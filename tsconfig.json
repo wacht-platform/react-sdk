@@ -20,6 +20,6 @@
     "esModuleInterop": true,
     "allowSyntheticDefaultImports": true
   },
-  "include": ["src"],
-  "exclude": ["src/**/__docs__", "src/**/__test__", "dist"]
+  "include": ["lib"],
+  "exclude": ["lib/**/__docs__", "lib/**/__test__", "dist"]
 }
