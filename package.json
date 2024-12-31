@@ -1,0 +1,29 @@
+{
+	"name": "@wacht/react",
+	"version": "1.0.0",
+	"description": "",
+	"type": "module",
+	"main": "dist/index.cjs.js",
+	"module": "dist/index.es.js",
+	"types": "dist/index.d.ts",
+	"files": ["/dist"],
+	"scripts": {
+		"build": "tsc && vite build"
+	},
+	"keywords": [],
+	"author": "Saurav Singh",
+	"license": "MIT",
+	"devDependencies": {
+		"@types/react": "^19.0.2",
+		"@vitejs/plugin-react": "^4.3.4",
+		"typescript": "^5.7.2",
+		"vite": "^6.0.6",
+		"vite-plugin-dts": "^4.4.0"
+	},
+	"peerDependencies": {
+		"react": "^19.0.0"
+	},
+	"dependencies": {
+		"swr": "^2.3.0"
+	}
+}
