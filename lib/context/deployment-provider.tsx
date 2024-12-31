@@ -1,7 +1,6 @@
 import { useState, useEffect, useMemo, createContext } from "react";
 import type { ReactNode } from "react";
-
-type Client = (url: URL | string, options?: RequestInit) => Promise<Response>;
+import { Client } from "../types/client";
 
 interface DeploymentInstance {
   baseUrl: string;

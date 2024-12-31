@@ -1,0 +1,1 @@
+export type Client = (url: URL | string, options?: RequestInit) => Promise<Response>;
