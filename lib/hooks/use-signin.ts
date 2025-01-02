@@ -1,45 +1,6 @@
-import { Client } from "../types/client";
-import { useDeployment } from "./use-deployment";
-
-type ErrorInterface = {
-  message: string;
-  code: ErrorCode;
-};
-
-enum ErrorCode {
-  Unknown = "unknown",
-  InvalidCredentials = "invalid_credentials",
-  UserNotFound = "user_not_found",
-  EmailNotFound = "email_not_found",
-  PhoneNotFound = "phone_not_found",
-  EmailAlreadyExists = "email_already_exists",
-  PhoneAlreadyExists = "phone_already_exists",
-  UserAlreadyExists = "user_already_exists",
-  InvalidEmail = "invalid_email",
-  InvalidPhone = "invalid_phone",
-  InvalidUsername = "invalid_username",
-  InvalidPassword = "invalid_password",
-  MissingPassword = "missing_password",
-  MissingUsername = "missing_username",
-  MissingEmail = "missing_email",
-  MissingPhone = "missing_phone",
-  MissingProvider = "missing_provider",
-  InvalidProvider = "invalid_provider",
-  MissingVerificationCode = "missing_verification_code",
-  VerificationCodeExpired = "verification_code_expired",
-}
-
-type ResultInterface<T, E> =
-  | {
-      data: never;
-      error: E;
-    }
-  | {
-      data: T;
-      error: never;
-    };
-
-type ApiResult<T, E = ErrorInterface> = Promise<ResultInterface<T, E>>;
+import { ApiResult, Client } from "../types/client";
+import { mapResponse } from "../utils/response-mapper";
+import { useClient } from "./use-client";
 
 type UsernameSignInParams = {
   username: string;
@@ -49,7 +10,7 @@ type UsernameSignInParams = {
 type SignInPlainUsername = ({
   username,
   password,
-}: UsernameSignInParams) => ApiResult<unknown>;
+}: UsernameSignInParams) => Promise<ApiResult<unknown>>;
 
 type EmailSignInParams = {
   email: string;
@@ -59,7 +20,7 @@ type EmailSignInParams = {
 type SignInPlainEmail = ({
   email,
   password,
-}: EmailSignInParams) => ApiResult<unknown>;
+}: EmailSignInParams) => Promise<ApiResult<unknown>>;
 
 type GenericSignInParams = {
   email?: string;
@@ -73,13 +34,13 @@ type SignInGeneric = ({
   username,
   password,
   phone,
-}: GenericSignInParams) => ApiResult<unknown>;
+}: GenericSignInParams) => Promise<ApiResult<unknown>>;
 
 type PhoneSignInParams = {
   phone: string;
 };
 
-type SignInPhone = ({ phone }: PhoneSignInParams) => ApiResult<unknown>;
+type SignInPhone = ({ phone }: PhoneSignInParams) => Promise<ApiResult<unknown>>;
 
 enum OAuthProvider {
   XOauth = "x_oauth",
@@ -96,7 +57,7 @@ type SignInOauth = ({
   provider,
 }: {
   provider: OAuthProvider;
-}) => ApiResult<unknown>;
+}) => Promise<ApiResult<unknown>>;
 
 export enum SignInStrategy {
   Username = "username",
@@ -128,13 +89,13 @@ type SignIn = {
 
 type UseSignInReturnType =
   | {
-      isLoaded: true;
-      signIn: SignIn;
-    }
+    isLoaded: true;
+    signIn: SignIn;
+  }
   | {
-      isLoaded: false;
-      signIn: never;
-    };
+    isLoaded: false;
+    signIn: never;
+  };
 
 function builder(client: Client): CreateSignInStrategyResult {
   const functionMap = {
@@ -162,7 +123,7 @@ function builderUsername(client: Client): SignInPlainUsername {
         password,
       }),
     });
-    return response.json();
+    return mapResponse(response);
   };
 }
 
@@ -178,7 +139,7 @@ function builderEmail(client: Client): SignInPlainEmail {
         password,
       }),
     });
-    return response.json();
+    return mapResponse(response);
   };
 }
 
@@ -193,7 +154,7 @@ function builderPhone(client: Client): SignInPhone {
         phone,
       }),
     });
-    return response.json();
+    return mapResponse(response);
   };
 }
 
@@ -208,7 +169,7 @@ function builderOauth(client: Client): SignInOauth {
         provider,
       }),
     });
-    return response.json();
+    return mapResponse(response);
   };
 }
 
@@ -227,12 +188,12 @@ function builderGeneric(client: Client): SignInGeneric {
         phone,
       }),
     });
-    return response.json();
+    return mapResponse(response);
   };
 }
 
 export function useSignIn(): UseSignInReturnType {
-  const { client, loading } = useDeployment();
+  const { client, loading } = useClient();
 
   if (loading) {
     return {
@@ -264,24 +225,24 @@ type SignInFunction<T extends SignInStrategy> = {
 
 type UseSignInWithStrategyReturnType<T extends SignInStrategy> =
   | {
-      isLoaded: false;
-      signIn: never;
-    }
+    isLoaded: false;
+    signIn: never;
+  }
   | {
-      isLoaded: true;
-      signIn: {
-        create: SignInFunction<T>;
-        completeVerification: (verificationCode: string) => Promise<unknown>;
-        prepareVerification: (
-          verification: VerificationStrategy,
-        ) => Promise<unknown>;
-      };
+    isLoaded: true;
+    signIn: {
+      create: SignInFunction<T>;
+      completeVerification: (verificationCode: string) => Promise<unknown>;
+      prepareVerification: (
+        verification: VerificationStrategy,
+      ) => Promise<unknown>;
     };
+  };
 
 export function useSignInWithStrategy<T extends SignInStrategy>(
   strategy: T,
 ): UseSignInWithStrategyReturnType<T> {
-  const { client, loading } = useDeployment();
+  const { client, loading } = useClient();
 
   if (loading) {
     return {

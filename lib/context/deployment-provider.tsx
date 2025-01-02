@@ -1,14 +1,10 @@
-import { useState, useEffect, useMemo, createContext } from "react";
+import { useState, useEffect, useMemo, createContext, useRef } from "react";
 import type { ReactNode } from "react";
-import { Client } from "../types/client";
-
-interface DeploymentInstance {
-  baseUrl: string;
-}
+import { ClinetReponse } from "../types/client";
 
 interface DeploymentContextType {
   loading: boolean;
-  client: Client | null;
+  deployment: Deployment | null;
 }
 
 const DeploymentContext = createContext<DeploymentContextType | undefined>(
@@ -20,19 +16,20 @@ interface DeploymentProviderProps {
   publicKey: string;
 }
 
-function createClient(deployment: DeploymentInstance): Client {
-  const fetcher = (url: URL | string, options?: RequestInit) =>
-    fetch(new URL(url, deployment.baseUrl), options);
 
-  return fetcher;
-}
 
 function DeploymentProvider({ children, publicKey }: DeploymentProviderProps) {
   const [loading, setLoading] = useState(true);
-  const [client, setClient] = useState<Client | null>(null);
+  const [deployment, setDeployment] = useState<Deployment | null>(null);
+  const singletonLock = useRef(false);
 
   useEffect(() => {
     async function initializeDeployment() {
+      if (singletonLock.current) {
+        return;
+      }
+
+      singletonLock.current = true;
       setLoading(true);
 
       const baseUrlEncoded = publicKey.split("_")[1];
@@ -41,12 +38,24 @@ function DeploymentProvider({ children, publicKey }: DeploymentProviderProps) {
         throw new Error("Invalid public key");
       }
 
-      const deploymentConfig = {
-        baseUrl: atob(baseUrlEncoded),
-      };
+      const baseUrl = atob(baseUrlEncoded);
 
-      const client = createClient(deploymentConfig);
-      setClient(() => client);
+      const devSession = localStorage.getItem("__dev_session__");
+
+      const deployment = await fetch(baseUrl + "/deployment", { headers: { "X-Development-Session": devSession ?? "" } });
+      if (!deployment.ok) {
+        throw new Error("Invalid deployment");
+      }
+      const deploymentConfig =
+        (await deployment.json()) as ClinetReponse<Deployment>;
+
+      deploymentConfig.data.host = baseUrl;
+      setDeployment(deploymentConfig.data);
+
+      if (deployment.headers.get("X-Development-Session")) {
+        localStorage.setItem("__dev_session__", deployment.headers.get("X-Development-Session") ?? "");
+      }
+
       setLoading(false);
     }
 
@@ -56,7 +65,7 @@ function DeploymentProvider({ children, publicKey }: DeploymentProviderProps) {
   const value = useMemo(
     () => ({
       loading,
-      client,
+      deployment,
     }),
     [loading],
   );
