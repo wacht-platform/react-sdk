@@ -1,282 +1,284 @@
-import { ApiResult, Client } from "../types/client";
+import type { ApiResult, Client } from "../types/client";
 import { mapResponse } from "../utils/response-mapper";
 import { useClient } from "./use-client";
 
 type UsernameSignInParams = {
-  username: string;
-  password: string;
+	username: string;
+	password: string;
 };
 
 type SignInPlainUsername = ({
-  username,
-  password,
+	username,
+	password,
 }: UsernameSignInParams) => Promise<ApiResult<unknown>>;
 
 type EmailSignInParams = {
-  email: string;
-  password: string;
+	email: string;
+	password: string;
 };
 
 type SignInPlainEmail = ({
-  email,
-  password,
+	email,
+	password,
 }: EmailSignInParams) => Promise<ApiResult<unknown>>;
 
 type GenericSignInParams = {
-  email?: string;
-  username?: string;
-  password?: string;
-  phone?: string;
+	email?: string;
+	username?: string;
+	password?: string;
+	phone?: string;
 };
 
 type SignInGeneric = ({
-  email,
-  username,
-  password,
-  phone,
+	email,
+	username,
+	password,
+	phone,
 }: GenericSignInParams) => Promise<ApiResult<unknown>>;
 
 type PhoneSignInParams = {
-  phone: string;
+	phone: string;
 };
 
-type SignInPhone = ({ phone }: PhoneSignInParams) => Promise<ApiResult<unknown>>;
+type SignInPhone = ({
+	phone,
+}: PhoneSignInParams) => Promise<ApiResult<unknown>>;
 
-enum OAuthProvider {
-  XOauth = "x_oauth",
-  GithubOauth = "github_oauth",
-  GitlabOauth = "gitlab_oauth",
-  GoogleOauth = "google_oauth",
-  FacebookOauth = "facebook_oauth",
-  MicrosoftOauth = "microsoft_oauth",
-  LinkedinOauth = "linkedin_oauth",
-  DiscordOauth = "discord_oauth",
+export enum OAuthProvider {
+	XOauth = "x_oauth",
+	GithubOauth = "github_oauth",
+	GitlabOauth = "gitlab_oauth",
+	GoogleOauth = "google_oauth",
+	FacebookOauth = "facebook_oauth",
+	MicrosoftOauth = "microsoft_oauth",
+	LinkedinOauth = "linkedin_oauth",
+	DiscordOauth = "discord_oauth",
 }
 
 type SignInOauth = ({
-  provider,
+	provider,
 }: {
-  provider: OAuthProvider;
+	provider: OAuthProvider;
 }) => Promise<ApiResult<unknown>>;
 
 export enum SignInStrategy {
-  Username = "username",
-  Email = "email",
-  Phone = "phone",
-  Oauth = "oauth",
-  Generic = "generic",
+	Username = "username",
+	Email = "email",
+	Phone = "phone",
+	Oauth = "oauth",
+	Generic = "generic",
 }
 
 type VerificationStrategy =
-  | "email_otp"
-  | "phone_otp"
-  | "email_magiclink"
-  | "auth_code";
+	| "email_otp"
+	| "phone_otp"
+	| "email_magiclink"
+	| "auth_code";
 
 type CreateSignInStrategyResult = {
-  (strategy: SignInStrategy.Username): SignInPlainUsername;
-  (strategy: SignInStrategy.Email): SignInPlainEmail;
-  (strategy: SignInStrategy.Phone): SignInPhone;
-  (strategy: SignInStrategy.Oauth): SignInOauth;
-  (strategy: SignInStrategy.Generic): SignInGeneric;
+	(strategy: SignInStrategy.Username): SignInPlainUsername;
+	(strategy: SignInStrategy.Email): SignInPlainEmail;
+	(strategy: SignInStrategy.Phone): SignInPhone;
+	(strategy: SignInStrategy.Oauth): SignInOauth;
+	(strategy: SignInStrategy.Generic): SignInGeneric;
 };
 
 type SignIn = {
-  createStrategy: CreateSignInStrategyResult;
-  prepareVerification: (verification: VerificationStrategy) => Promise<unknown>;
-  completeVerification: (verificationCode: string) => Promise<unknown>;
+	createStrategy: CreateSignInStrategyResult;
+	prepareVerification: (verification: VerificationStrategy) => Promise<unknown>;
+	completeVerification: (verificationCode: string) => Promise<unknown>;
 };
 
 type UseSignInReturnType =
-  | {
-    isLoaded: true;
-    signIn: SignIn;
-  }
-  | {
-    isLoaded: false;
-    signIn: never;
-  };
+	| {
+			isLoaded: true;
+			signIn: SignIn;
+	  }
+	| {
+			isLoaded: false;
+			signIn: never;
+	  };
 
 function builder(client: Client): CreateSignInStrategyResult {
-  const functionMap = {
-    [SignInStrategy.Username]: builderUsername(client),
-    [SignInStrategy.Email]: builderEmail(client),
-    [SignInStrategy.Phone]: builderPhone(client),
-    [SignInStrategy.Oauth]: builderOauth(client),
-    [SignInStrategy.Generic]: builderGeneric(client),
-  };
+	const functionMap = {
+		[SignInStrategy.Username]: builderUsername(client),
+		[SignInStrategy.Email]: builderEmail(client),
+		[SignInStrategy.Phone]: builderPhone(client),
+		[SignInStrategy.Oauth]: builderOauth(client),
+		[SignInStrategy.Generic]: builderGeneric(client),
+	};
 
-  return function signInBuilder(strategy: SignInStrategy) {
-    return functionMap[strategy];
-  } as CreateSignInStrategyResult;
+	return function signInBuilder(strategy: SignInStrategy) {
+		return functionMap[strategy];
+	} as CreateSignInStrategyResult;
 }
 
 function builderUsername(client: Client): SignInPlainUsername {
-  return async ({ username, password }: UsernameSignInParams) => {
-    const response = await client("/auth/signin", {
-      method: "POST",
-      headers: {
-        "Content-Type": "application/json",
-      },
-      body: JSON.stringify({
-        username,
-        password,
-      }),
-    });
-    return mapResponse(response);
-  };
+	return async ({ username, password }: UsernameSignInParams) => {
+		const form = new FormData();
+		form.append("username", username);
+		form.append("password", password);
+		const response = await client("/auth/signin", {
+			method: "POST",
+			headers: {
+				"Content-Type": "application/json",
+			},
+			body: form,
+		});
+		return mapResponse(response);
+	};
 }
 
 function builderEmail(client: Client): SignInPlainEmail {
-  return async ({ email, password }: EmailSignInParams) => {
-    const response = await client("/auth/signin", {
-      method: "POST",
-      headers: {
-        "Content-Type": "application/json",
-      },
-      body: JSON.stringify({
-        email,
-        password,
-      }),
-    });
-    return mapResponse(response);
-  };
+	return async ({ email, password }: EmailSignInParams) => {
+		const form = new FormData();
+		form.append("email", email);
+		form.append("password", password);
+		const response = await client("/auth/signin", {
+			method: "POST",
+			headers: {
+				"Content-Type": "application/json",
+			},
+			body: form,
+		});
+		return mapResponse(response);
+	};
 }
 
 function builderPhone(client: Client): SignInPhone {
-  return async ({ phone }: PhoneSignInParams) => {
-    const response = await client("/auth/signin", {
-      method: "POST",
-      headers: {
-        "Content-Type": "application/json",
-      },
-      body: JSON.stringify({
-        phone,
-      }),
-    });
-    return mapResponse(response);
-  };
+	return async ({ phone }: PhoneSignInParams) => {
+		const response = await client("/auth/signin", {
+			method: "POST",
+			headers: {
+				"Content-Type": "application/json",
+			},
+			body: JSON.stringify({
+				phone,
+			}),
+		});
+		return mapResponse(response);
+	};
 }
 
 function builderOauth(client: Client): SignInOauth {
-  return async ({ provider }: { provider: OAuthProvider }) => {
-    const response = await client("/auth/oauth/authorize", {
-      method: "POST",
-      headers: {
-        "Content-Type": "application/json",
-      },
-      body: JSON.stringify({
-        provider,
-      }),
-    });
-    return mapResponse(response);
-  };
+	return async ({ provider }: { provider: OAuthProvider }) => {
+		const response = await client("/auth/oauth/authorize", {
+			method: "POST",
+			headers: {
+				"Content-Type": "application/json",
+			},
+			body: JSON.stringify({
+				provider,
+			}),
+		});
+		return mapResponse(response);
+	};
 }
 
 function builderGeneric(client: Client): SignInGeneric {
-  return async ({ email, username, password, phone }: GenericSignInParams) => {
-    const response = await client("/auth/signin", {
-      method: "POST",
-      headers: {
-        "Content-Type": "application/json",
-      },
-      body: JSON.stringify({
-        strategy: "generic",
-        email,
-        username,
-        password,
-        phone,
-      }),
-    });
-    return mapResponse(response);
-  };
+	return async ({ email, username, password, phone }: GenericSignInParams) => {
+		const form = new FormData();
+		form.append("strategy", "generic");
+		if (email) form.append("email", email);
+		if (username) form.append("username", username);
+		if (password) form.append("password", password);
+		if (phone) form.append("phone", phone);
+		const response = await client("/auth/signin", {
+			method: "POST",
+			headers: {
+				"Content-Type": "application/json",
+			},
+			body: form,
+		});
+		return mapResponse(response);
+	};
 }
 
 export function useSignIn(): UseSignInReturnType {
-  const { client, loading } = useClient();
+	const { client, loading } = useClient();
 
-  if (loading) {
-    return {
-      isLoaded: false,
-    } as UseSignInReturnType;
-  }
+	if (loading) {
+		return {
+			isLoaded: false,
+		} as UseSignInReturnType;
+	}
 
-  return {
-    isLoaded: !loading,
-    signIn: {
-      createStrategy: builder(client!),
-      completeVerification: async (verificationCode: string) => {
-        console.log(verificationCode);
-      },
-      prepareVerification: async (verification: VerificationStrategy) => {
-        console.log(verification);
-      },
-    },
-  };
+	return {
+		isLoaded: !loading,
+		signIn: {
+			createStrategy: builder(client),
+			completeVerification: async (verificationCode: string) => {
+				console.log(verificationCode);
+			},
+			prepareVerification: async (verification: VerificationStrategy) => {
+				console.log(verification);
+			},
+		},
+	};
 }
 
 type SignInFunction<T extends SignInStrategy> = {
-  [SignInStrategy.Username]: SignInPlainUsername;
-  [SignInStrategy.Email]: SignInPlainEmail;
-  [SignInStrategy.Phone]: SignInPhone;
-  [SignInStrategy.Oauth]: SignInOauth;
-  [SignInStrategy.Generic]: SignInGeneric;
+	[SignInStrategy.Username]: SignInPlainUsername;
+	[SignInStrategy.Email]: SignInPlainEmail;
+	[SignInStrategy.Phone]: SignInPhone;
+	[SignInStrategy.Oauth]: SignInOauth;
+	[SignInStrategy.Generic]: SignInGeneric;
 }[T];
 
 type UseSignInWithStrategyReturnType<T extends SignInStrategy> =
-  | {
-    isLoaded: false;
-    signIn: never;
-  }
-  | {
-    isLoaded: true;
-    signIn: {
-      create: SignInFunction<T>;
-      completeVerification: (verificationCode: string) => Promise<unknown>;
-      prepareVerification: (
-        verification: VerificationStrategy,
-      ) => Promise<unknown>;
-    };
-  };
+	| {
+			isLoaded: false;
+			signIn: never;
+	  }
+	| {
+			isLoaded: true;
+			signIn: {
+				create: SignInFunction<T>;
+				completeVerification: (verificationCode: string) => Promise<unknown>;
+				prepareVerification: (
+					verification: VerificationStrategy,
+				) => Promise<unknown>;
+			};
+	  };
 
 export function useSignInWithStrategy<T extends SignInStrategy>(
-  strategy: T,
+	strategy: T,
 ): UseSignInWithStrategyReturnType<T> {
-  const { client, loading } = useClient();
+	const { client, loading } = useClient();
 
-  if (loading) {
-    return {
-      isLoaded: false,
-    } as UseSignInWithStrategyReturnType<T>;
-  }
+	if (loading) {
+		return {
+			isLoaded: false,
+		} as UseSignInWithStrategyReturnType<T>;
+	}
 
-  const strategyFunction = (() => {
-    switch (strategy) {
-      case SignInStrategy.Username:
-        return builderUsername(client!);
-      case SignInStrategy.Email:
-        return builderEmail(client!);
-      case SignInStrategy.Phone:
-        return builderPhone(client!);
-      case SignInStrategy.Oauth:
-        return builderOauth(client!);
-      case SignInStrategy.Generic:
-        return builderGeneric(client!);
-      default:
-        throw new Error("Invalid sign-in strategy");
-    }
-  })();
+	const strategyFunction = (() => {
+		switch (strategy) {
+			case SignInStrategy.Username:
+				return builderUsername(client);
+			case SignInStrategy.Email:
+				return builderEmail(client);
+			case SignInStrategy.Phone:
+				return builderPhone(client);
+			case SignInStrategy.Oauth:
+				return builderOauth(client);
+			case SignInStrategy.Generic:
+				return builderGeneric(client);
+			default:
+				throw new Error("Invalid sign-in strategy");
+		}
+	})();
 
-  return {
-    isLoaded: true,
-    signIn: {
-      create: strategyFunction,
-      completeVerification: async (verificationCode: string) => {
-        console.log(verificationCode);
-      },
-      prepareVerification: async (verification: VerificationStrategy) => {
-        console.log(verification);
-      },
-    },
-  } as UseSignInWithStrategyReturnType<T>;
+	return {
+		isLoaded: true,
+		signIn: {
+			create: strategyFunction,
+			completeVerification: async (verificationCode: string) => {
+				console.log(verificationCode);
+			},
+			prepareVerification: async (verification: VerificationStrategy) => {
+				console.log(verification);
+			},
+		},
+	} as UseSignInWithStrategyReturnType<T>;
 }
