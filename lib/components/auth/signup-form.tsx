@@ -631,16 +631,11 @@ const countries: Country[] = [
 ];
 
 interface SignUpFormProps {
-	onSuccess?: () => void;
-	onError?: (error: Error) => void;
 	className?: string;
+	signInUrl: string;
 }
 
-export function SignUpForm({
-	onSuccess,
-	onError,
-	className = "",
-}: SignUpFormProps) {
+export function SignUpForm({ className = "", signInUrl }: SignUpFormProps) {
 	const { isLoaded, signUp, initSSO, identifierAvailability } = useSignUp();
 	const { deployment } = useDeployment();
 	const countryDropdownRef = useRef<HTMLDivElement>(null);
@@ -743,10 +738,8 @@ export function SignUpForm({
 		setIsSubmitting(true);
 		try {
 			await signUp(formData);
-			onSuccess?.();
 		} catch (err) {
 			setErrors({ submit: (err as Error).message });
-			onError?.(err as Error);
 		} finally {
 			setIsSubmitting(false);
 		}
@@ -761,7 +754,6 @@ export function SignUpForm({
 			window.location.href = data.oauth_url;
 		} catch (err) {
 			setErrors({ submit: (err as Error).message });
-			onError?.(err as Error);
 		} finally {
 			setIsSubmitting(false);
 		}
@@ -1012,7 +1004,7 @@ export function SignUpForm({
 			</Form>
 
 			<Footer>
-				Already have an account? <Link href="/signin">Sign in</Link>
+				Already have an account? <Link href={signInUrl}>Sign in</Link>
 			</Footer>
 		</Container>
 	);

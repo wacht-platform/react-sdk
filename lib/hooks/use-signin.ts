@@ -1,4 +1,6 @@
+import { useState } from "react";
 import type { ApiResult, Client } from "../types/client";
+import type { Session, SignInAttempt } from "../types/session";
 import { mapResponse } from "../utils/response-mapper";
 import { useClient } from "./use-client";
 
@@ -34,7 +36,7 @@ type SignInGeneric = ({
 	username,
 	password,
 	phone,
-}: GenericSignInParams) => Promise<ApiResult<unknown>>;
+}: GenericSignInParams) => Promise<ApiResult<Session>>;
 
 type PhoneSignInParams = {
 	phone: string;
@@ -93,19 +95,29 @@ type UseSignInReturnType =
 	| {
 			isLoaded: true;
 			signIn: SignIn;
+			signInAttempt: SignInAttempt | null;
 	  }
 	| {
 			isLoaded: false;
 			signIn: never;
+			signInAttempt: null;
 	  };
 
-function builder(client: Client): CreateSignInStrategyResult {
+type InitSSOResponseType = {
+	oauth_url: string;
+	session: Session;
+};
+
+function builder(
+	client: Client,
+	setSignInAttempt: (attempt: SignInAttempt | null) => void,
+): CreateSignInStrategyResult {
 	const functionMap = {
-		[SignInStrategy.Username]: builderUsername(client),
-		[SignInStrategy.Email]: builderEmail(client),
-		[SignInStrategy.Phone]: builderPhone(client),
+		[SignInStrategy.Username]: builderUsername(client, setSignInAttempt),
+		[SignInStrategy.Email]: builderEmail(client, setSignInAttempt),
+		[SignInStrategy.Phone]: builderPhone(client, setSignInAttempt),
 		[SignInStrategy.Oauth]: builderOauth(client),
-		[SignInStrategy.Generic]: builderGeneric(client),
+		[SignInStrategy.Generic]: builderGeneric(client, setSignInAttempt),
 	};
 
 	return function signInBuilder(strategy: SignInStrategy) {
@@ -113,7 +125,10 @@ function builder(client: Client): CreateSignInStrategyResult {
 	} as CreateSignInStrategyResult;
 }
 
-function builderUsername(client: Client): SignInPlainUsername {
+function builderUsername(
+	client: Client,
+	setSignInAttempt: (attempt: SignInAttempt | null) => void,
+): SignInPlainUsername {
 	return async ({ username, password }: UsernameSignInParams) => {
 		const form = new FormData();
 		form.append("username", username);
@@ -125,11 +140,18 @@ function builderUsername(client: Client): SignInPlainUsername {
 			},
 			body: form,
 		});
-		return mapResponse(response);
+		const result = await mapResponse<Session>(response);
+		if ("data" in result && result.data?.sign_in_attempts?.length) {
+			setSignInAttempt(result.data.sign_in_attempts[0]);
+		}
+		return result;
 	};
 }
 
-function builderEmail(client: Client): SignInPlainEmail {
+function builderEmail(
+	client: Client,
+	setSignInAttempt: (attempt: SignInAttempt | null) => void,
+): SignInPlainEmail {
 	return async ({ email, password }: EmailSignInParams) => {
 		const form = new FormData();
 		form.append("email", email);
@@ -141,11 +163,18 @@ function builderEmail(client: Client): SignInPlainEmail {
 			},
 			body: form,
 		});
-		return mapResponse(response);
+		const result = await mapResponse<Session>(response);
+		if ("data" in result && result.data?.sign_in_attempts?.length) {
+			setSignInAttempt(result.data.sign_in_attempts[0]);
+		}
+		return result;
 	};
 }
 
-function builderPhone(client: Client): SignInPhone {
+function builderPhone(
+	client: Client,
+	setSignInAttempt: (attempt: SignInAttempt | null) => void,
+): SignInPhone {
 	return async ({ phone }: PhoneSignInParams) => {
 		const response = await client("/auth/signin", {
 			method: "POST",
@@ -156,7 +185,11 @@ function builderPhone(client: Client): SignInPhone {
 				phone,
 			}),
 		});
-		return mapResponse(response);
+		const result = await mapResponse<Session>(response);
+		if ("data" in result && result.data?.sign_in_attempts?.length) {
+			setSignInAttempt(result.data.sign_in_attempts[0]);
+		}
+		return result;
 	};
 }
 
@@ -171,11 +204,14 @@ function builderOauth(client: Client): SignInOauth {
 				provider,
 			}),
 		});
-		return mapResponse(response);
+		return mapResponse<InitSSOResponseType>(response);
 	};
 }
 
-function builderGeneric(client: Client): SignInGeneric {
+function builderGeneric(
+	client: Client,
+	setSignInAttempt: (attempt: SignInAttempt | null) => void,
+): SignInGeneric {
 	return async ({ email, username, password, phone }: GenericSignInParams) => {
 		const form = new FormData();
 		form.append("strategy", "generic");
@@ -190,23 +226,32 @@ function builderGeneric(client: Client): SignInGeneric {
 			},
 			body: form,
 		});
-		return mapResponse(response);
+		const result = await mapResponse<Session>(response);
+		if ("data" in result && result.data?.sign_in_attempts?.length) {
+			setSignInAttempt(result.data.sign_in_attempts[0]);
+		}
+		return result as ApiResult<Session>;
 	};
 }
 
 export function useSignIn(): UseSignInReturnType {
 	const { client, loading } = useClient();
+	const [signInAttempt, setSignInAttempt] = useState<SignInAttempt | null>(
+		null,
+	);
 
 	if (loading) {
 		return {
 			isLoaded: false,
+			signInAttempt: null,
 		} as UseSignInReturnType;
 	}
 
 	return {
 		isLoaded: !loading,
+		signInAttempt,
 		signIn: {
-			createStrategy: builder(client),
+			createStrategy: builder(client, setSignInAttempt),
 			completeVerification: async (verificationCode: string) => {
 				console.log(verificationCode);
 			},
@@ -229,6 +274,7 @@ type UseSignInWithStrategyReturnType<T extends SignInStrategy> =
 	| {
 			isLoaded: false;
 			signIn: never;
+			signInAttempt: null;
 	  }
 	| {
 			isLoaded: true;
@@ -239,31 +285,36 @@ type UseSignInWithStrategyReturnType<T extends SignInStrategy> =
 					verification: VerificationStrategy,
 				) => Promise<unknown>;
 			};
+			signInAttempt: SignInAttempt | null;
 	  };
 
 export function useSignInWithStrategy<T extends SignInStrategy>(
 	strategy: T,
 ): UseSignInWithStrategyReturnType<T> {
 	const { client, loading } = useClient();
+	const [signInAttempt, setSignInAttempt] = useState<SignInAttempt | null>(
+		null,
+	);
 
 	if (loading) {
 		return {
 			isLoaded: false,
+			signInAttempt: null,
 		} as UseSignInWithStrategyReturnType<T>;
 	}
 
 	const strategyFunction = (() => {
 		switch (strategy) {
 			case SignInStrategy.Username:
-				return builderUsername(client);
+				return builderUsername(client, setSignInAttempt);
 			case SignInStrategy.Email:
-				return builderEmail(client);
+				return builderEmail(client, setSignInAttempt);
 			case SignInStrategy.Phone:
-				return builderPhone(client);
+				return builderPhone(client, setSignInAttempt);
 			case SignInStrategy.Oauth:
 				return builderOauth(client);
 			case SignInStrategy.Generic:
-				return builderGeneric(client);
+				return builderGeneric(client, setSignInAttempt);
 			default:
 				throw new Error("Invalid sign-in strategy");
 		}
@@ -271,6 +322,7 @@ export function useSignInWithStrategy<T extends SignInStrategy>(
 
 	return {
 		isLoaded: true,
+		signInAttempt,
 		signIn: {
 			create: strategyFunction,
 			completeVerification: async (verificationCode: string) => {

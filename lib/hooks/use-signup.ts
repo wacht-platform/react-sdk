@@ -1,7 +1,9 @@
+import { useState } from "react";
 import type { ApiResult, Client } from "../types/client";
 import { mapResponse } from "../utils/response-mapper";
 import { useClient } from "./use-client";
 import type { SignUpParams, SSOProvider, SSOResponse } from "../types/auth";
+import type { SignInAttempt, Session } from "../types/session";
 
 type SignUpFunction = (params: SignUpParams) => Promise<ApiResult<unknown>>;
 type InitSSOFunction = (
@@ -19,15 +21,29 @@ type UseSignUpReturnType =
 			signUp: never;
 			initSSO: never;
 			identifierAvailability: never;
+			signUpAttempt: null;
 	  }
 	| {
 			isLoaded: true;
 			signUp: SignUpFunction;
 			initSSO: InitSSOFunction;
 			identifierAvailability: IdentifierAvailabilityFunction;
+			signUpAttempt: SignInAttempt | null;
 	  };
 
-function builder(client: Client): SignUpFunction {
+type SignUpResponse = {
+	sign_in_attempt?: SignInAttempt;
+};
+
+type InitSSOResponseType = {
+	oauth_url: string;
+	session: Session;
+};
+
+function builder(
+	client: Client,
+	setSignUpAttempt: (attempt: SignInAttempt | null) => void,
+): SignUpFunction {
 	return async (params: SignUpParams) => {
 		const form = new FormData();
 		for (const [key, value] of Object.entries(params)) {
@@ -40,20 +56,24 @@ function builder(client: Client): SignUpFunction {
 			},
 			body: form,
 		});
-		return mapResponse(response);
+		const result = await mapResponse<SignUpResponse>(response);
+		if ("data" in result && result.data?.sign_in_attempt) {
+			setSignUpAttempt(result.data.sign_in_attempt);
+		}
+		return result;
 	};
 }
 
 function ssoBuilder(client: Client): InitSSOFunction {
 	return async (provider: SSOProvider) => {
-		const response = await client("/auth/sso", {
+		const response = await client("/auth/oauth/authorize", {
 			method: "POST",
 			headers: {
 				"Content-Type": "application/json",
 			},
 			body: JSON.stringify({ provider }),
 		});
-		return mapResponse(response);
+		return mapResponse<InitSSOResponseType>(response);
 	};
 }
 
@@ -70,6 +90,9 @@ function identifierAvailabilityBuilder(
 
 export function useSignUp(): UseSignUpReturnType {
 	const { client, loading } = useClient();
+	const [signUpAttempt, setSignUpAttempt] = useState<SignInAttempt | null>(
+		null,
+	);
 
 	if (loading) {
 		return {
@@ -77,12 +100,14 @@ export function useSignUp(): UseSignUpReturnType {
 			signUp: null as never,
 			initSSO: null as never,
 			identifierAvailability: null as never,
+			signUpAttempt: null,
 		};
 	}
 
 	return {
 		isLoaded: true,
-		signUp: builder(client),
+		signUpAttempt,
+		signUp: builder(client, setSignUpAttempt),
 		initSSO: ssoBuilder(client),
 		identifierAvailability: identifierAvailabilityBuilder(client),
 	};

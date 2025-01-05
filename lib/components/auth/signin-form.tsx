@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import styled from "styled-components";
 import type { SSOProvider, SignInParams } from "../../types/auth";
 import { useSignInWithStrategy } from "../../hooks/use-signin";
@@ -271,17 +271,14 @@ const Link = styled.a`
 `;
 
 interface SignInFormProps {
-	onSuccess?: () => void;
-	onError?: (error: Error) => void;
 	className?: string;
+	signUpUrl: string;
 }
 
-export function SignInForm({
-	onSuccess,
-	onError,
-	className = "",
-}: SignInFormProps) {
-	const { isLoaded, signIn } = useSignInWithStrategy(SignInStrategy.Generic);
+export function SignInForm({ className = "", signUpUrl }: SignInFormProps) {
+	const { isLoaded, signIn, signInAttempt } = useSignInWithStrategy(
+		SignInStrategy.Generic,
+	);
 	const { isLoaded: isOAuthLoaded, signIn: oauthSignIn } =
 		useSignInWithStrategy(SignInStrategy.Oauth);
 	const { deployment } = useDeployment();
@@ -355,15 +352,11 @@ export function SignInForm({
 				setOtpSent(true);
 			} else if (otpSent) {
 				await signIn.completeVerification(otpCode);
-				onSuccess?.();
 			} else {
-				const res = await signIn.create(formData);
-				console.log(res);
-				onSuccess?.();
+				await signIn.create(formData);
 			}
 		} catch (err) {
 			setErrors({ submit: (err as Error).message });
-			onError?.(err as Error);
 		} finally {
 			setIsSubmitting(false);
 		}
@@ -382,7 +375,6 @@ export function SignInForm({
 			}
 		} catch (err) {
 			setErrors({ submit: (err as Error).message });
-			onError?.(err as Error);
 		} finally {
 			setIsSubmitting(false);
 		}
@@ -393,6 +385,50 @@ export function SignInForm({
 
 	const authSettings = deployment?.auth_settings;
 	const firstFactor = authSettings?.first_factor;
+
+	useEffect(() => {
+		if (!signInAttempt) return;
+
+		if (signInAttempt.completed) {
+			return;
+		}
+
+		switch (signInAttempt.current_step) {
+			case "verify_email":
+				if (!otpSent) {
+					signIn.prepareVerification("email_otp");
+					setOtpSent(true);
+				}
+				break;
+			case "verify_email_otp":
+				if (!otpSent) {
+					signIn.prepareVerification("email_otp");
+					setOtpSent(true);
+				}
+				break;
+			case "verify_phone":
+				if (!otpSent) {
+					signIn.prepareVerification("phone_otp");
+					setOtpSent(true);
+				}
+				break;
+			case "verify_phone_otp":
+				if (!otpSent) {
+					signIn.prepareVerification("phone_otp");
+					setOtpSent(true);
+				}
+				break;
+			case "verify_authenticator":
+				if (!otpSent) {
+					signIn.prepareVerification("auth_code");
+					setOtpSent(true);
+				}
+				break;
+			case "add_second_factor":
+				// This will be handled by a different component
+				break;
+		}
+	}, [signInAttempt, signIn.prepareVerification, otpSent]);
 
 	return (
 		<Container className={className}>
@@ -529,7 +565,7 @@ export function SignInForm({
 			</Form>
 
 			<Footer>
-				Don't have an account? <Link href="/signup">Sign up</Link>
+				Don't have an account? <Link href={signUpUrl}>Sign up</Link>
 			</Footer>
 		</Container>
 	);
