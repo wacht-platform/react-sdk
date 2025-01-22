@@ -210,7 +210,26 @@ const Input = styled.input`
 	background: #F9FAFB;
 	transition: all 0.2s;
 
-	&:focus {
+	&:not(:placeholder-shown):invalid {
+		outline: none;
+		border: 1px solid #EF4444;
+		background: white;
+	}
+	
+	&:not(:placeholder-shown):valid {
+		outline: none;
+		border: 1px solid #10B981;
+		background: white;
+	}
+	
+	&:focus:valid {
+		outline: none;
+		border-color: #22c55e;
+    box-shadow: 0 0 0 3px rgba(34, 197, 94, 0.1);
+		background: white;
+	}
+
+	&:focus:invalid {
 		outline: none;
 		border-color: #6366F1;
 		box-shadow: 0 0 0 3px rgba(99, 102, 241, 0.1);
@@ -813,53 +832,61 @@ export function SignUpForm({ className = "", signInUrl }: SignUpFormProps) {
 			<Form onSubmit={handleSubmit} noValidate>
 				{(authSettings?.first_name.enabled ||
 					authSettings?.last_name.enabled) && (
-					<NameFields $isBothEnabled={isBothNamesEnabled}>
-						{authSettings?.first_name.enabled && (
-							<FormGroup>
-								<Label htmlFor="firstName">
-									First name
-									{authSettings.first_name.required && (
-										<RequiredAsterisk>*</RequiredAsterisk>
+						<NameFields $isBothEnabled={isBothNamesEnabled}>
+							{authSettings?.first_name.enabled && (
+								<FormGroup>
+									<Label htmlFor="firstName">
+										First name
+										{authSettings.first_name.required && (
+											<RequiredAsterisk>*</RequiredAsterisk>
+										)}
+									</Label>
+									<Input
+										type="text"
+										id="firstName"
+										name="firstName"
+										required
+										minLength={3}
+										maxLength={30}
+										value={formData.firstName}
+										onChange={handleInputChange}
+										placeholder="First name"
+										aria-invalid={!!errors.firstName}
+										pattern="^[a-zA-Z]{3,30}$"
+									/>
+									{errors.firstName && (
+										<ErrorMessage>{errors.firstName}</ErrorMessage>
 									)}
-								</Label>
-								<Input
-									type="text"
-									id="firstName"
-									name="firstName"
-									value={formData.firstName}
-									onChange={handleInputChange}
-									placeholder="First name"
-									aria-invalid={!!errors.firstName}
-								/>
-								{errors.firstName && (
-									<ErrorMessage>{errors.firstName}</ErrorMessage>
-								)}
-							</FormGroup>
-						)}
-						{authSettings?.last_name.enabled && (
-							<FormGroup>
-								<Label htmlFor="lastName">
-									Last name
-									{authSettings.last_name.required && (
-										<RequiredAsterisk>*</RequiredAsterisk>
+								</FormGroup>
+							)}
+							{authSettings?.last_name.enabled && (
+								<FormGroup>
+									<Label htmlFor="lastName">
+										Last name
+										{authSettings.last_name.required && (
+											<RequiredAsterisk>*</RequiredAsterisk>
+										)}
+									</Label>
+									<Input
+										type="text"
+										id="lastName"
+										name="lastName"
+										required
+										minLength={3}
+										maxLength={30}
+										value={formData.lastName}
+										onChange={handleInputChange}
+										placeholder="Last name"
+										aria-invalid={!!errors.lastName}
+										pattern="^[a-zA-Z]{3,30}$"
+									/>
+									{errors.lastName && (
+										<ErrorMessage>{errors.lastName}</ErrorMessage>
 									)}
-								</Label>
-								<Input
-									type="text"
-									id="lastName"
-									name="lastName"
-									value={formData.lastName}
-									onChange={handleInputChange}
-									placeholder="Last name"
-									aria-invalid={!!errors.lastName}
-								/>
-								{errors.lastName && (
-									<ErrorMessage>{errors.lastName}</ErrorMessage>
-								)}
-							</FormGroup>
-						)}
-					</NameFields>
-				)}
+								</FormGroup>
+							)}
+						</NameFields>
+					)}
 
 				{authSettings?.username.enabled && (
 					<FormGroup>
@@ -873,11 +900,16 @@ export function SignUpForm({ className = "", signInUrl }: SignUpFormProps) {
 							type="text"
 							id="username"
 							name="username"
+							minLength={3}
+							maxLength={20}
 							value={formData.username}
 							onChange={handleInputChange}
 							placeholder="Choose a username"
 							aria-invalid={!!errors.username}
+							required
+							pattern="^[a-zA-Z][a-zA-Z0-9_.]{2,29}$"
 						/>
+
 						{errors.username && <ErrorMessage>{errors.username}</ErrorMessage>}
 					</FormGroup>
 				)}
@@ -894,10 +926,13 @@ export function SignUpForm({ className = "", signInUrl }: SignUpFormProps) {
 							type="email"
 							id="email"
 							name="email"
+							maxLength={320}
 							value={formData.email}
 							onChange={handleInputChange}
 							placeholder="Enter your email address"
 							aria-invalid={!!errors.email}
+							required
+							pattern="^[a-zA-Z0-9.!#$%&'*+/=?^_`{|}~-]+@[a-zA-Z0-9](?:[a-zA-Z0-9-]{0,61}[a-zA-Z0-9])?(?:\.[a-zA-Z0-9](?:[a-zA-Z0-9-]{0,61}[a-zA-Z0-9])?)+(\.[a-zA-Z]{2,})$"
 						/>
 						{errors.email && <ErrorMessage>{errors.email}</ErrorMessage>}
 					</FormGroup>
@@ -960,11 +995,15 @@ export function SignUpForm({ className = "", signInUrl }: SignUpFormProps) {
 								type="tel"
 								id="phoneNumber"
 								name="phoneNumber"
+								required
+								minLength={7}
+								maxLength={15}
 								ref={phoneNumberInputRef}
 								value={formData.phoneNumber}
 								onChange={handleInputChange}
 								placeholder="Phone number"
 								aria-invalid={!!errors.phoneNumber}
+								pattern="^\d{7,15}$"
 							/>
 						</PhoneInputGroup>
 						{errors.phoneNumber && (
@@ -990,6 +1029,10 @@ export function SignUpForm({ className = "", signInUrl }: SignUpFormProps) {
 								onChange={handleInputChange}
 								placeholder="Enter your password"
 								aria-invalid={!!errors.password}
+								required
+								minLength={8}
+								maxLength={128}
+								pattern="^(?=.*[a-z])(?=.*[A-Z])(?=.*\d)(?=.*[@$!%*?&])[A-Za-z\d@$!%*?&]{6,125}$"
 							/>
 						</PasswordGroup>
 						{errors.password && <ErrorMessage>{errors.password}</ErrorMessage>}
