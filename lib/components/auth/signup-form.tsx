@@ -696,6 +696,9 @@ export function SignUpForm({ className = "", signInUrl }: SignUpFormProps) {
 		if (name === "phoneNumber") {
 			value = value.replace(/[^0-9-]/g, "");
 		}
+		else if (name === "email") {
+			value = value.toLowerCase();
+		}
 		setFormData((prev) => ({ ...prev, [name]: value }));
 		setErrors((prev) => ({ ...prev, [name]: "" }));
 	};
@@ -706,11 +709,14 @@ export function SignUpForm({ className = "", signInUrl }: SignUpFormProps) {
 
 		const newErrors: Record<string, string> = {};
 
+		const namePattern = /^[a-zA-Z]{3,30}$/;
+		const usernamePattern = /^[a-zA-Z][a-zA-Z0-9_.]{2,29}$/;
+		const emailPattern = /^[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}$/;
+		const phonePattern = /^\d{7,15}$/;
+		const passwordPattern = /^(?=.*[a-z])(?=.*[A-Z])(?=.*\d)(?=.*[@$!%*?&])[A-Za-z\d@$!%*?&]{6,125}$/;
+
 		if (authSettings?.username.enabled && formData.username) {
-			const { data } = await identifierAvailability(
-				formData.username,
-				"username",
-			);
+			const { data } = await identifierAvailability(formData.username, "username");
 			if (data.exists) {
 				newErrors.username = "Username is not available";
 			}
@@ -725,27 +731,63 @@ export function SignUpForm({ className = "", signInUrl }: SignUpFormProps) {
 
 		if (authSettings?.first_name.required && !formData.firstName) {
 			newErrors.firstName = "First name is required";
+		} else if (
+			authSettings?.first_name.enabled &&
+			formData.firstName &&
+			!namePattern.test(formData.firstName)
+		) {
+			newErrors.firstName = "Invalid name";
 		}
+
 		if (authSettings?.last_name.required && !formData.lastName) {
 			newErrors.lastName = "Last name is required";
+		} else if (
+			authSettings?.last_name.enabled &&
+			formData.lastName &&
+			!namePattern.test(formData.lastName)
+		) {
+			newErrors.lastName = "Invalid last name";
 		}
+
 		if (authSettings?.username.required && !formData.username) {
 			newErrors.username = "Username is required";
+		} else if (
+			authSettings?.username.enabled &&
+			formData.username &&
+			!usernamePattern.test(formData.username)
+		) {
+			newErrors.username = "Username must be 3-20 characters";
 		}
+
 		if (authSettings?.email_address.required && !formData.email) {
 			newErrors.email = "Email address is required";
+		} else if (
+			authSettings?.email_address.enabled &&
+			formData.email &&
+			!emailPattern.test(formData.email)
+		) {
+			newErrors.email = "Invalid email address";
 		}
+
 		if (authSettings?.phone_number.required && !formData.phoneNumber) {
 			newErrors.phoneNumber = "Phone number is required";
+		} else if (
+			authSettings?.phone_number.enabled &&
+			formData.phoneNumber &&
+			!phonePattern.test(formData.phoneNumber)
+		) {
+			newErrors.phoneNumber = "Phone number must contain 7-15 digits";
 		}
+
 		if (authSettings?.password.required && !formData.password) {
 			newErrors.password = "Password is required";
 		} else if (
 			authSettings?.password.enabled &&
 			formData.password &&
-			formData.password.length < 8
+			!passwordPattern.test(formData.password)
 		) {
-			newErrors.password = "Password must contain 8 or more characters";
+			newErrors.password =
+				"Password must be 6-125 characters and include uppercase, lowercase, number, and special character";
 		}
 
 		setErrors(newErrors);
@@ -763,6 +805,7 @@ export function SignUpForm({ className = "", signInUrl }: SignUpFormProps) {
 			setIsSubmitting(false);
 		}
 	};
+
 
 	const handleSSOSignUp = async (provider: SSOProvider) => {
 		if (!isLoaded || isSubmitting) return;
@@ -932,7 +975,7 @@ export function SignUpForm({ className = "", signInUrl }: SignUpFormProps) {
 							placeholder="Enter your email address"
 							aria-invalid={!!errors.email}
 							required
-							pattern="^[a-zA-Z0-9.!#$%&'*+/=?^_`{|}~-]+@[a-zA-Z0-9](?:[a-zA-Z0-9-]{0,61}[a-zA-Z0-9])?(?:\.[a-zA-Z0-9](?:[a-zA-Z0-9-]{0,61}[a-zA-Z0-9])?)+(\.[a-zA-Z]{2,})$"
+							pattern="^[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}$"
 						/>
 						{errors.email && <ErrorMessage>{errors.email}</ErrorMessage>}
 					</FormGroup>
