@@ -210,7 +210,26 @@ const Input = styled.input`
 	background: #F9FAFB;
 	transition: all 0.2s;
 
-	&:focus {
+	&:not(:placeholder-shown):invalid {
+		outline: none;
+		border: 1px solid #EF4444;
+		background: white;
+	}
+	
+	&:not(:placeholder-shown):valid {
+		outline: none;
+		border: 1px solid #10B981;
+		background: white;
+	}
+	
+	&:focus:valid {
+		outline: none;
+		border-color: #22c55e;
+    box-shadow: 0 0 0 3px rgba(34, 197, 94, 0.1);
+		background: white;
+	}
+
+	&:focus:invalid {
 		outline: none;
 		border-color: #6366F1;
 		box-shadow: 0 0 0 3px rgba(99, 102, 241, 0.1);
@@ -677,6 +696,9 @@ export function SignUpForm({ className = "", signInUrl }: SignUpFormProps) {
 		if (name === "phoneNumber") {
 			value = value.replace(/[^0-9-]/g, "");
 		}
+		else if (name === "email") {
+			value = value.toLowerCase();
+		}
 		setFormData((prev) => ({ ...prev, [name]: value }));
 		setErrors((prev) => ({ ...prev, [name]: "" }));
 	};
@@ -687,11 +709,14 @@ export function SignUpForm({ className = "", signInUrl }: SignUpFormProps) {
 
 		const newErrors: Record<string, string> = {};
 
+		const namePattern = /^[a-zA-Z]{3,30}$/;
+		const usernamePattern = /^[a-zA-Z][a-zA-Z0-9_.]{2,29}$/;
+		const emailPattern = /^[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}$/;
+		const phonePattern = /^\d{7,15}$/;
+		const passwordPattern = /^(?=.*[a-z])(?=.*[A-Z])(?=.*\d)(?=.*[@$!%*?&])[A-Za-z\d@$!%*?&]{8,125}$/;
+
 		if (authSettings?.username.enabled && formData.username) {
-			const { data } = await identifierAvailability(
-				formData.username,
-				"username",
-			);
+			const { data } = await identifierAvailability(formData.username, "username");
 			if (data.exists) {
 				newErrors.username = "Username is not available";
 			}
@@ -706,27 +731,63 @@ export function SignUpForm({ className = "", signInUrl }: SignUpFormProps) {
 
 		if (authSettings?.first_name.required && !formData.firstName) {
 			newErrors.firstName = "First name is required";
+		} else if (
+			authSettings?.first_name.enabled &&
+			formData.firstName &&
+			!namePattern.test(formData.firstName)
+		) {
+			newErrors.firstName = "Invalid name";
 		}
+
 		if (authSettings?.last_name.required && !formData.lastName) {
 			newErrors.lastName = "Last name is required";
+		} else if (
+			authSettings?.last_name.enabled &&
+			formData.lastName &&
+			!namePattern.test(formData.lastName)
+		) {
+			newErrors.lastName = "Invalid last name";
 		}
+
 		if (authSettings?.username.required && !formData.username) {
 			newErrors.username = "Username is required";
+		} else if (
+			authSettings?.username.enabled &&
+			formData.username &&
+			!usernamePattern.test(formData.username)
+		) {
+			newErrors.username = "Username must be 3-20 characters";
 		}
+
 		if (authSettings?.email_address.required && !formData.email) {
 			newErrors.email = "Email address is required";
+		} else if (
+			authSettings?.email_address.enabled &&
+			formData.email &&
+			!emailPattern.test(formData.email)
+		) {
+			newErrors.email = "Invalid email address";
 		}
+
 		if (authSettings?.phone_number.required && !formData.phoneNumber) {
 			newErrors.phoneNumber = "Phone number is required";
+		} else if (
+			authSettings?.phone_number.enabled &&
+			formData.phoneNumber &&
+			!phonePattern.test(formData.phoneNumber)
+		) {
+			newErrors.phoneNumber = "Phone number must contain 7-15 digits";
 		}
+
 		if (authSettings?.password.required && !formData.password) {
 			newErrors.password = "Password is required";
 		} else if (
 			authSettings?.password.enabled &&
 			formData.password &&
-			formData.password.length < 8
+			!passwordPattern.test(formData.password)
 		) {
-			newErrors.password = "Password must contain 8 or more characters";
+			newErrors.password =
+				"Password must be 8-125 characters and include uppercase, lowercase, number, and special character";
 		}
 
 		setErrors(newErrors);
@@ -744,6 +805,7 @@ export function SignUpForm({ className = "", signInUrl }: SignUpFormProps) {
 			setIsSubmitting(false);
 		}
 	};
+
 
 	const handleSSOSignUp = async (provider: SSOProvider) => {
 		if (!isLoaded || isSubmitting) return;
@@ -813,53 +875,61 @@ export function SignUpForm({ className = "", signInUrl }: SignUpFormProps) {
 			<Form onSubmit={handleSubmit} noValidate>
 				{(authSettings?.first_name.enabled ||
 					authSettings?.last_name.enabled) && (
-					<NameFields $isBothEnabled={isBothNamesEnabled}>
-						{authSettings?.first_name.enabled && (
-							<FormGroup>
-								<Label htmlFor="firstName">
-									First name
-									{authSettings.first_name.required && (
-										<RequiredAsterisk>*</RequiredAsterisk>
+						<NameFields $isBothEnabled={isBothNamesEnabled}>
+							{authSettings?.first_name.enabled && (
+								<FormGroup>
+									<Label htmlFor="firstName">
+										First name
+										{authSettings.first_name.required && (
+											<RequiredAsterisk>*</RequiredAsterisk>
+										)}
+									</Label>
+									<Input
+										type="text"
+										id="firstName"
+										name="firstName"
+										required
+										minLength={3}
+										maxLength={30}
+										value={formData.firstName}
+										onChange={handleInputChange}
+										placeholder="First name"
+										aria-invalid={!!errors.firstName}
+										pattern="^[a-zA-Z]{3,30}$"
+									/>
+									{errors.firstName && (
+										<ErrorMessage>{errors.firstName}</ErrorMessage>
 									)}
-								</Label>
-								<Input
-									type="text"
-									id="firstName"
-									name="firstName"
-									value={formData.firstName}
-									onChange={handleInputChange}
-									placeholder="First name"
-									aria-invalid={!!errors.firstName}
-								/>
-								{errors.firstName && (
-									<ErrorMessage>{errors.firstName}</ErrorMessage>
-								)}
-							</FormGroup>
-						)}
-						{authSettings?.last_name.enabled && (
-							<FormGroup>
-								<Label htmlFor="lastName">
-									Last name
-									{authSettings.last_name.required && (
-										<RequiredAsterisk>*</RequiredAsterisk>
+								</FormGroup>
+							)}
+							{authSettings?.last_name.enabled && (
+								<FormGroup>
+									<Label htmlFor="lastName">
+										Last name
+										{authSettings.last_name.required && (
+											<RequiredAsterisk>*</RequiredAsterisk>
+										)}
+									</Label>
+									<Input
+										type="text"
+										id="lastName"
+										name="lastName"
+										required
+										minLength={3}
+										maxLength={30}
+										value={formData.lastName}
+										onChange={handleInputChange}
+										placeholder="Last name"
+										aria-invalid={!!errors.lastName}
+										pattern="^[a-zA-Z]{3,30}$"
+									/>
+									{errors.lastName && (
+										<ErrorMessage>{errors.lastName}</ErrorMessage>
 									)}
-								</Label>
-								<Input
-									type="text"
-									id="lastName"
-									name="lastName"
-									value={formData.lastName}
-									onChange={handleInputChange}
-									placeholder="Last name"
-									aria-invalid={!!errors.lastName}
-								/>
-								{errors.lastName && (
-									<ErrorMessage>{errors.lastName}</ErrorMessage>
-								)}
-							</FormGroup>
-						)}
-					</NameFields>
-				)}
+								</FormGroup>
+							)}
+						</NameFields>
+					)}
 
 				{authSettings?.username.enabled && (
 					<FormGroup>
@@ -873,11 +943,16 @@ export function SignUpForm({ className = "", signInUrl }: SignUpFormProps) {
 							type="text"
 							id="username"
 							name="username"
+							minLength={3}
+							maxLength={20}
 							value={formData.username}
 							onChange={handleInputChange}
 							placeholder="Choose a username"
 							aria-invalid={!!errors.username}
+							required
+							pattern="^[a-zA-Z][a-zA-Z0-9_.]{2,29}$"
 						/>
+
 						{errors.username && <ErrorMessage>{errors.username}</ErrorMessage>}
 					</FormGroup>
 				)}
@@ -894,10 +969,13 @@ export function SignUpForm({ className = "", signInUrl }: SignUpFormProps) {
 							type="email"
 							id="email"
 							name="email"
+							maxLength={320}
 							value={formData.email}
 							onChange={handleInputChange}
 							placeholder="Enter your email address"
 							aria-invalid={!!errors.email}
+							required
+							pattern="^[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}$"
 						/>
 						{errors.email && <ErrorMessage>{errors.email}</ErrorMessage>}
 					</FormGroup>
@@ -960,11 +1038,15 @@ export function SignUpForm({ className = "", signInUrl }: SignUpFormProps) {
 								type="tel"
 								id="phoneNumber"
 								name="phoneNumber"
+								required
+								minLength={7}
+								maxLength={15}
 								ref={phoneNumberInputRef}
 								value={formData.phoneNumber}
 								onChange={handleInputChange}
 								placeholder="Phone number"
 								aria-invalid={!!errors.phoneNumber}
+								pattern="^\d{7,15}$"
 							/>
 						</PhoneInputGroup>
 						{errors.phoneNumber && (
@@ -990,6 +1072,10 @@ export function SignUpForm({ className = "", signInUrl }: SignUpFormProps) {
 								onChange={handleInputChange}
 								placeholder="Enter your password"
 								aria-invalid={!!errors.password}
+								required
+								minLength={8}
+								maxLength={128}
+								pattern="^(?=.*[a-z])(?=.*[A-Z])(?=.*\d)(?=.*[@$!%*?&])[A-Za-z\d@$!%*?&]{8,125}$"
 							/>
 						</PasswordGroup>
 						{errors.password && <ErrorMessage>{errors.password}</ErrorMessage>}
