@@ -713,7 +713,7 @@ export function SignUpForm({ className = "", signInUrl }: SignUpFormProps) {
 		const usernamePattern = /^[a-zA-Z][a-zA-Z0-9_.]{2,29}$/;
 		const emailPattern = /^[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}$/;
 		const phonePattern = /^\d{7,15}$/;
-		const passwordPattern = /^(?=.*[a-z])(?=.*[A-Z])(?=.*\d)(?=.*[@$!%*?&])[A-Za-z\d@$!%*?&]{6,125}$/;
+		const passwordPattern = /^(?=.*[a-z])(?=.*[A-Z])(?=.*\d)(?=.*[@$!%*?&])[A-Za-z\d@$!%*?&]{8,125}$/;
 
 		if (authSettings?.username.enabled && formData.username) {
 			const { data } = await identifierAvailability(formData.username, "username");
@@ -787,7 +787,7 @@ export function SignUpForm({ className = "", signInUrl }: SignUpFormProps) {
 			!passwordPattern.test(formData.password)
 		) {
 			newErrors.password =
-				"Password must be 6-125 characters and include uppercase, lowercase, number, and special character";
+				"Password must be 8-125 characters and include uppercase, lowercase, number, and special character";
 		}
 
 		setErrors(newErrors);
@@ -1075,7 +1075,7 @@ export function SignUpForm({ className = "", signInUrl }: SignUpFormProps) {
 								required
 								minLength={8}
 								maxLength={128}
-								pattern="^(?=.*[a-z])(?=.*[A-Z])(?=.*\d)(?=.*[@$!%*?&])[A-Za-z\d@$!%*?&]{6,125}$"
+								pattern="^(?=.*[a-z])(?=.*[A-Z])(?=.*\d)(?=.*[@$!%*?&])[A-Za-z\d@$!%*?&]{8,125}$"
 							/>
 						</PasswordGroup>
 						{errors.password && <ErrorMessage>{errors.password}</ErrorMessage>}
