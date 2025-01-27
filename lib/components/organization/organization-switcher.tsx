@@ -1,6 +1,7 @@
 import { useState, useRef, useEffect } from 'react';
 import styled from 'styled-components';
 import { Building2, ChevronDown, LogOut, Plus, Settings, Users } from 'lucide-react';
+import { TypographyProvider } from '../utility/typography';
 
 interface Organization {
   id: string;
@@ -216,7 +217,7 @@ interface OrganizationSwitcherProps {
   setCurrentOrg: (org: Organization) => void;
 }
 
-const OrganizationSwitcher = ({ Organizations, currentOrg, setCurrentOrg }: OrganizationSwitcherProps) => {
+export const OrganizationSwitcher = ({ Organizations, currentOrg, setCurrentOrg }: OrganizationSwitcherProps) => {
   const [isOpen, setIsOpen] = useState(false);
   const dropdownRef = useRef<HTMLDivElement>(null);
 
@@ -237,64 +238,66 @@ const OrganizationSwitcher = ({ Organizations, currentOrg, setCurrentOrg }: Orga
   };
 
   return (
-    <Container ref={dropdownRef}>
-      <TriggerButton onClick={() => setIsOpen(!isOpen)} aria-expanded={isOpen} aria-haspopup="true">
-        <ButtonContent>
-          {currentOrg.imageUrl ? (
-            <OrgImage src={currentOrg.imageUrl} alt={currentOrg.name} />
-          ) : (
-            <Building2 size={24} style={{ color: '#1e293b', strokeWidth: 1.8 }} />
-          )}
-          <OrgName>{currentOrg.name}</OrgName>
-        </ButtonContent>
-        <ChevronIcon $isOpen={isOpen} />
-      </TriggerButton>
+    <TypographyProvider>
+      <Container ref={dropdownRef}>
+        <TriggerButton onClick={() => setIsOpen(!isOpen)} aria-expanded={isOpen} aria-haspopup="true">
+          <ButtonContent>
+            {currentOrg.imageUrl ? (
+              <OrgImage src={currentOrg.imageUrl} alt={currentOrg.name} />
+            ) : (
+              <Building2 size={24} style={{ color: '#1e293b', strokeWidth: 1.8 }} />
+            )}
+            <OrgName>{currentOrg.name}</OrgName>
+          </ButtonContent>
+          <ChevronIcon $isOpen={isOpen} />
+        </TriggerButton>
 
-      {isOpen && (
-        <Dropdown>
-          <DropdownHeader>
-            <HeaderText>Switch Organization</HeaderText>
-          </DropdownHeader>
+        {isOpen && (
+          <Dropdown>
+            <DropdownHeader>
+              <HeaderText>Switch Organization</HeaderText>
+            </DropdownHeader>
 
-          {Organizations.map((org) => (
-            <OrgButton
-              key={org.id}
-              onClick={() => handleOrgSelect(org)}
-              $isActive={currentOrg.id === org.id}
-            >
-              {org.imageUrl ? (
-                <LargeOrgImage src={org.imageUrl} alt={org.name} />
-              ) : (
-                <Building2 size={36} style={{ color: '#1e293b', strokeWidth: 1.5 }} />
-              )}
-              <OrgInfo>
-                <OrgTitle>{org.name}</OrgTitle>
-                <OrgRole>{org.role}</OrgRole>
-              </OrgInfo>
-            </OrgButton>
-          ))}
+            {Organizations.map((org) => (
+              <OrgButton
+                key={org.id}
+                onClick={() => handleOrgSelect(org)}
+                $isActive={currentOrg.id === org.id}
+              >
+                {org.imageUrl ? (
+                  <LargeOrgImage src={org.imageUrl} alt={org.name} />
+                ) : (
+                  <Building2 size={36} style={{ color: '#1e293b', strokeWidth: 1.5 }} />
+                )}
+                <OrgInfo>
+                  <OrgTitle>{org.name}</OrgTitle>
+                  <OrgRole>{org.role}</OrgRole>
+                </OrgInfo>
+              </OrgButton>
+            ))}
 
-          <Divider />
+            <Divider />
 
-          <ActionButton>
-            <Plus />
-            Create Organization
-          </ActionButton>
-          <ActionButton>
-            <Users />
-            Organization Profile
-          </ActionButton>
-          <ActionButton>
-            <Settings />
-            Organization Settings
-          </ActionButton>
-          <ActionButton $isDestructive>
-            <LogOut />
-            Sign Out
-          </ActionButton>
-        </Dropdown>
-      )}
-    </Container>
+            <ActionButton>
+              <Plus />
+              Create Organization
+            </ActionButton>
+            <ActionButton>
+              <Users />
+              Organization Profile
+            </ActionButton>
+            <ActionButton>
+              <Settings />
+              Organization Settings
+            </ActionButton>
+            <ActionButton $isDestructive>
+              <LogOut />
+              Sign Out
+            </ActionButton>
+          </Dropdown>
+        )}
+      </Container>
+    </TypographyProvider>
   );
 };
 

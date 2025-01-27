@@ -10,7 +10,7 @@
 		"/dist"
 	],
 	"scripts": {
-		"build": "tsc && vite build"
+		"build": "rm -rf ./dist && vite build && tsc"
 	},
 	"keywords": [],
 	"author": "Saurav Singh",
@@ -26,6 +26,7 @@
 		"react": "^19.0.0"
 	},
 	"dependencies": {
+		"lucide-react": "^0.474.0",
 		"styled-components": "^6.1.13",
 		"swr": "^2.3.0",
 		"ts-pattern": "^5.6.0"

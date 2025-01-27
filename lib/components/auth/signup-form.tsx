@@ -3,6 +3,7 @@ import styled from "styled-components";
 import type { SSOProvider, SignUpParams } from "../../types/auth";
 import { useSignUp } from "../../hooks/use-signup";
 import { useDeployment } from "../../hooks/use-deployment";
+import { TypographyProvider } from "../utility/typography";
 
 const ssoConfig = {
 	google_oauth: {
@@ -92,11 +93,6 @@ const Container = styled.div`
 	background: white;
 	border-radius: 12px;
 	box-shadow: 0 4px 24px rgba(0, 0, 0, 0.1);
-
-	* {
-		box-sizing: border-box;
-  		font-family: Inter, system-ui, Avenir, Helvetica, Arial, sans-serif;
-	}
 `;
 
 const Header = styled.div`
@@ -837,261 +833,263 @@ export function SignUpForm({ className = "", signInUrl }: SignUpFormProps) {
 	);
 
 	return (
-		<Container className={className}>
-			<Header>
-				<Title>Create your account</Title>
-				<Subtitle>Welcome! Please fill in the details to get started.</Subtitle>
-			</Header>
+		<TypographyProvider>
+			<Container className={className}>
+				<Header>
+					<Title>Create your account</Title>
+					<Subtitle>Welcome! Please fill in the details to get started.</Subtitle>
+				</Header>
 
-			{enabledSSOProviders.length > 0 && (
-				<>
-					<SSOButtonsContainer>
-						{enabledSSOProviders.map((conn) => {
-							const provider = conn.provider.toLowerCase() as SSOProvider;
-							if (!ssoConfig[provider]) return null;
-							const numProviders = enabledSSOProviders.length;
+				{enabledSSOProviders.length > 0 && (
+					<>
+						<SSOButtonsContainer>
+							{enabledSSOProviders.map((conn) => {
+								const provider = conn.provider.toLowerCase() as SSOProvider;
+								if (!ssoConfig[provider]) return null;
+								const numProviders = enabledSSOProviders.length;
 
-							return (
-								<SSOButton
-									key={conn.id}
-									onClick={() => handleSSOSignUp(provider)}
-									type="button"
-								>
-									{ssoConfig[provider].icon}
-									{numProviders > 1
-										? ssoConfig[provider].shortLabel
-										: ssoConfig[provider].fullLabel}
-								</SSOButton>
-							);
-						})}
-					</SSOButtonsContainer>
+								return (
+									<SSOButton
+										key={conn.id}
+										onClick={() => handleSSOSignUp(provider)}
+										type="button"
+									>
+										{ssoConfig[provider].icon}
+										{numProviders > 1
+											? ssoConfig[provider].shortLabel
+											: ssoConfig[provider].fullLabel}
+									</SSOButton>
+								);
+							})}
+						</SSOButtonsContainer>
 
-					<Divider>
-						<DividerText>or</DividerText>
-					</Divider>
-				</>
-			)}
+						<Divider>
+							<DividerText>or</DividerText>
+						</Divider>
+					</>
+				)}
 
-			<Form onSubmit={handleSubmit} noValidate>
-				{(authSettings?.first_name.enabled ||
-					authSettings?.last_name.enabled) && (
-						<NameFields $isBothEnabled={isBothNamesEnabled}>
-							{authSettings?.first_name.enabled && (
-								<FormGroup>
-									<Label htmlFor="firstName">
-										First name
-										{authSettings.first_name.required && (
-											<RequiredAsterisk>*</RequiredAsterisk>
+				<Form onSubmit={handleSubmit} noValidate>
+					{(authSettings?.first_name.enabled ||
+						authSettings?.last_name.enabled) && (
+							<NameFields $isBothEnabled={isBothNamesEnabled}>
+								{authSettings?.first_name.enabled && (
+									<FormGroup>
+										<Label htmlFor="firstName">
+											First name
+											{authSettings.first_name.required && (
+												<RequiredAsterisk>*</RequiredAsterisk>
+											)}
+										</Label>
+										<Input
+											type="text"
+											id="firstName"
+											name="firstName"
+											required
+											minLength={3}
+											maxLength={30}
+											value={formData.firstName}
+											onChange={handleInputChange}
+											placeholder="First name"
+											aria-invalid={!!errors.firstName}
+											pattern="^[a-zA-Z]{3,30}$"
+										/>
+										{errors.firstName && (
+											<ErrorMessage>{errors.firstName}</ErrorMessage>
 										)}
-									</Label>
-									<Input
-										type="text"
-										id="firstName"
-										name="firstName"
-										required
-										minLength={3}
-										maxLength={30}
-										value={formData.firstName}
-										onChange={handleInputChange}
-										placeholder="First name"
-										aria-invalid={!!errors.firstName}
-										pattern="^[a-zA-Z]{3,30}$"
-									/>
-									{errors.firstName && (
-										<ErrorMessage>{errors.firstName}</ErrorMessage>
-									)}
-								</FormGroup>
-							)}
-							{authSettings?.last_name.enabled && (
-								<FormGroup>
-									<Label htmlFor="lastName">
-										Last name
-										{authSettings.last_name.required && (
-											<RequiredAsterisk>*</RequiredAsterisk>
+									</FormGroup>
+								)}
+								{authSettings?.last_name.enabled && (
+									<FormGroup>
+										<Label htmlFor="lastName">
+											Last name
+											{authSettings.last_name.required && (
+												<RequiredAsterisk>*</RequiredAsterisk>
+											)}
+										</Label>
+										<Input
+											type="text"
+											id="lastName"
+											name="lastName"
+											required
+											minLength={3}
+											maxLength={30}
+											value={formData.lastName}
+											onChange={handleInputChange}
+											placeholder="Last name"
+											aria-invalid={!!errors.lastName}
+											pattern="^[a-zA-Z]{3,30}$"
+										/>
+										{errors.lastName && (
+											<ErrorMessage>{errors.lastName}</ErrorMessage>
 										)}
-									</Label>
-									<Input
-										type="text"
-										id="lastName"
-										name="lastName"
-										required
-										minLength={3}
-										maxLength={30}
-										value={formData.lastName}
-										onChange={handleInputChange}
-										placeholder="Last name"
-										aria-invalid={!!errors.lastName}
-										pattern="^[a-zA-Z]{3,30}$"
-									/>
-									{errors.lastName && (
-										<ErrorMessage>{errors.lastName}</ErrorMessage>
-									)}
-								</FormGroup>
-							)}
-						</NameFields>
+									</FormGroup>
+								)}
+							</NameFields>
+						)}
+
+					{authSettings?.username.enabled && (
+						<FormGroup>
+							<Label htmlFor="username">
+								Username
+								{authSettings.username.required && (
+									<RequiredAsterisk>*</RequiredAsterisk>
+								)}
+							</Label>
+							<Input
+								type="text"
+								id="username"
+								name="username"
+								minLength={3}
+								maxLength={20}
+								value={formData.username}
+								onChange={handleInputChange}
+								placeholder="Choose a username"
+								aria-invalid={!!errors.username}
+								required
+								pattern="^[a-zA-Z][a-zA-Z0-9_.]{2,29}$"
+							/>
+
+							{errors.username && <ErrorMessage>{errors.username}</ErrorMessage>}
+						</FormGroup>
 					)}
 
-				{authSettings?.username.enabled && (
-					<FormGroup>
-						<Label htmlFor="username">
-							Username
-							{authSettings.username.required && (
-								<RequiredAsterisk>*</RequiredAsterisk>
-							)}
-						</Label>
-						<Input
-							type="text"
-							id="username"
-							name="username"
-							minLength={3}
-							maxLength={20}
-							value={formData.username}
-							onChange={handleInputChange}
-							placeholder="Choose a username"
-							aria-invalid={!!errors.username}
-							required
-							pattern="^[a-zA-Z][a-zA-Z0-9_.]{2,29}$"
-						/>
-
-						{errors.username && <ErrorMessage>{errors.username}</ErrorMessage>}
-					</FormGroup>
-				)}
-
-				{authSettings?.email_address.enabled && (
-					<FormGroup>
-						<Label htmlFor="email">
-							Email address
-							{authSettings.email_address.required && (
-								<RequiredAsterisk>*</RequiredAsterisk>
-							)}
-						</Label>
-						<Input
-							type="email"
-							id="email"
-							name="email"
-							maxLength={320}
-							value={formData.email}
-							onChange={handleInputChange}
-							placeholder="Enter your email address"
-							aria-invalid={!!errors.email}
-							required
-							pattern="^[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}$"
-						/>
-						{errors.email && <ErrorMessage>{errors.email}</ErrorMessage>}
-					</FormGroup>
-				)}
-
-				{authSettings?.phone_number.enabled && (
-					<FormGroup>
-						<Label htmlFor="phoneNumber">
-							Phone number
-							{authSettings.phone_number.required && (
-								<RequiredAsterisk>*</RequiredAsterisk>
-							)}
-						</Label>
-						<PhoneInputGroup>
-							<CountryCodeSelect ref={countryDropdownRef}>
-								<CountryCodeButton
-									type="button"
-									onClick={() => setIsCountryDropdownOpen((prev) => !prev)}
-								>
-									<img
-										src={`https://flagcdn.com/16x12/${selectedCountry.code.toLocaleLowerCase()}.png`}
-										srcSet={`https://flagcdn.com/32x24/${selectedCountry.code.toLocaleLowerCase()}.png 2x, https://flagcdn.com/48x36/${selectedCountry.code.toLocaleLowerCase()}.png 3x`}
-										alt={selectedCountry.name}
-									/>
-									<span>{selectedCountry.dialCode}</span>
-								</CountryCodeButton>
-								<CountryCodeDropdown $isOpen={isCountryDropdownOpen}>
-									<CountrySearch
-										type="text"
-										placeholder="Search country..."
-										value={countrySearch}
-										onChange={(e) => setCountrySearch(e.target.value)}
-										onClick={(e) => e.stopPropagation()}
-									/>
-									<CountryList>
-										{filteredCountries.map((country) => (
-											<CountryOption
-												key={country.code}
-												onClick={(e) => {
-													e.stopPropagation();
-													e.preventDefault();
-													setSelectedCountry(country);
-													setIsCountryDropdownOpen(false);
-													phoneNumberInputRef.current?.focus();
-												}}
-											>
-												<img
-													src={`https://flagcdn.com/16x12/${country.code.toLocaleLowerCase()}.png`}
-													srcSet={`https://flagcdn.com/32x24/${country.code.toLocaleLowerCase()}.png 2x, https://flagcdn.com/48x36/${country.code.toLocaleLowerCase()}.png 3x`}
-													alt={country.name}
-												/>
-												<span>{country.name}</span>
-												<span className="country-code">{country.dialCode}</span>
-											</CountryOption>
-										))}
-									</CountryList>
-								</CountryCodeDropdown>
-							</CountryCodeSelect>
-							<PhoneInput
-								type="tel"
-								id="phoneNumber"
-								name="phoneNumber"
-								required
-								minLength={7}
-								maxLength={15}
-								ref={phoneNumberInputRef}
-								value={formData.phoneNumber}
-								onChange={handleInputChange}
-								placeholder="Phone number"
-								aria-invalid={!!errors.phoneNumber}
-								pattern="^\d{7,15}$"
-							/>
-						</PhoneInputGroup>
-						{errors.phoneNumber && (
-							<ErrorMessage>{errors.phoneNumber}</ErrorMessage>
-						)}
-					</FormGroup>
-				)}
-
-				{authSettings?.password.enabled && (
-					<FormGroup>
-						<Label htmlFor="password">
-							Password
-							{authSettings.password.required && (
-								<RequiredAsterisk>*</RequiredAsterisk>
-							)}
-						</Label>
-						<PasswordGroup>
+					{authSettings?.email_address.enabled && (
+						<FormGroup>
+							<Label htmlFor="email">
+								Email address
+								{authSettings.email_address.required && (
+									<RequiredAsterisk>*</RequiredAsterisk>
+								)}
+							</Label>
 							<Input
-								type="password"
-								id="password"
-								name="password"
-								value={formData.password}
+								type="email"
+								id="email"
+								name="email"
+								maxLength={320}
+								value={formData.email}
 								onChange={handleInputChange}
-								placeholder="Enter your password"
-								aria-invalid={!!errors.password}
+								placeholder="Enter your email address"
+								aria-invalid={!!errors.email}
 								required
-								minLength={8}
-								maxLength={128}
-								pattern="^(?=.*[a-z])(?=.*[A-Z])(?=.*\d)(?=.*[@$!%*?&])[A-Za-z\d@$!%*?&]{8,125}$"
+								pattern="^[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}$"
 							/>
-						</PasswordGroup>
-						{errors.password && <ErrorMessage>{errors.password}</ErrorMessage>}
-					</FormGroup>
-				)}
+							{errors.email && <ErrorMessage>{errors.email}</ErrorMessage>}
+						</FormGroup>
+					)}
 
-				{errors.submit && <ErrorMessage>{errors.submit}</ErrorMessage>}
+					{authSettings?.phone_number.enabled && (
+						<FormGroup>
+							<Label htmlFor="phoneNumber">
+								Phone number
+								{authSettings.phone_number.required && (
+									<RequiredAsterisk>*</RequiredAsterisk>
+								)}
+							</Label>
+							<PhoneInputGroup>
+								<CountryCodeSelect ref={countryDropdownRef}>
+									<CountryCodeButton
+										type="button"
+										onClick={() => setIsCountryDropdownOpen((prev) => !prev)}
+									>
+										<img
+											src={`https://flagcdn.com/16x12/${selectedCountry.code.toLocaleLowerCase()}.png`}
+											srcSet={`https://flagcdn.com/32x24/${selectedCountry.code.toLocaleLowerCase()}.png 2x, https://flagcdn.com/48x36/${selectedCountry.code.toLocaleLowerCase()}.png 3x`}
+											alt={selectedCountry.name}
+										/>
+										<span>{selectedCountry.dialCode}</span>
+									</CountryCodeButton>
+									<CountryCodeDropdown $isOpen={isCountryDropdownOpen}>
+										<CountrySearch
+											type="text"
+											placeholder="Search country..."
+											value={countrySearch}
+											onChange={(e) => setCountrySearch(e.target.value)}
+											onClick={(e) => e.stopPropagation()}
+										/>
+										<CountryList>
+											{filteredCountries.map((country) => (
+												<CountryOption
+													key={country.code}
+													onClick={(e) => {
+														e.stopPropagation();
+														e.preventDefault();
+														setSelectedCountry(country);
+														setIsCountryDropdownOpen(false);
+														phoneNumberInputRef.current?.focus();
+													}}
+												>
+													<img
+														src={`https://flagcdn.com/16x12/${country.code.toLocaleLowerCase()}.png`}
+														srcSet={`https://flagcdn.com/32x24/${country.code.toLocaleLowerCase()}.png 2x, https://flagcdn.com/48x36/${country.code.toLocaleLowerCase()}.png 3x`}
+														alt={country.name}
+													/>
+													<span>{country.name}</span>
+													<span className="country-code">{country.dialCode}</span>
+												</CountryOption>
+											))}
+										</CountryList>
+									</CountryCodeDropdown>
+								</CountryCodeSelect>
+								<PhoneInput
+									type="tel"
+									id="phoneNumber"
+									name="phoneNumber"
+									required
+									minLength={7}
+									maxLength={15}
+									ref={phoneNumberInputRef}
+									value={formData.phoneNumber}
+									onChange={handleInputChange}
+									placeholder="Phone number"
+									aria-invalid={!!errors.phoneNumber}
+									pattern="^\d{7,15}$"
+								/>
+							</PhoneInputGroup>
+							{errors.phoneNumber && (
+								<ErrorMessage>{errors.phoneNumber}</ErrorMessage>
+							)}
+						</FormGroup>
+					)}
 
-				<SubmitButton type="submit" disabled={isSubmitting || !isLoaded}>
-					{isSubmitting ? "Creating account..." : "Continue"}
-				</SubmitButton>
-			</Form>
+					{authSettings?.password.enabled && (
+						<FormGroup>
+							<Label htmlFor="password">
+								Password
+								{authSettings.password.required && (
+									<RequiredAsterisk>*</RequiredAsterisk>
+								)}
+							</Label>
+							<PasswordGroup>
+								<Input
+									type="password"
+									id="password"
+									name="password"
+									value={formData.password}
+									onChange={handleInputChange}
+									placeholder="Enter your password"
+									aria-invalid={!!errors.password}
+									required
+									minLength={8}
+									maxLength={128}
+									pattern="^(?=.*[a-z])(?=.*[A-Z])(?=.*\d)(?=.*[@$!%*?&])[A-Za-z\d@$!%*?&]{8,125}$"
+								/>
+							</PasswordGroup>
+							{errors.password && <ErrorMessage>{errors.password}</ErrorMessage>}
+						</FormGroup>
+					)}
 
-			<Footer>
-				Already have an account? <Link href={signInUrl}>Sign in</Link>
-			</Footer>
-		</Container>
+					{errors.submit && <ErrorMessage>{errors.submit}</ErrorMessage>}
+
+					<SubmitButton type="submit" disabled={isSubmitting || !isLoaded}>
+						{isSubmitting ? "Creating account..." : "Continue"}
+					</SubmitButton>
+				</Form>
+
+				<Footer>
+					Already have an account? <Link href={signInUrl}>Sign in</Link>
+				</Footer>
+			</Container>
+		</TypographyProvider>
 	);
 }

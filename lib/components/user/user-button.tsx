@@ -1,6 +1,7 @@
 import React, { useState, useRef, useEffect } from 'react';
 import styled from 'styled-components';
 import { LogOut, Settings, Plus } from 'lucide-react';
+import { TypographyProvider } from '../utility/typography';
 
 const ButtonWrapper = styled.div`
   display: flex;
@@ -220,69 +221,71 @@ export const UserButton: React.FC<UserButtonProps> = ({
   orderedAccounts.unshift(activeAccountData);
 
   return (
-    <ButtonWrapper onClick={toggleDropdown} ref={buttonRef} aria-haspopup="true" aria-expanded={isOpen}>
-      <Avatar>
-        {accounts[activeAccount].imageUrl ? (
-          <img src={accounts[activeAccount].imageUrl} alt={accounts[activeAccount].name} />
-        ) : (
-          getInitials(accounts[activeAccount].name)
-        )}
-      </Avatar>
+    <TypographyProvider>
+      <ButtonWrapper onClick={toggleDropdown} ref={buttonRef} aria-haspopup="true" aria-expanded={isOpen}>
+        <Avatar>
+          {accounts[activeAccount].imageUrl ? (
+            <img src={accounts[activeAccount].imageUrl} alt={accounts[activeAccount].name} />
+          ) : (
+            getInitials(accounts[activeAccount].name)
+          )}
+        </Avatar>
 
-      <DropdownWrapper $isOpen={isOpen} ref={dropdownRef}>
-        {orderedAccounts.map((account, index) => (
-          <div key={account.email}>
-            <AccountItem
-              $active={account.email === accounts[activeAccount].email}
-              onClick={() => {
-                const originalIndex = accounts.findIndex(a => a.email === account.email);
-                onAccountSwitch(originalIndex);
-                setIsOpen(false);
-              }}
-            >
-              <Avatar>
-                {account.imageUrl ? (
-                  <img src={account.imageUrl} alt={account.name} />
-                ) : (
-                  getInitials(account.name)
-                )}
-              </Avatar>
-              <AccountInfo>
-                <AccountName>{account.name}</AccountName>
-                <AccountEmail>{account.email}</AccountEmail>
-              </AccountInfo>
-            </AccountItem>
-            {account.email === accounts[activeAccount].email && (
-              <ActionContainer>
-                <StyledButton onClick={() => { onManageAccount(); setIsOpen(false); }}>
-                  <Settings size={16} />
-                  Manage
-                </StyledButton>
-                <StyledButton onClick={() => { onSignOut(); setIsOpen(false); }} $destructive>
-                  <LogOut size={16} />
-                  Sign Out
-                </StyledButton>
-              </ActionContainer>
-            )}
-          </div>
-        ))}
-        <Divider />
-        <AccountItem onClick={() => { onAddAccount(); setIsOpen(false); }}>
-          <Avatar>
-            <Plus size={20} />
-          </Avatar>
-          <AccountInfo>
-            <AccountName>Add account</AccountName>
-          </AccountInfo>
-        </AccountItem>
-        <Divider />
-        <ActionContainer>
-          <StyledButton onClick={() => { onSignOutAll(); setIsOpen(false); }} $destructive>
-            <LogOut size={16} />
-            Sign out all
-          </StyledButton>
-        </ActionContainer>
-      </DropdownWrapper>
-    </ButtonWrapper>
+        <DropdownWrapper $isOpen={isOpen} ref={dropdownRef}>
+          {orderedAccounts.map((account) => (
+            <div key={account.email}>
+              <AccountItem
+                $active={account.email === accounts[activeAccount].email}
+                onClick={() => {
+                  const originalIndex = accounts.findIndex(a => a.email === account.email);
+                  onAccountSwitch(originalIndex);
+                  setIsOpen(false);
+                }}
+              >
+                <Avatar>
+                  {account.imageUrl ? (
+                    <img src={account.imageUrl} alt={account.name} />
+                  ) : (
+                    getInitials(account.name)
+                  )}
+                </Avatar>
+                <AccountInfo>
+                  <AccountName>{account.name}</AccountName>
+                  <AccountEmail>{account.email}</AccountEmail>
+                </AccountInfo>
+              </AccountItem>
+              {account.email === accounts[activeAccount].email && (
+                <ActionContainer>
+                  <StyledButton onClick={() => { onManageAccount(); setIsOpen(false); }}>
+                    <Settings size={16} />
+                    Manage
+                  </StyledButton>
+                  <StyledButton onClick={() => { onSignOut(); setIsOpen(false); }} $destructive>
+                    <LogOut size={16} />
+                    Sign Out
+                  </StyledButton>
+                </ActionContainer>
+              )}
+            </div>
+          ))}
+          <Divider />
+          <AccountItem onClick={() => { onAddAccount(); setIsOpen(false); }}>
+            <Avatar>
+              <Plus size={20} />
+            </Avatar>
+            <AccountInfo>
+              <AccountName>Add account</AccountName>
+            </AccountInfo>
+          </AccountItem>
+          <Divider />
+          <ActionContainer>
+            <StyledButton onClick={() => { onSignOutAll(); setIsOpen(false); }} $destructive>
+              <LogOut size={16} />
+              Sign out all
+            </StyledButton>
+          </ActionContainer>
+        </DropdownWrapper>
+      </ButtonWrapper>
+    </TypographyProvider>
   );
 };

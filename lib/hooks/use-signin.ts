@@ -93,15 +93,15 @@ type SignIn = {
 
 type UseSignInReturnType =
 	| {
-			isLoaded: true;
-			signIn: SignIn;
-			signInAttempt: SignInAttempt | null;
-	  }
+		isLoaded: true;
+		signIn: SignIn;
+		signInAttempt: SignInAttempt | null;
+	}
 	| {
-			isLoaded: false;
-			signIn: never;
-			signInAttempt: null;
-	  };
+		isLoaded: false;
+		signIn: never;
+		signInAttempt: null;
+	};
 
 type InitSSOResponseType = {
 	oauth_url: string;
@@ -272,21 +272,22 @@ type SignInFunction<T extends SignInStrategy> = {
 
 type UseSignInWithStrategyReturnType<T extends SignInStrategy> =
 	| {
-			isLoaded: false;
-			signIn: never;
-			signInAttempt: null;
-	  }
+		isLoaded: false;
+		signIn: never;
+		signInAttempt: null;
+	}
 	| {
-			isLoaded: true;
-			signIn: {
-				create: SignInFunction<T>;
-				completeVerification: (verificationCode: string) => Promise<unknown>;
-				prepareVerification: (
-					verification: VerificationStrategy,
-				) => Promise<unknown>;
-			};
-			signInAttempt: SignInAttempt | null;
-	  };
+		isLoaded: true;
+		signIn: {
+			create: SignInFunction<T>;
+			completeVerification: (verificationCode: string) => Promise<unknown>;
+			prepareVerification: (
+				verification: VerificationStrategy,
+			) => Promise<unknown>;
+		};
+		signInAttempt: SignInAttempt | null;
+	};
+
 
 export function useSignInWithStrategy<T extends SignInStrategy>(
 	strategy: T,
@@ -320,6 +321,12 @@ export function useSignInWithStrategy<T extends SignInStrategy>(
 		}
 	})();
 
+	const prepareVerification = (strategy: VerificationStrategy) =>
+		client(`/prepare-verification?sign_in_attempt=${signInAttempt?.id}&strategy=${strategy}`, {
+			method: "POST",
+		})
+
+
 	return {
 		isLoaded: true,
 		signInAttempt,
@@ -328,9 +335,7 @@ export function useSignInWithStrategy<T extends SignInStrategy>(
 			completeVerification: async (verificationCode: string) => {
 				console.log(verificationCode);
 			},
-			prepareVerification: async (verification: VerificationStrategy) => {
-				console.log(verification);
-			},
+			prepareVerification: prepareVerification,
 		},
 	} as UseSignInWithStrategyReturnType<T>;
 }

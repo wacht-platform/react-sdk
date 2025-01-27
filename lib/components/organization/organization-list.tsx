@@ -1,6 +1,6 @@
-import React from 'react';
 import styled from 'styled-components';
 import { Building2, Plus, Settings } from 'lucide-react';
+import { TypographyProvider } from '../utility/typography';
 
 interface Organization {
   id: string;
@@ -225,40 +225,41 @@ interface OrganizationListProps {
   setActiveOrg: (id: string) => void;
 }
 
-const OrganizationList = ({ organizations, activeOrg, setActiveOrg }: OrganizationListProps) => {
-
+export const OrganizationList = ({ organizations, activeOrg, setActiveOrg }: OrganizationListProps) => {
   return (
-    <Container>
-      <Header>
-        <Building2 size={24} />
-        <Title>Organizations</Title>
-      </Header>
-      <List>
-        {organizations.map((org) => (
-          <OrganizationItem
-            key={org.id}
-            $active={activeOrg === org.id}
-            onClick={() => setActiveOrg(org.id)}
-          >
-            <OrgImage url={org.imageUrl}>
-              {!org.imageUrl && <Building2 size={24} />}
-            </OrgImage>
-            <OrgInfo>
-              <OrgName>{org.name}</OrgName>
-              <OrgRole>{org.role}</OrgRole>
-            </OrgInfo>
-            <IconButton>
-              <Settings size={20} />
-            </IconButton>
-          </OrganizationItem>
-        ))}
-        <Divider />
-        <ActionButton>
-          <Plus size={20} />
-          Create Organization
-        </ActionButton>
-      </List>
-    </Container>
+    <TypographyProvider>
+      <Container>
+        <Header>
+          <Building2 size={24} />
+          <Title>Organizations</Title>
+        </Header>
+        <List>
+          {organizations.map((org) => (
+            <OrganizationItem
+              key={org.id}
+              $active={activeOrg === org.id}
+              onClick={() => setActiveOrg(org.id)}
+            >
+              <OrgImage url={org.imageUrl}>
+                {!org.imageUrl && <Building2 size={24} />}
+              </OrgImage>
+              <OrgInfo>
+                <OrgName>{org.name}</OrgName>
+                <OrgRole>{org.role}</OrgRole>
+              </OrgInfo>
+              <IconButton>
+                <Settings size={20} />
+              </IconButton>
+            </OrganizationItem>
+          ))}
+          <Divider />
+          <ActionButton>
+            <Plus size={20} />
+            Create Organization
+          </ActionButton>
+        </List>
+      </Container>
+    </TypographyProvider>
   );
 };
 
