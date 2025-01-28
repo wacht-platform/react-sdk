@@ -409,7 +409,7 @@ export function SignInForm({ className = "", signUpUrl }: SignInFormProps) {
 	};
 
 	const enabledSSOProviders =
-		deployment?.sso_connections.filter((conn) => conn.enabled) || [];
+		deployment?.social_connections.filter((conn) => conn.enabled) || [];
 
 	const authSettings = deployment?.auth_settings;
 	const firstFactor = authSettings?.first_factor;

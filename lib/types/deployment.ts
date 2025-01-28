@@ -56,7 +56,7 @@ interface AuthSettings {
   deployment_id: number;
 }
 
-interface SSOConnection {
+interface DeploymentSocialConnection {
   id: number;
   created_at: string;
   updated_at: string;
@@ -78,7 +78,7 @@ interface Deployment {
   publishable_key: string;
   org_settings: OrgSettings;
   auth_settings: AuthSettings;
-  sso_connections: SSOConnection[];
+  social_connections: DeploymentSocialConnection[];
   project_id: number;
   mode: "production" | "staging";
 }
