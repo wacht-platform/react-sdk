@@ -6,6 +6,8 @@ import type { OAuthProvider } from "../../hooks/use-signin";
 import { SignInStrategy } from "../../hooks/use-signin";
 import { useDeployment } from "../../hooks/use-deployment";
 import { TypographyProvider } from "../utility/typography";
+import { OTPInput } from './otp-input';
+import { ArrowLeft } from 'lucide-react';
 
 const ssoConfig = {
 	google_oauth: {
@@ -89,22 +91,39 @@ const ssoConfig = {
 };
 
 const Container = styled.div`
-	width: 100%;
 	max-width: 400px;
+	width: 400px;
 	padding: 32px;
 	background: white;
 	border-radius: 12px;
 	box-shadow: 0 4px 24px rgba(0, 0, 0, 0.1);
 `;
 
+const BackButton = styled.button`
+	position: absolute;
+	top: 6px;
+	left: 0px;
+	cursor: pointer;
+	font-size: 14px;
+	margin-bottom: 24px;
+	color: #64748b;
+	background: none;
+	border: none;
+	
+	&:hover {
+		color: #1e293b;
+	}
+`;
+
 const Header = styled.div`
 	text-align: center;
 	margin-bottom: 24px;
+	position: relative;
 `;
 
 const Title = styled.h1`
-	font-size: 20px;
-	font-weight: 600;
+	font-size: 18px;
+	font-weight: 400;
 	color: #111827;
 	margin-bottom: 4px;
 `;
@@ -151,7 +170,7 @@ const SSOButton = styled.button`
 const Divider = styled.div`
 	position: relative;
 	text-align: center;
-	margin: 24px 0;
+	margin: 16px 0;
 
 	&::before {
 		content: "";
@@ -272,7 +291,7 @@ interface SignInFormProps {
 }
 
 export function SignInForm({ className = "", signUpUrl }: SignInFormProps) {
-	const { isLoaded, signIn, signInAttempt } = useSignInWithStrategy(
+	const { isLoaded, signIn, signInAttempt, discardSignInAttempt } = useSignInWithStrategy(
 		SignInStrategy.Generic,
 	);
 	const { isLoaded: isOAuthLoaded, signIn: oauthSignIn } =
@@ -295,7 +314,17 @@ export function SignInForm({ className = "", signUpUrl }: SignInFormProps) {
 		setErrors((prev) => ({ ...prev, [name]: "" }));
 	};
 
-	const handleSubmit = async (e: React.FormEvent) => {
+	const resetFormData = () => {
+		setFormData({
+			email: "",
+			username: "",
+			password: "",
+			phone: "",
+		});
+		setErrors({});
+	};
+
+	const createSignIn = async (e: React.FormEvent) => {
 		e.preventDefault();
 		if (!isLoaded || isSubmitting) return;
 
@@ -340,23 +369,26 @@ export function SignInForm({ className = "", signUpUrl }: SignInFormProps) {
 
 		setIsSubmitting(true);
 		try {
-			if (
-				(firstFactor === "email_otp" || firstFactor === "phone_otp") &&
-				!otpSent
-			) {
-				await signIn.prepareVerification(firstFactor);
-				setOtpSent(true);
-			} else if (otpSent) {
-				await signIn.completeVerification(otpCode);
-			} else {
-				await signIn.create(formData);
-			}
+			await signIn.create(formData);
 		} catch (err) {
 			setErrors({ submit: (err as Error).message });
 		} finally {
 			setIsSubmitting(false);
 		}
 	};
+
+	const completeVerification = async (e: React.FormEvent) => {
+		e.preventDefault();
+		if (!isLoaded || isSubmitting) return;
+		setIsSubmitting(true);
+		const newErrors: Record<string, string> = {};
+		if (!otpCode) {
+			newErrors.otp = "OTP code is required";
+		}
+		setErrors(newErrors);
+		signIn.completeVerification(otpCode);
+		setIsSubmitting(false)
+	}
 
 	const handleSSOSignIn = async (provider: SSOProvider) => {
 		if (!isOAuthLoaded || isSubmitting) return;
@@ -385,180 +417,184 @@ export function SignInForm({ className = "", signUpUrl }: SignInFormProps) {
 	useEffect(() => {
 		if (!signInAttempt) return;
 
-		if (signInAttempt.completed) {
+		if (signInAttempt.completed || otpSent) {
 			return;
 		}
 
 		switch (signInAttempt.current_step) {
 			case "verify_email":
-				if (!otpSent) {
-					signIn.prepareVerification("email_otp");
-				}
-				break;
 			case "verify_email_otp":
-				if (!otpSent) {
-					signIn.prepareVerification("email_otp");
-				}
+				signIn.prepareVerification("email_otp");
 				break;
 			case "verify_phone":
-				if (!otpSent) {
-					signIn.prepareVerification("phone_otp");
-				}
-				break;
 			case "verify_phone_otp":
-				if (!otpSent) {
-					signIn.prepareVerification("phone_otp");
-				}
-				break;
-			case "verify_authenticator":
-				if (!otpSent) {
-					signIn.prepareVerification("auth_code");
-				}
-				break;
-			case "add_second_factor":
-				// This will be handled by a different component
+				signIn.prepareVerification("phone_otp");
 				break;
 		}
+
+		setOtpSent(true);
 	}, [signInAttempt, signIn.prepareVerification, otpSent]);
 
 	return (
 		<TypographyProvider>
 			<Container className={className}>
-				<Header>
-					<Title>Sign in to your account</Title>
-					<Subtitle>Welcome back! Please enter your details.</Subtitle>
-				</Header>
-
-				{enabledSSOProviders.length > 0 && (
+				{otpSent ? (
 					<>
-						<SSOButtonsContainer>
-							{enabledSSOProviders.map((conn) => {
-								const provider = conn.provider.toLowerCase() as SSOProvider;
-								if (!ssoConfig[provider]) return null;
-								const numProviders = enabledSSOProviders.length;
+						<Header>
+							<BackButton onClick={() => { setOtpSent(false); discardSignInAttempt(); resetFormData() }}>
+								<ArrowLeft size={16} />
+							</BackButton>
+							<Title>Check your email</Title>
+							<Subtitle>{formData.email} to continue to Wacht</Subtitle>
+						</Header>
+					</>
+				) : (
+					<Header>
+						<Title>Sign in to your account</Title>
+						<Subtitle>Welcome back! Please enter your details.</Subtitle>
+					</Header>
+				)}
 
-								return (
-									<SSOButton
-										key={conn.id}
-										onClick={() => handleSSOSignIn(provider)}
-										type="button"
-									>
-										{ssoConfig[provider].icon}
-										{numProviders > 1
-											? ssoConfig[provider].shortLabel
-											: ssoConfig[provider].fullLabel}
-									</SSOButton>
-								);
-							})}
-						</SSOButtonsContainer>
+				{!otpSent ? (
+					<>
+						{enabledSSOProviders.length > 0 && (
+							<>
+								<SSOButtonsContainer>
+									{enabledSSOProviders.map((conn) => {
+										const provider = conn.provider.toLowerCase() as SSOProvider;
+										if (!ssoConfig[provider]) return null;
+										const numProviders = enabledSSOProviders.length;
 
-						<Divider>
-							<DividerText>or</DividerText>
-						</Divider>
+										return (
+											<SSOButton
+												key={conn.id}
+												onClick={() => handleSSOSignIn(provider)}
+												type="button"
+											>
+												{ssoConfig[provider].icon}
+												{numProviders > 1
+													? ssoConfig[provider].shortLabel
+													: ssoConfig[provider].fullLabel}
+											</SSOButton>
+										);
+									})}
+								</SSOButtonsContainer>
+
+								<Divider>
+									<DividerText>or</DividerText>
+								</Divider>
+							</>
+						)}
+
+						<Form onSubmit={createSignIn} noValidate>
+							{(firstFactor === "email_password" || firstFactor === "email_otp") && (
+								<FormGroup>
+									<Label htmlFor="email">Email address</Label>
+									<Input
+										type="email"
+										id="email"
+										name="email"
+										value={formData.email}
+										onChange={handleInputChange}
+										placeholder="Enter your email address"
+										aria-invalid={!!errors.email}
+									/>
+									{errors.email && <ErrorMessage>{errors.email}</ErrorMessage>}
+								</FormGroup>
+							)}
+
+							{firstFactor === "username_password" && (
+								<FormGroup>
+									<Label htmlFor="username">Username</Label>
+									<Input
+										type="text"
+										id="username"
+										name="username"
+										value={formData.username}
+										onChange={handleInputChange}
+										placeholder="Enter your username"
+										aria-invalid={!!errors.username}
+									/>
+									{errors.username && <ErrorMessage>{errors.username}</ErrorMessage>}
+								</FormGroup>
+							)}
+
+							{firstFactor === "phone_otp" && (
+								<FormGroup>
+									<Label htmlFor="phone">Phone number</Label>
+									<Input
+										type="tel"
+										id="phone"
+										name="phone"
+										value={formData.phone}
+										onChange={handleInputChange}
+										placeholder="Enter your phone number"
+										aria-invalid={!!errors.phone}
+									/>
+									{errors.phone && <ErrorMessage>{errors.phone}</ErrorMessage>}
+								</FormGroup>
+							)}
+
+							{(firstFactor === "email_password" ||
+								firstFactor === "username_password") && (
+									<FormGroup>
+										<Label htmlFor="password">Password</Label>
+										<PasswordGroup>
+											<Input
+												type="password"
+												id="password"
+												name="password"
+												value={formData.password}
+												onChange={handleInputChange}
+												placeholder="Enter your password"
+												aria-invalid={!!errors.password}
+											/>
+										</PasswordGroup>
+										{errors.password && <ErrorMessage>{errors.password}</ErrorMessage>}
+									</FormGroup>
+								)}
+
+							{errors.submit && <ErrorMessage>{errors.submit}</ErrorMessage>}
+
+							<SubmitButton type="submit" disabled={isSubmitting || !isLoaded}>
+								{isSubmitting
+									? "Signing in..."
+									: "Sign in"}
+							</SubmitButton>
+						</Form>
+						<Footer>
+							Don't have an account? <Link href={signUpUrl}>Sign up</Link>
+						</Footer>
+					</>
+				) : (
+					<>
+						<Form style={{ gap: "15px" }} onSubmit={completeVerification} noValidate>
+							<OTPInput
+								onComplete={async (code) => {
+									setOtpCode(code);
+								}}
+								onResend={async () => {
+									const strategy = firstFactor === "email_otp" ? "email_otp" : "phone_otp";
+									await signIn.prepareVerification(strategy);
+								}}
+								error={errors.otp}
+								isSubmitting={isSubmitting}
+							/>
+
+							<SubmitButton type="submit" disabled={
+								isSubmitting || !isLoaded || !otpCode
+							}>
+								{isSubmitting
+									? `Verifying...`
+									: "Continue to Wacht"}
+							</SubmitButton>
+						</Form>
+						<Footer>
+							Having trouble? <Link href={signUpUrl}>Contact support</Link>
+						</Footer>
 					</>
 				)}
 
-				<Form onSubmit={handleSubmit} noValidate>
-					{(firstFactor === "email_password" || firstFactor === "email_otp") && (
-						<FormGroup>
-							<Label htmlFor="email">Email address</Label>
-							<Input
-								type="email"
-								id="email"
-								name="email"
-								value={formData.email}
-								onChange={handleInputChange}
-								placeholder="Enter your email address"
-								aria-invalid={!!errors.email}
-							/>
-							{errors.email && <ErrorMessage>{errors.email}</ErrorMessage>}
-						</FormGroup>
-					)}
-
-					{firstFactor === "username_password" && (
-						<FormGroup>
-							<Label htmlFor="username">Username</Label>
-							<Input
-								type="text"
-								id="username"
-								name="username"
-								value={formData.username}
-								onChange={handleInputChange}
-								placeholder="Enter your username"
-								aria-invalid={!!errors.username}
-							/>
-							{errors.username && <ErrorMessage>{errors.username}</ErrorMessage>}
-						</FormGroup>
-					)}
-
-					{firstFactor === "phone_otp" && (
-						<FormGroup>
-							<Label htmlFor="phone">Phone number</Label>
-							<Input
-								type="tel"
-								id="phone"
-								name="phone"
-								value={formData.phone}
-								onChange={handleInputChange}
-								placeholder="Enter your phone number"
-								aria-invalid={!!errors.phone}
-							/>
-							{errors.phone && <ErrorMessage>{errors.phone}</ErrorMessage>}
-						</FormGroup>
-					)}
-
-					{(firstFactor === "email_password" ||
-						firstFactor === "username_password") && (
-							<FormGroup>
-								<Label htmlFor="password">Password</Label>
-								<PasswordGroup>
-									<Input
-										type="password"
-										id="password"
-										name="password"
-										value={formData.password}
-										onChange={handleInputChange}
-										placeholder="Enter your password"
-										aria-invalid={!!errors.password}
-									/>
-								</PasswordGroup>
-								{errors.password && <ErrorMessage>{errors.password}</ErrorMessage>}
-							</FormGroup>
-						)}
-
-					{otpSent &&
-						(firstFactor === "email_otp" || firstFactor === "phone_otp") && (
-							<FormGroup>
-								<Label htmlFor="otp">Verification code</Label>
-								<Input
-									type="text"
-									id="otp"
-									name="otp"
-									value={otpCode}
-									onChange={(e) => setOtpCode(e.target.value)}
-									placeholder="Enter verification code"
-									aria-invalid={!!errors.otp}
-								/>
-								{errors.otp && <ErrorMessage>{errors.otp}</ErrorMessage>}
-							</FormGroup>
-						)}
-
-					{errors.submit && <ErrorMessage>{errors.submit}</ErrorMessage>}
-
-					<SubmitButton type="submit" disabled={isSubmitting || !isLoaded}>
-						{isSubmitting
-							? "Signing in..."
-							: otpSent
-								? "Verify"
-								: firstFactor?.includes("otp")
-									? "Send code"
-									: "Sign in"}
-					</SubmitButton>
-				</Form>
-
-				<Footer>
-					Don't have an account? <Link href={signUpUrl}>Sign up</Link>
-				</Footer>
 			</Container>
 		</TypographyProvider>
 	);

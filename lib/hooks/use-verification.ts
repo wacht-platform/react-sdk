@@ -9,17 +9,17 @@ type VerifyOTPParams = {
 
 type UseVerifyEmailOTPReturnType =
   | {
-      isLoaded: false;
-      verifyOTP: never;
-      verificationError: null;
-      verificationSuccess: null;
-    }
+    isLoaded: false;
+    verifyOTP: never;
+    verificationError: null;
+    verificationSuccess: null;
+  }
   | {
-      isLoaded: true;
-      verifyOTP: (params: VerifyOTPParams) => Promise<ApiResult<unknown>>;
-      verificationError: string | null;
-      verificationSuccess: boolean | null;
-    };
+    isLoaded: true;
+    verifyOTP: (params: VerifyOTPParams) => Promise<ApiResult<unknown>>;
+    verificationError: string | null;
+    verificationSuccess: boolean | null;
+  };
 
 export function useVerifyEmailOTP(): UseVerifyEmailOTPReturnType {
   const { client, loading } = useClient();
@@ -42,9 +42,6 @@ export function useVerifyEmailOTP(): UseVerifyEmailOTPReturnType {
     try {
       const response = await client("/auth/verify-otp", {
         method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-        },
         body: JSON.stringify({
           otp,
           email,
@@ -52,13 +49,13 @@ export function useVerifyEmailOTP(): UseVerifyEmailOTPReturnType {
       });
 
       const result = await response.json();
-      
+
       if (result?.success) {
         setVerificationSuccess(true);
       } else {
         setVerificationError(result?.message || "Verification failed.");
       }
-      
+
       return result;
     } catch (error) {
       if (error instanceof Error) {

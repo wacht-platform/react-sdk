@@ -17,19 +17,19 @@ type IdentifierAvailabilityFunction = (
 
 type UseSignUpReturnType =
 	| {
-			isLoaded: false;
-			signUp: never;
-			initSSO: never;
-			identifierAvailability: never;
-			signUpAttempt: null;
-	  }
+		isLoaded: false;
+		signUp: never;
+		initSSO: never;
+		identifierAvailability: never;
+		signUpAttempt: null;
+	}
 	| {
-			isLoaded: true;
-			signUp: SignUpFunction;
-			initSSO: InitSSOFunction;
-			identifierAvailability: IdentifierAvailabilityFunction;
-			signUpAttempt: SignInAttempt | null;
-	  };
+		isLoaded: true;
+		signUp: SignUpFunction;
+		initSSO: InitSSOFunction;
+		identifierAvailability: IdentifierAvailabilityFunction;
+		signUpAttempt: SignInAttempt | null;
+	};
 
 type SignUpResponse = {
 	sign_in_attempt?: SignInAttempt;
@@ -51,9 +51,6 @@ function builder(
 		}
 		const response = await client("/auth/signup", {
 			method: "POST",
-			headers: {
-				"Content-Type": "application/json",
-			},
 			body: form,
 		});
 		const result = await mapResponse<SignUpResponse>(response);
@@ -68,9 +65,6 @@ function ssoBuilder(client: Client): InitSSOFunction {
 	return async (provider: SSOProvider) => {
 		const response = await client("/auth/oauth/authorize", {
 			method: "POST",
-			headers: {
-				"Content-Type": "application/json",
-			},
 			body: JSON.stringify({ provider }),
 		});
 		return mapResponse<InitSSOResponseType>(response);

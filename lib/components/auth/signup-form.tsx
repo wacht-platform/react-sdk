@@ -87,8 +87,8 @@ const ssoConfig = {
 };
 
 const Container = styled.div`
-	width: 100%;
-	max-width: 360px;
+	max-width: 400px;
+	width: 400px;
 	padding: 32px;
 	background: white;
 	border-radius: 12px;

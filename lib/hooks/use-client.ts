@@ -18,8 +18,8 @@ export function useClient(): UseClientReturnType {
 
     const fetcher = async (url: URL | string, options?: RequestInit) => {
         const response = await fetch(new URL(url, deployment?.host ?? ""), {
-            ...options,
             ...getDefaultOptions(deployment!),
+            ...options,
         });
 
         return response;
@@ -32,11 +32,12 @@ export function useClient(): UseClientReturnType {
 }
 
 function getDefaultOptions(deployment: Deployment): RequestInit {
+    const headers = new Headers();
+
     if (deployment.mode === "staging") {
+        headers.append("X-Development-Session", localStorage.getItem("__dev_session__") ?? "");
         return {
-            headers: {
-                "X-Development-Session": localStorage.getItem("__dev_session__") ?? "",
-            },
+            headers,
         };
     }
 

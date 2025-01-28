@@ -96,11 +96,13 @@ type UseSignInReturnType =
 		isLoaded: true;
 		signIn: SignIn;
 		signInAttempt: SignInAttempt | null;
+		discardSignInAttempt: () => void;
 	}
 	| {
 		isLoaded: false;
 		signIn: never;
 		signInAttempt: null;
+		discardSignInAttempt: () => void;
 	};
 
 type InitSSOResponseType = {
@@ -133,11 +135,9 @@ function builderUsername(
 		const form = new FormData();
 		form.append("username", username);
 		form.append("password", password);
+
 		const response = await client("/auth/signin", {
 			method: "POST",
-			headers: {
-				"Content-Type": "application/json",
-			},
 			body: form,
 		});
 		const result = await mapResponse<Session>(response);
@@ -156,11 +156,9 @@ function builderEmail(
 		const form = new FormData();
 		form.append("email", email);
 		form.append("password", password);
+
 		const response = await client("/auth/signin", {
 			method: "POST",
-			headers: {
-				"Content-Type": "application/json",
-			},
 			body: form,
 		});
 		const result = await mapResponse<Session>(response);
@@ -176,14 +174,12 @@ function builderPhone(
 	setSignInAttempt: (attempt: SignInAttempt | null) => void,
 ): SignInPhone {
 	return async ({ phone }: PhoneSignInParams) => {
+		const form = new FormData();
+		form.append("phone", phone);
+
 		const response = await client("/auth/signin", {
 			method: "POST",
-			headers: {
-				"Content-Type": "application/json",
-			},
-			body: JSON.stringify({
-				phone,
-			}),
+			body: form,
 		});
 		const result = await mapResponse<Session>(response);
 		if ("data" in result && result.data?.sign_in_attempts?.length) {
@@ -197,9 +193,6 @@ function builderOauth(client: Client): SignInOauth {
 	return async ({ provider }: { provider: OAuthProvider }) => {
 		const response = await client("/auth/oauth/authorize", {
 			method: "POST",
-			headers: {
-				"Content-Type": "application/json",
-			},
 			body: JSON.stringify({
 				provider,
 			}),
@@ -219,11 +212,9 @@ function builderGeneric(
 		if (username) form.append("username", username);
 		if (password) form.append("password", password);
 		if (phone) form.append("phone", phone);
+
 		const response = await client("/auth/signin", {
 			method: "POST",
-			headers: {
-				"Content-Type": "application/json",
-			},
 			body: form,
 		});
 		const result = await mapResponse<Session>(response);
@@ -253,11 +244,25 @@ export function useSignIn(): UseSignInReturnType {
 		signIn: {
 			createStrategy: builder(client, setSignInAttempt),
 			completeVerification: async (verificationCode: string) => {
-				console.log(verificationCode);
+				const headers = new Headers();
+				headers.append("Content-Type", "application/json");
+
+				await client(`/auth/complete-verification?sign_in_attempt=${signInAttempt?.id}`, {
+					method: "POST",
+					headers,
+					body: JSON.stringify({
+						verification_code: verificationCode,
+					}),
+				})
 			},
-			prepareVerification: async (verification: VerificationStrategy) => {
-				console.log(verification);
+			prepareVerification: async (strategy: VerificationStrategy) => {
+				await client(`/auth/prepare-verification?sign_in_attempt=${signInAttempt?.id}&strategy=${strategy}`, {
+					method: "POST",
+				})
 			},
+		},
+		discardSignInAttempt: () => {
+			setSignInAttempt(null);
 		},
 	};
 }
@@ -275,6 +280,7 @@ type UseSignInWithStrategyReturnType<T extends SignInStrategy> =
 		isLoaded: false;
 		signIn: never;
 		signInAttempt: null;
+		discardSignInAttempt: () => void;
 	}
 	| {
 		isLoaded: true;
@@ -286,18 +292,16 @@ type UseSignInWithStrategyReturnType<T extends SignInStrategy> =
 			) => Promise<unknown>;
 		};
 		signInAttempt: SignInAttempt | null;
+		discardSignInAttempt: () => void;
 	};
 
 
 export function useSignInWithStrategy<T extends SignInStrategy>(
 	strategy: T,
 ): UseSignInWithStrategyReturnType<T> {
-	const { client, loading } = useClient();
-	const [signInAttempt, setSignInAttempt] = useState<SignInAttempt | null>(
-		null,
-	);
+	const { isLoaded, signIn, signInAttempt, discardSignInAttempt } = useSignIn()
 
-	if (loading) {
+	if (!isLoaded) {
 		return {
 			isLoaded: false,
 			signInAttempt: null,
@@ -307,24 +311,19 @@ export function useSignInWithStrategy<T extends SignInStrategy>(
 	const strategyFunction = (() => {
 		switch (strategy) {
 			case SignInStrategy.Username:
-				return builderUsername(client, setSignInAttempt);
+				return signIn.createStrategy(SignInStrategy.Username);
 			case SignInStrategy.Email:
-				return builderEmail(client, setSignInAttempt);
+				return signIn.createStrategy(SignInStrategy.Email);
 			case SignInStrategy.Phone:
-				return builderPhone(client, setSignInAttempt);
+				return signIn.createStrategy(SignInStrategy.Phone);
 			case SignInStrategy.Oauth:
-				return builderOauth(client);
+				return signIn.createStrategy(SignInStrategy.Oauth);
 			case SignInStrategy.Generic:
-				return builderGeneric(client, setSignInAttempt);
+				return signIn.createStrategy(SignInStrategy.Generic);
 			default:
 				throw new Error("Invalid sign-in strategy");
 		}
 	})();
-
-	const prepareVerification = (strategy: VerificationStrategy) =>
-		client(`/prepare-verification?sign_in_attempt=${signInAttempt?.id}&strategy=${strategy}`, {
-			method: "POST",
-		})
 
 
 	return {
@@ -332,10 +331,9 @@ export function useSignInWithStrategy<T extends SignInStrategy>(
 		signInAttempt,
 		signIn: {
 			create: strategyFunction,
-			completeVerification: async (verificationCode: string) => {
-				console.log(verificationCode);
-			},
-			prepareVerification: prepareVerification,
+			completeVerification: signIn.completeVerification,
+			prepareVerification: signIn.prepareVerification,
 		},
+		discardSignInAttempt: discardSignInAttempt,
 	} as UseSignInWithStrategyReturnType<T>;
 }
