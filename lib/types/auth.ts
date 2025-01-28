@@ -5,10 +5,10 @@ export enum SSOProvider {
 }
 
 export interface SignUpParams {
-    firstName?: string;
-    lastName?: string;
+    first_name?: string;
+    last_name?: string;
     username?: string;
-    phoneNumber?: string;
+    phone_number?: string;
     email?: string;
     password?: string;
 }

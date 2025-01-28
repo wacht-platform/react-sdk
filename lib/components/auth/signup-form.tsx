@@ -214,7 +214,6 @@ const Input = styled.input`
 	
 	&:not(:placeholder-shown):valid {
 		outline: none;
-		border: 1px solid #10B981;
 		background: white;
 	}
 	
@@ -655,12 +654,12 @@ export function SignUpForm({ className = "", signInUrl }: SignUpFormProps) {
 	const { deployment } = useDeployment();
 	const countryDropdownRef = useRef<HTMLDivElement>(null);
 	const [formData, setFormData] = useState<SignUpParams>({
-		firstName: "",
-		lastName: "",
+		first_name: "",
+		last_name: "",
 		email: "",
 		password: "",
 		username: "",
-		phoneNumber: "",
+		phone_number: "",
 	});
 	const [errors, setErrors] = useState<Record<string, string>>({});
 	const [isSubmitting, setIsSubmitting] = useState(false);
@@ -689,7 +688,7 @@ export function SignUpForm({ className = "", signInUrl }: SignUpFormProps) {
 
 	const handleInputChange = (e: React.ChangeEvent<HTMLInputElement>) => {
 		let { name, value } = e.target;
-		if (name === "phoneNumber") {
+		if (name === "phone_number") {
 			value = value.replace(/[^0-9-]/g, "");
 		}
 		else if (name === "email") {
@@ -725,24 +724,24 @@ export function SignUpForm({ className = "", signInUrl }: SignUpFormProps) {
 			}
 		}
 
-		if (authSettings?.first_name.required && !formData.firstName) {
-			newErrors.firstName = "First name is required";
+		if (authSettings?.first_name.required && !formData.first_name) {
+			newErrors.first_name = "First name is required";
 		} else if (
 			authSettings?.first_name.enabled &&
-			formData.firstName &&
-			!namePattern.test(formData.firstName)
+			formData.first_name &&
+			!namePattern.test(formData.first_name)
 		) {
-			newErrors.firstName = "Invalid name";
+			newErrors.first_name = "Invalid name";
 		}
 
-		if (authSettings?.last_name.required && !formData.lastName) {
-			newErrors.lastName = "Last name is required";
+		if (authSettings?.last_name.required && !formData.last_name) {
+			newErrors.last_name = "Last name is required";
 		} else if (
 			authSettings?.last_name.enabled &&
-			formData.lastName &&
-			!namePattern.test(formData.lastName)
+			formData.last_name &&
+			!namePattern.test(formData.last_name)
 		) {
-			newErrors.lastName = "Invalid last name";
+			newErrors.last_name = "Invalid last name";
 		}
 
 		if (authSettings?.username.required && !formData.username) {
@@ -765,14 +764,14 @@ export function SignUpForm({ className = "", signInUrl }: SignUpFormProps) {
 			newErrors.email = "Invalid email address";
 		}
 
-		if (authSettings?.phone_number.required && !formData.phoneNumber) {
-			newErrors.phoneNumber = "Phone number is required";
+		if (authSettings?.phone_number.required && !formData.phone_number) {
+			newErrors.phone_number = "Phone number is required";
 		} else if (
 			authSettings?.phone_number.enabled &&
-			formData.phoneNumber &&
-			!phonePattern.test(formData.phoneNumber)
+			formData.phone_number &&
+			!phonePattern.test(formData.phone_number)
 		) {
-			newErrors.phoneNumber = "Phone number must contain 7-15 digits";
+			newErrors.phone_number = "Phone number must contain 7-15 digits";
 		}
 
 		if (authSettings?.password.required && !formData.password) {
@@ -875,7 +874,7 @@ export function SignUpForm({ className = "", signInUrl }: SignUpFormProps) {
 							<NameFields $isBothEnabled={isBothNamesEnabled}>
 								{authSettings?.first_name.enabled && (
 									<FormGroup>
-										<Label htmlFor="firstName">
+										<Label htmlFor="first_name">
 											First name
 											{authSettings.first_name.required && (
 												<RequiredAsterisk>*</RequiredAsterisk>
@@ -883,25 +882,25 @@ export function SignUpForm({ className = "", signInUrl }: SignUpFormProps) {
 										</Label>
 										<Input
 											type="text"
-											id="firstName"
-											name="firstName"
+											id="first_name"
+											name="first_name"
 											required
 											minLength={3}
 											maxLength={30}
-											value={formData.firstName}
+											value={formData.first_name}
 											onChange={handleInputChange}
 											placeholder="First name"
-											aria-invalid={!!errors.firstName}
+											aria-invalid={!!errors.first_name}
 											pattern="^[a-zA-Z]{3,30}$"
 										/>
-										{errors.firstName && (
-											<ErrorMessage>{errors.firstName}</ErrorMessage>
+										{errors.first_name && (
+											<ErrorMessage>{errors.first_name}</ErrorMessage>
 										)}
 									</FormGroup>
 								)}
 								{authSettings?.last_name.enabled && (
 									<FormGroup>
-										<Label htmlFor="lastName">
+										<Label htmlFor="last_name">
 											Last name
 											{authSettings.last_name.required && (
 												<RequiredAsterisk>*</RequiredAsterisk>
@@ -909,19 +908,19 @@ export function SignUpForm({ className = "", signInUrl }: SignUpFormProps) {
 										</Label>
 										<Input
 											type="text"
-											id="lastName"
-											name="lastName"
+											id="last_name"
+											name="last_name"
 											required
 											minLength={3}
 											maxLength={30}
-											value={formData.lastName}
+											value={formData.last_name}
 											onChange={handleInputChange}
 											placeholder="Last name"
-											aria-invalid={!!errors.lastName}
+											aria-invalid={!!errors.last_name}
 											pattern="^[a-zA-Z]{3,30}$"
 										/>
-										{errors.lastName && (
-											<ErrorMessage>{errors.lastName}</ErrorMessage>
+										{errors.last_name && (
+											<ErrorMessage>{errors.last_name}</ErrorMessage>
 										)}
 									</FormGroup>
 								)}
@@ -980,7 +979,7 @@ export function SignUpForm({ className = "", signInUrl }: SignUpFormProps) {
 
 					{authSettings?.phone_number.enabled && (
 						<FormGroup>
-							<Label htmlFor="phoneNumber">
+							<Label htmlFor="phone_number">
 								Phone number
 								{authSettings.phone_number.required && (
 									<RequiredAsterisk>*</RequiredAsterisk>
@@ -1032,22 +1031,23 @@ export function SignUpForm({ className = "", signInUrl }: SignUpFormProps) {
 									</CountryCodeDropdown>
 								</CountryCodeSelect>
 								<PhoneInput
+									style={{ height: "100%" }}
 									type="tel"
-									id="phoneNumber"
-									name="phoneNumber"
+									id="phone_number"
+									name="phone_number"
 									required
 									minLength={7}
 									maxLength={15}
 									ref={phoneNumberInputRef}
-									value={formData.phoneNumber}
+									value={formData.phone_number}
 									onChange={handleInputChange}
 									placeholder="Phone number"
-									aria-invalid={!!errors.phoneNumber}
+									aria-invalid={!!errors.phone_number}
 									pattern="^\d{7,15}$"
 								/>
 							</PhoneInputGroup>
-							{errors.phoneNumber && (
-								<ErrorMessage>{errors.phoneNumber}</ErrorMessage>
+							{errors.phone_number && (
+								<ErrorMessage>{errors.phone_number}</ErrorMessage>
 							)}
 						</FormGroup>
 					)}
