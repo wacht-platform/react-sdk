@@ -1,9 +1,9 @@
-import { useState } from "react";
 import type { ApiResult, Client } from "../types/client";
 import { mapResponse } from "../utils/response-mapper";
 import { useClient } from "./use-client";
 import type { SignUpParams, SSOProvider, SSOResponse } from "../types/auth";
 import type { SignInAttempt, Session } from "../types/session";
+import { useSignInAttempt } from "./use-signin-attempt";
 
 type SignUpFunction = (params: SignUpParams) => Promise<ApiResult<unknown>>;
 type InitSSOFunction = (
@@ -21,14 +21,16 @@ type UseSignUpReturnType =
 		signUp: never;
 		initSSO: never;
 		identifierAvailability: never;
-		signUpAttempt: null;
+		signInAttempt: null;
+		discardSignInAttempt: () => void;
 	}
 	| {
 		isLoaded: true;
 		signUp: SignUpFunction;
 		initSSO: InitSSOFunction;
 		identifierAvailability: IdentifierAvailabilityFunction;
-		signUpAttempt: SignInAttempt | null;
+		signInAttempt: SignInAttempt | null;
+		discardSignInAttempt: () => void;
 	};
 
 type SignUpResponse = {
@@ -84,9 +86,8 @@ function identifierAvailabilityBuilder(
 
 export function useSignUp(): UseSignUpReturnType {
 	const { client, loading } = useClient();
-	const [signUpAttempt, setSignUpAttempt] = useState<SignInAttempt | null>(
-		null,
-	);
+	const { setSignInAttempt, signInAttempt, discardSignInAttempt } = useSignInAttempt();
+
 
 	if (loading) {
 		return {
@@ -94,14 +95,16 @@ export function useSignUp(): UseSignUpReturnType {
 			signUp: null as never,
 			initSSO: null as never,
 			identifierAvailability: null as never,
-			signUpAttempt: null,
+			signInAttempt: null,
+			discardSignInAttempt,
 		};
 	}
 
 	return {
 		isLoaded: true,
-		signUpAttempt,
-		signUp: builder(client, setSignUpAttempt),
+		signInAttempt,
+		discardSignInAttempt,
+		signUp: builder(client, setSignInAttempt),
 		initSSO: ssoBuilder(client),
 		identifierAvailability: identifierAvailabilityBuilder(client),
 	};

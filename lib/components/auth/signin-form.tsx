@@ -6,8 +6,8 @@ import type { OAuthProvider } from "../../hooks/use-signin";
 import { SignInStrategy } from "../../hooks/use-signin";
 import { useDeployment } from "../../hooks/use-deployment";
 import { TypographyProvider } from "../utility/typography";
-import { OTPInput } from './otp-input';
-import { ArrowLeft } from 'lucide-react';
+import { OTPInput } from "./otp-input";
+import { ArrowLeft } from "lucide-react";
 
 const ssoConfig = {
 	google_oauth: {
@@ -291,9 +291,8 @@ interface SignInFormProps {
 }
 
 export function SignInForm({ className = "", signUpUrl }: SignInFormProps) {
-	const { isLoaded, signIn, signInAttempt, discardSignInAttempt } = useSignInWithStrategy(
-		SignInStrategy.Generic,
-	);
+	const { isLoaded, signIn, signInAttempt, discardSignInAttempt } =
+		useSignInWithStrategy(SignInStrategy.Generic);
 	const { isLoaded: isOAuthLoaded, signIn: oauthSignIn } =
 		useSignInWithStrategy(SignInStrategy.Oauth);
 	const { deployment } = useDeployment();
@@ -387,8 +386,8 @@ export function SignInForm({ className = "", signUpUrl }: SignInFormProps) {
 		}
 		setErrors(newErrors);
 		signIn.completeVerification(otpCode);
-		setIsSubmitting(false)
-	}
+		setIsSubmitting(false);
+	};
 
 	const handleSSOSignIn = async (provider: SSOProvider) => {
 		if (!isOAuthLoaded || isSubmitting) return;
@@ -441,7 +440,13 @@ export function SignInForm({ className = "", signUpUrl }: SignInFormProps) {
 				{otpSent ? (
 					<>
 						<Header>
-							<BackButton onClick={() => { setOtpSent(false); discardSignInAttempt(); resetFormData() }}>
+							<BackButton
+								onClick={() => {
+									setOtpSent(false);
+									discardSignInAttempt();
+									resetFormData();
+								}}
+							>
 								<ArrowLeft size={16} />
 							</BackButton>
 							<Title>Check your email</Title>
@@ -487,7 +492,8 @@ export function SignInForm({ className = "", signUpUrl }: SignInFormProps) {
 						)}
 
 						<Form onSubmit={createSignIn} noValidate>
-							{(firstFactor === "email_password" || firstFactor === "email_otp") && (
+							{(firstFactor === "email_password" ||
+								firstFactor === "email_otp") && (
 								<FormGroup>
 									<Label htmlFor="email">Email address</Label>
 									<Input
@@ -515,7 +521,9 @@ export function SignInForm({ className = "", signUpUrl }: SignInFormProps) {
 										placeholder="Enter your username"
 										aria-invalid={!!errors.username}
 									/>
-									{errors.username && <ErrorMessage>{errors.username}</ErrorMessage>}
+									{errors.username && (
+										<ErrorMessage>{errors.username}</ErrorMessage>
+									)}
 								</FormGroup>
 							)}
 
@@ -537,29 +545,29 @@ export function SignInForm({ className = "", signUpUrl }: SignInFormProps) {
 
 							{(firstFactor === "email_password" ||
 								firstFactor === "username_password") && (
-									<FormGroup>
-										<Label htmlFor="password">Password</Label>
-										<PasswordGroup>
-											<Input
-												type="password"
-												id="password"
-												name="password"
-												value={formData.password}
-												onChange={handleInputChange}
-												placeholder="Enter your password"
-												aria-invalid={!!errors.password}
-											/>
-										</PasswordGroup>
-										{errors.password && <ErrorMessage>{errors.password}</ErrorMessage>}
-									</FormGroup>
-								)}
+								<FormGroup>
+									<Label htmlFor="password">Password</Label>
+									<PasswordGroup>
+										<Input
+											type="password"
+											id="password"
+											name="password"
+											value={formData.password}
+											onChange={handleInputChange}
+											placeholder="Enter your password"
+											aria-invalid={!!errors.password}
+										/>
+									</PasswordGroup>
+									{errors.password && (
+										<ErrorMessage>{errors.password}</ErrorMessage>
+									)}
+								</FormGroup>
+							)}
 
 							{errors.submit && <ErrorMessage>{errors.submit}</ErrorMessage>}
 
 							<SubmitButton type="submit" disabled={isSubmitting || !isLoaded}>
-								{isSubmitting
-									? "Signing in..."
-									: "Sign in"}
+								{isSubmitting ? "Signing in..." : "Sign in"}
 							</SubmitButton>
 						</Form>
 						<Footer>
@@ -568,25 +576,29 @@ export function SignInForm({ className = "", signUpUrl }: SignInFormProps) {
 					</>
 				) : (
 					<>
-						<Form style={{ gap: "15px" }} onSubmit={completeVerification} noValidate>
+						<Form
+							style={{ gap: "15px" }}
+							onSubmit={completeVerification}
+							noValidate
+						>
 							<OTPInput
 								onComplete={async (code) => {
 									setOtpCode(code);
 								}}
 								onResend={async () => {
-									const strategy = firstFactor === "email_otp" ? "email_otp" : "phone_otp";
+									const strategy =
+										firstFactor === "email_otp" ? "email_otp" : "phone_otp";
 									await signIn.prepareVerification(strategy);
 								}}
 								error={errors.otp}
 								isSubmitting={isSubmitting}
 							/>
 
-							<SubmitButton type="submit" disabled={
-								isSubmitting || !isLoaded || !otpCode
-							}>
-								{isSubmitting
-									? `Verifying...`
-									: "Continue to Wacht"}
+							<SubmitButton
+								type="submit"
+								disabled={isSubmitting || !isLoaded || !otpCode}
+							>
+								{isSubmitting ? "Verifying..." : "Continue to Wacht"}
 							</SubmitButton>
 						</Form>
 						<Footer>
@@ -594,7 +606,6 @@ export function SignInForm({ className = "", signUpUrl }: SignInFormProps) {
 						</Footer>
 					</>
 				)}
-
 			</Container>
 		</TypographyProvider>
 	);
