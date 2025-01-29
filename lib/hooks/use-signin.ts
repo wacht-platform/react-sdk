@@ -93,13 +93,13 @@ type SignIn = {
 
 type UseSignInReturnType =
   | {
-      isLoaded: true;
+      loading: false;
       signIn: SignIn;
       signInAttempt: SignInAttempt | null;
       discardSignInAttempt: () => void;
     }
   | {
-      isLoaded: false;
+      loading: true;
       signIn: never;
       signInAttempt: null;
       discardSignInAttempt: () => void;
@@ -232,13 +232,13 @@ export function useSignIn(): UseSignInReturnType {
 
   if (loading) {
     return {
-      isLoaded: false,
+      loading: true,
       signInAttempt: null,
     } as UseSignInReturnType;
   }
 
   return {
-    isLoaded: !loading,
+    loading: false,
     signInAttempt,
     signIn: {
       createStrategy: builder(client, setSignInAttempt),
@@ -280,13 +280,13 @@ type SignInFunction<T extends SignInStrategy> = {
 
 type UseSignInWithStrategyReturnType<T extends SignInStrategy> =
   | {
-      isLoaded: false;
+      loading: true;
       signIn: never;
       signInAttempt: null;
       discardSignInAttempt: () => void;
     }
   | {
-      isLoaded: true;
+      loading: false;
       signIn: {
         create: SignInFunction<T>;
         completeVerification: (verificationCode: string) => Promise<unknown>;
@@ -301,11 +301,11 @@ type UseSignInWithStrategyReturnType<T extends SignInStrategy> =
 export function useSignInWithStrategy<T extends SignInStrategy>(
   strategy: T,
 ): UseSignInWithStrategyReturnType<T> {
-  const { isLoaded, signIn, signInAttempt, discardSignInAttempt } = useSignIn();
+  const { loading, signIn, signInAttempt, discardSignInAttempt } = useSignIn();
 
-  if (!isLoaded) {
+  if (loading) {
     return {
-      isLoaded: false,
+      loading: true,
       signInAttempt: null,
     } as UseSignInWithStrategyReturnType<T>;
   }
@@ -328,7 +328,7 @@ export function useSignInWithStrategy<T extends SignInStrategy>(
   })();
 
   return {
-    isLoaded: true,
+    loading: false,
     signInAttempt,
     signIn: {
       create: strategyFunction,

@@ -3,21 +3,24 @@ import { mapResponse } from "../utils/response-mapper";
 import { useClient } from "./use-client";
 import type { Session } from "../types/session";
 import useSWR from "swr";
+import { useCallback } from "react";
 
 type UseSessionReturnType =
   | {
-      isLoaded: false;
+      loading: true;
       session: never;
       switchSignIn: never;
       signOut: never;
       error: Error | null;
+      refetch: () => Promise<void>;
     }
   | {
-      isLoaded: true;
+      loading: false;
       error: Error | null;
       session: Session;
       switchSignIn: (signInId: number) => Promise<void>;
       signOut: (signInId?: number) => Promise<void>;
+      refetch: () => Promise<void>;
     };
 
 async function fetchSession(client: Client): Promise<Session> {
@@ -61,20 +64,25 @@ export function useSession(): UseSessionReturnType {
     error,
     mutate,
     isLoading,
-  } = useSWR("/session", fetchSession);
+  } = useSWR("/session", () => fetchSession(client));
+
+  const refetch = useCallback(async () => {
+    await mutate();
+  }, [mutate]);
 
   if (loading || !session || isLoading) {
     return {
-      isLoaded: false,
+      loading: true,
       error,
       session: null as never,
       switchSignIn: null as never,
       signOut: null as never,
+      refetch,
     };
   }
 
   return {
-    isLoaded: !isLoading,
+    loading: isLoading,
     error,
     session,
     switchSignIn: async (signInId: number) => {
@@ -85,5 +93,6 @@ export function useSession(): UseSessionReturnType {
       await signOut(client, signInId);
       await mutate();
     },
+    refetch,
   };
 }
