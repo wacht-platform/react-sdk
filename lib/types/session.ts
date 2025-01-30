@@ -27,8 +27,8 @@ type CurrentSessionStep =
 	| "verify_authenticator"
 	| "add_second_factor";
 
-export interface SignInAttempt {
-	id: number;
+export interface SigninAttempt {
+	id: string;
 	email: string;
 	session_id: number;
 	method: SignInMethod;
@@ -43,9 +43,31 @@ export interface SignInAttempt {
 	completed: boolean;
 }
 
+type SignupAttemptStep =
+	| "verify_email"
+	| "verify_phone"
+	| "verify_authenticator";
+
+export interface SignupAttempt {
+	id: string;
+	session_id: number;
+	first_name: string;
+	last_name: string;
+	email: string;
+	username: string;
+	phone_number: string;
+	password: string;
+	required_fields: string[];
+	missing_fields: string[];
+	current_step: SignupAttemptStep;
+	remaining_steps: SignupAttemptStep[];
+	completed: boolean;
+}
+
 export interface Session {
 	id: number;
-	activeSignIn: SignIn | null;
-	signIns: SignIn[];
-	sign_in_attempts?: SignInAttempt[];
+	active_signin: SignIn | null;
+	signins: SignIn[];
+	signin_attempts?: SigninAttempt[];
+	signup_attempts?: SignupAttempt[];
 }

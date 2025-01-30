@@ -75,122 +75,125 @@ const Timer = styled.span`
 `;
 
 interface OTPInputProps {
-    length?: number;
-    onComplete: (code: string) => Promise<void>;
-    onResend: () => Promise<void>;
-    error?: string;
-    isSubmitting?: boolean;
+	length?: number;
+	onComplete: (code: string) => Promise<void>;
+	onResend: () => Promise<void>;
+	error?: string;
+	isSubmitting?: boolean;
 }
 
 export function OTPInput({
-    length = 6,
-    onComplete,
-    onResend,
-    error,
-    isSubmitting = false,
+	length = 6,
+	onComplete,
+	onResend,
+	error,
+	isSubmitting = false,
 }: OTPInputProps) {
-    const [otp, setOtp] = useState<string[]>(new Array(length).fill(""));
-    const [resendTimer, setResendTimer] = useState(60);
-    const [canResend, setCanResend] = useState(false);
-    const inputRefs = useRef<(HTMLInputElement | null)[]>([]);
+	const [otp, setOtp] = useState<string[]>(new Array(length).fill(""));
+	const [resendTimer, setResendTimer] = useState(60);
+	const [canResend, setCanResend] = useState(false);
+	const inputRefs = useRef<(HTMLInputElement | null)[]>([]);
 
-    const startTimer = () => {
-        const timer = setInterval(() => {
-            setResendTimer((prev) => {
-                if (prev <= 1) {
-                    setCanResend(true);
-                    clearInterval(timer);
-                    return 0;
-                }
-                return prev - 1;
-            });
-        }, 1000);
+	const startTimer = () => {
+		const timer = setInterval(() => {
+			setResendTimer((prev) => {
+				if (prev <= 1) {
+					setCanResend(true);
+					clearInterval(timer);
+					return 0;
+				}
+				return prev - 1;
+			});
+		}, 1000);
 
-        return timer;
-    };
+		return timer;
+	};
 
-    useEffect(() => {
-        const timer = startTimer();
-        return () => clearInterval(timer);
-    }, []);
+	useEffect(() => {
+		const timer = startTimer();
+		return () => clearInterval(timer);
+	}, []);
 
-    const handleResend = async () => {
-        if (!canResend || isSubmitting) return;
-        await onResend();
-        setCanResend(false);
-        setResendTimer(60);
-        setOtp(new Array(length).fill(""));
-        inputRefs.current[0]?.focus();
-        startTimer();
-    };
+	const handleResend = async () => {
+		if (!canResend || isSubmitting) return;
+		await onResend();
+		setCanResend(false);
+		setResendTimer(60);
+		setOtp(new Array(length).fill(""));
+		inputRefs.current[0]?.focus();
+		startTimer();
+	};
 
-    const handleChange = (element: HTMLInputElement, index: number) => {
-        if (isSubmitting) return;
+	const handleChange = (element: HTMLInputElement, index: number) => {
+		if (isSubmitting) return;
 
-        const value = element.value;
-        const newOtp = [...otp];
+		const value = element.value;
+		const newOtp = [...otp];
 
-        // Allow only numbers
-        newOtp[index] = value.replace(/[^0-9]/g, "");
+		// Allow only numbers
+		newOtp[index] = value.replace(/[^0-9]/g, "");
 
-        // Update state
-        setOtp(newOtp);
+		// Update state
+		setOtp(newOtp);
 
-        // Submit if all fields are filled
-        const combinedOtp = newOtp.join("");
-        if (combinedOtp.length === length) {
-            onComplete(combinedOtp);
-        }
+		// Submit if all fields are filled
+		const combinedOtp = newOtp.join("");
+		if (combinedOtp.length === length) {
+			onComplete(combinedOtp);
+		}
 
-        // Move to next input if value is entered
-        if (value && index < length - 1) {
-            inputRefs.current[index + 1]?.focus();
-        }
-    };
+		// Move to next input if value is entered
+		if (value && index < length - 1) {
+			inputRefs.current[index + 1]?.focus();
+		}
+	};
 
-    const handleKeyDown = (e: React.KeyboardEvent<HTMLInputElement>, index: number) => {
-        if (isSubmitting) return;
+	const handleKeyDown = (
+		e: React.KeyboardEvent<HTMLInputElement>,
+		index: number,
+	) => {
+		if (isSubmitting) return;
 
-        // Move to previous input on backspace
-        if (e.key === "Backspace" && !otp[index] && index > 0) {
-            inputRefs.current[index - 1]?.focus();
-        }
-    };
+		// Move to previous input on backspace
+		if (e.key === "Backspace" && !otp[index] && index > 0) {
+			inputRefs.current[index - 1]?.focus();
+		}
+	};
 
-    return (
-        <Container>
-            <InputGroup>
-                {otp.map((digit, index) => (
-                    <InputBox
-                        key={index}
-                        type="text"
-                        maxLength={1}
-                        value={digit}
-                        onChange={(e) => handleChange(e.target, index)}
-                        onKeyDown={(e) => handleKeyDown(e, index)}
-                        ref={(ref: HTMLInputElement | null) => {
-                            inputRefs.current[index] = ref;
-                            return undefined;
-                        }}
-                        disabled={isSubmitting}
-                        autoFocus={index === 0}
-                    />
-                ))}
-            </InputGroup>
-            {error && <ErrorMessage>{error}</ErrorMessage>}
-            <div>
-                {canResend ? (
-                    <ResendButton
-                        type="button"
-                        onClick={handleResend}
-                        disabled={isSubmitting}
-                    >
-                        Didn't receive a code? Resend
-                    </ResendButton>
-                ) : (
-                    <Timer>Resend code in {resendTimer}s</Timer>
-                )}
-            </div>
-        </Container>
-    );
+	return (
+		<Container>
+			<InputGroup>
+				{otp.map((digit, index) => (
+					<InputBox
+						key={`otp-input-${digit}`}
+						type="text"
+						maxLength={1}
+						value={digit}
+						onChange={(e) => handleChange(e.target, index)}
+						onKeyDown={(e) => handleKeyDown(e, index)}
+						ref={(ref: HTMLInputElement | null) => {
+							inputRefs.current[index] = ref;
+							return undefined;
+						}}
+						disabled={isSubmitting}
+						autoFocus={index === 0}
+					/>
+				))}
+			</InputGroup>
+			{error && <ErrorMessage>{error}</ErrorMessage>}
+			<div>
+				{canResend ? (
+					<ResendButton
+						type="button"
+						onClick={handleResend}
+						disabled={isSubmitting}
+					>
+						Didn't receive a code? Resend
+					</ResendButton>
+				) : (
+					<Timer>Resend code in {resendTimer}s</Timer>
+				)}
+			</div>
+		</Container>
+	);
 }

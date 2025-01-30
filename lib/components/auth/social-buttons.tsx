@@ -1,0 +1,150 @@
+import styled, { css } from "styled-components";
+import { GithubIcon } from "../icons/github";
+import { MicrosoftIcon } from "../icons/microsoft";
+import { GoogleIcon } from "../icons/google";
+import { XIcon } from "../icons/x";
+
+const socialAuthProviders = {
+	google_oauth: {
+		shortLabel: "Google",
+		fullLabel: "Continue with Google",
+		icon: <GoogleIcon />,
+	},
+	microsoft_oauth: {
+		shortLabel: "Microsoft",
+		fullLabel: "Continue with Microsoft",
+		icon: <MicrosoftIcon />,
+	},
+	github_oauth: {
+		shortLabel: "GitHub",
+		fullLabel: "Continue with GitHub",
+		icon: <GithubIcon />,
+	},
+	x_oauth: {
+		shortLabel: "X",
+		fullLabel: "Continue with X",
+		icon: <XIcon />,
+	},
+};
+
+const SocialAuthButtonsContainer = styled.div`
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+  margin-bottom: 24px;
+`;
+
+const ButtonRow = styled.div`
+  display: flex;
+  flex-wrap: wrap;
+  gap: 12px;
+`;
+
+const SocialAuthButton = styled.button<{
+	$isWide?: boolean;
+	$totalProviders: number;
+}>`
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  padding: 8px 16px;
+  border: 1px solid #e5e7eb;
+  border-radius: 8px;
+  background: white;
+  cursor: pointer;
+  transition: all 0.2s;
+  font-size: 14px;
+  color: #374151;
+  font-weight: 500;
+  height: 40px;
+
+  ${(props) => {
+		if (props.$totalProviders <= 6) {
+			return css`
+        flex: 1 1 0;
+      `;
+		}
+		return css`
+        flex: 0 0 calc((100% - (12px * 5)) / 6);
+        ${
+					props.$isWide &&
+					css`
+          flex: 0 0 calc((100% - (12px * 3)) / 4);
+        `
+				}
+      `;
+	}}
+
+  &:hover {
+    background-color: #f9fafb;
+    border-color: #d1d5db;
+  }
+
+  svg {
+    width: 20px;
+    height: 20px;
+    flex-shrink: 0;
+  }
+`;
+
+interface SocialAuthButtonsProps {
+	connections: DeploymentSocialConnection[];
+	callback: (provider: DeploymentSocialConnection) => void;
+}
+
+export const SocialAuthButtons = ({
+	connections,
+	callback,
+}: SocialAuthButtonsProps) => {
+	const organizeButtons = () => {
+		if (connections.length <= 6) {
+			return [connections];
+		}
+		if (connections.length <= 12) {
+			return [connections.slice(0, 4), connections.slice(4)];
+		}
+		return [
+			connections.slice(0, 4),
+			connections.slice(4, 8),
+			connections.slice(8),
+		];
+	};
+
+	const totalProviders = connections.length;
+
+	const buttonRows = organizeButtons();
+
+	return (
+		<SocialAuthButtonsContainer>
+			{buttonRows.map((row, rowIndex) => (
+				<ButtonRow key={row[0].id}>
+					{row.map((connection) => {
+						const provider =
+							connection.provider as keyof typeof socialAuthProviders;
+						return (
+							<SocialAuthButton
+								key={connection.id}
+								onClick={() => callback(connection)}
+								type="button"
+								$isWide={
+									buttonRows.length > 1 && rowIndex < buttonRows.length - 1
+								}
+								$totalProviders={totalProviders}
+							>
+								{socialAuthProviders[provider].icon}
+								{totalProviders < 3 && (
+									<span>
+										{totalProviders === 1
+											? socialAuthProviders[provider].fullLabel
+											: socialAuthProviders[provider].shortLabel}
+									</span>
+								)}
+							</SocialAuthButton>
+						);
+					})}
+				</ButtonRow>
+			))}
+		</SocialAuthButtonsContainer>
+	);
+};
