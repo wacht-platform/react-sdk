@@ -15,36 +15,36 @@ import { SocialAuthButtons } from "./social-buttons";
 import { countries } from "../constants/geo";
 
 const Container = styled.div`
-  max-width: 400px;
-  width: 400px;
-  padding: 32px 40px;
+  max-width: 25rem;
+  width: 25rem;
+  padding: 2rem 2.5rem;
   background: white;
-  border-radius: 12px;
-  box-shadow: 0 4px 24px rgba(0, 0, 0, 0.1);
+  border-radius: 0.75rem;
+  box-shadow: 0 0.25rem 1.5rem rgba(0, 0, 0, 0.1);
 `;
 
 const Header = styled.div`
   text-align: center;
-  margin-bottom: 24px;
+  margin-bottom: 1.5rem;
   position: relative;
 `;
 
 const Title = styled.h1`
-  font-size: 20px;
+  font-size: 1.25rem;
   font-weight: 600;
   color: #111827;
-  margin-bottom: 4px;
+  margin-bottom: 0.25rem;
 `;
 
 const Subtitle = styled.p`
   color: #6b7280;
-  font-size: 14px;
+  font-size: 0.875rem;
 `;
 
 const Divider = styled.div`
   position: relative;
   text-align: center;
-  margin: 24px 0;
+  margin: 1.5rem 0;
 
   &::before {
     content: "";
@@ -52,7 +52,7 @@ const Divider = styled.div`
     top: 50%;
     left: 0;
     right: 0;
-    height: 1px;
+    height: 0.0625rem;
     background: #e5e7eb;
   }
 `;
@@ -60,51 +60,50 @@ const Divider = styled.div`
 const DividerText = styled.span`
   position: relative;
   background: white;
-  padding: 0 12px;
+  padding: 0 0.75rem;
   color: #6b7280;
-  font-size: 14px;
+  font-size: 0.875rem;
 `;
 
 const Form = styled.form`
   display: flex;
   flex-direction: column;
-  gap: 16px;
+  gap: 1rem;
 `;
 
 const NameFields = styled.div<{ $isBothEnabled: boolean }>`
   display: grid;
-  grid-template-columns: ${(props) =>
-		props.$isBothEnabled ? "1fr 1fr" : "1fr"};
-  gap: 12px;
+  grid-template-columns: ${(props) => (props.$isBothEnabled ? "1fr 1fr" : "1fr")};
+  gap: 0.75rem;
 `;
 
 const FormGroup = styled.div`
   display: flex;
   flex-direction: column;
-  gap: 6px;
+  gap: 0.375rem;
 `;
 
 const Label = styled.label`
-  font-size: 14px;
+  font-size: 0.875rem;
   text-align: left;
   font-weight: 500;
   color: #374151;
 `;
 
 const Input = styled.input`
-  padding: 8px 12px;
+  padding: 0.5rem 0.75rem;
   width: 100%;
-  height: 35px;
-  border: 1px solid #e5e7eb;
-  border-radius: 8px;
-  font-size: 14px;
+  height: 2.1875rem;
+  border: 0.0625rem solid #e5e7eb;
+  border-radius: 0.5rem;
+  font-size: 0.875rem;
   color: #111827;
   background: #f9fafb;
   transition: all 0.2s;
 
   &:not(:placeholder-shown):invalid {
     outline: none;
-    border: 1px solid #ef4444;
+    border: 0.0625rem solid #ef4444;
     background: white;
   }
 
@@ -116,14 +115,14 @@ const Input = styled.input`
   &:focus:valid {
     outline: none;
     border-color: #22c55e;
-    box-shadow: 0 0 0 3px rgba(34, 197, 94, 0.1);
+    box-shadow: 0 0 0 0.1875rem rgba(34, 197, 94, 0.1);
     background: white;
   }
 
   &:focus:invalid {
     outline: none;
     border-color: #6366f1;
-    box-shadow: 0 0 0 3px rgba(99, 102, 241, 0.1);
+    box-shadow: 0 0 0 0.1875rem rgba(99, 102, 241, 0.1);
     background: white;
   }
 
@@ -151,16 +150,16 @@ const RequiredAsterisk = styled.span`
 
 const SubmitButton = styled.button`
   width: 100%;
-  padding: 9px 16px;
+  padding: 0.5625rem 1rem;
   background: #6366f1;
   color: white;
   border: none;
-  border-radius: 8px;
+  border-radius: 0.5rem;
   font-weight: 500;
-  font-size: 14px;
+  font-size: 0.875rem;
   cursor: pointer;
   transition: background-color 0.2s;
-  margin-top: 8px;
+  margin-top: 0.5rem;
 
   &:hover:not(:disabled) {
     background: #4f46e5;
@@ -173,9 +172,9 @@ const SubmitButton = styled.button`
 `;
 
 const Footer = styled.p`
-  margin-top: 24px;
+  margin-top: 1.5rem;
   text-align: center;
-  font-size: 14px;
+  font-size: 0.875rem;
   color: #6b7280;
 `;
 

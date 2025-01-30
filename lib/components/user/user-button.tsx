@@ -2,7 +2,7 @@ import React, { useState, useRef, useEffect } from 'react';
 import styled from 'styled-components';
 import { LogOut, Settings, Plus } from 'lucide-react';
 import { TypographyProvider } from '../utility/typography';
-import { useSession } from '../../hooks';
+// import { useSession } from '../../hooks';
 
 const ButtonWrapper = styled.div`
   display: flex;
@@ -188,7 +188,7 @@ export const UserButton: React.FC<UserButtonProps> = ({
   const [isOpen, setIsOpen] = useState(false);
   const dropdownRef = useRef<HTMLDivElement>(null);
   const buttonRef = useRef<HTMLDivElement>(null);
-  const { isLoaded, session, switchSignIn, signOut } = useSession();
+  // const { isLoaded, session, switchSignIn, signOut } = useSession();
 
   const accounts = [
     {
@@ -224,7 +224,7 @@ export const UserButton: React.FC<UserButtonProps> = ({
   ];
  
 
-  console.log(session, isLoaded, switchSignIn, signOut);
+  // console.log(session, isLoaded, switchSignIn, signOut);
 
   useEffect(() => {
     const handleClickOutside = (event: MouseEvent) => {
