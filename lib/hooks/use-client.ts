@@ -1,45 +1,59 @@
-import { Client } from "../types/client";
+import type { Client } from "../types/client";
 import { useDeployment } from "./use-deployment";
 
 type UseClientReturnType = {
-    client: Client;
-    loading: boolean;
-}
+	client: Client;
+	loading: boolean;
+};
 
 export function useClient(): UseClientReturnType {
-    const { deployment, loading } = useDeployment();
+	const { deployment, loading } = useDeployment();
 
-    if (loading) {
-        return {
-            client: () => Promise.reject(new Error("Deployment is loading")),
-            loading,
-        };
-    }
+	if (loading || !deployment) {
+		return {
+			client: () => Promise.reject(new Error("Deployment is loading")),
+			loading,
+		};
+	}
 
-    const fetcher = async (url: URL | string, options?: RequestInit) => {
-        const response = await fetch(new URL(url, deployment?.host ?? ""), {
-            ...getDefaultOptions(deployment!),
-            ...options,
-        });
+	const fetcher = async (url: URL | string, options?: RequestInit) => {
+		const defaultOptions = getDefaultOptions(deployment);
+		const headers = new Headers(defaultOptions.headers);
 
-        return response;
-    }
+		if (options?.headers) {
+			const modifiedHeaders = new Headers(options.headers);
+			modifiedHeaders.forEach((value, key) => {
+				headers.set(key, value);
+			});
+		}
 
-    return {
-        client: fetcher,
-        loading,
-    };
+		const response = await fetch(new URL(url, deployment?.host ?? ""), {
+			...defaultOptions,
+			...options,
+			headers,
+		});
+
+		return response;
+	};
+
+	return {
+		client: fetcher,
+		loading,
+	};
 }
 
 function getDefaultOptions(deployment: Deployment): RequestInit {
-    const headers = new Headers();
+	const headers = new Headers();
 
-    if (deployment.mode === "staging") {
-        headers.append("X-Development-Session", localStorage.getItem("__dev_session__") ?? "");
-        return {
-            headers,
-        };
-    }
+	if (deployment.mode === "staging") {
+		headers.append(
+			"X-Development-Session",
+			localStorage.getItem("__dev_session__") ?? "",
+		);
+		return {
+			headers,
+		};
+	}
 
-    return {};
+	return {};
 }
