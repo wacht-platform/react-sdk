@@ -14,19 +14,37 @@ import { ArrowLeft } from "lucide-react";
 import { SocialAuthButtons } from "./social-buttons";
 import { countries } from "../constants/geo";
 
+const breakpoints = {
+	sm: '36rem',
+	md: '48rem',
+	lg: '62rem',
+	xl: '75rem'
+};
+
 const Container = styled.div`
   max-width: 25rem;
-  width: 25rem;
+  width: 100%;
   padding: 2rem 2.5rem;
   background: white;
   border-radius: 0.75rem;
   box-shadow: 0 0.25rem 1.5rem rgba(0, 0, 0, 0.1);
+  margin: 0 auto;
+
+  @media (max-width: ${breakpoints.sm}) {
+    max-width: 100%;
+    padding: 1.5rem;
+    border-radius: 0;
+  }
 `;
 
 const Header = styled.div`
   text-align: center;
   margin-bottom: 1.5rem;
   position: relative;
+
+  @media (max-width: ${breakpoints.sm}) {
+    margin-bottom: 1rem;
+  }
 `;
 
 const Title = styled.h1`
@@ -34,11 +52,19 @@ const Title = styled.h1`
   font-weight: 600;
   color: #111827;
   margin-bottom: 0.25rem;
+
+  @media (max-width: ${breakpoints.sm}) {
+    font-size: 1.125rem;
+  }
 `;
 
 const Subtitle = styled.p`
   color: #6b7280;
   font-size: 0.875rem;
+
+  @media (max-width: ${breakpoints.sm}) {
+    font-size: 0.75rem;
+  }
 `;
 
 const Divider = styled.div`
@@ -55,6 +81,10 @@ const Divider = styled.div`
     height: 0.0625rem;
     background: #e5e7eb;
   }
+
+  @media (max-width: ${breakpoints.sm}) {
+    margin: 1rem 0;
+  }
 `;
 
 const DividerText = styled.span`
@@ -69,12 +99,21 @@ const Form = styled.form`
   display: flex;
   flex-direction: column;
   gap: 1rem;
+
+  @media (max-width: ${breakpoints.sm}) {
+    gap: 0.75rem;
+  }
 `;
 
 const NameFields = styled.div<{ $isBothEnabled: boolean }>`
   display: grid;
   grid-template-columns: ${(props) => (props.$isBothEnabled ? "1fr 1fr" : "1fr")};
   gap: 0.75rem;
+
+  @media (max-width: ${breakpoints.sm}) {
+    grid-template-columns: 1fr;
+    gap: 0.5rem;
+  }
 `;
 
 const FormGroup = styled.div`
@@ -88,12 +127,16 @@ const Label = styled.label`
   text-align: left;
   font-weight: 500;
   color: #374151;
+
+  @media (max-width: ${breakpoints.sm}) {
+    font-size: 0.75rem;
+  }
 `;
 
 const Input = styled.input`
   padding: 0.5rem 0.75rem;
   width: 100%;
-  height: 2.1875rem;
+  height: 2.5rem;
   border: 0.0625rem solid #e5e7eb;
   border-radius: 0.5rem;
   font-size: 0.875rem;
@@ -129,6 +172,12 @@ const Input = styled.input`
   &::placeholder {
     color: #9ca3af;
   }
+
+  @media (max-width: ${breakpoints.sm}) {
+    height: 2.25rem;
+    font-size: 0.8125rem;
+    padding: 0.375rem 0.625rem;
+  }
 `;
 
 const PasswordGroup = styled.div`
@@ -136,15 +185,15 @@ const PasswordGroup = styled.div`
 `;
 
 const ErrorMessage = styled.p`
-  font-size: 12px;
+  font-size: 0.75rem;
   color: #ef4444;
   margin: 0;
-  margin-top: 2px;
+  margin-top: 0.125rem;
 `;
 
 const RequiredAsterisk = styled.span`
   color: #ef4444;
-  margin-left: 4px;
+  margin-left: 0.25rem;
   vertical-align: middle;
 `;
 
@@ -169,6 +218,11 @@ const SubmitButton = styled.button`
     opacity: 0.7;
     cursor: not-allowed;
   }
+
+  @media (max-width: ${breakpoints.sm}) {
+    padding: 0.5rem 0.875rem;
+    font-size: 0.8125rem;
+  }
 `;
 
 const Footer = styled.p`
@@ -176,6 +230,11 @@ const Footer = styled.p`
   text-align: center;
   font-size: 0.875rem;
   color: #6b7280;
+
+  @media (max-width: ${breakpoints.sm}) {
+    margin-top: 1rem;
+    font-size: 0.75rem;
+  }
 `;
 
 const Link = styled.a`
@@ -191,8 +250,12 @@ const Link = styled.a`
 
 const PhoneInputGroup = styled.div`
   display: flex;
-  gap: 8px;
+  gap: 0.5rem;
   width: 100%;
+
+  @media (max-width: ${breakpoints.sm}) {
+    gap: 0.375rem;
+  }
 `;
 
 const CountryCodeSelect = styled.div`
@@ -202,12 +265,12 @@ const CountryCodeSelect = styled.div`
 const CountryCodeButton = styled.button`
   display: flex;
   align-items: center;
-  gap: 6px;
-  padding: 8px 12px;
+  gap: 0.375rem;
+  padding: 0.5rem 0.75rem;
   width: 100%;
-  border: 1px solid #e5e7eb;
-  border-radius: 8px;
-  font-size: 14px;
+  border: 0.0625rem solid #e5e7eb;
+  border-radius: 0.5rem;
+  font-size: 0.875rem;
   color: #111827;
   background: #f9fafb;
   cursor: pointer;
@@ -220,34 +283,44 @@ const CountryCodeButton = styled.button`
   &:focus {
     outline: none;
     border-color: #6366f1;
-    box-shadow: 0 0 0 3px rgba(99, 102, 241, 0.1);
+    box-shadow: 0 0 0 0.1875rem rgba(99, 102, 241, 0.1);
     background: white;
+  }
+
+  @media (max-width: ${breakpoints.sm}) {
+    padding: 0.375rem 0.625rem;
+    font-size: 0.8125rem;
   }
 `;
 
 const CountryCodeDropdown = styled.div<{ $isOpen: boolean }>`
   position: absolute;
-  top: calc(100% + 4px);
+  top: calc(100% + 0.25rem);
   left: 0;
-  width: 280px;
-  max-height: 300px;
+  width: 17.5rem;
+  max-height: 18.75rem;
   overflow-y: auto;
   background: white;
-  border: 1px solid #e5e7eb;
-  border-radius: 8px;
+  border: 0.0625rem solid #e5e7eb;
+  border-radius: 0.5rem;
   box-shadow:
-    0 4px 6px -1px rgba(0, 0, 0, 0.1),
-    0 2px 4px -1px rgba(0, 0, 0, 0.06);
+    0 0.25rem 0.375rem -0.0625rem rgba(0, 0, 0, 0.1),
+    0 0.125rem 0.25rem -0.0625rem rgba(0, 0, 0, 0.06);
   z-index: 50;
   display: ${(props) => (props.$isOpen ? "block" : "none")};
+
+  @media (max-width: ${breakpoints.sm}) {
+    width: 15rem;
+    max-height: 15rem;
+  }
 `;
 
 const CountrySearch = styled.input`
   width: 100%;
-  padding: 8px 12px;
+  padding: 0.5rem 0.75rem;
   border: none;
-  border-bottom: 1px solid #e5e7eb;
-  font-size: 14px;
+  border-bottom: 0.0625rem solid #e5e7eb;
+  font-size: 0.875rem;
   color: #111827;
 
   &:focus {
@@ -258,22 +331,31 @@ const CountrySearch = styled.input`
   &::placeholder {
     color: #9ca3af;
   }
+
+  @media (max-width: ${breakpoints.sm}) {
+    padding: 0.375rem 0.625rem;
+    font-size: 0.8125rem;
+  }
 `;
 
 const CountryList = styled.div`
-  max-height: 250px;
+  max-height: 15.625rem;
   overflow-y: auto;
+
+  @media (max-width: ${breakpoints.sm}) {
+    max-height: 12.5rem;
+  }
 `;
 
 const CountryOption = styled.button`
   display: flex;
   align-items: center;
-  gap: 8px;
+  gap: 0.5rem;
   width: 100%;
-  padding: 8px 12px;
+  padding: 0.5rem 0.75rem;
   border: none;
   background: transparent;
-  font-size: 14px;
+  font-size: 0.875rem;
   color: #111827;
   cursor: pointer;
   text-align: left;
@@ -286,6 +368,12 @@ const CountryOption = styled.button`
     color: #6b7280;
     margin-left: auto;
   }
+
+  @media (max-width: ${breakpoints.sm}) {
+    padding: 0.375rem 0.625rem;
+    font-size: 0.8125rem;
+    gap: 0.375rem;
+  }
 `;
 
 const PhoneInput = styled(Input)`
@@ -294,17 +382,22 @@ const PhoneInput = styled(Input)`
 
 const BackButton = styled.button`
   position: absolute;
-  top: 6px;
-  left: 0px;
+  top: 0.375rem;
+  left: 0;
   cursor: pointer;
-  font-size: 14px;
-  margin-bottom: 24px;
+  font-size: 0.875rem;
+  margin-bottom: 1.5rem;
   color: #64748b;
   background: none;
   border: none;
 
   &:hover {
     color: #1e293b;
+  }
+
+  @media (max-width: ${breakpoints.sm}) {
+    font-size: 0.75rem;
+    margin-bottom: 1rem;
   }
 `;
 
@@ -320,6 +413,7 @@ export function SignUpForm({ className = "", signInUrl }: SignUpFormProps) {
 		identifierAvailability,
 		signupAttempt,
 		discardSignupAttempt,
+		error,
 	} = useSignUp();
 	const { signIn: oauthSignIn } = useSignInWithStrategy(SignInStrategy.Oauth);
 	const { deployment } = useDeployment();
@@ -415,7 +509,7 @@ export function SignUpForm({ className = "", signInUrl }: SignUpFormProps) {
 		if (authSettings?.email_address.enabled && formData.email) {
 			const { data } = await identifierAvailability(formData.email, "email");
 			if (data.exists) {
-				newErrors.email = "Email address is not available";
+				newErrors.email = "Email address is already in use";
 			}
 		}
 
@@ -561,6 +655,8 @@ export function SignUpForm({ className = "", signInUrl }: SignUpFormProps) {
 		setOtpSent(true);
 	}, [signupAttempt, signUp, otpSent]);
 
+	console.log(error, signupAttempt, loading,);
+
 	return (
 		<TypographyProvider>
 			<Container className={className}>
@@ -636,61 +732,61 @@ export function SignUpForm({ className = "", signInUrl }: SignUpFormProps) {
 						<Form onSubmit={handleSubmit} noValidate>
 							{(authSettings?.first_name?.enabled ||
 								authSettings?.last_name?.enabled) && (
-								<NameFields $isBothEnabled={isBothNamesEnabled}>
-									{authSettings?.first_name?.enabled && (
-										<FormGroup>
-											<Label htmlFor="first_name">
-												First name
-												{authSettings?.first_name?.required && (
-													<RequiredAsterisk>*</RequiredAsterisk>
+									<NameFields $isBothEnabled={isBothNamesEnabled}>
+										{authSettings?.first_name?.enabled && (
+											<FormGroup>
+												<Label htmlFor="first_name">
+													First name
+													{authSettings?.first_name?.required && (
+														<RequiredAsterisk>*</RequiredAsterisk>
+													)}
+												</Label>
+												<Input
+													type="text"
+													id="first_name"
+													name="first_name"
+													required
+													minLength={3}
+													maxLength={30}
+													value={formData.first_name}
+													onChange={handleInputChange}
+													placeholder="First name"
+													aria-invalid={!!errors.first_name}
+													pattern="^[a-zA-Z]{3,30}$"
+												/>
+												{errors.first_name && (
+													<ErrorMessage>{errors.first_name}</ErrorMessage>
 												)}
-											</Label>
-											<Input
-												type="text"
-												id="first_name"
-												name="first_name"
-												required
-												minLength={3}
-												maxLength={30}
-												value={formData.first_name}
-												onChange={handleInputChange}
-												placeholder="First name"
-												aria-invalid={!!errors.first_name}
-												pattern="^[a-zA-Z]{3,30}$"
-											/>
-											{errors.first_name && (
-												<ErrorMessage>{errors.first_name}</ErrorMessage>
-											)}
-										</FormGroup>
-									)}
-									{authSettings?.last_name?.enabled && (
-										<FormGroup>
-											<Label htmlFor="last_name">
-												Last name
-												{authSettings?.last_name?.required && (
-													<RequiredAsterisk>*</RequiredAsterisk>
+											</FormGroup>
+										)}
+										{authSettings?.last_name?.enabled && (
+											<FormGroup>
+												<Label htmlFor="last_name">
+													Last name
+													{authSettings?.last_name?.required && (
+														<RequiredAsterisk>*</RequiredAsterisk>
+													)}
+												</Label>
+												<Input
+													type="text"
+													id="last_name"
+													name="last_name"
+													required
+													minLength={3}
+													maxLength={30}
+													value={formData.last_name}
+													onChange={handleInputChange}
+													placeholder="Last name"
+													aria-invalid={!!errors.last_name}
+													pattern="^[a-zA-Z]{3,30}$"
+												/>
+												{errors.last_name && (
+													<ErrorMessage>{errors.last_name}</ErrorMessage>
 												)}
-											</Label>
-											<Input
-												type="text"
-												id="last_name"
-												name="last_name"
-												required
-												minLength={3}
-												maxLength={30}
-												value={formData.last_name}
-												onChange={handleInputChange}
-												placeholder="Last name"
-												aria-invalid={!!errors.last_name}
-												pattern="^[a-zA-Z]{3,30}$"
-											/>
-											{errors.last_name && (
-												<ErrorMessage>{errors.last_name}</ErrorMessage>
-											)}
-										</FormGroup>
-									)}
-								</NameFields>
-							)}
+											</FormGroup>
+										)}
+									</NameFields>
+								)}
 
 							{authSettings?.username.enabled && (
 								<FormGroup>
