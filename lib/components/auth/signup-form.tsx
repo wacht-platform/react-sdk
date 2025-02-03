@@ -410,10 +410,9 @@ export function SignUpForm({ className = "", signInUrl }: SignUpFormProps) {
 	const {
 		loading,
 		signUp,
-		identifierAvailability,
 		signupAttempt,
 		discardSignupAttempt,
-		error,
+		errors: error,
 	} = useSignUp();
 	const { signIn: oauthSignIn } = useSignInWithStrategy(SignInStrategy.Oauth);
 	const { deployment } = useDeployment();
@@ -496,22 +495,10 @@ export function SignUpForm({ className = "", signInUrl }: SignUpFormProps) {
 		const passwordPattern =
 			/^(?=.*[a-z])(?=.*[A-Z])(?=.*\d)(?=.*[@$!%*?&])[A-Za-z\d@$!%*?&]{8,125}$/;
 
-		if (authSettings?.username.enabled && formData.username) {
-			const { data } = await identifierAvailability(
-				formData.username,
-				"username",
-			);
-			if (data.exists) {
-				newErrors.username = "Username is not available";
-			}
-		}
 
-		if (authSettings?.email_address.enabled && formData.email) {
-			const { data } = await identifierAvailability(formData.email, "email");
-			if (data.exists) {
-				newErrors.email = "Email address is already in use";
-			}
-		}
+		console.log("errors", error);
+
+
 
 		if (authSettings?.first_name.required && !formData.first_name) {
 			newErrors.first_name = "First name is required";
@@ -574,6 +561,20 @@ export function SignUpForm({ className = "", signInUrl }: SignUpFormProps) {
 				"Password must be 8-125 characters and include uppercase, lowercase, number, and special character";
 		}
 
+		if (Array.isArray(error?.error)) {
+			error.error.forEach((err) => {
+				if (err.code === "EMAIL_EXISTS") {
+					newErrors.email = err.message;
+				}
+				if (err.code === "PHONE_NUMBER_EXISTS") {
+					newErrors.phone_number = err.message;
+				}
+				if (err.code === "USERNAME_EXISTS") {
+					newErrors.username = err.message;
+				}
+			});
+		}
+
 		setErrors(newErrors);
 
 		if (Object.keys(newErrors).length > 0) {
@@ -612,6 +613,8 @@ export function SignUpForm({ className = "", signInUrl }: SignUpFormProps) {
 		deployment?.social_connections.filter((conn) => conn.enabled) || [];
 
 	const authSettings = deployment?.auth_settings;
+
+	console.log("auths", authSettings);
 
 	const filteredCountries = countries.filter(
 		(country) =>
@@ -655,7 +658,7 @@ export function SignUpForm({ className = "", signInUrl }: SignUpFormProps) {
 		setOtpSent(true);
 	}, [signupAttempt, signUp, otpSent]);
 
-	console.log(error, signupAttempt, loading,);
+
 
 	return (
 		<TypographyProvider>

@@ -1,4 +1,4 @@
-import type { ApiResult, Client } from "../types/client";
+import type { ApiResult, Client, ErrorInterface } from "../types/client";
 import { mapResponse } from "../utils/response-mapper";
 import { useClient } from "./use-client";
 import type { SignUpParams } from "../types/auth";
@@ -6,43 +6,36 @@ import type { Session, SignupAttempt } from "../types/session";
 import { useState } from "react";
 
 export type SignUpFunction = {
-  create: (params: SignUpParams) => Promise<ApiResult<unknown>>;
+  create: (params: SignUpParams) => Promise<ApiResult<unknown, ErrorInterface>>;
   prepareVerification: (
     strategy: SignupVerificationStrategy
   ) => Promise<unknown>;
   completeVerification: (verificationCode: string) => Promise<unknown>;
 };
 
-type IdentifierAvailabilityFunction = (
-  identifier: string,
-  identifierType: "email" | "username"
-) => Promise<ApiResult<{ exists: boolean }>>;
-
 export type SignupVerificationStrategy = "email_otp" | "phone_otp";
 
-type UseSignUpReturnType =
+export type UseSignUpReturnType =
   | {
       loading: true;
       signUp: never;
-      identifierAvailability: never;
       signupAttempt: null;
       discardSignupAttempt: () => void;
-      error: null;
+      errors: null;
     }
   | {
       loading: false;
       signUp: SignUpFunction;
-      identifierAvailability: IdentifierAvailabilityFunction;
       signupAttempt: SignupAttempt | null;
       discardSignupAttempt: () => void;
-      error: ApiResult<unknown> | null;
+      errors: ApiResult<unknown, ErrorInterface> | null;
     };
 
 function builder(
   client: Client,
   signupAttempt: SignupAttempt | null,
   setSignUpAttempt: (attempt: SignupAttempt | null) => void,
-  setError: (error: ApiResult<unknown> | null) => void
+  setErrors: (errors: ApiResult<unknown, ErrorInterface> | null) => void
 ): SignUpFunction {
   return {
     create: async (params: SignUpParams) => {
@@ -57,9 +50,9 @@ function builder(
       const result = await mapResponse<Session>(response);
       if ("data" in result && result.data?.signup_attempts?.length) {
         setSignUpAttempt(result.data.signup_attempts?.at(-1) || null);
-        setError(null);
+        setErrors(null);
       } else {
-        setError(result);
+        setErrors(result);
       }
       return result;
     },
@@ -89,35 +82,21 @@ function builder(
   };
 }
 
-function identifierAvailabilityBuilder(
-  client: Client
-): IdentifierAvailabilityFunction {
-  return async (identifier: string, identifierType: "email" | "username") => {
-    const response = await client(
-      `/auth/identifier-availability?identifier=${identifier}&type=${identifierType}`
-    );
-    return mapResponse(response);
-  };
-}
-
 export function useSignUp(): UseSignUpReturnType {
   const { client, loading } = useClient();
-  const [signupAttempt, setSignupAttempt] = useState<SignupAttempt | null>(
-    null
-  );
-  const [error, setError] = useState<ApiResult<unknown> | null>(null);
+  const [signupAttempt, setSignupAttempt] = useState<SignupAttempt | null>(null);
+  const [errors, setErrors] = useState<ApiResult<unknown, ErrorInterface> | null>(null);
 
   if (loading) {
     return {
       loading: true,
       signUp: null as never,
-      identifierAvailability: null as never,
       signupAttempt: null,
       discardSignupAttempt: () => {
         setSignupAttempt(null);
-        setError(null);
+        setErrors(null);
       },
-      error: null,
+      errors: null,
     };
   }
 
@@ -126,10 +105,9 @@ export function useSignUp(): UseSignUpReturnType {
     signupAttempt,
     discardSignupAttempt: () => {
       setSignupAttempt(null);
-      setError(null);
+      setErrors(null);
     },
-    signUp: builder(client, signupAttempt, setSignupAttempt, setError),
-    identifierAvailability: identifierAvailabilityBuilder(client),
-    error,
+    signUp: builder(client, signupAttempt, setSignupAttempt, setErrors),
+    errors,
   };
 }

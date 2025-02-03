@@ -89,6 +89,7 @@ type SignIn = {
 	createStrategy: CreateSignInStrategyResult;
 	prepareVerification: (verification: VerificationStrategy) => Promise<unknown>;
 	completeVerification: (verificationCode: string) => Promise<unknown>;
+	handleSSOCallback?: (client: Client, code: string, state: string) => Promise<ApiResult<Session>>;
 };
 
 type UseSignInReturnType =
@@ -198,6 +199,16 @@ function builderOauth(client: Client): SignInOauth {
 	};
 }
 
+async function handleSSOCallback(client: Client, code: string, state: string) {
+	const response = await client(`/auth/oauth2/callback?code=${code}&state=${state}`, {
+    method: "GET",
+  });
+  
+  const result = await mapResponse<Session>(response);
+  
+  return result;
+}
+
 function builderGeneric(
 	client: Client,
 	setSignInAttempt: (attempt: SigninAttempt | null) => void,
@@ -263,6 +274,7 @@ export function useSignIn(): UseSignInReturnType {
 					},
 				);
 			},
+			handleSSOCallback: handleSSOCallback
 		},
 		discardSignInAttempt: () => {
 			setSignInAttempt(null);
