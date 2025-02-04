@@ -406,6 +406,7 @@ interface SignUpFormProps {
 	signInUrl: string;
 }
 
+
 export function SignUpForm({ className = "", signInUrl }: SignUpFormProps) {
 	const {
 		loading,
@@ -496,10 +497,6 @@ export function SignUpForm({ className = "", signInUrl }: SignUpFormProps) {
 			/^(?=.*[a-z])(?=.*[A-Z])(?=.*\d)(?=.*[@$!%*?&])[A-Za-z\d@$!%*?&]{8,125}$/;
 
 
-		console.log("errors", error);
-
-
-
 		if (authSettings?.first_name.required && !formData.first_name) {
 			newErrors.first_name = "First name is required";
 		} else if (
@@ -559,20 +556,6 @@ export function SignUpForm({ className = "", signInUrl }: SignUpFormProps) {
 		) {
 			newErrors.password =
 				"Password must be 8-125 characters and include uppercase, lowercase, number, and special character";
-		}
-
-		if (Array.isArray(error?.error)) {
-			error.error.forEach((err) => {
-				if (err.code === "EMAIL_EXISTS") {
-					newErrors.email = err.message;
-				}
-				if (err.code === "PHONE_NUMBER_EXISTS") {
-					newErrors.phone_number = err.message;
-				}
-				if (err.code === "USERNAME_EXISTS") {
-					newErrors.username = err.message;
-				}
-			});
 		}
 
 		setErrors(newErrors);
@@ -658,7 +641,27 @@ export function SignUpForm({ className = "", signInUrl }: SignUpFormProps) {
 		setOtpSent(true);
 	}, [signupAttempt, signUp, otpSent]);
 
-
+	useEffect(() => {
+    const newErrors: Record<string, string> = {};
+    if (error?.error) {
+      if (Array.isArray(error?.error)) {
+        error.error.forEach((err) => {
+          if (err.code === "USERNAME_EXISTS") {
+            newErrors.username = err.message;
+          }
+          if (err.code === "EMAIL_EXISTS") {
+            newErrors.email = err.message;
+          }
+					{
+						if (err.code === "PHONE_NUMBER_EXISTS") {
+							newErrors.phone_number = err.message;
+						}
+					}
+        });
+      }
+    }
+    setErrors((prev) => ({ ...prev, ...newErrors }));
+  }, [error]);
 
 	return (
 		<TypographyProvider>
