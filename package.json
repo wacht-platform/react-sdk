@@ -10,7 +10,7 @@
 		"/dist"
 	],
 	"scripts": {
-		"build": "rm -rf ./dist && vite build && tsc"
+		"build": "tsc && vite build"
 	},
 	"keywords": [],
 	"author": "Saurav Singh",
