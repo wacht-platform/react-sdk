@@ -13,13 +13,13 @@ interface SignInContextType {
     setOtpSent: (sent: boolean) => void;
     enabledSocialsProviders: DeploymentSocialConnection[];
     authSettings: AuthSettings | undefined;
-    firstFactor: string | undefined;
-    setFirstFactor: (factor: string) => void;
+    firstFactor: FirstFactor | undefined;
+    setFirstFactor: (factor: FirstFactor) => void;
 }
 
 const SignInContext = createContext<SignInContextType | undefined>(undefined);
 
-export function useSignIn() {
+export function useSignInContext() {
     const context = useContext(SignInContext);
     if (!context) {
         throw new Error("useSignIn must be used within a SignInProvider");
@@ -33,7 +33,7 @@ interface SignInProviderProps {
 
 export function SignInProvider({ children }: SignInProviderProps) {
     const { deployment } = useDeployment();
-    const [firstFactor, setFirstFactor] = useState<string>(deployment?.auth_settings.first_factor || "");
+    const [firstFactor, setFirstFactor] = useState<FirstFactor>(deployment?.auth_settings.first_factor!);
     const [email, setEmail] = useState("");
     const [showOtherOptions, setShowOtherOptions] = useState(false);
     const [showForgotPassword, setShowForgotPassword] = useState(false);

@@ -10,7 +10,7 @@ import { ArrowLeft } from "lucide-react";
 import { SocialAuthButtons } from "./social-buttons";
 import { ForgotPassword } from "./forgot-password";
 import { OtherSignInOptions } from "./other-signin-options";
-import { useSignIn, SignInProvider } from "../../context/signin-provider";
+import { useSignInContext, SignInProvider } from "../../context/signin-provider";
 
 const Container = styled.div`
   max-width: 400px;
@@ -187,7 +187,7 @@ export function SignInForm({ signUpUrl }: SignInFormProps) {
 }
 
 function SignInFormContent({ signUpUrl }: SignInFormProps) {
-	const { setEmail, otpSent, setOtpSent, showForgotPassword, setShowForgotPassword, showOtherOptions, setShowOtherOptions, enabledSocialsProviders, firstFactor } = useSignIn();
+	const { setEmail, otpSent, setOtpSent, showForgotPassword, setShowForgotPassword, showOtherOptions, setShowOtherOptions, enabledSocialsProviders, firstFactor } = useSignInContext();
 	const { loading, signIn, signInAttempt, discardSignInAttempt } =
 		useSignInWithStrategy(SignInStrategy.Generic);
 	const { signIn: oauthSignIn } = useSignInWithStrategy(SignInStrategy.Oauth);

@@ -15,6 +15,7 @@ interface OrgSettings {
 interface AuthFactorsEnabled {
 	email_password: boolean;
 	username_password: boolean;
+	email_magic_link: boolean;
 	email_otp: boolean;
 	phone_otp: boolean;
 	web3_wallet: boolean;
@@ -31,6 +32,14 @@ interface AuthField {
 	enabled: boolean;
 	required: boolean;
 }
+
+type SecondFactor = "none" | "phone_otp" | "backup_code" | "authenticator";
+type FirstFactor =
+	| "email_password"
+	| "username_password"
+	| "email_otp"
+	| "email_magic_link"
+	| "phone_otp";
 
 interface AuthSettings {
 	id: number;
@@ -49,10 +58,10 @@ interface AuthSettings {
 	auth_factors_enabled: AuthFactorsEnabled;
 	verification_policy: VerificationPolicy;
 	second_factor_policy: string;
-	first_factor: string;
-	second_factor: string | null;
-	alternate_first_factors: string[] | null;
-	alternate_second_factors: string[] | null;
+	first_factor: FirstFactor;
+	second_factor: SecondFactor | null;
+	alternate_first_factors: FirstFactor[] | null;
+	alternate_second_factors: SecondFactor[] | null;
 	deployment_id: number;
 }
 
