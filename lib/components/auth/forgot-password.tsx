@@ -1,9 +1,8 @@
 import { useState } from "react";
 import styled from "styled-components";
-import { useDeployment } from "../../hooks/use-deployment";
 import { TypographyProvider } from "../utility/typography";
-import { SocialAuthButtons } from "./social-buttons";
 import { ArrowLeft } from "lucide-react";
+import { OtherAuthOptions } from "./other-auth-options";
 
 const Container = styled.div`
   max-width: 400px;
@@ -89,30 +88,6 @@ const ResetButton = styled.button`
   }
 `;
 
-const EmailButton = styled.button`
-  width: 100%;
-  padding: 6px 16px;
-  background: #f9fafb;
-  color: #111827;
-  border: 1px solid #e5e7eb;
-  border-radius: 8px;
-  font-size: 14px;
-  cursor: pointer;
-  text-align: center;
-  transition: all 0.2s;
-  margin-bottom: 8px;
-
-  &:hover:not(:disabled) {
-    background: #f3f4f6;
-    border-color: #d1d5db;
-  }
-
-  &:disabled {
-    opacity: 0.7;
-    cursor: not-allowed;
-  }
-`;
-
 interface ForgotPasswordProps {
   onBack: () => void;
   onHelp: () => void;
@@ -121,12 +96,7 @@ interface ForgotPasswordProps {
 export function ForgotPassword({
   onBack,
 }: ForgotPasswordProps) {
-  const { deployment } = useDeployment();
   const [isSubmitting, setIsSubmitting] = useState(false);
-
-  const authSettings = deployment?.auth_settings;
-  const enabledSocialsProviders =
-    deployment?.social_connections.filter((conn) => conn.enabled) || [];
 
   const handleResetPassword = async () => {
     setIsSubmitting(true);
@@ -151,21 +121,7 @@ export function ForgotPassword({
           <DividerText>Or, sign in with another method</DividerText>
         </Divider>
 
-        {enabledSocialsProviders.length > 0 && (
-          <SocialAuthButtons
-            connections={enabledSocialsProviders}
-            callback={(connection) => {
-              console.log(connection);
-            }}
-          />
-        )}
-
-        {authSettings?.email_address.required && (
-          <div>
-            <EmailButton>Get a magic on your email</EmailButton>
-            <EmailButton>Login with email code</EmailButton>
-          </div>
-        )}
+        <OtherAuthOptions />
       </Container>
     </TypographyProvider>
   );

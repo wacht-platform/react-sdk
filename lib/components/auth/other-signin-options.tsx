@@ -2,7 +2,6 @@ import { ArrowLeft } from "lucide-react";
 import styled from "styled-components";
 import { TypographyProvider } from "../utility/typography";
 import { OtherAuthOptions } from "./other-auth-options";
-import { useSignIn } from "../../context/signin-provider";
 
 const Container = styled.div`
   max-width: 400px;
@@ -52,18 +51,6 @@ interface OtherSignInOptionsProps {
 }
 
 export function OtherSignInOptions({ onBack }: OtherSignInOptionsProps) {
-  const { setFirstFactor } = useSignIn();
-
-  const handleEmailMagicLink = () => {
-    setFirstFactor("email_otp");
-    onBack();
-  };
-
-  const handleEmailCode = () => {
-    setFirstFactor("email_otp");
-    onBack();
-  };
-
   return (
     <TypographyProvider>
       <Container>
@@ -76,10 +63,7 @@ export function OtherSignInOptions({ onBack }: OtherSignInOptionsProps) {
             Sign in with one of the following options to continue
           </Subtitle>
         </Header>
-        <OtherAuthOptions
-          onEmailMagicLink={handleEmailMagicLink}
-          onEmailCode={handleEmailCode}
-        />
+        <OtherAuthOptions />
       </Container>
     </TypographyProvider>
   );

@@ -130,19 +130,15 @@ export function OTPInput({
 		const value = element.value;
 		const newOtp = [...otp];
 
-		// Allow only numbers
 		newOtp[index] = value.replace(/[^0-9]/g, "");
 
-		// Update state
 		setOtp(newOtp);
 
-		// Submit if all fields are filled
 		const combinedOtp = newOtp.join("");
 		if (combinedOtp.length === length) {
 			onComplete(combinedOtp);
 		}
 
-		// Move to next input if value is entered
 		if (value && index < length - 1) {
 			inputRefs.current[index + 1]?.focus();
 		}
@@ -154,7 +150,6 @@ export function OTPInput({
 	) => {
 		if (isSubmitting) return;
 
-		// Move to previous input on backspace
 		if (e.key === "Backspace" && !otp[index] && index > 0) {
 			inputRefs.current[index - 1]?.focus();
 		}
@@ -165,7 +160,7 @@ export function OTPInput({
 			<InputGroup>
 				{otp.map((digit, index) => (
 					<InputBox
-						key={`otp-input-${digit}`}
+						key={index}
 						type="text"
 						maxLength={1}
 						value={digit}

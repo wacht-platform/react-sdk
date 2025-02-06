@@ -1,4 +1,4 @@
-import type { ApiResult, Client } from "../types/client";
+import type { ApiResult, Client, ErrorInterface } from "../types/client";
 import { mapResponse } from "../utils/response-mapper";
 import { useClient } from "./use-client";
 import type { SignUpParams } from "../types/auth";
@@ -6,116 +6,108 @@ import type { Session, SignupAttempt } from "../types/session";
 import { useState } from "react";
 
 export type SignUpFunction = {
-	create: (params: SignUpParams) => Promise<ApiResult<unknown>>;
-	prepareVerification: (
-		strategy: SignupVerificationStrategy,
-	) => Promise<unknown>;
-	completeVerification: (verificationCode: string) => Promise<unknown>;
+  create: (params: SignUpParams) => Promise<ApiResult<unknown, ErrorInterface>>;
+  prepareVerification: (
+    strategy: SignupVerificationStrategy
+  ) => Promise<unknown>;
+  completeVerification: (verificationCode: string) => Promise<unknown>;
 };
-
-type IdentifierAvailabilityFunction = (
-	identifier: string,
-	identifierType: "email" | "username",
-) => Promise<ApiResult<{ exists: boolean }>>;
 
 export type SignupVerificationStrategy = "email_otp" | "phone_otp";
 
-type UseSignUpReturnType =
-	| {
-			loading: true;
-			signUp: never;
-			identifierAvailability: never;
-			signupAttempt: null;
-			discardSignupAttempt: () => void;
-	  }
-	| {
-			loading: false;
-			signUp: SignUpFunction;
-			identifierAvailability: IdentifierAvailabilityFunction;
-			signupAttempt: SignupAttempt | null;
-			discardSignupAttempt: () => void;
-	  };
+export type UseSignUpReturnType =
+  | {
+      loading: true;
+      signUp: never;
+      signupAttempt: null;
+      discardSignupAttempt: () => void;
+      errors: null;
+    }
+  | {
+      loading: false;
+      signUp: SignUpFunction;
+      signupAttempt: SignupAttempt | null;
+      discardSignupAttempt: () => void;
+      errors: ApiResult<unknown, ErrorInterface> | null;
+    };
 
 function builder(
-	client: Client,
-	signupAttempt: SignupAttempt | null,
-	setSignUpAttempt: (attempt: SignupAttempt | null) => void,
+  client: Client,
+  signupAttempt: SignupAttempt | null,
+  setSignUpAttempt: (attempt: SignupAttempt | null) => void,
+  setErrors: (errors: ApiResult<unknown, ErrorInterface> | null) => void
 ): SignUpFunction {
-	return {
-		create: async (params: SignUpParams) => {
-			const form = new FormData();
-			for (const [key, value] of Object.entries(params)) {
-				form.append(key, value);
-			}
-			const response = await client("/auth/signup", {
-				method: "POST",
-				body: form,
-			});
-			const result = await mapResponse<Session>(response);
-			console.log(result);
-			if ("data" in result && result.data?.signup_attempts?.length) {
-				setSignUpAttempt(result.data.signup_attempts?.at(-1) || null);
-			}
-			return result;
-		},
-		prepareVerification: async (strategy: SignupVerificationStrategy) => {
-			await client(
-				`/auth/prepare-verification?attempt_identifier=${signupAttempt?.id}&strategy=${strategy}&identifier_type=signup`,
-				{
-					method: "POST",
-				},
-			);
-		},
-		completeVerification: async (verificationCode: string) => {
-			const headers = new Headers();
-			headers.append("Content-Type", "application/json");
+  return {
+    create: async (params: SignUpParams) => {
+      const form = new FormData();
+      for (const [key, value] of Object.entries(params)) {
+        form.append(key, value);
+      }
+      const response = await client("/auth/signup", {
+        method: "POST",
+        body: form,
+      });
+      const result = await mapResponse<Session>(response);
+      if ("data" in result && result.data?.signup_attempts?.length) {
+        setSignUpAttempt(result.data.signup_attempts?.at(-1) || null);
+        setErrors(null);
+      } else {
+        setErrors(result);
+      }
+      return result;
+    },
+    prepareVerification: async (strategy: SignupVerificationStrategy) => {
+      await client(
+        `/auth/prepare-verification?attempt_identifier=${signupAttempt?.id}&strategy=${strategy}&identifier_type=signup`,
+        {
+          method: "POST",
+        }
+      );
+    },
+    completeVerification: async (verificationCode: string) => {
+      const headers = new Headers();
+      headers.append("Content-Type", "application/json");
 
-			await client(
-				`/auth/attempt-verification?attempt_identifier=${signupAttempt?.id}&identifier_type=signup`,
-				{
-					method: "POST",
-					headers,
-					body: JSON.stringify({
-						verification_code: verificationCode,
-					}),
-				},
-			);
-		},
-	};
-}
-
-function identifierAvailabilityBuilder(
-	client: Client,
-): IdentifierAvailabilityFunction {
-	return async (identifier: string, identifierType: "email" | "username") => {
-		const response = await client(
-			`/auth/identifier-availability?identifier=${identifier}&type=${identifierType}`,
-		);
-		return mapResponse(response);
-	};
+      await client(
+        `/auth/attempt-verification?attempt_identifier=${signupAttempt?.id}&identifier_type=signup`,
+        {
+          method: "POST",
+          headers,
+          body: JSON.stringify({
+            verification_code: verificationCode,
+          }),
+        }
+      );
+    },
+  };
 }
 
 export function useSignUp(): UseSignUpReturnType {
-	const { client, loading } = useClient();
-	const [signupAttempt, setSignupAttempt] = useState<SignupAttempt | null>(
-		null,
-	);
+  const { client, loading } = useClient();
+  const [signupAttempt, setSignupAttempt] = useState<SignupAttempt | null>(null);
+  const [errors, setErrors] = useState<ApiResult<unknown, ErrorInterface> | null>(null);
 
-	if (loading) {
-		return {
-			loading: true,
-			signUp: null as never,
-			identifierAvailability: null as never,
-			signupAttempt: null,
-			discardSignupAttempt: () => setSignupAttempt(null),
-		};
-	}
+  if (loading) {
+    return {
+      loading: true,
+      signUp: null as never,
+      signupAttempt: null,
+      discardSignupAttempt: () => {
+        setSignupAttempt(null);
+        setErrors(null);
+      },
+      errors: null,
+    };
+  }
 
-	return {
-		loading: false,
-		signupAttempt,
-		discardSignupAttempt: () => setSignupAttempt(null),
-		signUp: builder(client, signupAttempt, setSignupAttempt),
-		identifierAvailability: identifierAvailabilityBuilder(client),
-	};
+  return {
+    loading: false,
+    signupAttempt,
+    discardSignupAttempt: () => {
+      setSignupAttempt(null);
+      setErrors(null);
+    },
+    signUp: builder(client, signupAttempt, setSignupAttempt, setErrors),
+    errors,
+  };
 }

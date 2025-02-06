@@ -2,6 +2,7 @@ import React, { useState, useRef, useEffect } from 'react';
 import styled from 'styled-components';
 import { LogOut, Settings, Plus } from 'lucide-react';
 import { TypographyProvider } from '../utility/typography';
+// import { useSession } from '../../hooks';
 
 const ButtonWrapper = styled.div`
   display: flex;
@@ -176,17 +177,54 @@ interface UserButtonProps {
 }
 
 export const UserButton: React.FC<UserButtonProps> = ({
-  accounts,
-  activeAccount,
-  onAccountSwitch,
-  onSignOut,
-  onSignOutAll,
-  onManageAccount,
-  onAddAccount,
+  // accounts = [],
+  activeAccount = 0,
+  onAccountSwitch = () => { },
+  onSignOut = () => { },
+  onSignOutAll = () => { },
+  onManageAccount = () => { },
+  onAddAccount = () => { },
 }) => {
   const [isOpen, setIsOpen] = useState(false);
   const dropdownRef = useRef<HTMLDivElement>(null);
   const buttonRef = useRef<HTMLDivElement>(null);
+  // const { isLoaded, session, switchSignIn, signOut } = useSession();
+
+  const accounts = [
+    {
+      name: "John Doe",
+      email: "johndoe@gmail.com",
+      imageUrl: "https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?auto=format&fit=facearea&facepad=2&w=256&h=256&q=80"
+    },
+    {
+      name: "Dexter",
+      email: "dexter@work.com",
+      imageUrl: "https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcQzrWgYQAAF5VJZ3ZrwpSWEtQ7AGkyE3Q0Yhw&s"
+    },
+    {
+      name: "Vishal Kumar",
+      email: "vishal@personal.com",
+      imageUrl: ""
+    },
+    {
+      name: "John Dey",
+      email: "johndey@gmail.com",
+      imageUrl: "https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?auto=format&fit=facearea&facepad=2&w=256&h=256&q=80"
+    },
+    {
+      name: "Nancy",
+      email: "nancy@work.com",
+      imageUrl: "https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcQzrWgYQAAF5VJZ3ZrwpSWEtQ7AGkyE3Q0Yhw&s"
+    },
+    {
+      name: "Vishal Sahu",
+      email: "sahu@personal.com",
+      imageUrl: ""
+    }
+  ];
+ 
+
+  // console.log(session, isLoaded, switchSignIn, signOut);
 
   useEffect(() => {
     const handleClickOutside = (event: MouseEvent) => {

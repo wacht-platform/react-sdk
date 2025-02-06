@@ -35,17 +35,26 @@ export enum ErrorCode {
   InvalidProvider = "invalid_provider",
   MissingVerificationCode = "missing_verification_code",
   VerificationCodeExpired = "verification_code_expired",
+  UsernameExist = "USERNAME_EXISTS",
 }
 
 
-export type ResultInterface<T, E> =
+  export type ResultInterface<T, E> =
   | {
-    data: never;
-    error: E;
-  }
+      data: never;
+      error: E;
+      errors?: never;
+    }
   | {
-    data: T;
-    error: never;
-  };
+      data: never;
+      errors: E;
+      error?: never;
+    }
+  | {
+      data: T;
+      error: never;
+      errors?: never;
+    };
+
 
 export type ApiResult<T, E = ErrorInterface> = ResultInterface<T, E>;

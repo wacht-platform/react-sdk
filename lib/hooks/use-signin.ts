@@ -1,5 +1,5 @@
 import { useState } from "react";
-import type { ApiResult, Client } from "../types/client";
+import type { ApiResult, Client, ErrorInterface } from "../types/client";
 import type { Session, SigninAttempt } from "../types/session";
 import { mapResponse } from "../utils/response-mapper";
 import { useClient } from "./use-client";
@@ -12,7 +12,7 @@ type UsernameSignInParams = {
 type SignInPlainUsername = ({
 	username,
 	password,
-}: UsernameSignInParams) => Promise<ApiResult<unknown>>;
+}: UsernameSignInParams) => Promise<ApiResult<Session>>;
 
 type EmailSignInParams = {
 	email: string;
@@ -22,7 +22,7 @@ type EmailSignInParams = {
 type SignInPlainEmail = ({
 	email,
 	password,
-}: EmailSignInParams) => Promise<ApiResult<unknown>>;
+}: EmailSignInParams) => Promise<ApiResult<Session>>;
 
 type GenericSignInParams = {
 	email?: string;
@@ -44,7 +44,7 @@ type PhoneSignInParams = {
 
 type SignInPhone = ({
 	phone,
-}: PhoneSignInParams) => Promise<ApiResult<unknown>>;
+}: PhoneSignInParams) => Promise<ApiResult<Session>>;
 
 export enum OAuthProvider {
 	XOauth = "x_oauth",
@@ -61,7 +61,7 @@ type SignInOauth = ({
 	provider,
 }: {
 	provider: OAuthProvider;
-}) => Promise<ApiResult<unknown>>;
+}) => Promise<ApiResult<InitSSOResponseType>>;
 
 export enum SignInStrategy {
 	Username = "username",
@@ -97,12 +97,14 @@ type UseSignInReturnType =
 			signIn: SignIn;
 			signinAttempt: SigninAttempt | null;
 			discardSignInAttempt: () => void;
+			errors: ApiResult<unknown, ErrorInterface> | null;
 	  }
 	| {
 			loading: true;
 			signIn: never;
 			signinAttempt: null;
 			discardSignInAttempt: () => void;
+			errors: null;
 	  };
 
 type InitSSOResponseType = {
@@ -113,13 +115,14 @@ type InitSSOResponseType = {
 function builder(
 	client: Client,
 	setSignInAttempt: (attempt: SigninAttempt | null) => void,
+	setErrors: (errors: ApiResult<unknown, ErrorInterface> | null) => void,
 ): CreateSignInStrategyResult {
 	const functionMap = {
-		[SignInStrategy.Username]: builderUsername(client, setSignInAttempt),
-		[SignInStrategy.Email]: builderEmail(client, setSignInAttempt),
-		[SignInStrategy.Phone]: builderPhone(client, setSignInAttempt),
-		[SignInStrategy.Oauth]: builderOauth(client),
-		[SignInStrategy.Generic]: builderGeneric(client, setSignInAttempt),
+		[SignInStrategy.Username]: builderUsername(client, setSignInAttempt, setErrors),
+		[SignInStrategy.Email]: builderEmail(client, setSignInAttempt, setErrors),
+		[SignInStrategy.Phone]: builderPhone(client, setSignInAttempt, setErrors),
+		[SignInStrategy.Oauth]: builderOauth(client, setErrors),
+		[SignInStrategy.Generic]: builderGeneric(client, setSignInAttempt, setErrors),
 	};
 
 	return function signInBuilder(strategy: SignInStrategy) {
@@ -130,6 +133,7 @@ function builder(
 function builderUsername(
 	client: Client,
 	setSignInAttempt: (attempt: SigninAttempt | null) => void,
+	setErrors: (errors: ApiResult<unknown, ErrorInterface> | null) => void,
 ): SignInPlainUsername {
 	return async ({ username, password }: UsernameSignInParams) => {
 		const form = new FormData();
@@ -142,7 +146,10 @@ function builderUsername(
 		});
 		const result = await mapResponse<Session>(response);
 		if ("data" in result && result.data?.signin_attempts?.length) {
-			setSignInAttempt(result.data.signin_attempts?.at(-1) || null);
+			setSignInAttempt(result.data.signin_attempts.at(-1) || null);
+			setErrors(null);
+		} else {
+			setErrors(result);
 		}
 		return result;
 	};
@@ -151,6 +158,7 @@ function builderUsername(
 function builderEmail(
 	client: Client,
 	setSignInAttempt: (attempt: SigninAttempt | null) => void,
+	setErrors: (errors: ApiResult<unknown, ErrorInterface> | null) => void,
 ): SignInPlainEmail {
 	return async ({ email, password }: EmailSignInParams) => {
 		const form = new FormData();
@@ -163,7 +171,10 @@ function builderEmail(
 		});
 		const result = await mapResponse<Session>(response);
 		if ("data" in result && result.data?.signin_attempts?.length) {
-			setSignInAttempt(result.data.signin_attempts?.at(-1) || null);
+			setSignInAttempt(result.data.signin_attempts.at(-1) || null);
+			setErrors(null);
+		} else {
+			setErrors(result);
 		}
 		return result;
 	};
@@ -172,6 +183,7 @@ function builderEmail(
 function builderPhone(
 	client: Client,
 	setSignInAttempt: (attempt: SigninAttempt | null) => void,
+	setErrors: (errors: ApiResult<unknown, ErrorInterface> | null) => void,
 ): SignInPhone {
 	return async ({ phone }: PhoneSignInParams) => {
 		const form = new FormData();
@@ -183,24 +195,37 @@ function builderPhone(
 		});
 		const result = await mapResponse<Session>(response);
 		if ("data" in result && result.data?.signin_attempts?.length) {
-			setSignInAttempt(result.data.signin_attempts?.at(-1) || null);
+			setSignInAttempt(result.data.signin_attempts.at(-1) || null);
+			setErrors(null);
+		} else {
+			setErrors(result);
 		}
 		return result;
 	};
 }
 
-function builderOauth(client: Client): SignInOauth {
+function builderOauth(
+	client: Client,
+	setErrors: (errors: ApiResult<unknown, ErrorInterface> | null) => void,
+): SignInOauth {
 	return async ({ provider }: { provider: OAuthProvider }) => {
 		const response = await client(`/auth/oauth2/init?provider=${provider}`, {
 			method: "POST",
 		});
-		return mapResponse<InitSSOResponseType>(response);
+		const result = await mapResponse<InitSSOResponseType>(response);
+		if ("data" in result) {
+			setErrors(null);
+		} else {
+			setErrors(result);
+		}
+		return result;
 	};
 }
 
 function builderGeneric(
 	client: Client,
 	setSignInAttempt: (attempt: SigninAttempt | null) => void,
+	setErrors: (errors: ApiResult<unknown, ErrorInterface> | null) => void,
 ): SignInGeneric {
 	return async ({ email, username, password, phone }: GenericSignInParams) => {
 		const form = new FormData();
@@ -216,7 +241,10 @@ function builderGeneric(
 		});
 		const result = await mapResponse<Session>(response);
 		if ("data" in result && result.data?.signin_attempts?.length) {
-			setSignInAttempt(result.data.signin_attempts?.at(-1) || null);
+			setSignInAttempt(result.data.signin_attempts.at(-1) || null);
+			setErrors(null);
+		} else {
+			setErrors(result);
 		}
 		return result as ApiResult<Session>;
 	};
@@ -224,14 +252,18 @@ function builderGeneric(
 
 export function useSignIn(): UseSignInReturnType {
 	const { client, loading } = useClient();
-	const [signinAttempt, setSignInAttempt] = useState<SigninAttempt | null>(
-		null,
-	);
+	const [signinAttempt, setSignInAttempt] = useState<SigninAttempt | null>(null);
+	const [errors, setErrors] = useState<ApiResult<unknown, ErrorInterface> | null>(null);
 
 	if (loading) {
 		return {
 			loading: true,
 			signinAttempt: null,
+			discardSignInAttempt: () => {
+				setSignInAttempt(null);
+				setErrors(null);
+			},
+			errors: null,
 		} as UseSignInReturnType;
 	}
 
@@ -239,7 +271,7 @@ export function useSignIn(): UseSignInReturnType {
 		loading: false,
 		signinAttempt,
 		signIn: {
-			createStrategy: builder(client, setSignInAttempt),
+			createStrategy: builder(client, setSignInAttempt, setErrors),
 			completeVerification: async (verificationCode: string) => {
 				const headers = new Headers();
 				headers.append("Content-Type", "application/json");
@@ -266,7 +298,9 @@ export function useSignIn(): UseSignInReturnType {
 		},
 		discardSignInAttempt: () => {
 			setSignInAttempt(null);
+			setErrors(null);
 		},
+		errors,
 	};
 }
 
@@ -278,40 +312,38 @@ type SignInFunction<T extends SignInStrategy> = {
 	[SignInStrategy.Generic]: SignInGeneric;
 }[T];
 
-type UseSignInWithStrategyReturnType<T extends SignInStrategy> =
+export type UseSignInWithStrategyReturnType<T extends SignInStrategy> =
 	| {
 			loading: true;
 			signIn: never;
-			signInAttempt: null;
+			signinAttempt: null;
 			discardSignInAttempt: () => void;
+			errors: null;
 	  }
 	| {
 			loading: false;
 			signIn: {
 				create: SignInFunction<T>;
 				completeVerification: (verificationCode: string) => Promise<unknown>;
-				prepareVerification: (
-					verification: VerificationStrategy,
-				) => Promise<unknown>;
+				prepareVerification: (verification: VerificationStrategy) => Promise<unknown>;
 			};
-			signInAttempt: SigninAttempt | null;
+			signinAttempt: SigninAttempt | null;
 			discardSignInAttempt: () => void;
+			errors: ApiResult<unknown, ErrorInterface> | null;
 	  };
 
 export function useSignInWithStrategy<T extends SignInStrategy>(
 	strategy: T,
 ): UseSignInWithStrategyReturnType<T> {
-	const {
-		loading,
-		signIn,
-		signinAttempt: signInAttempt,
-		discardSignInAttempt,
-	} = useSignIn();
+	const { loading, signIn, signinAttempt, discardSignInAttempt, errors } =
+		useSignIn();
 
 	if (loading) {
 		return {
 			loading: true,
-			signInAttempt: null,
+			signinAttempt: null,
+			discardSignInAttempt,
+			errors: null,
 		} as UseSignInWithStrategyReturnType<T>;
 	}
 
@@ -334,12 +366,13 @@ export function useSignInWithStrategy<T extends SignInStrategy>(
 
 	return {
 		loading: false,
-		signInAttempt,
+		signinAttempt,
 		signIn: {
 			create: strategyFunction,
 			completeVerification: signIn.completeVerification,
 			prepareVerification: signIn.prepareVerification,
 		},
-		discardSignInAttempt: discardSignInAttempt,
+		discardSignInAttempt,
+		errors,
 	} as UseSignInWithStrategyReturnType<T>;
 }
