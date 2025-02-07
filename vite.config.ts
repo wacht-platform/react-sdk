@@ -24,4 +24,9 @@ export default defineConfig({
     emptyOutDir: true,
   },
   plugins: [react(), dts()],
+  resolve: {
+    alias: {
+      "@": "/lib",
+    },
+  },
 });

@@ -43,7 +43,7 @@ export enum ErrorCode {
 export type ResultInterface<T, E> =
   | {
     data: never;
-    errors?: E[];
+    errors: E[];
   }
   | {
     data: T;

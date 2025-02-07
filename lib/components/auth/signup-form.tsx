@@ -1,6 +1,5 @@
 import { useState, useRef, useEffect } from "react";
 import styled from "styled-components";
-import type { SignUpParams } from "../../types/auth";
 import { useSignUp } from "../../hooks/use-signup";
 import {
 	useSignInWithStrategy,
@@ -12,7 +11,7 @@ import { TypographyProvider } from "../utility/typography";
 import { OTPInput } from "./otp-input";
 import { ArrowLeft } from "lucide-react";
 import { SocialAuthButtons } from "./social-buttons";
-import { countries } from "../constants/geo";
+import { countries } from "../../constants/geo";
 
 const breakpoints = {
 	sm: '36rem',

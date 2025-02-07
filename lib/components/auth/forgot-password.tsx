@@ -1,8 +1,8 @@
 import { useState } from "react";
 import styled from "styled-components";
-import { TypographyProvider } from "../utility/typography";
+import { TypographyProvider } from "@/components/utility/typography";
 import { ArrowLeft } from "lucide-react";
-import { OtherAuthOptions } from "./other-auth-options";
+import { OtherAuthOptions } from "@/components/auth/other-auth-options";
 
 const Container = styled.div`
   max-width: 400px;

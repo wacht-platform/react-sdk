@@ -2,7 +2,11 @@
   "compilerOptions": {
     "target": "ES5",
     "useDefineForClassFields": true,
-    "lib": ["ES2022", "DOM", "DOM.Iterable"],
+    "lib": [
+      "ES2022",
+      "DOM",
+      "DOM.Iterable"
+    ],
     "module": "ESNext",
     "skipLibCheck": true,
     "moduleResolution": "bundler",
@@ -18,8 +22,20 @@
     "declarationDir": "./dist",
     "emitDeclarationOnly": true,
     "esModuleInterop": true,
-    "allowSyntheticDefaultImports": true
+    "allowSyntheticDefaultImports": true,
+    "baseUrl": ".",
+    "paths": {
+      "@/*": [
+        "lib/*"
+      ]
+    }
   },
-  "include": ["lib"],
-  "exclude": ["lib/**/__docs__", "lib/**/__test__", "dist"]
+  "include": [
+    "lib"
+  ],
+  "exclude": [
+    "lib/**/__docs__",
+    "lib/**/__test__",
+    "dist"
+  ]
 }

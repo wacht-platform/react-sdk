@@ -1,6 +1,4 @@
-import type { User } from "./user";
-
-export interface SignIn {
+interface SignIn {
 	id: number;
 	userId: number;
 	user: User;
@@ -27,7 +25,7 @@ type CurrentSessionStep =
 	| "verify_authenticator"
 	| "add_second_factor";
 
-export interface SigninAttempt {
+interface SigninAttempt {
 	id: string;
 	email: string;
 	session_id: number;
@@ -48,7 +46,7 @@ type SignupAttemptStep =
 	| "verify_phone"
 	| "verify_authenticator";
 
-export interface SignupAttempt {
+interface SignupAttempt {
 	id: string;
 	session_id: number;
 	first_name: string;
@@ -64,7 +62,7 @@ export interface SignupAttempt {
 	completed: boolean;
 }
 
-export interface Session {
+interface Session {
 	id: number;
 	active_signin: SignIn | null;
 	signins: SignIn[];

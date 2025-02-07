@@ -1,6 +1,5 @@
 import { useEffect, useState } from "react";
 import styled from "styled-components";
-import type { SignInParams } from "../../types/auth";
 import { useSignInWithStrategy } from "../../hooks/use-signin";
 import type { OAuthProvider } from "../../hooks/use-signin";
 import { SignInStrategy } from "../../hooks/use-signin";

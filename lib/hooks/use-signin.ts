@@ -1,6 +1,5 @@
 import { useState } from "react";
 import type { ApiResult, Client, ErrorInterface } from "../types/client";
-import type { Session, SigninAttempt } from "../types/session";
 import { mapResponse } from "../utils/response-mapper";
 import { useClient } from "./use-client";
 
@@ -93,19 +92,19 @@ type SignIn = {
 
 type UseSignInReturnType =
 	| {
-			loading: false;
-			signIn: SignIn;
-			signinAttempt: SigninAttempt | null;
-			discardSignInAttempt: () => void;
-			errors: ApiResult<unknown, ErrorInterface> | null;
-	  }
+		loading: false;
+		signIn: SignIn;
+		signinAttempt: SigninAttempt | null;
+		discardSignInAttempt: () => void;
+		errors: ApiResult<unknown, ErrorInterface> | null;
+	}
 	| {
-			loading: true;
-			signIn: never;
-			signinAttempt: null;
-			discardSignInAttempt: () => void;
-			errors: null;
-	  };
+		loading: true;
+		signIn: never;
+		signinAttempt: null;
+		discardSignInAttempt: () => void;
+		errors: null;
+	};
 
 type InitSSOResponseType = {
 	oauth_url: string;
@@ -314,23 +313,23 @@ type SignInFunction<T extends SignInStrategy> = {
 
 export type UseSignInWithStrategyReturnType<T extends SignInStrategy> =
 	| {
-			loading: true;
-			signIn: never;
-			signinAttempt: null;
-			discardSignInAttempt: () => void;
-			errors: null;
-	  }
+		loading: true;
+		signIn: never;
+		signinAttempt: null;
+		discardSignInAttempt: () => void;
+		errors: null;
+	}
 	| {
-			loading: false;
-			signIn: {
-				create: SignInFunction<T>;
-				completeVerification: (verificationCode: string) => Promise<unknown>;
-				prepareVerification: (verification: VerificationStrategy) => Promise<unknown>;
-			};
-			signinAttempt: SigninAttempt | null;
-			discardSignInAttempt: () => void;
-			errors: ApiResult<unknown, ErrorInterface> | null;
-	  };
+		loading: false;
+		signIn: {
+			create: SignInFunction<T>;
+			completeVerification: (verificationCode: string) => Promise<unknown>;
+			prepareVerification: (verification: VerificationStrategy) => Promise<unknown>;
+		};
+		signinAttempt: SigninAttempt | null;
+		discardSignInAttempt: () => void;
+		errors: ApiResult<unknown, ErrorInterface> | null;
+	};
 
 export function useSignInWithStrategy<T extends SignInStrategy>(
 	strategy: T,

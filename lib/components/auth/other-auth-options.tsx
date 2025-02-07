@@ -1,13 +1,13 @@
 import { useState } from "react";
 import styled from "styled-components";
-import { useDeployment } from "../../hooks/use-deployment";
+import { useDeployment } from "@/hooks/use-deployment";
 import {
 	useSignInWithStrategy,
 	SignInStrategy,
 	type OAuthProvider,
-} from "../../hooks/use-signin";
-import { SocialAuthButtons } from "./social-buttons";
-import { useSignInContext } from "../../context/signin-provider";
+} from "@/hooks/use-signin";
+import { SocialAuthButtons } from "@/components/auth/social-buttons";
+import { useSignInContext } from "@/context/signin-provider";
 
 const EmailButton = styled.button`
   width: 100%;

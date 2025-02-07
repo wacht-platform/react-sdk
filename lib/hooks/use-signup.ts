@@ -1,8 +1,6 @@
 import type { ApiResult, Client, ErrorInterface } from "../types/client";
 import { mapResponse } from "../utils/response-mapper";
 import { useClient } from "./use-client";
-import type { SignUpParams } from "../types/auth";
-import type { Session, SignupAttempt } from "../types/session";
 import { useState } from "react";
 
 export type SignUpFunction = {
@@ -17,19 +15,19 @@ export type SignupVerificationStrategy = "email_otp" | "phone_otp";
 
 export type UseSignUpReturnType =
   | {
-      loading: true;
-      signUp: never;
-      signupAttempt: null;
-      discardSignupAttempt: () => void;
-      errors: null;
-    }
+    loading: true;
+    signUp: never;
+    signupAttempt: null;
+    discardSignupAttempt: () => void;
+    errors: null;
+  }
   | {
-      loading: false;
-      signUp: SignUpFunction;
-      signupAttempt: SignupAttempt | null;
-      discardSignupAttempt: () => void;
-      errors: ApiResult<unknown, ErrorInterface> | null;
-    };
+    loading: false;
+    signUp: SignUpFunction;
+    signupAttempt: SignupAttempt | null;
+    discardSignupAttempt: () => void;
+    errors: ApiResult<unknown, ErrorInterface> | null;
+  };
 
 function builder(
   client: Client,

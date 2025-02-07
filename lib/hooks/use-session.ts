@@ -1,27 +1,26 @@
 import type { ApiResult, Client } from "../types/client";
 import { mapResponse } from "../utils/response-mapper";
 import { useClient } from "./use-client";
-import type { Session } from "../types/session";
 import useSWR from "swr";
 import { useCallback } from "react";
 
 type UseSessionReturnType =
   | {
-      loading: true;
-      session: never;
-      switchSignIn: never;
-      signOut: never;
-      error: Error | null;
-      refetch: () => Promise<void>;
-    }
+    loading: true;
+    session: never;
+    switchSignIn: never;
+    signOut: never;
+    error: Error | null;
+    refetch: () => Promise<void>;
+  }
   | {
-      loading: false;
-      error: Error | null;
-      session: Session;
-      switchSignIn: (signInId: number) => Promise<void>;
-      signOut: (signInId?: number) => Promise<void>;
-      refetch: () => Promise<void>;
-    };
+    loading: false;
+    error: Error | null;
+    session: Session;
+    switchSignIn: (signInId: number) => Promise<void>;
+    signOut: (signInId?: number) => Promise<void>;
+    refetch: () => Promise<void>;
+  };
 
 async function fetchSession(client: Client): Promise<Session> {
   const response = await client("/session", {
@@ -64,7 +63,7 @@ export function useSession(): UseSessionReturnType {
     error,
     mutate,
     isLoading,
-  } = useSWR("/session", () => fetchSession(client));
+  } = useSWR(!loading ? "/session" : null, () => fetchSession(client));
 
   const refetch = useCallback(async () => {
     await mutate();

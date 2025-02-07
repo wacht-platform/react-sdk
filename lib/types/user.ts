@@ -1,17 +1,17 @@
-export interface SocialConnection {
+interface SocialConnection {
     id: number;
     provider: string;
     emailAddress: string;
 }
 
-export interface UserEmailAddress {
+interface UserEmailAddress {
     id: number;
     email: string;
     isPrimary: boolean;
     socialConnection?: SocialConnection;
 }
 
-export interface User {
+interface User {
     id: number;
     firstName: string;
     lastName: string;

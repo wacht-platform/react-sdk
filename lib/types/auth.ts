@@ -1,10 +1,10 @@
-export enum SocialAuthProvider {
+enum SocialAuthProvider {
   GitHub = "github_oauth",
   Google = "google_oauth",
   Microsoft = "microsoft_oauth",
 }
 
-export interface SignUpParams {
+interface SignUpParams {
   first_name?: string;
   last_name?: string;
   username?: string;
@@ -13,22 +13,22 @@ export interface SignUpParams {
   password?: string;
 }
 
-export interface SSOResponse {
+interface SSOResponse {
   oauth_url: string;
   session: unknown;
 }
 
-export interface SignInParams {
+interface SignInParams {
   email?: string;
   username?: string;
   password?: string;
   phone?: string;
 }
 
-export interface SignInResponse {
+interface SignInResponse {
   session: unknown;
 }
 
-export interface SSOCallbackResponse {
+interface SSOCallbackResponse {
   session: unknown;
 }
