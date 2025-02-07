@@ -16,12 +16,9 @@ export type ErrorInterface = {
 
 export enum ErrorCode {
   Unknown = "unknown",
-  InvalidCredentials = "invalid_credentials",
   UserNotFound = "user_not_found",
   EmailNotFound = "email_not_found",
   PhoneNotFound = "phone_not_found",
-  EmailAlreadyExists = "email_already_exists",
-  PhoneAlreadyExists = "phone_already_exists",
   UserAlreadyExists = "user_already_exists",
   InvalidEmail = "invalid_email",
   InvalidPhone = "invalid_phone",
@@ -36,25 +33,22 @@ export enum ErrorCode {
   MissingVerificationCode = "missing_verification_code",
   VerificationCodeExpired = "verification_code_expired",
   UsernameExist = "USERNAME_EXISTS",
+  EmailExists = "EMAIL_EXISTS",
+  InvalidCredentials = "INVALID_CREDENTIALS",
+  UserAlreadySignedIn = "USER_ALREADY_SIGNED_IN",
+  PhoneNumberExists = "PHONE_NUMBER_EXISTS",
 }
 
 
-  export type ResultInterface<T, E> =
+export type ResultInterface<T, E> =
   | {
-      data: never;
-      error: E;
-      errors?: never;
-    }
+    data: never;
+    errors?: E[];
+  }
   | {
-      data: never;
-      errors: E;
-      error?: never;
-    }
-  | {
-      data: T;
-      error: never;
-      errors?: never;
-    };
+    data: T;
+    errors?: never;
+  };
 
 
 export type ApiResult<T, E = ErrorInterface> = ResultInterface<T, E>;

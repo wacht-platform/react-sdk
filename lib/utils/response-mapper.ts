@@ -7,6 +7,6 @@ export async function mapResponse<T>(
 
 	return {
 		data: json.data,
-		error: json.errors,
+		errors: json.errors,
 	} as ApiResult<T>;
 }

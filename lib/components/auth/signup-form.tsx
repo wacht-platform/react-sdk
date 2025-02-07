@@ -413,7 +413,7 @@ export function SignUpForm({ className = "", signInUrl }: SignUpFormProps) {
 		signUp,
 		signupAttempt,
 		discardSignupAttempt,
-		errors: error,
+		errors: signUpErrors,
 	} = useSignUp();
 	const { signIn: oauthSignIn } = useSignInWithStrategy(SignInStrategy.Oauth);
 	const { deployment } = useDeployment();
@@ -597,8 +597,6 @@ export function SignUpForm({ className = "", signInUrl }: SignUpFormProps) {
 
 	const authSettings = deployment?.auth_settings;
 
-	console.log("auths", authSettings);
-
 	const filteredCountries = countries.filter(
 		(country) =>
 			country.name.toLowerCase().includes(countrySearch.toLowerCase()) ||
@@ -642,26 +640,33 @@ export function SignUpForm({ className = "", signInUrl }: SignUpFormProps) {
 	}, [signupAttempt, signUp, otpSent]);
 
 	useEffect(() => {
-    const newErrors: Record<string, string> = {};
-    if (error?.error) {
-      if (Array.isArray(error?.error)) {
-        error.error.forEach((err) => {
-          if (err.code === "USERNAME_EXISTS") {
-            newErrors.username = err.message;
-          }
-          if (err.code === "EMAIL_EXISTS") {
-            newErrors.email = err.message;
-          }
-					{
-						if (err.code === "PHONE_NUMBER_EXISTS") {
-							newErrors.phone_number = err.message;
-						}
+		const newErrors: Record<string, string> = {};
+		console.log("signUpErrors", signUpErrors);
+		if (signUpErrors?.errors) {
+			if (Array.isArray(signUpErrors?.errors)) {
+				signUpErrors.errors.forEach((err) => {
+					if (err.code === "USERNAME_EXISTS") {
+						newErrors.username = err.message;
 					}
-        });
-      }
-    }
-    setErrors((prev) => ({ ...prev, ...newErrors }));
-  }, [error]);
+
+					if (err.code === "EMAIL_EXISTS") {
+						newErrors.email = err.message;
+					}
+
+					if (err.code === "PHONE_NUMBER_EXISTS") {
+						newErrors.phone_number = err.message;
+					}
+
+					if (err.code === "INVALID_CREDENTIALS") {
+						newErrors.password = err.message;
+					}
+				});
+			}
+		}
+
+		console.log("newErrors", newErrors);
+		setErrors(newErrors);
+	}, [signUpErrors]);
 
 	return (
 		<TypographyProvider>
