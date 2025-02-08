@@ -188,7 +188,7 @@ export function SignInForm({ signUpUrl }: SignInFormProps) {
 
 function SignInFormContent({ signUpUrl }: SignInFormProps) {
   const { setEmail, otpSent, setOtpSent, showForgotPassword, setShowForgotPassword, showOtherOptions, setShowOtherOptions, enabledSocialsProviders, firstFactor } = useSignInContext();
-  const { loading, signIn, signinAttempt, discardSignInAttempt } =
+  const { loading, signIn, signinAttempt, discardSignInAttempt,errors: error } =
     useSignInWithStrategy(SignInStrategy.Generic);
   const { signIn: oauthSignIn } = useSignInWithStrategy(SignInStrategy.Oauth);
   const [formData, setFormData] = useState<SignInParams>({
@@ -328,9 +328,9 @@ function SignInFormContent({ signUpUrl }: SignInFormProps) {
 
   useEffect(() => {
     const newErrors: Record<string, string> = {};
-    if (errors?.error) {
-      if (Array.isArray(errors?.error)) {
-        errors.error.forEach((err) => {
+    if (error?.error) {
+      if (Array.isArray(error?.error)) {
+        error.error.forEach((err) => {
           if (err.code === "INVALID_CREDENTIALS") {
             newErrors.password = err.message;
           }
@@ -341,7 +341,7 @@ function SignInFormContent({ signUpUrl }: SignInFormProps) {
       }
     }
     setErrors((prev) => ({ ...prev, ...newErrors }));
-  }, [errors]);
+  }, [error]);  
 
   if (showOtherOptions) {
     return <OtherSignInOptions onBack={() => setShowOtherOptions(false)} />;
