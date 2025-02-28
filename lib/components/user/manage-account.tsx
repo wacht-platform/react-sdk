@@ -1,22 +1,30 @@
-import { useState, useRef, useEffect } from "react";
+import { useState } from "react";
 import styled from "styled-components";
 import {
-  User,
-  Shield,
-  Edit2,
-  ArrowRight,
-  ArrowLeft,
-  MoreVertical,
-  LogOut,
-  Ban,
+	User,
+	Shield,
+	ArrowRight,
+	ArrowLeft,
+	MoreVertical,
+	LogOut,
+	Ban,
+	Plus,
 } from "lucide-react";
-import { TypographyProvider } from "../utility/typography";
-import { useUser } from "../../hooks/use-user";
-import { FirefoxIcon } from "../icons/firefox";
+import { EmailAddPopover } from "@/components/user/add-email-popover";
+import { PhoneAddPopover } from "@/components/user/add-phone-popover";
+import { Dropdown, DropdownItem } from "@/components/utility/dropdown";
+import { useUser } from "@/hooks/use-user";
+
+export const TypographyProvider = styled.div`
+	* {
+		box-sizing: border-box;
+  		font-family: Inter, system-ui, Avenir, Helvetica, Arial, sans-serif;
+	}
+`;
 
 const Container = styled.div`
   max-width: 1000px;
-  height: 650px;
+  height: 600px;
   background: #ffffff;
   border-radius: 20px;
   box-shadow: 0 8px 30px rgba(0, 0, 0, 0.06);
@@ -100,20 +108,21 @@ const SectionTitle = styled.h2`
   display: flex;
   justify-content: space-between;
   align-items: center;
-  font-weight: 500;
 `;
 
 const ProfileHeader = styled.div`
   display: flex;
+  padding: 0 8px;
   gap: 8px;
   align-items: center;
   justify-content: space-between;
+  cursor: pointer;
   margin-bottom: 24px;
 `;
 
 const Avatar = styled.img`
-  width: 80px;
-  height: 80px;
+  width: 60px;
+  height: 60px;
   border-radius: 50%;
   object-fit: cover;
   @media (max-width: 600px) {
@@ -127,10 +136,9 @@ const ProfileName = styled.div`
 `;
 
 const Name = styled.h2`
-  font-size: 20px;
+  font-size: 16px;
   margin: 0;
   color: #1e293b;
-  font-weight: 500;
 `;
 
 const EditButton = styled.button`
@@ -176,7 +184,7 @@ const InfoItem = styled.div`
 const InfoLabel = styled.div`
   color: #64748b;
   font-size: 14px;
-  width: 160px;
+  width: 180px;
 `;
 
 const InfoContent = styled.div`
@@ -216,36 +224,27 @@ const IconButton = styled.button`
   }
 `;
 
-const DropdownMenu = styled.div<{ $openUpwards?: boolean }>`
-  position: absolute;
-  right: 0;
-  ${(props) => (props.$openUpwards ? "bottom: 100%;" : "top: 100%;")}
-  background: white;
-  border-radius: 8px;
-  box-shadow: 0 4px 6px -1px rgb(0 0 0 / 0.1), 0 2px 4px -2px rgb(0 0 0 / 0.1);
-  min-width: 180px;
-  z-index: 10;
-  overflow: hidden;
-  margin-top: ${(props) => (props.$openUpwards ? "0" : "4px")};
-  margin-bottom: ${(props) => (props.$openUpwards ? "4px" : "0")};
+const Badge = styled.span`
+  background: #E0E7FF;
+  color: #4F46E5;
+  padding: 2px 8px;
+  border-radius: 6px;
+  font-size: 10px;
+  font-weight: 500;
 `;
 
-const DropdownItem = styled.button<{ $destructive?: boolean }>`
-  width: 100%;
-  padding: 8px 12px;
-  background: none;
-  border: none;
-  cursor: pointer;
+const EmailItem = styled.div`
   display: flex;
   align-items: center;
-  gap: 8px;
-  font-size: 14px;
-  color: ${(props) => (props.$destructive ? "#ef4444" : "#1e293b")};
-  transition: background-color 0.2s ease;
+  justify-content: space-between;
+  padding: 8px 0;
+  transition: all 0.2s ease;
+`;
 
-  &:hover {
-    background: ${(props) => (props.$destructive ? "#fee2e2" : "#f8fafc")};
-  }
+const EmailContent = styled.div`
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
 `;
 
 const SidebarHeader = styled.div`
@@ -272,7 +271,7 @@ const AddItemForm = styled.div<{ $isVisible: boolean }>`
   transition: transform 0.3s ease;
   display: flex;
   flex-direction: column;
-  gap: 24px;
+  gap: 8px;
 `;
 
 const BackButton = styled.button`
@@ -285,611 +284,739 @@ const BackButton = styled.button`
   padding: 8px 0;
   cursor: pointer;
   font-size: 14px;
-  margin-bottom: 24px;
   
   &:hover {
     color: #1e293b;
   }
 `;
 
+const OutlinedButton = styled.button`
+  background: none;
+  border: 1px solid #e2e8f0;
+  color: #1e293b;
+  padding: 4px;
+  border-radius: 6px;
+  cursor: pointer;
+  font-size: 14px;
+  transition: all 0.2s ease;
+  &:hover {
+    background: #f8fafc;
+  }
+`;
+
 const SessionDropdown = ({
-  isOpen,
-  onClose,
-  sessionId,
-  location,
-  onLogout,
-  onBanIp,
+	isOpen,
+	onClose,
+	sessionId,
+	location,
+	onLogout,
+	onBanIp,
 }: {
-  isOpen: boolean;
-  onClose: () => void;
-  sessionId: string;
-  location: string;
-  onLogout: (id: string) => void;
-  onBanIp: (ip: string) => void;
+	isOpen: boolean;
+	onClose: () => void;
+	sessionId: string;
+	location: string;
+	onLogout: (id: string) => void;
+	onBanIp: (ip: string) => void;
 }) => {
-  const dropdownRef = useRef<HTMLDivElement>(null);
-  const [openUpwards, setOpenUpwards] = useState(false);
-
-  useEffect(() => {
-    const handleClickOutside = (event: MouseEvent) => {
-      if (
-        dropdownRef.current &&
-        !dropdownRef.current.contains(event.target as Node)
-      ) {
-        onClose();
-      }
-    };
-
-    if (isOpen) {
-      document.addEventListener("mousedown", handleClickOutside);
-
-      // Check if dropdown should open upwards
-      if (dropdownRef.current) {
-        const dropdownRect = dropdownRef.current.getBoundingClientRect();
-        const windowHeight = window.innerHeight;
-        const spaceBelow = windowHeight - dropdownRect.bottom;
-        const requiredSpace = 100; // Approximate height of dropdown
-        setOpenUpwards(spaceBelow < requiredSpace);
-      }
-    }
-
-    return () => {
-      document.removeEventListener("mousedown", handleClickOutside);
-    };
-  }, [isOpen, onClose]);
-
-  if (!isOpen) return null;
-
-  return (
-    <DropdownMenu ref={dropdownRef} $openUpwards={openUpwards}>
-      <DropdownItem onClick={() => onLogout(sessionId)}>
-        <LogOut size={14} />
-        Logout Session
-      </DropdownItem>
-      <DropdownItem $destructive onClick={() => onBanIp(location)}>
-        <Ban size={14} />
-        Ban IP Address
-      </DropdownItem>
-    </DropdownMenu>
-  );
+	return (
+		<Dropdown isOpen={isOpen} onClose={onClose} position={{ right: 0 }}>
+			<DropdownItem onClick={() => onLogout(sessionId)}>
+				<div style={{ display: "flex", alignItems: "center", gap: "8px" }}>
+					<LogOut size={14} />
+					Logout Session
+				</div>
+			</DropdownItem>
+			<DropdownItem $destructive onClick={() => onBanIp(location)}>
+				<div style={{ display: "flex", alignItems: "center", gap: "8px" }}>
+					<Ban size={14} />
+					Ban IP Address
+				</div>
+			</DropdownItem>
+		</Dropdown>
+	);
 };
 
 export const ManageAccount = () => {
-  const [activeTab, setActiveTab] = useState("manage-account");
-  const [addingItem, setAddingItem] = useState<
-    "email" | "phone" | "social" | null
-  >(null);
-  const [activeSession, setActiveSession] = useState<string | null>(null);
+	const [activeTab, setActiveTab] = useState("manage-account");
+	const [intermediateScreen, setIntermediateScreen] = useState<
+		"email" | "phone" | "social" | null
+	>(null);
+	const [activeEmail, setActiveEmail] = useState<string | null>(null);
+	const [activePhone, setActivePhone] = useState<string | null>(null);
+	const [isAddingEmail, setIsAddingEmail] = useState(false);
+	const [isAddingPhone, setIsAddingPhone] = useState(false);
+	const [activeSession, setActiveSession] = useState<string | null>(null);
+	const [newEmail, setNewEmail] = useState("");
+	const [newPhone, setNewPhone] = useState("");
+	const [emailIdInAction, setEmailIdInAction] = useState<string | null>(null);
+	const [phoneIdInAction, setPhoneIdInAction] = useState<string | null>(null);
 
-  const logoutSession = (sessionId: string) => {
-    // Mock implementation
-    console.log("Logging out session:", sessionId);
-  };
+	const logoutSession = (sessionId: string) => {
+		console.log("Logging out session:", sessionId);
+	};
 
-  const banIpAddress = (ipAddress: string) => {
-    // Mock implementation
-    console.log("Banning IP address:", ipAddress);
-  };
-  const { user } = useUser();
+	const banIpAddress = (ipAddress: string) => {
+		console.log("Banning IP address:", ipAddress);
+	};
+	const {
+		user,
+		loading,
+		createEmailAddress,
+		deleteEmailAddress,
+		prepareEmailVerification,
+		attemptEmailVerification,
+		createPhoneNumber,
+		deletePhoneNumber,
+		preparePhoneVerification,
+		attemptPhoneVerification,
+		makePhonePrimary,
+	} = useUser();
 
-  const removeEmail = (email: string) => {
-    // Mock implementation
-    console.log("Remove email:", email);
-  };
+	const disconnectAccount = (connectionId: number) => {
+		console.log("Disconnect account:", connectionId);
+	};
 
-  const removePhone = (phone: string) => {
-    // Mock implementation
-    console.log("Remove phone:", phone);
-  };
+	const handleCloseDropdown = () => {
+		setActiveSession(null);
+	};
 
-  const disconnectAccount = (provider: string) => {
-    // Mock implementation
-    console.log("Disconnect account:", provider);
-  };
+	const handlePrepareVerification = async (id: string) => {
+		await prepareEmailVerification(id);
+	};
 
-  const handleCloseDropdown = () => {
-    setActiveSession(null);
-  };
+	const handlePreparePhoneVerification = async (id: string) => {
+		await preparePhoneVerification(id);
+	};
 
-  const renderContent = () => {
-    if (activeTab === "manage-account") {
-      return (
-        <>
-          <SectionTitle style={{ marginBottom: "16px" }}>
-            Account Details
-          </SectionTitle>
-          <ProfileSection>
-            <ProfileHeader>
-              <Avatar
-                src="https://images.unsplash.com/photo-1472099645785-5658abf4ff4e?ixlib=rb-1.2.1&auto=format&fit=facearea&facepad=2&w=256&h=256&q=80"
-                alt="Profile"
-              />
-              <ProfileName>
-                <Name>Arlene McCoy</Name>
-              </ProfileName>
-              <EditButton>
-                <Edit2 size={16} />
-                Edit profile
-              </EditButton>
-            </ProfileHeader>
+	const handleMakePrimary = async (id: string) => {
+		// Add your logic to make email primary
+		console.log(id);
+		setActiveEmail(null);
+	};
 
-            <InfoItem onClick={() => setAddingItem("email")}>
-              <InfoLabel>Email addresses</InfoLabel>
-              <InfoContent>
-                <div
-                  style={{
-                    flex: 1,
-                    overflow: "hidden",
-                    textOverflow: "ellipsis",
-                    whiteSpace: "nowrap",
-                  }}
-                >
-                  example@gmail.com, example@personal.com, email@work.io
-                </div>
-                <ArrowRight size={14} style={{ color: "#64748b" }} />
-              </InfoContent>
-            </InfoItem>
+	const handleMakePhonePrimary = async (id: string) => {
+		await makePhonePrimary(id);
+		setActivePhone(null);
+		user.refetch();
+	};
 
-            <InfoItem onClick={() => setAddingItem("phone")}>
-              <InfoLabel>Phone number</InfoLabel>
-              <InfoContent>
-                <div
-                  style={{
-                    flex: 1,
-                    overflow: "hidden",
-                    textOverflow: "ellipsis",
-                    whiteSpace: "nowrap",
-                  }}
-                >
-                  +1(555)123-4567
-                </div>
-                <ArrowRight size={14} style={{ color: "#64748b" }} />
-              </InfoContent>
-            </InfoItem>
+	if (loading) return null;
 
-            <InfoItem onClick={() => setAddingItem("social")}>
-              <InfoLabel>Connected accounts</InfoLabel>
-              <InfoContent>
-                <div
-                  style={{
-                    flex: 1,
-                    overflow: "hidden",
-                    textOverflow: "ellipsis",
-                    whiteSpace: "nowrap",
-                  }}
-                >
-                  Google • example@email.com
-                </div>
-                <ArrowRight size={14} style={{ color: "#64748b" }} />
-              </InfoContent>
-            </InfoItem>
+	const renderContent = () => {
+		if (activeTab === "manage-account") {
+			return (
+				<>
+					<SectionTitle style={{ marginBottom: "20px" }}>
+						Account Details
+					</SectionTitle>
+					<ProfileSection>
+						<ProfileHeader>
+							<Avatar
+								src="https://images.unsplash.com/photo-1472099645785-5658abf4ff4e?ixlib=rb-1.2.1&auto=format&fit=facearea&facepad=2&w=256&h=256&q=80"
+								alt="Profile"
+							/>
+							<ProfileName>
+								<Name>
+									{user?.first_name} {user?.last_name}
+								</Name>
+							</ProfileName>
 
-            <SectionTitle style={{ marginTop: "32px", marginBottom: "16px" }}>
-              Security settings
-            </SectionTitle>
+							<ArrowRight size={14} style={{ color: "#64748b" }} />
+						</ProfileHeader>
 
-            <InfoItem onClick={() => setActiveTab("security")}>
-              <InfoLabel>Password</InfoLabel>
-              <InfoContent>
-                <div
-                  style={{
-                    flex: 1,
-                    overflow: "hidden",
-                    textOverflow: "ellipsis",
-                    whiteSpace: "nowrap",
-                  }}
-                >
-                  Last changed 3 months ago
-                </div>
-                <ArrowRight size={14} style={{ color: "#64748b" }} />
-              </InfoContent>
-            </InfoItem>
+						<InfoItem onClick={() => setIntermediateScreen("email")}>
+							<InfoLabel>Email addresses</InfoLabel>
+							<InfoContent>
+								<div
+									style={{
+										flex: 1,
+										overflow: "hidden",
+										textOverflow: "ellipsis",
+										whiteSpace: "nowrap",
+									}}
+								>
+									{user?.user_email_addresses?.length
+										? user.user_email_addresses
+												.map((email) => email.email)
+												.join(", ")
+										: "No email addresses added"}
+								</div>
+								<ArrowRight size={14} style={{ color: "#64748b" }} />
+							</InfoContent>
+						</InfoItem>
 
-            <InfoItem onClick={() => setActiveTab("security")}>
-              <InfoLabel>Authenticator App</InfoLabel>
-              <InfoContent>
-                <div
-                  style={{
-                    flex: 1,
-                    overflow: "hidden",
-                    textOverflow: "ellipsis",
-                    whiteSpace: "nowrap",
-                  }}
-                >
-                  Add a second layer of security to your account
-                </div>
-                <ArrowRight size={14} style={{ color: "#64748b" }} />
-              </InfoContent>
-            </InfoItem>
+						<InfoItem onClick={() => setIntermediateScreen("phone")}>
+							<InfoLabel>Phone number</InfoLabel>
+							<InfoContent>
+								<div
+									style={{
+										flex: 1,
+										overflow: "hidden",
+										textOverflow: "ellipsis",
+										whiteSpace: "nowrap",
+									}}
+								>
+									{user?.user_phone_numbers?.length
+										? user.user_phone_numbers
+												.map((phone) => phone.phone_number)
+												.join(", ")
+										: "No phone numbers added"}
+								</div>
+								<ArrowRight size={14} style={{ color: "#64748b" }} />
+							</InfoContent>
+						</InfoItem>
 
-            <InfoItem onClick={() => setActiveTab("security")}>
-              <InfoLabel>Backup codes</InfoLabel>
-              <InfoContent>
-                <div
-                  style={{
-                    flex: 1,
-                    overflow: "hidden",
-                    textOverflow: "ellipsis",
-                    whiteSpace: "nowrap",
-                  }}
-                >
-                  Generate backup codes for emergency access
-                </div>
-                <ArrowRight size={14} style={{ color: "#64748b" }} />
-              </InfoContent>
-            </InfoItem>
-          </ProfileSection>
-        </>
-      );
-    }
+						<InfoItem onClick={() => setIntermediateScreen("social")}>
+							<InfoLabel>Connected accounts</InfoLabel>
+							<InfoContent>
+								<div
+									style={{
+										flex: 1,
+										overflow: "hidden",
+										textOverflow: "ellipsis",
+										whiteSpace: "nowrap",
+									}}
+								>
+									{user?.social_connections?.length
+										? user.social_connections
+												.map(
+													(conn) => `${conn.provider} • ${conn.email_address}`,
+												)
+												.join(", ")
+										: "No accounts connected"}
+								</div>
+								<ArrowRight size={14} style={{ color: "#64748b" }} />
+							</InfoContent>
+						</InfoItem>
 
-    return (
-      <>
-        <ProfileSection>
-          <SectionTitle>Active Sessions</SectionTitle>
-          {user.sessions.map((session) => (
-            <div
-              key={session.id}
-              style={{
-                display: "flex",
-                alignItems: "center",
-                padding: "16px",
-                background:
-                  activeSession === session.id ? "#f8fafc" : "transparent",
-                borderRadius: "8px",
-                marginTop: "12px",
-                position: "relative",
-              }}
-            >
-              <div style={{ marginRight: "16px" }}>
-                <FirefoxIcon style={{ width: 24, height: 24 }} />
-              </div>
-              <div style={{ flex: 1 }}>
-                <div
-                  style={{
-                    fontSize: "14px",
-                    color: "#1e293b",
-                    fontWeight: 500,
-                  }}
-                >
-                  {session.browser}
-                </div>
-                <LastLogin>
-                  <div>{session.location}</div>
-                  <div>{session.id}</div>
-                </LastLogin>
-              </div>
-              <div style={{ position: "relative" }}>
-                <IconButton
-                  onClick={() =>
-                    setActiveSession(
-                      activeSession === session.id ? null : session.id,
-                    )
-                  }
-                >
-                  <MoreVertical size={16} />
-                </IconButton>
-                <SessionDropdown
-                  isOpen={activeSession === session.id}
-                  onClose={handleCloseDropdown}
-                  sessionId={session.id}
-                  location={session.location}
-                  onLogout={logoutSession}
-                  onBanIp={banIpAddress}
-                />
-              </div>
-            </div>
-          ))}
-        </ProfileSection>
-      </>
-    );
-  };
+						<SectionTitle style={{ marginTop: "32px", marginBottom: "16px" }}>
+							Security settings
+						</SectionTitle>
 
-  return (
-    <TypographyProvider>
-      <Container>
-        <Layout>
-          <Sidebar>
-            <SidebarHeader>
-              <SidebarTitle>
-                <Title>Account</Title>
-                <Subtitle>Manage your account info</Subtitle>
-              </SidebarTitle>
-            </SidebarHeader>
-            <MenuItem
-              active={activeTab === "manage-account"}
-              onClick={() => setActiveTab("manage-account")}
-            >
-              <User size={16} />
-              Manage Account
-            </MenuItem>
-            <MenuItem
-              active={activeTab === "active-sessions"}
-              onClick={() => setActiveTab("active-sessions")}
-            >
-              <Shield size={16} />
-              Active Sessions
-            </MenuItem>
-          </Sidebar>
+						<InfoItem onClick={() => setActiveTab("security")}>
+							<InfoLabel>Password</InfoLabel>
+							<InfoContent>
+								<div
+									style={{
+										flex: 1,
+										overflow: "hidden",
+										textOverflow: "ellipsis",
+										whiteSpace: "nowrap",
+									}}
+								>
+									Last changed 3 months ago
+								</div>
+								<ArrowRight size={14} style={{ color: "#64748b" }} />
+							</InfoContent>
+						</InfoItem>
 
-          <div
-            style={{ position: "relative", width: "100%", overflow: "hidden" }}
-          >
-            <MainContent $isAdding={!!addingItem}>
-              {renderContent()}
-            </MainContent>
+						<InfoItem onClick={() => setActiveTab("security")}>
+							<InfoLabel>
+								Two Factor Verification
+								{user.second_factor_policy}
+							</InfoLabel>
+							<InfoContent>
+								<div
+									style={{
+										flex: 1,
+										overflow: "hidden",
+										textOverflow: "ellipsis",
+										whiteSpace: "nowrap",
+									}}
+								>
+									{user.second_factor_policy === "none"
+										? "Add a second layer of security to your account"
+										: "Set up your second factors"}
+								</div>
+								<ArrowRight size={14} style={{ color: "#64748b" }} />
+							</InfoContent>
+						</InfoItem>
+					</ProfileSection>
+				</>
+			);
+		}
 
-            <AddItemForm $isVisible={!!addingItem}>
-              <BackButton onClick={() => setAddingItem(null)}>
-                <ArrowLeft size={16} />
-                Back to profile
-              </BackButton>
-              <SectionTitle>
-                {addingItem === "email" && "Email addresses"}
-                {addingItem === "phone" && "Phone numbers"}
-                {addingItem === "social" && "Connected accounts"}
-              </SectionTitle>
-              {addingItem === "email" && (
-                <div
-                  style={{
-                    display: "flex",
-                    flexDirection: "column",
-                    gap: "24px",
-                  }}
-                >
-                  <div
-                    style={{
-                      display: "flex",
-                      flexDirection: "column",
-                      gap: "12px",
-                    }}
-                  >
-                    {user.emails.map((email) => (
-                      <div
-                        key={email.address}
-                        style={{
-                          display: "flex",
-                          alignItems: "center",
-                          justifyContent: "space-between",
-                          padding: "12px",
-                          background: "#f8fafc",
-                          borderRadius: "8px",
-                        }}
-                      >
-                        <div
-                          style={{
-                            display: "flex",
-                            flexDirection: "column",
-                            gap: "4px",
-                          }}
-                        >
-                          <div style={{ fontSize: "14px", color: "#1e293b" }}>
-                            {email.address}
-                          </div>
-                          {email.isPrimary && (
-                            <div style={{ fontSize: "12px", color: "#64748b" }}>
-                              Primary email
-                            </div>
-                          )}
-                        </div>
-                        <EditButton
-                          onClick={() => removeEmail(email.address)}
-                          style={{ background: "#fee2e2", color: "#ef4444" }}
-                        >
-                          Remove
-                        </EditButton>
-                      </div>
-                    ))}
-                  </div>
-                  <div
-                    style={{
-                      display: "flex",
-                      flexDirection: "column",
-                      gap: "16px",
-                    }}
-                  >
-                    <div
-                      style={{
-                        display: "flex",
-                        flexDirection: "column",
-                        gap: "8px",
-                      }}
-                    >
-                      <label
-                        htmlFor="new-email"
-                        style={{ fontSize: "14px", color: "#64748b" }}
-                      >
-                        New email address
-                      </label>
-                      <input
-                        id="new-email"
-                        type="email"
-                        placeholder="Enter your email address"
-                        style={{
-                          padding: "8px 12px",
-                          border: "1px solid #e2e8f0",
-                          borderRadius: "6px",
-                          fontSize: "14px",
-                        }}
-                      />
-                    </div>
-                    <EditButton style={{ width: "fit-content" }}>
-                      Add email address
-                    </EditButton>
-                  </div>
-                </div>
-              )}
-              {addingItem === "phone" && (
-                <div
-                  style={{
-                    display: "flex",
-                    flexDirection: "column",
-                    gap: "24px",
-                  }}
-                >
-                  <div
-                    style={{
-                      display: "flex",
-                      flexDirection: "column",
-                      gap: "12px",
-                    }}
-                  >
-                    {user.phones.map((phone) => (
-                      <div
-                        key={phone.number}
-                        style={{
-                          display: "flex",
-                          alignItems: "center",
-                          justifyContent: "space-between",
-                          padding: "12px",
-                          background: "#f8fafc",
-                          borderRadius: "8px",
-                        }}
-                      >
-                        <div
-                          style={{
-                            display: "flex",
-                            flexDirection: "column",
-                            gap: "4px",
-                          }}
-                        >
-                          <div style={{ fontSize: "14px", color: "#1e293b" }}>
-                            {phone.number}
-                          </div>
-                          {phone.isPrimary && (
-                            <div style={{ fontSize: "12px", color: "#64748b" }}>
-                              Primary phone
-                            </div>
-                          )}
-                        </div>
-                        <EditButton
-                          onClick={() => removePhone(phone.number)}
-                          style={{ background: "#fee2e2", color: "#ef4444" }}
-                        >
-                          Remove
-                        </EditButton>
-                      </div>
-                    ))}
-                  </div>
-                  <div
-                    style={{
-                      display: "flex",
-                      flexDirection: "column",
-                      gap: "16px",
-                    }}
-                  >
-                    <div
-                      style={{
-                        display: "flex",
-                        flexDirection: "column",
-                        gap: "8px",
-                      }}
-                    >
-                      <label
-                        htmlFor="new-phone"
-                        style={{ fontSize: "14px", color: "#64748b" }}
-                      >
-                        New phone number
-                      </label>
-                      <input
-                        id="new-phone"
-                        type="tel"
-                        placeholder="Enter your phone number"
-                        style={{
-                          padding: "8px 12px",
-                          border: "1px solid #e2e8f0",
-                          borderRadius: "6px",
-                          fontSize: "14px",
-                        }}
-                      />
-                    </div>
-                    <EditButton style={{ width: "fit-content" }}>
-                      Add phone number
-                    </EditButton>
-                  </div>
-                </div>
-              )}
-              {addingItem === "social" && (
-                <div
-                  style={{
-                    display: "flex",
-                    flexDirection: "column",
-                    gap: "24px",
-                  }}
-                >
-                  <div
-                    style={{
-                      display: "flex",
-                      flexDirection: "column",
-                      gap: "12px",
-                    }}
-                  >
-                    {user.connectedAccounts.map((account) => (
-                      <div
-                        key={account.provider + account.email}
-                        style={{
-                          display: "flex",
-                          alignItems: "center",
-                          justifyContent: "space-between",
-                          padding: "12px",
-                          background: "#f8fafc",
-                          borderRadius: "8px",
-                        }}
-                      >
-                        <div
-                          style={{
-                            display: "flex",
-                            flexDirection: "column",
-                            gap: "4px",
-                          }}
-                        >
-                          <div style={{ fontSize: "14px", color: "#1e293b" }}>
-                            {account.provider}
-                          </div>
-                          <div style={{ fontSize: "12px", color: "#64748b" }}>
-                            {account.email}
-                          </div>
-                        </div>
-                        <EditButton
-                          onClick={() => disconnectAccount(account.provider)}
-                          style={{ background: "#fee2e2", color: "#ef4444" }}
-                        >
-                          Disconnect
-                        </EditButton>
-                      </div>
-                    ))}
-                  </div>
-                  <div
-                    style={{
-                      display: "flex",
-                      flexDirection: "column",
-                      gap: "12px",
-                    }}
-                  >
-                    <EditButton
-                      style={{ width: "100%", justifyContent: "center" }}
-                    >
-                      Continue with Google
-                    </EditButton>
-                    <EditButton
-                      style={{ width: "100%", justifyContent: "center" }}
-                    >
-                      Continue with GitHub
-                    </EditButton>
-                    <EditButton
-                      style={{ width: "100%", justifyContent: "center" }}
-                    >
-                      Continue with Microsoft
-                    </EditButton>
-                  </div>
-                </div>
-              )}
-            </AddItemForm>
-          </div>
-        </Layout>
-      </Container>
-    </TypographyProvider>
-  );
+		return (
+			<>
+				<ProfileSection>
+					<SectionTitle>Active Sessions</SectionTitle>
+					{user.sessions.map((session) => (
+						<div
+							key={session.id}
+							style={{
+								display: "flex",
+								alignItems: "center",
+								padding: "16px",
+								background:
+									activeSession === session.id ? "#f8fafc" : "transparent",
+								borderRadius: "8px",
+								marginTop: "12px",
+								position: "relative",
+							}}
+						>
+							<div style={{ marginRight: "16px" }}>
+								{/* <FirefoxIcon style={{ width: 24, height: 24 }} /> */}
+							</div>
+							<div style={{ flex: 1 }}>
+								<div
+									style={{
+										fontSize: "14px",
+										color: "#1e293b",
+										fontWeight: 500,
+									}}
+								>
+									{session.browser}
+								</div>
+								<LastLogin>
+									<div>{session.location}</div>
+									<div>{session.id}</div>
+								</LastLogin>
+							</div>
+							<div style={{ position: "relative" }}>
+								<IconButton
+									onClick={() =>
+										setActiveSession(
+											activeSession === session.id ? null : session.id,
+										)
+									}
+								>
+									<MoreVertical size={16} />
+								</IconButton>
+								<SessionDropdown
+									isOpen={activeSession === session.id}
+									onClose={handleCloseDropdown}
+									sessionId={session.id}
+									location={session.location}
+									onLogout={logoutSession}
+									onBanIp={banIpAddress}
+								/>
+							</div>
+						</div>
+					))}
+				</ProfileSection>
+			</>
+		);
+	};
+
+	return (
+		<TypographyProvider>
+			<Container>
+				<Layout>
+					<Sidebar>
+						<SidebarHeader>
+							<SidebarTitle>
+								<Title>Account</Title>
+								<Subtitle>Manage your account info</Subtitle>
+							</SidebarTitle>
+						</SidebarHeader>
+						<MenuItem
+							active={activeTab === "manage-account"}
+							onClick={() => setActiveTab("manage-account")}
+						>
+							<User size={16} />
+							Manage Account
+						</MenuItem>
+						<MenuItem
+							active={activeTab === "active-sessions"}
+							onClick={() => setActiveTab("active-sessions")}
+						>
+							<Shield size={16} />
+							Active Sessions
+						</MenuItem>
+					</Sidebar>
+
+					<div
+						style={{ position: "relative", width: "100%", overflow: "hidden" }}
+					>
+						<MainContent $isAdding={!!intermediateScreen}>
+							{renderContent()}
+						</MainContent>
+
+						<AddItemForm $isVisible={!!intermediateScreen}>
+							<BackButton onClick={() => setIntermediateScreen(null)}>
+								<ArrowLeft size={16} />
+								Back to profile
+							</BackButton>
+							{intermediateScreen === "email" && (
+								<>
+									<SectionTitle style={{ fontSize: "14px", margin: "6px 0" }}>
+										<span style={{ fontWeight: 500 }}>Email addresses</span>
+										<div style={{ position: "relative" }}>
+											<OutlinedButton onClick={() => setIsAddingEmail(true)}>
+												<Plus size={16} />
+											</OutlinedButton>
+											{isAddingEmail && (
+												<EmailAddPopover
+													onClose={() => setIsAddingEmail(false)}
+													onAddEmail={async (email) => {
+														const newEmail = await createEmailAddress(email);
+														setNewEmail(newEmail.data.id);
+														await prepareEmailVerification(newEmail.data.id);
+														user.refetch();
+													}}
+													onPrepareVerification={async () => {
+														await prepareEmailVerification(newEmail);
+														user.refetch();
+													}}
+													onAttemptVerification={async (otp) => {
+														await attemptEmailVerification(newEmail, otp);
+														user.refetch();
+													}}
+												/>
+											)}
+										</div>
+									</SectionTitle>
+									<div
+										style={{
+											display: "flex",
+											flexDirection: "column",
+											gap: "4px",
+										}}
+									>
+										{!user?.user_email_addresses?.length ? (
+											<div
+												style={{
+													textAlign: "center",
+													padding: "20px",
+													color: "#64748b",
+												}}
+											>
+												No email addresses added
+											</div>
+										) : (
+											user.user_email_addresses.map((email) => (
+												<EmailItem key={email.email}>
+													<EmailContent>
+														<div
+															style={{
+																fontSize: "14px",
+																color: "#1e293b",
+																display: "flex",
+																alignItems: "center",
+																gap: "8px",
+															}}
+														>
+															{email.email}
+															{email.id === user?.primary_email_address_id && (
+																<Badge>Primary</Badge>
+															)}
+															<Badge>
+																{!email.verified ? "Not Verified" : "Verified"}
+															</Badge>
+														</div>
+													</EmailContent>
+													<div style={{ position: "relative" }}>
+														<IconButton
+															onClick={() =>
+																setActiveEmail(
+																	activeEmail === email.id ? null : email.id,
+																)
+															}
+														>
+															<MoreVertical size={16} />
+														</IconButton>
+														{emailIdInAction === email.id && (
+															<EmailAddPopover
+																existingEmail={email.email}
+																onClose={() => setEmailIdInAction(null)}
+																onAddEmail={async (email) => {
+																	const newEmail =
+																		await createEmailAddress(email);
+																	setNewEmail(newEmail.data.id);
+																	await prepareEmailVerification(
+																		newEmail.data.id,
+																	);
+																	user.refetch();
+																}}
+																onPrepareVerification={async () => {
+																	await prepareEmailVerification(newEmail);
+																	user.refetch();
+																}}
+																onAttemptVerification={async (otp) => {
+																	await attemptEmailVerification(email.id, otp);
+																	user.refetch();
+																}}
+															/>
+														)}
+														{!emailIdInAction && (
+															<Dropdown
+																isOpen={activeEmail === email.id}
+																onClose={() => setActiveEmail(null)}
+																position={{ right: 0 }}
+															>
+																{!email.verified && (
+																	<DropdownItem
+																		onClick={() => {
+																			handlePrepareVerification(email.id);
+																			setEmailIdInAction(email.id);
+																		}}
+																	>
+																		Verify email
+																	</DropdownItem>
+																)}
+																{email.id !==
+																	user?.primary_email_address_id && (
+																	<DropdownItem
+																		onClick={() => handleMakePrimary(email.id)}
+																	>
+																		Make primary
+																	</DropdownItem>
+																)}
+																<DropdownItem
+																	$destructive
+																	onClick={() => deleteEmailAddress(email.id)}
+																>
+																	Remove
+																</DropdownItem>
+															</Dropdown>
+														)}
+													</div>
+												</EmailItem>
+											))
+										)}
+									</div>
+								</>
+							)}
+							{intermediateScreen === "phone" && (
+								<>
+									<SectionTitle style={{ fontSize: "14px", margin: "6px 0" }}>
+										<span style={{ fontWeight: 500 }}>Phone number</span>
+										<div style={{ position: "relative" }}>
+											<OutlinedButton onClick={() => setIsAddingPhone(true)}>
+												<Plus size={16} />
+											</OutlinedButton>
+											{isAddingPhone && (
+												<PhoneAddPopover
+													onClose={() => setIsAddingPhone(false)}
+													onAddPhone={async (phone) => {
+														const newPhone = await createPhoneNumber(phone);
+														setNewPhone(newPhone.data.id);
+														await preparePhoneVerification(newPhone.data.id);
+														user.refetch();
+													}}
+													onPrepareVerification={async () => {
+														await preparePhoneVerification(newPhone);
+														user.refetch();
+													}}
+													onAttemptVerification={async (otp) => {
+														await attemptPhoneVerification(newPhone, otp);
+														user.refetch();
+													}}
+												/>
+											)}
+										</div>
+									</SectionTitle>
+									<div
+										style={{
+											display: "flex",
+											flexDirection: "column",
+											gap: "12px",
+										}}
+									>
+										{!user?.user_phone_numbers?.length ? (
+											<div
+												style={{
+													textAlign: "center",
+													padding: "20px",
+													color: "#64748b",
+												}}
+											>
+												No phone numbers added
+											</div>
+										) : (
+											user.user_phone_numbers.map((phone) => (
+												<EmailItem key={phone.phone_number}>
+													<EmailContent>
+														<div
+															style={{
+																fontSize: "14px",
+																color: "#1e293b",
+																display: "flex",
+																alignItems: "center",
+																gap: "8px",
+															}}
+														>
+															{phone.phone_number}
+															{phone.id === user?.primary_email_address_id && (
+																<Badge>Primary</Badge>
+															)}
+															<Badge>
+																{!phone.verified ? "Not Verified" : "Verified"}
+															</Badge>
+														</div>
+													</EmailContent>
+													<div style={{ position: "relative" }}>
+														<IconButton
+															onClick={() =>
+																setActivePhone(
+																	activePhone === phone.id ? null : phone.id,
+																)
+															}
+														>
+															<MoreVertical size={16} />
+														</IconButton>
+														{phoneIdInAction === phone.id && (
+															<PhoneAddPopover
+																existingPhone={phone.phone_number}
+																onClose={() => setPhoneIdInAction(null)}
+																onAddPhone={async (phone) => {
+																	const newPhone =
+																		await createPhoneNumber(phone);
+																	setNewPhone(newPhone.data.id);
+																	await preparePhoneVerification(
+																		newPhone.data.id,
+																	);
+																	user.refetch();
+																}}
+																onPrepareVerification={async () => {
+																	await preparePhoneVerification(newPhone);
+																	user.refetch();
+																}}
+																onAttemptVerification={async (otp) => {
+																	await attemptPhoneVerification(phone.id, otp);
+																	user.refetch();
+																}}
+															/>
+														)}
+														{!phoneIdInAction && (
+															<Dropdown
+																isOpen={activePhone === phone.id}
+																onClose={() => setActivePhone(null)}
+																position={{ right: 0 }}
+															>
+																{!phone.verified && (
+																	<DropdownItem
+																		onClick={() => {
+																			handlePreparePhoneVerification(phone.id);
+																			setPhoneIdInAction(phone.id);
+																		}}
+																	>
+																		Verify phone
+																	</DropdownItem>
+																)}
+																{phone.id !== user?.primary_phone_number_id && (
+																	<DropdownItem
+																		onClick={async () => {
+																			await handleMakePhonePrimary(phone.id);
+																			setActivePhone(null);
+																			user.refetch();
+																		}}
+																	>
+																		Make primary
+																	</DropdownItem>
+																)}
+																<DropdownItem
+																	$destructive
+																	onClick={async () => {
+																		await deletePhoneNumber(phone.id);
+																		user.refetch();
+																	}}
+																>
+																	Remove
+																</DropdownItem>
+															</Dropdown>
+														)}
+													</div>
+												</EmailItem>
+											))
+										)}
+									</div>
+								</>
+							)}
+							{intermediateScreen === "social" && (
+								<div
+									style={{
+										display: "flex",
+										flexDirection: "column",
+										gap: "24px",
+									}}
+								>
+									<div
+										style={{
+											display: "flex",
+											flexDirection: "column",
+											gap: "12px",
+										}}
+									>
+										{!user?.social_connections?.length ? (
+											<div
+												style={{
+													textAlign: "center",
+													padding: "20px",
+													color: "#64748b",
+												}}
+											>
+												No accounts connected
+											</div>
+										) : (
+											user.social_connections.map((account) => (
+												<div
+													key={account.provider + account.email_address}
+													style={{
+														display: "flex",
+														alignItems: "center",
+														justifyContent: "space-between",
+														padding: "12px",
+														background: "#f8fafc",
+														borderRadius: "8px",
+													}}
+												>
+													<div
+														style={{
+															display: "flex",
+															flexDirection: "column",
+															gap: "4px",
+														}}
+													>
+														<div style={{ fontSize: "14px", color: "#1e293b" }}>
+															{account.provider}
+														</div>
+														<div style={{ fontSize: "12px", color: "#64748b" }}>
+															{account.email_address}
+														</div>
+													</div>
+													<EditButton
+														onClick={() => disconnectAccount(account.id)}
+														style={{ background: "#fee2e2", color: "#ef4444" }}
+													>
+														Disconnect
+													</EditButton>
+												</div>
+											))
+										)}
+									</div>
+									<div
+										style={{
+											display: "flex",
+											flexDirection: "column",
+											gap: "12px",
+										}}
+									>
+										<EditButton
+											style={{ width: "100%", justifyContent: "center" }}
+										>
+											Continue with Google
+										</EditButton>
+										<EditButton
+											style={{ width: "100%", justifyContent: "center" }}
+										>
+											Continue with GitHub
+										</EditButton>
+										<EditButton
+											style={{ width: "100%", justifyContent: "center" }}
+										>
+											Continue with Microsoft
+										</EditButton>
+									</div>
+								</div>
+							)}
+						</AddItemForm>
+					</div>
+				</Layout>
+			</Container>
+		</TypographyProvider>
+	);
 };
 
 export default ManageAccount;

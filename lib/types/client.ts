@@ -1,20 +1,20 @@
-export type Client = (
+type Client = (
   url: URL | string,
   options?: RequestInit,
 ) => Promise<Response>;
 
-export type ClinetReponse<T> = {
+type ClinetReponse<T> = {
   status: number;
   message: string;
   data: T;
 };
 
-export type ErrorInterface = {
+type ErrorInterface = {
   message: string;
   code: ErrorCode;
 };
 
-export enum ErrorCode {
+enum ErrorCode {
   Unknown = "unknown",
   UserNotFound = "user_not_found",
   EmailNotFound = "email_not_found",
@@ -40,7 +40,7 @@ export enum ErrorCode {
 }
 
 
-export type ResultInterface<T, E> =
+type ResultInterface<T, E> =
   | {
     data: never;
     errors: E[];
@@ -51,4 +51,4 @@ export type ResultInterface<T, E> =
   };
 
 
-export type ApiResult<T, E = ErrorInterface> = ResultInterface<T, E>;
+type ApiResult<T, E = ErrorInterface> = ResultInterface<T, E>;

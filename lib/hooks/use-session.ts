@@ -1,4 +1,3 @@
-import type { ApiResult, Client } from "../types/client";
 import { mapResponse } from "../utils/response-mapper";
 import { useClient } from "./use-client";
 import useSWR from "swr";

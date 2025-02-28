@@ -1,5 +1,3 @@
-import type { ApiResult } from "../types/client";
-
 export async function mapResponse<T>(
 	response: Response,
 ): Promise<ApiResult<T>> {

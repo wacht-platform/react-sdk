@@ -4,7 +4,7 @@ import { useSignInWithStrategy } from "../../hooks/use-signin";
 import type { OAuthProvider } from "../../hooks/use-signin";
 import { SignInStrategy } from "../../hooks/use-signin";
 import { TypographyProvider } from "../utility/typography";
-import { OTPInput } from "./otp-input";
+import { OTPInput } from "@/components/utility/otp-input";
 import { ArrowLeft } from "lucide-react";
 import { SocialAuthButtons } from "./social-buttons";
 import { ForgotPassword } from "./forgot-password";
@@ -13,7 +13,9 @@ import {
 	useSignInContext,
 	SignInProvider,
 } from "../../context/signin-provider";
-import { ErrorCode } from "../../types/client";
+import { NavigationLink } from "../utility/navigation";
+import { Input } from "@/components/utility/input";
+import { Form, FormGroup, Label } from "../utility/form";
 
 const Container = styled.div`
   max-width: 400px;
@@ -82,48 +84,6 @@ const DividerText = styled.span`
   font-size: 14px;
 `;
 
-const Form = styled.form`
-  display: flex;
-  flex-direction: column;
-  gap: 16px;
-`;
-
-const FormGroup = styled.div`
-  display: flex;
-  flex-direction: column;
-  gap: 6px;
-`;
-
-const Label = styled.label`
-  font-size: 14px;
-  text-align: left;
-  font-weight: 500;
-  color: #374151;
-`;
-
-const Input = styled.input`
-  padding: 8px 12px;
-  width: 100%;
-  height: 35px;
-  border: 1px solid #e5e7eb;
-  border-radius: 8px;
-  font-size: 14px;
-  color: #111827;
-  background: #f9fafb;
-  transition: all 0.2s;
-
-  &:focus {
-    outline: none;
-    border-color: #6366f1;
-    box-shadow: 0 0 0 3px rgba(99, 102, 241, 0.1);
-    background: white;
-  }
-
-  &::placeholder {
-    color: #9ca3af;
-  }
-`;
-
 const PasswordGroup = styled.div`
   position: relative;
 `;
@@ -165,7 +125,7 @@ const Footer = styled.p`
   color: #6b7280;
 `;
 
-const Link = styled.a`
+const Link = styled.span`
   color: #6366f1;
   text-decoration: none;
   font-weight: 500;
@@ -507,7 +467,7 @@ function SignInFormContent({ signUpUrl }: SignInFormProps) {
 							</Link>
 						</Form>
 						<Footer>
-							Don't have an account? <Link href={signUpUrl}>Sign up</Link>
+							Don't have an account? <Link><NavigationLink to={signUpUrl}>Sign up</NavigationLink></Link>
 						</Footer>
 					</>
 				) : (
@@ -538,7 +498,7 @@ function SignInFormContent({ signUpUrl }: SignInFormProps) {
 							</SubmitButton>
 						</Form>
 						<Footer>
-							Having trouble? <Link href={signUpUrl}>Get help</Link>
+							Having trouble? <Link>Get help</Link>
 						</Footer>
 					</>
 				)}

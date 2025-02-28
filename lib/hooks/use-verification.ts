@@ -1,6 +1,5 @@
 import { useState } from "react";
 import { useClient } from "./use-client";
-import type { ApiResult } from "../types/client";
 
 type VerifyOTPParams = {
   otp: string;

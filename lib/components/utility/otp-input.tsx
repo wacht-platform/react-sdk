@@ -1,4 +1,4 @@
-import { useState, useRef, useEffect } from "react";
+import { useState, useRef, useEffect, useCallback } from "react";
 import styled from "styled-components";
 
 const Container = styled.div`
@@ -76,7 +76,7 @@ const Timer = styled.span`
 
 interface OTPInputProps {
 	length?: number;
-	onComplete: (code: string) => Promise<void>;
+	onComplete: ((code: string) => Promise<void>) | ((code: string) => void);
 	onResend: () => Promise<void>;
 	error?: string;
 	isSubmitting?: boolean;
@@ -94,7 +94,7 @@ export function OTPInput({
 	const [canResend, setCanResend] = useState(false);
 	const inputRefs = useRef<(HTMLInputElement | null)[]>([]);
 
-	const startTimer = () => {
+	const startTimer = useCallback(() => {
 		const timer = setInterval(() => {
 			setResendTimer((prev) => {
 				if (prev <= 1) {
@@ -107,12 +107,12 @@ export function OTPInput({
 		}, 1000);
 
 		return timer;
-	};
+	}, []);
 
 	useEffect(() => {
 		const timer = startTimer();
 		return () => clearInterval(timer);
-	}, []);
+	}, [startTimer]);
 
 	const handleResend = async () => {
 		if (!canResend || isSubmitting) return;
@@ -160,6 +160,7 @@ export function OTPInput({
 			<InputGroup>
 				{otp.map((digit, index) => (
 					<InputBox
+						// biome-ignore lint/suspicious/noArrayIndexKey: <explanation>
 						key={index}
 						type="text"
 						maxLength={1}

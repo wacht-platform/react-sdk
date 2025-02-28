@@ -1,7 +1,8 @@
 interface SignIn {
 	id: number;
 	userId: number;
-	user: User;
+	user: CurrentUser;
+	expiresAt: string;
 }
 
 type SignInMethod = "plain" | "sso" | "passkey";
@@ -65,7 +66,7 @@ interface SignupAttempt {
 interface Session {
 	id: number;
 	active_signin: SignIn | null;
-	signins: SignIn[];
+	signins?: SignIn[];
 	signin_attempts?: SigninAttempt[];
 	signup_attempts?: SignupAttempt[];
 }

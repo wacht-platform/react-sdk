@@ -1,9 +1,3 @@
-enum SocialAuthProvider {
-  GitHub = "github_oauth",
-  Google = "google_oauth",
-  Microsoft = "microsoft_oauth",
-}
-
 interface SignUpParams {
   first_name?: string;
   last_name?: string;
@@ -32,3 +26,14 @@ interface SignInResponse {
 interface SSOCallbackResponse {
   session: unknown;
 }
+
+type SocialConnectionProvider =
+  | "x_oauth"
+  | "github_oauth"
+  | "gitlab_oauth"
+  | "google_oauth"
+  | "facebook_oauth"
+  | "microsoft_oauth"
+  | "linkedin_oauth"
+  | "discord_oauth"
+  | "apple_oauth"

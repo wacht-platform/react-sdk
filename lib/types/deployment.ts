@@ -1,93 +1,95 @@
 interface OrgSettings {
-	id: number;
-	created_at: string;
-	updated_at: string;
-	deleted_at: null;
-	deployment_id: number;
-	enabled: boolean;
-	ip_allowlist_enabled: boolean;
-	max_allowed_members: number;
-	allow_deletion: boolean;
-	custom_role_enabled: boolean;
-	default_role: string;
+  id: number;
+  created_at: string;
+  updated_at: string;
+  deleted_at: null;
+  deployment_id: number;
+  enabled: boolean;
+  ip_allowlist_enabled: boolean;
+  max_allowed_members: number;
+  allow_deletion: boolean;
+  custom_role_enabled: boolean;
+  default_role: string;
 }
 
 interface AuthFactorsEnabled {
-	email_password: boolean;
-	username_password: boolean;
-	email_magic_link: boolean;
-	email_otp: boolean;
-	phone_otp: boolean;
-	web3_wallet: boolean;
-	backup_code: boolean;
-	authenticator: boolean;
+  email_password: boolean;
+  username_password: boolean;
+  email_magic_link: boolean;
+  email_otp: boolean;
+  phone_otp: boolean;
+  web3_wallet: boolean;
+  backup_code: boolean;
+  authenticator: boolean;
 }
 
 interface VerificationPolicy {
-	phone_number: boolean;
-	email: boolean;
+  phone_number: boolean;
+  email: boolean;
 }
 
 interface AuthField {
-	enabled: boolean;
-	required: boolean;
+  enabled: boolean;
+  required: boolean;
 }
 
 type SecondFactor = "none" | "phone_otp" | "backup_code" | "authenticator";
 type FirstFactor =
-	| "email_password"
-	| "username_password"
-	| "email_otp"
-	| "email_magic_link"
-	| "phone_otp";
+  | "email_password"
+  | "username_password"
+  | "email_otp"
+  | "email_magic_link"
+  | "phone_otp";
+
+type SecondFactorPolicy = "none" | "optional" | "enforced";
 
 interface AuthSettings {
-	id: number;
-	created_at: string;
-	updated_at: string;
-	deleted_at: null;
-	email_address: AuthField;
-	phone_number: AuthField;
-	username: AuthField;
-	first_name: AuthField;
-	last_name: AuthField;
-	password: AuthField;
-	backup_code: AuthField;
-	web3_wallet: AuthField;
-	password_policy: AuthField;
-	auth_factors_enabled: AuthFactorsEnabled;
-	verification_policy: VerificationPolicy;
-	second_factor_policy: string;
-	first_factor: FirstFactor;
-	second_factor: SecondFactor | null;
-	alternate_first_factors: FirstFactor[] | null;
-	alternate_second_factors: SecondFactor[] | null;
-	deployment_id: number;
+  id: number;
+  created_at: string;
+  updated_at: string;
+  deleted_at: null;
+  email_address: AuthField;
+  phone_number: AuthField;
+  username: AuthField;
+  first_name: AuthField;
+  last_name: AuthField;
+  password: AuthField;
+  backup_code: AuthField;
+  web3_wallet: AuthField;
+  password_policy: AuthField;
+  auth_factors_enabled: AuthFactorsEnabled;
+  verification_policy: VerificationPolicy;
+  second_factor_policy: SecondFactorPolicy;
+  first_factor: FirstFactor;
+  second_factor: SecondFactor | null;
+  alternate_first_factors: FirstFactor[] | null;
+  alternate_second_factors: SecondFactor[] | null;
+  deployment_id: number;
 }
 
 interface DeploymentSocialConnection {
-	id: number;
-	created_at: string;
-	updated_at: string;
-	deleted_at: null;
-	deployment_id: number;
-	provider: string;
-	enabled: boolean;
-	user_defined_scopes: null;
-	custom_credentials_set: boolean;
+  id: number;
+  created_at: string;
+  updated_at: string;
+  deleted_at: null;
+  deployment_id: number;
+  provider: string;
+  enabled: boolean;
+  user_defined_scopes: null;
+  custom_credentials_set: boolean;
 }
 
 interface Deployment {
-	id: number;
-	created_at: string;
-	updated_at: string;
-	deleted_at: null;
-	maintenance_mode: boolean;
-	host: string;
-	publishable_key: string;
-	org_settings: OrgSettings;
-	auth_settings: AuthSettings;
-	social_connections: DeploymentSocialConnection[];
-	project_id: number;
-	mode: "production" | "staging";
+  id: number;
+  created_at: string;
+  updated_at: string;
+  deleted_at: null;
+  maintenance_mode: boolean;
+  host: string;
+  publishable_key: string;
+  org_settings: OrgSettings;
+  auth_settings: AuthSettings;
+  social_connections: DeploymentSocialConnection[];
+  project_id: number;
+  mode: "production" | "staging";
 }

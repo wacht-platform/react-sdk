@@ -1,5 +1,4 @@
 import { useState } from "react";
-import type { ApiResult, Client, ErrorInterface } from "../types/client";
 import { mapResponse } from "../utils/response-mapper";
 import { useClient } from "./use-client";
 

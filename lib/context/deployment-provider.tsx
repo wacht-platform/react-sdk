@@ -1,6 +1,5 @@
 import { useState, useEffect, useMemo, createContext, useRef } from "react";
 import type { ReactNode } from "react";
-import type { ClinetReponse } from "../types/client";
 
 interface DeploymentContextType {
 	loading: boolean;

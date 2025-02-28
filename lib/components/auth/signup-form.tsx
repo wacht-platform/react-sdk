@@ -1,4 +1,4 @@
-import { useState, useRef, useEffect } from "react";
+import { useState, useEffect } from "react";
 import styled from "styled-components";
 import { useSignUp } from "../../hooks/use-signup";
 import {
@@ -8,16 +8,18 @@ import {
 } from "../../hooks/use-signin";
 import { useDeployment } from "../../hooks/use-deployment";
 import { TypographyProvider } from "../utility/typography";
-import { OTPInput } from "./otp-input";
+import { OTPInput } from "@/components/utility/otp-input";
 import { ArrowLeft } from "lucide-react";
 import { SocialAuthButtons } from "./social-buttons";
-import { countries } from "../../constants/geo";
+import { NavigationLink } from "../utility/navigation";
+import { Input } from "../utility/input";
+import { PhoneNumberInput } from "../utility/phone";
 
 const breakpoints = {
-	sm: '36rem',
-	md: '48rem',
-	lg: '62rem',
-	xl: '75rem'
+	sm: "36rem",
+	md: "48rem",
+	lg: "62rem",
+	xl: "75rem",
 };
 
 const Container = styled.div`
@@ -132,53 +134,6 @@ const Label = styled.label`
   }
 `;
 
-const Input = styled.input`
-  padding: 0.5rem 0.75rem;
-  width: 100%;
-  height: 2.5rem;
-  border: 0.0625rem solid #e5e7eb;
-  border-radius: 0.5rem;
-  font-size: 0.875rem;
-  color: #111827;
-  background: #f9fafb;
-  transition: all 0.2s;
-
-  &:not(:placeholder-shown):invalid {
-    outline: none;
-    border: 0.0625rem solid #ef4444;
-    background: white;
-  }
-
-  &:not(:placeholder-shown):valid {
-    outline: none;
-    background: white;
-  }
-
-  &:focus:valid {
-    outline: none;
-    border-color: #22c55e;
-    box-shadow: 0 0 0 0.1875rem rgba(34, 197, 94, 0.1);
-    background: white;
-  }
-
-  &:focus:invalid {
-    outline: none;
-    border-color: #6366f1;
-    box-shadow: 0 0 0 0.1875rem rgba(99, 102, 241, 0.1);
-    background: white;
-  }
-
-  &::placeholder {
-    color: #9ca3af;
-  }
-
-  @media (max-width: ${breakpoints.sm}) {
-    height: 2.25rem;
-    font-size: 0.8125rem;
-    padding: 0.375rem 0.625rem;
-  }
-`;
-
 const PasswordGroup = styled.div`
   position: relative;
 `;
@@ -236,7 +191,7 @@ const Footer = styled.p`
   }
 `;
 
-const Link = styled.a`
+const Link = styled.span`
   color: #6366f1;
   text-decoration: none;
   font-weight: 500;
@@ -245,138 +200,6 @@ const Link = styled.a`
   &:hover {
     color: #4f46e5;
   }
-`;
-
-const PhoneInputGroup = styled.div`
-  display: flex;
-  gap: 0.5rem;
-  width: 100%;
-
-  @media (max-width: ${breakpoints.sm}) {
-    gap: 0.375rem;
-  }
-`;
-
-const CountryCodeSelect = styled.div`
-  position: relative;
-`;
-
-const CountryCodeButton = styled.button`
-  display: flex;
-  align-items: center;
-  gap: 0.375rem;
-  padding: 0.5rem 0.75rem;
-  width: 100%;
-  border: 0.0625rem solid #e5e7eb;
-  border-radius: 0.5rem;
-  font-size: 0.875rem;
-  color: #111827;
-  background: #f9fafb;
-  cursor: pointer;
-  transition: all 0.2s;
-
-  &:hover {
-    border-color: #d1d5db;
-  }
-
-  &:focus {
-    outline: none;
-    border-color: #6366f1;
-    box-shadow: 0 0 0 0.1875rem rgba(99, 102, 241, 0.1);
-    background: white;
-  }
-
-  @media (max-width: ${breakpoints.sm}) {
-    padding: 0.375rem 0.625rem;
-    font-size: 0.8125rem;
-  }
-`;
-
-const CountryCodeDropdown = styled.div<{ $isOpen: boolean }>`
-  position: absolute;
-  top: calc(100% + 0.25rem);
-  left: 0;
-  width: 17.5rem;
-  max-height: 18.75rem;
-  overflow-y: auto;
-  background: white;
-  border: 0.0625rem solid #e5e7eb;
-  border-radius: 0.5rem;
-  box-shadow:
-    0 0.25rem 0.375rem -0.0625rem rgba(0, 0, 0, 0.1),
-    0 0.125rem 0.25rem -0.0625rem rgba(0, 0, 0, 0.06);
-  z-index: 50;
-  display: ${(props) => (props.$isOpen ? "block" : "none")};
-
-  @media (max-width: ${breakpoints.sm}) {
-    width: 15rem;
-    max-height: 15rem;
-  }
-`;
-
-const CountrySearch = styled.input`
-  width: 100%;
-  padding: 0.5rem 0.75rem;
-  border: none;
-  border-bottom: 0.0625rem solid #e5e7eb;
-  font-size: 0.875rem;
-  color: #111827;
-
-  &:focus {
-    outline: none;
-    border-color: #6366f1;
-  }
-
-  &::placeholder {
-    color: #9ca3af;
-  }
-
-  @media (max-width: ${breakpoints.sm}) {
-    padding: 0.375rem 0.625rem;
-    font-size: 0.8125rem;
-  }
-`;
-
-const CountryList = styled.div`
-  max-height: 15.625rem;
-  overflow-y: auto;
-
-  @media (max-width: ${breakpoints.sm}) {
-    max-height: 12.5rem;
-  }
-`;
-
-const CountryOption = styled.button`
-  display: flex;
-  align-items: center;
-  gap: 0.5rem;
-  width: 100%;
-  padding: 0.5rem 0.75rem;
-  border: none;
-  background: transparent;
-  font-size: 0.875rem;
-  color: #111827;
-  cursor: pointer;
-  text-align: left;
-
-  &:hover {
-    background: #f9fafb;
-  }
-
-  .country-code {
-    color: #6b7280;
-    margin-left: auto;
-  }
-
-  @media (max-width: ${breakpoints.sm}) {
-    padding: 0.375rem 0.625rem;
-    font-size: 0.8125rem;
-    gap: 0.375rem;
-  }
-`;
-
-const PhoneInput = styled(Input)`
-  flex: 1;
 `;
 
 const BackButton = styled.button`
@@ -405,7 +228,6 @@ interface SignUpFormProps {
 	signInUrl: string;
 }
 
-
 export function SignUpForm({ className = "", signInUrl }: SignUpFormProps) {
 	const {
 		loading,
@@ -416,7 +238,6 @@ export function SignUpForm({ className = "", signInUrl }: SignUpFormProps) {
 	} = useSignUp();
 	const { signIn: oauthSignIn } = useSignInWithStrategy(SignInStrategy.Oauth);
 	const { deployment } = useDeployment();
-	const countryDropdownRef = useRef<HTMLDivElement>(null);
 	const [formData, setFormData] = useState<SignUpParams>({
 		first_name: "",
 		last_name: "",
@@ -427,34 +248,12 @@ export function SignUpForm({ className = "", signInUrl }: SignUpFormProps) {
 	});
 	const [errors, setErrors] = useState<Record<string, string>>({});
 	const [isSubmitting, setIsSubmitting] = useState(false);
-	const [isCountryDropdownOpen, setIsCountryDropdownOpen] = useState(false);
-	const [selectedCountry, setSelectedCountry] = useState(
-		countries.find(
-			(c) =>
-				c.code ===
-				Intl.DateTimeFormat().resolvedOptions().locale.split("-")?.pop(),
-		) || countries[0],
+	const [countryCode, setCountryCode] = useState(
+		Intl.DateTimeFormat().resolvedOptions().locale.split("-")?.pop(),
 	);
-	const [countrySearch, setCountrySearch] = useState("");
-	const phoneNumberInputRef = useRef<HTMLInputElement>(null);
+
 	const [otpSent, setOtpSent] = useState(false);
 	const [otpCode, setOtpCode] = useState("");
-
-	useEffect(() => {
-		function handleClickOutside(event: MouseEvent) {
-			if (
-				countryDropdownRef.current &&
-				!countryDropdownRef.current.contains(event.target as Node)
-			) {
-				setIsCountryDropdownOpen(false);
-			}
-		}
-
-		document.addEventListener("mousedown", handleClickOutside);
-		return () => {
-			document.removeEventListener("mousedown", handleClickOutside);
-		};
-	}, []);
 
 	const handleInputChange = (e: React.ChangeEvent<HTMLInputElement>) => {
 		let { name, value } = e.target;
@@ -494,7 +293,6 @@ export function SignUpForm({ className = "", signInUrl }: SignUpFormProps) {
 		const phonePattern = /^\d{7,15}$/;
 		const passwordPattern =
 			/^(?=.*[a-z])(?=.*[A-Z])(?=.*\d)(?=.*[@$!%*?&])[A-Za-z\d@$!%*?&]{8,125}$/;
-
 
 		if (authSettings?.first_name.required && !formData.first_name) {
 			newErrors.first_name = "First name is required";
@@ -565,6 +363,9 @@ export function SignUpForm({ className = "", signInUrl }: SignUpFormProps) {
 
 		setIsSubmitting(true);
 		try {
+			if (formData.phone_number) {
+				formData.phone_number = `+${countryCode}${formData.phone_number}`;
+			}
 			await signUp.create(formData);
 		} catch (err) {
 			setErrors({ submit: (err as Error).message });
@@ -595,12 +396,6 @@ export function SignUpForm({ className = "", signInUrl }: SignUpFormProps) {
 		deployment?.social_connections.filter((conn) => conn.enabled) || [];
 
 	const authSettings = deployment?.auth_settings;
-
-	const filteredCountries = countries.filter(
-		(country) =>
-			country.name.toLowerCase().includes(countrySearch.toLowerCase()) ||
-			country.dialCode.includes(countrySearch),
-	);
 
 	const isBothNamesEnabled = Boolean(
 		authSettings?.first_name?.enabled && authSettings?.last_name?.enabled,
@@ -643,7 +438,7 @@ export function SignUpForm({ className = "", signInUrl }: SignUpFormProps) {
 		console.log("signUpErrors", signUpErrors);
 		if (signUpErrors?.errors) {
 			if (Array.isArray(signUpErrors?.errors)) {
-				signUpErrors.errors.forEach((err) => {
+				for (const err of signUpErrors.errors) {
 					if (err.code === "USERNAME_EXISTS") {
 						newErrors.username = err.message;
 					}
@@ -659,7 +454,7 @@ export function SignUpForm({ className = "", signInUrl }: SignUpFormProps) {
 					if (err.code === "INVALID_CREDENTIALS") {
 						newErrors.password = err.message;
 					}
-				});
+				}
 			}
 		}
 
@@ -714,7 +509,10 @@ export function SignUpForm({ className = "", signInUrl }: SignUpFormProps) {
 							</SubmitButton>
 						</Form>
 						<Footer>
-							Having trouble? <Link href={signInUrl}>Contact support</Link>
+							Having trouble?{" "}
+							<Link>
+								<NavigationLink to={signInUrl}>Contact support</NavigationLink>
+							</Link>
 						</Footer>
 					</>
 				) : (
@@ -742,61 +540,61 @@ export function SignUpForm({ className = "", signInUrl }: SignUpFormProps) {
 						<Form onSubmit={handleSubmit} noValidate>
 							{(authSettings?.first_name?.enabled ||
 								authSettings?.last_name?.enabled) && (
-									<NameFields $isBothEnabled={isBothNamesEnabled}>
-										{authSettings?.first_name?.enabled && (
-											<FormGroup>
-												<Label htmlFor="first_name">
-													First name
-													{authSettings?.first_name?.required && (
-														<RequiredAsterisk>*</RequiredAsterisk>
-													)}
-												</Label>
-												<Input
-													type="text"
-													id="first_name"
-													name="first_name"
-													required
-													minLength={3}
-													maxLength={30}
-													value={formData.first_name}
-													onChange={handleInputChange}
-													placeholder="First name"
-													aria-invalid={!!errors.first_name}
-													pattern="^[a-zA-Z]{3,30}$"
-												/>
-												{errors.first_name && (
-													<ErrorMessage>{errors.first_name}</ErrorMessage>
+								<NameFields $isBothEnabled={isBothNamesEnabled}>
+									{authSettings?.first_name?.enabled && (
+										<FormGroup>
+											<Label htmlFor="first_name">
+												First name
+												{authSettings?.first_name?.required && (
+													<RequiredAsterisk>*</RequiredAsterisk>
 												)}
-											</FormGroup>
-										)}
-										{authSettings?.last_name?.enabled && (
-											<FormGroup>
-												<Label htmlFor="last_name">
-													Last name
-													{authSettings?.last_name?.required && (
-														<RequiredAsterisk>*</RequiredAsterisk>
-													)}
-												</Label>
-												<Input
-													type="text"
-													id="last_name"
-													name="last_name"
-													required
-													minLength={3}
-													maxLength={30}
-													value={formData.last_name}
-													onChange={handleInputChange}
-													placeholder="Last name"
-													aria-invalid={!!errors.last_name}
-													pattern="^[a-zA-Z]{3,30}$"
-												/>
-												{errors.last_name && (
-													<ErrorMessage>{errors.last_name}</ErrorMessage>
+											</Label>
+											<Input
+												type="text"
+												id="first_name"
+												name="first_name"
+												required
+												minLength={3}
+												maxLength={30}
+												value={formData.first_name}
+												onChange={handleInputChange}
+												placeholder="First name"
+												aria-invalid={!!errors.first_name}
+												pattern="^[a-zA-Z]{3,30}$"
+											/>
+											{errors.first_name && (
+												<ErrorMessage>{errors.first_name}</ErrorMessage>
+											)}
+										</FormGroup>
+									)}
+									{authSettings?.last_name?.enabled && (
+										<FormGroup>
+											<Label htmlFor="last_name">
+												Last name
+												{authSettings?.last_name?.required && (
+													<RequiredAsterisk>*</RequiredAsterisk>
 												)}
-											</FormGroup>
-										)}
-									</NameFields>
-								)}
+											</Label>
+											<Input
+												type="text"
+												id="last_name"
+												name="last_name"
+												required
+												minLength={3}
+												maxLength={30}
+												value={formData.last_name}
+												onChange={handleInputChange}
+												placeholder="Last name"
+												aria-invalid={!!errors.last_name}
+												pattern="^[a-zA-Z]{3,30}$"
+											/>
+											{errors.last_name && (
+												<ErrorMessage>{errors.last_name}</ErrorMessage>
+											)}
+										</FormGroup>
+									)}
+								</NameFields>
+							)}
 
 							{authSettings?.username.enabled && (
 								<FormGroup>
@@ -858,71 +656,15 @@ export function SignUpForm({ className = "", signInUrl }: SignUpFormProps) {
 											<RequiredAsterisk>*</RequiredAsterisk>
 										)}
 									</Label>
-									<PhoneInputGroup>
-										<CountryCodeSelect ref={countryDropdownRef}>
-											<CountryCodeButton
-												type="button"
-												onClick={() =>
-													setIsCountryDropdownOpen((prev) => !prev)
-												}
-											>
-												<img
-													src={`https://flagcdn.com/16x12/${selectedCountry.code.toLocaleLowerCase()}.png`}
-													srcSet={`https://flagcdn.com/32x24/${selectedCountry.code.toLocaleLowerCase()}.png 2x, https://flagcdn.com/48x36/${selectedCountry.code.toLocaleLowerCase()}.png 3x`}
-													alt={selectedCountry.name}
-												/>
-												<span>{selectedCountry.dialCode}</span>
-											</CountryCodeButton>
-											<CountryCodeDropdown $isOpen={isCountryDropdownOpen}>
-												<CountrySearch
-													type="text"
-													placeholder="Search country..."
-													value={countrySearch}
-													onChange={(e) => setCountrySearch(e.target.value)}
-													onClick={(e) => e.stopPropagation()}
-												/>
-												<CountryList>
-													{filteredCountries.map((country) => (
-														<CountryOption
-															key={country.code}
-															onClick={(e) => {
-																e.stopPropagation();
-																e.preventDefault();
-																setSelectedCountry(country);
-																setIsCountryDropdownOpen(false);
-																phoneNumberInputRef.current?.focus();
-															}}
-														>
-															<img
-																src={`https://flagcdn.com/16x12/${country.code.toLocaleLowerCase()}.png`}
-																srcSet={`https://flagcdn.com/32x24/${country.code.toLocaleLowerCase()}.png 2x, https://flagcdn.com/48x36/${country.code.toLocaleLowerCase()}.png 3x`}
-																alt={country.name}
-															/>
-															<span>{country.name}</span>
-															<span className="country-code">
-																{country.dialCode}
-															</span>
-														</CountryOption>
-													))}
-												</CountryList>
-											</CountryCodeDropdown>
-										</CountryCodeSelect>
-										<PhoneInput
-											style={{ height: "100%" }}
-											type="tel"
-											id="phone_number"
-											name="phone_number"
-											required
-											minLength={7}
-											maxLength={15}
-											ref={phoneNumberInputRef}
-											value={formData.phone_number}
-											onChange={handleInputChange}
-											placeholder="Phone number"
-											aria-invalid={!!errors.phone_number}
-											pattern="^\d{7,15}$"
-										/>
-									</PhoneInputGroup>
+
+									<PhoneNumberInput
+										value={formData.phone_number}
+										onChange={handleInputChange}
+										error={errors.phone_number}
+										countryCode={countryCode}
+										setCountryCode={setCountryCode}
+									/>
+
 									{errors.phone_number && (
 										<ErrorMessage>{errors.phone_number}</ErrorMessage>
 									)}
@@ -966,7 +708,10 @@ export function SignUpForm({ className = "", signInUrl }: SignUpFormProps) {
 						</Form>
 
 						<Footer>
-							Already have an account? <Link href={signInUrl}>Sign in</Link>
+							Already have an account?{" "}
+							<Link>
+								<NavigationLink to={signInUrl}>Sign in</NavigationLink>
+							</Link>
 						</Footer>
 					</>
 				)}

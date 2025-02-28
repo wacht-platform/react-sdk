@@ -1,4 +1,3 @@
-import type { Client } from "../types/client";
 import { useDeployment } from "./use-deployment";
 
 type UseClientReturnType = {
@@ -25,6 +24,10 @@ export function useClient(): UseClientReturnType {
 			modifiedHeaders.forEach((value, key) => {
 				headers.set(key, value);
 			});
+		}
+
+		if (!(options?.body instanceof FormData)) {
+			headers.set("Content-Type", "application/json");
 		}
 
 		const response = await fetch(new URL(url, deployment?.host ?? ""), {
