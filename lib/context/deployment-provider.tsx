@@ -1,21 +1,26 @@
+"use client";
+
 import { useState, useEffect, useMemo, createContext, useRef } from "react";
 import type { ReactNode } from "react";
 
-interface DeploymentContextType {
+interface FrontendDeploymentContextType {
 	loading: boolean;
 	deployment: Deployment | null;
 }
 
-const DeploymentContext = createContext<DeploymentContextType | undefined>(
-	undefined,
-);
+const FrontendDeploymentContext = createContext<
+	FrontendDeploymentContextType | undefined
+>(undefined);
 
-interface DeploymentProviderProps {
+interface FrontendDeploymentProviderProps {
 	children: ReactNode;
 	publicKey: string;
 }
 
-function DeploymentProvider({ children, publicKey }: DeploymentProviderProps) {
+function FrontendDeploymentProvider({
+	children,
+	publicKey,
+}: FrontendDeploymentProviderProps) {
 	const [loading, setLoading] = useState(true);
 	const [deployment, setDeployment] = useState<Deployment | null>(null);
 	const singletonLock = useRef(false);
@@ -73,11 +78,11 @@ function DeploymentProvider({ children, publicKey }: DeploymentProviderProps) {
 	);
 
 	return (
-		<DeploymentContext.Provider value={value}>
+		<FrontendDeploymentContext.Provider value={value}>
 			{children}
-		</DeploymentContext.Provider>
+		</FrontendDeploymentContext.Provider>
 	);
 }
 
-export { DeploymentProvider, DeploymentContext };
-export type { DeploymentContextType };
+export { FrontendDeploymentProvider, FrontendDeploymentContext };
+export type { FrontendDeploymentContextType };

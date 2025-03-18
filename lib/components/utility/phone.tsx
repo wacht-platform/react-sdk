@@ -196,11 +196,7 @@ export const PhoneNumberInput = ({
 					type="button"
 					onClick={() => setIsCountryDropdownOpen((prev) => !prev)}
 				>
-					<img
-						src={`https://flagcdn.com/16x12/${selectedCountry.code.toLocaleLowerCase()}.png`}
-						srcSet={`https://flagcdn.com/32x24/${selectedCountry.code.toLocaleLowerCase()}.png 2x, https://flagcdn.com/48x36/${selectedCountry.code.toLocaleLowerCase()}.png 3x`}
-						alt={selectedCountry.name}
-					/>
+					<span>{selectedCountry.flag}</span>
 					<span>{selectedCountry.dialCode}</span>
 				</CountryCodeButton>
 				<CountryCodeDropdown $isOpen={isCountryDropdownOpen}>
@@ -223,11 +219,7 @@ export const PhoneNumberInput = ({
 									phoneNumberInputRef.current?.focus();
 								}}
 							>
-								<img
-									src={`https://flagcdn.com/16x12/${country.code.toLocaleLowerCase()}.png`}
-									srcSet={`https://flagcdn.com/32x24/${country.code.toLocaleLowerCase()}.png 2x, https://flagcdn.com/48x36/${country.code.toLocaleLowerCase()}.png 3x`}
-									alt={country.name}
-								/>
+								<span>{country.flag}</span>
 								<span>{country.name}</span>
 								<span className="country-code">{country.dialCode}</span>
 							</CountryOption>

@@ -1,6 +1,6 @@
 import { ArrowLeft } from "lucide-react";
 import styled from "styled-components";
-import { TypographyProvider } from "@/components/utility/typography";
+import { DefaultStylesProvider } from "@/components/utility/typography";
 import { OtherAuthOptions } from "@/components/auth/other-auth-options";
 
 const Container = styled.div`
@@ -47,24 +47,24 @@ const BackButton = styled.button`
 `;
 
 interface OtherSignInOptionsProps {
-  onBack: () => void;
+	onBack: () => void;
 }
 
 export function OtherSignInOptions({ onBack }: OtherSignInOptionsProps) {
-  return (
-    <TypographyProvider>
-      <Container>
-        <Header>
-          <BackButton onClick={onBack}>
-            <ArrowLeft size={16} />
-          </BackButton>
-          <Title>Supported Sign in Options</Title>
-          <Subtitle>
-            Sign in with one of the following options to continue
-          </Subtitle>
-        </Header>
-        <OtherAuthOptions />
-      </Container>
-    </TypographyProvider>
-  );
+	return (
+		<DefaultStylesProvider>
+			<Container>
+				<Header>
+					<BackButton onClick={onBack}>
+						<ArrowLeft size={16} />
+					</BackButton>
+					<Title>Supported Sign in Options</Title>
+					<Subtitle>
+						Sign in with one of the following options to continue
+					</Subtitle>
+				</Header>
+				<OtherAuthOptions />
+			</Container>
+		</DefaultStylesProvider>
+	);
 }

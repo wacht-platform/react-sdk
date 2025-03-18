@@ -18,7 +18,7 @@ const PopoverContainer = styled.div`
   z-index: 10;
 `;
 
-const Button = styled.button<{ $primary?: boolean }>`
+export const Button = styled.button<{ $primary?: boolean }>`
   padding: 8px 16px;
   background: ${(props) => (props.$primary ? "#6366f1" : "white")};
   color: ${(props) => (props.$primary ? "white" : "#64748b")};
@@ -38,7 +38,7 @@ const Button = styled.button<{ $primary?: boolean }>`
   }
 `;
 
-const ButtonGroup = styled.div`
+export const ButtonGroup = styled.div`
   display: flex;
   gap: 8px;
   justify-content: flex-end;

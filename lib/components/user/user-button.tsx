@@ -1,329 +1,463 @@
-import React, { useState, useRef, useEffect } from 'react';
-import styled from 'styled-components';
-import { LogOut, Settings, Plus } from 'lucide-react';
-import { TypographyProvider } from '../utility/typography';
-// import { useSession } from '../../hooks';
+import { useState, useRef, useEffect } from "react";
+import styled from "styled-components";
+import { LogOut, Settings, Plus } from "lucide-react";
+import { DefaultStylesProvider } from "../utility/typography";
+import { useSession } from "@/hooks";
+import { ManageAccountDialog } from "./manage-account-dialog";
+import { useDialog } from "../utility/use-dialog";
 
-const ButtonWrapper = styled.div`
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  width: 36px;
-  height: 36px;
-  border-radius: 50%;
-  cursor: pointer;
-  transition: all 0.2s ease;
-  padding: 0;
-  border: none;
-  background: transparent;
-  position: relative;
+const Container = styled.div`
+	position: relative;
+`;
 
-  &:hover {
-    background: rgba(0, 0, 0, 0.05);
-  }
+const AccountButton = styled.button`
+	display: flex;
+	align-items: center;
+	gap: 12px;
+	border: none;
+	background: transparent;
+	cursor: pointer;
+	padding: 6px;
+	border-radius: 30px;
+	transition: background-color 0.2s ease;
+	
+	&:hover {
+		background: rgba(0, 0, 0, 0.05);
+	}
+`;
 
-  @media (max-width: 600px) {
-    width: 28px;
-    height: 28px;
-  }
+const AvatarContainer = styled.div`
+	position: relative;
 `;
 
 const Avatar = styled.div`
-  width: 36px;
-  height: 36px;
-  border-radius: 50%;
-  overflow: hidden;
-  background: #f1f5f9;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  font-size: 14px;
-  font-weight: 500;
-  color: #64748b;
+	width: 32px;
+	height: 32px;
+	border-radius: 50%;
+	overflow: hidden;
+	background: #e2e8f0;
+	display: flex;
+	align-items: center;
+	justify-content: center;
+	font-size: 14px;
+	font-weight: 500;
+	color: #64748b;
 
-  img {
-    width: 100%;
-    height: 100%;
-    object-fit: cover;
-  }
-
-  @media (max-width: 600px) {
-    width: 28px;
-    height: 28px;
-    font-size: 12px;
-  }
+	img {
+		width: 100%;
+		height: 100%;
+		object-fit: cover;
+	}
 `;
 
-const DropdownWrapper = styled.div<{ $isOpen: boolean }>`
-  position: absolute;
-  top: calc(100% + 8px);
-  right: 0;
-  background: white;
-  border-radius: 12px;
-  min-width: 350px; 
-  min-height: auto;
-  padding: 8px 0;
-  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
-  display: ${(props) => (props.$isOpen ? 'block' : 'none')};
-  z-index: 50;
-  overflow: hidden; /* Prevent any scrollbars */
-  font-family: system-ui, -apple-system, sans-serif;
-
-  @media (max-width: 600px) {
-    min-width: 80vw;
-  }
+const UserName = styled.div`
+	font-size: 14px;
+	font-weight: 500;
+	color: #1e293b;
 `;
 
-
-const AccountItem = styled.div<{ $active?: boolean }>`
-  display: flex;
-  align-items: center;
-  gap: 12px;
-  width: 100%;
-  padding: 12px 16px;
-  border: none;
-  background: ${(props) => (props.$active ? '#f8fafc' : 'none')};
-  cursor: pointer;
-  text-align: left;
-  transition: all 0.2s ease;
-
-  &:hover {
-    background: #f8fafc;
-  }
+const StatusIndicator = styled.span<{ $status: "available" | "busy" | "away" }>`
+	position: absolute;
+	bottom: 0;
+	right: 0;
+	height: 8px;
+	width: 8px;
+	border-radius: 50%;
+	background: ${(props) => {
+		switch (props.$status) {
+			case "available":
+				return "#10b981";
+			case "busy":
+				return "#f59e0b";
+			case "away":
+				return "#f97316";
+			default:
+				return "#10b981";
+		}
+	}}
+	border: 1px solid white;
 `;
 
-const AccountInfo = styled.div`
-  flex: 1;
+const AccountName = styled.span`
+	font-size: 14px;
+	font-weight: 500;
+	color: #1e293b;
 `;
 
-const AccountName = styled.div`
-  font-weight: 500;
-  font-size: 14px;
-  color: #1e293b;
-  margin-bottom: 2px;
-
-  @media (max-width: 600px) {
-    font-size: 12px;
-  }
+const AccountEmail = styled.span`
+	font-size: 12px;
+	color: #64748b;
 `;
 
-const AccountEmail = styled.div`
-  font-size: 13px;
-  color: #64748b;
-
-  @media (max-width: 600px) {
-    font-size: 11px;
-  }
+// Dropdown styled components
+const DropdownContainer = styled.div<{
+	$position: "bottom-right" | "bottom-left" | "top-right" | "top-left";
+}>`
+	position: absolute;
+	${(props) => {
+		switch (props.$position) {
+			case "bottom-right":
+				return `
+					top: calc(100% + 8px);
+					left: 8px;
+				`;
+			case "bottom-left":
+				return `
+					top: calc(100% + 8px);
+					right: 8px;
+				`;
+			case "top-right":
+				return `
+					bottom: calc(100% + 8px);
+					left: 8px;
+				`;
+			case "top-left":
+				return `
+					bottom: calc(100% + 8px);
+					right: 8px;
+				`;
+			default:
+				return `
+					top: calc(100% + 8px);
+					left: 8px;
+				`;
+		}
+	}}
+	border-radius: 6px;
+	border: 1px solid #e2e8f0;
+	background: white;
+	box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+	z-index: 50;
+	overflow: hidden;
+	min-width: 380px;
+	max-width: calc(100vw - 24px);
+	max-height: calc(100vh - 48px);
+	overflow-y: auto;
 `;
 
-const ActionContainer = styled.div`
-  display: flex;
-  justify-content: space-between;
-  padding: 8px 16px;
-  gap: 8px;
+const AccountSection = styled.div`
+	padding: 12px;
+	border-bottom: 1px solid #f1f5f9;
 `;
 
-const StyledButton = styled.button<{ $destructive?: boolean }>`
-  display: flex;
-  align-items: center;
-  gap: 8px;
-  padding: 8px 16px;
-  border: none;
-  background: #f8fafc;
-  cursor: pointer;
-  font-size: 14px;
-  color: ${props => props.$destructive ? '#ef4444' : '#1e293b'};
-  border-radius: 6px;
-  transition: all 0.2s ease;
-  font-family: inherit;
-  flex: 1;
-
-  &:hover {
-    background: #f1f5f9;
-  }
-
-  svg {
-    width: 16px;
-    height: 16px;
-    color: ${props => props.$destructive ? '#ef4444' : '#64748b'};
-  }
-
-  @media (max-width: 600px) {
-    font-size: 12px;
-    padding: 6px 12px;
-  }
+const AccountHeader = styled.div`
+	display: flex;
+	align-items: center;
+	gap: 12px;
 `;
 
-const Divider = styled.div`
-  height: 1px;
-  background: #e2e8f0;
-  margin: 8px 0;
+const AccountDetails = styled.div`
+	display: flex;
+	flex: 1;
+	flex-direction: column;
 `;
 
-interface Account {
-  name: string;
-  email: string;
-  imageUrl?: string;
-}
+const NameRow = styled.div`
+	display: flex;
+	align-items: center;
+	justify-content: space-between;
+`;
+
+const LargerAvatar = styled(Avatar)`
+	width: 40px;
+	height: 40px;
+`;
+
+const ActionRow = styled.div`
+	display: flex;
+	margin-top: 12px;
+	gap: 8px;
+`;
+
+const ActionLink = styled.button<{ $destructive?: boolean }>`
+	display: flex;
+	align-items: center;
+	justify-content: center;
+	gap: 6px;
+	background: #f8fafc;
+	border: none;
+	border-radius: 4px;
+	padding: 6px;
+	font-size: 12px;
+	color: ${(props) => (props.$destructive ? "#dc2626" : "#64748b")};
+	cursor: pointer;
+	text-align: center;
+	flex: 1;
+	
+	&:hover {
+		background: ${(props) => (props.$destructive ? "#fee2e2" : "#f1f5f9")};
+		color: ${(props) => (props.$destructive ? "#b91c1c" : "#334155")};
+	}
+
+	svg {
+		width: 14px;
+		height: 14px;
+	}
+`;
+
+const FooterSection = styled.div`
+	background: #f8fafc;
+	padding: 12px;
+`;
+
+const FooterButton = styled.button`
+	display: flex;
+	width: 100%;
+	align-items: center;
+	gap: 8px;
+	background: transparent;
+	border: none;
+	padding: 8px;
+	font-size: 14px;
+	color: #64748b;
+	cursor: pointer;
+	text-align: left;
+
+	&:hover {
+		color: #334155;
+	}
+
+	svg {
+		width: 16px;
+		height: 16px;
+	}
+`;
 
 interface UserButtonProps {
-  accounts: Account[];
-  activeAccount: number;
-  onAccountSwitch: (index: number) => void;
-  onSignOut: () => void;
-  onSignOutAll: () => void;
-  onManageAccount: () => void;
-  onAddAccount: () => void;
+	showName?: boolean;
 }
 
-export const UserButton: React.FC<UserButtonProps> = ({
-  // accounts = [],
-  activeAccount = 0,
-  onAccountSwitch = () => { },
-  onSignOut = () => { },
-  onSignOutAll = () => { },
-  onManageAccount = () => { },
-  onAddAccount = () => { },
-}) => {
-  const [isOpen, setIsOpen] = useState(false);
-  const dropdownRef = useRef<HTMLDivElement>(null);
-  const buttonRef = useRef<HTMLDivElement>(null);
-  // const { isLoaded, session, switchSignIn, signOut } = useSession();
+export const UserButton: React.FC<UserButtonProps> = ({ showName = true }) => {
+	const [isOpen, setIsOpen] = useState(false);
+	const [dropdownPosition, setDropdownPosition] = useState<
+		"bottom-right" | "bottom-left" | "top-right" | "top-left"
+	>("bottom-right");
+	const manageAccountDialog = useDialog(false);
+	const containerRef = useRef<HTMLDivElement>(null);
+	const dropdownRef = useRef<HTMLDivElement>(null);
+	const { session, signOut, refetch } = useSession();
 
-  const accounts = [
-    {
-      name: "John Doe",
-      email: "johndoe@gmail.com",
-      imageUrl: "https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?auto=format&fit=facearea&facepad=2&w=256&h=256&q=80"
-    },
-    {
-      name: "Dexter",
-      email: "dexter@work.com",
-      imageUrl: "https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcQzrWgYQAAF5VJZ3ZrwpSWEtQ7AGkyE3Q0Yhw&s"
-    },
-    {
-      name: "Vishal Kumar",
-      email: "vishal@personal.com",
-      imageUrl: ""
-    },
-    {
-      name: "John Dey",
-      email: "johndey@gmail.com",
-      imageUrl: "https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?auto=format&fit=facearea&facepad=2&w=256&h=256&q=80"
-    },
-    {
-      name: "Nancy",
-      email: "nancy@work.com",
-      imageUrl: "https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcQzrWgYQAAF5VJZ3ZrwpSWEtQ7AGkyE3Q0Yhw&s"
-    },
-    {
-      name: "Vishal Sahu",
-      email: "sahu@personal.com",
-      imageUrl: ""
-    }
-  ];
- 
+	const selectedAccount = session?.active_signin?.user;
 
-  // console.log(session, isLoaded, switchSignIn, signOut);
+	useEffect(() => {
+		const handleClickOutside = (event: MouseEvent) => {
+			if (
+				containerRef.current &&
+				!containerRef.current.contains(event.target as Node)
+			) {
+				setIsOpen(false);
+			}
+		};
 
-  useEffect(() => {
-    const handleClickOutside = (event: MouseEvent) => {
-      if (
-        dropdownRef.current &&
-        buttonRef.current &&
-        !dropdownRef.current.contains(event.target as Node) &&
-        !buttonRef.current.contains(event.target as Node)
-      ) {
-        setIsOpen(false);
-      }
-    };
+		document.addEventListener("mousedown", handleClickOutside);
+		return () => {
+			document.removeEventListener("mousedown", handleClickOutside);
+		};
+	}, []);
 
-    document.addEventListener('mousedown', handleClickOutside);
-    return () => {
-      document.removeEventListener('mousedown', handleClickOutside);
-    };
-  }, []);
+	useEffect(() => {
+		if (isOpen && containerRef.current) {
+			setTimeout(() => {
+				if (!containerRef.current || !dropdownRef.current) return;
 
-  const toggleDropdown = () => setIsOpen(!isOpen);
+				const buttonRect = containerRef.current.getBoundingClientRect();
+				const dropdownWidth = dropdownRef.current.offsetWidth || 300;
+				const dropdownHeight = dropdownRef.current.offsetHeight || 300;
+				const windowWidth = window.innerWidth;
+				const windowHeight = window.innerHeight;
 
-  const getInitials = (name: string) => {
-    return name
-      .split(' ')
-      .map((part) => part[0])
-      .join('')
-      .toUpperCase();
-  };
+				const spaceRight = windowWidth - buttonRect.right;
+				const spaceLeft = buttonRect.left;
+				const spaceBottom = windowHeight - buttonRect.bottom;
+				const spaceTop = buttonRect.top;
 
-  const orderedAccounts = [...accounts];
-  const [activeAccountData] = orderedAccounts.splice(activeAccount, 1);
-  orderedAccounts.unshift(activeAccountData);
+				if (spaceBottom >= dropdownHeight && spaceRight >= dropdownWidth) {
+					setDropdownPosition("bottom-right");
+				} else if (
+					spaceBottom >= dropdownHeight &&
+					spaceLeft >= dropdownWidth
+				) {
+					setDropdownPosition("bottom-left");
+				} else if (spaceTop >= dropdownHeight && spaceRight >= dropdownWidth) {
+					setDropdownPosition("top-right");
+				} else if (spaceTop >= dropdownHeight && spaceLeft >= dropdownWidth) {
+					setDropdownPosition("top-left");
+				} else {
+					const positions = [
+						{
+							position: "bottom-right",
+							space: Math.min(spaceBottom, spaceRight),
+						},
+						{
+							position: "bottom-left",
+							space: Math.min(spaceBottom, spaceLeft),
+						},
+						{ position: "top-right", space: Math.min(spaceTop, spaceRight) },
+						{ position: "top-left", space: Math.min(spaceTop, spaceLeft) },
+					];
 
-  return (
-    <TypographyProvider>
-      <ButtonWrapper onClick={toggleDropdown} ref={buttonRef} aria-haspopup="true" aria-expanded={isOpen}>
-        <Avatar>
-          {accounts[activeAccount].imageUrl ? (
-            <img src={accounts[activeAccount].imageUrl} alt={accounts[activeAccount].name} />
-          ) : (
-            getInitials(accounts[activeAccount].name)
-          )}
-        </Avatar>
+					positions.sort((a, b) => b.space - a.space);
 
-        <DropdownWrapper $isOpen={isOpen} ref={dropdownRef}>
-          {orderedAccounts.map((account) => (
-            <div key={account.email}>
-              <AccountItem
-                $active={account.email === accounts[activeAccount].email}
-                onClick={() => {
-                  const originalIndex = accounts.findIndex(a => a.email === account.email);
-                  onAccountSwitch(originalIndex);
-                  setIsOpen(false);
-                }}
-              >
-                <Avatar>
-                  {account.imageUrl ? (
-                    <img src={account.imageUrl} alt={account.name} />
-                  ) : (
-                    getInitials(account.name)
-                  )}
-                </Avatar>
-                <AccountInfo>
-                  <AccountName>{account.name}</AccountName>
-                  <AccountEmail>{account.email}</AccountEmail>
-                </AccountInfo>
-              </AccountItem>
-              {account.email === accounts[activeAccount].email && (
-                <ActionContainer>
-                  <StyledButton onClick={() => { onManageAccount(); setIsOpen(false); }}>
-                    <Settings size={16} />
-                    Manage
-                  </StyledButton>
-                  <StyledButton onClick={() => { onSignOut(); setIsOpen(false); }} $destructive>
-                    <LogOut size={16} />
-                    Sign Out
-                  </StyledButton>
-                </ActionContainer>
-              )}
-            </div>
-          ))}
-          <Divider />
-          <AccountItem onClick={() => { onAddAccount(); setIsOpen(false); }}>
-            <Avatar>
-              <Plus size={20} />
-            </Avatar>
-            <AccountInfo>
-              <AccountName>Add account</AccountName>
-            </AccountInfo>
-          </AccountItem>
-          <Divider />
-          <ActionContainer>
-            <StyledButton onClick={() => { onSignOutAll(); setIsOpen(false); }} $destructive>
-              <LogOut size={16} />
-              Sign out all
-            </StyledButton>
-          </ActionContainer>
-        </DropdownWrapper>
-      </ButtonWrapper>
-    </TypographyProvider>
-  );
+					setDropdownPosition(
+						positions[0].position as
+							| "bottom-right"
+							| "bottom-left"
+							| "top-right"
+							| "top-left",
+					);
+				}
+			}, 0);
+		}
+	}, [isOpen]);
+
+	const toggleDropdown = () => {
+		setIsOpen(!isOpen);
+	};
+
+	const getInitials = (name: string) => {
+		return name
+			.split(" ")
+			.map((part) => part[0])
+			.join("")
+			.toUpperCase();
+	};
+
+	// const handleUserSwitch = async (signInId: string) => {
+	// 	await switchSignIn(signInId);
+	// 	await refetch();
+	// 	setIsOpen(false);
+	// };
+
+	const handleSignOut = async (signInId: string) => {
+		await signOut(signInId);
+		await refetch();
+		setIsOpen(false);
+	};
+
+	const handleSignOutAll = async () => {
+		await signOut();
+		await refetch();
+		setIsOpen(false);
+	};
+
+	const handleOpenManageAccount = () => {
+		manageAccountDialog.open();
+		setIsOpen(false);
+	};
+
+	return (
+		<DefaultStylesProvider>
+			<Container ref={containerRef}>
+				<AccountButton onClick={toggleDropdown}>
+					<AvatarContainer>
+						<Avatar>
+							{selectedAccount?.has_profile_picture ? (
+								<img
+									src={selectedAccount.profile_picture_url}
+									alt={selectedAccount.first_name}
+								/>
+							) : (
+								getInitials(
+									`${selectedAccount?.first_name || ""} ${
+										selectedAccount?.last_name || ""
+									}`,
+								)
+							)}
+						</Avatar>
+						<StatusIndicator
+							$status={selectedAccount?.availability || "away"}
+						/>
+					</AvatarContainer>
+					{showName && (
+						<UserName>
+							{`${selectedAccount?.first_name || ""} ${
+								selectedAccount?.last_name || ""
+							}`}
+						</UserName>
+					)}
+				</AccountButton>
+
+				{isOpen && (
+					<DropdownContainer ref={dropdownRef} $position={dropdownPosition}>
+						<div>
+							{session?.signins?.map(({ user: account, id: signInId }) => (
+								<AccountSection key={account.id}>
+									<AccountHeader>
+										<AvatarContainer>
+											<LargerAvatar>
+												{account.has_profile_picture ? (
+													<img
+														src={account.profile_picture_url}
+														alt={account.first_name}
+													/>
+												) : (
+													getInitials(
+														`${account?.first_name || ""} ${
+															account?.last_name || ""
+														}`,
+													)
+												)}
+											</LargerAvatar>
+											{account.id === selectedAccount?.id ? (
+												<StatusIndicator $status={account.availability} />
+											) : (
+												<StatusIndicator $status="away" />
+											)}
+										</AvatarContainer>
+										<AccountDetails>
+											<NameRow>
+												<AccountName>
+													{`${account?.first_name || ""} ${
+														account?.last_name || ""
+													}`}
+												</AccountName>
+											</NameRow>
+											<AccountEmail>
+												{account.user_email_addresses[0].email}
+											</AccountEmail>
+										</AccountDetails>
+									</AccountHeader>
+
+									{account.id === selectedAccount?.id && (
+										<ActionRow>
+											<ActionLink onClick={() => handleOpenManageAccount()}>
+												<Settings />
+												Manage account
+											</ActionLink>
+											<ActionLink
+												$destructive
+												onClick={() => handleSignOut(signInId)}
+											>
+												<LogOut />
+												Sign out
+											</ActionLink>
+										</ActionRow>
+									)}
+								</AccountSection>
+							))}
+
+							<FooterSection style={{ borderBottom: "1px solid #e2e8f0" }}>
+								<FooterButton onClick={() => handleSignOutAll()}>
+									<Plus />
+									Add new account
+								</FooterButton>
+							</FooterSection>
+
+							<FooterSection>
+								<FooterButton onClick={() => handleSignOutAll()}>
+									<LogOut />
+									Sign out of all accounts
+								</FooterButton>
+							</FooterSection>
+						</div>
+					</DropdownContainer>
+				)}
+
+				<ManageAccountDialog
+					isOpen={manageAccountDialog.isOpen}
+					onClose={manageAccountDialog.close}
+				/>
+			</Container>
+		</DefaultStylesProvider>
+	);
 };

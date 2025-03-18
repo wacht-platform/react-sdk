@@ -1,1 +1,1 @@
-export { DeploymentProvider } from "./deployment-provider";
+export { FrontendDeploymentProvider } from "./deployment-provider";

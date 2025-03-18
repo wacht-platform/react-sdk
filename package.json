@@ -28,6 +28,7 @@
 	},
 	"dependencies": {
 		"lucide-react": "^0.474.0",
+		"qrcode.react": "^4.2.0",
 		"styled-components": "^6.1.13",
 		"swr": "^2.3.0",
 		"ts-pattern": "^5.6.0"

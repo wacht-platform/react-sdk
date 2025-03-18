@@ -1,6 +1,6 @@
 import { useState } from "react";
 import styled from "styled-components";
-import { TypographyProvider } from "@/components/utility/typography";
+import { DefaultStylesProvider } from "@/components/utility/typography";
 import { ArrowLeft } from "lucide-react";
 import { OtherAuthOptions } from "@/components/auth/other-auth-options";
 
@@ -89,40 +89,38 @@ const ResetButton = styled.button`
 `;
 
 interface ForgotPasswordProps {
-  onBack: () => void;
-  onHelp: () => void;
+	onBack: () => void;
+	onHelp: () => void;
 }
 
-export function ForgotPassword({
-  onBack,
-}: ForgotPasswordProps) {
-  const [isSubmitting, setIsSubmitting] = useState(false);
+export function ForgotPassword({ onBack }: ForgotPasswordProps) {
+	const [isSubmitting, setIsSubmitting] = useState(false);
 
-  const handleResetPassword = async () => {
-    setIsSubmitting(true);
-    setIsSubmitting(false);
-  };
+	const handleResetPassword = async () => {
+		setIsSubmitting(true);
+		setIsSubmitting(false);
+	};
 
-  return (
-    <TypographyProvider>
-      <Container>
-        <Header>
-          <BackButton onClick={onBack}>
-            <ArrowLeft size={16} />
-          </BackButton>
-          <Title>Forgot Password?</Title>
-        </Header>
+	return (
+		<DefaultStylesProvider>
+			<Container>
+				<Header>
+					<BackButton onClick={onBack}>
+						<ArrowLeft size={16} />
+					</BackButton>
+					<Title>Forgot Password?</Title>
+				</Header>
 
-        <ResetButton onClick={handleResetPassword} disabled={isSubmitting}>
-          Reset your password
-        </ResetButton>
+				<ResetButton onClick={handleResetPassword} disabled={isSubmitting}>
+					Reset your password
+				</ResetButton>
 
-        <Divider>
-          <DividerText>Or, sign in with another method</DividerText>
-        </Divider>
+				<Divider>
+					<DividerText>Or, sign in with another method</DividerText>
+				</Divider>
 
-        <OtherAuthOptions />
-      </Container>
-    </TypographyProvider>
-  );
+				<OtherAuthOptions />
+			</Container>
+		</DefaultStylesProvider>
+	);
 }

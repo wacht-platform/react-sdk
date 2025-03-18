@@ -3,7 +3,7 @@ import styled from "styled-components";
 import { useSignInWithStrategy } from "../../hooks/use-signin";
 import type { OAuthProvider } from "../../hooks/use-signin";
 import { SignInStrategy } from "../../hooks/use-signin";
-import { TypographyProvider } from "../utility/typography";
+import { DefaultStylesProvider } from "../utility/typography";
 import { OTPInput } from "@/components/utility/otp-input";
 import { ArrowLeft } from "lucide-react";
 import { SocialAuthButtons } from "./social-buttons";
@@ -161,8 +161,13 @@ function SignInFormContent({ signUpUrl }: SignInFormProps) {
 		enabledSocialsProviders,
 		firstFactor,
 	} = useSignInContext();
-	const { loading, signIn, signinAttempt, discardSignInAttempt, errors: signInErrors } =
-		useSignInWithStrategy(SignInStrategy.Generic);
+	const {
+		loading,
+		signIn,
+		signinAttempt,
+		discardSignInAttempt,
+		errors: signInErrors,
+	} = useSignInWithStrategy(SignInStrategy.Generic);
 	const { signIn: oauthSignIn } = useSignInWithStrategy(SignInStrategy.Oauth);
 	const [formData, setFormData] = useState<SignInParams>({
 		email: "",
@@ -304,7 +309,13 @@ function SignInFormContent({ signUpUrl }: SignInFormProps) {
 		if (signInErrors?.errors) {
 			if (Array.isArray(signInErrors?.errors)) {
 				signInErrors.errors.forEach((err) => {
-					if ([ErrorCode.InvalidCredentials, ErrorCode.UserNotFound, ErrorCode.UserAlreadySignedIn].includes(err.code)) {
+					if (
+						[
+							ErrorCode.InvalidCredentials,
+							ErrorCode.UserNotFound,
+							ErrorCode.UserAlreadySignedIn,
+						].includes(err.code)
+					) {
 						newErrors.submit = err.message;
 					}
 				});
@@ -330,7 +341,7 @@ function SignInFormContent({ signUpUrl }: SignInFormProps) {
 	}
 
 	return (
-		<TypographyProvider>
+		<DefaultStylesProvider>
 			<Container>
 				{otpSent ? (
 					<>
@@ -373,20 +384,20 @@ function SignInFormContent({ signUpUrl }: SignInFormProps) {
 						<Form onSubmit={createSignIn} noValidate>
 							{(firstFactor === "email_password" ||
 								firstFactor === "email_otp") && (
-									<FormGroup>
-										<Label htmlFor="email">Email address</Label>
-										<Input
-											type="email"
-											id="email"
-											name="email"
-											value={formData.email}
-											onChange={handleInputChange}
-											placeholder="Enter your email address"
-											aria-invalid={!!errors.email}
-										/>
-										{errors.email && <ErrorMessage>{errors.email}</ErrorMessage>}
-									</FormGroup>
-								)}
+								<FormGroup>
+									<Label htmlFor="email">Email address</Label>
+									<Input
+										type="email"
+										id="email"
+										name="email"
+										value={formData.email}
+										onChange={handleInputChange}
+										placeholder="Enter your email address"
+										aria-invalid={!!errors.email}
+									/>
+									{errors.email && <ErrorMessage>{errors.email}</ErrorMessage>}
+								</FormGroup>
+							)}
 
 							{firstFactor === "username_password" && (
 								<FormGroup>
@@ -424,34 +435,34 @@ function SignInFormContent({ signUpUrl }: SignInFormProps) {
 
 							{(firstFactor === "email_password" ||
 								firstFactor === "username_password") && (
-									<FormGroup>
-										<div
-											style={{ display: "flex", justifyContent: "space-between" }}
+								<FormGroup>
+									<div
+										style={{ display: "flex", justifyContent: "space-between" }}
+									>
+										<Label htmlFor="password">Password</Label>
+										<Link
+											style={{ fontSize: "12px" }}
+											onClick={() => setShowForgotPassword(true)}
 										>
-											<Label htmlFor="password">Password</Label>
-											<Link
-												style={{ fontSize: "12px" }}
-												onClick={() => setShowForgotPassword(true)}
-											>
-												Forgot password?
-											</Link>
-										</div>
-										<PasswordGroup>
-											<Input
-												type="password"
-												id="password"
-												name="password"
-												value={formData.password}
-												onChange={handleInputChange}
-												placeholder="Enter your password"
-												aria-invalid={!!errors.password}
-											/>
-										</PasswordGroup>
-										{errors.password && (
-											<ErrorMessage>{errors.password}</ErrorMessage>
-										)}
-									</FormGroup>
-								)}
+											Forgot password?
+										</Link>
+									</div>
+									<PasswordGroup>
+										<Input
+											type="password"
+											id="password"
+											name="password"
+											value={formData.password}
+											onChange={handleInputChange}
+											placeholder="Enter your password"
+											aria-invalid={!!errors.password}
+										/>
+									</PasswordGroup>
+									{errors.password && (
+										<ErrorMessage>{errors.password}</ErrorMessage>
+									)}
+								</FormGroup>
+							)}
 
 							{errors.submit && <ErrorMessage>{errors.submit}</ErrorMessage>}
 
@@ -467,7 +478,10 @@ function SignInFormContent({ signUpUrl }: SignInFormProps) {
 							</Link>
 						</Form>
 						<Footer>
-							Don't have an account? <Link><NavigationLink to={signUpUrl}>Sign up</NavigationLink></Link>
+							Don't have an account?{" "}
+							<Link>
+								<NavigationLink to={signUpUrl}>Sign up</NavigationLink>
+							</Link>
 						</Footer>
 					</>
 				) : (
@@ -503,6 +517,6 @@ function SignInFormContent({ signUpUrl }: SignInFormProps) {
 					</>
 				)}
 			</Container>
-		</TypographyProvider>
+		</DefaultStylesProvider>
 	);
 }

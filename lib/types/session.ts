@@ -1,6 +1,6 @@
 interface SignIn {
-	id: number;
-	userId: number;
+	id: string;
+	userId: string;
 	user: CurrentUser;
 	expiresAt: string;
 }

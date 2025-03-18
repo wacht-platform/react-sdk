@@ -7,7 +7,7 @@ import {
 	type OAuthProvider,
 } from "../../hooks/use-signin";
 import { useDeployment } from "../../hooks/use-deployment";
-import { TypographyProvider } from "../utility/typography";
+import { DefaultStylesProvider } from "../utility/typography";
 import { OTPInput } from "@/components/utility/otp-input";
 import { ArrowLeft } from "lucide-react";
 import { SocialAuthButtons } from "./social-buttons";
@@ -463,7 +463,7 @@ export function SignUpForm({ className = "", signInUrl }: SignUpFormProps) {
 	}, [signUpErrors]);
 
 	return (
-		<TypographyProvider>
+		<DefaultStylesProvider>
 			<Container className={className}>
 				{otpSent ? (
 					<>
@@ -716,6 +716,6 @@ export function SignUpForm({ className = "", signInUrl }: SignUpFormProps) {
 					</>
 				)}
 			</Container>
-		</TypographyProvider>
+		</DefaultStylesProvider>
 	);
 }

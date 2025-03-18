@@ -1,13 +1,20 @@
-import { useState, useRef, useEffect } from 'react';
-import styled from 'styled-components';
-import { Building2, ChevronDown, LogOut, Plus, Settings, Users } from 'lucide-react';
-import { TypographyProvider } from '../utility/typography';
+import { useState, useRef, useEffect } from "react";
+import styled from "styled-components";
+import {
+	Building2,
+	ChevronDown,
+	LogOut,
+	Plus,
+	Settings,
+	Users,
+} from "lucide-react";
+import { DefaultStylesProvider } from "../utility/typography";
 
 interface Organization {
-  id: string;
-  name: string;
-  role: 'admin' | 'member';
-  imageUrl?: string;
+	id: string;
+	name: string;
+	role: "admin" | "member";
+	imageUrl?: string;
 }
 
 const Container = styled.div`
@@ -67,11 +74,11 @@ const OrgName = styled.span`
   }
 `;
 
-const ChevronIcon = styled(ChevronDown) <{ $isOpen: boolean }>`
+const ChevronIcon = styled(ChevronDown)<{ $isOpen: boolean }>`
   width: 16px;
   height: 16px;
   color: #64748b;
-  transform: ${props => props.$isOpen ? 'rotate(180deg)' : 'rotate(0)'};
+  transform: ${(props) => (props.$isOpen ? "rotate(180deg)" : "rotate(0)")};
   transition: transform 0.2s;
 `;
 
@@ -97,7 +104,6 @@ const Dropdown = styled.div`
   }
 `;
 
-
 const DropdownHeader = styled.div`
   padding: 8px 8px 4px;
 `;
@@ -117,7 +123,7 @@ const OrgButton = styled.button<{ $isActive: boolean }>`
   padding: 8px;
   border-radius: 6px;
   transition: all 0.2s;
-  background-color: ${props => (props.$isActive ? '#f1f5f9' : 'transparent')};
+  background-color: ${(props) => (props.$isActive ? "#f1f5f9" : "transparent")};
   border: none;
   cursor: pointer;
 
@@ -183,7 +189,7 @@ const ActionButton = styled.button<{ $isDestructive?: boolean }>`
   width: 100%;
   padding: 8px;
   font-size: 14px;
-  color: ${props => (props.$isDestructive ? '#ef4444' : '#1e293b')};
+  color: ${(props) => (props.$isDestructive ? "#ef4444" : "#1e293b")};
   transition: all 0.2s;
   border: none;
   background: transparent;
@@ -202,7 +208,7 @@ const ActionButton = styled.button<{ $isDestructive?: boolean }>`
   svg {
     width: 16px;
     height: 16px;
-    color: ${props => (props.$isDestructive ? '#ef4444' : '#64748b')};
+    color: ${(props) => (props.$isDestructive ? "#ef4444" : "#64748b")};
 
     @media (max-width: 600px) {
       width: 14px;
@@ -212,93 +218,110 @@ const ActionButton = styled.button<{ $isDestructive?: boolean }>`
 `;
 
 interface OrganizationSwitcherProps {
-  Organizations: Organization[];
-  currentOrg: Organization;
-  setCurrentOrg: (org: Organization) => void;
+	Organizations: Organization[];
+	currentOrg: Organization;
+	setCurrentOrg: (org: Organization) => void;
 }
 
-export const OrganizationSwitcher = ({ Organizations, currentOrg, setCurrentOrg }: OrganizationSwitcherProps) => {
-  const [isOpen, setIsOpen] = useState(false);
-  const dropdownRef = useRef<HTMLDivElement>(null);
+export const OrganizationSwitcher = ({
+	Organizations,
+	currentOrg,
+	setCurrentOrg,
+}: OrganizationSwitcherProps) => {
+	const [isOpen, setIsOpen] = useState(false);
+	const dropdownRef = useRef<HTMLDivElement>(null);
 
-  useEffect(() => {
-    const handleClickOutside = (event: MouseEvent) => {
-      if (dropdownRef.current && !dropdownRef.current.contains(event.target as Node)) {
-        setIsOpen(false);
-      }
-    };
+	useEffect(() => {
+		const handleClickOutside = (event: MouseEvent) => {
+			if (
+				dropdownRef.current &&
+				!dropdownRef.current.contains(event.target as Node)
+			) {
+				setIsOpen(false);
+			}
+		};
 
-    document.addEventListener('mousedown', handleClickOutside);
-    return () => document.removeEventListener('mousedown', handleClickOutside);
-  }, []);
+		document.addEventListener("mousedown", handleClickOutside);
+		return () => document.removeEventListener("mousedown", handleClickOutside);
+	}, []);
 
-  const handleOrgSelect = (org: Organization) => {
-    setCurrentOrg(org);
-    setIsOpen(false);
-  };
+	const handleOrgSelect = (org: Organization) => {
+		setCurrentOrg(org);
+		setIsOpen(false);
+	};
 
-  return (
-    <TypographyProvider>
-      <Container ref={dropdownRef}>
-        <TriggerButton onClick={() => setIsOpen(!isOpen)} aria-expanded={isOpen} aria-haspopup="true">
-          <ButtonContent>
-            {currentOrg.imageUrl ? (
-              <OrgImage src={currentOrg.imageUrl} alt={currentOrg.name} />
-            ) : (
-              <Building2 size={24} style={{ color: '#1e293b', strokeWidth: 1.8 }} />
-            )}
-            <OrgName>{currentOrg.name}</OrgName>
-          </ButtonContent>
-          <ChevronIcon $isOpen={isOpen} />
-        </TriggerButton>
+	return (
+		<DefaultStylesProvider>
+			<Container ref={dropdownRef}>
+				<TriggerButton
+					onClick={() => setIsOpen(!isOpen)}
+					aria-expanded={isOpen}
+					aria-haspopup="true"
+				>
+					<ButtonContent>
+						{currentOrg.imageUrl ? (
+							<OrgImage src={currentOrg.imageUrl} alt={currentOrg.name} />
+						) : (
+							<Building2
+								size={24}
+								style={{ color: "#1e293b", strokeWidth: 1.8 }}
+							/>
+						)}
+						<OrgName>{currentOrg.name}</OrgName>
+					</ButtonContent>
+					<ChevronIcon $isOpen={isOpen} />
+				</TriggerButton>
 
-        {isOpen && (
-          <Dropdown>
-            <DropdownHeader>
-              <HeaderText>Switch Organization</HeaderText>
-            </DropdownHeader>
+				{isOpen && (
+					<Dropdown>
+						<DropdownHeader>
+							<HeaderText>Switch Organization</HeaderText>
+						</DropdownHeader>
 
-            {Organizations.map((org) => (
-              <OrgButton
-                key={org.id}
-                onClick={() => handleOrgSelect(org)}
-                $isActive={currentOrg.id === org.id}
-              >
-                {org.imageUrl ? (
-                  <LargeOrgImage src={org.imageUrl} alt={org.name} />
-                ) : (
-                  <Building2 size={36} style={{ color: '#1e293b', strokeWidth: 1.5 }} />
-                )}
-                <OrgInfo>
-                  <OrgTitle>{org.name}</OrgTitle>
-                  <OrgRole>{org.role}</OrgRole>
-                </OrgInfo>
-              </OrgButton>
-            ))}
+						{Organizations.map((org) => (
+							<OrgButton
+								key={org.id}
+								onClick={() => handleOrgSelect(org)}
+								$isActive={currentOrg.id === org.id}
+							>
+								{org.imageUrl ? (
+									<LargeOrgImage src={org.imageUrl} alt={org.name} />
+								) : (
+									<Building2
+										size={36}
+										style={{ color: "#1e293b", strokeWidth: 1.5 }}
+									/>
+								)}
+								<OrgInfo>
+									<OrgTitle>{org.name}</OrgTitle>
+									<OrgRole>{org.role}</OrgRole>
+								</OrgInfo>
+							</OrgButton>
+						))}
 
-            <Divider />
+						<Divider />
 
-            <ActionButton>
-              <Plus />
-              Create Organization
-            </ActionButton>
-            <ActionButton>
-              <Users />
-              Organization Profile
-            </ActionButton>
-            <ActionButton>
-              <Settings />
-              Organization Settings
-            </ActionButton>
-            <ActionButton $isDestructive>
-              <LogOut />
-              Sign Out
-            </ActionButton>
-          </Dropdown>
-        )}
-      </Container>
-    </TypographyProvider>
-  );
+						<ActionButton>
+							<Plus />
+							Create Organization
+						</ActionButton>
+						<ActionButton>
+							<Users />
+							Organization Profile
+						</ActionButton>
+						<ActionButton>
+							<Settings />
+							Organization Settings
+						</ActionButton>
+						<ActionButton $isDestructive>
+							<LogOut />
+							Sign Out
+						</ActionButton>
+					</Dropdown>
+				)}
+			</Container>
+		</DefaultStylesProvider>
+	);
 };
 
 export default OrganizationSwitcher;

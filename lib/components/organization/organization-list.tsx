@@ -1,12 +1,12 @@
-import styled from 'styled-components';
-import { Building2, Plus, Settings } from 'lucide-react';
-import { TypographyProvider } from '../utility/typography';
+import styled from "styled-components";
+import { Building2, Plus, Settings } from "lucide-react";
+import { DefaultStylesProvider } from "../utility/typography";
 
 interface Organization {
-  id: string;
-  name: string;
-  role: string;
-  imageUrl?: string;
+	id: string;
+	name: string;
+	role: string;
+	imageUrl?: string;
 }
 
 const Container = styled.div`
@@ -79,7 +79,7 @@ const OrganizationItem = styled.div<{ $active?: boolean }>`
   border-radius: 0.75rem;
   cursor: pointer;
   transition: all 0.2s;
-  background: ${props => props.$active ? '#f1f5f9' : 'transparent'};
+  background: ${(props) => (props.$active ? "#f1f5f9" : "transparent")};
   margin-bottom: 0.5rem;
 
   &:hover {
@@ -100,7 +100,7 @@ const OrgImage = styled.div<{ url?: string }>`
   width: 3.5rem;
   height: 3.5rem;
   border-radius: 0.75rem;
-  background: ${props => props.url ? `url(${props.url})` : '#f1f5f9'};
+  background: ${(props) => (props.url ? `url(${props.url})` : "#f1f5f9")};
   background-size: cover;
   background-position: center;
   display: flex;
@@ -220,47 +220,51 @@ const ActionButton = styled.button`
 `;
 
 interface OrganizationListProps {
-  organizations: Organization[];
-  activeOrg: string;
-  setActiveOrg: (id: string) => void;
+	organizations: Organization[];
+	activeOrg: string;
+	setActiveOrg: (id: string) => void;
 }
 
-export const OrganizationList = ({ organizations, activeOrg, setActiveOrg }: OrganizationListProps) => {
-  return (
-    <TypographyProvider>
-      <Container>
-        <Header>
-          <Building2 size={24} />
-          <Title>Organizations</Title>
-        </Header>
-        <List>
-          {organizations.map((org) => (
-            <OrganizationItem
-              key={org.id}
-              $active={activeOrg === org.id}
-              onClick={() => setActiveOrg(org.id)}
-            >
-              <OrgImage url={org.imageUrl}>
-                {!org.imageUrl && <Building2 size={24} />}
-              </OrgImage>
-              <OrgInfo>
-                <OrgName>{org.name}</OrgName>
-                <OrgRole>{org.role}</OrgRole>
-              </OrgInfo>
-              <IconButton>
-                <Settings size={20} />
-              </IconButton>
-            </OrganizationItem>
-          ))}
-          <Divider />
-          <ActionButton>
-            <Plus size={20} />
-            Create Organization
-          </ActionButton>
-        </List>
-      </Container>
-    </TypographyProvider>
-  );
+export const OrganizationList = ({
+	organizations,
+	activeOrg,
+	setActiveOrg,
+}: OrganizationListProps) => {
+	return (
+		<DefaultStylesProvider>
+			<Container>
+				<Header>
+					<Building2 size={24} />
+					<Title>Organizations</Title>
+				</Header>
+				<List>
+					{organizations.map((org) => (
+						<OrganizationItem
+							key={org.id}
+							$active={activeOrg === org.id}
+							onClick={() => setActiveOrg(org.id)}
+						>
+							<OrgImage url={org.imageUrl}>
+								{!org.imageUrl && <Building2 size={24} />}
+							</OrgImage>
+							<OrgInfo>
+								<OrgName>{org.name}</OrgName>
+								<OrgRole>{org.role}</OrgRole>
+							</OrgInfo>
+							<IconButton>
+								<Settings size={20} />
+							</IconButton>
+						</OrganizationItem>
+					))}
+					<Divider />
+					<ActionButton>
+						<Plus size={20} />
+						Create Organization
+					</ActionButton>
+				</List>
+			</Container>
+		</DefaultStylesProvider>
+	);
 };
 
 export default OrganizationList;
