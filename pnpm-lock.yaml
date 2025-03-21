@@ -17,6 +17,9 @@ importers:
       react:
         specifier: ^19.0.0
         version: 19.0.0
+      rollup-plugin-preserve-use-client:
+        specifier: ^3.0.1
+        version: 3.0.1(rollup@4.29.1)
       styled-components:
         specifier: ^6.1.13
         version: 6.1.13(react-dom@19.0.0(react@19.0.0))(react@19.0.0)
@@ -796,6 +799,11 @@ packages:
     resolution: {integrity: sha512-NPRy+/ncIMeDlTAsuqwKIiferiawhefFJtkNSW0qZJEqMEb+qBt/77B/jGeeek+F0uOeN05CDa6HXbbIgtVX4w==}
     engines: {node: '>= 0.4'}
     hasBin: true
+
+  rollup-plugin-preserve-use-client@3.0.1:
+    resolution: {integrity: sha512-4WKtGnQsgeCzT/PnA82V4knXVTKxNrxJFcPVa1Kero2XaLs1yazGSCUwxv6NzVmeNeURqE+A5wLbI+zlPKVgMg==}
+    peerDependencies:
+      rollup: ^4.0.0
 
   rollup@4.29.1:
     resolution: {integrity: sha512-RaJ45M/kmJUzSWDs1Nnd5DdV4eerC98idtUOVr6FfKcgxqvjwHmxc5upLF9qZU9EpsVzzhleFahrT3shLuJzIw==}
@@ -1661,6 +1669,10 @@ snapshots:
       is-core-module: 2.16.1
       path-parse: 1.0.7
       supports-preserve-symlinks-flag: 1.0.0
+
+  rollup-plugin-preserve-use-client@3.0.1(rollup@4.29.1):
+    dependencies:
+      rollup: 4.29.1
 
   rollup@4.29.1:
     dependencies:

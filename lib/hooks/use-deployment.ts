@@ -6,5 +6,8 @@ export function useDeployment() {
 	if (context === undefined) {
 		throw new Error("useDeployment must be used within a DeploymentProvider");
 	}
+	if (!context.loading && !context.deployment) {
+		throw new Error("Deployment is not loaded");
+	}
 	return context;
 }

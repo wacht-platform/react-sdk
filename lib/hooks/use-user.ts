@@ -4,14 +4,6 @@ import { mapResponse } from "@/utils/response-mapper";
 
 type SecondFactorPolicy = "none" | "optional" | "enforced";
 
-interface UserSession {
-	id: string;
-	browser: string;
-	ipAddress: string;
-	timestamp: string;
-	location: string;
-}
-
 interface ProfileUpdateData {
 	first_name?: string;
 	last_name?: string;
@@ -23,6 +15,11 @@ interface ProfileUpdateData {
 
 const fetchUser = async (client: Client) => {
 	const response = await mapResponse<CurrentUser>(await client("/me"));
+	return response.data;
+};
+
+const fetchUserSignins = async (client: Client) => {
+	const response = await mapResponse<SignIn[]>(await client("/me/signins"));
 	return response.data;
 };
 
@@ -43,15 +40,6 @@ export function useUser() {
 		);
 		mutate();
 		return response;
-	};
-
-	const getActiveSessions = async () => {
-		const response = await mapResponse<UserSession[]>(
-			await client("/me/sessions", {
-				method: "GET",
-			}),
-		);
-		return response.data;
 	};
 
 	const getEmailAddresses = async () => {
@@ -217,27 +205,9 @@ export function useUser() {
 		return response.data;
 	};
 
-	const sessions: UserSession[] = [
-		{
-			id: "1",
-			browser: "Chrome on MacOS",
-			ipAddress: "192.168.1.1",
-			timestamp: "Last active 2 hours ago",
-			location: "San Francisco, US",
-		},
-		{
-			id: "2",
-			browser: "Safari on iOS",
-			ipAddress: "192.168.1.2",
-			timestamp: "Last active 5 minutes ago",
-			location: "New York, US",
-		},
-	];
-
 	return {
 		user: {
 			...user,
-			sessions,
 			refetch: mutate,
 		},
 		updateProfile,
@@ -258,7 +228,29 @@ export function useUser() {
 		generateBackupCodes,
 		regenerateBackupCodes,
 		updateProfilePicture,
-		getActiveSessions,
+		loading: isLoading || loading,
+	};
+}
+
+export function useUserSignins() {
+	const { client, loading } = useClient();
+	const { data: signins, isLoading } = useSWR(
+		loading ? null : "/me/signins",
+		() => fetchUserSignins(client),
+	);
+
+	const removeSignin = async (id: string) => {
+		const response = await mapResponse(
+			await client(`/me/signins/${id}/signout`, {
+				method: "PATCH",
+			}),
+		);
+		return response;
+	};
+
+	return {
+		signins,
+		removeSignin,
 		loading: isLoading || loading,
 	};
 }

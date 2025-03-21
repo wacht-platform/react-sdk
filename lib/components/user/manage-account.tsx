@@ -28,7 +28,7 @@ import {
 import { EmailAddPopover } from "@/components/user/add-email-popover";
 import { PhoneAddPopover } from "@/components/user/add-phone-popover";
 import { Dropdown, DropdownItem } from "@/components/utility/dropdown";
-import { useUser } from "@/hooks/use-user";
+import { useUser, useUserSignins } from "@/hooks/use-user";
 import { match, P } from "ts-pattern";
 import { GoogleIcon } from "../icons/google";
 import { MicrosoftIcon } from "../icons/microsoft";
@@ -93,7 +93,7 @@ const Layout = styled.div`
   }
 `;
 
-const MenuItem = styled.div<{ active?: boolean }>`
+const MenuItem = styled.div<{ $active?: boolean }>`
   padding: 8px 12px;
   margin: 2px 0;
   border-radius: 6px;
@@ -102,9 +102,9 @@ const MenuItem = styled.div<{ active?: boolean }>`
   font-size: 14px;
   align-items: center;
   gap: 8px;
-  background: ${(props) => (props.active ? "#f8f7f4" : "transparent")};
-  color: ${(props) => (props.active ? "#1e293b" : "#64748b")};
-  font-weight: ${(props) => (props.active ? "500" : "normal")};
+  background: ${(props) => (props.$active ? "#f8f7f4" : "transparent")};
+  color: ${(props) => (props.$active ? "#1e293b" : "#64748b")};
+  font-weight: ${(props) => (props.$active ? "500" : "normal")};
   transition: all 0.2s ease;
 
   &:hover {
@@ -514,75 +514,104 @@ const ProfileManagementSection = ({
 
 const ActiveSessionsSection = () => {
 	const [activeSession, setActiveSession] = useState<string | null>(null);
-	const { user } = useUser();
+	const { signins, removeSignin, loading } = useUserSignins();
 
 	const handleCloseDropdown = () => {
 		setActiveSession(null);
 	};
-	const logoutSession = (sessionId: string) => {
-		console.log("Logging out session:", sessionId);
+
+	const logoutSession = async (sessionId: string) => {
+		await removeSignin(sessionId);
+		setActiveSession(null);
 	};
 
 	const banIpAddress = (ipAddress: string) => {
 		console.log("Banning IP address:", ipAddress);
 	};
 
+	if (loading) {
+		return (
+			<div
+				style={{ display: "flex", justifyContent: "center", padding: "20px" }}
+			>
+				<Spinner />
+			</div>
+		);
+	}
+
 	return (
 		<ProfileSection>
-			<SectionTitle>Active Sessions</SectionTitle>
-			{user.sessions.map((session) => (
+			<SectionTitle>Active Sign-ins</SectionTitle>
+			{signins && signins.length > 0 ? (
+				signins.map((signin) => (
+					<div
+						key={signin.id}
+						style={{
+							display: "flex",
+							alignItems: "center",
+							padding: "16px",
+							background:
+								activeSession === signin.id ? "#f8fafc" : "transparent",
+							borderRadius: "8px",
+							marginTop: "12px",
+							position: "relative",
+						}}
+					>
+						<div style={{ marginRight: "16px" }}>
+							{/* Browser icon would go here */}
+						</div>
+						<div style={{ flex: 1 }}>
+							<div
+								style={{
+									fontSize: "14px",
+									color: "#1e293b",
+									fontWeight: 500,
+								}}
+							>
+								{signin.browser || "Unknown Browser"}
+								{signin.device ? ` • ${signin.device}` : ""}
+							</div>
+							<LastLogin>
+								<div>
+									{signin.city && signin.country
+										? `${signin.city}, ${signin.country}`
+										: signin.ipAddress || "Unknown location"}
+								</div>
+								<div>{new Date(signin.lastActiveAt).toLocaleString()}</div>
+							</LastLogin>
+						</div>
+						<div style={{ position: "relative" }}>
+							<IconButton
+								onClick={() =>
+									setActiveSession(
+										activeSession === signin.id ? null : signin.id,
+									)
+								}
+							>
+								<MoreVertical size={16} />
+							</IconButton>
+							<SessionDropdown
+								isOpen={activeSession === signin.id}
+								onClose={handleCloseDropdown}
+								sessionId={signin.id}
+								location={signin.ipAddress || "Unknown"}
+								onLogout={logoutSession}
+								onBanIp={banIpAddress}
+							/>
+						</div>
+					</div>
+				))
+			) : (
 				<div
-					key={session.id}
 					style={{
-						display: "flex",
-						alignItems: "center",
-						padding: "16px",
-						background:
-							activeSession === session.id ? "#f8fafc" : "transparent",
-						borderRadius: "8px",
-						marginTop: "12px",
-						position: "relative",
+						textAlign: "center",
+						padding: "20px",
+						color: "#64748b",
 					}}
 				>
-					<div style={{ marginRight: "16px" }}>
-						{/* <FirefoxIcon style={{ width: 24, height: 24 }} /> */}
-					</div>
-					<div style={{ flex: 1 }}>
-						<div
-							style={{
-								fontSize: "14px",
-								color: "#1e293b",
-								fontWeight: 500,
-							}}
-						>
-							{session.browser}
-						</div>
-						<LastLogin>
-							<div>{session.location}</div>
-							<div>{session.id}</div>
-						</LastLogin>
-					</div>
-					<div style={{ position: "relative" }}>
-						<IconButton
-							onClick={() =>
-								setActiveSession(
-									activeSession === session.id ? null : session.id,
-								)
-							}
-						>
-							<MoreVertical size={16} />
-						</IconButton>
-						<SessionDropdown
-							isOpen={activeSession === session.id}
-							onClose={handleCloseDropdown}
-							sessionId={session.id}
-							location={session.location}
-							onLogout={logoutSession}
-							onBanIp={banIpAddress}
-						/>
-					</div>
+					No active sign-ins found
 				</div>
-			))}
+			)}
 		</ProfileSection>
 	);
 };
@@ -1048,18 +1077,18 @@ export const ManageAccount = () => {
 							</SidebarTitle>
 						</SidebarHeader>
 						<MenuItem
-							active={activeTab === "manage-account"}
+							$active={activeTab === "manage-account"}
 							onClick={() => setActiveTab("manage-account")}
 						>
 							<User size={16} />
 							Account
 						</MenuItem>
 						<MenuItem
-							active={activeTab === "active-sessions"}
+							$active={activeTab === "active-sessions"}
 							onClick={() => setActiveTab("active-sessions")}
 						>
 							<Shield size={16} />
-							Sessions
+							Active Sign-ins
 						</MenuItem>
 					</Sidebar>
 

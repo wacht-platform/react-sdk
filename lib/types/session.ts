@@ -3,6 +3,15 @@ interface SignIn {
 	userId: string;
 	user: CurrentUser;
 	expiresAt: string;
+	lastActiveAt: string;
+	ipAddress: string;
+	browser: string;
+	device: string;
+	city: string;
+	region: string;
+	regionCode: string;
+	country: string;
+	countryCode: string;
 }
 
 type SignInMethod = "plain" | "sso" | "passkey";

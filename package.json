@@ -1,6 +1,6 @@
 {
-	"name": "@snipextt/wacht-react",
-	"version": "0.0.1",
+	"name": "@snipextt/wacht-js",
+	"version": "0.0.7",
 	"description": "",
 	"type": "module",
 	"main": "dist/index.cjs.js",
@@ -29,6 +29,7 @@
 	"dependencies": {
 		"lucide-react": "^0.474.0",
 		"qrcode.react": "^4.2.0",
+		"rollup-plugin-preserve-use-client": "^3.0.1",
 		"styled-components": "^6.1.13",
 		"swr": "^2.3.0",
 		"ts-pattern": "^5.6.0"

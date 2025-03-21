@@ -47,9 +47,12 @@ function FrontendDeploymentProvider({
 			const deployment = await fetch(`${baseUrl}/deployment`, {
 				headers: { "X-Development-Session": devSession ?? "" },
 			});
+
 			if (!deployment.ok) {
-				throw new Error("Invalid deployment");
+				setLoading(false);
+				return;
 			}
+
 			const deploymentConfig =
 				(await deployment.json()) as ClinetReponse<Deployment>;
 
