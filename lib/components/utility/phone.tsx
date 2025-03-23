@@ -12,7 +12,7 @@ const breakpoints = {
 
 const PhoneInputGroup = styled.div`
   display: flex;
-  gap: 0.5rem;
+  gap: var(--space-xs);
   width: 100%;
 
   @media (max-width: ${breakpoints.sm}) {
@@ -30,23 +30,23 @@ const CountryCodeButton = styled.button`
   gap: 0.375rem;
   padding: 0.5rem 0.75rem;
   width: 100%;
-  border: 0.0625rem solid #e5e7eb;
-  border-radius: 0.5rem;
-  font-size: 0.875rem;
-  color: #111827;
-  background: #f9fafb;
+  border: 0.0625rem solid var(--color-border);
+  border-radius: var(--radius-md);
+  font-size: var(--font-xs);
+  color: var(--color-foreground);
+  background: var(--color-input-background);
   cursor: pointer;
   transition: all 0.2s;
 
   &:hover {
-    border-color: #d1d5db;
+    border-color: var(--color-input-border);
   }
 
   &:focus {
     outline: none;
-    border-color: #6366f1;
-    box-shadow: 0 0 0 0.1875rem rgba(99, 102, 241, 0.1);
-    background: white;
+    border-color: var(--color-primary);
+    box-shadow: 0 0 0 0.1875rem var(--color-input-focus-border);
+    background: var(--color-background);
   }
 
   @media (max-width: ${breakpoints.sm}) {
@@ -62,12 +62,12 @@ const CountryCodeDropdown = styled.div<{ $isOpen: boolean }>`
   width: 17.5rem;
   max-height: 18.75rem;
   overflow-y: auto;
-  background: white;
-  border: 0.0625rem solid #e5e7eb;
-  border-radius: 0.5rem;
+  background: var(--color-background);
+  border: 0.0625rem solid var(--color-border);
+  border-radius: var(--radius-md);
   box-shadow:
-    0 0.25rem 0.375rem -0.0625rem rgba(0, 0, 0, 0.1),
-    0 0.125rem 0.25rem -0.0625rem rgba(0, 0, 0, 0.06);
+    0 0.25rem 0.375rem -0.0625rem var(--color-shadow),
+    0 0.125rem 0.25rem -0.0625rem var(--color-shadow);
   z-index: 50;
   display: ${(props) => (props.$isOpen ? "block" : "none")};
 
@@ -81,17 +81,18 @@ const CountrySearch = styled.input`
   width: 100%;
   padding: 0.5rem 0.75rem;
   border: none;
-  border-bottom: 0.0625rem solid #e5e7eb;
-  font-size: 0.875rem;
-  color: #111827;
+  border-bottom: 0.0625rem solid var(--color-border);
+  font-size: var(--font-xs);
+  color: var(--color-foreground);
+  background: var(--color-background);
 
   &:focus {
     outline: none;
-    border-color: #6366f1;
+    border-color: var(--color-primary);
   }
 
   &::placeholder {
-    color: #9ca3af;
+    color: var(--color-secondary-text);
   }
 
   @media (max-width: ${breakpoints.sm}) {
@@ -117,17 +118,17 @@ const CountryOption = styled.button`
   padding: 0.5rem 0.75rem;
   border: none;
   background: transparent;
-  font-size: 0.875rem;
-  color: #111827;
+  font-size: var(--font-xs);
+  color: var(--color-foreground);
   cursor: pointer;
   text-align: left;
 
   &:hover {
-    background: #f9fafb;
+    background: var(--color-input-background);
   }
 
   .country-code {
-    color: #6b7280;
+    color: var(--color-secondary-text);
     margin-left: auto;
   }
 

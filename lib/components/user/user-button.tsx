@@ -1,7 +1,7 @@
 import { useState, useRef, useEffect } from "react";
 import styled from "styled-components";
 import { LogOut, Settings, Plus } from "lucide-react";
-import { DefaultStylesProvider } from "../utility/typography";
+import { DefaultStylesProvider } from "../utility/root";
 import { useSession } from "@/hooks";
 import { ManageAccountDialog } from "./manage-account-dialog";
 import { useDialog } from "../utility/use-dialog";

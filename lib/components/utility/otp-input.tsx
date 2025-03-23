@@ -5,71 +5,71 @@ const Container = styled.div`
   width: 100%;
   display: flex;
   flex-direction: column;
-  gap: 10px;
+  gap: var(--space-xs);
 `;
 
 const InputGroup = styled.div`
   display: flex;
-  gap: 8px;
+  gap: var(--space-xs);
   justify-content: center;
 `;
 
 const InputBox = styled.input`
   width: 40px;
   height: 40px;
-  border: 1px solid #E5E7EB;
-  border-radius: 8px;
-  font-size: 18px;
-  color: #111827;
-  background: #F9FAFB;
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-md);
+  font-size: var(--font-md);
+  color: var(--color-foreground);
+  background: var(--color-input-background);
   text-align: center;
   transition: all 0.2s;
 
   &:focus {
     outline: none;
-    border-color: #6366F1;
-    box-shadow: 0 0 0 3px rgba(99, 102, 241, 0.1);
-    background: white;
+    border-color: var(--color-primary);
+    box-shadow: 0 0 0 3px var(--color-input-focus-border);
+    background: var(--color-background);
   }
 
   &::placeholder {
-    color: #9CA3AF;
+    color: var(--color-secondary-text);
   }
 `;
 
 const ErrorMessage = styled.p`
-  font-size: 12px;
-  color: #EF4444;
+  font-size: var(--font-2xs);
+  color: var(--color-error);
   margin: 0;
-  margin-top: 2px;
+  margin-top: var(--space-2xs);
   text-align: center;
 `;
 
 const ResendButton = styled.button`
   background: none;
   border: none;
-  color: #6366F1;
-  font-size: 14px;
+  color: var(--color-primary);
+  font-size: var(--font-xs);
   font-weight: 500;
   cursor: pointer;
   padding: 0;
-  margin-top: 4px;
+  margin-top: var(--space-2xs);
   text-align: center;
   width: 100%;
 
   &:hover:not(:disabled) {
-    color: #4F46E5;
+    color: var(--color-primary-hover);
   }
 
   &:disabled {
-    color: #9CA3AF;
+    color: var(--color-secondary-text);
     cursor: not-allowed;
   }
 `;
 
 const Timer = styled.span`
-  color: #6B7280;
-  font-size: 14px;
+  color: var(--color-secondary-text);
+  font-size: var(--font-xs);
   display: block;
   text-align: center;
 `;

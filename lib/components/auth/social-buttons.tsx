@@ -30,14 +30,14 @@ const socialAuthProviders = {
 const SocialAuthButtonsContainer = styled.div`
   display: flex;
   flex-direction: column;
-  gap: 12px;
-  margin-bottom: 24px;
+  gap: var(--space-sm);
+  margin-bottom: var(--space-lg);
 `;
 
 const ButtonRow = styled.div`
   display: flex;
   flex-wrap: wrap;
-  gap: 12px;
+  gap: var(--space-sm);
 `;
 
 const SocialAuthButton = styled.button<{
@@ -47,15 +47,15 @@ const SocialAuthButton = styled.button<{
   display: flex;
   align-items: center;
   justify-content: center;
-  gap: 8px;
-  padding: 8px 16px;
-  border: 1px solid #e5e7eb;
-  border-radius: 8px;
-  background: white;
+  gap: var(--space-xs);
+  padding: var(--space-xs) var(--space-md);
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-md);
+  background: var(--color-background);
   cursor: pointer;
   transition: all 0.2s;
-  font-size: 14px;
-  color: #374151;
+  font-size: var(--font-xs);
+  color: var(--color-foreground);
   font-weight: 500;
   height: 40px;
 
@@ -66,19 +66,19 @@ const SocialAuthButton = styled.button<{
       `;
 		}
 		return css`
-        flex: 0 0 calc((100% - (12px * 5)) / 6);
+        flex: 0 0 calc((100% - (var(--space-sm) * 5)) / 6);
         ${
 					props.$isWide &&
 					css`
-          flex: 0 0 calc((100% - (12px * 3)) / 4);
+          flex: 0 0 calc((100% - (var(--space-sm) * 3)) / 4);
         `
 				}
       `;
 	}}
 
   &:hover {
-    background-color: #f9fafb;
-    border-color: #d1d5db;
+    background-color: var(--color-input-background);
+    border-color: var(--color-input-border);
   }
 
   svg {

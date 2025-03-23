@@ -3,7 +3,7 @@ import styled from "styled-components";
 import { useSignInWithStrategy } from "../../hooks/use-signin";
 import type { OAuthProvider } from "../../hooks/use-signin";
 import { SignInStrategy } from "../../hooks/use-signin";
-import { DefaultStylesProvider } from "../utility/typography";
+import { DefaultStylesProvider } from "../utility/root";
 import { OTPInput } from "@/components/utility/otp-input";
 import { ArrowLeft } from "lucide-react";
 import { SocialAuthButtons } from "./social-buttons";
@@ -20,50 +20,50 @@ import { Form, FormGroup, Label } from "../utility/form";
 const Container = styled.div`
   max-width: 400px;
   width: 400px;
-  padding: 32px 40px;
-  background: white;
-  border-radius: 12px;
-  box-shadow: 0 4px 24px rgba(0, 0, 0, 0.1);
+  padding: var(--space-xl) var(--space-2xl);
+  background: var(--color-background);
+  border-radius: var(--radius-lg);
+  box-shadow: 0 4px 24px var(--color-shadow);
 `;
 
 const BackButton = styled.button`
   position: absolute;
-  top: 6px;
+  top: var(--space-2xs);
   left: 0px;
   cursor: pointer;
-  font-size: 14px;
-  margin-bottom: 24px;
-  color: #64748b;
+  font-size: var(--font-xs);
+  margin-bottom: var(--space-lg);
+  color: var(--color-muted);
   background: none;
   border: none;
 
   &:hover {
-    color: #1e293b;
+    color: var(--color-foreground);
   }
 `;
 
 const Header = styled.div`
   text-align: center;
-  margin-bottom: 24px;
+  margin-bottom: var(--space-lg);
   position: relative;
 `;
 
 const Title = styled.h1`
-  font-size: 18px;
+  font-size: var(--font-md);
   font-weight: 400;
-  color: #111827;
-  margin-bottom: 4px;
+  color: var(--color-foreground);
+  margin-bottom: var(--space-2xs);
 `;
 
 const Subtitle = styled.p`
-  color: #6b7280;
-  font-size: 14px;
+  color: var(--color-secondary-text);
+  font-size: var(--font-xs);
 `;
 
 const Divider = styled.div`
   position: relative;
   text-align: center;
-  margin: 16px 0;
+  margin: var(--space-md) 0;
 
   &::before {
     content: "";
@@ -72,16 +72,16 @@ const Divider = styled.div`
     left: 0;
     right: 0;
     height: 1px;
-    background: #e5e7eb;
+    background: var(--color-divider);
   }
 `;
 
 const DividerText = styled.span`
   position: relative;
-  background: white;
-  padding: 0 12px;
-  color: #6b7280;
-  font-size: 14px;
+  background: var(--color-background);
+  padding: 0 var(--space-sm);
+  color: var(--color-secondary-text);
+  font-size: var(--font-xs);
 `;
 
 const PasswordGroup = styled.div`
@@ -89,27 +89,27 @@ const PasswordGroup = styled.div`
 `;
 
 const ErrorMessage = styled.p`
-  font-size: 12px;
-  color: #ef4444;
+  font-size: var(--font-2xs);
+  color: var(--color-error);
   margin: 0;
-  margin-top: 2px;
+  margin-top: var(--space-2xs);
 `;
 
 const SubmitButton = styled.button`
   width: 100%;
-  padding: 9px 16px;
-  background: #6366f1;
+  padding: 9px var(--space-md);
+  background: var(--color-primary);
   color: white;
   border: none;
-  border-radius: 8px;
+  border-radius: var(--radius-md);
   font-weight: 500;
-  font-size: 14px;
+  font-size: var(--font-xs);
   cursor: pointer;
   transition: background-color 0.2s;
-  margin-top: 8px;
+  margin-top: var(--space-xs);
 
   &:hover:not(:disabled) {
-    background: #4f46e5;
+    background: var(--color-primary-hover);
   }
 
   &:disabled {
@@ -119,21 +119,21 @@ const SubmitButton = styled.button`
 `;
 
 const Footer = styled.p`
-  margin-top: 24px;
+  margin-top: var(--space-lg);
   text-align: center;
-  font-size: 14px;
-  color: #6b7280;
+  font-size: var(--font-xs);
+  color: var(--color-secondary-text);
 `;
 
 const Link = styled.span`
-  color: #6366f1;
+  color: var(--color-primary);
   text-decoration: none;
   font-weight: 500;
   transition: color 0.2s;
   cursor: pointer;
 
   &:hover {
-    color: #4f46e5;
+    color: var(--color-primary-hover);
   }
 `;
 
@@ -284,7 +284,7 @@ function SignInFormContent({ signUpUrl }: SignInFormProps) {
 	};
 
 	useEffect(() => {
-		if (!signinAttempt) return;
+		if (!signIn || !signinAttempt) return;
 
 		if (signinAttempt.completed || otpSent) {
 			return;
@@ -302,13 +302,13 @@ function SignInFormContent({ signUpUrl }: SignInFormProps) {
 		}
 
 		setOtpSent(true);
-	}, [signinAttempt, signIn.prepareVerification, otpSent]);
+	}, [signinAttempt, signIn, otpSent, setOtpSent]);
 
 	useEffect(() => {
 		const newErrors: Record<string, string> = {};
 		if (signInErrors?.errors) {
 			if (Array.isArray(signInErrors?.errors)) {
-				signInErrors.errors.forEach((err) => {
+				for (const err of signInErrors.errors) {
 					if (
 						[
 							ErrorCode.InvalidCredentials,
@@ -318,7 +318,7 @@ function SignInFormContent({ signUpUrl }: SignInFormProps) {
 					) {
 						newErrors.submit = err.message;
 					}
-				});
+				}
 			}
 		}
 

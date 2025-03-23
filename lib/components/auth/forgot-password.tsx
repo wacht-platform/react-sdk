@@ -1,35 +1,35 @@
 import { useState } from "react";
 import styled from "styled-components";
-import { DefaultStylesProvider } from "@/components/utility/typography";
+import { DefaultStylesProvider } from "@/components/utility/root";
 import { ArrowLeft } from "lucide-react";
 import { OtherAuthOptions } from "@/components/auth/other-auth-options";
 
 const Container = styled.div`
   max-width: 400px;
   width: 400px;
-  padding: 32px 40px;
-  background: white;
-  border-radius: 12px;
-  box-shadow: 0 4px 24px rgba(0, 0, 0, 0.1);
+  padding: var(--space-xl) var(--space-2xl);
+  background: var(--color-background);
+  border-radius: var(--radius-lg);
+  box-shadow: 0 4px 24px var(--color-shadow);
 `;
 
 const Header = styled.div`
   text-align: center;
-  margin-bottom: 32px;
+  margin-bottom: var(--space-md);
   position: relative;
 `;
 
 const Title = styled.h1`
-  font-size: 18px;
+  font-size: var(--font-md);
   font-weight: 400;
-  color: #111827;
-  margin-bottom: 4px;
+  color: var(--color-foreground);
+  margin-bottom: var(--space-2xs);
 `;
 
 const Divider = styled.div`
   position: relative;
   text-align: center;
-  margin: 16px 0;
+  margin: var(--space-md) 0;
 
   &::before {
     content: "";
@@ -38,54 +38,69 @@ const Divider = styled.div`
     left: 0;
     right: 0;
     height: 1px;
-    background: #e5e7eb;
+    background: var(--color-divider);
   }
 `;
 
 const DividerText = styled.span`
   position: relative;
-  background: white;
-  padding: 0 12px;
-  color: #6b7280;
-  font-size: 14px;
+  background: var(--color-background);
+  padding: 0 var(--space-sm);
+  color: var(--color-secondary-text);
+  font-size: var(--font-xs);
 `;
 
 const BackButton = styled.button`
   position: absolute;
-  top: 6px;
+  top: var(--space-xs);
   left: 0px;
   cursor: pointer;
-  font-size: 14px;
-  margin-bottom: 24px;
-  color: #64748b;
+  font-size: var(--font-xs);
+  margin-bottom: var(--space-lg);
+  color: var(--color-muted);
   background: none;
   border: none;
 
   &:hover {
-    color: #1e293b;
+    color: var(--color-foreground);
   }
 `;
 
 const ResetButton = styled.button`
   width: 100%;
-  padding: 9px 16px;
-  background: #6366f1;
+  padding: 9px var(--space-md);
+  background: var(--color-primary);
   color: white;
   border: none;
-  border-radius: 8px;
+  border-radius: var(--radius-md);
   font-weight: 500;
-  font-size: 14px;
+  font-size: var(--font-xs);
   cursor: pointer;
   transition: background-color 0.2s;
 
   &:hover:not(:disabled) {
-    background: #4f46e5;
+    background: var(--color-primary-hover);
   }
 
   &:disabled {
     opacity: 0.7;
     cursor: not-allowed;
   }
+`;
+
+const Footer = styled.div`
+  text-align: center;
+  margin-top: var(--space-md);
+`;
+
+const FooterText = styled.p`
+  font-size: var(--font-xs);
+  color: var(--color-muted);
+`;
+
+const Link = styled.a`
+  color: var(--color-primary);
+  text-decoration: none;
 `;
 
 interface ForgotPasswordProps {
@@ -108,7 +123,7 @@ export function ForgotPassword({ onBack }: ForgotPasswordProps) {
 					<BackButton onClick={onBack}>
 						<ArrowLeft size={16} />
 					</BackButton>
-					<Title>Forgot Password?</Title>
+					<Title>Forgot Password</Title>
 				</Header>
 
 				<ResetButton onClick={handleResetPassword} disabled={isSubmitting}>
@@ -120,6 +135,12 @@ export function ForgotPassword({ onBack }: ForgotPasswordProps) {
 				</Divider>
 
 				<OtherAuthOptions />
+
+				<Footer>
+					<FooterText>
+						Unable to reset password? <Link href="/contact">Get help</Link>
+					</FooterText>
+				</Footer>
 			</Container>
 		</DefaultStylesProvider>
 	);

@@ -7,5 +7,5 @@ export * from "./otp-input";
 export * from "./phone";
 export * from "./spinner";
 export * from "./switch";
-export * from "./typography";
+export * from "./root";
 export * from "./use-dialog";

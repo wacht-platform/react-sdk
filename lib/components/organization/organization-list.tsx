@@ -1,6 +1,6 @@
 import styled from "styled-components";
 import { Building2, Plus, Settings } from "lucide-react";
-import { DefaultStylesProvider } from "../utility/typography";
+import { DefaultStylesProvider } from "../utility/root";
 
 interface Organization {
 	id: string;

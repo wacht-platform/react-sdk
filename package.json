@@ -1,6 +1,6 @@
 {
-	"name": "@snipextt/wacht-js",
-	"version": "0.0.7",
+	"name": "@snipextt/wacht",
+	"version": "0.0.1-alpha.1",
 	"description": "",
 	"type": "module",
 	"main": "dist/index.cjs.js",

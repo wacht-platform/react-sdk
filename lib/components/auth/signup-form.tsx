@@ -7,7 +7,7 @@ import {
 	type OAuthProvider,
 } from "../../hooks/use-signin";
 import { useDeployment } from "../../hooks/use-deployment";
-import { DefaultStylesProvider } from "../utility/typography";
+import { DefaultStylesProvider } from "../utility/root";
 import { OTPInput } from "@/components/utility/otp-input";
 import { ArrowLeft } from "lucide-react";
 import { SocialAuthButtons } from "./social-buttons";
@@ -25,10 +25,10 @@ const breakpoints = {
 const Container = styled.div`
   max-width: 25rem;
   width: 100%;
-  padding: 2rem 2.5rem;
-  background: white;
-  border-radius: 0.75rem;
-  box-shadow: 0 0.25rem 1.5rem rgba(0, 0, 0, 0.1);
+  padding: var(--space-xl) var(--space-2xl);
+  background: var(--color-background);
+  border-radius: var(--radius-lg);
+  box-shadow: 0 0.25rem 1.5rem var(--color-shadow);
   margin: 0 auto;
 
   @media (max-width: ${breakpoints.sm}) {
@@ -40,7 +40,7 @@ const Container = styled.div`
 
 const Header = styled.div`
   text-align: center;
-  margin-bottom: 1.5rem;
+  margin-bottom: var(--space-lg);
   position: relative;
 
   @media (max-width: ${breakpoints.sm}) {
@@ -49,10 +49,10 @@ const Header = styled.div`
 `;
 
 const Title = styled.h1`
-  font-size: 1.25rem;
+  font-size: var(--font-md);
   font-weight: 600;
-  color: #111827;
-  margin-bottom: 0.25rem;
+  color: var(--color-foreground);
+  margin-bottom: var(--space-2xs);
 
   @media (max-width: ${breakpoints.sm}) {
     font-size: 1.125rem;
@@ -60,8 +60,8 @@ const Title = styled.h1`
 `;
 
 const Subtitle = styled.p`
-  color: #6b7280;
-  font-size: 0.875rem;
+  color: var(--color-secondary-text);
+  font-size: var(--font-xs);
 
   @media (max-width: ${breakpoints.sm}) {
     font-size: 0.75rem;
@@ -71,7 +71,7 @@ const Subtitle = styled.p`
 const Divider = styled.div`
   position: relative;
   text-align: center;
-  margin: 1.5rem 0;
+  margin: var(--space-lg) 0;
 
   &::before {
     content: "";
@@ -80,7 +80,7 @@ const Divider = styled.div`
     left: 0;
     right: 0;
     height: 0.0625rem;
-    background: #e5e7eb;
+    background: var(--color-divider);
   }
 
   @media (max-width: ${breakpoints.sm}) {
@@ -90,16 +90,16 @@ const Divider = styled.div`
 
 const DividerText = styled.span`
   position: relative;
-  background: white;
+  background: var(--color-background);
   padding: 0 0.75rem;
-  color: #6b7280;
-  font-size: 0.875rem;
+  color: var(--color-secondary-text);
+  font-size: var(--font-xs);
 `;
 
 const Form = styled.form`
   display: flex;
   flex-direction: column;
-  gap: 1rem;
+  gap: var(--space-md);
 
   @media (max-width: ${breakpoints.sm}) {
     gap: 0.75rem;
@@ -109,7 +109,7 @@ const Form = styled.form`
 const NameFields = styled.div<{ $isBothEnabled: boolean }>`
   display: grid;
   grid-template-columns: ${(props) => (props.$isBothEnabled ? "1fr 1fr" : "1fr")};
-  gap: 0.75rem;
+  gap: var(--space-sm);
 
   @media (max-width: ${breakpoints.sm}) {
     grid-template-columns: 1fr;
@@ -120,14 +120,14 @@ const NameFields = styled.div<{ $isBothEnabled: boolean }>`
 const FormGroup = styled.div`
   display: flex;
   flex-direction: column;
-  gap: 0.375rem;
+  gap: var(--space-2xs);
 `;
 
 const Label = styled.label`
-  font-size: 0.875rem;
+  font-size: var(--font-xs);
   text-align: left;
   font-weight: 500;
-  color: #374151;
+  color: var(--color-foreground);
 
   @media (max-width: ${breakpoints.sm}) {
     font-size: 0.75rem;
@@ -139,33 +139,33 @@ const PasswordGroup = styled.div`
 `;
 
 const ErrorMessage = styled.p`
-  font-size: 0.75rem;
-  color: #ef4444;
+  font-size: var(--font-2xs);
+  color: var(--color-error);
   margin: 0;
-  margin-top: 0.125rem;
+  margin-top: var(--space-2xs);
 `;
 
 const RequiredAsterisk = styled.span`
-  color: #ef4444;
-  margin-left: 0.25rem;
+  color: var(--color-error);
+  margin-left: var(--space-2xs);
   vertical-align: middle;
 `;
 
 const SubmitButton = styled.button`
   width: 100%;
   padding: 0.5625rem 1rem;
-  background: #6366f1;
+  background: var(--color-primary);
   color: white;
   border: none;
-  border-radius: 0.5rem;
+  border-radius: var(--radius-md);
   font-weight: 500;
-  font-size: 0.875rem;
+  font-size: var(--font-xs);
   cursor: pointer;
   transition: background-color 0.2s;
-  margin-top: 0.5rem;
+  margin-top: var(--space-xs);
 
   &:hover:not(:disabled) {
-    background: #4f46e5;
+    background: var(--color-primary-hover);
   }
 
   &:disabled {
@@ -180,10 +180,10 @@ const SubmitButton = styled.button`
 `;
 
 const Footer = styled.p`
-  margin-top: 1.5rem;
+  margin-top: var(--space-lg);
   text-align: center;
-  font-size: 0.875rem;
-  color: #6b7280;
+  font-size: var(--font-xs);
+  color: var(--color-secondary-text);
 
   @media (max-width: ${breakpoints.sm}) {
     margin-top: 1rem;
@@ -192,13 +192,13 @@ const Footer = styled.p`
 `;
 
 const Link = styled.span`
-  color: #6366f1;
+  color: var(--color-primary);
   text-decoration: none;
   font-weight: 500;
   transition: color 0.2s;
 
   &:hover {
-    color: #4f46e5;
+    color: var(--color-primary-hover);
   }
 `;
 
