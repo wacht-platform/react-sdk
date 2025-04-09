@@ -34,7 +34,7 @@ function FrontendDeploymentProvider({
 			singletonLock.current = true;
 			setLoading(true);
 
-			const baseUrlEncoded = publicKey.split("_")[1];
+			const baseUrlEncoded = publicKey.split("_").pop();
 
 			if (!baseUrlEncoded) {
 				throw new Error("Invalid public key");
