@@ -7,7 +7,7 @@ import { OtherAuthOptions } from "@/components/auth/other-auth-options";
 const Container = styled.div`
   max-width: 400px;
   width: 400px;
-  padding: var(--space-xl) var(--space-2xl);
+  padding: var(--space-2xl);
   background: var(--color-background);
   border-radius: var(--radius-lg);
   box-shadow: 0 4px 24px var(--color-shadow);
@@ -104,44 +104,44 @@ const Link = styled.a`
 `;
 
 interface ForgotPasswordProps {
-	onBack: () => void;
-	onHelp: () => void;
+  onBack: () => void;
+  onHelp: () => void;
 }
 
 export function ForgotPassword({ onBack }: ForgotPasswordProps) {
-	const [isSubmitting, setIsSubmitting] = useState(false);
+  const [isSubmitting, setIsSubmitting] = useState(false);
 
-	const handleResetPassword = async () => {
-		setIsSubmitting(true);
-		setIsSubmitting(false);
-	};
+  const handleResetPassword = async () => {
+    setIsSubmitting(true);
+    setIsSubmitting(false);
+  };
 
-	return (
-		<DefaultStylesProvider>
-			<Container>
-				<Header>
-					<BackButton onClick={onBack}>
-						<ArrowLeft size={16} />
-					</BackButton>
-					<Title>Forgot Password</Title>
-				</Header>
+  return (
+    <DefaultStylesProvider>
+      <Container>
+        <Header>
+          <BackButton onClick={onBack}>
+            <ArrowLeft size={16} />
+          </BackButton>
+          <Title>Forgot Password</Title>
+        </Header>
 
-				<ResetButton onClick={handleResetPassword} disabled={isSubmitting}>
-					Reset your password
-				</ResetButton>
+        <ResetButton onClick={handleResetPassword} disabled={isSubmitting}>
+          Reset your password
+        </ResetButton>
 
-				<Divider>
-					<DividerText>Or, sign in with another method</DividerText>
-				</Divider>
+        <Divider>
+          <DividerText>Or, sign in with another method</DividerText>
+        </Divider>
 
-				<OtherAuthOptions />
+        <OtherAuthOptions />
 
-				<Footer>
-					<FooterText>
-						Unable to reset password? <Link href="/contact">Get help</Link>
-					</FooterText>
-				</Footer>
-			</Container>
-		</DefaultStylesProvider>
-	);
+        <Footer>
+          <FooterText>
+            Unable to reset password? <Link href="/contact">Get help</Link>
+          </FooterText>
+        </Footer>
+      </Container>
+    </DefaultStylesProvider>
+  );
 }

@@ -20,7 +20,7 @@ import { Form, FormGroup, Label } from "../utility/form";
 const Container = styled.div`
   max-width: 400px;
   width: 400px;
-  padding: var(--space-xl) var(--space-2xl);
+  padding: var(--space-2xl);
   background: var(--color-background);
   border-radius: var(--radius-lg);
   box-shadow: 0 4px 24px var(--color-shadow);
@@ -384,20 +384,20 @@ function SignInFormContent({ signUpUrl }: SignInFormProps) {
 						<Form onSubmit={createSignIn} noValidate>
 							{(firstFactor === "email_password" ||
 								firstFactor === "email_otp") && (
-								<FormGroup>
-									<Label htmlFor="email">Email address</Label>
-									<Input
-										type="email"
-										id="email"
-										name="email"
-										value={formData.email}
-										onChange={handleInputChange}
-										placeholder="Enter your email address"
-										aria-invalid={!!errors.email}
-									/>
-									{errors.email && <ErrorMessage>{errors.email}</ErrorMessage>}
-								</FormGroup>
-							)}
+									<FormGroup>
+										<Label htmlFor="email">Email address</Label>
+										<Input
+											type="email"
+											id="email"
+											name="email"
+											value={formData.email}
+											onChange={handleInputChange}
+											placeholder="Enter your email address"
+											aria-invalid={!!errors.email}
+										/>
+										{errors.email && <ErrorMessage>{errors.email}</ErrorMessage>}
+									</FormGroup>
+								)}
 
 							{firstFactor === "username_password" && (
 								<FormGroup>
@@ -435,34 +435,34 @@ function SignInFormContent({ signUpUrl }: SignInFormProps) {
 
 							{(firstFactor === "email_password" ||
 								firstFactor === "username_password") && (
-								<FormGroup>
-									<div
-										style={{ display: "flex", justifyContent: "space-between" }}
-									>
-										<Label htmlFor="password">Password</Label>
-										<Link
-											style={{ fontSize: "12px" }}
-											onClick={() => setShowForgotPassword(true)}
+									<FormGroup>
+										<div
+											style={{ display: "flex", justifyContent: "space-between" }}
 										>
-											Forgot password?
-										</Link>
-									</div>
-									<PasswordGroup>
-										<Input
-											type="password"
-											id="password"
-											name="password"
-											value={formData.password}
-											onChange={handleInputChange}
-											placeholder="Enter your password"
-											aria-invalid={!!errors.password}
-										/>
-									</PasswordGroup>
-									{errors.password && (
-										<ErrorMessage>{errors.password}</ErrorMessage>
-									)}
-								</FormGroup>
-							)}
+											<Label htmlFor="password">Password</Label>
+											<Link
+												style={{ fontSize: "12px" }}
+												onClick={() => setShowForgotPassword(true)}
+											>
+												Forgot password?
+											</Link>
+										</div>
+										<PasswordGroup>
+											<Input
+												type="password"
+												id="password"
+												name="password"
+												value={formData.password}
+												onChange={handleInputChange}
+												placeholder="Enter your password"
+												aria-invalid={!!errors.password}
+											/>
+										</PasswordGroup>
+										{errors.password && (
+											<ErrorMessage>{errors.password}</ErrorMessage>
+										)}
+									</FormGroup>
+								)}
 
 							{errors.submit && <ErrorMessage>{errors.submit}</ErrorMessage>}
 

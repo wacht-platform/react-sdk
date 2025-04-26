@@ -1,12 +1,12 @@
 "use client";
 
 import { useState, useEffect, useMemo, createContext, useRef } from "react";
-import type { ReactNode } from "react";
+import type { ReactNode, ElementType } from "react";
 
 interface FrontendDeploymentContextType {
 	loading: boolean;
 	deployment: Deployment | null;
-	platformNav: (to: string, options?: { replace?: boolean } & Record<string, unknown>) => void;
+	platformLink: ElementType;
 }
 
 const FrontendDeploymentContext = createContext<
@@ -16,13 +16,13 @@ const FrontendDeploymentContext = createContext<
 interface FrontendDeploymentProviderProps {
 	children: ReactNode;
 	publicKey: string;
-	platformNav: (to: string, options?: { replace?: boolean } & Record<string, unknown>) => void;
+	platformLink: ElementType;
 }
 
 function FrontendDeploymentProvider({
 	children,
 	publicKey,
-	platformNav,
+	platformLink,
 }: FrontendDeploymentProviderProps) {
 	const [loading, setLoading] = useState(true);
 	const [deployment, setDeployment] = useState<Deployment | null>(null);
@@ -79,9 +79,9 @@ function FrontendDeploymentProvider({
 		() => ({
 			loading,
 			deployment,
-			platformNav,
+			platformLink,
 		}),
-		[loading, deployment, platformNav],
+		[loading, deployment, platformLink],
 	);
 
 	return (

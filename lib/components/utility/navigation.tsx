@@ -4,7 +4,6 @@ import React from 'react';
 export interface NavigationProps {
   to: string;
   replace?: boolean;
-  options?: Record<string, unknown>;
   children?: React.ReactNode;
   [key: string]: any;
 }
@@ -12,16 +11,21 @@ export interface NavigationProps {
 
 export const NavigationLink: React.FC<NavigationProps> = ({
   to,
-  replace = false,
-  options = {},
+  replace,
   children,
   ...props
 }) => {
-  const { platformNav } = useDeployment();
+  const context = useDeployment();
+
+  if (!context || context.loading) {
+    return <span {...props}>{children}</span>;
+  }
+
+  const { platformLink: PlatformLink } = context;
 
   return (
-    <a href={to} onClick={() => platformNav(to, { replace, ...options })} {...props}>
+    <PlatformLink href={to} replace={replace} {...props}>
       {children}
-    </a>
+    </PlatformLink>
   );
 };

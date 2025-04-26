@@ -6,7 +6,7 @@ import { OtherAuthOptions } from "@/components/auth/other-auth-options";
 const Container = styled.div`
   max-width: 400px;
   width: 400px;
-  padding: var(--space-xl) var(--space-2xl);
+  padding: var(--space-2xl);
   background: var(--color-background);
   border-radius: var(--radius-lg);
   box-shadow: 0 4px 24px var(--color-shadow);
@@ -62,27 +62,27 @@ const Link = styled.a`
 `;
 
 interface OtherSignInOptionsProps {
-	onBack: () => void;
+  onBack: () => void;
 }
 
 export function OtherSignInOptions({ onBack }: OtherSignInOptionsProps) {
-	return (
-		<DefaultStylesProvider>
-			<Container>
-				<Header>
-					<BackButton onClick={onBack}>
-						<ArrowLeft size={16} />
-					</BackButton>
-					<Title>Supported Options</Title>
-					<Subtitle>Choose one of the following options to continue</Subtitle>
-				</Header>
-				<OtherAuthOptions />
-				<Footer>
-					<FooterText>
-						Don't have an account? <Link href="/signup">Sign up</Link>
-					</FooterText>
-				</Footer>
-			</Container>
-		</DefaultStylesProvider>
-	);
+  return (
+    <DefaultStylesProvider>
+      <Container>
+        <Header>
+          <BackButton onClick={onBack}>
+            <ArrowLeft size={16} />
+          </BackButton>
+          <Title>Supported Options</Title>
+          <Subtitle>Choose one of the following options to continue</Subtitle>
+        </Header>
+        <OtherAuthOptions />
+        <Footer>
+          <FooterText>
+            Don't have an account? <Link href="/signup">Sign up</Link>
+          </FooterText>
+        </Footer>
+      </Container>
+    </DefaultStylesProvider>
+  );
 }

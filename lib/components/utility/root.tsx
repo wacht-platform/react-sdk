@@ -26,7 +26,7 @@ export const DefaultStylesProvider = styled.div`
 	--space-md: 16px;
 	--space-lg: 24px;
 	--space-xl: 32px;
-	--space-2xl: 40px;
+	--space-2xl: 34px;
 	
 	/* Font Sizes */
 	--font-2xs: 12px;
@@ -43,7 +43,7 @@ export const DefaultStylesProvider = styled.div`
 
 	.dark & {
 		/* Colors - Dark Mode */
-		--color-background: #2a2a2a;
+		--color-background: #0d0b0b;
 		--color-foreground: #e6e9f0;
 		--color-secondary-text: #b0b7c9;
 		--color-muted: #9aa3b8;
