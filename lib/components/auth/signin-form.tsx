@@ -10,12 +10,16 @@ import { SocialAuthButtons } from "./social-buttons";
 import { ForgotPassword } from "./forgot-password";
 import { OtherSignInOptions } from "./other-signin-options";
 import {
-	useSignInContext,
-	SignInProvider,
+  useSignInContext,
+  SignInProvider,
 } from "../../context/signin-provider";
 import { NavigationLink } from "../utility/navigation";
 import { Input } from "@/components/utility/input";
 import { Form, FormGroup, Label } from "../utility/form";
+import { ErrorCode } from "@/types/client";
+import { SignInParams } from "@/types/auth";
+import { DeploymentSocialConnection } from "@/types/deployment";
+import { useDeployment } from "@/hooks/use-deployment";
 
 const Container = styled.div`
   max-width: 400px;
@@ -137,386 +141,395 @@ const Link = styled.span`
   }
 `;
 
-interface SignInFormProps {
-	signUpUrl: string;
+export function SignInForm() {
+  return (
+    <SignInProvider>
+      <SignInFormContent />
+    </SignInProvider>
+  );
 }
 
-export function SignInForm({ signUpUrl }: SignInFormProps) {
-	return (
-		<SignInProvider>
-			<SignInFormContent signUpUrl={signUpUrl} />
-		</SignInProvider>
-	);
-}
+function SignInFormContent() {
+  const { deployment } = useDeployment();
+  const {
+    setEmail,
+    otpSent,
+    setOtpSent,
+    showForgotPassword,
+    setShowForgotPassword,
+    showOtherOptions,
+    setShowOtherOptions,
+    enabledSocialsProviders,
+    firstFactor,
+  } = useSignInContext();
+  const {
+    loading,
+    signIn,
+    signinAttempt,
+    discardSignInAttempt,
+    errors: signInErrors,
+  } = useSignInWithStrategy(SignInStrategy.Generic);
+  const { signIn: oauthSignIn } = useSignInWithStrategy(SignInStrategy.Oauth);
+  const [formData, setFormData] = useState<SignInParams>({
+    email: "",
+    username: "",
+    password: "",
+    phone: "",
+  });
+  const [errors, setErrors] = useState<Record<string, string>>({});
+  const [isSubmitting, setIsSubmitting] = useState(false);
+  const [otpCode, setOtpCode] = useState("");
 
-function SignInFormContent({ signUpUrl }: SignInFormProps) {
-	const {
-		setEmail,
-		otpSent,
-		setOtpSent,
-		showForgotPassword,
-		setShowForgotPassword,
-		showOtherOptions,
-		setShowOtherOptions,
-		enabledSocialsProviders,
-		firstFactor,
-	} = useSignInContext();
-	const {
-		loading,
-		signIn,
-		signinAttempt,
-		discardSignInAttempt,
-		errors: signInErrors,
-	} = useSignInWithStrategy(SignInStrategy.Generic);
-	const { signIn: oauthSignIn } = useSignInWithStrategy(SignInStrategy.Oauth);
-	const [formData, setFormData] = useState<SignInParams>({
-		email: "",
-		username: "",
-		password: "",
-		phone: "",
-	});
-	const [errors, setErrors] = useState<Record<string, string>>({});
-	const [isSubmitting, setIsSubmitting] = useState(false);
-	const [otpCode, setOtpCode] = useState("");
+  const handleInputChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const { name, value } = e.target;
+    if (name === "email") {
+      setEmail(value);
+    }
+    setFormData((prev) => ({ ...prev, [name]: value }));
+    setErrors((prev) => ({ ...prev, [name]: "" }));
+  };
 
-	const handleInputChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-		const { name, value } = e.target;
-		if (name === "email") {
-			setEmail(value);
-		}
-		setFormData((prev) => ({ ...prev, [name]: value }));
-		setErrors((prev) => ({ ...prev, [name]: "" }));
-	};
+  const resetFormData = () => {
+    setFormData({
+      email: "",
+      username: "",
+      password: "",
+      phone: "",
+    });
+    setErrors({});
+  };
 
-	const resetFormData = () => {
-		setFormData({
-			email: "",
-			username: "",
-			password: "",
-			phone: "",
-		});
-		setErrors({});
-	};
+  const createSignIn = async (e: React.FormEvent) => {
+    e.preventDefault();
+    if (loading || isSubmitting) return;
 
-	const createSignIn = async (e: React.FormEvent) => {
-		e.preventDefault();
-		if (loading || isSubmitting) return;
+    const newErrors: Record<string, string> = {};
 
-		const newErrors: Record<string, string> = {};
+    if (firstFactor === "email_password") {
+      if (!formData.email) {
+        newErrors.email = "Email address is required";
+      }
+      if (!formData.password) {
+        newErrors.password = "Password is required";
+      }
+    } else if (firstFactor === "username_password") {
+      if (!formData.username) {
+        newErrors.username = "Username is required";
+      }
+      if (!formData.password) {
+        newErrors.password = "Password is required";
+      }
+    } else if (firstFactor === "email_otp") {
+      if (!formData.email) {
+        newErrors.email = "Email address is required";
+      }
+      if (otpSent && !otpCode) {
+        newErrors.otp = "OTP code is required";
+      }
+    } else if (firstFactor === "phone_otp") {
+      if (!formData.phone) {
+        newErrors.phone = "Phone number is required";
+      }
+      if (otpSent && !otpCode) {
+        newErrors.otp = "OTP code is required";
+      }
+    }
 
-		if (firstFactor === "email_password") {
-			if (!formData.email) {
-				newErrors.email = "Email address is required";
-			}
-			if (!formData.password) {
-				newErrors.password = "Password is required";
-			}
-		} else if (firstFactor === "username_password") {
-			if (!formData.username) {
-				newErrors.username = "Username is required";
-			}
-			if (!formData.password) {
-				newErrors.password = "Password is required";
-			}
-		} else if (firstFactor === "email_otp") {
-			if (!formData.email) {
-				newErrors.email = "Email address is required";
-			}
-			if (otpSent && !otpCode) {
-				newErrors.otp = "OTP code is required";
-			}
-		} else if (firstFactor === "phone_otp") {
-			if (!formData.phone) {
-				newErrors.phone = "Phone number is required";
-			}
-			if (otpSent && !otpCode) {
-				newErrors.otp = "OTP code is required";
-			}
-		}
+    setErrors(newErrors);
 
-		setErrors(newErrors);
+    if (Object.keys(newErrors).length > 0) {
+      return;
+    }
 
-		if (Object.keys(newErrors).length > 0) {
-			return;
-		}
+    setIsSubmitting(true);
+    try {
+      await signIn.create(formData);
+    } catch (err) {
+      setErrors({ submit: (err as Error).message });
+    } finally {
+      setIsSubmitting(false);
+    }
+  };
 
-		setIsSubmitting(true);
-		try {
-			await signIn.create(formData);
-		} catch (err) {
-			setErrors({ submit: (err as Error).message });
-		} finally {
-			setIsSubmitting(false);
-		}
-	};
+  const completeVerification = async (e: React.FormEvent) => {
+    e.preventDefault();
+    if (loading || isSubmitting) return;
+    setIsSubmitting(true);
+    const newErrors: Record<string, string> = {};
+    if (!otpCode) {
+      newErrors.otp = "OTP code is required";
+    }
+    setErrors(newErrors);
+    signIn.completeVerification(otpCode);
+    setIsSubmitting(false);
+  };
 
-	const completeVerification = async (e: React.FormEvent) => {
-		e.preventDefault();
-		if (loading || isSubmitting) return;
-		setIsSubmitting(true);
-		const newErrors: Record<string, string> = {};
-		if (!otpCode) {
-			newErrors.otp = "OTP code is required";
-		}
-		setErrors(newErrors);
-		signIn.completeVerification(otpCode);
-		setIsSubmitting(false);
-	};
+  const initSocialAuthSignIn = async (
+    connection: DeploymentSocialConnection
+  ) => {
+    if (loading || isSubmitting) return;
 
-	const initSocialAuthSignIn = async (
-		connection: DeploymentSocialConnection,
-	) => {
-		if (loading || isSubmitting) return;
+    setIsSubmitting(true);
+    try {
+      const { data } = await oauthSignIn.create({
+        provider: connection.provider as OAuthProvider,
+      });
+      if (data && typeof data === "object" && "oauth_url" in data) {
+        window.location.href = data.oauth_url as string;
+      }
+    } catch (err) {
+      setErrors({ submit: (err as Error).message });
+    } finally {
+      setIsSubmitting(false);
+    }
+  };
 
-		setIsSubmitting(true);
-		try {
-			const { data } = await oauthSignIn.create({
-				provider: connection.provider as OAuthProvider,
-			});
-			if (data && typeof data === "object" && "oauth_url" in data) {
-				window.location.href = data.oauth_url as string;
-			}
-		} catch (err) {
-			setErrors({ submit: (err as Error).message });
-		} finally {
-			setIsSubmitting(false);
-		}
-	};
+  useEffect(() => {
+    if (!signIn || !signinAttempt) return;
 
-	useEffect(() => {
-		if (!signIn || !signinAttempt) return;
+    if (otpSent) {
+      return;
+    }
 
-		if (signinAttempt.completed || otpSent) {
-			return;
-		}
+    if (signinAttempt.completed) {
+      let redirectUri = new URLSearchParams(window.location.search).get(
+        "redirect_uri"
+      );
+      if (redirectUri) {
+        window.location.href = redirectUri;
+      }
+      return;
+    }
 
-		switch (signinAttempt.current_step) {
-			case "verify_email":
-			case "verify_email_otp":
-				signIn.prepareVerification("email_otp");
-				break;
-			case "verify_phone":
-			case "verify_phone_otp":
-				signIn.prepareVerification("phone_otp");
-				break;
-		}
+    switch (signinAttempt.current_step) {
+      case "verify_email":
+      case "verify_email_otp":
+        signIn.prepareVerification("email_otp");
+        break;
+      case "verify_phone":
+      case "verify_phone_otp":
+        signIn.prepareVerification("phone_otp");
+        break;
+    }
 
-		setOtpSent(true);
-	}, [signinAttempt, signIn, otpSent, setOtpSent]);
+    setOtpSent(true);
+  }, [signinAttempt, signIn, otpSent, setOtpSent]);
 
-	useEffect(() => {
-		const newErrors: Record<string, string> = {};
-		if (signInErrors?.errors) {
-			if (Array.isArray(signInErrors?.errors)) {
-				for (const err of signInErrors.errors) {
-					if (
-						[
-							ErrorCode.InvalidCredentials,
-							ErrorCode.UserNotFound,
-							ErrorCode.UserAlreadySignedIn,
-						].includes(err.code)
-					) {
-						newErrors.submit = err.message;
-					}
-				}
-			}
-		}
+  useEffect(() => {
+    const newErrors: Record<string, string> = {};
+    if (signInErrors?.errors) {
+      if (Array.isArray(signInErrors?.errors)) {
+        for (const err of signInErrors.errors) {
+          if (
+            [
+              ErrorCode.InvalidCredentials,
+              ErrorCode.UserNotFound,
+              ErrorCode.UserAlreadySignedIn,
+            ].includes(err.code)
+          ) {
+            newErrors.submit = err.message;
+          }
+        }
+      }
+    }
 
-		setErrors(newErrors);
-	}, [signInErrors]);
+    setErrors(newErrors);
+  }, [signInErrors]);
 
-	if (showOtherOptions) {
-		return <OtherSignInOptions onBack={() => setShowOtherOptions(false)} />;
-	}
+  if (showOtherOptions) {
+    return <OtherSignInOptions onBack={() => setShowOtherOptions(false)} />;
+  }
 
-	if (showForgotPassword) {
-		return (
-			<ForgotPassword
-				onBack={() => setShowForgotPassword(false)}
-				onHelp={() => {
-					console.log("Help requested");
-				}}
-			/>
-		);
-	}
+  if (showForgotPassword) {
+    return (
+      <ForgotPassword
+        onBack={() => setShowForgotPassword(false)}
+        onHelp={() => {
+          console.log("Help requested");
+        }}
+      />
+    );
+  }
 
-	return (
-		<DefaultStylesProvider>
-			<Container>
-				{otpSent ? (
-					<>
-						<Header>
-							<BackButton
-								onClick={() => {
-									setOtpSent(false);
-									discardSignInAttempt();
-									resetFormData();
-								}}
-							>
-								<ArrowLeft size={16} />
-							</BackButton>
-							<Title>Check your email</Title>
-							<Subtitle>{formData.email} to continue to Wacht</Subtitle>
-						</Header>
-					</>
-				) : (
-					<Header>
-						<Title>Sign in to your account</Title>
-						<Subtitle>Welcome back! Please enter your details.</Subtitle>
-					</Header>
-				)}
+  return (
+    <DefaultStylesProvider>
+      <Container>
+        {otpSent ? (
+          <>
+            <Header>
+              <BackButton
+                onClick={() => {
+                  setOtpSent(false);
+                  discardSignInAttempt();
+                  resetFormData();
+                }}
+              >
+                <ArrowLeft size={16} />
+              </BackButton>
+              <Title>Check your email</Title>
+              <Subtitle>{formData.email} to continue to Wacht</Subtitle>
+            </Header>
+          </>
+        ) : (
+          <Header>
+            <Title>Sign in to your account</Title>
+            <Subtitle>Welcome back! Please enter your details.</Subtitle>
+          </Header>
+        )}
 
-				{!otpSent ? (
-					<>
-						{enabledSocialsProviders.length > 0 && (
-							<>
-								<SocialAuthButtons
-									connections={enabledSocialsProviders}
-									callback={initSocialAuthSignIn}
-								/>
+        {!otpSent ? (
+          <>
+            {enabledSocialsProviders.length > 0 && (
+              <>
+                <SocialAuthButtons
+                  connections={enabledSocialsProviders}
+                  callback={initSocialAuthSignIn}
+                />
 
-								<Divider>
-									<DividerText>or</DividerText>
-								</Divider>
-							</>
-						)}
+                <Divider>
+                  <DividerText>or</DividerText>
+                </Divider>
+              </>
+            )}
 
-						<Form onSubmit={createSignIn} noValidate>
-							{(firstFactor === "email_password" ||
-								firstFactor === "email_otp") && (
-									<FormGroup>
-										<Label htmlFor="email">Email address</Label>
-										<Input
-											type="email"
-											id="email"
-											name="email"
-											value={formData.email}
-											onChange={handleInputChange}
-											placeholder="Enter your email address"
-											aria-invalid={!!errors.email}
-										/>
-										{errors.email && <ErrorMessage>{errors.email}</ErrorMessage>}
-									</FormGroup>
-								)}
+            <Form onSubmit={createSignIn} noValidate>
+              {(firstFactor === "email_password" ||
+                firstFactor === "email_otp") && (
+                <FormGroup>
+                  <Label htmlFor="email">Email address</Label>
+                  <Input
+                    type="email"
+                    id="email"
+                    name="email"
+                    value={formData.email}
+                    onChange={handleInputChange}
+                    placeholder="Enter your email address"
+                    aria-invalid={!!errors.email}
+                  />
+                  {errors.email && <ErrorMessage>{errors.email}</ErrorMessage>}
+                </FormGroup>
+              )}
 
-							{firstFactor === "username_password" && (
-								<FormGroup>
-									<Label htmlFor="username">Username</Label>
-									<Input
-										type="text"
-										id="username"
-										name="username"
-										value={formData.username}
-										onChange={handleInputChange}
-										placeholder="Enter your username"
-										aria-invalid={!!errors.username}
-									/>
-									{errors.username && (
-										<ErrorMessage>{errors.username}</ErrorMessage>
-									)}
-								</FormGroup>
-							)}
+              {firstFactor === "username_password" && (
+                <FormGroup>
+                  <Label htmlFor="username">Username</Label>
+                  <Input
+                    type="text"
+                    id="username"
+                    name="username"
+                    value={formData.username}
+                    onChange={handleInputChange}
+                    placeholder="Enter your username"
+                    aria-invalid={!!errors.username}
+                  />
+                  {errors.username && (
+                    <ErrorMessage>{errors.username}</ErrorMessage>
+                  )}
+                </FormGroup>
+              )}
 
-							{firstFactor === "phone_otp" && (
-								<FormGroup>
-									<Label htmlFor="phone">Phone number</Label>
-									<Input
-										type="tel"
-										id="phone"
-										name="phone"
-										value={formData.phone}
-										onChange={handleInputChange}
-										placeholder="Enter your phone number"
-										aria-invalid={!!errors.phone}
-									/>
-									{errors.phone && <ErrorMessage>{errors.phone}</ErrorMessage>}
-								</FormGroup>
-							)}
+              {firstFactor === "phone_otp" && (
+                <FormGroup>
+                  <Label htmlFor="phone">Phone number</Label>
+                  <Input
+                    type="tel"
+                    id="phone"
+                    name="phone"
+                    value={formData.phone}
+                    onChange={handleInputChange}
+                    placeholder="Enter your phone number"
+                    aria-invalid={!!errors.phone}
+                  />
+                  {errors.phone && <ErrorMessage>{errors.phone}</ErrorMessage>}
+                </FormGroup>
+              )}
 
-							{(firstFactor === "email_password" ||
-								firstFactor === "username_password") && (
-									<FormGroup>
-										<div
-											style={{ display: "flex", justifyContent: "space-between" }}
-										>
-											<Label htmlFor="password">Password</Label>
-											<Link
-												style={{ fontSize: "12px" }}
-												onClick={() => setShowForgotPassword(true)}
-											>
-												Forgot password?
-											</Link>
-										</div>
-										<PasswordGroup>
-											<Input
-												type="password"
-												id="password"
-												name="password"
-												value={formData.password}
-												onChange={handleInputChange}
-												placeholder="Enter your password"
-												aria-invalid={!!errors.password}
-											/>
-										</PasswordGroup>
-										{errors.password && (
-											<ErrorMessage>{errors.password}</ErrorMessage>
-										)}
-									</FormGroup>
-								)}
+              {(firstFactor === "email_password" ||
+                firstFactor === "username_password") && (
+                <FormGroup>
+                  <div
+                    style={{ display: "flex", justifyContent: "space-between" }}
+                  >
+                    <Label htmlFor="password">Password</Label>
+                    <Link
+                      style={{ fontSize: "12px" }}
+                      onClick={() => setShowForgotPassword(true)}
+                    >
+                      Forgot password?
+                    </Link>
+                  </div>
+                  <PasswordGroup>
+                    <Input
+                      type="password"
+                      id="password"
+                      name="password"
+                      value={formData.password}
+                      onChange={handleInputChange}
+                      placeholder="Enter your password"
+                      aria-invalid={!!errors.password}
+                    />
+                  </PasswordGroup>
+                  {errors.password && (
+                    <ErrorMessage>{errors.password}</ErrorMessage>
+                  )}
+                </FormGroup>
+              )}
 
-							{errors.submit && <ErrorMessage>{errors.submit}</ErrorMessage>}
+              {errors.submit && <ErrorMessage>{errors.submit}</ErrorMessage>}
 
-							<SubmitButton type="submit" disabled={isSubmitting || loading}>
-								{isSubmitting ? "Signing in..." : "Sign in"}
-							</SubmitButton>
+              <SubmitButton type="submit" disabled={isSubmitting || loading}>
+                {isSubmitting ? "Signing in..." : "Sign in"}
+              </SubmitButton>
 
-							<Link
-								style={{ fontSize: "12px", textAlign: "center" }}
-								onClick={() => setShowOtherOptions(true)}
-							>
-								Use other methods
-							</Link>
-						</Form>
-						<Footer>
-							Don't have an account?{" "}
-							<Link>
-								<NavigationLink to={signUpUrl}>Sign up</NavigationLink>
-							</Link>
-						</Footer>
-					</>
-				) : (
-					<>
-						<Form
-							style={{ gap: "15px" }}
-							onSubmit={completeVerification}
-							noValidate
-						>
-							<OTPInput
-								onComplete={async (code) => {
-									setOtpCode(code);
-								}}
-								onResend={async () => {
-									const strategy =
-										firstFactor === "email_otp" ? "email_otp" : "phone_otp";
-									await signIn.prepareVerification(strategy);
-								}}
-								error={errors.otp}
-								isSubmitting={isSubmitting}
-							/>
+              <Link
+                style={{ fontSize: "12px", textAlign: "center" }}
+                onClick={() => setShowOtherOptions(true)}
+              >
+                Use other methods
+              </Link>
+            </Form>
+            <Footer>
+              Don't have an account?{" "}
+              <Link>
+                <NavigationLink to={deployment!.ui_settings.sign_in_page_url}>
+                  Sign up
+                </NavigationLink>
+              </Link>
+            </Footer>
+          </>
+        ) : (
+          <>
+            <Form
+              style={{ gap: "15px" }}
+              onSubmit={completeVerification}
+              noValidate
+            >
+              <OTPInput
+                onComplete={async (code) => {
+                  setOtpCode(code);
+                }}
+                onResend={async () => {
+                  const strategy =
+                    firstFactor === "email_otp" ? "email_otp" : "phone_otp";
+                  await signIn.prepareVerification(strategy);
+                }}
+                error={errors.otp}
+                isSubmitting={isSubmitting}
+              />
 
-							<SubmitButton
-								type="submit"
-								disabled={isSubmitting || loading || !otpCode}
-							>
-								{isSubmitting ? "Verifying..." : "Continue to Wacht"}
-							</SubmitButton>
-						</Form>
-						<Footer>
-							Having trouble? <Link>Get help</Link>
-						</Footer>
-					</>
-				)}
-			</Container>
-		</DefaultStylesProvider>
-	);
+              <SubmitButton
+                type="submit"
+                disabled={isSubmitting || loading || !otpCode}
+              >
+                {isSubmitting ? "Verifying..." : "Continue to Wacht"}
+              </SubmitButton>
+            </Form>
+            <Footer>
+              Having trouble? <Link>Get help</Link>
+            </Footer>
+          </>
+        )}
+      </Container>
+    </DefaultStylesProvider>
+  );
 }

@@ -1,4 +1,4 @@
-interface SignUpParams {
+export interface SignUpParams {
   first_name?: string;
   last_name?: string;
   username?: string;
@@ -7,27 +7,27 @@ interface SignUpParams {
   password?: string;
 }
 
-interface SSOResponse {
+export interface SSOResponse {
   oauth_url: string;
   session: unknown;
 }
 
-interface SignInParams {
+export interface SignInParams {
   email?: string;
   username?: string;
   password?: string;
   phone?: string;
 }
 
-interface SignInResponse {
+export interface SignInResponse {
   session: unknown;
 }
 
-interface SSOCallbackResponse {
+export interface SSOCallbackResponse {
   session: unknown;
 }
 
-type SocialConnectionProvider =
+export type SocialConnectionProvider =
   | "x_oauth"
   | "github_oauth"
   | "gitlab_oauth"

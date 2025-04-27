@@ -1,6 +1,9 @@
 import { useClient } from "@/hooks/use-client";
 import useSWR from "swr";
 import { mapResponse } from "@/utils/response-mapper";
+import { CurrentUser, UserAuthenticator, UserEmailAddress, UserPhoneNumber } from "@/types/user";
+import { Client } from "@/types/client";
+import { SignIn } from "@/types/session";
 
 type SecondFactorPolicy = "none" | "optional" | "enforced";
 

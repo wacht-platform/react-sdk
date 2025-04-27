@@ -2,6 +2,9 @@ import { mapResponse } from "../utils/response-mapper";
 import { useClient } from "./use-client";
 import useSWR from "swr";
 import { useCallback } from "react";
+import { ApiResult } from "@/types/client";
+import { Session } from "@/types/session";
+import { Client } from "@/types/client";
 
 type UseSessionReturnType =
 	| {

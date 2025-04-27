@@ -1,4 +1,6 @@
-interface SignIn {
+import { CurrentUser } from "./user";
+
+export interface SignIn {
 	id: string;
 	userId: string;
 	user: CurrentUser;
@@ -14,9 +16,9 @@ interface SignIn {
 	countryCode: string;
 }
 
-type SignInMethod = "plain" | "sso" | "passkey";
+export type SignInMethod = "plain" | "sso" | "passkey";
 
-type SSOProvider =
+export type SSOProvider =
 	| "x_oauth"
 	| "github_oauth"
 	| "gitlab_oauth"
@@ -26,7 +28,7 @@ type SSOProvider =
 	| "linkedin_oauth"
 	| "discord_oauth";
 
-type CurrentSessionStep =
+export type CurrentSessionStep =
 	| "verify_password"
 	| "verify_email"
 	| "verify_email_otp"
@@ -35,7 +37,7 @@ type CurrentSessionStep =
 	| "verify_authenticator"
 	| "add_second_factor";
 
-interface SigninAttempt {
+export interface SigninAttempt {
 	id: string;
 	email: string;
 	session_id: number;
@@ -51,12 +53,12 @@ interface SigninAttempt {
 	completed: boolean;
 }
 
-type SignupAttemptStep =
+export type SignupAttemptStep =
 	| "verify_email"
 	| "verify_phone"
 	| "verify_authenticator";
 
-interface SignupAttempt {
+export interface SignupAttempt {
 	id: string;
 	session_id: number;
 	first_name: string;
@@ -72,7 +74,7 @@ interface SignupAttempt {
 	completed: boolean;
 }
 
-interface Session {
+export interface Session {
 	id: number;
 	active_signin: SignIn | null;
 	signins?: SignIn[];

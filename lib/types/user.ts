@@ -1,4 +1,7 @@
-type VerificationStrategy =
+import { SocialConnectionProvider } from "./auth";
+import { SecondFactorPolicy } from "./deployment";
+
+export type VerificationStrategy =
 	| "otp"
 	| "oath_google"
 	| "oath_github"
@@ -8,7 +11,7 @@ type VerificationStrategy =
 	| "oauth_discord"
 	| "oauth_apple";
 
-interface SocialConnection {
+export interface SocialConnection {
 	id: number;
 	provider: SocialConnectionProvider;
 	email_address: string;
@@ -16,7 +19,7 @@ interface SocialConnection {
 	last_name: string;
 }
 
-interface UserEmailAddress {
+export interface UserEmailAddress {
 	id: string;
 	email: string;
 	is_primary: boolean;
@@ -25,21 +28,21 @@ interface UserEmailAddress {
 	verification_strategy: VerificationStrategy;
 }
 
-interface UserPhoneNumber {
+export interface UserPhoneNumber {
 	id: string;
 	phone_number: string;
 	verified: boolean;
 	verified_at: string;
 }
 
-interface UserAuthenticator {
+export interface UserAuthenticator {
 	id: string;
 	created_at: string;
 	totp_secret?: string;
 	otp_url?: string;
 }
 
-interface CurrentUser {
+export interface CurrentUser {
 	id: string;
 	first_name: string;
 	last_name: string;

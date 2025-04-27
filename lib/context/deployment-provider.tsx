@@ -1,94 +1,100 @@
 "use client";
 
+import { ClinetReponse } from "@/types/client";
+import { Deployment } from "@/types/deployment";
 import { useState, useEffect, useMemo, createContext, useRef } from "react";
-import type { ReactNode, ElementType } from "react";
+import type { ReactNode } from "react";
 
 interface FrontendDeploymentContextType {
-	loading: boolean;
-	deployment: Deployment | null;
-	platformLink: ElementType;
+  loading: boolean;
+  deployment: Deployment | null;
 }
 
 const FrontendDeploymentContext = createContext<
-	FrontendDeploymentContextType | undefined
+  FrontendDeploymentContextType | undefined
 >(undefined);
 
 interface FrontendDeploymentProviderProps {
-	children: ReactNode;
-	publicKey: string;
-	platformLink: ElementType;
+  children: ReactNode;
+  publicKey: string;
 }
 
 function FrontendDeploymentProvider({
-	children,
-	publicKey,
-	platformLink,
+  children,
+  publicKey,
 }: FrontendDeploymentProviderProps) {
-	const [loading, setLoading] = useState(true);
-	const [deployment, setDeployment] = useState<Deployment | null>(null);
-	const singletonLock = useRef(false);
+  const [loading, setLoading] = useState(true);
+  const [deployment, setDeployment] = useState<Deployment | null>(null);
+  const singletonLock = useRef(false);
 
-	useEffect(() => {
-		async function initializeDeployment() {
-			if (singletonLock.current) {
-				return;
-			}
+  useEffect(() => {
+    async function initializeDeployment() {
+      if (singletonLock.current) {
+        return;
+      }
 
-			singletonLock.current = true;
-			setLoading(true);
+      singletonLock.current = true;
+      setLoading(true);
 
-			const baseUrlEncoded = publicKey.split("_").pop();
+      const baseUrlEncoded = publicKey.split("_").pop();
 
-			if (!baseUrlEncoded) {
-				throw new Error("Invalid public key");
-			}
+      if (!baseUrlEncoded) {
+        throw new Error("Invalid public key");
+      }
 
-			const baseUrl = atob(baseUrlEncoded);
+      const baseUrl = atob(baseUrlEncoded);
+      // get query param
+      let devSession = null;
+      if (new URLSearchParams(window.location.search)) {
+        devSession = new URLSearchParams(window.location.search).get(
+          "dev_session"
+        );
+        localStorage.setItem("__dev_session__", devSession ?? "");
+      } else {
+        devSession = localStorage.getItem("__dev_session__");
+      }
 
-			const devSession = localStorage.getItem("__dev_session__");
+      const deployment = await fetch(`${baseUrl}/deployment`, {
+        headers: { "X-Development-Session": devSession ?? "" },
+      });
 
-			const deployment = await fetch(`${baseUrl}/deployment`, {
-				headers: { "X-Development-Session": devSession ?? "" },
-			});
+      if (!deployment.ok) {
+        setLoading(false);
+        return;
+      }
 
-			if (!deployment.ok) {
-				setLoading(false);
-				return;
-			}
+      const deploymentConfig =
+        (await deployment.json()) as ClinetReponse<Deployment>;
 
-			const deploymentConfig =
-				(await deployment.json()) as ClinetReponse<Deployment>;
+      deploymentConfig.data.host = baseUrl;
+      setDeployment(deploymentConfig.data);
 
-			deploymentConfig.data.host = baseUrl;
-			setDeployment(deploymentConfig.data);
+      if (deployment.headers.get("X-Development-Session")) {
+        localStorage.setItem(
+          "__dev_session__",
+          deployment.headers.get("X-Development-Session") ?? ""
+        );
+      }
 
-			if (deployment.headers.get("X-Development-Session")) {
-				localStorage.setItem(
-					"__dev_session__",
-					deployment.headers.get("X-Development-Session") ?? "",
-				);
-			}
+      setLoading(false);
+    }
 
-			setLoading(false);
-		}
+    initializeDeployment();
+  }, [publicKey]);
 
-		initializeDeployment();
-	}, [publicKey]);
+  const value = useMemo(
+    () => ({
+      loading,
+      deployment,
+    }),
+    [loading, deployment]
+  );
 
-	const value = useMemo(
-		() => ({
-			loading,
-			deployment,
-			platformLink,
-		}),
-		[loading, deployment, platformLink],
-	);
-
-	return (
-		<FrontendDeploymentContext.Provider value={value}>
-			{children}
-		</FrontendDeploymentContext.Provider>
-	);
+  return (
+    <FrontendDeploymentContext.Provider value={value}>
+      {children}
+    </FrontendDeploymentContext.Provider>
+  );
 }
 
 export { FrontendDeploymentProvider, FrontendDeploymentContext };

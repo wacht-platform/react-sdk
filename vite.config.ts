@@ -31,4 +31,7 @@ export default defineConfig({
 			"@": "/lib",
 		},
 	},
+	define: {
+		"import.meta": "import.meta",
+	},
 });

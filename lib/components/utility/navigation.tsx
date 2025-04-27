@@ -1,5 +1,4 @@
-import { useDeployment } from '@/hooks';
-import React from 'react';
+import React, { useCallback } from "react";
 
 export interface NavigationProps {
   to: string;
@@ -8,24 +7,34 @@ export interface NavigationProps {
   [key: string]: any;
 }
 
-
 export const NavigationLink: React.FC<NavigationProps> = ({
   to,
   replace,
   children,
   ...props
 }) => {
-  const context = useDeployment();
+  const handleNavigation = useCallback(
+    (e: React.MouseEvent<HTMLAnchorElement>) => {
+      e.preventDefault();
+      const searchParams = new URLSearchParams(window.location.search);
+      let newUrl = new URL(to);
+      searchParams.forEach((value, key) => {
+        newUrl.searchParams.set(key, value);
+      });
 
-  if (!context || context.loading) {
-    return <span {...props}>{children}</span>;
-  }
-
-  const { platformLink: PlatformLink } = context;
+      if (replace) {
+        window.history.replaceState({}, "", newUrl.toString());
+      } else {
+        window.history.pushState({}, "", newUrl.toString());
+      }
+      window.dispatchEvent(new PopStateEvent("popstate", { state: {} }));
+    },
+    [to, replace]
+  );
 
   return (
-    <PlatformLink href={to} replace={replace} {...props}>
+    <a href={to} onClick={handleNavigation} {...props}>
       {children}
-    </PlatformLink>
+    </a>
   );
 };

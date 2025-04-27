@@ -1,4 +1,4 @@
-interface OrgSettings {
+export interface OrgSettings {
   id: number;
   created_at: string;
   updated_at: string;
@@ -12,7 +12,7 @@ interface OrgSettings {
   default_role: string;
 }
 
-interface AuthFactorsEnabled {
+export interface AuthFactorsEnabled {
   email_password: boolean;
   username_password: boolean;
   email_magic_link: boolean;
@@ -23,27 +23,27 @@ interface AuthFactorsEnabled {
   authenticator: boolean;
 }
 
-interface VerificationPolicy {
+export interface VerificationPolicy {
   phone_number: boolean;
   email: boolean;
 }
 
-interface AuthField {
+export interface AuthField {
   enabled: boolean;
   required: boolean;
 }
 
-type SecondFactor = "none" | "phone_otp" | "backup_code" | "authenticator";
-type FirstFactor =
+export type SecondFactor = "none" | "phone_otp" | "backup_code" | "authenticator";
+export type FirstFactor =
   | "email_password"
   | "username_password"
   | "email_otp"
   | "email_magic_link"
   | "phone_otp";
 
-type SecondFactorPolicy = "none" | "optional" | "enforced";
+export type SecondFactorPolicy = "none" | "optional" | "enforced";
 
-interface AuthSettings {
+export interface AuthSettings {
   id: number;
   created_at: string;
   updated_at: string;
@@ -67,7 +67,7 @@ interface AuthSettings {
   deployment_id: number;
 }
 
-interface DeploymentSocialConnection {
+export interface DeploymentSocialConnection {
   id: number;
   created_at: string;
   updated_at: string;
@@ -79,7 +79,12 @@ interface DeploymentSocialConnection {
   custom_credentials_set: boolean;
 }
 
-interface Deployment {
+export interface DeploymentUISettings {
+  sign_in_page_url: string;
+  sign_up_page_url: string;
+}
+
+export interface Deployment {
   id: number;
   created_at: string;
   updated_at: string;
@@ -90,6 +95,7 @@ interface Deployment {
   org_settings: OrgSettings;
   auth_settings: AuthSettings;
   social_connections: DeploymentSocialConnection[];
+  ui_settings: DeploymentUISettings;
   project_id: number;
   mode: "production" | "staging";
 }
