@@ -295,10 +295,19 @@ function SignInFormContent() {
       let redirectUri = new URLSearchParams(window.location.search).get(
         "redirect_uri"
       );
-      if (redirectUri) {
-        window.location.href = redirectUri;
+
+      if (!redirectUri) return;
+
+      let uri = new URL(redirectUri);
+
+      if (deployment?.mode === "staging") {
+        uri.searchParams.set(
+          "dev_session",
+          localStorage.getItem("__dev_session__") ?? ""
+        );
       }
-      return;
+
+      window.location.href = uri.toString();
     }
 
     switch (signinAttempt.current_step) {

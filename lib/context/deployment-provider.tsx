@@ -45,11 +45,12 @@ function FrontendDeploymentProvider({
       const baseUrl = atob(baseUrlEncoded);
       // get query param
       let devSession = null;
-      if (new URLSearchParams(window.location.search)) {
+      if (new URLSearchParams(window.location.search).has("dev_session")) {
         devSession = new URLSearchParams(window.location.search).get(
           "dev_session"
         );
         localStorage.setItem("__dev_session__", devSession ?? "");
+        window.history.replaceState({}, "", window.location.pathname);
       } else {
         devSession = localStorage.getItem("__dev_session__");
       }

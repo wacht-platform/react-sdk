@@ -11,7 +11,7 @@ export const NavigateToSignIn = () => {
       import.meta?.env?.VITE_SIGNIN_URL ||
       deployment.ui_settings.sign_in_page_url;
 
-    let currentHost = window.location.host;
+    let currentHost = window.location.href;
 
     let url = new URL(signinLink);
     url.searchParams.set("redirect_uri", `${currentHost}`);
@@ -32,7 +32,7 @@ export const NavigateToSignUp = () => {
       import.meta?.env?.VITE_SIGNUP_URL ||
       deployment.ui_settings.sign_up_page_url;
 
-    let currentHost = window.location.host;
+    let currentHost = window.location.href;
 
     let url = new URL(signupLink);
     url.searchParams.set("redirect_uri", `${currentHost}`);
