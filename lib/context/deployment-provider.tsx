@@ -50,7 +50,9 @@ function FrontendDeploymentProvider({
           "dev_session"
         );
         localStorage.setItem("__dev_session__", devSession ?? "");
-        window.history.replaceState({}, "", window.location.pathname);
+        let newUrl = new URL(window.location.href);
+        newUrl.searchParams.delete("dev_session");
+        window.history.replaceState({}, "", newUrl.toString());
       } else {
         devSession = localStorage.getItem("__dev_session__");
       }

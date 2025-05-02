@@ -16,6 +16,13 @@ export const NavigateToSignIn = () => {
     let url = new URL(signinLink);
     url.searchParams.set("redirect_uri", `${currentHost}`);
 
+    if (deployment?.mode === "staging") {
+      url.searchParams.set(
+        "dev_session",
+        localStorage.getItem("__dev_session__") ?? ""
+      );
+    }
+
     window.location.href = url.toString();
   }, [deployment, loading]);
 
@@ -37,6 +44,12 @@ export const NavigateToSignUp = () => {
     let url = new URL(signupLink);
     url.searchParams.set("redirect_uri", `${currentHost}`);
 
+    if (deployment?.mode === "staging") {
+      url.searchParams.set(
+        "dev_session",
+        localStorage.getItem("__dev_session__") ?? ""
+      );
+    }
     window.location.href = url.toString();
   }, [deployment, loading]);
 

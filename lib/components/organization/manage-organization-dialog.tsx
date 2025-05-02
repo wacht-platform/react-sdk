@@ -1,8 +1,8 @@
 import type { FC, ReactNode } from "react";
 import { Dialog } from "../utility/dialog";
-import { ManageAccount } from "./manage-account";
+import { ManageOrganization } from "./manage-organization";
 
-interface ManageAccountDialogProps {
+interface ManageOrganizationDialogProps {
   isOpen: boolean;
   onClose: () => void;
   title?: string;
@@ -14,7 +14,7 @@ interface ManageAccountDialogProps {
   showCloseButton?: boolean;
 }
 
-export const ManageAccountDialog: FC<ManageAccountDialogProps> = ({
+export const ManageOrganizationDialog: FC<ManageOrganizationDialogProps> = ({
   isOpen,
   onClose,
   title,
@@ -34,7 +34,7 @@ export const ManageAccountDialog: FC<ManageAccountDialogProps> = ({
               {headerContent || title}
             </Dialog.Header>
           )}
-          {customContent || children || <ManageAccount />}
+          {customContent || children || <ManageOrganization />}
           {footerContent && <Dialog.Footer>{footerContent}</Dialog.Footer>}
         </Dialog.Content>
       </Dialog.Overlay>

@@ -1,8 +1,8 @@
 import { useState } from "react";
 import styled from "styled-components";
 import {
-  User,
-  Shield,
+  // User,
+  // Shield,
   ArrowRight,
   ArrowLeft,
   MoreVertical,
@@ -44,7 +44,7 @@ import { QRCodeSVG } from "qrcode.react";
 import React from "react";
 import { UserAuthenticator } from "@/types/user";
 
-export const TypographyProvider = styled.div`
+const TypographyProvider = styled.div`
   * {
     box-sizing: border-box;
     font-family: Inter, system-ui, Avenir, Helvetica, Arial, sans-serif;
@@ -68,12 +68,12 @@ const Container = styled.div`
   }
 `;
 
-const Sidebar = styled.div`
-  @media (min-width: 601px) {
-    position: sticky;
-    height: fit-content;
-  }
-`;
+// const Sidebar = styled.div`
+//   @media (min-width: 601px) {
+//     position: sticky;
+//     height: fit-content;
+//   }
+// `;
 
 const MainContent = styled.div<{ $isAdding: boolean }>`
   display: flex;
@@ -85,7 +85,7 @@ const MainContent = styled.div<{ $isAdding: boolean }>`
 
 const Layout = styled.div`
   display: grid;
-  grid-template-columns: 180px 1fr;
+  grid-template-columns: 1fr;
   gap: 28px;
   height: 100%;
   @media (max-width: 768px) {
@@ -94,31 +94,31 @@ const Layout = styled.div`
   }
 `;
 
-const MenuItem = styled.div<{ $active?: boolean }>`
-  padding: 8px 12px;
-  margin: 2px 0;
-  border-radius: 6px;
-  cursor: pointer;
-  display: flex;
-  font-size: 14px;
-  align-items: center;
-  gap: 8px;
-  background: ${(props) => (props.$active ? "#f8f7f4" : "transparent")};
-  color: ${(props) => (props.$active ? "#1e293b" : "#64748b")};
-  font-weight: ${(props) => (props.$active ? "500" : "normal")};
-  transition: all 0.2s ease;
+// const MenuItem = styled.div<{ $active?: boolean }>`
+//   padding: 8px 12px;
+//   margin: 2px 0;
+//   border-radius: 6px;
+//   cursor: pointer;
+//   display: flex;
+//   font-size: 14px;
+//   align-items: center;
+//   gap: 8px;
+//   background: ${(props) => (props.$active ? "#f8f7f4" : "transparent")};
+//   color: ${(props) => (props.$active ? "#1e293b" : "#64748b")};
+//   font-weight: ${(props) => (props.$active ? "500" : "normal")};
+//   transition: all 0.2s ease;
 
-  &:hover {
-    background: #f8f7f4;
-  }
-`;
+//   &:hover {
+//     background: #f8f7f4;
+//   }
+// `;
 
-const Title = styled.h1`
-  font-size: 18px;
-  margin: 0;
-  color: #1e293b;
-  font-weight: 400;
-`;
+// const Title = styled.h1`
+//   font-size: 18px;
+//   margin: 0;
+//   color: #1e293b;
+//   font-weight: 400;
+// `;
 
 const ProfileSection = styled.div`
   display: flex;
@@ -132,6 +132,7 @@ const SectionTitle = styled.h2`
   display: flex;
   justify-content: space-between;
   align-items: center;
+  margin-bottom: 6px;
 `;
 
 const ProfileHeader = styled.div`
@@ -187,13 +188,11 @@ const EditButton = styled.button`
 const InfoItem = styled.div`
   display: flex;
   align-items: center;
-  padding: 16px 8px;
+  padding: 16px 2px;
   border-bottom: 1px solid #e2e8f0;
   gap: 12px;
   color: #1e293b;
   cursor: pointer;
-  margin: 0 -4px;
-  border-radius: 4px;
   transition: background-color 0.2s ease;
 
   &:last-child {
@@ -271,17 +270,18 @@ const EmailContent = styled.div`
   gap: 4px;
 `;
 
-const SidebarHeader = styled.div`
-  display: flex;
-  align-items: center;
-  gap: 12px;
-  margin-bottom: 24px;
-`;
+// const SidebarHeader = styled.div`
+//   display: flex;
+//   align-items: center;
+//   gap: 12px;
+//   margin-bottom: 20px;
+//   padding-left: 12px;
+// `;
 
-const SidebarTitle = styled.div`
-  display: flex;
-  flex-direction: column;
-`;
+// const SidebarTitle = styled.div`
+//   display: flex;
+//   flex-direction: column;
+// `;
 
 const AddItemForm = styled.div<{ $isVisible: boolean }>`
   position: absolute;
@@ -290,8 +290,6 @@ const AddItemForm = styled.div<{ $isVisible: boolean }>`
   width: 100%;
   height: 100%;
   background: white;
-  padding: 24px;
-  padding-top: 0;
   overflow-y: auto;
   transform: translateX(${(props) => (props.$isVisible ? "-100%" : "0")});
   transition: transform 0.3s ease;
@@ -377,6 +375,7 @@ const ProfileManagementSection = ({
       | "2fa/backup_code"
       | "2fa/phone"
       | "profile-details"
+      | "active-sessions"
       | null
     >
   >;
@@ -386,7 +385,7 @@ const ProfileManagementSection = ({
   return (
     <>
       <SectionTitle style={{ marginBottom: "20px" }}>
-        Account Details
+        Manage your account
       </SectionTitle>
       <ProfileSection>
         <ProfileHeader onClick={() => setScreen("profile-details")}>
@@ -508,6 +507,22 @@ const ProfileManagementSection = ({
             <ArrowRight size={14} style={{ color: "#64748b" }} />
           </InfoContent>
         </InfoItem>
+        <InfoItem onClick={() => setScreen("active-sessions")}>
+          <InfoLabel>Active sessions</InfoLabel>
+          <InfoContent>
+            <div
+              style={{
+                flex: 1,
+                overflow: "hidden",
+                textOverflow: "ellipsis",
+                whiteSpace: "nowrap",
+              }}
+            >
+              Manage your active sessions
+            </div>
+            <ArrowRight size={14} style={{ color: "#64748b" }} />
+          </InfoContent>
+        </InfoItem>
       </ProfileSection>
     </>
   );
@@ -542,7 +557,7 @@ const ActiveSessionsSection = () => {
 
   return (
     <ProfileSection>
-      <SectionTitle>Active Sign-ins</SectionTitle>
+      <SectionTitle>Active Sessions</SectionTitle>
       {signins && signins.length > 0 ? (
         signins.map((signin) => (
           <div
@@ -632,8 +647,8 @@ const EmailManagementSection = () => {
 
   return (
     <>
-      <SectionTitle style={{ fontSize: "14px", margin: "6px 0" }}>
-        <span style={{ fontWeight: 500 }}>Email addresses</span>
+      <SectionTitle>
+        <span>Email addresses</span>
         <div style={{ position: "relative" }}>
           <OutlinedButton onClick={() => setIsAddingEmail(true)}>
             <Plus size={16} />
@@ -780,8 +795,8 @@ const PhoneManagementSection = () => {
 
   return (
     <>
-      <SectionTitle style={{ fontSize: "14px", margin: "6px 0" }}>
-        <span style={{ fontWeight: 500 }}>Phone number</span>
+      <SectionTitle>
+        <span>Phone number</span>
         <div style={{ position: "relative" }}>
           <OutlinedButton onClick={() => setIsAddingPhone(true)}>
             <Plus size={16} />
@@ -1039,7 +1054,6 @@ const SocialManagementSection = () => {
 };
 
 export const ManageAccount = () => {
-  const [activeTab, setActiveTab] = useState("manage-account");
   const [intermediateScreen, setIntermediateScreen] = useState<
     | "email"
     | "phone"
@@ -1050,6 +1064,7 @@ export const ManageAccount = () => {
     | "2fa/backup_code"
     | "2fa/phone"
     | "profile-details"
+    | "active-sessions"
     | null
   >(null);
   const { loading } = useUser();
@@ -1071,7 +1086,7 @@ export const ManageAccount = () => {
     <TypographyProvider>
       <Container>
         <Layout>
-          <Sidebar>
+          {/* <Sidebar>
             <SidebarHeader>
               <SidebarTitle>
                 <Title>Manage Account</Title>
@@ -1082,27 +1097,27 @@ export const ManageAccount = () => {
               onClick={() => setActiveTab("manage-account")}
             >
               <User size={16} />
-              Account
+              User Settings
             </MenuItem>
             <MenuItem
               $active={activeTab === "active-sessions"}
               onClick={() => setActiveTab("active-sessions")}
             >
               <Shield size={16} />
-              Active Sign-ins
+              Active Sessions
             </MenuItem>
-          </Sidebar>
+          </Sidebar> */}
 
           <div
             style={{ position: "relative", width: "100%", overflow: "hidden" }}
           >
             <MainContent $isAdding={!!intermediateScreen}>
-              {match(activeTab)
-                .with("manage-account", () => (
-                  <ProfileManagementSection setScreen={setIntermediateScreen} />
-                ))
+              {/* {match(activeTab)
+                .with("manage-account", () => ( */}
+              <ProfileManagementSection setScreen={setIntermediateScreen} />
+              {/* ))
                 .with("active-sessions", () => <ActiveSessionsSection />)
-                .otherwise(() => null)}
+                .otherwise(() => null)} */}
             </MainContent>
 
             <AddItemForm $isVisible={!!intermediateScreen}>
@@ -1134,6 +1149,7 @@ export const ManageAccount = () => {
                 .with("2fa/authenticator", () => (
                   <AuthenticatorManagementSection />
                 ))
+                .with("active-sessions", () => <ActiveSessionsSection />)
                 .with("2fa/backup_code", () => <BackupCodeManagementSection />)
                 .with("profile-details", () => (
                   <ProfileDetailsManagementSection />
@@ -1224,12 +1240,6 @@ const PasswordManagementSection = () => {
 
   return (
     <div>
-      <SectionTitle
-        style={{ fontSize: "14px", marginBottom: "8px", fontWeight: 500 }}
-      >
-        Change Password
-      </SectionTitle>
-
       <Form onSubmit={handleSubmit}>
         <FormGroup>
           <Label htmlFor="currentPassword">Current Password</Label>
@@ -1349,15 +1359,14 @@ const TwoFactorManagementSection = ({
       | "2fa/backup_code"
       | "2fa/phone"
       | "profile-details"
+      | "active-sessions"
       | null
     >
   >;
 }) => {
   return (
     <div>
-      <SectionTitle
-        style={{ fontSize: "14px", marginBottom: "8px", fontWeight: 500 }}
-      >
+      <SectionTitle>
         <span>Two-Factor Verification</span>
       </SectionTitle>
 

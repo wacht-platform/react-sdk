@@ -1,15 +1,28 @@
-export interface OrgSettings {
+export interface B2BSettings {
   id: number;
   created_at: string;
   updated_at: string;
   deleted_at: null;
   deployment_id: number;
-  enabled: boolean;
-  ip_allowlist_enabled: boolean;
-  max_allowed_members: number;
-  allow_deletion: boolean;
-  custom_role_enabled: boolean;
-  default_role: string;
+  organizations_enabled: boolean;
+  workspaces_enabled: boolean;
+  ip_allowlist_per_org_enabled: boolean;
+  allow_users_to_create_orgs: boolean;
+  max_orgs_per_user: number;
+  max_allowed_org_members: number;
+  max_allowed_workspace_members: number;
+  allow_org_deletion: boolean;
+  allow_workspace_deletion: boolean;
+  custom_org_role_enabled: boolean;
+  limit_org_creation_per_user: boolean;
+  limit_workspace_creation_per_org: boolean;
+  org_creation_per_user_count: number;
+  workspaces_per_org_count: number;
+  custom_workspace_role_enabled: boolean;
+  default_workspace_creator_role_id: number;
+  default_workspace_member_role_id: number;
+  default_org_creator_role_id: number;
+  default_org_member_role_id: number;
 }
 
 export interface AuthFactorsEnabled {
@@ -33,7 +46,11 @@ export interface AuthField {
   required: boolean;
 }
 
-export type SecondFactor = "none" | "phone_otp" | "backup_code" | "authenticator";
+export type SecondFactor =
+  | "none"
+  | "phone_otp"
+  | "backup_code"
+  | "authenticator";
 export type FirstFactor =
   | "email_password"
   | "username_password"
@@ -92,7 +109,7 @@ export interface Deployment {
   maintenance_mode: boolean;
   host: string;
   publishable_key: string;
-  org_settings: OrgSettings;
+  b2b_settings: B2BSettings;
   auth_settings: AuthSettings;
   social_connections: DeploymentSocialConnection[];
   ui_settings: DeploymentUISettings;
