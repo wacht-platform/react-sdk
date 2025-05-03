@@ -18,11 +18,46 @@ export interface OrganizationRole {
   updated_at: string;
 }
 
+export interface OrganizationMembershipWithOrganization {
+  id: string;
+  organization: Organization;
+  user_id: string;
+  role: OrganizationRole[];
+  created_at: string;
+  updated_at: string;
+}
+
 export interface OrganizationMembership {
   id: string;
   organization: Organization;
   user_id: string;
   role: OrganizationRole[];
+  created_at: string;
+  updated_at: string;
+}
+
+export interface OrganizationInvitation {
+  id: string;
+  created_at: string;
+  updated_at: string;
+  organization_id: string;
+  email: string;
+  initial_organization_role: OrganizationRole;
+  inviter: OrganizationMembership;
+  workspace: Workspace;
+  initial_workspace_role: WorkspaceRole;
+  expired: boolean;
+}
+
+export interface OrganizationDomain {
+  id: string;
+  organization_id: string;
+  domain: string;
+  verified: boolean;
+  verified_dns_record_type: string;
+  verified_dns_record_name: string;
+  verified_dns_record_data: string;
+  verification_attempts: number;
   created_at: string;
   updated_at: string;
 }

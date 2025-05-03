@@ -573,9 +573,7 @@ const ActiveSessionsSection = () => {
               position: "relative",
             }}
           >
-            <div style={{ marginRight: "16px" }}>
-              {/* Browser icon would go here */}
-            </div>
+            <div style={{ marginRight: "16px" }}></div>
             <div style={{ flex: 1 }}>
               <div
                 style={{

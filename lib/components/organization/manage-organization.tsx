@@ -12,22 +12,13 @@ import {
   ChevronDown,
   ChevronUp,
 } from "lucide-react";
-import { useOrganization } from "@/hooks/use-organization";
+import { useActiveOrganization } from "@/hooks/use-organization";
 import { Spinner } from "../utility";
 import { match } from "ts-pattern";
 import { FormGroup, Label } from "../utility/form";
 import { Input } from "../utility/input";
 import { Button } from "../user/add-phone-popover";
-
-interface Organization {
-  id: string;
-  name: string;
-  image_url?: string;
-  description?: string;
-  role: string;
-  verified_domains: string[];
-  members_count: number;
-}
+import useSWR from "swr";
 
 const TypographyProvider = styled.div`
   * {
@@ -198,7 +189,7 @@ const OrganizationManagementSection = ({
     >
   >;
 }) => {
-  const { selectedOrganization, loading } = useOrganization();
+  const { selectedOrganization, loading } = useActiveOrganization();
 
   if (loading || !selectedOrganization) {
     return (
@@ -214,7 +205,7 @@ const OrganizationManagementSection = ({
     );
   }
 
-  const organization = selectedOrganization as unknown as Organization;
+  const organization = selectedOrganization;
 
   return (
     <>
@@ -255,7 +246,7 @@ const OrganizationManagementSection = ({
         </InfoItem>
 
         <InfoItem onClick={() => setScreen("members")}>
-          <InfoLabel>Manage Memberships</InfoLabel>
+          <InfoLabel>Manage Members</InfoLabel>
           <InfoContent>
             <div
               style={{
@@ -333,14 +324,14 @@ const OrganizationManagementSection = ({
 
 // General settings section
 const GeneralSettingsSection = () => {
-  const { selectedOrganization, loading } = useOrganization();
+  const { selectedOrganization, loading } = useActiveOrganization();
   const [name, setName] = useState(selectedOrganization?.name || "");
   const [description, setDescription] = useState(
-    selectedOrganization?.description || ""
+    selectedOrganization?.description || "",
   );
   const [image, setImage] = useState<File | null>(null);
   const [previewUrl, setPreviewUrl] = useState<string | null>(
-    selectedOrganization?.image_url || null
+    selectedOrganization?.image_url || null,
   );
   const [successMessage, setSuccessMessage] = useState("");
   const fileInputRef = React.useRef<HTMLInputElement>(null);
@@ -386,15 +377,7 @@ const GeneralSettingsSection = () => {
     setTimeout(() => setSuccessMessage(""), 3000);
   };
 
-  const handleLeaveOrg = () => {
-    if (
-      window.confirm(
-        "Are you sure you want to leave this organization? You will lose access to all resources."
-      )
-    ) {
-      alert("You would be removed from the organization");
-    }
-  };
+  const handleLeaveOrg = () => {};
 
   return (
     <div>
@@ -620,9 +603,15 @@ const LeaveOrgAccordion = ({
   );
 };
 
-// Domains Management Section
 const DomainsSection = () => {
-  const { selectedOrganization, loading } = useOrganization();
+  const { selectedOrganization, loading, getOrganizationDomains } =
+    useActiveOrganization();
+  const { data: domains } = useSWR(
+    selectedOrganization ? `/domains/${selectedOrganization.id}` : null,
+    () => getOrganizationDomains!(),
+  );
+
+  console.log(domains);
 
   if (loading || !selectedOrganization) {
     return (
@@ -637,17 +626,6 @@ const DomainsSection = () => {
       </div>
     );
   }
-
-  const organization = selectedOrganization as unknown as Organization;
-
-  const domains = organization.verified_domains
-    ? organization.verified_domains.map((domain: string, index: number) => ({
-        id: index + 1,
-        domain,
-        status: "verified",
-        primary: index === 0,
-      }))
-    : [];
 
   const [newDomain, setNewDomain] = useState("");
 
@@ -678,7 +656,7 @@ const DomainsSection = () => {
       </div>
 
       <div style={{ display: "flex", flexDirection: "column", gap: "8px" }}>
-        {domains.map((domain) => (
+        {domains?.map((domain) => (
           <div
             key={domain.id}
             style={{
@@ -697,23 +675,7 @@ const DomainsSection = () => {
               >
                 <Globe size={16} />
                 <span style={{ fontWeight: 500 }}>{domain.domain}</span>
-                {domain.primary && <Badge>Primary</Badge>}
-              </div>
-              <div
-                style={{ marginTop: "4px", fontSize: "13px", color: "#64748b" }}
-              >
-                <span
-                  style={{
-                    color: domain.status === "verified" ? "#16a34a" : "#ea580c",
-                    display: "flex",
-                    alignItems: "center",
-                    gap: "4px",
-                    fontSize: "12px",
-                  }}
-                >
-                  <CheckCircle size={14} />
-                  Verified
-                </span>
+                {domain.verified && <Badge>Verified</Badge>}
               </div>
             </div>
             <div>
@@ -738,7 +700,7 @@ const DomainsSection = () => {
 
 // Members Management Section
 const MembersSection = () => {
-  const { selectedOrganization, loading } = useOrganization();
+  const { selectedOrganization, loading } = useActiveOrganization();
 
   if (loading || !selectedOrganization) {
     return (
@@ -789,7 +751,7 @@ const MembersSection = () => {
 
 // Billing Management Section
 const BillingSection = () => {
-  const { selectedOrganization, loading } = useOrganization();
+  const { selectedOrganization, loading } = useActiveOrganization();
 
   if (loading || !selectedOrganization) {
     return (
@@ -829,7 +791,7 @@ const BillingSection = () => {
 
 // Security Settings Section
 const SecuritySection = () => {
-  const { selectedOrganization, loading } = useOrganization();
+  const { selectedOrganization, loading } = useActiveOrganization();
 
   if (loading || !selectedOrganization) {
     return (
@@ -873,7 +835,7 @@ export const ManageOrganization = () => {
     "general" | "members" | "domains" | "billing" | "security" | null
   >(null);
 
-  const { loading } = useOrganization();
+  const { loading } = useActiveOrganization();
 
   if (loading)
     return (

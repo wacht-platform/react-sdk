@@ -1,6 +1,6 @@
 import { useState, useRef, useCallback } from "react";
 import styled from "styled-components";
-import { useOrganization } from "@/hooks/use-organization";
+import { useOrganizationList } from "@/hooks/use-organization";
 import { Upload, X } from "lucide-react";
 
 const FormGroup = styled.div`
@@ -193,8 +193,7 @@ export const CreateOrganizationForm: React.FC<CreateOrganizationFormProps> = ({
   const [previewUrl, setPreviewUrl] = useState<string | null>(null);
   const [isSubmitting, setIsSubmitting] = useState(false);
   const fileInputRef = useRef<HTMLInputElement>(null);
-
-  const { createOrganization } = useOrganization();
+  const { createOrganization } = useOrganizationList();
 
   const handleImageChange = (event: React.ChangeEvent<HTMLInputElement>) => {
     if (event.target.files && event.target.files[0]) {
@@ -236,7 +235,7 @@ export const CreateOrganizationForm: React.FC<CreateOrganizationFormProps> = ({
       await createOrganization(
         name,
         image || undefined,
-        description || undefined
+        description || undefined,
       );
       onSuccess?.();
     } catch (error) {

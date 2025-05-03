@@ -11,7 +11,10 @@ import {
   FolderKanban,
 } from "lucide-react";
 import { DefaultStylesProvider } from "../utility/root";
-import { useOrganization, useOrganizationList } from "@/hooks/use-organization";
+import {
+  useActiveOrganization,
+  useOrganizationList,
+} from "@/hooks/use-organization";
 import { useWorkspaceMemberships } from "@/hooks/use-workspace";
 import { useDeployment, useSession } from "@/hooks";
 import { Workspace } from "@/types/organization";
@@ -241,7 +244,8 @@ const ModalContent = styled.div`
   border-radius: 8px;
   width: 100%;
   max-width: 425px;
-  box-shadow: 0 20px 25px -5px rgba(0, 0, 0, 0.1),
+  box-shadow:
+    0 20px 25px -5px rgba(0, 0, 0, 0.1),
     0 10px 10px -5px rgba(0, 0, 0, 0.04);
   overflow: hidden;
 `;
@@ -366,7 +370,7 @@ export const OrganizationSwitcher = () => {
     loading: organizationLoading,
     refetch: refetchOrganizations,
   } = useOrganizationList();
-  const { selectedOrganization } = useOrganization();
+  const { selectedOrganization } = useActiveOrganization();
   const { workspaceMemberships, loading: workspaceMembershipsLoading } =
     useWorkspaceMemberships();
   const {
@@ -395,19 +399,22 @@ export const OrganizationSwitcher = () => {
 
     const workspacesByOrg =
       (workspacesEnabled &&
-        workspaceMemberships?.reduce((acc, membership) => {
-          if (!acc[membership.organization_id]) {
-            acc[membership.organization_id] = [];
-          }
+        workspaceMemberships?.reduce(
+          (acc, membership) => {
+            if (!acc[membership.organization_id]) {
+              acc[membership.organization_id] = [];
+            }
 
-          const enhancedWorkspace: EnhancedWorkspace = {
-            ...membership.workspace,
-            organizationId: membership.organization_id,
-          };
+            const enhancedWorkspace: EnhancedWorkspace = {
+              ...membership.workspace,
+              organizationId: membership.organization_id,
+            };
 
-          acc[membership.organization_id].push(enhancedWorkspace);
-          return acc;
-        }, {} as Record<string, EnhancedWorkspace[]>)) ||
+            acc[membership.organization_id].push(enhancedWorkspace);
+            return acc;
+          },
+          {} as Record<string, EnhancedWorkspace[]>,
+        )) ||
       {};
 
     organizations?.forEach((org) => {
@@ -423,9 +430,9 @@ export const OrganizationSwitcher = () => {
 
     const defaultOrg = orgs[0];
     const defaultWorkspace = workspacesEnabled
-      ? defaultOrg.workspaces?.find(
-          (ws) => ws.id === session?.active_signin?.active_workspace_id
-        ) ?? null
+      ? (defaultOrg.workspaces?.find(
+          (ws) => ws.id === session?.active_signin?.active_workspace_id,
+        ) ?? null)
       : null;
 
     let selectedOrg = defaultOrg;
@@ -444,7 +451,7 @@ export const OrganizationSwitcher = () => {
       if (workspacesEnabled && selectedOrg.workspaces) {
         selectedWorkspace =
           selectedOrg.workspaces.find(
-            (ws) => ws.id === session?.active_signin?.active_workspace_id
+            (ws) => ws.id === session?.active_signin?.active_workspace_id,
           ) ?? null;
       }
     }
@@ -482,7 +489,7 @@ export const OrganizationSwitcher = () => {
       const workspaceMatches =
         workspacesEnabled &&
         org.workspaces?.some((ws) =>
-          ws.name.toLowerCase().includes(searchQuery.toLowerCase())
+          ws.name.toLowerCase().includes(searchQuery.toLowerCase()),
         );
       return orgMatches || workspaceMatches;
     });
@@ -490,7 +497,7 @@ export const OrganizationSwitcher = () => {
 
   const handleCreateWorkspace = () => {
     console.log(
-      `Creating new workspace: ${newWorkspaceName} in org: ${selectedOrg.name}`
+      `Creating new workspace: ${newWorkspaceName} in org: ${selectedOrg.name}`,
     );
     setNewWorkspaceName("");
     setShowNewWorkspaceDialog(false);
@@ -582,7 +589,7 @@ export const OrganizationSwitcher = () => {
                     $isActive={selectedOrg.id === org.id && !selectedWorkspace}
                     onClick={() => {
                       handleSwitchOrganization(
-                        org.personal ? undefined : org.id
+                        org.personal ? undefined : org.id,
                       );
                     }}
                     disabled={isSwitching}
@@ -649,7 +656,7 @@ export const OrganizationSwitcher = () => {
                     $isActive={selectedOrg.id === org.id}
                     onClick={() => {
                       handleSwitchOrganization(
-                        org.personal ? undefined : org.id
+                        org.personal ? undefined : org.id,
                       );
                     }}
                     disabled={isSwitching}
