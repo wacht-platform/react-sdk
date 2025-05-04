@@ -2,7 +2,8 @@ import { useState, useRef, useEffect } from "react";
 import styled from "styled-components";
 import { Input } from "@/components/utility/input";
 import { FormGroup, Label } from "../utility/form";
-import { OTPInput } from "../utility/otp-input";
+import { OrganizationDomain } from "@/types/organization";
+import { useActiveOrganization } from "@/hooks/use-organization";
 
 const PopoverContainer = styled.div`
   position: absolute;
@@ -54,22 +55,43 @@ const Title = styled.div`
   margin-bottom: 8px;
 `;
 
-interface EmailAddPopoverProps {
-  existingEmail?: string;
-  onClose: () => void;
-  onAddEmail: (email: string) => Promise<void>;
-  onPrepareVerification: () => Promise<void>;
-  onAttemptVerification: (otp: string) => Promise<void>;
+interface AddDomainPopoverProps {
+  onClose?: () => void;
+  domain?: OrganizationDomain;
 }
 
-export const EmailAddPopover = ({
+export const AddDomainPopover = ({
   onClose,
-  onAddEmail,
-  onAttemptVerification,
-  onPrepareVerification,
-  existingEmail,
-}: EmailAddPopoverProps) => {
+  domain,
+}: AddDomainPopoverProps) => {
   const popoverRef = useRef<HTMLDivElement>(null);
+  const [currentDomain, setCurrentDomain] = useState<OrganizationDomain>();
+  const [newFqdn, setNewFqdn] = useState("");
+  const [loading, setLoading] = useState(false);
+  const { addDomain, verifyDomain } = useActiveOrganization();
+
+  const handleDoaminCreation = async () => {
+    if (!newFqdn.trim()) return;
+
+    const res = await addDomain!(newFqdn);
+    if (res?.errors?.length) return;
+
+    console.log(res);
+
+    setCurrentDomain(res!.data);
+  };
+
+  const handleDomainVerification = async () => {
+    if (!currentDomain || loading) return;
+    setLoading(true);
+    try {
+      await verifyDomain!(currentDomain.id);
+      onClose?.();
+    } catch (error) {
+    } finally {
+      setLoading(false);
+    }
+  };
 
   useEffect(() => {
     const handleClickOutside = (event: MouseEvent) => {
@@ -77,7 +99,7 @@ export const EmailAddPopover = ({
         popoverRef.current &&
         !popoverRef.current.contains(event.target as Node)
       ) {
-        onClose();
+        onClose?.();
       }
     };
 
@@ -87,62 +109,31 @@ export const EmailAddPopover = ({
       document.removeEventListener("mousedown", handleClickOutside);
     };
   }, [onClose]);
-  const [step, setStep] = useState<"email" | "otp">(
-    existingEmail ? "otp" : "email",
-  );
-  const [email, setEmail] = useState(existingEmail || "");
-  const [otp, setOtp] = useState("");
-  const [loading, setLoading] = useState(false);
 
-  const handleEmailSubmit = async () => {
-    if (!email || loading) return;
-    setLoading(true);
-    try {
-      await onAddEmail(email);
-      setStep("otp");
-    } catch (error) {
-    } finally {
-      setLoading(false);
-    }
-  };
-
-  const handleOTPSubmit = async () => {
-    setLoading(true);
-    try {
-      await onAttemptVerification(otp);
-      onClose();
-    } catch (error) {
-    } finally {
-      setLoading(false);
-    }
-  };
+  useEffect(() => {
+    if (!domain) return;
+    setCurrentDomain(domain);
+  }, [domain]);
 
   return (
     <PopoverContainer ref={popoverRef}>
-      {step === "email" ? (
+      {!currentDomain ? (
         <>
           <Title>Add email address</Title>
-          <div
-            style={{ fontSize: "14px", color: "#64748b", marginBottom: "10px" }}
-          >
-            You will have to verify this email address before you can start
-            using it.
-          </div>
-
           <FormGroup>
-            <Label>Email address</Label>
+            <Label>Enter FQDN</Label>
             <Input
-              type="email"
-              placeholder="Enter your email"
-              value={email}
-              onChange={(e) => setEmail(e.target.value)}
+              type="text"
+              placeholder="Enter your domain"
+              value={newFqdn}
+              onChange={(e) => setNewFqdn(e.target.value)}
             />
           </FormGroup>
           <ButtonGroup>
             <Button
               $primary
-              onClick={handleEmailSubmit}
-              disabled={!email || loading}
+              onClick={handleDoaminCreation}
+              disabled={!newFqdn || loading}
               style={{ width: "100%" }}
             >
               {loading ? "Adding..." : "Continue"}
@@ -151,26 +142,42 @@ export const EmailAddPopover = ({
         </>
       ) : (
         <>
-          <Title>Verify your email</Title>
+          <Title>Verify your domain</Title>
           <div
             style={{ fontSize: "14px", color: "#64748b", marginBottom: "16px" }}
           >
-            Enter the 6-digit code sent to {email}
+            Add the following DNS record to your domain
           </div>
-          <OTPInput
-            onComplete={async (code) => setOtp(code)}
-            onResend={onPrepareVerification}
-            isSubmitting={loading}
-          />
-
+          <FormGroup>
+            <Label>Record Type</Label>
+            <Input
+              value={currentDomain?.verification_dns_record_type}
+              disabled
+            />
+          </FormGroup>
+          <FormGroup>
+            <Label>Record Name</Label>
+            <Input
+              value={currentDomain?.verification_dns_record_name}
+              disabled
+            />
+          </FormGroup>
+          <FormGroup>
+            <Label>Record Data</Label>
+            <Input
+              type="text"
+              value={currentDomain?.verification_dns_record_data}
+              disabled
+            />
+          </FormGroup>
           <ButtonGroup>
             <Button
               $primary
-              onClick={handleOTPSubmit}
-              disabled={otp.length < 6 || loading}
+              onClick={handleDomainVerification}
+              disabled={loading}
               style={{ width: "100%" }}
             >
-              {loading ? "Verifying..." : "Verify"}
+              {loading ? "Adding..." : "Continue"}
             </Button>
           </ButtonGroup>
         </>

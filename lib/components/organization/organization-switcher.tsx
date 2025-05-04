@@ -370,7 +370,7 @@ export const OrganizationSwitcher = () => {
     loading: organizationLoading,
     refetch: refetchOrganizations,
   } = useOrganizationList();
-  const { selectedOrganization } = useActiveOrganization();
+  const { activeOrganization: selectedOrganization } = useActiveOrganization();
   const { workspaceMemberships, loading: workspaceMembershipsLoading } =
     useWorkspaceMemberships();
   const {

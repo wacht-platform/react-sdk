@@ -132,7 +132,6 @@ const SectionTitle = styled.h2`
   display: flex;
   justify-content: space-between;
   align-items: center;
-  margin-bottom: 6px;
 `;
 
 const ProfileHeader = styled.div`
@@ -598,7 +597,7 @@ const ActiveSessionsSection = () => {
               <IconButton
                 onClick={() =>
                   setActiveSession(
-                    activeSession === signin.id ? null : signin.id
+                    activeSession === signin.id ? null : signin.id,
                   )
                 }
               >
@@ -964,7 +963,7 @@ const SocialManagementSection = () => {
   };
 
   const enabledProviders = deployment?.social_connections.filter(
-    (conn) => conn.enabled
+    (conn) => conn.enabled,
   );
 
   return (
@@ -977,7 +976,7 @@ const SocialManagementSection = () => {
     >
       {enabledProviders?.map((provider) => {
         const connectedAccount = user?.social_connections?.find(
-          (conn) => conn.provider === provider.provider
+          (conn) => conn.provider === provider.provider,
         );
         const providerInfo =
           socialAuthProviders[
@@ -1425,7 +1424,7 @@ const AuthenticatorManagementSection = () => {
   const [secondOtpCode, setSecondOtpCode] = useState("");
   const [isSettingUp, setIsSettingUp] = useState(false);
   const [activeAuthenticator, setActiveAuthenticator] = useState<string | null>(
-    null
+    null,
   );
   const { user, setupAuthenticator, verifyAuthenticator, deleteAuthenticator } =
     useUser();
@@ -1718,7 +1717,7 @@ const AuthenticatorManagementSection = () => {
               <div style={{ fontSize: "12px", color: "#64748b" }}>
                 Added on{" "}
                 {new Date(
-                  user.user_authenticator.created_at
+                  user.user_authenticator.created_at,
                 ).toLocaleDateString()}
               </div>
             </EmailContent>
@@ -1728,7 +1727,7 @@ const AuthenticatorManagementSection = () => {
                   setActiveAuthenticator(
                     activeAuthenticator === user.user_authenticator?.id
                       ? null
-                      : user.user_authenticator?.id || null
+                      : user.user_authenticator?.id || null,
                   )
                 }
                 style={{
@@ -1837,7 +1836,7 @@ const AuthenticatorManagementSection = () => {
                       value={firstOtpCode}
                       onChange={(e) =>
                         setFirstOtpCode(
-                          e.target.value.replace(/[^0-9]/g, "").slice(0, 6)
+                          e.target.value.replace(/[^0-9]/g, "").slice(0, 6),
                         )
                       }
                       placeholder="••••••"
@@ -1856,7 +1855,7 @@ const AuthenticatorManagementSection = () => {
                     value={secondOtpCode}
                     onChange={(e) =>
                       setSecondOtpCode(
-                        e.target.value.replace(/[^0-9]/g, "").slice(0, 6)
+                        e.target.value.replace(/[^0-9]/g, "").slice(0, 6),
                       )
                     }
                     placeholder="••••••"
@@ -2477,7 +2476,7 @@ const ProfileDetailsManagementSection = () => {
   }, [user]);
 
   const handleProfilePictureChange = async (
-    e: React.ChangeEvent<HTMLInputElement>
+    e: React.ChangeEvent<HTMLInputElement>,
   ) => {
     const file = e.target.files?.[0];
     if (!file) return;
@@ -2513,7 +2512,7 @@ const ProfileDetailsManagementSection = () => {
     // This is a placeholder for account deletion functionality
     if (
       window.confirm(
-        "Are you sure you want to delete your account? This action cannot be undone."
+        "Are you sure you want to delete your account? This action cannot be undone.",
       )
     ) {
       alert("Account deletion would be processed here");

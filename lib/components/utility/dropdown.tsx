@@ -1,5 +1,5 @@
-import { ReactNode, useEffect, useRef } from 'react';
-import styled from 'styled-components';
+import { type ReactNode, useEffect, useRef } from "react";
+import styled from "styled-components";
 
 const DropdownContainer = styled.div`
   position: absolute;
@@ -16,43 +16,51 @@ const DropdownContainer = styled.div`
 `;
 
 interface DropdownProps {
-    children: ReactNode;
-    isOpen: boolean;
-    onClose: () => void;
-    position?: {
-        top?: number | string;
-        right?: number | string;
-        bottom?: number | string;
-        left?: number | string;
-    };
+	children: ReactNode;
+	isOpen: boolean;
+	onClose: () => void;
+	position?: {
+		top?: number | string;
+		right?: number | string;
+		bottom?: number | string;
+		left?: number | string;
+	};
 }
 
-export const Dropdown = ({ children, isOpen, onClose, position }: DropdownProps) => {
-    const dropdownRef = useRef<HTMLDivElement>(null);
+export const Dropdown = ({
+	children,
+	isOpen,
+	onClose,
+	position,
+}: DropdownProps) => {
+	const dropdownRef = useRef<HTMLDivElement>(null);
 
-    useEffect(() => {
-        const handleClickOutside = (event: MouseEvent) => {
-            if (dropdownRef.current && !dropdownRef.current.contains(event.target as Node)) {
-                onClose();
-            }
-        };
+	useEffect(() => {
+		const handleClickOutside = (event: MouseEvent) => {
+			if (
+				dropdownRef.current &&
+				!dropdownRef.current.contains(event.target as Node)
+			) {
+				onClose();
+			}
+		};
 
-        if (isOpen) {
-            document.addEventListener('mousedown', handleClickOutside);
-        }
+		if (isOpen) {
+			document.addEventListener("mousedown", handleClickOutside);
+		}
 
-        return () => {
-            document.removeEventListener('mousedown', handleClickOutside);
-        };
-    }, [isOpen, onClose]);
+		return () => {
+			document.removeEventListener("mousedown", handleClickOutside);
+		};
+	}, [isOpen, onClose]);
 
-    if (!isOpen) return null;
+	if (!isOpen) return null;
 
-    return (
-        <DropdownContainer ref={dropdownRef} style={position}>
-            {children}
-        </DropdownContainer>
-    );
+	return (
+		<DropdownContainer ref={dropdownRef} style={position}>
+			{children}
+		</DropdownContainer>
+	);
 };
 
 export const DropdownItem = styled.button<{ $destructive?: boolean }>`

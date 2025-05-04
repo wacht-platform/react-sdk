@@ -1,3 +1,5 @@
+import { PublicUserData } from "./user";
+
 export interface Organization {
   id: string;
   name: string;
@@ -30,7 +32,7 @@ export interface OrganizationMembershipWithOrganization {
 export interface OrganizationMembership {
   id: string;
   organization: Organization;
-  user_id: string;
+  user: PublicUserData;
   role: OrganizationRole[];
   created_at: string;
   updated_at: string;
@@ -52,11 +54,11 @@ export interface OrganizationInvitation {
 export interface OrganizationDomain {
   id: string;
   organization_id: string;
-  domain: string;
+  fqdn: string;
   verified: boolean;
-  verified_dns_record_type: string;
-  verified_dns_record_name: string;
-  verified_dns_record_data: string;
+  verification_dns_record_type: string;
+  verification_dns_record_name: string;
+  verification_dns_record_data: string;
   verification_attempts: number;
   created_at: string;
   updated_at: string;

@@ -1,6 +1,6 @@
 import { ApiResult, Client } from "@/types/client";
 import { ErrorInterface } from "@/types/client";
-import { mapResponse } from "../utils/response-mapper";
+import { responseMapper } from "../utils/response-mapper";
 import { useClient } from "./use-client";
 import { useState } from "react";
 import { Session, SignupAttempt } from "@/types/session";
@@ -9,7 +9,7 @@ import { SignUpParams } from "@/types/auth";
 export type SignUpFunction = {
   create: (params: SignUpParams) => Promise<ApiResult<unknown, ErrorInterface>>;
   prepareVerification: (
-    strategy: SignupVerificationStrategy
+    strategy: SignupVerificationStrategy,
   ) => Promise<unknown>;
   completeVerification: (verificationCode: string) => Promise<unknown>;
 };
@@ -18,25 +18,25 @@ export type SignupVerificationStrategy = "email_otp" | "phone_otp";
 
 export type UseSignUpReturnType =
   | {
-    loading: true;
-    signUp: never;
-    signupAttempt: null;
-    discardSignupAttempt: () => void;
-    errors: null;
-  }
+      loading: true;
+      signUp: never;
+      signupAttempt: null;
+      discardSignupAttempt: () => void;
+      errors: null;
+    }
   | {
-    loading: false;
-    signUp: SignUpFunction;
-    signupAttempt: SignupAttempt | null;
-    discardSignupAttempt: () => void;
-    errors: ApiResult<unknown, ErrorInterface> | null;
-  };
+      loading: false;
+      signUp: SignUpFunction;
+      signupAttempt: SignupAttempt | null;
+      discardSignupAttempt: () => void;
+      errors: ApiResult<unknown, ErrorInterface> | null;
+    };
 
 function builder(
   client: Client,
   signupAttempt: SignupAttempt | null,
   setSignUpAttempt: (attempt: SignupAttempt | null) => void,
-  setErrors: (errors: ApiResult<unknown, ErrorInterface> | null) => void
+  setErrors: (errors: ApiResult<unknown, ErrorInterface> | null) => void,
 ): SignUpFunction {
   return {
     create: async (params: SignUpParams) => {
@@ -48,7 +48,7 @@ function builder(
         method: "POST",
         body: form,
       });
-      const result = await mapResponse<Session>(response);
+      const result = await responseMapper<Session>(response);
       if ("data" in result && result.data?.signup_attempts?.length) {
         setSignUpAttempt(result.data.signup_attempts?.at(-1) || null);
         setErrors(null);
@@ -62,7 +62,7 @@ function builder(
         `/auth/prepare-verification?attempt_identifier=${signupAttempt?.id}&strategy=${strategy}&identifier_type=signup`,
         {
           method: "POST",
-        }
+        },
       );
     },
     completeVerification: async (verificationCode: string) => {
@@ -77,7 +77,7 @@ function builder(
           body: JSON.stringify({
             verification_code: verificationCode,
           }),
-        }
+        },
       );
     },
   };
@@ -85,8 +85,13 @@ function builder(
 
 export function useSignUp(): UseSignUpReturnType {
   const { client, loading } = useClient();
-  const [signupAttempt, setSignupAttempt] = useState<SignupAttempt | null>(null);
-  const [errors, setErrors] = useState<ApiResult<unknown, ErrorInterface> | null>(null);
+  const [signupAttempt, setSignupAttempt] = useState<SignupAttempt | null>(
+    null,
+  );
+  const [errors, setErrors] = useState<ApiResult<
+    unknown,
+    ErrorInterface
+  > | null>(null);
 
   if (loading) {
     return {

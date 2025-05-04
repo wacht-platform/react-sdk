@@ -1,4 +1,4 @@
-import { mapResponse } from "../utils/response-mapper";
+import { responseMapper } from "../utils/response-mapper";
 import { useClient } from "./use-client";
 import useSWR from "swr";
 import { useCallback } from "react";
@@ -32,26 +32,26 @@ async function fetchSession(client: Client): Promise<Session> {
   const response = await client("/session", {
     method: "GET",
   });
-  const responseParsed = await mapResponse<Session>(response);
+  const responseParsed = await responseMapper<Session>(response);
   return responseParsed.data;
 }
 
 async function switchSignIn(
   client: Client,
-  signInId: string
+  signInId: string,
 ): Promise<ApiResult<Session>> {
   const response = await client(
     `/session/switch-sign-in?sign_in_id=${signInId}`,
     {
       method: "POST",
-    }
+    },
   );
-  return mapResponse(response);
+  return responseMapper(response);
 }
 
 async function signOut(
   client: Client,
-  signInId?: string
+  signInId?: string,
 ): Promise<ApiResult<Session>> {
   const url = signInId
     ? `/session/sign-out?sign_in_id=${signInId}`
@@ -59,12 +59,12 @@ async function signOut(
   const response = await client(url, {
     method: "POST",
   });
-  return mapResponse(response);
+  return responseMapper(response);
 }
 
 async function switchOrganization(
   client: Client,
-  organizationId?: string
+  organizationId?: string,
 ): Promise<ApiResult<Session>> {
   const response = await client(
     `/session/switch-organization${
@@ -72,22 +72,22 @@ async function switchOrganization(
     }`,
     {
       method: "PUT",
-    }
+    },
   );
-  return mapResponse(response);
+  return responseMapper(response);
 }
 
 async function switchWorkspace(
   client: Client,
-  workspaceId: string
+  workspaceId: string,
 ): Promise<ApiResult<Session>> {
   const response = await client(
     `/session/switch-workspace?workspace_id=${workspaceId}`,
     {
       method: "PUT",
-    }
+    },
   );
-  return mapResponse(response);
+  return responseMapper(response);
 }
 
 export function useSession(): UseSessionReturnType {
@@ -97,7 +97,13 @@ export function useSession(): UseSessionReturnType {
     error,
     mutate,
     isLoading,
-  } = useSWR(!loading ? "/session" : null, () => fetchSession(client));
+  } = useSWR(!loading ? "/session" : null, () => fetchSession(client), {
+    refreshInterval: 30000,
+    revalidateOnFocus: false,
+    revalidateOnReconnect: false,
+    revalidateIfStale: false,
+    dedupingInterval: 5000,
+  });
 
   const refetch = useCallback(async () => {
     await mutate();

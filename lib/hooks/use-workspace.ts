@@ -1,7 +1,7 @@
 import { Client } from "@/types/client";
 import { useClient } from "./use-client";
 import useSWR from "swr";
-import { mapResponse } from "@/utils/response-mapper";
+import { responseMapper } from "@/utils/response-mapper";
 import { WorkspaceMembership } from "@/types/organization";
 import { useMemo } from "react";
 import { useSession } from "./use-session";
@@ -28,7 +28,7 @@ export const useWorkspace = () => {
   const workspace = useMemo(() => {
     return workspaces.find(
       (workspace) =>
-        workspace.id === session?.active_signin?.active_workspace_id
+        workspace.id === session?.active_signin?.active_workspace_id,
     );
   }, [workspaces, session]);
 
@@ -40,17 +40,17 @@ export const useWorkspace = () => {
 };
 
 async function fetchWorkspaceMemberships(client: Client) {
-  const response = await mapResponse<WorkspaceMembership[]>(
-    await client("/me/workspace-memberships")
+  const response = await responseMapper<WorkspaceMembership[]>(
+    await client("/me/workspace-memberships"),
   );
   return response.data;
 }
 
 async function leaveWorkspace(client: Client, workspaceId: string) {
-  const response = await mapResponse<void>(
+  const response = await responseMapper<void>(
     await client(`/workspace-memberships/${workspaceId}`, {
       method: "DELETE",
-    })
+    }),
   );
   return response.data;
 }
@@ -65,7 +65,9 @@ export const useWorkspaceMemberships = () => {
       refreshInterval: 30000,
       revalidateOnFocus: false,
       revalidateOnReconnect: false,
-    }
+      revalidateIfStale: false,
+      dedupingInterval: 5000,
+    },
   );
 
   return {
