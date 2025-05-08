@@ -33,7 +33,7 @@ export interface OrganizationMembership {
   id: string;
   organization: Organization;
   user: PublicUserData;
-  role: OrganizationRole[];
+  roles: OrganizationRole[];
   created_at: string;
   updated_at: string;
 }

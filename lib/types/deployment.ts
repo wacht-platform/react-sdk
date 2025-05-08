@@ -23,6 +23,8 @@ export interface B2BSettings {
   default_workspace_member_role_id: number;
   default_org_creator_role_id: number;
   default_org_member_role_id: number;
+  workspace_permissions: string[];
+  organization_permissions: string[];
 }
 
 export interface AuthFactorsEnabled {
