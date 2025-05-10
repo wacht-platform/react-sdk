@@ -8,7 +8,6 @@ import { useActiveOrganization } from "@/hooks/use-organization";
 const PopoverContainer = styled.div`
   position: absolute;
   right: 0;
-  top: 100%;
   margin-top: 8px;
   background: white;
   border-radius: 8px;

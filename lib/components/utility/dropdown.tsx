@@ -1,66 +1,131 @@
-import { type ReactNode, useEffect, useRef } from "react";
+import {
+  createContext,
+  CSSProperties,
+  type ReactNode,
+  useCallback,
+  useContext,
+  useEffect,
+  useRef,
+  useState,
+} from "react";
 import styled from "styled-components";
 
-const DropdownContainer = styled.div`
+const DropdownItemsContainer = styled.div`
   position: absolute;
   right: 0;
-  top: 100%;
   margin-top: 4px;
   background: white;
   border-radius: 8px;
-  box-shadow: 0 4px 6px -1px rgb(0 0 0 / 0.1), 0 2px 4px -2px rgb(0 0 0 / 0.1);
+  box-shadow:
+    0 4px 6px -1px rgb(0 0 0 / 0.1),
+    0 2px 4px -2px rgb(0 0 0 / 0.1);
   border: 1px solid #e2e8f0;
   overflow: hidden;
   z-index: 10;
   min-width: 140px;
+  display: grid;
+`;
+
+const DropdownContainer = styled.div`
+  width: fit-content;
 `;
 
 interface DropdownProps {
-	children: ReactNode;
-	isOpen: boolean;
-	onClose: () => void;
-	position?: {
-		top?: number | string;
-		right?: number | string;
-		bottom?: number | string;
-		left?: number | string;
-	};
+  children: ReactNode;
+  open?: boolean;
+  openChange?: (open: boolean) => void;
+  style?: CSSProperties;
 }
 
+type DropdownContextProps = {
+  open: boolean;
+  openChange: (open: boolean) => void;
+};
+
+const DropdownContext = createContext<DropdownContextProps | undefined>(
+  undefined,
+);
+
+const useDropdownContext = () => {
+  const context = useContext(DropdownContext);
+  if (!context) {
+    throw new Error(
+      "useDropdownContext must be used within a DropdownProvider",
+    );
+  }
+  return context;
+};
+
 export const Dropdown = ({
-	children,
-	isOpen,
-	onClose,
-	position,
+  children,
+  open,
+  openChange,
+  style,
 }: DropdownProps) => {
-	const dropdownRef = useRef<HTMLDivElement>(null);
+  const dropdownRef = useRef<HTMLDivElement>(null);
+  const [_open, _setOpen] = useState(false);
 
-	useEffect(() => {
-		const handleClickOutside = (event: MouseEvent) => {
-			if (
-				dropdownRef.current &&
-				!dropdownRef.current.contains(event.target as Node)
-			) {
-				onClose();
-			}
-		};
+  useEffect(() => {
+    const handleClickOutside = (event: MouseEvent) => {
+      if (
+        dropdownRef.current &&
+        !dropdownRef.current.contains(event.target as Node)
+      ) {
+        _setOpen(false);
+      }
+    };
 
-		if (isOpen) {
-			document.addEventListener("mousedown", handleClickOutside);
-		}
+    if (_open) {
+      document.addEventListener("mousedown", handleClickOutside);
+    }
 
-		return () => {
-			document.removeEventListener("mousedown", handleClickOutside);
-		};
-	}, [isOpen, onClose]);
+    return () => {
+      document.removeEventListener("mousedown", handleClickOutside);
+    };
+  }, [_open, openChange]);
 
-	if (!isOpen) return null;
+  useEffect(() => {
+    openChange?.(_open);
+  }, [_open]);
 
-	return (
-		<DropdownContainer ref={dropdownRef} style={position}>
-			{children}
-		</DropdownContainer>
-	);
+  useEffect(() => {
+    _setOpen(!!open);
+  }, [open]);
+
+  return (
+    <DropdownContext.Provider
+      value={{
+        open: _open,
+        openChange: (v) => _setOpen(v),
+      }}
+    >
+      <DropdownContainer style={style} ref={dropdownRef}>
+        {children}
+      </DropdownContainer>
+    </DropdownContext.Provider>
+  );
+};
+
+export const DropdownItems = ({ children }: { children: ReactNode }) => {
+  const { open } = useDropdownContext();
+
+  if (!open) return null;
+
+  return <DropdownItemsContainer>{children}</DropdownItemsContainer>;
+};
+
+export const DropdownTrigger = ({ children }: { children: ReactNode }) => {
+  const { openChange, open } = useDropdownContext();
+
+  const toggleDropdown = useCallback(() => {
+    openChange(!open);
+  }, [open, openChange]);
+
+  return (
+    <div style={{ position: "relative" }} onClick={toggleDropdown}>
+      {children}
+    </div>
+  );
 };
 
 export const DropdownItem = styled.button<{ $destructive?: boolean }>`
@@ -71,9 +136,16 @@ export const DropdownItem = styled.button<{ $destructive?: boolean }>`
   text-align: left;
   cursor: pointer;
   font-size: 14px;
+  width: 200px;
   color: ${(props) => (props.$destructive ? "#ef4444" : "#1e293b")};
 
   &:hover {
     background: ${(props) => (props.$destructive ? "#fee2e2" : "#f8fafc")};
   }
+`;
+
+export const DropdownDivider = styled.div`
+  height: 1px;
+  background-color: #e2e8f0;
+  width: 100%;
 `;

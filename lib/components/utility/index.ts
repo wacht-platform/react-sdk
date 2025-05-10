@@ -9,3 +9,6 @@ export * from "./spinner";
 export * from "./switch";
 export * from "./root";
 export * from "./use-dialog";
+export * from "./search";
+export * from "./button";
+export * from "./combo-box";

@@ -27,7 +27,12 @@ import {
 } from "lucide-react";
 import { EmailAddPopover } from "@/components/user/add-email-popover";
 import { PhoneAddPopover } from "@/components/user/add-phone-popover";
-import { Dropdown, DropdownItem } from "@/components/utility/dropdown";
+import {
+  Dropdown,
+  DropdownItem,
+  DropdownItems,
+  DropdownTrigger,
+} from "@/components/utility/dropdown";
 import { useUser, useUserSignins } from "@/hooks/use-user";
 import { match, P } from "ts-pattern";
 import { GoogleIcon } from "../icons/google";
@@ -343,7 +348,7 @@ const SessionDropdown = ({
   onBanIp: (ip: string) => void;
 }) => {
   return (
-    <Dropdown isOpen={isOpen} onClose={onClose} position={{ right: 0 }}>
+    <Dropdown open={isOpen} openChange={onClose}>
       <DropdownItem onClick={() => onLogout(sessionId)}>
         <div style={{ display: "flex", alignItems: "center", gap: "8px" }}>
           <LogOut size={14} />
@@ -738,9 +743,8 @@ const EmailManagementSection = () => {
                 )}
                 {!emailIdInAction && (
                   <Dropdown
-                    isOpen={activeEmail === email.id}
-                    onClose={() => setActiveEmail(null)}
-                    position={{ right: 0 }}
+                    open={activeEmail === email.id}
+                    openChange={() => setActiveEmail(null)}
                   >
                     {!email.verified && (
                       <DropdownItem
@@ -886,9 +890,8 @@ const PhoneManagementSection = () => {
                 )}
                 {!phoneIdInAction && (
                   <Dropdown
-                    isOpen={activePhone === phone.id}
-                    onClose={() => setActivePhone(null)}
-                    position={{ right: 0 }}
+                    open={activePhone === phone.id}
+                    openChange={() => setActivePhone(null)}
                   >
                     {!phone.verified && (
                       <DropdownItem
@@ -1721,27 +1724,25 @@ const AuthenticatorManagementSection = () => {
                 ).toLocaleDateString()}
               </div>
             </EmailContent>
-            <div style={{ position: "relative" }}>
-              <IconButton
-                onClick={() =>
-                  setActiveAuthenticator(
-                    activeAuthenticator === user.user_authenticator?.id
-                      ? null
-                      : user.user_authenticator?.id || null,
-                  )
-                }
-                style={{
-                  width: "32px",
-                  height: "32px",
-                }}
-              >
-                <MoreVertical size={15} />
-              </IconButton>
-              <Dropdown
-                isOpen={activeAuthenticator === user.user_authenticator?.id}
-                onClose={() => setActiveAuthenticator(null)}
-                position={{ right: 0 }}
-              >
+            <Dropdown>
+              <DropdownTrigger>
+                <IconButton
+                  onClick={() =>
+                    setActiveAuthenticator(
+                      activeAuthenticator === user.user_authenticator?.id
+                        ? null
+                        : user.user_authenticator?.id || null,
+                    )
+                  }
+                  style={{
+                    width: "32px",
+                    height: "32px",
+                  }}
+                >
+                  <MoreVertical size={15} />
+                </IconButton>
+              </DropdownTrigger>
+              <DropdownItems>
                 <DropdownItem
                   $destructive
                   onClick={() =>
@@ -1751,8 +1752,8 @@ const AuthenticatorManagementSection = () => {
                 >
                   Disconnect
                 </DropdownItem>
-              </Dropdown>
-            </div>
+              </DropdownItems>
+            </Dropdown>
           </EmailItem>
         </div>
       )}

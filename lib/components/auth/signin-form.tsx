@@ -20,6 +20,7 @@ import { ErrorCode } from "@/types/client";
 import { SignInParams } from "@/types/auth";
 import { DeploymentSocialConnection } from "@/types/deployment";
 import { useDeployment } from "@/hooks/use-deployment";
+import { Button } from "@/components/utility";
 
 const Container = styled.div`
   max-width: 400px;
@@ -99,27 +100,9 @@ const ErrorMessage = styled.p`
   margin-top: var(--space-2xs);
 `;
 
-const SubmitButton = styled.button`
-  width: 100%;
-  padding: 9px var(--space-md);
-  background: var(--color-primary);
-  color: white;
-  border: none;
-  border-radius: var(--radius-md);
-  font-weight: 500;
-  font-size: var(--font-xs);
-  cursor: pointer;
-  transition: background-color 0.2s;
+const SubmitButton = styled(Button)`
+  padding: var(--space-md);
   margin-top: var(--space-xs);
-
-  &:hover:not(:disabled) {
-    background: var(--color-primary-hover);
-  }
-
-  &:disabled {
-    opacity: 0.7;
-    cursor: not-allowed;
-  }
 `;
 
 const Footer = styled.p`
@@ -265,7 +248,7 @@ function SignInFormContent() {
   };
 
   const initSocialAuthSignIn = async (
-    connection: DeploymentSocialConnection
+    connection: DeploymentSocialConnection,
   ) => {
     if (loading || isSubmitting) return;
 
@@ -293,7 +276,7 @@ function SignInFormContent() {
 
     if (signinAttempt.completed) {
       let redirectUri = new URLSearchParams(window.location.search).get(
-        "redirect_uri"
+        "redirect_uri",
       );
 
       if (!redirectUri) return;
@@ -303,7 +286,7 @@ function SignInFormContent() {
       if (deployment?.mode === "staging") {
         uri.searchParams.set(
           "dev_session",
-          localStorage.getItem("__dev_session__") ?? ""
+          localStorage.getItem("__dev_session__") ?? "",
         );
       }
 

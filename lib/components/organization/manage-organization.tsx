@@ -1,10 +1,4 @@
-import React, {
-  createContext,
-  useContext,
-  useState,
-  useRef,
-  useEffect,
-} from "react";
+import React, { createContext, useContext, useState } from "react";
 import styled from "styled-components";
 import {
   Building,
@@ -16,32 +10,36 @@ import {
   ChevronDown,
   ChevronUp,
   MoreVertical,
-  Globe,
   Copy,
   ExternalLink,
   Trash,
   FileText,
   Check,
-  Edit,
-  Shield,
-  Users,
-  Search,
   Save,
-  UserPlus,
+  UserPlus2,
 } from "lucide-react";
 import { useActiveOrganization } from "@/hooks/use-organization";
-import { Spinner } from "../utility";
 import { match } from "ts-pattern";
-import { FormGroup, Label } from "../utility/form";
-import { Input } from "../utility/input";
 import { AddDomainPopover } from "./add-domain-popover";
-import { Dropdown, DropdownItem } from "@/components/utility/dropdown";
 import useSWR from "swr";
 import { InviteMemberPopover } from "./invite-member-popover";
-import { OrganizationRole } from "@/types/organization";
-import { ComboBox } from "@/components/utility/combo-box";
-import { Switch } from "@/components/utility/switch";
+import { OrganizationRole, OrganizationDomain } from "@/types/organization";
 import { AddRolePopover } from "./add-role-popover";
+import {
+  Button,
+  Input,
+  SearchInput,
+  Spinner,
+  Switch,
+  ComboBox,
+  Dropdown,
+  DropdownItems,
+  DropdownItem,
+  DropdownTrigger,
+  FormGroup,
+  Label,
+  DropdownDivider,
+} from "@/components/utility";
 
 interface BillingPlan {
   id: string;
@@ -68,8 +66,7 @@ const TypographyProvider = styled.div`
 `;
 
 const Container = styled.div`
-  width: 900px;
-  max-width: 100%;
+  width: 100%;
   height: 600px;
   background: #ffffff;
   border-radius: 20px;
@@ -187,6 +184,7 @@ const AddItemForm = styled.div<{ $isVisible: boolean }>`
   height: 100%;
   background: white;
   overflow-y: auto;
+  overflow-x: hidden;
   transform: translateX(${(props) => (props.$isVisible ? "-100%" : "0")});
   transition: transform 0.3s ease;
   display: flex;
@@ -194,11 +192,11 @@ const AddItemForm = styled.div<{ $isVisible: boolean }>`
   gap: 16px;
 `;
 
-const DropdownDivider = styled.div`
-  height: 1px;
-  background-color: #e2e8f0;
-  margin: 6px 0;
-  width: 100%;
+const HeaderCTAContainer = styled.div`
+  display: flex;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: 8px;
 `;
 
 type Screen =
@@ -208,6 +206,7 @@ type Screen =
   | "billing"
   | "security"
   | "roles"
+  | "audit-logs"
   | null;
 
 type ScreenContextType = {
@@ -334,7 +333,7 @@ const OrganizationManagementSection = () => {
           </InfoContent>
         </InfoItem>
 
-        <InfoItem onClick={() => setScreen("security")}>
+        <InfoItem onClick={() => setScreen("audit-logs")}>
           <InfoLabel>Audit Logs</InfoLabel>
           <InfoContent>
             <div
@@ -420,12 +419,13 @@ const GeneralSettingsSection = () => {
     useActiveOrganization();
   const [name, setName] = useState(selectedOrganization?.name || "");
   const [description, setDescription] = useState(
-    selectedOrganization?.description || ""
+    selectedOrganization?.description || "",
   );
   const [image, setImage] = useState<File | null>(null);
   const [previewUrl, setPreviewUrl] = useState<string | null>(
-    selectedOrganization?.image_url || null
+    selectedOrganization?.image_url || null,
   );
+  const [showDeleteConfirm, setShowDeleteConfirm] = useState(false);
   const [successMessage, setSuccessMessage] = useState("");
   const [_, setIsSubmitting] = useState(false);
   const fileInputRef = React.useRef<HTMLInputElement>(null);
@@ -617,6 +617,126 @@ const GeneralSettingsSection = () => {
           </FormGroup>
         </div>
       </form>
+
+      <div>
+        <h3
+          style={{
+            fontSize: "16px",
+            fontWeight: 500,
+            color: "#ef4444",
+            marginBottom: "16px",
+            display: "flex",
+            alignItems: "center",
+            gap: "8px",
+          }}
+        >
+          <AlertTriangle size={16} />
+          Danger Zone
+        </h3>
+
+        <div
+          style={{
+            padding: "16px",
+            background: "#fff",
+            borderLeft: "3px solid #ef4444",
+          }}
+        >
+          <div
+            style={{
+              display: "flex",
+              justifyContent: "space-between",
+              alignItems: "center",
+            }}
+          >
+            <div>
+              <div
+                style={{
+                  fontWeight: 500,
+                  marginBottom: "4px",
+                  fontSize: "14px",
+                  color: "#b91c1c",
+                }}
+              >
+                Delete Organization
+              </div>
+              <div style={{ fontSize: "14px", color: "#64748b" }}>
+                This action cannot be undone. All data will be permanently
+                deleted.
+              </div>
+            </div>
+            <button
+              type="button"
+              onClick={() => setShowDeleteConfirm(true)}
+              style={{
+                padding: "6px 12px",
+                background: "#fee2e2",
+                color: "#b91c1c",
+                border: "1px solid #fecaca",
+                borderRadius: "4px",
+                fontWeight: 500,
+                fontSize: "14px",
+                cursor: "pointer",
+              }}
+            >
+              Delete
+            </button>
+          </div>
+
+          {showDeleteConfirm && (
+            <div
+              style={{
+                marginTop: "16px",
+                padding: "16px",
+                background: "#fee2e2",
+                borderTop: "1px solid #fecaca",
+              }}
+            >
+              <div style={{ marginBottom: "16px", color: "#b91c1c" }}>
+                Are you sure you want to delete this organization? This action
+                cannot be undone.
+              </div>
+              <div
+                style={{
+                  display: "flex",
+                  gap: "8px",
+                  justifyContent: "flex-end",
+                }}
+              >
+                <button
+                  type="button"
+                  onClick={() => setShowDeleteConfirm(false)}
+                  style={{
+                    padding: "6px 12px",
+                    background: "#fff",
+                    border: "1px solid #e2e8f0",
+                    borderRadius: "4px",
+                    color: "#64748b",
+                    cursor: "pointer",
+                  }}
+                >
+                  Cancel
+                </button>
+                <button
+                  type="button"
+                  onClick={console.log}
+                  style={{
+                    padding: "6px 12px",
+                    background: "#dc2626",
+                    color: "white",
+                    border: "none",
+                    borderRadius: "4px",
+                    fontWeight: 500,
+                    fontSize: "14px",
+                    cursor: "pointer",
+                  }}
+                >
+                  Confirm Delete
+                </button>
+              </div>
+            </div>
+          )}
+        </div>
+      </div>
     </>
   );
 };
@@ -624,67 +744,35 @@ const GeneralSettingsSection = () => {
 const Badge = styled.span`
   background: #fff8e6;
   color: #854d0e;
-  padding: 2px 8px;
-  border-radius: 20px;
+  padding: 0px 4px;
+  border-radius: 4px;
   font-size: 12px;
-  font-weight: 500;
+  font-weight: 400;
   display: flex;
   align-items: center;
-  gap: 4px;
-`;
-
-const DomainItem = styled.div`
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-  padding: 6px 0;
-  border-bottom: 1px solid #e2e8f0;
-  transition: all 0.2s ease;
-
-  &:last-child {
-    border-bottom: none;
-  }
-`;
-
-const DomainContent = styled.div`
-  display: flex;
-  gap: 12px;
-  align-items: center;
-`;
-
-const DomainInfo = styled.div`
-  display: flex;
-  flex-direction: column;
-  gap: 4px;
+  max-width: max-content;
+  gap: 2px;
+  border: 1px solid rgba(0, 0, 0, 0.05);
+  white-space: nowrap;
 `;
 
 const IconButton = styled.button`
   background: none;
-  border: none;
-  padding: 4px;
+  border: 1px solid #e2e8f0;
+  padding: 3px;
   cursor: pointer;
   color: #64748b;
-  border-radius: 4px;
+  border-radius: 3px;
   display: flex;
   align-items: center;
   justify-content: center;
   transition: all 0.2s ease;
+  font-size: 11px;
 
   &:hover {
     background: #f1f5f9;
     color: #1e293b;
   }
-`;
-
-const IconWrapper = styled.div`
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  width: 36px;
-  height: 36px;
-  border-radius: 50%;
-  background: #f1f5f9;
-  color: #1e293b;
 `;
 
 const DomainsSection = () => {
@@ -695,33 +783,48 @@ const DomainsSection = () => {
   } = useActiveOrganization();
 
   const {
-    data: domains = [],
+    data: domainsFromAPI = [],
     isLoading,
     mutate,
   } = useSWR(
     activeOrganization?.id ? `/domains/${activeOrganization.id}` : null,
-    () => getOrganizationDomains?.() || [],
+    async () => {
+      const realDomains = (await getOrganizationDomains?.()) || [];
+      return realDomains.map((domain, index) => ({
+        ...domain,
+        verified:
+          domain.verified !== undefined ? domain.verified : index % 2 === 0,
+      }));
+    },
     {
       refreshInterval: 30000,
       revalidateOnFocus: false,
       revalidateOnReconnect: false,
       dedupingInterval: 5000,
-    }
+    },
   );
+  const domains = domainsFromAPI as Array<
+    OrganizationDomain & { verified: boolean }
+  >;
 
   const [isAddingDomain, setIsAddingDomain] = useState(false);
-  const [activeDomain, setActiveDomain] = useState<string | null>(null);
   const [domainInVerification, setDomainInVerification] = useState<
     string | null
   >(null);
   const [searchQuery, setSearchQuery] = useState("");
+  const [selectedDomainInAction, setSelectedDomainAction] = useState<
+    string | null
+  >(null);
 
-  // Filter domains based on search query
   const filteredDomains = React.useMemo(() => {
-    if (!searchQuery) return domains;
-    return domains.filter((domain) =>
-      domain.fqdn.toLowerCase().includes(searchQuery.toLowerCase())
-    );
+    let tempDomains = domains;
+    if (searchQuery.trim() !== "") {
+      const lowercasedQuery = searchQuery.toLowerCase();
+      tempDomains = tempDomains.filter((domain) =>
+        domain.fqdn.toLowerCase().includes(lowercasedQuery),
+      );
+    }
+    return tempDomains;
   }, [domains, searchQuery]);
 
   const handleDeleteDomain = async (domainId: string) => {
@@ -736,11 +839,7 @@ const DomainsSection = () => {
   if (loading || isLoading) {
     return (
       <div
-        style={{
-          display: "flex",
-          justifyContent: "center",
-          padding: "40px 0",
-        }}
+        style={{ display: "flex", justifyContent: "center", padding: "40px 0" }}
       >
         <Spinner />
       </div>
@@ -749,122 +848,105 @@ const DomainsSection = () => {
 
   return (
     <>
-      <div style={{ position: "relative" }}>
-        <SectionHeader
-          title="Organization Domains"
-          actionLabel="New Domain"
-          onAction={() => setIsAddingDomain(true)}
-          buttonIcon={<Globe size={14} />}
-        />
-        {isAddingDomain && (
-          <AddDomainPopover onClose={() => setIsAddingDomain(false)} />
-        )}
-      </div>
-
-      {/* Search bar */}
-      <div
-        style={{
-          display: "flex",
-          alignItems: "center",
-          border: "1px solid #e2e8f0",
-          borderRadius: "8px",
-          padding: "8px 12px",
-          backgroundColor: "#fff",
-        }}
-      >
-        <Search size={16} color="#94a3b8" style={{ marginRight: "8px" }} />
-        <input
-          type="text"
-          placeholder="Search domains"
+      <SectionHeader title="Organization Domains" />
+      <HeaderCTAContainer>
+        <SearchInput
           value={searchQuery}
-          onChange={(e) => setSearchQuery(e.target.value)}
-          style={{
-            border: "none",
-            outline: "none",
-            width: "100%",
-            fontSize: "14px",
-            color: "#1e293b",
-          }}
+          onChange={setSearchQuery}
+          placeholder="Search Domain"
         />
-      </div>
+        <div>
+          <Button onClick={() => setIsAddingDomain(true)}>New Domain</Button>
+          {isAddingDomain && (
+            <AddDomainPopover onClose={() => setIsAddingDomain(false)} />
+          )}
+        </div>
+      </HeaderCTAContainer>
 
-      <div
-        style={{
-          display: "flex",
-          flexDirection: "column",
-        }}
-      >
-        {!filteredDomains?.length ? (
-          <div
-            style={{
-              textAlign: "center",
-              padding: "20px",
-              color: "#64748b",
-            }}
-          >
-            {searchQuery ? "No domains match your search" : "No domains added"}
-          </div>
-        ) : (
-          filteredDomains.map((domain) => (
-            <DomainItem key={domain.id}>
-              <DomainContent>
-                <IconWrapper>
-                  <Globe size={18} />
-                </IconWrapper>
-                <DomainInfo>
-                  <div
-                    style={{
-                      fontSize: "14px",
-                      fontWeight: 500,
-                      color: "#1e293b",
-                    }}
-                  >
-                    {domain.fqdn}
-                  </div>
-                  <div
-                    style={{
-                      display: "flex",
-                      alignItems: "center",
-                      gap: "8px",
-                    }}
-                  >
-                    <Badge>
-                      <AlertTriangle size={12} />
-                      Pending Verification
+      {!filteredDomains?.length ? (
+        <EmptyTableMessage>
+          {searchQuery !== "all"
+            ? "No domains match your criteria"
+            : "No domains added"}
+        </EmptyTableMessage>
+      ) : (
+        <Table>
+          <TableHead>
+            <TableRow>
+              <TableHeader>Domain</TableHeader>
+              <TableHeader>Status</TableHeader>
+              <TableHeader>Date Added</TableHeader>
+              <TableHeader></TableHeader>
+            </TableRow>
+          </TableHead>
+          <TableBody>
+            {filteredDomains.map((domain) => (
+              <TableRow key={domain.id}>
+                <TableCellFlex>{domain.fqdn}</TableCellFlex>
+                <StatusCell>
+                  {domain.verified ? (
+                    <Badge style={{ background: "#E6F9F0", color: "#0A7156" }}>
+                      <CheckCircle size={12} /> Verified
                     </Badge>
-                    <span style={{ fontSize: "12px", color: "#64748b" }}>
-                      Added {new Date(domain.created_at).toLocaleDateString()}
-                    </span>
-                  </div>
-                </DomainInfo>
-              </DomainContent>
-              <div style={{ position: "relative" }}>
-                <IconButton
-                  onClick={() =>
-                    setActiveDomain(
-                      activeDomain === domain.id ? null : domain.id
-                    )
-                  }
-                >
-                  <MoreVertical size={16} />
-                </IconButton>
-                {domainInVerification === domain.id && (
-                  <AddDomainPopover
-                    domain={domain}
-                    onClose={() => setDomainInVerification(null)}
-                  />
-                )}
-                {domainInVerification !== domain.id && (
+                  ) : (
+                    <Badge
+                      style={{
+                        background: "#FEF9C3",
+                        color: "#854D0E",
+                        border: "1px solid #FEF08A",
+                      }}
+                    >
+                      <AlertTriangle size={9} /> Pending Verification
+                    </Badge>
+                  )}
+                </StatusCell>
+                <TableCell>
+                  {new Date(domain.created_at).toLocaleDateString()}
+                </TableCell>
+                <ActionsCell>
                   <Dropdown
-                    isOpen={activeDomain === domain.id}
-                    onClose={() => setActiveDomain(null)}
-                    position={{ right: 0 }}
+                    style={{ marginLeft: "auto" }}
+                    open={selectedDomainInAction === domain.id}
+                    openChange={(v) =>
+                      setSelectedDomainAction(v ? domain.id : null)
+                    }
                   >
-                    {!domain.verified && (
+                    <DropdownTrigger>
+                      <IconButton>
+                        <MoreVertical size={14} />
+                      </IconButton>
+                    </DropdownTrigger>
+                    {domainInVerification === domain.id && (
+                      <AddDomainPopover
+                        domain={domain}
+                        onClose={() => setDomainInVerification(null)}
+                      />
+                    )}
+
+                    <DropdownItems>
+                      {!domain.verified && (
+                        <DropdownItem
+                          onClick={() => {
+                            handleVerifyDomain(domain.id);
+                            setSelectedDomainAction(null);
+                          }}
+                        >
+                          <div
+                            style={{
+                              display: "flex",
+                              alignItems: "center",
+                              gap: "8px",
+                            }}
+                          >
+                            <CheckCircle size={16} color="#6366f1" /> Verify
+                            Domain
+                          </div>
+                        </DropdownItem>
+                      )}
                       <DropdownItem
-                        style={{ width: 180 }}
                         onClick={() => {
-                          handleVerifyDomain(domain.id);
+                          setSelectedDomainAction(null);
+                          console.log("copy", domain.fqdn);
                         }}
                       >
                         <div
@@ -874,64 +956,52 @@ const DomainsSection = () => {
                             gap: "8px",
                           }}
                         >
-                          <CheckCircle size={16} color="#6366f1" />
-                          Verify Domain
+                          <Copy size={16} color="#64748b" /> Copy Domain
                         </div>
                       </DropdownItem>
-                    )}
-                    <DropdownItem
-                      onClick={() => console.log("copy", domain.fqdn)}
-                    >
-                      <div
-                        style={{
-                          display: "flex",
-                          alignItems: "center",
-                          gap: "8px",
+                      <DropdownItem
+                        onClick={() => {
+                          window.open(`https://${domain.fqdn}`, "_blank");
+                          setSelectedDomainAction(null);
                         }}
                       >
-                        <Copy size={16} color="#64748b" />
-                        Copy Domain
-                      </div>
-                    </DropdownItem>
-                    <DropdownItem
-                      onClick={() =>
-                        window.open(`https://${domain.fqdn}`, "_blank")
-                      }
-                    >
-                      <div
-                        style={{
-                          display: "flex",
-                          alignItems: "center",
-                          gap: "8px",
+                        <div
+                          style={{
+                            display: "flex",
+                            alignItems: "center",
+                            gap: "8px",
+                          }}
+                        >
+                          <ExternalLink size={16} color="#64748b" /> Visit
+                          Domain
+                        </div>
+                      </DropdownItem>
+                      <DropdownDivider />
+                      <DropdownItem
+                        $destructive
+                        onClick={() => {
+                          handleDeleteDomain(domain.id);
+                          setSelectedDomainAction(null);
                         }}
                       >
-                        <ExternalLink size={16} color="#64748b" />
-                        Visit Domain
-                      </div>
-                    </DropdownItem>
-                    <DropdownDivider />
-                    <DropdownItem
-                      $destructive
-                      onClick={() => handleDeleteDomain(domain.id)}
-                    >
-                      <div
-                        style={{
-                          display: "flex",
-                          alignItems: "center",
-                          gap: "8px",
-                        }}
-                      >
-                        <Trash size={16} color="#ef4444" />
-                        Remove Domain
-                      </div>
-                    </DropdownItem>
+                        <div
+                          style={{
+                            display: "flex",
+                            alignItems: "center",
+                            gap: "8px",
+                          }}
+                        >
+                          <Trash size={16} color="#ef4444" /> Remove Domain
+                        </div>
+                      </DropdownItem>
+                    </DropdownItems>
                   </Dropdown>
-                )}
-              </div>
-            </DomainItem>
-          ))
-        )}
-      </div>
+                </ActionsCell>
+              </TableRow>
+            ))}
+          </TableBody>
+        </Table>
+      )}
     </>
   );
 };
@@ -939,15 +1009,16 @@ const DomainsSection = () => {
 const RoleDropdownButton = styled.button`
   display: flex;
   align-items: center;
-  gap: 6px;
-  padding: 7px 12px;
-  width: 150px;
+  gap: 4px;
+  padding: 5px 10px;
+  width: 140px;
   background: #f8fafc;
   justify-content: space-between;
   border: 1px solid #e2e8f0;
-  border-radius: 6px;
+  border-radius: 4px;
   color: #64748b;
-  font-size: 14px;
+  font-size: 12px;
+  font-weight: 400;
   cursor: pointer;
   transition: all 0.2s ease;
 
@@ -956,67 +1027,24 @@ const RoleDropdownButton = styled.button`
   }
 `;
 
-const RoleDropdownContainer = styled.div<{ isOpen: boolean }>`
-  position: absolute;
-  top: calc(100% + 8px);
-  right: 0;
-  background: white;
-  border-radius: 8px;
-  border: 1px solid #e2e8f0;
-  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
-  z-index: 50;
-  overflow: hidden;
-  opacity: ${(props) => (props.isOpen ? 1 : 0)};
-  transform: ${(props) => (props.isOpen ? "scale(1)" : "scale(0.95)")};
-  transform-origin: top right;
-  pointer-events: ${(props) => (props.isOpen ? "auto" : "none")};
-  transition: all 0.2s ease;
-  width: 220px;
-`;
-
-const RoleDropdownItem = styled.div<{ isActive?: boolean }>`
-  display: flex;
-  justify-content: space-between;
-  align-items: center;
-  padding: 8px 12px;
-  cursor: pointer;
-  font-size: 14px;
-  background: ${(props) => (props.isActive ? "#f1f5f9" : "transparent")};
-  transition: background 0.2s ease;
-
-  &:hover {
-    background: #f8fafc;
-  }
-`;
-
-const RoleHeading = styled.div`
-  padding: 10px 12px;
-  font-size: 12px;
-  font-weight: 500;
-  text-transform: uppercase;
-  color: #64748b;
-  border-bottom: 1px solid #f1f5f9;
-`;
-
 const MembersSection = () => {
   const {
-    activeOrganization: selectedOrganization,
+    activeOrganization,
     loading,
     getMembers,
-    getInvitations,
+    // getInvitations,
     getRoles,
     addRole,
     removeRole,
-    discardInvitation,
   } = useActiveOrganization();
-
   const [isInviting, setIsInviting] = useState(false);
   const [message, setMessage] = useState<{
     text: string;
     type: "success" | "error";
   } | null>(null);
-  const [activeDropdown, setActiveDropdown] = useState<string | null>(null);
-  const dropdownRefs = useRef<Record<string, HTMLDivElement | null>>({});
+  const [activeMemberRoleDropdown, setActiveMemberRoleDropdown] = useState<
+    string | null
+  >(null);
   const [searchQuery, setSearchQuery] = useState("");
 
   const {
@@ -1024,40 +1052,37 @@ const MembersSection = () => {
     isLoading: membersLoading,
     mutate: reloadMembers,
   } = useSWR(
-    selectedOrganization
-      ? `/api/organizations/${selectedOrganization.id}/members`
+    activeOrganization
+      ? `/api/organizations/${activeOrganization.id}/members`
       : null,
-    () => getMembers?.() || []
+    () => getMembers?.() || [],
   );
-
-  const {
-    data: invitations = [],
-    isLoading: invitationsLoading,
-    mutate: reloadInvitations,
-  } = useSWR(
-    selectedOrganization
-      ? `/api/organizations/${selectedOrganization.id}/invitations`
+  // const {
+  //   data: invitations = [],
+  //   isLoading: invitationsLoading,
+  //   mutate: reloadInvitations,
+  // } = useSWR(
+  //   activeOrganization
+  //     ? `/api/organizations/${activeOrganization.id}/invitations`
+  //     : null,
+  //   () => getInvitations?.() || [],
+  // );
+  const { data: rolesData = [], isLoading: rolesLoading } = useSWR(
+    activeOrganization
+      ? `/api/organizations/${activeOrganization.id}/roles`
       : null,
-    () => getInvitations?.() || []
+    () => getRoles?.() || [],
   );
-
-  const { data: roles = [], isLoading: rolesLoading } = useSWR(
-    selectedOrganization
-      ? `/api/organizations/${selectedOrganization.id}/roles`
-      : null,
-    () => getRoles?.() || []
-  );
+  const roles = rolesData as OrganizationRole[];
 
   const filteredMembers = React.useMemo(() => {
     if (!searchQuery) return members;
     return members.filter((member: any) => {
       if (!member.user) return false;
-
       const firstName = member.user.first_name || "";
       const lastName = member.user.last_name || "";
       const email = member.user.primary_email_address?.email || "";
       const fullName = `${firstName} ${lastName}`.trim();
-
       return (
         fullName.toLowerCase().includes(searchQuery.toLowerCase()) ||
         email.toLowerCase().includes(searchQuery.toLowerCase())
@@ -1065,32 +1090,15 @@ const MembersSection = () => {
     });
   }, [members, searchQuery]);
 
-  useEffect(() => {
-    const handleClickOutside = (event: MouseEvent) => {
-      if (activeDropdown) {
-        const dropdown = dropdownRefs.current[activeDropdown];
-        if (dropdown && !dropdown.contains(event.target as Node)) {
-          setActiveDropdown(null);
-        }
-      }
-    };
-
-    document.addEventListener("mousedown", handleClickOutside);
-    return () => {
-      document.removeEventListener("mousedown", handleClickOutside);
-    };
-  }, [activeDropdown]);
-
-  const handleInvitationSuccess = () => {
-    setMessage({ text: "Invitation sent successfully", type: "success" });
-    reloadInvitations();
-    setIsInviting(false);
-    setTimeout(() => setMessage(null), 3000);
-  };
-
+  // const handleInvitationSuccess = () => {
+  //   setMessage({ text: "Invitation sent successfully", type: "success" });
+  //   reloadInvitations();
+  //   setIsInviting(false);
+  //   setTimeout(() => setMessage(null), 3000);
+  // };
   const handleRemoveMember = async (memberId: string) => {
     if (
-      !selectedOrganization ||
+      !activeOrganization ||
       !confirm("Are you sure you want to remove this member?")
     )
       return;
@@ -1108,27 +1116,26 @@ const MembersSection = () => {
       setTimeout(() => setMessage(null), 3000);
     }
   };
-
-  const handleCancelInvitation = async (invitationId: string) => {
-    try {
-      await discardInvitation(invitationId);
-      reloadInvitations();
-      setMessage({
-        text: "Invitation cancelled successfully",
-        type: "success",
-      });
-    } catch (error) {
-      console.error("Failed to cancel invitation", error);
-      setMessage({ text: "Failed to cancel invitation", type: "error" });
-    } finally {
-      setTimeout(() => setMessage(null), 3000);
-    }
-  };
+  // const handleCancelInvitation = async (invitationId: string) => {
+  //   try {
+  //     await discardInvitation(invitationId);
+  //     reloadInvitations();
+  //     setMessage({
+  //       text: "Invitation cancelled successfully",
+  //       type: "success",
+  //     });
+  //   } catch (error) {
+  //     console.error("Failed to cancel invitation", error);
+  //     setMessage({ text: "Failed to cancel invitation", type: "error" });
+  //   } finally {
+  //     setTimeout(() => setMessage(null), 3000);
+  //   }
+  // };
 
   const toggleRole = async (
     memberId: string,
     roleId: string,
-    hasRole: boolean
+    hasRole: boolean,
   ) => {
     try {
       if (hasRole) {
@@ -1139,6 +1146,7 @@ const MembersSection = () => {
         setMessage({ text: "Role added successfully", type: "success" });
       }
       reloadMembers();
+      setActiveMemberRoleDropdown(null); // Close dropdown after role change
     } catch (error) {
       console.error("Failed to update role", error);
       setMessage({ text: "Failed to update role", type: "error" });
@@ -1146,45 +1154,24 @@ const MembersSection = () => {
       setTimeout(() => setMessage(null), 3000);
     }
   };
+  const getInitials = (firstName = "", lastName = "") =>
+    `${firstName[0] || ""}${lastName[0] || ""}`.toUpperCase();
+  const memberHasRole = (member: any, roleId: string) =>
+    member.roles?.some((r: any) => r.id === roleId) || false;
 
-  const getInitials = (firstName: string = "", lastName: string = "") => {
-    return `${firstName[0] || ""}${lastName[0] || ""}`.toUpperCase();
-  };
-
-  const memberHasRole = (member: any, roleId: string) => {
-    return member.roles?.some((role: any) => role.id === roleId) || false;
-  };
-
-  if (loading || membersLoading || invitationsLoading || rolesLoading) {
+  if (loading || membersLoading || rolesLoading)
     return (
       <div
-        style={{
-          display: "flex",
-          justifyContent: "center",
-          padding: "40px 0",
-        }}
+        style={{ display: "flex", justifyContent: "center", padding: "40px 0" }}
       >
         <Spinner />
       </div>
     );
-  }
 
   return (
     <>
       <div style={{ position: "relative" }}>
-        <SectionHeader
-          title="Organization Members"
-          actionLabel="Invite Member"
-          onAction={() => setIsInviting(true)}
-          buttonIcon={<UserPlus size={14} />}
-        />
-        {isInviting && (
-          <InviteMemberPopover
-            onClose={() => setIsInviting(false)}
-            onSuccess={handleInvitationSuccess}
-            roles={roles}
-          />
-        )}
+        <SectionHeader title="Organization Members" />
       </div>
 
       {message && (
@@ -1212,216 +1199,48 @@ const MembersSection = () => {
       <div
         style={{
           display: "flex",
+          gap: "8px",
           alignItems: "center",
-          border: "1px solid #e2e8f0",
-          borderRadius: "8px",
-          padding: "8px 12px",
-          backgroundColor: "#fff",
+          flexWrap: "wrap",
         }}
       >
-        <Search size={16} color="#94a3b8" style={{ marginRight: "8px" }} />
-        <input
-          type="text"
-          placeholder="Search members"
+        <SearchInput
           value={searchQuery}
-          onChange={(e) => setSearchQuery(e.target.value)}
-          style={{
-            border: "none",
-            outline: "none",
-            width: "100%",
-            fontSize: "14px",
-            color: "#1e293b",
-          }}
+          onChange={setSearchQuery}
+          placeholder="Search members"
         />
+        <div>
+          <Button onClick={() => setIsInviting(true)}>
+            <UserPlus2 size={12} />
+            <span>Invite Members</span>
+          </Button>
+          {isInviting && (
+            <InviteMemberPopover
+              onClose={() => setIsInviting(false)}
+              onSuccess={console.log}
+              roles={roles}
+            />
+          )}
+        </div>
       </div>
 
       {filteredMembers.length === 0 ? (
-        <div
-          style={{
-            padding: "16px",
-            textAlign: "center",
-            color: "#64748b",
-            backgroundColor: "#f8fafc",
-            borderRadius: "8px",
-          }}
-        >
+        <EmptyTableMessage>
           {searchQuery ? "No members match your search" : "No members yet"}
-        </div>
+        </EmptyTableMessage>
       ) : (
-        <div>
-          {filteredMembers.map((member: any) => (
-            <div
-              key={member.id}
-              style={{
-                display: "flex",
-                alignItems: "center",
-                justifyContent: "space-between",
-                padding: "6px 0",
-              }}
-            >
-              <div
-                style={{ display: "flex", alignItems: "center", gap: "12px" }}
-              >
-                <div
-                  style={{
-                    width: "40px",
-                    height: "40px",
-                    borderRadius: "50%",
-                    background: "#f1f5f9",
-                    display: "flex",
-                    alignItems: "center",
-                    justifyContent: "center",
-                    color: "#64748b",
-                    fontWeight: 500,
-                    fontSize: "16px",
-                    overflow: "hidden",
-                  }}
-                >
-                  {member.user && member.user.profile_picture_url ? (
-                    <img
-                      src={member.user.profile_picture_url}
-                      alt={`${member.user.first_name || ""} ${
-                        member.user.last_name || ""
-                      }`}
-                      style={{
-                        width: "100%",
-                        height: "100%",
-                        objectFit: "cover",
-                      }}
-                    />
-                  ) : (
-                    getInitials(member.user?.first_name, member.user?.last_name)
-                  )}
-                </div>
-                <div>
-                  <div
-                    style={{
-                      fontSize: "14px",
-                      fontWeight: 500,
-                      color: "#1e293b",
-                    }}
-                  >
-                    {member.user
-                      ? `${member.user.first_name || ""} ${
-                          member.user.last_name || ""
-                        }`.trim() ||
-                        member.user.primary_email_address?.email ||
-                        "User"
-                      : "User"}
-                  </div>
-                  <div style={{ fontSize: "13px", color: "#64748b" }}>
-                    <div
-                      style={{ display: "flex", flexWrap: "wrap", gap: "4px" }}
-                    >
-                      {member.roles?.map((role: any) => (
-                        <span
-                          key={role.id}
-                          style={{
-                            fontSize: "12px",
-                            padding: "2px 8px",
-                            background: "#f1f5f9",
-                            borderRadius: "20px",
-                          }}
-                        >
-                          {role.name}
-                        </span>
-                      ))}
-                    </div>
-                  </div>
-                </div>
-              </div>
-
-              <div style={{ display: "flex", gap: "8px" }}>
-                <div
-                  style={{ position: "relative" }}
-                  ref={(el) => {
-                    dropdownRefs.current[member.id] = el;
-                  }}
-                >
-                  <RoleDropdownButton
-                    onClick={() =>
-                      setActiveDropdown(
-                        activeDropdown === member.id ? null : member.id
-                      )
-                    }
-                  >
-                    <span>Manage Roles</span>
-                    {activeDropdown === member.id ? (
-                      <ChevronUp size={14} />
-                    ) : (
-                      <ChevronDown size={14} />
-                    )}
-                  </RoleDropdownButton>
-
-                  <RoleDropdownContainer isOpen={activeDropdown === member.id}>
-                    <RoleHeading>Available Roles</RoleHeading>
-                    {roles.map((role) => {
-                      const hasRole = memberHasRole(member, role.id);
-                      return (
-                        <RoleDropdownItem
-                          key={role.id}
-                          isActive={hasRole}
-                          onClick={() =>
-                            toggleRole(member.id, role.id, hasRole)
-                          }
-                        >
-                          <span>{role.name}</span>
-                          {hasRole && <Check size={14} color="#16a34a" />}
-                        </RoleDropdownItem>
-                      );
-                    })}
-                  </RoleDropdownContainer>
-                </div>
-
-                <button
-                  onClick={() => handleRemoveMember(member.id)}
-                  style={{
-                    width: "40px",
-                    display: "flex",
-                    alignItems: "center",
-                    justifyContent: "center",
-                    border: "1px solid #e2e8f0",
-                    borderRadius: "6px",
-                    background: "transparent",
-                    cursor: "pointer",
-                    color: "#ef4444",
-                  }}
-                >
-                  <Trash size={16} />
-                </button>
-              </div>
-            </div>
-          ))}
-        </div>
-      )}
-
-      {invitations?.length > 0 && (
-        <div style={{ marginTop: "16px" }}>
-          <h3
-            style={{
-              fontSize: "15px",
-              color: "#64748b",
-              marginBottom: "8px",
-              fontWeight: 500,
-            }}
-          >
-            Pending Invitations ({invitations?.length})
-          </h3>
-
-          <div>
-            {invitations?.map((invitation) => (
-              <div
-                key={invitation.id}
-                style={{
-                  display: "flex",
-                  alignItems: "center",
-                  justifyContent: "space-between",
-                  padding: "6px 0",
-                }}
-              >
-                <div
-                  style={{ display: "flex", alignItems: "center", gap: "12px" }}
-                >
+        <Table>
+          <TableHead>
+            <TableRow>
+              <TableHeader>Member</TableHeader>
+              <TableHeader>Roles</TableHeader>
+              <TableHeader></TableHeader>
+            </TableRow>
+          </TableHead>
+          <TableBody>
+            {filteredMembers.map((member: any) => (
+              <TableRow key={member.id}>
+                <TableCellFlex>
                   <div
                     style={{
                       width: "40px",
@@ -1432,69 +1251,154 @@ const MembersSection = () => {
                       alignItems: "center",
                       justifyContent: "center",
                       color: "#64748b",
+                      fontWeight: 500,
+                      fontSize: "16px",
+                      overflow: "hidden",
                     }}
                   >
-                    <Plus size={16} />
+                    {member.user && member.user.profile_picture_url ? (
+                      <img
+                        src={member.user.profile_picture_url}
+                        alt={`${member.user.first_name || ""} ${
+                          member.user.last_name || ""
+                        }`}
+                        style={{
+                          width: "100%",
+                          height: "100%",
+                          objectFit: "cover",
+                        }}
+                      />
+                    ) : (
+                      getInitials(
+                        member.user?.first_name,
+                        member.user?.last_name,
+                      )
+                    )}
                   </div>
                   <div>
                     <div
                       style={{
-                        fontSize: "14px",
-                        fontWeight: 500,
-                        color: "#1e293b",
+                        fontSize: "12px",
+                        fontWeight: 400,
+                        color: "#334155",
                       }}
                     >
-                      {invitation.email}
+                      {member.user
+                        ? `${member.user.first_name || ""} ${
+                            member.user.last_name || ""
+                          }`.trim() ||
+                          member.user.primary_email_address?.email ||
+                          "User"
+                        : "User"}
                     </div>
-                    <div
-                      style={{
-                        display: "flex",
-                        alignItems: "center",
-                        gap: "8px",
-                      }}
-                    >
-                      <span
-                        style={{
-                          fontSize: "12px",
-                          padding: "2px 8px",
-                          background: "#fff8e6",
-                          color: "#854d0e",
-                          borderRadius: "20px",
-                          display: "inline-flex",
-                          alignItems: "center",
-                          gap: "4px",
-                        }}
-                      >
-                        <AlertTriangle size={12} />
-                        Pending
-                      </span>
-                      <span style={{ fontSize: "12px", color: "#64748b" }}>
-                        {invitation.initial_organization_role?.name}
-                      </span>
+                    <div style={{ fontSize: "13px", color: "#64748b" }}>
+                      {member.user?.primary_email_address?.email}
                     </div>
                   </div>
-                </div>
-                <button
-                  onClick={() => handleCancelInvitation(invitation.id)}
-                  style={{
-                    width: "32px",
-                    height: "32px",
-                    display: "flex",
-                    alignItems: "center",
-                    justifyContent: "center",
-                    border: "1px solid #e2e8f0",
-                    borderRadius: "6px",
-                    background: "transparent",
-                    cursor: "pointer",
-                    color: "#ef4444",
-                  }}
-                >
-                  <Trash size={16} />
-                </button>
-              </div>
+                </TableCellFlex>
+                <TableCell>
+                  <div
+                    style={{
+                      display: "flex",
+                      flexWrap: "wrap",
+                      gap: "4px",
+                    }}
+                  >
+                    {member.roles?.map((role: OrganizationRole) => (
+                      <span
+                        key={role.id}
+                        style={{
+                          padding: "1px 5px",
+                          background: "#f1f5f9",
+                          borderRadius: "10px",
+                          border: "1px solid #e2e8f0",
+                          color: "#64748b",
+                        }}
+                      >
+                        {role.name}
+                      </span>
+                    ))}
+                  </div>
+                </TableCell>
+                <ActionsCell>
+                  <div
+                    style={{
+                      display: "flex",
+                      gap: "8px",
+                      justifyContent: "flex-end",
+                    }}
+                  >
+                    <Dropdown>
+                      <DropdownTrigger>
+                        <RoleDropdownButton
+                          onClick={() =>
+                            setActiveMemberRoleDropdown(
+                              activeMemberRoleDropdown === member.id
+                                ? null
+                                : member.id,
+                            )
+                          }
+                        >
+                          <span>
+                            {member.roles?.[0]?.name || "Assign Role"}
+                            {member.roles?.length > 1
+                              ? ` +${member.roles.length - 1}`
+                              : ""}
+                          </span>
+                          {activeMemberRoleDropdown === member.id ? (
+                            <ChevronUp size={14} />
+                          ) : (
+                            <ChevronDown size={14} />
+                          )}
+                        </RoleDropdownButton>
+                      </DropdownTrigger>
+                      <DropdownItems>
+                        {roles.map((role) => {
+                          const hasRole = memberHasRole(member, role.id);
+                          return (
+                            <DropdownItem
+                              key={role.id}
+                              onClick={() =>
+                                toggleRole(member.id, role.id, hasRole)
+                              }
+                            >
+                              <div
+                                style={{
+                                  display: "flex",
+                                  justifyContent: "space-between",
+                                  width: "100%",
+                                }}
+                              >
+                                <span>{role.name}</span>
+                                {hasRole && <Check size={16} color="#16a34a" />}
+                              </div>
+                            </DropdownItem>
+                          );
+                        })}
+                      </DropdownItems>
+                    </Dropdown>
+                    <button
+                      onClick={() => handleRemoveMember(member.id)}
+                      style={{
+                        width: "40px",
+                        display: "flex",
+                        alignItems: "center",
+                        justifyContent: "center",
+                        border: "1px solid #e2e8f0",
+                        borderRadius: "6px",
+                        background: "transparent",
+                        cursor: "pointer",
+                        color: "#ef4444",
+                      }}
+                    >
+                      <Trash size={16} />
+                    </button>
+                  </div>
+                </ActionsCell>
+              </TableRow>
             ))}
-          </div>
-        </div>
+          </TableBody>
+        </Table>
       )}
     </>
   );
@@ -1641,66 +1545,62 @@ const BillingSection = () => {
               Select a subscription plan that fits your organization's needs
             </p>
 
-            <div
-              style={{ display: "flex", flexDirection: "column", gap: "16px" }}
-            >
-              {plans.map((plan) => (
-                <div
-                  key={plan.id}
-                  style={{
-                    border: `1px solid ${plan.current ? "#6366f1" : "#e2e8f0"}`,
-                    borderRadius: "8px",
-                    padding: "16px",
-                    background: plan.current ? "#f5f7ff" : "white",
-                  }}
-                >
-                  <div
+            <Table>
+              <TableHead>
+                <TableRow>
+                  <TableHeader>Plan</TableHeader>
+                  <TableHeader>Price</TableHeader>
+                  <TableHeader>Features</TableHeader>
+                  <TableHeader></TableHeader>
+                </TableRow>
+              </TableHead>
+              <TableBody>
+                {plans.map((plan) => (
+                  <TableRow
+                    key={plan.id}
                     style={{
-                      display: "flex",
-                      justifyContent: "space-between",
-                      alignItems: "center",
-                      marginBottom: "12px",
+                      background: plan.current ? "#f5f7ff" : "white",
                     }}
                   >
-                    <div>
-                      <h3
-                        style={{
-                          margin: 0,
-                          fontSize: "16px",
-                          fontWeight: 600,
-                          color: "#1e293b",
-                        }}
-                      >
-                        {plan.name}
-                        {plan.current && (
-                          <span
-                            style={{
-                              marginLeft: "8px",
-                              fontSize: "12px",
-                              background: "#6366f1",
-                              color: "white",
-                              padding: "2px 8px",
-                              borderRadius: "20px",
-                            }}
-                          >
-                            Current Plan
-                          </span>
-                        )}
-                      </h3>
-                      <p
-                        style={{
-                          margin: "4px 0 0 0",
-                          fontSize: "14px",
-                          color: "#64748b",
-                        }}
-                      >
-                        {plan.description}
-                      </p>
-                    </div>
-                    <div style={{ textAlign: "right" }}>
+                    <TableCellFlex>
+                      <div>
+                        <div
+                          style={{
+                            fontSize: "16px",
+                            fontWeight: 600,
+                            color: "#1e293b",
+                          }}
+                        >
+                          {plan.name}
+                          {plan.current && (
+                            <span
+                              style={{
+                                marginLeft: "8px",
+                                fontSize: "12px",
+                                background: "#6366f1",
+                                color: "white",
+                                padding: "2px 8px",
+                                borderRadius: "20px",
+                              }}
+                            >
+                              Current Plan
+                            </span>
+                          )}
+                        </div>
+                        <div
+                          style={{
+                            fontSize: "14px",
+                            color: "#64748b",
+                          }}
+                        >
+                          {plan.description}
+                        </div>
+                      </div>
+                    </TableCellFlex>
+                    <TableCell>
                       <div
                         style={{
-                          fontSize: "24px",
+                          fontSize: "18px",
                           fontWeight: 600,
                           color: "#1e293b",
                         }}
@@ -1710,11 +1610,28 @@ const BillingSection = () => {
                           /month
                         </span>
                       </div>
+                    </TableCell>
+                    <TableCell>
+                      <ul style={{ margin: 0, paddingLeft: "20px" }}>
+                        {plan.features.map((feature, idx) => (
+                          <li
+                            key={idx}
+                            style={{
+                              fontSize: "14px",
+                              color: "#64748b",
+                              marginBottom: "4px",
+                            }}
+                          >
+                            {feature}
+                          </li>
+                        ))}
+                      </ul>
+                    </TableCell>
+                    <TableCell>
                       {!plan.current && (
                         <button
                           onClick={() => handleChangePlan(plan.id)}
                           style={{
-                            marginTop: "8px",
                             padding: "6px 12px",
                             background: "#6366f1",
                             color: "white",
@@ -1728,38 +1645,11 @@ const BillingSection = () => {
                           Upgrade
                         </button>
                       )}
-                    </div>
-                  </div>
-
-                  <div style={{ marginTop: "12px" }}>
-                    <h4
-                      style={{
-                        margin: "0 0 8px 0",
-                        fontSize: "14px",
-                        fontWeight: 500,
-                        color: "#1e293b",
-                      }}
-                    >
-                      Features:
-                    </h4>
-                    <ul style={{ margin: 0, paddingLeft: "20px" }}>
-                      {plan.features.map((feature, idx) => (
-                        <li
-                          key={idx}
-                          style={{
-                            fontSize: "14px",
-                            color: "#64748b",
-                            marginBottom: "4px",
-                          }}
-                        >
-                          {feature}
-                        </li>
-                      ))}
-                    </ul>
-                  </div>
-                </div>
-              ))}
-            </div>
+                    </TableCell>
+                  </TableRow>
+                ))}
+              </TableBody>
+            </Table>
           </div>
         )}
 
@@ -1775,73 +1665,56 @@ const BillingSection = () => {
               View and download your billing history
             </p>
 
-            <div
-              style={{
-                border: "1px solid #e2e8f0",
-                borderRadius: "8px",
-                overflow: "hidden",
-              }}
-            >
-              <div
-                style={{
-                  display: "grid",
-                  gridTemplateColumns: "1fr 1fr 1fr 1fr",
-                  padding: "12px 16px",
-                  background: "#f8fafc",
-                  fontWeight: 500,
-                  fontSize: "14px",
-                  color: "#64748b",
-                  borderBottom: "1px solid #e2e8f0",
-                }}
-              >
-                <div>Date</div>
-                <div>Amount</div>
-                <div>Status</div>
-                <div></div>
-              </div>
-
-              {invoices.map((invoice) => (
-                <div
-                  key={invoice.id}
-                  style={{
-                    display: "grid",
-                    gridTemplateColumns: "1fr 1fr 1fr 1fr",
-                    padding: "12px 16px",
-                    borderBottom: "1px solid #e2e8f0",
-                    fontSize: "14px",
-                    color: "#1e293b",
-                    alignItems: "center",
-                  }}
-                >
-                  <div>{new Date(invoice.date).toLocaleDateString()}</div>
-                  <div>${invoice.amount.toFixed(2)}</div>
-                  <div>
-                    <span
-                      style={{
-                        display: "inline-block",
-                        padding: "2px 8px",
-                        borderRadius: "20px",
-                        fontSize: "12px",
-                        background:
-                          invoice.status === "paid" ? "#dcfce7" : "#fee2e2",
-                        color:
-                          invoice.status === "paid" ? "#166534" : "#b91c1c",
-                      }}
-                    >
-                      {invoice.status.charAt(0).toUpperCase() +
-                        invoice.status.slice(1)}
-                    </span>
-                  </div>
-                  <div style={{ textAlign: "right" }}>
-                    <IconButton
-                      onClick={() => handleDownloadInvoice(invoice.id)}
-                    >
-                      <FileText size={16} />
-                    </IconButton>
-                  </div>
-                </div>
-              ))}
-            </div>
+            <Table>
+              <TableHead>
+                <TableRow>
+                  <TableHeader>Date</TableHeader>
+                  <TableHeader>Amount</TableHeader>
+                  <TableHeader>Status</TableHeader>
+                  <TableHeader></TableHeader>
+                </TableRow>
+              </TableHead>
+              <TableBody>
+                {invoices.map((invoice) => (
+                  <TableRow key={invoice.id}>
+                    <TableCell>
+                      {new Date(invoice.date).toLocaleDateString()}
+                    </TableCell>
+                    <TableCell>${invoice.amount.toFixed(2)}</TableCell>
+                    <TableCell>
+                      <span
+                        style={{
+                          display: "inline-flex",
+                          alignItems: "center",
+                          padding: "1px 6px",
+                          borderRadius: "12px",
+                          fontSize: "11px",
+                          background:
+                            invoice.status === "paid" ? "#dcfce7" : "#fee2e2",
+                          color:
+                            invoice.status === "paid" ? "#166534" : "#b91c1c",
+                          border: "1px solid",
+                          borderColor:
+                            invoice.status === "paid" ? "#86efac" : "#fecaca",
+                          fontWeight: 400,
+                          whiteSpace: "nowrap",
+                        }}
+                      >
+                        {invoice.status.charAt(0).toUpperCase() +
+                          invoice.status.slice(1)}
+                      </span>
+                    </TableCell>
+                    <ActionsCell>
+                      <IconButton
+                        onClick={() => handleDownloadInvoice(invoice.id)}
+                      >
+                        <FileText size={14} />
+                      </IconButton>
+                    </ActionsCell>
+                  </TableRow>
+                ))}
+              </TableBody>
+            </Table>
           </div>
         )}
       </div>
@@ -1864,7 +1737,6 @@ const SecuritySection = () => {
   const [_, setIsSubmitting] = useState(false);
   const [showDeleteConfirm, setShowDeleteConfirm] = useState(false);
 
-  // Mock workspaces for the combobox
   const workspaces = [
     { id: "ws1", name: "Engineering" },
     { id: "ws2", name: "Marketing" },
@@ -2245,13 +2117,13 @@ const RolesSection = () => {
     activeOrganization
       ? `/api/organizations/${activeOrganization.id}/roles`
       : null,
-    () => getRoles?.() || []
+    () => getRoles?.() || [],
   );
 
   const filteredRoles = React.useMemo(() => {
     if (!searchQuery) return roles;
     return roles.filter((role) =>
-      role.name.toLowerCase().includes(searchQuery.toLowerCase())
+      role.name.toLowerCase().includes(searchQuery.toLowerCase()),
     );
   }, [roles, searchQuery]);
 
@@ -2320,44 +2192,6 @@ const RolesSection = () => {
     }
   };
 
-  const getRoleIcon = (roleName: string) => {
-    const lowerName = roleName.toLowerCase();
-    if (lowerName === "admin") {
-      return (
-        <div
-          style={{
-            width: 40,
-            height: 40,
-            borderRadius: "8px",
-            backgroundColor: "#FEF2F2",
-            display: "flex",
-            alignItems: "center",
-            justifyContent: "center",
-            color: "#EF4444",
-          }}
-        >
-          <Shield size={20} />
-        </div>
-      );
-    }
-    return (
-      <div
-        style={{
-          width: 40,
-          height: 40,
-          borderRadius: "8px",
-          backgroundColor: "#F0F7FF",
-          display: "flex",
-          alignItems: "center",
-          justifyContent: "center",
-          color: "#3B82F6",
-        }}
-      >
-        <Users size={20} />
-      </div>
-    );
-  };
-
   if (loading || rolesLoading) {
     return (
       <div
@@ -2374,22 +2208,7 @@ const RolesSection = () => {
 
   return (
     <>
-      <div style={{ position: "relative" }}>
-        <SectionHeader
-          title="Organization Roles"
-          actionLabel="Create Role"
-          onAction={() => setRolePopover({ isOpen: true })}
-          buttonIcon={<Plus size={14} />}
-        />
-        {rolePopover.isOpen && (
-          <AddRolePopover
-            role={rolePopover.role}
-            onClose={() => setRolePopover({ isOpen: false })}
-            onSuccess={handleRoleSaved}
-          />
-        )}
-      </div>
-
+      <SectionHeader title="Organization Roles" />
       {message && (
         <div
           style={{
@@ -2412,97 +2231,334 @@ const RolesSection = () => {
         </div>
       )}
 
-      <div
-        style={{
-          display: "flex",
-          alignItems: "center",
-          border: "1px solid #e2e8f0",
-          borderRadius: "8px",
-          padding: "8px 12px",
-          backgroundColor: "#fff",
-        }}
-      >
-        <Search size={16} color="#94a3b8" style={{ marginRight: "8px" }} />
-        <input
-          type="text"
+      <HeaderCTAContainer>
+        <SearchInput
           placeholder="Search roles"
+          onChange={setSearchQuery}
           value={searchQuery}
-          onChange={(e) => setSearchQuery(e.target.value)}
-          style={{
-            border: "none",
-            outline: "none",
-            width: "100%",
-            fontSize: "14px",
-            color: "#1e293b",
-          }}
         />
-      </div>
+
+        <div>
+          <Button>
+            <Plus size={14} />
+            <span>Add role </span>
+          </Button>
+
+          {rolePopover.isOpen && (
+            <AddRolePopover
+              role={rolePopover.role}
+              onClose={() => setRolePopover({ isOpen: false })}
+              onSuccess={handleRoleSaved}
+            />
+          )}
+        </div>
+      </HeaderCTAContainer>
 
       {filteredRoles.length === 0 ? (
-        <div
-          style={{
-            padding: "20px 0",
-            textAlign: "center",
-            color: "#64748b",
-          }}
-        >
+        <EmptyTableMessage>
           {searchQuery
             ? "No roles match your search"
             : "No roles defined yet. Create your first role to get started."}
-        </div>
+        </EmptyTableMessage>
       ) : (
-        <div style={{ display: "flex", flexDirection: "column", gap: "12px" }}>
-          {filteredRoles.map((role) => (
-            <div
-              key={role.id}
-              style={{
-                display: "flex",
-                alignItems: "center",
-              }}
-            >
-              {getRoleIcon(role.name)}
+        <Table>
+          <TableHead>
+            <TableRow>
+              <TableHeader>Role</TableHeader>
+              <TableHeader>Permissions</TableHeader>
+              <TableHeader></TableHeader>
+            </TableRow>
+          </TableHead>
+          <TableBody>
+            {filteredRoles.map((role) => (
+              <TableRow key={role.id}>
+                <TableCellFlex>
+                  <div
+                    style={{
+                      fontSize: "14px",
+                      fontWeight: 500,
+                    }}
+                  >
+                    {role.name}
+                  </div>
+                </TableCellFlex>
+                <TableCell>
+                  <div
+                    style={{
+                      fontSize: "14px",
+                      color: "#64748b",
+                    }}
+                  >
+                    {role.permissions.join(", ")}
+                  </div>
+                </TableCell>
+                <ActionsCell>
+                  <Dropdown style={{ marginLeft: "auto" }}>
+                    <DropdownTrigger>
+                      <IconButton>
+                        <MoreVertical size={14} />
+                      </IconButton>
+                    </DropdownTrigger>
 
-              <div style={{ marginLeft: "16px", flex: 1 }}>
+                    <DropdownItems>
+                      <DropdownItem
+                        onClick={() => {
+                          setRolePopover({ isOpen: true, role });
+                        }}
+                      >
+                        Edit Role
+                      </DropdownItem>
+                      <DropdownDivider />
+                      <DropdownItem
+                        $destructive
+                        onClick={() => {
+                          handleDeleteRole(role.id);
+                        }}
+                      >
+                        Remove Role
+                      </DropdownItem>
+                    </DropdownItems>
+                  </Dropdown>
+                </ActionsCell>
+              </TableRow>
+            ))}
+          </TableBody>
+        </Table>
+      )}
+    </>
+  );
+};
+
+interface SeverityIndicatorProps {
+  severity: "critical" | "warning" | "info";
+  style?: React.CSSProperties;
+}
+
+const SeverityIndicator = ({ severity, style }: SeverityIndicatorProps) => {
+  let bgColor = "";
+  let textColor = "";
+  let label = "";
+
+  switch (severity) {
+    case "critical":
+      bgColor = "#FEE2E2";
+      textColor = "#B91C1C";
+      label = "Critical";
+      break;
+    case "warning":
+      bgColor = "#FEF3C7";
+      textColor = "#92400E";
+      label = "Warning";
+      break;
+    case "info":
+    default:
+      bgColor = "#E0F2FE";
+      textColor = "#0369A1";
+      label = "Info";
+  }
+
+  return (
+    <span
+      style={{
+        display: "inline-flex",
+        alignItems: "center",
+        fontWeight: 400,
+        padding: "0px 4px",
+        borderRadius: "4px",
+        backgroundColor: bgColor,
+        color: textColor,
+        border: "1px solid rgba(0, 0, 0, 0.05)",
+        ...style,
+      }}
+    >
+      <span
+        style={{
+          width: "5px",
+          height: "5px",
+          borderRadius: "50%",
+          backgroundColor: textColor,
+          marginRight: "4px",
+        }}
+      />
+      {label}
+    </span>
+  );
+};
+
+const FilterButton = styled(RoleDropdownButton)`
+  padding: 8px 12px;
+`;
+
+// Define the AuditLogEntry interface (Restored)
+interface AuditLogEntry {
+  id: string;
+  date: string;
+  actor: string;
+  action: string;
+  description: string;
+  severity: "critical" | "warning" | "info";
+}
+
+const AuditLogsSection = () => {
+  const [searchQuery, setSearchQuery] = useState("");
+  const [selectedSeverity, setSelectedSeverity] = useState<
+    "all" | "critical" | "warning" | "info"
+  >("all");
+
+  const logs: AuditLogEntry[] = [
+    {
+      id: "1",
+      date: "2024-06-01T10:15:00Z",
+      actor: "Alice Smith",
+      action: "Added member",
+      description: "Added Bob Jones to the organization as Admin.",
+      severity: "info",
+    },
+    {
+      id: "2",
+      date: "2024-06-02T14:30:00Z",
+      actor: "Bob Jones",
+      action: "Changed role",
+      description: "Changed Charlie Brown's role from Member to Admin.",
+      severity: "warning",
+    },
+    {
+      id: "3",
+      date: "2024-06-03T09:00:00Z",
+      actor: "Alice Smith",
+      action: "Removed domain",
+      description: "Removed domain example.com from verified domains.",
+      severity: "critical",
+    },
+    {
+      id: "4",
+      date: "2024-06-04T16:45:00Z",
+      actor: "Charlie Brown",
+      action: "Updated security settings",
+      description: "Enabled MFA requirement for all members.",
+      severity: "warning",
+    },
+    {
+      id: "5",
+      date: "2024-06-05T11:00:00Z",
+      actor: "System",
+      action: "Generated report",
+      description: "Monthly activity report generated successfully.",
+      severity: "info",
+    },
+  ];
+
+  const filteredLogs = React.useMemo(() => {
+    let tempLogs = logs;
+    if (selectedSeverity !== "all") {
+      tempLogs = tempLogs.filter((log) => log.severity === selectedSeverity);
+    }
+    if (searchQuery.trim() !== "") {
+      const lowercasedQuery = searchQuery.toLowerCase();
+      tempLogs = tempLogs.filter(
+        (log) =>
+          log.action.toLowerCase().includes(lowercasedQuery) ||
+          log.actor.toLowerCase().includes(lowercasedQuery) ||
+          log.description.toLowerCase().includes(lowercasedQuery),
+      );
+    }
+    return tempLogs;
+  }, [searchQuery, selectedSeverity, logs]);
+
+  const severityOptions: { value: typeof selectedSeverity; label: string }[] = [
+    { value: "all", label: "All Levels" },
+    { value: "critical", label: "Critical" },
+    { value: "warning", label: "Warning" },
+    { value: "info", label: "Info" },
+  ];
+
+  // *** RESTORED RETURN STATEMENT AND JSX ***
+  return (
+    <div>
+      <SectionHeader title="Audit Logs" />
+      <div
+        style={{
+          display: "flex",
+          gap: "16px",
+          marginTop: "16px",
+          marginBottom: "16px",
+          alignItems: "center",
+          flexWrap: "wrap",
+        }}
+      >
+        <SearchInput
+          value={searchQuery}
+          onChange={setSearchQuery}
+          placeholder="search by action, actor, or description"
+        />
+        <Dropdown>
+          <DropdownTrigger>
+            <FilterButton>
+              <span>
+                {severityOptions.find((opt) => opt.value === selectedSeverity)
+                  ?.label || "Filter by Severity"}
+              </span>
+            </FilterButton>
+          </DropdownTrigger>
+          <DropdownItems>
+            {severityOptions.map((option) => (
+              <DropdownItem
+                key={option.value}
+                onClick={() => {
+                  setSelectedSeverity(option.value);
+                }}
+              >
                 <div
                   style={{
                     display: "flex",
-                    alignItems: "center",
-                    gap: "8px",
-                    fontSize: "14px",
-                    fontWeight: 500,
+                    justifyContent: "space-between",
+                    width: "100%",
                   }}
                 >
-                  {role.name}
+                  <span>{option.label}</span>
+                  {selectedSeverity === option.value && (
+                    <Check size={16} color="#16a34a" />
+                  )}
                 </div>
+              </DropdownItem>
+            ))}
+          </DropdownItems>
+        </Dropdown>
+      </div>
 
-                <div
-                  style={{
-                    fontSize: "14px",
-                    color: "#64748b",
-                  }}
-                >
-                  {role.permissions.join(", ")}
-                </div>
-              </div>
-
-              <div style={{ display: "flex", gap: "8px" }}>
-                <IconButton
-                  onClick={() => setRolePopover({ isOpen: true, role })}
-                >
-                  <Edit size={18} />
-                </IconButton>
-                <IconButton
-                  style={{ color: "#ef4444" }}
-                  onClick={() => handleDeleteRole(role.id)}
-                >
-                  <Trash size={18} />
-                </IconButton>
-              </div>
-            </div>
-          ))}
-        </div>
+      {filteredLogs.length === 0 ? (
+        <EmptyTableMessage>
+          {searchQuery.trim() !== "" || selectedSeverity !== "all"
+            ? "No audit logs match your search criteria."
+            : "No audit log events found."}
+        </EmptyTableMessage>
+      ) : (
+        <Table>
+          <TableHead>
+            <TableRow>
+              <TableHeader>Severity</TableHeader>
+              <TableHeader>Action</TableHeader>
+              <TableHeader>Actor</TableHeader>
+              <TableHeader>Description</TableHeader>
+              <TableHeader>Timestamp</TableHeader>
+            </TableRow>
+          </TableHead>
+          <TableBody>
+            {filteredLogs.map((log) => (
+              <TableRow key={log.id}>
+                <TableCell>
+                  <SeverityIndicator severity={log.severity} />
+                </TableCell>
+                <TableCell>{log.action}</TableCell>
+                <TableCell>{log.actor}</TableCell>
+                <TableCell>{log.description}</TableCell>
+                <TableCell>{new Date(log.date).toLocaleString()}</TableCell>
+              </TableRow>
+            ))}
+          </TableBody>
+        </Table>
       )}
-    </>
+    </div>
   );
 };
 
@@ -2547,6 +2603,7 @@ export const ManageOrganization = () => {
                   .with("billing", () => <BillingSection />)
                   .with("security", () => <SecuritySection />)
                   .with("roles", () => <RolesSection />)
+                  .with("audit-logs", () => <AuditLogsSection />)
                   .otherwise(() => null)}
               </AddItemForm>
             </div>
@@ -2556,5 +2613,84 @@ export const ManageOrganization = () => {
     </TypographyProvider>
   );
 };
+
+const Table = styled.table`
+  width: 100%;
+  border-collapse: separate;
+  border-spacing: 0;
+  border: 1px solid #e2e8f0;
+  border-radius: 3px;
+  overflow: hidden;
+  font-size: 11px;
+  box-shadow: 0 1px 2px rgba(0, 0, 0, 0.03);
+  line-height: 1.4;
+`;
+
+const TableHead = styled.thead`
+  background-color: #f8fafc;
+  border-bottom: 1px solid #e2e8f0;
+`;
+
+const TableBody = styled.tbody`
+  background-color: white;
+`;
+
+const TableRow = styled.tr`
+  border-bottom: 1px solid #e2e8f0;
+  &:last-child {
+    border-bottom: none;
+  }
+`;
+
+const TableHeader = styled.th`
+  text-align: left;
+  padding: 8px 16px;
+  font-weight: 500;
+  font-size: 12px;
+  color: #64748b;
+  white-space: nowrap;
+  text-transform: uppercase;
+  letter-spacing: 0.3px;
+`;
+
+const TableCell = styled.td`
+  padding: 10px 16px;
+  font-size: 12px;
+  color: #475569;
+  border-bottom: 1px solid #e2e8f0;
+  vertical-align: middle;
+
+  ${TableRow}:last-child & {
+    border-bottom: none;
+  }
+`;
+
+const TableCellFlex = styled(TableCell)`
+  display: flex;
+  align-items: center;
+  gap: 8px;
+`;
+
+const StatusCell = styled(TableCell)`
+  padding: 6px 12px;
+`;
+
+const ActionsCell = styled(TableCell)`
+  text-align: right;
+  width: 50px;
+  white-space: nowrap;
+  padding: 4px 6px;
+`;
+
+const EmptyTableMessage = styled.div`
+  text-align: center;
+  padding: 12px;
+  background-color: #f8fafc;
+  color: #94a3b8;
+  border: 1px solid #e2e8f0;
+  border-radius: 4px;
+  margin-top: 12px;
+  font-size: 11px;
+`;
 
 export default ManageOrganization;

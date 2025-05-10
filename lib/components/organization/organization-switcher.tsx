@@ -1,7 +1,7 @@
 "use client";
 
 import React, { useState, useRef, useEffect, useMemo } from "react";
-import styled, { css } from "styled-components";
+import styled from "styled-components";
 import {
   Check,
   ChevronsUpDown,
@@ -20,6 +20,7 @@ import { useDeployment, useSession } from "@/hooks";
 import { Workspace } from "@/types/organization";
 import CreateOrganizationDialog from "./create-organization-dialog";
 import { ManageOrganizationDialog } from "./manage-organization-dialog";
+import { CreateWorkspaceDialog } from "../workspace/create-workspace-dialog";
 import { useDialog } from "../utility/use-dialog";
 
 const Container = styled.div`
@@ -185,10 +186,9 @@ const IconContainer = styled.div`
 
 const WorkspaceIcon = styled.div`
   color: #71717a;
-  margin-right: 8px;
 `;
 
-const ActionIconContainer = styled.div`
+const ActionIconContainer = styled.div<{ $destructive?: boolean }>`
   display: flex;
   align-items: center;
   justify-content: center;
@@ -196,7 +196,7 @@ const ActionIconContainer = styled.div`
   height: 20px;
   border-radius: 50%;
   background: #f4f4f5;
-  color: #71717a;
+  color: ${({ $destructive }) => ($destructive ? "#ff4d4f" : "#71717a")};
   margin-right: 6px;
 `;
 
@@ -221,149 +221,27 @@ const Spinner = styled.span`
   }
 `;
 
-// Modal Components
-const ModalOverlay = styled.div<{ isOpen: boolean }>`
-  position: fixed;
-  top: 0;
-  left: 0;
-  right: 0;
-  bottom: 0;
-  background: rgba(0, 0, 0, 0.5);
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  z-index: 100;
-  opacity: ${(props) => (props.isOpen ? 1 : 0)};
-  pointer-events: ${(props) => (props.isOpen ? "auto" : "none")};
-  transition: opacity 0.2s ease;
-  backdrop-filter: blur(4px);
-`;
-
-const ModalContent = styled.div`
-  background: white;
-  border-radius: 8px;
-  width: 100%;
-  max-width: 425px;
-  box-shadow:
-    0 20px 25px -5px rgba(0, 0, 0, 0.1),
-    0 10px 10px -5px rgba(0, 0, 0, 0.04);
-  overflow: hidden;
-`;
-
-const ModalHeader = styled.div`
-  padding: 16px 24px;
-  border-bottom: 1px solid #f4f4f5;
-`;
-
-const ModalTitle = styled.h3`
-  margin: 0;
-  font-size: 18px;
-  font-weight: 600;
-`;
-
-const ModalDescription = styled.p`
-  margin: 4px 0 0;
-  font-size: 14px;
-  color: #71717a;
-`;
-
-const ModalBody = styled.div`
-  padding: 16px 24px;
-`;
-
-const ModalFooter = styled.div`
-  padding: 16px 24px;
-  border-top: 1px solid #f4f4f5;
-  display: flex;
-  justify-content: flex-end;
-  gap: 8px;
-`;
-
-const FormGroup = styled.div`
-  margin-bottom: 16px;
-`;
-
-const Label = styled.label`
-  display: block;
-  margin-bottom: 8px;
-  font-size: 14px;
-  font-weight: 500;
-`;
-
-const Input = styled.input`
-  width: 100%;
-  padding: 8px 12px;
-  border: 1px solid #e4e4e7;
-  border-radius: 6px;
-  font-size: 14px;
-  outline: none;
-
-  &:focus {
-    border-color: #8b5cf6;
-    box-shadow: 0 0 0 2px rgba(139, 92, 246, 0.2);
-  }
-`;
-
-const Button = styled.button<{ variant?: "primary" | "outline" }>`
-  padding: 8px 16px;
-  border-radius: 6px;
-  font-size: 14px;
-  font-weight: 500;
-  cursor: pointer;
-  transition: all 0.2s ease;
-
-  ${(props) =>
-    props.variant === "primary" &&
-    css`
-      background: #8b5cf6;
-      color: white;
-      border: none;
-
-      &:hover {
-        background: #7c3aed;
-      }
-    `}
-
-  ${(props) =>
-    props.variant === "outline" &&
-    css`
-      background: transparent;
-      border: 1px solid #e4e4e7;
-      color: #18181b;
-
-      &:hover {
-        background: #f4f4f5;
-      }
-    `}
-
-  &:disabled {
-    cursor: not-allowed;
-    opacity: 0.7;
-  }
-`;
-
 interface EnhancedWorkspace extends Workspace {
-  organizationId: string;
+  organization_id: string;
 }
 
 interface EnhancedOrganization {
   id: string;
   name: string;
-  imageUrl?: string;
+  image_url?: string;
   workspaces?: EnhancedWorkspace[];
   personal?: boolean;
 }
 
 export const OrganizationSwitcher = () => {
   const [open, setOpen] = useState(false);
-  const [showNewWorkspaceDialog, setShowNewWorkspaceDialog] = useState(false);
   const [searchQuery, setSearchQuery] = useState("");
-  const [newWorkspaceName, setNewWorkspaceName] = useState("");
   const [isSwitching, setIsSwitching] = useState(false);
   const dropdownRef = useRef<HTMLDivElement>(null);
 
   const createOrgDialog = useDialog(false);
   const manageOrgDialog = useDialog(false);
+  const createWorkspaceDialog = useDialog(false);
 
   const {
     organizations,
@@ -371,8 +249,11 @@ export const OrganizationSwitcher = () => {
     refetch: refetchOrganizations,
   } = useOrganizationList();
   const { activeOrganization: selectedOrganization } = useActiveOrganization();
-  const { workspaceMemberships, loading: workspaceMembershipsLoading } =
-    useWorkspaceMemberships();
+  const {
+    workspaceMemberships,
+    loading: workspaceMembershipsLoading,
+    refetch: refetchWorkspaceMemberships,
+  } = useWorkspaceMemberships();
   const {
     session,
     loading: sessionLoading,
@@ -391,7 +272,7 @@ export const OrganizationSwitcher = () => {
     const personalOrg: EnhancedOrganization = {
       id: session?.active_signin?.user?.id ?? "",
       name: "Personal Account",
-      imageUrl: session?.active_signin?.user?.profile_picture_url,
+      image_url: session?.active_signin?.user?.profile_picture_url,
       personal: true,
     };
 
@@ -407,7 +288,7 @@ export const OrganizationSwitcher = () => {
 
             const enhancedWorkspace: EnhancedWorkspace = {
               ...membership.workspace,
-              organizationId: membership.organization_id,
+              organization_id: membership.organization_id,
             };
 
             acc[membership.organization_id].push(enhancedWorkspace);
@@ -421,7 +302,7 @@ export const OrganizationSwitcher = () => {
       orgs.push({
         id: org.id,
         name: org.name,
-        imageUrl: org.image_url,
+        image_url: org.image_url,
         workspaces: workspacesEnabled
           ? workspacesByOrg[org.id] || []
           : undefined,
@@ -442,7 +323,7 @@ export const OrganizationSwitcher = () => {
       selectedOrg = {
         id: selectedOrganization?.id ?? "",
         name: selectedOrganization?.name ?? "",
-        imageUrl: selectedOrganization?.image_url ?? "",
+        image_url: selectedOrganization?.image_url ?? "",
         workspaces: workspacesEnabled
           ? workspacesByOrg[selectedOrganization?.id ?? ""] || []
           : undefined,
@@ -495,16 +376,12 @@ export const OrganizationSwitcher = () => {
     });
   }, [dropdownOrgList, searchQuery, workspacesEnabled]);
 
-  const handleCreateWorkspace = () => {
-    console.log(
-      `Creating new workspace: ${newWorkspaceName} in org: ${selectedOrg.name}`,
-    );
-    setNewWorkspaceName("");
-    setShowNewWorkspaceDialog(false);
-  };
-
   const handleOrganizationCreated = () => {
     refetchOrganizations();
+  };
+
+  const handleWorkspaceCreated = () => {
+    refetchWorkspaceMemberships();
   };
 
   if (organizationLoading || sessionLoading || workspaceMembershipsLoading) {
@@ -539,9 +416,9 @@ export const OrganizationSwitcher = () => {
                 <AvatarFallback style={{ background: "#e4e4e7" }}>
                   <Spinner />
                 </AvatarFallback>
-              ) : selectedOrg.imageUrl ? (
+              ) : selectedOrg.image_url ? (
                 <AvatarImage
-                  src={selectedOrg.imageUrl}
+                  src={selectedOrg.image_url}
                   alt={selectedOrg.name}
                 />
               ) : (
@@ -575,109 +452,120 @@ export const OrganizationSwitcher = () => {
             onChange={(e) => setSearchQuery(e.target.value)}
           />
 
-          {filteredOrganizations.length === 0 && (
-            <MenuItem>
-              No organization{workspacesEnabled ? " or workspace" : ""} found.
-            </MenuItem>
-          )}
+          <div style={{ maxHeight: "360px", overflowY: "auto" }}>
+            {filteredOrganizations.length === 0 && (
+              <MenuItem>
+                No organization{workspacesEnabled ? " or workspace" : ""} found.
+              </MenuItem>
+            )}
 
-          {workspacesEnabled
-            ? filteredOrganizations.map((org) => (
-                <React.Fragment key={org.id}>
-                  <GroupHeading>{org.name}</GroupHeading>
-                  <MenuItem
-                    $isActive={selectedOrg.id === org.id && !selectedWorkspace}
-                    onClick={() => {
-                      handleSwitchOrganization(
-                        org.personal ? undefined : org.id,
-                      );
-                    }}
-                    disabled={isSwitching}
-                  >
-                    <FlexContainer>
-                      {org.imageUrl ? (
-                        <AvatarImage src={org.imageUrl} alt={org.name} />
-                      ) : (
-                        <IconContainer>
-                          <Building size={14} />
-                        </IconContainer>
-                      )}
-                      <span style={{ marginTop: "-2px" }}>{org.name}</span>
-                    </FlexContainer>
-                    {selectedOrg.id === org.id && !selectedWorkspace && (
-                      <Check size={16} color="#8b5cf6" />
-                    )}
-                  </MenuItem>
-
-                  {org.workspaces?.map((workspace) => (
-                    <WorkspaceMenuItem
-                      key={workspace.id}
-                      $isActive={selectedWorkspace?.id === workspace.id}
+            {workspacesEnabled
+              ? filteredOrganizations.map((org, index) => (
+                  <React.Fragment key={org.id}>
+                    <GroupHeading>{org.name}</GroupHeading>
+                    <MenuItem
+                      $isActive={
+                        selectedOrg.id === org.id && !selectedWorkspace
+                      }
                       onClick={() => {
-                        handleSwitchWorkspace(workspace.id);
+                        handleSwitchOrganization(
+                          org.personal ? undefined : org.id,
+                        );
                       }}
                       disabled={isSwitching}
                     >
                       <FlexContainer>
-                        <WorkspaceIcon>
-                          <FolderKanban size={14} />
-                        </WorkspaceIcon>
-                        <span>{workspace.name}</span>
+                        {org.image_url ? (
+                          <AvatarImage src={org.image_url} alt={org.name} />
+                        ) : (
+                          <IconContainer>
+                            <Building size={14} />
+                          </IconContainer>
+                        )}
+                        <span style={{ marginTop: "-2px" }}>{org.name}</span>
                       </FlexContainer>
-                      {selectedWorkspace?.id === workspace.id && (
+                      {selectedOrg.id === org.id && !selectedWorkspace && (
                         <Check size={16} color="#8b5cf6" />
                       )}
-                    </WorkspaceMenuItem>
-                  ))}
+                    </MenuItem>
 
-                  {!org.personal && (
-                    <WorkspaceMenuItem
+                    {org.workspaces?.map((workspace) => (
+                      <WorkspaceMenuItem
+                        key={workspace.id}
+                        $isActive={selectedWorkspace?.id === workspace.id}
+                        onClick={() => {
+                          handleSwitchWorkspace(workspace.id);
+                        }}
+                        disabled={isSwitching}
+                      >
+                        <FlexContainer>
+                          {workspace.image_url ? (
+                            <AvatarImage
+                              style={{ width: 20, height: 20 }}
+                              src={workspace.image_url}
+                              alt={workspace.name}
+                            />
+                          ) : (
+                            <FolderKanban size={20} color="#8b5cf6" />
+                          )}
+                          <span>{workspace.name}</span>
+                        </FlexContainer>
+                        {selectedWorkspace?.id === workspace.id && (
+                          <Check size={16} color="#8b5cf6" />
+                        )}
+                      </WorkspaceMenuItem>
+                    ))}
+
+                    {!org.personal && (
+                      <WorkspaceMenuItem
+                        onClick={() => {
+                          createWorkspaceDialog.open();
+                        }}
+                        disabled={isSwitching}
+                      >
+                        <FlexContainer>
+                          <WorkspaceIcon>
+                            <PlusCircle size={14} />
+                          </WorkspaceIcon>
+                          <SubdueText>Add Workspace</SubdueText>
+                        </FlexContainer>
+                      </WorkspaceMenuItem>
+                    )}
+                    {index != filteredOrganizations.length - 1 && <Separator />}
+                  </React.Fragment>
+                ))
+              : filteredOrganizations.map((org, index) => (
+                  <React.Fragment key={org.id}>
+                    <MenuItem
+                      key={org.id}
+                      $isActive={selectedOrg.id === org.id}
                       onClick={() => {
-                        setShowNewWorkspaceDialog(true);
+                        handleSwitchOrganization(
+                          org.personal ? undefined : org.id,
+                        );
                       }}
                       disabled={isSwitching}
                     >
                       <FlexContainer>
-                        <WorkspaceIcon>
-                          <PlusCircle size={14} />
-                        </WorkspaceIcon>
-                        <SubdueText>Add Workspace</SubdueText>
+                        {org.image_url ? (
+                          <AvatarImage src={org.image_url} alt={org.name} />
+                        ) : (
+                          <IconContainer>
+                            <Building size={14} />
+                          </IconContainer>
+                        )}
+                        <span style={{ marginTop: "-2px" }}>{org.name}</span>
                       </FlexContainer>
-                    </WorkspaceMenuItem>
-                  )}
-
-                  <Separator />
-                </React.Fragment>
-              ))
-            : filteredOrganizations.map((org, index) => (
-                <React.Fragment key={org.id}>
-                  <MenuItem
-                    key={org.id}
-                    $isActive={selectedOrg.id === org.id}
-                    onClick={() => {
-                      handleSwitchOrganization(
-                        org.personal ? undefined : org.id,
-                      );
-                    }}
-                    disabled={isSwitching}
-                  >
-                    <FlexContainer>
-                      {org.imageUrl ? (
-                        <AvatarImage src={org.imageUrl} alt={org.name} />
-                      ) : (
-                        <IconContainer>
-                          <Building size={14} />
-                        </IconContainer>
+                      {selectedOrg.id === org.id && (
+                        <Check size={16} color="#8b5cf6" />
                       )}
-                      <span style={{ marginTop: "-2px" }}>{org.name}</span>
-                    </FlexContainer>
-                    {selectedOrg.id === org.id && (
-                      <Check size={16} color="#8b5cf6" />
-                    )}
-                  </MenuItem>
-                  {index === filteredOrganizations.length - 1 && <Separator />}
-                </React.Fragment>
-              ))}
+                    </MenuItem>
+                    {index != filteredOrganizations.length - 1 && <Separator />}
+                  </React.Fragment>
+                ))}
+          </div>
+
+          <Separator />
 
           <MenuItem
             onClick={() => createOrgDialog.open()}
@@ -692,62 +580,33 @@ export const OrganizationSwitcher = () => {
           </MenuItem>
 
           {!selectedOrg.personal && (
-            <MenuItem
-              onClick={() => {
-                manageOrgDialog.open();
-                setOpen(false);
-              }}
-              disabled={isSwitching}
-            >
-              <FlexContainer>
-                <ActionIconContainer>
-                  <Settings size={14} />
-                </ActionIconContainer>
-                <span>Manage Organizations</span>
-              </FlexContainer>
-            </MenuItem>
+            <>
+              <MenuItem
+                onClick={() => {
+                  manageOrgDialog.open();
+                  setOpen(false);
+                }}
+                disabled={isSwitching}
+              >
+                <FlexContainer>
+                  <ActionIconContainer>
+                    <Settings size={14} />
+                  </ActionIconContainer>
+                  <span>Manage Organizations</span>
+                </FlexContainer>
+              </MenuItem>
+            </>
           )}
         </Dropdown>
 
-        {/* New Workspace Dialog - only show if workspaces are enabled */}
-        {workspacesEnabled && (
-          <ModalOverlay isOpen={showNewWorkspaceDialog}>
-            <ModalContent>
-              <ModalHeader>
-                <ModalTitle>Create workspace</ModalTitle>
-                <ModalDescription>
-                  Add a new workspace to {selectedOrg.name}.
-                </ModalDescription>
-              </ModalHeader>
-              <ModalBody>
-                <FormGroup>
-                  <Label htmlFor="workspace-name">Workspace name</Label>
-                  <Input
-                    id="workspace-name"
-                    placeholder="Engineering"
-                    value={newWorkspaceName}
-                    onChange={(e) => setNewWorkspaceName(e.target.value)}
-                  />
-                </FormGroup>
-              </ModalBody>
-              <ModalFooter>
-                <Button
-                  variant="outline"
-                  onClick={() => setShowNewWorkspaceDialog(false)}
-                  disabled={isSwitching}
-                >
-                  Cancel
-                </Button>
-                <Button
-                  variant="primary"
-                  onClick={handleCreateWorkspace}
-                  disabled={isSwitching}
-                >
-                  Create
-                </Button>
-              </ModalFooter>
-            </ModalContent>
-          </ModalOverlay>
+        {workspacesEnabled && selectedOrg && !selectedOrg.personal && (
+          <CreateWorkspaceDialog
+            isOpen={createWorkspaceDialog.isOpen}
+            onClose={createWorkspaceDialog.close}
+            onCreated={handleWorkspaceCreated}
+            organizationId={selectedOrg.id}
+            organizationName={selectedOrg.name}
+          />
         )}
 
         <CreateOrganizationDialog
