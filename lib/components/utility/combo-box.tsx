@@ -121,7 +121,7 @@ export interface ComboBoxGroup {
 
 interface ComboBoxProps {
   options: ComboBoxOption[] | ComboBoxGroup[];
-  value?: string;
+  value?: string | null;
   onChange: (value: string) => void;
   placeholder?: string;
   disabled?: boolean;
@@ -163,16 +163,16 @@ export const ComboBox: React.FC<ComboBoxProps> = ({
   const filteredOptions = searchQuery
     ? isGrouped
       ? (options as ComboBoxGroup[])
-          .map((group) => ({
-            ...group,
-            options: group.options.filter((option) =>
-              option.label.toLowerCase().includes(searchQuery.toLowerCase())
-            ),
-          }))
-          .filter((group) => group.options.length > 0)
+        .map((group) => ({
+          ...group,
+          options: group.options.filter((option) =>
+            option.label.toLowerCase().includes(searchQuery.toLowerCase())
+          ),
+        }))
+        .filter((group) => group.options.length > 0)
       : (options as ComboBoxOption[]).filter((option) =>
-          option.label.toLowerCase().includes(searchQuery.toLowerCase())
-        )
+        option.label.toLowerCase().includes(searchQuery.toLowerCase())
+      )
     : options;
 
   const handleOptionClick = (
@@ -354,16 +354,16 @@ export const ComboBoxMulti: React.FC<ComboBoxMultiProps> = ({
   const filteredOptions = searchQuery
     ? isGrouped
       ? (options as ComboBoxGroup[])
-          .map((group) => ({
-            ...group,
-            options: group.options.filter((option) =>
-              option.label.toLowerCase().includes(searchQuery.toLowerCase())
-            ),
-          }))
-          .filter((group) => group.options.length > 0)
+        .map((group) => ({
+          ...group,
+          options: group.options.filter((option) =>
+            option.label.toLowerCase().includes(searchQuery.toLowerCase())
+          ),
+        }))
+        .filter((group) => group.options.length > 0)
       : (options as ComboBoxOption[]).filter((option) =>
-          option.label.toLowerCase().includes(searchQuery.toLowerCase())
-        )
+        option.label.toLowerCase().includes(searchQuery.toLowerCase())
+      )
     : options;
 
   const handleOptionClick = (

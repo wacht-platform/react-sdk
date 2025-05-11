@@ -24,11 +24,11 @@ export const useOrganizationList = () => {
       const response = await responseMapper<OrganizationRole[]>(
         await client(`/organizations/${id}/roles`, {
           method: "GET",
-        })
+        }),
       );
       return response.data;
     },
-    [client]
+    [client],
   );
 
   const getOrganizationMembers = useCallback(
@@ -36,11 +36,11 @@ export const useOrganizationList = () => {
       const response = await responseMapper<OrganizationMembership[]>(
         await client(`/organizations/${id}/members`, {
           method: "GET",
-        })
+        }),
       );
       return response.data;
     },
-    [client]
+    [client],
   );
 
   const getOrganizationInvitations = useCallback(
@@ -48,11 +48,11 @@ export const useOrganizationList = () => {
       const response = await responseMapper<OrganizationInvitation[]>(
         await client(`/organizations/${id}/invitations`, {
           method: "GET",
-        })
+        }),
       );
       return response.data;
     },
-    [client]
+    [client],
   );
 
   const getOrganizationDomains = useCallback(
@@ -60,11 +60,11 @@ export const useOrganizationList = () => {
       const response = await responseMapper<OrganizationDomain[]>(
         await client(`/organizations/${id}/domains`, {
           method: "GET",
-        })
+        }),
       );
       return response.data;
     },
-    [client]
+    [client],
   );
 
   const removeOrganizationMember = useCallback(
@@ -74,7 +74,7 @@ export const useOrganizationList = () => {
       });
       await refetch();
     },
-    [refetch, client]
+    [refetch, client],
   );
 
   const createOrganization = useCallback(
@@ -91,14 +91,18 @@ export const useOrganizationList = () => {
         await client("/organizations", {
           method: "POST",
           body: formData,
-        })
+        }),
       );
       await refetch();
       await refetchSession();
       return response;
     },
-    [refetchSession, client]
+    [refetchSession, client],
   );
+
+  // const updateOrganization = useCallback(
+  //   async ()
+  // )
 
   const addOrganizationDomain = useCallback(
     async (id: string, fqdn: string) => {
@@ -106,12 +110,12 @@ export const useOrganizationList = () => {
         await client(`/organizations/${id}/domains`, {
           method: "POST",
           body: JSON.stringify({ domain: fqdn }),
-        })
+        }),
       );
 
       return response;
     },
-    [client]
+    [client],
   );
 
   const verifyOrganizationDomain = useCallback(
@@ -119,12 +123,12 @@ export const useOrganizationList = () => {
       const response = await responseMapper<OrganizationDomain>(
         await client(`/organizations/${id}/domains/${domainId}/verify`, {
           method: "POST",
-        })
+        }),
       );
 
       return response;
     },
-    [client]
+    [client],
   );
 
   const removeOrganizationDomain = useCallback(
@@ -132,12 +136,12 @@ export const useOrganizationList = () => {
       const response = await responseMapper<OrganizationDomain>(
         await client(`/organizations/${id}/domains/${domainId}`, {
           method: "DELETE",
-        })
+        }),
       );
 
       return response;
     },
-    [client]
+    [client],
   );
 
   const leaveOrganization = useCallback(
@@ -145,11 +149,11 @@ export const useOrganizationList = () => {
       const response = await responseMapper<void>(
         await client(`/organizations/${id}/leave`, {
           method: "DELETE",
-        })
+        }),
       );
       return response.data;
     },
-    [client]
+    [client],
   );
 
   const addRoleToOrganizationMember = useCallback(
@@ -159,12 +163,12 @@ export const useOrganizationList = () => {
           `/organizations/${organizationId}/members/${memberId}/roles/${roleId}`,
           {
             method: "PUT",
-          }
-        )
+          },
+        ),
       );
       return response.data;
     },
-    [client]
+    [client],
   );
 
   const removeRoleFromOrganizationMember = useCallback(
@@ -174,12 +178,12 @@ export const useOrganizationList = () => {
           `/organizations/${organizationId}/members/${memberId}/roles/${roleId}`,
           {
             method: "DELETE",
-          }
-        )
+          },
+        ),
       );
       return response.data;
     },
-    [client]
+    [client],
   );
 
   const inviteOrganizationMember = useCallback(
@@ -188,7 +192,7 @@ export const useOrganizationList = () => {
       email: string,
       roleId?: string,
       workspaceId?: string,
-      workspaceRoleId?: string
+      workspaceRoleId?: string,
     ) => {
       const response = await responseMapper<OrganizationInvitation>(
         await client(`/organizations/${organizationId}/invitations`, {
@@ -199,11 +203,11 @@ export const useOrganizationList = () => {
             workspace_id: workspaceId,
             workspace_role_id: workspaceRoleId,
           }),
-        })
+        }),
       );
       return response.data;
     },
-    [client]
+    [client],
   );
 
   const discardOrganizationInvitation = useCallback(
@@ -213,17 +217,17 @@ export const useOrganizationList = () => {
           `/organizations/${organizationId}/invitations/${invitationId}`,
           {
             method: "DELETE",
-          }
-        )
+          },
+        ),
       );
       return response.data;
     },
-    [client]
+    [client],
   );
 
   const organizations = useMemo(() => {
     return organizationMemberships?.map(
-      (membership) => membership.organization
+      (membership) => membership.organization,
     );
   }, [organizationMemberships]);
 
@@ -279,7 +283,7 @@ export const useActiveOrganization = () => {
     return (
       organizations?.find(
         (organization) =>
-          organization.id === session?.active_signin?.active_organization_id
+          organization.id === session?.active_signin?.active_organization_id,
       ) || null
     );
   }, [organizations, session]);
@@ -301,11 +305,11 @@ export const useActiveOrganization = () => {
       if (!activeOrganization) return [];
       const data = await removeOrganizationMember(
         memberId,
-        activeOrganization.id
+        activeOrganization.id,
       );
       return data;
     },
-    [activeOrganization, removeOrganizationMember]
+    [activeOrganization, removeOrganizationMember],
   );
 
   const getCurrentOrganizationDomains = useCallback(async () => {
@@ -320,7 +324,7 @@ export const useActiveOrganization = () => {
       const data = await addOrganizationDomain(activeOrganization.id, domain);
       return data;
     },
-    [activeOrganization, addOrganizationDomain]
+    [activeOrganization, addOrganizationDomain],
   );
 
   const verifyActiveOrganizationDomain = useCallback(
@@ -328,11 +332,11 @@ export const useActiveOrganization = () => {
       if (!activeOrganization) return;
       const data = await verifyOrganizationDomain(
         activeOrganization.id,
-        domainId
+        domainId,
       );
       return data;
     },
-    [activeOrganization, verifyOrganizationDomain]
+    [activeOrganization, verifyOrganizationDomain],
   );
 
   const removeActiveOrganizationDomain = useCallback(
@@ -341,11 +345,11 @@ export const useActiveOrganization = () => {
 
       const data = await removeOrganizationDomain(
         activeOrganization.id,
-        domainId
+        domainId,
       );
       return data;
     },
-    [activeOrganization, removeOrganizationDomain]
+    [activeOrganization, removeOrganizationDomain],
   );
 
   const addRoleToCurrentOrganizationMember = useCallback(
@@ -354,11 +358,11 @@ export const useActiveOrganization = () => {
       const data = await addRoleToOrganizationMember(
         activeOrganization.id,
         memberId,
-        roleId
+        roleId,
       );
       return data;
     },
-    [activeOrganization, addRoleToOrganizationMember]
+    [activeOrganization, addRoleToOrganizationMember],
   );
 
   const removeRoleFromCurrentOrganizationMember = useCallback(
@@ -367,11 +371,11 @@ export const useActiveOrganization = () => {
       const data = await removeRoleFromOrganizationMember(
         activeOrganization.id,
         memberId,
-        roleId
+        roleId,
       );
       return data;
     },
-    [activeOrganization, removeRoleFromOrganizationMember]
+    [activeOrganization, removeRoleFromOrganizationMember],
   );
 
   const inviteMemberToOrganization = useCallback(
@@ -379,7 +383,7 @@ export const useActiveOrganization = () => {
       email: string,
       roleId?: string,
       workspaceId?: string,
-      workspaceRoleId?: string
+      workspaceRoleId?: string,
     ) => {
       if (!activeOrganization) return;
       const data = await inviteOrganizationMember(
@@ -387,11 +391,11 @@ export const useActiveOrganization = () => {
         email,
         roleId,
         workspaceId,
-        workspaceRoleId
+        workspaceRoleId,
       );
       return data;
     },
-    [activeOrganization, inviteOrganizationMember]
+    [activeOrganization, inviteOrganizationMember],
   );
 
   const discardInvitationToOrganization = useCallback(
@@ -399,11 +403,11 @@ export const useActiveOrganization = () => {
       if (!activeOrganization) return;
       const data = await discardOrganizationInvitation(
         activeOrganization.id,
-        invitationId
+        invitationId,
       );
       return data;
     },
-    [activeOrganization, discardOrganizationInvitation]
+    [activeOrganization, discardOrganizationInvitation],
   );
 
   const leaveCurrentOrganization = useCallback(async () => {
@@ -478,7 +482,7 @@ export const useOrganizationMemberships = () => {
       revalidateOnReconnect: false,
       revalidateIfStale: false,
       dedupingInterval: 5000,
-    }
+    },
   );
 
   return {

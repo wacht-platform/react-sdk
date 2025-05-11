@@ -1,4 +1,4 @@
-import React, { createContext, useContext, useState } from "react";
+import React, { createContext, useContext, useMemo, useState } from "react";
 import styled from "styled-components";
 import {
   Building,
@@ -39,7 +39,9 @@ import {
   FormGroup,
   Label,
   DropdownDivider,
+  Form,
 } from "@/components/utility";
+import { useWorkspaceList } from "@/hooks/use-workspace";
 
 interface BillingPlan {
   id: string;
@@ -247,13 +249,7 @@ const OrganizationManagementSection = () => {
       </SectionTitle>
       <ProfileSection>
         <ProfileHeader onClick={() => setScreen("general")}>
-          <Avatar
-            src={
-              organization.image_url ||
-              "https://images.unsplash.com/photo-1560179707-f14e90ef3623?ixlib=rb-1.2.1&auto=format&fit=crop&w=300&h=300&q=80"
-            }
-            alt="Organization Logo"
-          />
+          <Avatar src={organization.image_url} alt="Organization Logo" />
           <ProfileName>
             <Name>{organization.name}</Name>
           </ProfileName>
@@ -380,14 +376,14 @@ const SectionHeader = ({
         style={{
           display: "flex",
           alignItems: "center",
-          gap: "4px",
+          gap: "8px",
           fontSize: 16,
           cursor: "pointer",
         }}
         onClick={() => setScreen(null)}
       >
         <ArrowLeft size={16} />
-        <SectionTitle>{title}</SectionTitle>
+        <SectionTitle style={{ fontSize: 14 }}>{title}</SectionTitle>
       </div>
 
       {actionLabel && onAction && (
@@ -525,7 +521,16 @@ const GeneralSettingsSection = () => {
         </div>
       )}
 
-      <form onSubmit={handleSubmit} style={{ width: "100%" }}>
+      <Form
+        onSubmit={handleSubmit}
+        style={{
+          width: "100%",
+          gap: "16px",
+          paddingBottom: "32px",
+          borderBottom: "1px solid #e2e8f0",
+          marginBottom: "16px",
+        }}
+      >
         <div
           style={{
             display: "flex",
@@ -534,7 +539,7 @@ const GeneralSettingsSection = () => {
             textAlign: "center",
           }}
         >
-          <div style={{ position: "relative", marginBottom: "16px" }}>
+          <div style={{ position: "relative" }}>
             <button
               type="button"
               onClick={triggerFileInput}
@@ -574,49 +579,45 @@ const GeneralSettingsSection = () => {
           </div>
         </div>
 
-        <div>
-          <FormGroup>
-            <Label>Organization Name</Label>
-            <Input
-              id="name"
-              type="text"
-              value={name}
-              onChange={(e) => setName(e.target.value)}
-              placeholder="Organization Name"
-              style={{
-                width: "100%",
-                padding: "10px 12px",
-                borderRadius: "6px",
-                fontSize: "14px",
-                backgroundColor: "#fff",
-              }}
-              required
-            />
-          </FormGroup>
-        </div>
+        <FormGroup>
+          <Label>Organization Name</Label>
+          <Input
+            id="name"
+            type="text"
+            value={name}
+            onChange={(e) => setName(e.target.value)}
+            placeholder="Organization Name"
+            style={{
+              width: "100%",
+              padding: "10px 12px",
+              borderRadius: "6px",
+              fontSize: "14px",
+              backgroundColor: "#fff",
+            }}
+            required
+          />
+        </FormGroup>
 
-        <div style={{ marginTop: "16px" }}>
-          <FormGroup>
-            <Label>Description</Label>
-            <Input
-              id="description"
-              as="textarea"
-              value={description}
-              onChange={(e) => setDescription(e.target.value)}
-              placeholder="Enter organization description"
-              style={{
-                width: "100%",
-                padding: "10px 12px",
-                borderRadius: "6px",
-                fontSize: "14px",
-                backgroundColor: "#fff",
-                minHeight: "100px",
-                resize: "vertical",
-              }}
-            />
-          </FormGroup>
-        </div>
-      </form>
+        <FormGroup>
+          <Label>Description</Label>
+          <Input
+            id="description"
+            as="textarea"
+            value={description}
+            onChange={(e) => setDescription(e.target.value)}
+            placeholder="Enter organization description"
+            style={{
+              width: "100%",
+              padding: "10px 12px",
+              borderRadius: "6px",
+              fontSize: "14px",
+              backgroundColor: "#fff",
+              minHeight: "100px",
+              resize: "vertical",
+            }}
+          />
+        </FormGroup>
+      </Form>
 
       <div>
         <h3
@@ -657,11 +658,11 @@ const GeneralSettingsSection = () => {
                   color: "#b91c1c",
                 }}
               >
-                Delete Organization
+                Leave Organization
               </div>
               <div style={{ fontSize: "14px", color: "#64748b" }}>
-                This action cannot be undone. All data will be permanently
-                deleted.
+                Your membership will be revoked and you will not be able to join
+                back unless you are invited by an admin
               </div>
             </div>
             <button
@@ -1725,6 +1726,7 @@ const BillingSection = () => {
 const SecuritySection = () => {
   const { activeOrganization: selectedOrganization, loading } =
     useActiveOrganization();
+  const { workspaces: workspaceList } = useWorkspaceList();
 
   const [security, setSecurity] = useState({
     mfa_required: false,
@@ -1737,12 +1739,12 @@ const SecuritySection = () => {
   const [_, setIsSubmitting] = useState(false);
   const [showDeleteConfirm, setShowDeleteConfirm] = useState(false);
 
-  const workspaces = [
-    { id: "ws1", name: "Engineering" },
-    { id: "ws2", name: "Marketing" },
-    { id: "ws3", name: "Sales" },
-    { id: "ws4", name: "Product" },
-  ];
+  const workspaces = useMemo(() => {
+    const currentOrgWorkspaces = workspaceList.filter(
+      (workspace) => workspace.organization.id === selectedOrganization?.id,
+    );
+    return currentOrgWorkspaces;
+  }, [workspaceList, selectedOrganization?.id]);
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -1826,7 +1828,7 @@ const SecuritySection = () => {
         </div>
       )}
 
-      <form
+      <Form
         onSubmit={handleSubmit}
         style={{
           display: "flex",
@@ -1971,7 +1973,7 @@ const SecuritySection = () => {
             />
           </div>
         </div>
-      </form>
+      </Form>
 
       <div>
         <h3
@@ -2387,6 +2389,8 @@ const SeverityIndicator = ({ severity, style }: SeverityIndicatorProps) => {
 
 const FilterButton = styled(RoleDropdownButton)`
   padding: 8px 12px;
+  gap: 12px;
+  width: fit-content;
 `;
 
 // Define the AuditLogEntry interface (Restored)
@@ -2498,6 +2502,7 @@ const AuditLogsSection = () => {
                 {severityOptions.find((opt) => opt.value === selectedSeverity)
                   ?.label || "Filter by Severity"}
               </span>
+              <ChevronDown size={16} color="#16a34a" />
             </FilterButton>
           </DropdownTrigger>
           <DropdownItems>

@@ -98,3 +98,8 @@ export interface WorkspaceMembership {
   created_at: string;
   updated_at: string;
 }
+
+export interface OrganizationUpdate {
+  image?: File;
+  name?: string;
+}

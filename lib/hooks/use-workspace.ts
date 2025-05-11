@@ -2,13 +2,16 @@ import { Client } from "@/types/client";
 import { useClient } from "./use-client";
 import useSWR from "swr";
 import { responseMapper } from "@/utils/response-mapper";
-import { WorkspaceMembership } from "@/types/organization";
+import {
+  WorkspaceMembership,
+  WorkspaceWithOrganization,
+} from "@/types/organization";
 import { useCallback, useMemo } from "react";
 import { useSession } from "./use-session";
 
 async function fetchWorkspaceMemberships(client: Client) {
   const response = await responseMapper<WorkspaceMembership[]>(
-    await client("/me/workspace-memberships")
+    await client("/me/workspace-memberships"),
   );
   return response.data;
 }
@@ -17,7 +20,7 @@ async function leaveWorkspace(client: Client, workspaceId: string) {
   const response = await responseMapper<void>(
     await client(`/workspace-memberships/${workspaceId}`, {
       method: "DELETE",
-    })
+    }),
   );
   return response.data;
 }
@@ -39,7 +42,7 @@ export const useWorkspaceMemberships = () => {
       revalidateOnReconnect: false,
       revalidateIfStale: false,
       dedupingInterval: 5000,
-    }
+    },
   );
 
   return {
@@ -56,7 +59,10 @@ export const useWorkspaceList = () => {
   const { client } = useClient();
 
   const workspaces = useMemo(() => {
-    return workspaceMemberships?.map((membership) => membership.workspace);
+    return workspaceMemberships?.map((membership) => ({
+      ...membership.workspace,
+      organization: membership.organization,
+    })) as WorkspaceWithOrganization[];
   }, [workspaceMemberships]);
 
   const createWorkspace = useCallback(
@@ -64,7 +70,7 @@ export const useWorkspaceList = () => {
       organizationId: string,
       name: string,
       image?: File,
-      description?: string
+      description?: string,
     ) => {
       const formData = new FormData();
       formData.append("name", name);
@@ -82,7 +88,7 @@ export const useWorkspaceList = () => {
       await refetch();
       return result;
     },
-    [client, refetch]
+    [client, refetch],
   );
 
   const leaveWorkspaceCallback = useCallback(
@@ -91,7 +97,7 @@ export const useWorkspaceList = () => {
       await refetch();
       return result;
     },
-    [client, refetch]
+    [client, refetch],
   );
 
   return {
@@ -122,7 +128,7 @@ export const useActiveWorkspace = () => {
     return (
       workspaces.find(
         (workspace) =>
-          workspace.id === session?.active_signin?.active_workspace_id
+          workspace.id === session?.active_signin?.active_workspace_id,
       ) || null
     );
   }, [workspaces, session]);
