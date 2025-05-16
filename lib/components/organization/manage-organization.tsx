@@ -306,6 +306,23 @@ const OrganizationManagementSection = () => {
         </SectionTitle>
 
         <InfoItem onClick={() => setScreen("security")}>
+          <InfoLabel>Manage Billing</InfoLabel>
+          <InfoContent>
+            <div
+              style={{
+                flex: 1,
+                overflow: "hidden",
+                textOverflow: "ellipsis",
+                whiteSpace: "nowrap",
+              }}
+            >
+              Track usage and manage subscriptions for your organization
+            </div>
+            <ArrowRight size={14} style={{ color: "#64748b" }} />
+          </InfoContent>
+        </InfoItem>
+
+        <InfoItem onClick={() => setScreen("security")}>
           <InfoLabel>Access & Security</InfoLabel>
           <InfoContent>
             <div
