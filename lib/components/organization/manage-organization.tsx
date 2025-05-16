@@ -1,4 +1,10 @@
-import React, { createContext, useContext, useMemo, useState } from "react";
+import React, {
+  useCallback,
+  useEffect,
+  useMemo,
+  useRef,
+  useState,
+} from "react";
 import styled from "styled-components";
 import {
   Building,
@@ -6,9 +12,7 @@ import {
   ArrowRight,
   ArrowLeft,
   AlertTriangle,
-  Plus,
   ChevronDown,
-  ChevronUp,
   MoreVertical,
   Copy,
   ExternalLink,
@@ -16,14 +20,21 @@ import {
   FileText,
   Check,
   Save,
-  UserPlus2,
+  ChevronUp,
+  Info,
+  CircleAlert,
 } from "lucide-react";
 import { useActiveOrganization } from "@/hooks/use-organization";
 import { match } from "ts-pattern";
 import { AddDomainPopover } from "./add-domain-popover";
 import useSWR from "swr";
 import { InviteMemberPopover } from "./invite-member-popover";
-import { OrganizationRole, OrganizationDomain } from "@/types/organization";
+import {
+  OrganizationRole,
+  OrganizationDomain,
+  OrganizationUpdate,
+  OrganizationMembership,
+} from "@/types/organization";
 import { AddRolePopover } from "./add-role-popover";
 import {
   Button,
@@ -42,6 +53,8 @@ import {
   Form,
 } from "@/components/utility";
 import { useWorkspaceList } from "@/hooks/use-workspace";
+import { ConfirmationPopover } from "../utility/confirmation-popover";
+import { ScreenContext, Screen, useScreenContext } from "./context";
 
 interface BillingPlan {
   id: string;
@@ -201,30 +214,10 @@ const HeaderCTAContainer = styled.div`
   gap: 8px;
 `;
 
-type Screen =
-  | "general"
-  | "members"
-  | "domains"
-  | "billing"
-  | "security"
-  | "roles"
-  | "audit-logs"
-  | null;
-
-type ScreenContextType = {
-  screen: Screen;
-  setScreen: React.Dispatch<React.SetStateAction<Screen>>;
-};
-
-const ScreenContext = createContext<ScreenContextType>({
-  screen: null,
-  setScreen: () => {},
-});
-
 const OrganizationManagementSection = () => {
   const { activeOrganization: selectedOrganization, loading } =
     useActiveOrganization();
-  const { setScreen } = useContext(ScreenContext);
+  const { setScreen } = useScreenContext();
 
   if (loading || !selectedOrganization) {
     return (
@@ -361,7 +354,7 @@ const SectionHeader = ({
   onAction?: () => void;
   buttonIcon?: React.ReactNode;
 }) => {
-  const { setScreen } = useContext(ScreenContext);
+  const { setScreen } = useScreenContext();
 
   return (
     <div
@@ -411,8 +404,11 @@ const SectionHeader = ({
 };
 
 const GeneralSettingsSection = () => {
-  const { activeOrganization: selectedOrganization, loading } =
-    useActiveOrganization();
+  const {
+    activeOrganization: selectedOrganization,
+    loading,
+    updateOrganization,
+  } = useActiveOrganization();
   const [name, setName] = useState(selectedOrganization?.name || "");
   const [description, setDescription] = useState(
     selectedOrganization?.description || "",
@@ -421,8 +417,7 @@ const GeneralSettingsSection = () => {
   const [previewUrl, setPreviewUrl] = useState<string | null>(
     selectedOrganization?.image_url || null,
   );
-  const [showDeleteConfirm, setShowDeleteConfirm] = useState(false);
-  const [successMessage, setSuccessMessage] = useState("");
+  const [successMessage] = useState("");
   const [_, setIsSubmitting] = useState(false);
   const fileInputRef = React.useRef<HTMLInputElement>(null);
 
@@ -462,31 +457,25 @@ const GeneralSettingsSection = () => {
     }
   };
 
-  const handleSubmit = async (e: React.FormEvent) => {
-    e.preventDefault();
+  const handleSubmit = async (e?: React.FormEvent) => {
+    e?.preventDefault();
     if (!selectedOrganization) return;
 
     try {
       setIsSubmitting(true);
-
-      // Create form data if we have an image
-      let payload: any = { name, description };
+      const data: OrganizationUpdate = {};
 
       if (image) {
-        const formData = new FormData();
-        formData.append("image", image);
-        formData.append("name", name);
-        formData.append("description", description || "");
-        payload = formData;
+        data.image = image;
+      }
+      if (name) {
+        data.name = name;
+      }
+      if (description) {
+        data.description = description;
       }
 
-      // Mock implementation since updateOrganization doesn't exist
-      console.log("Updating organization", payload);
-      // Simulate API call
-      await new Promise((resolve) => setTimeout(resolve, 1000));
-
-      setSuccessMessage("Organization details updated successfully");
-      setTimeout(() => setSuccessMessage(""), 3000);
+      await updateOrganization?.(data);
     } catch (error) {
       console.error("Failed to update organization", error);
     } finally {
@@ -499,7 +488,7 @@ const GeneralSettingsSection = () => {
       <SectionHeader
         title="Organization Settings"
         actionLabel="Save changes"
-        onAction={console.log}
+        onAction={handleSubmit}
         buttonIcon={<Save size={14} />}
       />
 
@@ -526,9 +515,6 @@ const GeneralSettingsSection = () => {
         style={{
           width: "100%",
           gap: "16px",
-          paddingBottom: "32px",
-          borderBottom: "1px solid #e2e8f0",
-          marginBottom: "16px",
         }}
       >
         <div
@@ -619,125 +605,11 @@ const GeneralSettingsSection = () => {
         </FormGroup>
       </Form>
 
-      <div>
-        <h3
-          style={{
-            fontSize: "16px",
-            fontWeight: 500,
-            color: "#ef4444",
-            marginBottom: "16px",
-            display: "flex",
-            alignItems: "center",
-            gap: "8px",
-          }}
-        >
-          <AlertTriangle size={16} />
-          Danger Zone
-        </h3>
-
-        <div
-          style={{
-            padding: "16px",
-            background: "#fff",
-            borderLeft: "3px solid #ef4444",
-          }}
-        >
-          <div
-            style={{
-              display: "flex",
-              justifyContent: "space-between",
-              alignItems: "center",
-            }}
-          >
-            <div>
-              <div
-                style={{
-                  fontWeight: 500,
-                  marginBottom: "4px",
-                  fontSize: "14px",
-                  color: "#b91c1c",
-                }}
-              >
-                Leave Organization
-              </div>
-              <div style={{ fontSize: "14px", color: "#64748b" }}>
-                Your membership will be revoked and you will not be able to join
-                back unless you are invited by an admin
-              </div>
-            </div>
-            <button
-              type="button"
-              onClick={() => setShowDeleteConfirm(true)}
-              style={{
-                padding: "6px 12px",
-                background: "#fee2e2",
-                color: "#b91c1c",
-                border: "1px solid #fecaca",
-                borderRadius: "4px",
-                fontWeight: 500,
-                fontSize: "14px",
-                cursor: "pointer",
-              }}
-            >
-              Delete
-            </button>
-          </div>
-
-          {showDeleteConfirm && (
-            <div
-              style={{
-                marginTop: "16px",
-                padding: "16px",
-                background: "#fee2e2",
-                borderTop: "1px solid #fecaca",
-              }}
-            >
-              <div style={{ marginBottom: "16px", color: "#b91c1c" }}>
-                Are you sure you want to delete this organization? This action
-                cannot be undone.
-              </div>
-              <div
-                style={{
-                  display: "flex",
-                  gap: "8px",
-                  justifyContent: "flex-end",
-                }}
-              >
-                <button
-                  type="button"
-                  onClick={() => setShowDeleteConfirm(false)}
-                  style={{
-                    padding: "6px 12px",
-                    background: "#fff",
-                    border: "1px solid #e2e8f0",
-                    borderRadius: "4px",
-                    color: "#64748b",
-                    cursor: "pointer",
-                  }}
-                >
-                  Cancel
-                </button>
-                <button
-                  type="button"
-                  onClick={console.log}
-                  style={{
-                    padding: "6px 12px",
-                    background: "#dc2626",
-                    color: "white",
-                    border: "none",
-                    borderRadius: "4px",
-                    fontWeight: 500,
-                    fontSize: "14px",
-                    cursor: "pointer",
-                  }}
-                >
-                  Confirm Delete
-                </button>
-              </div>
-            </div>
-          )}
-        </div>
-      </div>
+      <DeleteAccountAccordion
+        handleDeleteAccount={console.log}
+        title="Leave Organization"
+        description="Leave this orgnization, you will not be able to join back unless invited by an admin"
+      />
     </>
   );
 };
@@ -774,6 +646,11 @@ const IconButton = styled.button`
     background: #f1f5f9;
     color: #1e293b;
   }
+
+  &:disabled {
+    opacity: 0.5;
+    cursor: not-allowed;
+  }
 `;
 
 const DomainsSection = () => {
@@ -781,8 +658,12 @@ const DomainsSection = () => {
     activeOrganization,
     loading,
     getDomains: getOrganizationDomains,
+    removeDomain,
   } = useActiveOrganization();
-
+  const tableRef = useRef<HTMLTableElement | null>(null);
+  const [domainForDeletion, setDomainForDeletion] = useState<string | null>(
+    null,
+  );
   const {
     data: domainsFromAPI = [],
     isLoading,
@@ -828,8 +709,8 @@ const DomainsSection = () => {
     return tempDomains;
   }, [domains, searchQuery]);
 
-  const handleDeleteDomain = async (domainId: string) => {
-    console.log(domainId);
+  const handleDeleteDomain = async (domain: OrganizationDomain) => {
+    await removeDomain(domain);
     mutate();
   };
 
@@ -859,7 +740,12 @@ const DomainsSection = () => {
         <div>
           <Button onClick={() => setIsAddingDomain(true)}>New Domain</Button>
           {isAddingDomain && (
-            <AddDomainPopover onClose={() => setIsAddingDomain(false)} />
+            <AddDomainPopover
+              onClose={() => {
+                setIsAddingDomain(false);
+                mutate();
+              }}
+            />
           )}
         </div>
       </HeaderCTAContainer>
@@ -871,7 +757,7 @@ const DomainsSection = () => {
             : "No domains added"}
         </EmptyTableMessage>
       ) : (
-        <Table>
+        <Table ref={tableRef}>
           <TableHead>
             <TableRow>
               <TableHeader>Domain</TableHeader>
@@ -905,6 +791,13 @@ const DomainsSection = () => {
                   {new Date(domain.created_at).toLocaleDateString()}
                 </TableCell>
                 <ActionsCell>
+                  {domainForDeletion === domain.id && (
+                    <ConfirmationPopover
+                      title="Are you sure you want to delete this domain?"
+                      onConfirm={() => handleDeleteDomain(domain)}
+                      onCancel={() => setDomainForDeletion(null)}
+                    />
+                  )}
                   <Dropdown
                     style={{ marginLeft: "auto" }}
                     open={selectedDomainInAction === domain.id}
@@ -981,8 +874,8 @@ const DomainsSection = () => {
                       <DropdownItem
                         $destructive
                         onClick={() => {
-                          handleDeleteDomain(domain.id);
                           setSelectedDomainAction(null);
+                          setDomainForDeletion(domain.id);
                         }}
                       >
                         <div
@@ -1012,7 +905,6 @@ const RoleDropdownButton = styled.button`
   align-items: center;
   gap: 4px;
   padding: 5px 10px;
-  width: 140px;
   background: #f8fafc;
   justify-content: space-between;
   border: 1px solid #e2e8f0;
@@ -1035,8 +927,8 @@ const MembersSection = () => {
     getMembers,
     // getInvitations,
     getRoles,
-    addRole,
-    removeRole,
+    addMemberRole,
+    removeMemberRole,
   } = useActiveOrganization();
   const [isInviting, setIsInviting] = useState(false);
   const [message, setMessage] = useState<{
@@ -1097,26 +989,7 @@ const MembersSection = () => {
   //   setIsInviting(false);
   //   setTimeout(() => setMessage(null), 3000);
   // };
-  const handleRemoveMember = async (memberId: string) => {
-    if (
-      !activeOrganization ||
-      !confirm("Are you sure you want to remove this member?")
-    )
-      return;
 
-    try {
-      console.log("Removing member", memberId);
-      await new Promise((resolve) => setTimeout(resolve, 1000));
-
-      reloadMembers();
-      setMessage({ text: "Member removed successfully", type: "success" });
-    } catch (error) {
-      console.error("Failed to remove member", error);
-      setMessage({ text: "Failed to remove member", type: "error" });
-    } finally {
-      setTimeout(() => setMessage(null), 3000);
-    }
-  };
   // const handleCancelInvitation = async (invitationId: string) => {
   //   try {
   //     await discardInvitation(invitationId);
@@ -1134,16 +1007,16 @@ const MembersSection = () => {
   // };
 
   const toggleRole = async (
-    memberId: string,
-    roleId: string,
+    member: OrganizationMembership,
+    role: OrganizationRole,
     hasRole: boolean,
   ) => {
     try {
       if (hasRole) {
-        await removeRole(memberId, roleId);
+        await removeMemberRole(member, role);
         setMessage({ text: "Role removed successfully", type: "success" });
       } else {
-        await addRole(memberId, roleId);
+        await addMemberRole(member, role);
         setMessage({ text: "Role added successfully", type: "success" });
       }
       reloadMembers();
@@ -1212,7 +1085,6 @@ const MembersSection = () => {
         />
         <div>
           <Button onClick={() => setIsInviting(true)}>
-            <UserPlus2 size={12} />
             <span>Invite Members</span>
           </Button>
           {isInviting && (
@@ -1235,11 +1107,10 @@ const MembersSection = () => {
             <TableRow>
               <TableHeader>Member</TableHeader>
               <TableHeader>Roles</TableHeader>
-              <TableHeader></TableHeader>
             </TableRow>
           </TableHead>
           <TableBody>
-            {filteredMembers.map((member: any) => (
+            {filteredMembers.map((member) => (
               <TableRow key={member.id}>
                 <TableCellFlex>
                   <div
@@ -1279,7 +1150,6 @@ const MembersSection = () => {
                   <div>
                     <div
                       style={{
-                        fontSize: "12px",
                         fontWeight: 400,
                         color: "#334155",
                       }}
@@ -1297,36 +1167,13 @@ const MembersSection = () => {
                     </div>
                   </div>
                 </TableCellFlex>
-                <TableCell>
-                  <div
-                    style={{
-                      display: "flex",
-                      flexWrap: "wrap",
-                      gap: "4px",
-                    }}
-                  >
-                    {member.roles?.map((role: OrganizationRole) => (
-                      <span
-                        key={role.id}
-                        style={{
-                          padding: "1px 5px",
-                          background: "#f1f5f9",
-                          borderRadius: "10px",
-                          border: "1px solid #e2e8f0",
-                          color: "#64748b",
-                        }}
-                      >
-                        {role.name}
-                      </span>
-                    ))}
-                  </div>
-                </TableCell>
                 <ActionsCell>
                   <div
                     style={{
                       display: "flex",
-                      gap: "8px",
-                      justifyContent: "flex-end",
+                      gap: "10px",
+                      alignItems: "center",
+                      paddingRight: "8px",
                     }}
                   >
                     <Dropdown>
@@ -1346,22 +1193,15 @@ const MembersSection = () => {
                               ? ` +${member.roles.length - 1}`
                               : ""}
                           </span>
-                          {activeMemberRoleDropdown === member.id ? (
-                            <ChevronUp size={14} />
-                          ) : (
-                            <ChevronDown size={14} />
-                          )}
                         </RoleDropdownButton>
                       </DropdownTrigger>
-                      <DropdownItems>
+                      <DropdownItems style={{ right: 40 }}>
                         {roles.map((role) => {
                           const hasRole = memberHasRole(member, role.id);
                           return (
                             <DropdownItem
                               key={role.id}
-                              onClick={() =>
-                                toggleRole(member.id, role.id, hasRole)
-                              }
+                              onClick={() => toggleRole(member, role, hasRole)}
                             >
                               <div
                                 style={{
@@ -1378,22 +1218,7 @@ const MembersSection = () => {
                         })}
                       </DropdownItems>
                     </Dropdown>
-                    <button
-                      onClick={() => handleRemoveMember(member.id)}
-                      style={{
-                        width: "40px",
-                        display: "flex",
-                        alignItems: "center",
-                        justifyContent: "center",
-                        border: "1px solid #e2e8f0",
-                        borderRadius: "6px",
-                        background: "transparent",
-                        cursor: "pointer",
-                        color: "#ef4444",
-                      }}
-                    >
-                      <Trash size={16} />
-                    </button>
+                    <Trash size={16} />
                   </div>
                 </ActionsCell>
               </TableRow>
@@ -1724,7 +1549,7 @@ const BillingSection = () => {
 };
 
 const SecuritySection = () => {
-  const { activeOrganization: selectedOrganization, loading } =
+  const { activeOrganization, loading, updateOrganization } =
     useActiveOrganization();
   const { workspaces: workspaceList } = useWorkspaceList();
 
@@ -1737,32 +1562,44 @@ const SecuritySection = () => {
 
   const [successMessage, setSuccessMessage] = useState("");
   const [_, setIsSubmitting] = useState(false);
-  const [showDeleteConfirm, setShowDeleteConfirm] = useState(false);
 
   const workspaces = useMemo(() => {
     const currentOrgWorkspaces = workspaceList.filter(
-      (workspace) => workspace.organization.id === selectedOrganization?.id,
+      (workspace) => workspace.organization.id === activeOrganization?.id,
     );
     return currentOrgWorkspaces;
-  }, [workspaceList, selectedOrganization?.id]);
+  }, [workspaceList, activeOrganization?.id]);
 
-  const handleSubmit = async (e: React.FormEvent) => {
-    e.preventDefault();
-    if (!selectedOrganization) return;
+  const handleSubmit = async (e?: React.FormEvent) => {
+    e?.preventDefault();
+    if (!activeOrganization) return;
 
     try {
-      setIsSubmitting(true);
-      console.log("Updating security settings:", security);
-      await new Promise((resolve) => setTimeout(resolve, 1000));
+      const data: OrganizationUpdate = {};
 
+      data.enable_ip_restriction = security.ip_restrictions;
+      data.enforce_mfa_setup = security.mfa_required;
+      data.whitelisted_ips = security.allowed_ips?.split("\n");
+      data.auto_assigned_workspace_id = security.default_workspace_id;
+
+      await updateOrganization?.(data);
       setSuccessMessage("Security settings updated successfully");
-      setTimeout(() => setSuccessMessage(""), 3000);
     } catch (error) {
       console.error("Failed to update security settings", error);
     } finally {
       setIsSubmitting(false);
     }
   };
+
+  useEffect(() => {
+    if (!activeOrganization) return;
+    setSecurity({
+      allowed_ips: activeOrganization.whitelisted_ips?.join("\n"),
+      ip_restrictions: activeOrganization.enable_ip_restriction,
+      mfa_required: activeOrganization.enforce_mfa,
+      default_workspace_id: activeOrganization.auto_assigned_workspace_id,
+    });
+  }, [activeOrganization]);
 
   const handleToggleMfa = () => {
     setSecurity((prev) => ({ ...prev, mfa_required: !prev.mfa_required }));
@@ -1775,19 +1612,7 @@ const SecuritySection = () => {
     }));
   };
 
-  const handleDeleteOrganization = async () => {
-    if (!selectedOrganization) return;
-
-    try {
-      console.log("Deleting organization:", selectedOrganization.id);
-      await new Promise((resolve) => setTimeout(resolve, 1000));
-      window.location.href = "/"; // Redirect after deletion
-    } catch (error) {
-      console.error("Failed to delete organization", error);
-    }
-  };
-
-  if (loading || !selectedOrganization) {
+  if (loading || !activeOrganization) {
     return (
       <div
         style={{
@@ -1806,7 +1631,7 @@ const SecuritySection = () => {
       <SectionHeader
         title="Security & Access"
         actionLabel="Save Settings"
-        onAction={console.log}
+        onAction={handleSubmit}
         buttonIcon={<Save size={14} />}
       />
 
@@ -1836,7 +1661,6 @@ const SecuritySection = () => {
           gap: "24px",
           paddingBottom: "32px",
           borderBottom: "1px solid #e2e8f0",
-          marginBottom: "16px",
         }}
       >
         <div
@@ -1902,7 +1726,7 @@ const SecuritySection = () => {
           </div>
 
           {security.ip_restrictions && (
-            <div style={{ marginTop: "16px", marginBottom: "16px" }}>
+            <div style={{ marginTop: "16px" }}>
               <FormGroup>
                 <Label>Allowed IP Addresses</Label>
                 <Input
@@ -1925,7 +1749,6 @@ const SecuritySection = () => {
                   style={{
                     fontSize: "12px",
                     color: "#64748b",
-                    marginTop: "8px",
                   }}
                 >
                   Enter one IP address or CIDR range per line (e.g., 192.168.1.1
@@ -1975,132 +1798,18 @@ const SecuritySection = () => {
         </div>
       </Form>
 
-      <div>
-        <h3
-          style={{
-            fontSize: "16px",
-            fontWeight: 500,
-            color: "#ef4444",
-            marginBottom: "16px",
-            display: "flex",
-            alignItems: "center",
-            gap: "8px",
-          }}
-        >
-          <AlertTriangle size={16} />
-          Danger Zone
-        </h3>
-
-        <div
-          style={{
-            padding: "16px",
-            background: "#fff",
-            borderLeft: "3px solid #ef4444",
-          }}
-        >
-          <div
-            style={{
-              display: "flex",
-              justifyContent: "space-between",
-              alignItems: "center",
-            }}
-          >
-            <div>
-              <div
-                style={{
-                  fontWeight: 500,
-                  marginBottom: "4px",
-                  fontSize: "14px",
-                  color: "#b91c1c",
-                }}
-              >
-                Delete Organization
-              </div>
-              <div style={{ fontSize: "14px", color: "#64748b" }}>
-                This action cannot be undone. All data will be permanently
-                deleted.
-              </div>
-            </div>
-            <button
-              type="button"
-              onClick={() => setShowDeleteConfirm(true)}
-              style={{
-                padding: "6px 12px",
-                background: "#fee2e2",
-                color: "#b91c1c",
-                border: "1px solid #fecaca",
-                borderRadius: "4px",
-                fontWeight: 500,
-                fontSize: "14px",
-                cursor: "pointer",
-              }}
-            >
-              Delete
-            </button>
-          </div>
-
-          {showDeleteConfirm && (
-            <div
-              style={{
-                marginTop: "16px",
-                padding: "16px",
-                background: "#fee2e2",
-                borderTop: "1px solid #fecaca",
-              }}
-            >
-              <div style={{ marginBottom: "16px", color: "#b91c1c" }}>
-                Are you sure you want to delete this organization? This action
-                cannot be undone.
-              </div>
-              <div
-                style={{
-                  display: "flex",
-                  gap: "8px",
-                  justifyContent: "flex-end",
-                }}
-              >
-                <button
-                  type="button"
-                  onClick={() => setShowDeleteConfirm(false)}
-                  style={{
-                    padding: "6px 12px",
-                    background: "#fff",
-                    border: "1px solid #e2e8f0",
-                    borderRadius: "4px",
-                    color: "#64748b",
-                    cursor: "pointer",
-                  }}
-                >
-                  Cancel
-                </button>
-                <button
-                  type="button"
-                  onClick={handleDeleteOrganization}
-                  style={{
-                    padding: "6px 12px",
-                    background: "#dc2626",
-                    color: "white",
-                    border: "none",
-                    borderRadius: "4px",
-                    fontWeight: 500,
-                    fontSize: "14px",
-                    cursor: "pointer",
-                  }}
-                >
-                  Confirm Delete
-                </button>
-              </div>
-            </div>
-          )}
-        </div>
-      </div>
+      <DeleteAccountAccordion
+        handleDeleteAccount={console.log}
+        title="Delete Organization"
+        description="Delete this organization, all associated members and workspaces will be deleted, and all associated data will be permanently removed."
+      />
     </>
   );
 };
 
 const RolesSection = () => {
-  const { activeOrganization, loading, getRoles } = useActiveOrganization();
-
+  const { activeOrganization, loading, getRoles, removeRole } =
+    useActiveOrganization();
   const [rolePopover, setRolePopover] = useState<{
     isOpen: boolean;
     role?: OrganizationRole;
@@ -2109,7 +1818,11 @@ const RolesSection = () => {
     text: string;
     type: "success" | "error";
   } | null>(null);
+  const [roleForOptionPopover, setRoleForOptionPopover] = useState<
+    string | null
+  >(null);
   const [searchQuery, setSearchQuery] = useState("");
+  const [roleForDeletion, setRoleForDeletion] = useState<string | null>(null);
 
   const {
     data: roles = [],
@@ -2135,9 +1848,7 @@ const RolesSection = () => {
     description?: string;
   }) => {
     try {
-      // Check if we're editing or creating
       if (role.id) {
-        // Updating existing role
         console.log("Updating role:", role);
         await new Promise((resolve) => setTimeout(resolve, 1000));
         setMessage({
@@ -2176,19 +1887,11 @@ const RolesSection = () => {
     }
   };
 
-  const handleDeleteRole = async (roleId: string) => {
-    if (!confirm("Are you sure you want to delete this role?")) return;
-
+  const handleDeleteRole = async (role: OrganizationRole) => {
     try {
-      // Mock implementation for deleting a role
-      console.log("Deleting role:", roleId);
-      await new Promise((resolve) => setTimeout(resolve, 1000));
-
-      setMessage({ text: "Role deleted successfully", type: "success" });
+      await removeRole(role);
       reloadRoles();
     } catch (error) {
-      console.error("Failed to delete role", error);
-      setMessage({ text: "Failed to delete role", type: "error" });
     } finally {
       setTimeout(() => setMessage(null), 3000);
     }
@@ -2241,11 +1944,9 @@ const RolesSection = () => {
         />
 
         <div>
-          <Button>
-            <Plus size={14} />
-            <span>Add role </span>
+          <Button onClick={() => setRolePopover({ isOpen: true })}>
+            Add role
           </Button>
-
           {rolePopover.isOpen && (
             <AddRolePopover
               role={rolePopover.role}
@@ -2295,9 +1996,22 @@ const RolesSection = () => {
                   </div>
                 </TableCell>
                 <ActionsCell>
-                  <Dropdown style={{ marginLeft: "auto" }}>
+                  {roleForDeletion === role.id && (
+                    <ConfirmationPopover
+                      title="Are you sure you want to delete this domain?"
+                      onConfirm={() => handleDeleteRole(role)}
+                      onCancel={() => setRoleForDeletion(null)}
+                    />
+                  )}
+                  <Dropdown
+                    open={roleForOptionPopover === role.id}
+                    openChange={(open) =>
+                      setRoleForOptionPopover(open ? role.id : null)
+                    }
+                    style={{ marginLeft: "auto" }}
+                  >
                     <DropdownTrigger>
-                      <IconButton>
+                      <IconButton disabled={!role.organization_id}>
                         <MoreVertical size={14} />
                       </IconButton>
                     </DropdownTrigger>
@@ -2305,16 +2019,17 @@ const RolesSection = () => {
                     <DropdownItems>
                       <DropdownItem
                         onClick={() => {
+                          setRoleForOptionPopover(null);
                           setRolePopover({ isOpen: true, role });
                         }}
                       >
                         Edit Role
                       </DropdownItem>
-                      <DropdownDivider />
                       <DropdownItem
                         $destructive
                         onClick={() => {
-                          handleDeleteRole(role.id);
+                          setRoleForOptionPopover(null);
+                          setRoleForDeletion(role.id);
                         }}
                       >
                         Remove Role
@@ -2570,6 +2285,17 @@ const AuditLogsSection = () => {
 export const ManageOrganization = () => {
   const { loading } = useActiveOrganization();
   const [screen, setScreen] = useState<Screen>(null);
+  const [toastMessage, setToastMessage] = useState<string | null>(null);
+  const [toastLevel, setToastLevel] = useState<"info" | "error">("info");
+
+  const toast = useCallback(
+    (message: string, level: "info" | "error" = "info") => {
+      setToastMessage(message);
+      setToastLevel(level);
+      setTimeout(() => setToastMessage(null), 3000);
+    },
+    [setToastMessage],
+  );
 
   if (loading)
     return (
@@ -2586,7 +2312,7 @@ export const ManageOrganization = () => {
 
   return (
     <TypographyProvider>
-      <ScreenContext.Provider value={{ screen, setScreen }}>
+      <ScreenContext.Provider value={{ screen, setScreen, toast }}>
         <Container>
           <Layout>
             <div
@@ -2611,6 +2337,24 @@ export const ManageOrganization = () => {
                   .with("audit-logs", () => <AuditLogsSection />)
                   .otherwise(() => null)}
               </AddItemForm>
+
+              {toastMessage && (
+                <div
+                  style={{
+                    position: "relative",
+                    bottom: "20px",
+                    right: "20px",
+                    display: "flex",
+                    gap: "8px",
+                  }}
+                >
+                  {toastLevel === "error" && (
+                    <CircleAlert size={14} color="#FF0000" />
+                  )}
+                  {toastLevel === "info" && <Info size={14} color="#0070f3" />}
+                  <span>{toastMessage}</span>
+                </div>
+              )}
             </div>
           </Layout>
         </Container>
@@ -2697,5 +2441,86 @@ const EmptyTableMessage = styled.div`
   margin-top: 12px;
   font-size: 11px;
 `;
+
+const DeleteAccountAccordion = ({
+  handleDeleteAccount,
+  title,
+  description,
+}: {
+  handleDeleteAccount: () => void;
+  title: string;
+  description: string;
+}) => {
+  const [isOpen, setIsOpen] = useState(false);
+
+  return (
+    <div>
+      <button
+        type="button"
+        onClick={() => setIsOpen(!isOpen)}
+        style={{
+          display: "flex",
+          alignItems: "center",
+          justifyContent: "space-between",
+          width: "100%",
+          padding: "8px 0",
+          background: "transparent",
+          border: "none",
+          cursor: "pointer",
+          textAlign: "left",
+          color: "#ef4444",
+          fontWeight: 500,
+          fontSize: "14px",
+        }}
+      >
+        <div style={{ display: "flex", alignItems: "center", gap: "8px" }}>
+          <AlertTriangle size={16} />
+          {title}
+        </div>
+        <div style={{ transition: "transform 0.2s ease" }}>
+          {isOpen ? <ChevronUp size={16} /> : <ChevronDown size={16} />}
+        </div>
+      </button>
+
+      {isOpen && (
+        <div
+          style={{
+            padding: "16px",
+            background: "#fef2f2",
+            borderRadius: "8px",
+            marginTop: "8px",
+          }}
+        >
+          <p
+            style={{
+              fontSize: "14px",
+              color: "#4b5563",
+              margin: "0 0 16px 0",
+              lineHeight: "1.5",
+            }}
+          >
+            {description}
+          </p>
+          <button
+            type="button"
+            onClick={handleDeleteAccount}
+            style={{
+              padding: "8px 16px",
+              backgroundColor: "#dc2626",
+              border: "none",
+              borderRadius: "6px",
+              fontSize: "14px",
+              fontWeight: 500,
+              color: "white",
+              cursor: "pointer",
+            }}
+          >
+            Delete Account
+          </button>
+        </div>
+      )}
+    </div>
+  );
+};
 
 export default ManageOrganization;

@@ -13,7 +13,7 @@ import {
 import { DefaultStylesProvider } from "../utility/root";
 import {
   useActiveOrganization,
-  useOrganizationList,
+  useOrganizationMemberships,
 } from "@/hooks/use-organization";
 import { useWorkspaceMemberships } from "@/hooks/use-workspace";
 import { useDeployment, useSession } from "@/hooks";
@@ -25,7 +25,8 @@ import { useDialog } from "../utility/use-dialog";
 
 const Container = styled.div`
   position: relative;
-  width: 280px;
+  max-width: 100%;
+  min-width: 224px;
 `;
 
 const SwitcherButton = styled.button`
@@ -34,16 +35,11 @@ const SwitcherButton = styled.button`
   justify-content: space-between;
   width: 100%;
   padding: 8px 12px;
-  background: rgba(255, 255, 255, 0.5);
   border-radius: 6px;
   font-size: 14px;
   font-weight: 500;
   cursor: pointer;
   border: 1px solid rgba(238, 238, 238, 0.8);
-
-  &:hover {
-    background: rgba(255, 255, 255, 0.8);
-  }
 
   &:disabled {
     cursor: not-allowed;
@@ -221,15 +217,11 @@ const Spinner = styled.span`
   }
 `;
 
-interface EnhancedWorkspace extends Workspace {
-  organization_id: string;
-}
-
 interface EnhancedOrganization {
   id: string;
   name: string;
   image_url?: string;
-  workspaces?: EnhancedWorkspace[];
+  workspaces?: Workspace[];
   personal?: boolean;
 }
 
@@ -244,10 +236,10 @@ export const OrganizationSwitcher = () => {
   const createWorkspaceDialog = useDialog(false);
 
   const {
-    organizations,
+    organizationMemberships,
     loading: organizationLoading,
     refetch: refetchOrganizations,
-  } = useOrganizationList();
+  } = useOrganizationMemberships();
   const { activeOrganization: selectedOrganization } = useActiveOrganization();
   const {
     workspaceMemberships,
@@ -286,19 +278,18 @@ export const OrganizationSwitcher = () => {
               acc[membership.organization_id] = [];
             }
 
-            const enhancedWorkspace: EnhancedWorkspace = {
+            const enhancedWorkspace = {
               ...membership.workspace,
-              organization_id: membership.organization_id,
             };
 
             acc[membership.organization_id].push(enhancedWorkspace);
             return acc;
           },
-          {} as Record<string, EnhancedWorkspace[]>,
+          {} as Record<string, Workspace[]>,
         )) ||
       {};
 
-    organizations?.forEach((org) => {
+    organizationMemberships?.forEach(({ organization: org }) => {
       orgs.push({
         id: org.id,
         name: org.name,
@@ -310,16 +301,10 @@ export const OrganizationSwitcher = () => {
     });
 
     const defaultOrg = orgs[0];
-    const defaultWorkspace = workspacesEnabled
-      ? (defaultOrg.workspaces?.find(
-          (ws) => ws.id === session?.active_signin?.active_workspace_id,
-        ) ?? null)
-      : null;
-
     let selectedOrg = defaultOrg;
-    let selectedWorkspace: EnhancedWorkspace | null = defaultWorkspace;
+    let selectedWorkspace: Workspace | null = null;
 
-    if (session?.active_signin?.active_organization_id) {
+    if (session?.active_signin?.active_organization_membership_id) {
       selectedOrg = {
         id: selectedOrganization?.id ?? "",
         name: selectedOrganization?.name ?? "",
@@ -331,9 +316,10 @@ export const OrganizationSwitcher = () => {
       };
       if (workspacesEnabled && selectedOrg.workspaces) {
         selectedWorkspace =
-          selectedOrg.workspaces.find(
-            (ws) => ws.id === session?.active_signin?.active_workspace_id,
-          ) ?? null;
+          workspaceMemberships?.find(
+            (ws) =>
+              ws.id === session?.active_signin?.active_workspace_membership_id,
+          )?.workspace ?? null;
       }
     }
 
@@ -342,7 +328,12 @@ export const OrganizationSwitcher = () => {
       selectedOrg,
       selectedWorkspace,
     };
-  }, [organizations, workspaceMemberships, session, workspacesEnabled]);
+  }, [
+    organizationMemberships,
+    workspaceMemberships,
+    session,
+    workspacesEnabled,
+  ]);
 
   useEffect(() => {
     const handleClickOutside = (event: MouseEvent) => {

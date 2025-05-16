@@ -5,15 +5,17 @@ import { FormGroup, Label } from "../utility/form";
 import { useActiveOrganization } from "@/hooks/use-organization";
 import { Spinner } from "../utility";
 import { ComboBox, ComboBoxOption } from "../utility/combo-box";
+import { OrganizationRole } from "@/types/organization";
 
 const PopoverContainer = styled.div`
   position: absolute;
   right: 0;
-  top: 100%;
   margin-top: 8px;
   background: white;
   border-radius: 8px;
-  box-shadow: 0 4px 6px -1px rgb(0 0 0 / 0.1), 0 2px 4px -2px rgb(0 0 0 / 0.1);
+  box-shadow:
+    0 4px 6px -1px rgb(0 0 0 / 0.1),
+    0 2px 4px -2px rgb(0 0 0 / 0.1);
   border: 1px solid #e2e8f0;
   padding: 16px;
   width: 380px;
@@ -54,15 +56,10 @@ const Title = styled.div`
   margin-bottom: 16px;
 `;
 
-interface Role {
-  id: string;
-  name: string;
-}
-
 interface InviteMemberPopoverProps {
   onClose?: () => void;
   onSuccess?: () => void;
-  roles: Role[];
+  roles: OrganizationRole[];
 }
 
 export const InviteMemberPopover = ({
@@ -72,11 +69,12 @@ export const InviteMemberPopover = ({
 }: InviteMemberPopoverProps) => {
   const popoverRef = useRef<HTMLDivElement>(null);
   const [email, setEmail] = useState("");
-  const [selectedRole, setSelectedRole] = useState("");
+  const [selectedRole, setSelectedRole] = useState<OrganizationRole | null>(
+    null,
+  );
   const [loading, setLoading] = useState(false);
   const { inviteMember } = useActiveOrganization();
 
-  // Transform roles into ComboBox options
   const roleOptions: ComboBoxOption[] = roles.map((role) => ({
     value: role.id,
     label: role.name,
@@ -90,7 +88,7 @@ export const InviteMemberPopover = ({
       console.log("Inviting member", { email, role: selectedRole });
       // Use the inviteMember function from the hook if available
       if (inviteMember) {
-        await inviteMember(email, selectedRole);
+        await inviteMember({ email, organizationRole: selectedRole });
       } else {
         // Mock implementation for testing
         await new Promise((resolve) => setTimeout(resolve, 1000));
@@ -137,8 +135,10 @@ export const InviteMemberPopover = ({
         <Label>Role</Label>
         <ComboBox
           options={roleOptions}
-          value={selectedRole}
-          onChange={setSelectedRole}
+          value={selectedRole?.id}
+          onChange={(id) =>
+            setSelectedRole(roles.find((role) => role.id === id)!)
+          }
           placeholder="Select a role"
         />
       </FormGroup>

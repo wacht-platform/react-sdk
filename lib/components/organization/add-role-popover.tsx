@@ -6,15 +6,17 @@ import { Spinner } from "../utility";
 import { OrganizationRole } from "@/types/organization";
 import { useDeployment } from "@/hooks/use-deployment";
 import { ComboBoxMulti } from "../utility/combo-box";
+import { useActiveOrganization } from "@/hooks/use-organization";
 
 const PopoverContainer = styled.div`
   position: absolute;
   right: 0;
-  top: 100%;
   margin-top: 8px;
   background: white;
   border-radius: 8px;
-  box-shadow: 0 4px 6px -1px rgb(0 0 0 / 0.1), 0 2px 4px -2px rgb(0 0 0 / 0.1);
+  box-shadow:
+    0 4px 6px -1px rgb(0 0 0 / 0.1),
+    0 2px 4px -2px rgb(0 0 0 / 0.1);
   border: 1px solid #e2e8f0;
   padding: 16px;
   width: 380px;
@@ -69,15 +71,16 @@ export const AddRolePopover = ({
   const popoverRef = useRef<HTMLDivElement>(null);
   const [name, setName] = useState(role?.name || "");
   const [permissions, setPermissions] = useState<string[]>(
-    role?.permissions || []
+    role?.permissions || [],
   );
+  const {} = useActiveOrganization();
   const [loading, setLoading] = useState(false);
   const { deployment } = useDeployment();
 
   const isEditing = !!role;
 
   const permissionOptions = Array.isArray(
-    deployment?.b2b_settings?.organization_permissions
+    deployment?.b2b_settings?.organization_permissions,
   )
     ? deployment.b2b_settings.organization_permissions.map((perm) => ({
         value: perm,

@@ -3,8 +3,8 @@ import { CurrentUser } from "./user";
 export interface SignIn {
   id: string;
   user_id: string;
-  active_organization_id: string;
-  active_workspace_id: string;
+  active_organization_membership_id: string;
+  active_workspace_membership_id: string;
   user: CurrentUser;
   expiresAt: string;
   lastActiveAt: string;
@@ -82,4 +82,9 @@ export interface Session {
   signins?: SignIn[];
   signin_attempts?: SigninAttempt[];
   signup_attempts?: SignupAttempt[];
+}
+
+export interface SessionToken {
+  token: string;
+  expires: number;
 }

@@ -232,11 +232,11 @@ export const CreateOrganizationForm: React.FC<CreateOrganizationFormProps> = ({
 
     setIsSubmitting(true);
     try {
-      await createOrganization(
+      await createOrganization({
         name,
-        image || undefined,
-        description || undefined,
-      );
+        image: image || undefined,
+        description: description || undefined,
+      });
       onSuccess?.();
     } catch (error) {
       console.error("Failed to create organization:", error);

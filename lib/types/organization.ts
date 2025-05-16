@@ -8,12 +8,17 @@ export interface Organization {
   member_count: number;
   public_metadata: Record<string, unknown>;
   private_metadata: Record<string, unknown>;
+  enforce_mfa: boolean;
+  enable_ip_restriction: boolean;
+  whitelisted_ips: string[];
+  auto_assigned_workspace_id: string;
   created_at: string;
   updated_at: string;
 }
 
 export interface OrganizationRole {
   id: string;
+  organization_id: string;
   name: string;
   permissions: string[];
   created_at: string;
@@ -102,4 +107,33 @@ export interface WorkspaceMembership {
 export interface OrganizationUpdate {
   image?: File;
   name?: string;
+  description?: string;
+  whitelisted_ips?: string[];
+  auto_assigned_workspace_id?: string;
+  enable_ip_restriction?: boolean;
+  enforce_mfa_setup?: boolean;
+}
+
+export interface RoleCreate {
+  name: string;
+  permissions?: string[];
+}
+
+export type RoleUpdate = Partial<RoleCreate>;
+
+export interface NewOrgnization {
+  name: string;
+  description?: string;
+  image?: File;
+}
+
+export interface NewDomain {
+  fqdn: string;
+}
+
+export interface OrganizationInvitationPayload {
+  email: string;
+  organizationRole: OrganizationRole;
+  workspace?: Workspace;
+  workspaceRole?: WorkspaceRole;
 }

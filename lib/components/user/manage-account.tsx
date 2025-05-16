@@ -2510,7 +2510,6 @@ const ProfileDetailsManagementSection = () => {
   };
 
   const handleDeleteAccount = () => {
-    // This is a placeholder for account deletion functionality
     if (
       window.confirm(
         "Are you sure you want to delete your account? This action cannot be undone.",

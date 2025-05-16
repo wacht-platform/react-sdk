@@ -4,6 +4,7 @@ import { Input } from "@/components/utility/input";
 import { FormGroup, Label } from "../utility/form";
 import { OrganizationDomain } from "@/types/organization";
 import { useActiveOrganization } from "@/hooks/use-organization";
+import { useScreenContext } from "./context";
 
 const PopoverContainer = styled.div`
   position: absolute;
@@ -68,15 +69,15 @@ export const AddDomainPopover = ({
   const [newFqdn, setNewFqdn] = useState("");
   const [loading, setLoading] = useState(false);
   const { addDomain, verifyDomain } = useActiveOrganization();
+  const { toast } = useScreenContext();
 
   const handleDoaminCreation = async () => {
     if (!newFqdn.trim()) return;
 
-    const res = await addDomain!(newFqdn);
+    const res = await addDomain!({ fqdn: newFqdn });
     if (res?.errors?.length) return;
 
-    console.log(res);
-
+    toast("Domain added successfully", "info");
     setCurrentDomain(res!.data);
   };
 
@@ -84,8 +85,9 @@ export const AddDomainPopover = ({
     if (!currentDomain || loading) return;
     setLoading(true);
     try {
-      await verifyDomain!(currentDomain.id);
+      await verifyDomain!(currentDomain);
       onClose?.();
+      toast("Domain verified successfully", "info");
     } catch (error) {
     } finally {
       setLoading(false);
@@ -141,11 +143,17 @@ export const AddDomainPopover = ({
         </>
       ) : (
         <>
-          <Title>Verify your domain</Title>
-          <div
-            style={{ fontSize: "14px", color: "#64748b", marginBottom: "16px" }}
-          >
-            Add the following DNS record to your domain
+          <div style={{ textAlign: "left" }}>
+            <Title>Verify your domain</Title>
+            <div
+              style={{
+                fontSize: "14px",
+                color: "#64748b",
+                marginBottom: "16px",
+              }}
+            >
+              Add the following DNS record to your domain
+            </div>
           </div>
           <FormGroup>
             <Label>Record Type</Label>

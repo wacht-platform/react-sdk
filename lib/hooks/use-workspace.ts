@@ -112,12 +112,12 @@ export const useWorkspaceList = () => {
 
 export const useActiveWorkspace = () => {
   const {
-    workspaces,
     refetch,
     loading,
     error: listError,
     leaveWorkspace: leaveWorkspaceFromList,
   } = useWorkspaceList();
+  const { workspaceMemberships } = useWorkspaceMemberships();
   const {
     session,
     loading: sessionLoading,
@@ -126,12 +126,13 @@ export const useActiveWorkspace = () => {
 
   const activeWorkspace = useMemo(() => {
     return (
-      workspaces.find(
+      workspaceMemberships?.find(
         (workspace) =>
-          workspace.id === session?.active_signin?.active_workspace_id,
-      ) || null
+          workspace.id ===
+          session?.active_signin?.active_workspace_membership_id,
+      )?.workspace || null
     );
-  }, [workspaces, session]);
+  }, [workspaceMemberships, session]);
 
   const leaveCurrentWorkspace = useCallback(async () => {
     if (!activeWorkspace) return;

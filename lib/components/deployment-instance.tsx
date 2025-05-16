@@ -2,27 +2,27 @@ import type { ReactNode } from "react";
 import { useDeployment } from "../hooks/use-deployment";
 
 interface DeploymentInstanceProps {
-	children: ReactNode;
+  children: ReactNode;
 }
 
-const DeploymentInstanceInitialized: React.FC<DeploymentInstanceProps> = ({
-	children,
+const DeploymentInitialized: React.FC<DeploymentInstanceProps> = ({
+  children,
 }: DeploymentInstanceProps) => {
-	const { loading } = useDeployment();
+  const { loading } = useDeployment();
 
-	if (loading) return null;
+  if (loading) return null;
 
-	return <>{children}</>;
+  return <>{children}</>;
 };
 
-const DeploymentInstanceInitializing: React.FC<DeploymentInstanceProps> = ({
-	children,
+const DeploymentInitializing: React.FC<DeploymentInstanceProps> = ({
+  children,
 }: DeploymentInstanceProps) => {
-	const { loading } = useDeployment();
+  const { loading } = useDeployment();
 
-	if (loading) return <>{children}</>;
+  if (loading) return <>{children}</>;
 
-	return null;
+  return null;
 };
 
-export { DeploymentInstanceInitialized, DeploymentInstanceInitializing };
+export { DeploymentInitialized, DeploymentInitializing };

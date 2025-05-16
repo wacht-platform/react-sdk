@@ -3,7 +3,7 @@ import { useClient } from "./use-client";
 import useSWR from "swr";
 import { useCallback } from "react";
 import { ApiResult } from "@/types/client";
-import { Session } from "@/types/session";
+import { Session, SessionToken } from "@/types/session";
 import { Client } from "@/types/client";
 
 type UseSessionReturnType =
@@ -14,6 +14,7 @@ type UseSessionReturnType =
       switchOrganization: never;
       switchWorkspace: never;
       signOut: never;
+      getToken: never;
       error: Error | null;
       refetch: () => Promise<void>;
     }
@@ -23,6 +24,7 @@ type UseSessionReturnType =
       session: Session;
       switchSignIn: (signInId: string) => Promise<void>;
       signOut: (signInId?: string) => Promise<void>;
+      getToken: (template?: string) => Promise<string>;
       switchOrganization: (organizationId?: string) => Promise<void>;
       switchWorkspace: (workspaceId: string) => Promise<void>;
       refetch: () => Promise<void>;
@@ -90,6 +92,19 @@ async function switchWorkspace(
   return responseMapper(response);
 }
 
+const tokenSingletonMap = new Map<string, SessionToken>();
+const fetchSingleton = new Map<string, Promise<ApiResult<SessionToken>>>();
+
+async function getSessionToken(
+  client: Client,
+  template?: string,
+): Promise<ApiResult<SessionToken>> {
+  const response = await client(
+    `/session/token${template ? `?template=${template}` : ""}`,
+  );
+  return responseMapper(response);
+}
+
 export function useSession(): UseSessionReturnType {
   const { client, loading } = useClient();
   const {
@@ -109,6 +124,27 @@ export function useSession(): UseSessionReturnType {
     await mutate();
   }, [mutate]);
 
+  const getToken = useCallback(
+    async (template: string = "default") => {
+      if (!session) throw new Error("no session");
+      const existingToken = tokenSingletonMap.get(template);
+      if (existingToken && existingToken.expires > Date.now()) {
+        return existingToken?.token || "";
+      }
+      if (!fetchSingleton.get(template)) {
+        fetchSingleton.set(template, getSessionToken(client));
+      }
+      const data = await fetchSingleton.get(template)!;
+      fetchSingleton.delete(template);
+      if (data.errors?.length) {
+        throw new error(data.errors[0]);
+      }
+      tokenSingletonMap.set(template, data.data);
+      return data.data.token;
+    },
+    [client, session?.active_signin],
+  );
+
   if (loading || !session || isLoading) {
     return {
       loading: true,
@@ -118,6 +154,7 @@ export function useSession(): UseSessionReturnType {
       switchOrganization: null as never,
       switchWorkspace: null as never,
       signOut: null as never,
+      getToken: null as never,
       refetch,
     };
   }
@@ -142,6 +179,7 @@ export function useSession(): UseSessionReturnType {
       await switchWorkspace(client, workspaceId);
       await mutate();
     },
+    getToken,
     refetch,
   };
 }

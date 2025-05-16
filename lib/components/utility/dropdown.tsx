@@ -12,8 +12,8 @@ import styled from "styled-components";
 
 const DropdownItemsContainer = styled.div`
   position: absolute;
-  right: 0;
   margin-top: 4px;
+  right: 0;
   background: white;
   border-radius: 8px;
   box-shadow:
@@ -106,12 +106,20 @@ export const Dropdown = ({
   );
 };
 
-export const DropdownItems = ({ children }: { children: ReactNode }) => {
+export const DropdownItems = ({
+  children,
+  style,
+}: {
+  children: ReactNode;
+  style?: React.CSSProperties;
+}) => {
   const { open } = useDropdownContext();
 
   if (!open) return null;
 
-  return <DropdownItemsContainer>{children}</DropdownItemsContainer>;
+  return (
+    <DropdownItemsContainer style={style}>{children}</DropdownItemsContainer>
+  );
 };
 
 export const DropdownTrigger = ({ children }: { children: ReactNode }) => {
