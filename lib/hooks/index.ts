@@ -5,3 +5,7 @@ export * from "./use-client";
 export * from "./use-deployment";
 export * from "./use-verification";
 export * from "./use-user";
+export * from "./use-waitlist";
+export * from "./use-organization";
+export * from "./use-workspace";
+export * from "./use-sso-callback";
