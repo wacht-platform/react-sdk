@@ -1,6 +1,8 @@
-import { Deployment } from "@/types/deployment";
+import type { Deployment } from "@/types/deployment";
 import { useDeployment } from "./use-deployment";
-import { Client } from "@/types/client";
+import type { Client } from "@/types/client";
+import { useOrganizationMemberships } from "./use-organization";
+import { useWorkspaceMemberships } from "./use-workspace";
 
 type UseClientReturnType = {
 	client: Client;
@@ -8,12 +10,14 @@ type UseClientReturnType = {
 };
 
 export function useClient(): UseClientReturnType {
-	const { deployment, loading } = useDeployment();
+	const { deployment, loading: sessionLoading } = useDeployment();
+	const { loading: organizationLoading } = useOrganizationMemberships();
+	const { loading: workspaceLoading } = useWorkspaceMemberships();
 
-	if (loading || !deployment) {
+	if (sessionLoading || !deployment) {
 		return {
 			client: () => Promise.reject(new Error("Deployment is loading")),
-			loading,
+			loading: sessionLoading,
 		};
 	}
 
@@ -43,7 +47,7 @@ export function useClient(): UseClientReturnType {
 
 	return {
 		client: fetcher,
-		loading,
+		loading: organizationLoading || workspaceLoading || sessionLoading,
 	};
 }
 
