@@ -31,7 +31,7 @@ export function useSSOCallback(options: SSOCallbackOptions = {}): SSOCallbackSta
 	const { onSuccess, onError, autoRedirect = true } = options;
 	const { client, loading: clientLoading } = useClient();
 	const { deployment } = useDeployment();
-	
+
 	const [loading, setLoading] = useState(false);
 	const [error, setError] = useState<Error | null>(null);
 	const [session, setSession] = useState<Session | null>(null);
@@ -89,10 +89,10 @@ export function useSSOCallback(options: SSOCallbackOptions = {}): SSOCallbackSta
 			if ("data" in result) {
 				const sessionData = result.data.session;
 				const redirectUriData = result.data.redirect_uri || null;
-				
+
 				setSession(sessionData);
 				setRedirectUri(redirectUriData);
-				
+
 				if (onSuccess) {
 					onSuccess(sessionData, redirectUriData || undefined);
 				}
@@ -116,24 +116,9 @@ export function useSSOCallback(options: SSOCallbackOptions = {}): SSOCallbackSta
 
 		// Determine final redirect URL
 		let finalRedirectUrl = redirectUri;
-		
-		if (!finalRedirectUrl) {
-			// Use deployment's sign-in page URL as fallback
-			finalRedirectUrl = deployment?.ui_settings?.sign_in_page_url || deployment?.host || "/";
-		}
 
-		// Add dev session for staging mode
-		if (deployment?.mode === "staging" && finalRedirectUrl) {
-			try {
-				const url = new URL(finalRedirectUrl);
-				const devSession = localStorage.getItem("__dev_session__");
-				if (devSession) {
-					url.searchParams.set("dev_session", devSession);
-				}
-				finalRedirectUrl = url.toString();
-			} catch {
-				// If URL parsing fails, use as-is
-			}
+		if (!finalRedirectUrl) {
+			finalRedirectUrl = deployment?.ui_settings?.sign_in_page_url || deployment!.frontend_host;
 		}
 
 		// Perform redirect
@@ -159,10 +144,10 @@ export function useSSORedirect() {
 
 	const redirect = (customRedirectUri?: string) => {
 		let finalRedirectUrl = customRedirectUri;
-		
+
 		if (!finalRedirectUrl) {
 			// Use deployment's sign-in page URL as fallback
-			finalRedirectUrl = deployment?.ui_settings?.sign_in_page_url || deployment?.host || "/";
+			finalRedirectUrl = deployment?.ui_settings?.sign_in_page_url || deployment?.backend_host || "/";
 		}
 
 		// Add dev session for staging mode

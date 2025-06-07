@@ -171,7 +171,9 @@ export interface Deployment {
 	updated_at: string;
 	deleted_at: null;
 	maintenance_mode: boolean;
-	host: string;
+	backend_host: string;
+	frontend_host: string;
+	mail_from_host: string;
 	publishable_key: string;
 	b2b_settings: B2BSettings;
 	auth_settings: AuthSettings;

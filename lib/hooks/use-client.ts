@@ -1,8 +1,6 @@
 import type { Deployment } from "@/types/deployment";
 import { useDeployment } from "./use-deployment";
 import type { Client } from "@/types/client";
-import { useOrganizationMemberships } from "./use-organization";
-import { useWorkspaceMemberships } from "./use-workspace";
 
 type UseClientReturnType = {
 	client: Client;
@@ -11,8 +9,6 @@ type UseClientReturnType = {
 
 export function useClient(): UseClientReturnType {
 	const { deployment, loading: sessionLoading } = useDeployment();
-	const { loading: organizationLoading } = useOrganizationMemberships();
-	const { loading: workspaceLoading } = useWorkspaceMemberships();
 
 	if (sessionLoading || !deployment) {
 		return {
@@ -36,7 +32,7 @@ export function useClient(): UseClientReturnType {
 			headers.set("Content-Type", "application/json");
 		}
 
-		const response = await fetch(new URL(url, deployment?.host ?? ""), {
+		const response = await fetch(new URL(url, deployment?.backend_host ?? ""), {
 			...defaultOptions,
 			...options,
 			headers,
@@ -47,7 +43,7 @@ export function useClient(): UseClientReturnType {
 
 	return {
 		client: fetcher,
-		loading: organizationLoading || workspaceLoading || sessionLoading,
+		loading: sessionLoading,
 	};
 }
 

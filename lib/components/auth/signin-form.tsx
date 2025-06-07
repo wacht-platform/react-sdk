@@ -5,7 +5,7 @@ import type { OAuthProvider } from "../../hooks/use-signin";
 import { SignInStrategy } from "../../hooks/use-signin";
 import { DefaultStylesProvider } from "../utility/root";
 import { OTPInput } from "@/components/utility/otp-input";
-import { ArrowLeft } from "lucide-react";
+
 import { SocialAuthButtons } from "./social-buttons";
 import { ForgotPassword } from "./forgot-password";
 import { OtherSignInOptions } from "./other-signin-options";
@@ -32,21 +32,6 @@ const Container = styled.div`
   box-shadow: 0 4px 24px var(--color-shadow);
 `;
 
-const BackButton = styled.button`
-  position: absolute;
-  top: var(--space-2xs);
-  left: 0px;
-  cursor: pointer;
-  font-size: var(--font-xs);
-  margin-bottom: var(--space-lg);
-  color: var(--color-muted);
-  background: none;
-  border: none;
-
-  &:hover {
-    color: var(--color-foreground);
-  }
-`;
 
 const Header = styled.div`
   text-align: center;
@@ -352,15 +337,6 @@ function SignInFormContent() {
 				{otpSent ? (
 					<>
 						<Header>
-							<BackButton
-								onClick={() => {
-									setOtpSent(false);
-									discardSignInAttempt();
-									resetFormData();
-								}}
-							>
-								<ArrowLeft size={16} />
-							</BackButton>
 							<Title>Check your email</Title>
 							<Subtitle>{formData.email} to continue to Wacht</Subtitle>
 						</Header>
@@ -390,20 +366,20 @@ function SignInFormContent() {
 						<Form onSubmit={createSignIn} noValidate>
 							{(firstFactor === "email_password" ||
 								firstFactor === "email_otp") && (
-								<FormGroup>
-									<Label htmlFor="email">Email address</Label>
-									<Input
-										type="email"
-										id="email"
-										name="email"
-										value={formData.email}
-										onChange={handleInputChange}
-										placeholder="Enter your email address"
-										aria-invalid={!!errors.email}
-									/>
-									{errors.email && <ErrorMessage>{errors.email}</ErrorMessage>}
-								</FormGroup>
-							)}
+									<FormGroup>
+										<Label htmlFor="email">Email address</Label>
+										<Input
+											type="email"
+											id="email"
+											name="email"
+											value={formData.email}
+											onChange={handleInputChange}
+											placeholder="Enter your email address"
+											aria-invalid={!!errors.email}
+										/>
+										{errors.email && <ErrorMessage>{errors.email}</ErrorMessage>}
+									</FormGroup>
+								)}
 
 							{firstFactor === "username_password" && (
 								<FormGroup>
@@ -441,34 +417,34 @@ function SignInFormContent() {
 
 							{(firstFactor === "email_password" ||
 								firstFactor === "username_password") && (
-								<FormGroup>
-									<div
-										style={{ display: "flex", justifyContent: "space-between" }}
-									>
-										<Label htmlFor="password">Password</Label>
-										<Link
-											style={{ fontSize: "12px" }}
-											onClick={() => setShowForgotPassword(true)}
+									<FormGroup>
+										<div
+											style={{ display: "flex", justifyContent: "space-between" }}
 										>
-											Forgot password?
-										</Link>
-									</div>
-									<PasswordGroup>
-										<Input
-											type="password"
-											id="password"
-											name="password"
-											value={formData.password}
-											onChange={handleInputChange}
-											placeholder="Enter your password"
-											aria-invalid={!!errors.password}
-										/>
-									</PasswordGroup>
-									{errors.password && (
-										<ErrorMessage>{errors.password}</ErrorMessage>
-									)}
-								</FormGroup>
-							)}
+											<Label htmlFor="password">Password</Label>
+											<Link
+												style={{ fontSize: "12px" }}
+												onClick={() => setShowForgotPassword(true)}
+											>
+												Forgot password?
+											</Link>
+										</div>
+										<PasswordGroup>
+											<Input
+												type="password"
+												id="password"
+												name="password"
+												value={formData.password}
+												onChange={handleInputChange}
+												placeholder="Enter your password"
+												aria-invalid={!!errors.password}
+											/>
+										</PasswordGroup>
+										{errors.password && (
+											<ErrorMessage>{errors.password}</ErrorMessage>
+										)}
+									</FormGroup>
+								)}
 
 							{errors.submit && <ErrorMessage>{errors.submit}</ErrorMessage>}
 
@@ -521,6 +497,13 @@ function SignInFormContent() {
 						</Form>
 						<Footer>
 							Having trouble? <Link>Get help</Link>
+							<div style={{ marginTop: 'var(--space-sm)' }}>
+								<Link onClick={() => {
+									setOtpSent(false);
+									discardSignInAttempt();
+									resetFormData();
+								}} style={{ cursor: 'pointer' }}>Use other method</Link>
+							</div>
 						</Footer>
 					</>
 				)}

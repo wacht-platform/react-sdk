@@ -95,19 +95,19 @@ type SignIn = {
 
 type UseSignInReturnType =
 	| {
-			loading: false;
-			signIn: SignIn;
-			signinAttempt: SigninAttempt | null;
-			discardSignInAttempt: () => void;
-			errors: ApiResult<unknown, ErrorInterface> | null;
-	  }
+		loading: false;
+		signIn: SignIn;
+		signinAttempt: SigninAttempt | null;
+		discardSignInAttempt: () => void;
+		errors: ApiResult<unknown, ErrorInterface> | null;
+	}
 	| {
-			loading: true;
-			signIn: never;
-			signinAttempt: null;
-			discardSignInAttempt: () => void;
-			errors: null;
-	  };
+		loading: true;
+		signIn: never;
+		signinAttempt: null;
+		discardSignInAttempt: () => void;
+		errors: null;
+	};
 
 type InitSSOResponseType = {
 	oauth_url: string;
@@ -233,7 +233,6 @@ function builderOauth(
 		const result = await responseMapper<InitSSOResponseType>(response);
 		if ("data" in result) {
 			setErrors(null);
-			// Automatically redirect to OAuth provider
 			if (result.data.oauth_url) {
 				window.location.href = result.data.oauth_url;
 			}
@@ -341,25 +340,25 @@ type SignInFunction<T extends SignInStrategy> = {
 
 export type UseSignInWithStrategyReturnType<T extends SignInStrategy> =
 	| {
-			loading: true;
-			signIn: never;
-			signinAttempt: null;
-			discardSignInAttempt: () => void;
-			errors: null;
-	  }
+		loading: true;
+		signIn: never;
+		signinAttempt: null;
+		discardSignInAttempt: () => void;
+		errors: null;
+	}
 	| {
-			loading: false;
-			signIn: {
-				create: SignInFunction<T>;
-				completeVerification: (verificationCode: string) => Promise<unknown>;
-				prepareVerification: (
-					verification: VerificationStrategy,
-				) => Promise<unknown>;
-			};
-			signinAttempt: SigninAttempt | null;
-			discardSignInAttempt: () => void;
-			errors: ApiResult<unknown, ErrorInterface> | null;
-	  };
+		loading: false;
+		signIn: {
+			create: SignInFunction<T>;
+			completeVerification: (verificationCode: string) => Promise<unknown>;
+			prepareVerification: (
+				verification: VerificationStrategy,
+			) => Promise<unknown>;
+		};
+		signinAttempt: SigninAttempt | null;
+		discardSignInAttempt: () => void;
+		errors: ApiResult<unknown, ErrorInterface> | null;
+	};
 
 export function useSignInWithStrategy<T extends SignInStrategy>(
 	strategy: T,

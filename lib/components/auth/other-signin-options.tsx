@@ -1,4 +1,3 @@
-import { ArrowLeft } from "lucide-react";
 import styled from "styled-components";
 import { DefaultStylesProvider } from "@/components/utility/root";
 import { OtherAuthOptions } from "@/components/auth/other-auth-options";
@@ -30,21 +29,7 @@ const Subtitle = styled.p`
   font-size: var(--font-xs);
 `;
 
-const BackButton = styled.button`
-  position: absolute;
-  top: var(--space-2xs);
-  left: 0px;
-  cursor: pointer;
-  font-size: var(--font-xs);
-  margin-bottom: var(--space-lg);
-  color: var(--color-muted);
-  background: none;
-  border: none;
 
-  &:hover {
-    color: var(--color-foreground);
-  }
-`;
 
 const Footer = styled.div`
   text-align: center;
@@ -70,9 +55,6 @@ export function OtherSignInOptions({ onBack }: OtherSignInOptionsProps) {
     <DefaultStylesProvider>
       <Container>
         <Header>
-          <BackButton onClick={onBack}>
-            <ArrowLeft size={16} />
-          </BackButton>
           <Title>Supported Options</Title>
           <Subtitle>Choose one of the following options to continue</Subtitle>
         </Header>
@@ -80,6 +62,9 @@ export function OtherSignInOptions({ onBack }: OtherSignInOptionsProps) {
         <Footer>
           <FooterText>
             Don't have an account? <Link href="/signup">Sign up</Link>
+          </FooterText>
+          <FooterText style={{ marginTop: 'var(--space-sm)' }}>
+            <Link onClick={onBack} style={{ cursor: 'pointer' }}>Use other method</Link>
           </FooterText>
         </Footer>
       </Container>

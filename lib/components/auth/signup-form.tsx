@@ -9,7 +9,7 @@ import {
 import { useDeployment } from "../../hooks/use-deployment";
 import { DefaultStylesProvider } from "../utility/root";
 import { OTPInput } from "@/components/utility/otp-input";
-import { ArrowLeft } from "lucide-react";
+
 import { SocialAuthButtons } from "./social-buttons";
 import { NavigationLink } from "../utility/navigation";
 import { Input } from "../utility/input";
@@ -206,26 +206,7 @@ const Link = styled.span`
   }
 `;
 
-const BackButton = styled.button`
-  position: absolute;
-  top: 0.375rem;
-  left: 0;
-  cursor: pointer;
-  font-size: 0.875rem;
-  margin-bottom: 1.5rem;
-  color: #64748b;
-  background: none;
-  border: none;
 
-  &:hover {
-    color: #1e293b;
-  }
-
-  @media (max-width: ${breakpoints.sm}) {
-    font-size: 0.75rem;
-    margin-bottom: 1rem;
-  }
-`;
 
 export function SignUpForm() {
 	const {
@@ -467,13 +448,6 @@ export function SignUpForm() {
 				{otpSent ? (
 					<>
 						<Header>
-							<BackButton
-								onClick={() => {
-									resetFormData();
-								}}
-							>
-								<ArrowLeft size={16} />
-							</BackButton>
 							<Title>
 								Check your{" "}
 								{authSettings?.email_address?.enabled ? "email" : "phone"}
@@ -514,6 +488,11 @@ export function SignUpForm() {
 									Contact support
 								</NavigationLink>
 							</Link>
+							<div style={{ marginTop: 'var(--space-sm)' }}>
+								<Link onClick={() => {
+									resetFormData();
+								}} style={{ cursor: 'pointer' }}>Use other method</Link>
+							</div>
 						</Footer>
 					</>
 				) : (
@@ -543,61 +522,61 @@ export function SignUpForm() {
 						<Form onSubmit={handleSubmit} noValidate>
 							{(authSettings?.first_name?.enabled ||
 								authSettings?.last_name?.enabled) && (
-								<NameFields $isBothEnabled={isBothNamesEnabled}>
-									{authSettings?.first_name?.enabled && (
-										<FormGroup>
-											<Label htmlFor="first_name">
-												First name
-												{authSettings?.first_name?.required && (
-													<RequiredAsterisk>*</RequiredAsterisk>
+									<NameFields $isBothEnabled={isBothNamesEnabled}>
+										{authSettings?.first_name?.enabled && (
+											<FormGroup>
+												<Label htmlFor="first_name">
+													First name
+													{authSettings?.first_name?.required && (
+														<RequiredAsterisk>*</RequiredAsterisk>
+													)}
+												</Label>
+												<Input
+													type="text"
+													id="first_name"
+													name="first_name"
+													required
+													minLength={3}
+													maxLength={30}
+													value={formData.first_name}
+													onChange={handleInputChange}
+													placeholder="First name"
+													aria-invalid={!!errors.first_name}
+													pattern="^[a-zA-Z]{3,30}$"
+												/>
+												{errors.first_name && (
+													<ErrorMessage>{errors.first_name}</ErrorMessage>
 												)}
-											</Label>
-											<Input
-												type="text"
-												id="first_name"
-												name="first_name"
-												required
-												minLength={3}
-												maxLength={30}
-												value={formData.first_name}
-												onChange={handleInputChange}
-												placeholder="First name"
-												aria-invalid={!!errors.first_name}
-												pattern="^[a-zA-Z]{3,30}$"
-											/>
-											{errors.first_name && (
-												<ErrorMessage>{errors.first_name}</ErrorMessage>
-											)}
-										</FormGroup>
-									)}
-									{authSettings?.last_name?.enabled && (
-										<FormGroup>
-											<Label htmlFor="last_name">
-												Last name
-												{authSettings?.last_name?.required && (
-													<RequiredAsterisk>*</RequiredAsterisk>
+											</FormGroup>
+										)}
+										{authSettings?.last_name?.enabled && (
+											<FormGroup>
+												<Label htmlFor="last_name">
+													Last name
+													{authSettings?.last_name?.required && (
+														<RequiredAsterisk>*</RequiredAsterisk>
+													)}
+												</Label>
+												<Input
+													type="text"
+													id="last_name"
+													name="last_name"
+													required
+													minLength={3}
+													maxLength={30}
+													value={formData.last_name}
+													onChange={handleInputChange}
+													placeholder="Last name"
+													aria-invalid={!!errors.last_name}
+													pattern="^[a-zA-Z]{3,30}$"
+												/>
+												{errors.last_name && (
+													<ErrorMessage>{errors.last_name}</ErrorMessage>
 												)}
-											</Label>
-											<Input
-												type="text"
-												id="last_name"
-												name="last_name"
-												required
-												minLength={3}
-												maxLength={30}
-												value={formData.last_name}
-												onChange={handleInputChange}
-												placeholder="Last name"
-												aria-invalid={!!errors.last_name}
-												pattern="^[a-zA-Z]{3,30}$"
-											/>
-											{errors.last_name && (
-												<ErrorMessage>{errors.last_name}</ErrorMessage>
-											)}
-										</FormGroup>
-									)}
-								</NameFields>
-							)}
+											</FormGroup>
+										)}
+									</NameFields>
+								)}
 
 							{authSettings?.username.enabled && (
 								<FormGroup>

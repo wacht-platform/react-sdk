@@ -61,7 +61,7 @@ function DeploymentProvider({ children, publicKey }: DeploymentProviderProps) {
 			const deploymentConfig =
 				(await deployment.json()) as ClinetReponse<Deployment>;
 
-			deploymentConfig.data.host = baseUrl;
+			deploymentConfig.data.backend_host = baseUrl;
 			setDeployment(deploymentConfig.data);
 
 			if (deployment.headers.get("X-Development-Session")) {

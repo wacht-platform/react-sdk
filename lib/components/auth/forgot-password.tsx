@@ -1,7 +1,7 @@
 import { useState } from "react";
 import styled from "styled-components";
 import { DefaultStylesProvider } from "@/components/utility/root";
-import { ArrowLeft } from "lucide-react";
+
 import { OtherAuthOptions } from "@/components/auth/other-auth-options";
 
 const Container = styled.div`
@@ -50,21 +50,7 @@ const DividerText = styled.span`
   font-size: var(--font-xs);
 `;
 
-const BackButton = styled.button`
-  position: absolute;
-  top: var(--space-xs);
-  left: 0px;
-  cursor: pointer;
-  font-size: var(--font-xs);
-  margin-bottom: var(--space-lg);
-  color: var(--color-muted);
-  background: none;
-  border: none;
 
-  &:hover {
-    color: var(--color-foreground);
-  }
-`;
 
 const ResetButton = styled.button`
   width: 100%;
@@ -120,9 +106,6 @@ export function ForgotPassword({ onBack }: ForgotPasswordProps) {
     <DefaultStylesProvider>
       <Container>
         <Header>
-          <BackButton onClick={onBack}>
-            <ArrowLeft size={16} />
-          </BackButton>
           <Title>Forgot Password</Title>
         </Header>
 
@@ -139,6 +122,9 @@ export function ForgotPassword({ onBack }: ForgotPasswordProps) {
         <Footer>
           <FooterText>
             Unable to reset password? <Link href="/contact">Get help</Link>
+          </FooterText>
+          <FooterText style={{ marginTop: 'var(--space-sm)' }}>
+            <Link onClick={onBack} style={{ cursor: 'pointer' }}>Use other method</Link>
           </FooterText>
         </Footer>
       </Container>
