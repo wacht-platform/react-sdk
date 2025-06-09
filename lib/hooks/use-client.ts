@@ -38,6 +38,14 @@ export function useClient(): UseClientReturnType {
 			headers,
 		});
 
+		if (response.headers.get("X-Development-Session")) {
+				localStorage.setItem(
+					"__dev_session__",
+					response.headers.get("X-Development-Session") ?? "",
+				);
+			}
+			
+
 		return response;
 	};
 
