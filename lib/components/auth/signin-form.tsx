@@ -22,6 +22,7 @@ import type { DeploymentSocialConnection } from "@/types/deployment";
 import { useDeployment } from "@/hooks/use-deployment";
 import { Button } from "@/components/utility";
 import { AuthFormImage } from "./auth-image";
+import { SignInProfileCompletion } from "./signin-profile-completion";
 
 const Container = styled.div`
   max-width: 360px;
@@ -137,6 +138,7 @@ function SignInFormContent() {
 		signinAttempt,
 		discardSignInAttempt,
 		errors: signInErrors,
+		completeProfile,
 	} = useSignInWithStrategy(SignInStrategy.Generic);
 	const { signIn: oauthSignIn } = useSignInWithStrategy(SignInStrategy.Oauth);
 	const [formData, setFormData] = useState<SignInParams>({
@@ -326,6 +328,19 @@ function SignInFormContent() {
 					console.log("Help requested");
 				}}
 			/>
+		);
+	}
+
+	if (signinAttempt?.requires_completion) {
+		return (
+			<DefaultStylesProvider>
+				<SignInProfileCompletion
+					signinAttempt={signinAttempt}
+					onComplete={completeProfile}
+					loading={isSubmitting}
+					error={signInErrors?.errors?.[0] ? new Error(signInErrors.errors[0].message) : null}
+				/>
+			</DefaultStylesProvider>
 		);
 	}
 

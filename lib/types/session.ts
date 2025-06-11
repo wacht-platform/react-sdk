@@ -53,6 +53,9 @@ export interface SigninAttempt {
   last_active_org_id: number;
   current_step: CurrentSessionStep;
   completed: boolean;
+  requires_completion?: boolean;
+  missing_fields?: string[];
+  required_fields?: string[];
 }
 
 export type SignupAttemptStep =

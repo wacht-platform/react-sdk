@@ -551,10 +551,10 @@ export function SignUpForm() {
             <Header>
               <Title>
                 Check your{" "}
-                {authSettings?.email_address?.enabled ? "email" : "phone"}
+                {signupAttempt?.current_step === "verify_email" ? "email" : "phone"}
               </Title>
               <Subtitle>
-                {authSettings?.email_address?.enabled
+                {signupAttempt?.current_step === "verify_email"
                   ? `${formData.email} to continue to Wacht`
                   : `${formData.phone_number} to continue to Wacht`}
               </Subtitle>
@@ -569,7 +569,8 @@ export function SignUpForm() {
                   setOtpCode(code);
                 }}
                 onResend={async () => {
-                  await signUp.prepareVerification("email_otp");
+                  const strategy = signupAttempt?.current_step === "verify_email" ? "email_otp" : "phone_otp";
+                  await signUp.prepareVerification(strategy);
                 }}
                 error={errors.otp}
                 isSubmitting={isSubmitting}

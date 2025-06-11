@@ -5,6 +5,7 @@ import { Loader2, AlertCircle, CheckCircle } from "lucide-react";
 import { DefaultStylesProvider } from "../utility/root";
 import { useSSOCallback } from "../../hooks/use-sso-callback";
 import { AuthFormImage } from "./auth-image";
+import { OAuthCompletionForm } from "./oauth-completion-form";
 
 const Container = styled.div`
   max-width: 360px;
@@ -133,28 +134,45 @@ const ErrorDetails = styled.div`
 interface SSOCallbackProps {
   onSuccess?: (session: any, redirectUri?: string) => void;
   onError?: (error: Error) => void;
+  onRequiresCompletion?: (signupAttempt: any, session: any) => void;
   autoRedirect?: boolean;
   loadingMessage?: string;
   successMessage?: string;
   errorMessage?: string;
+  showCompletionForm?: boolean;
 }
 
 export function SSOCallback({
   onSuccess,
   onError,
+  onRequiresCompletion,
   autoRedirect = true,
   loadingMessage = "Completing sign in...",
   successMessage = "Sign in successful! Redirecting...",
   errorMessage = "Sign in failed",
+  showCompletionForm = true,
 }: SSOCallbackProps = {}) {
-  const { error, session, processed } = useSSOCallback({
+  const {
+    error,
+    session,
+    processed,
+    requiresCompletion,
+    requiresVerification,
+    signupAttempt,
+    completeOAuthSignup,
+    completeVerification,
+    prepareVerification,
+    completionLoading,
+    completionError
+  } = useSSOCallback({
     onSuccess,
     onError,
+    onRequiresCompletion,
     autoRedirect,
   });
 
-  // Determine current status
   const getStatus = () => {
+    if ((requiresCompletion || requiresVerification) && signupAttempt && showCompletionForm) return "completion";
     if (error && error.message.includes("No OAuth callback data found")) return "redirecting";
     if (error) return "error";
     if (session && processed) return "success";
@@ -192,6 +210,22 @@ export function SSOCallback({
         return loadingMessage;
     }
   };
+
+  if (status === "completion") {
+    return (
+      <DefaultStylesProvider>
+        <OAuthCompletionForm
+          signupAttempt={signupAttempt}
+          onComplete={completeOAuthSignup}
+          onCompleteVerification={completeVerification}
+          onPrepareVerification={prepareVerification}
+          loading={completionLoading}
+          error={completionError}
+          requiresVerification={requiresVerification}
+        />
+      </DefaultStylesProvider>
+    );
+  }
 
   return (
     <DefaultStylesProvider>

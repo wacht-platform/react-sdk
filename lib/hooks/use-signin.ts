@@ -101,6 +101,12 @@ type UseSignInReturnType =
 		signinAttempt: SigninAttempt | null;
 		discardSignInAttempt: () => void;
 		errors: ApiResult<unknown, ErrorInterface> | null;
+		completeProfile: (data: {
+			first_name?: string;
+			last_name?: string;
+			username?: string;
+			phone_number?: string;
+		}) => Promise<ApiResult<unknown, ErrorInterface>>;
 	}
 	| {
 		loading: true;
@@ -108,6 +114,7 @@ type UseSignInReturnType =
 		signinAttempt: null;
 		discardSignInAttempt: () => void;
 		errors: null;
+		completeProfile: never;
 	};
 
 type InitSSOResponseType = {
@@ -291,6 +298,7 @@ export function useSignIn(): UseSignInReturnType {
 				setErrors(null);
 			},
 			errors: null,
+			completeProfile: null as never,
 		} as UseSignInReturnType;
 	}
 
@@ -328,6 +336,34 @@ export function useSignIn(): UseSignInReturnType {
 			setErrors(null);
 		},
 		errors,
+		completeProfile: async (data: {
+			first_name?: string;
+			last_name?: string;
+			username?: string;
+			phone_number?: string;
+		}) => {
+			const form = new FormData();
+			if (data.first_name) form.append("first_name", data.first_name);
+			if (data.last_name) form.append("last_name", data.last_name);
+			if (data.username) form.append("username", data.username);
+			if (data.phone_number) form.append("phone_number", data.phone_number);
+
+			const response = await client(
+				`/auth/signin/complete-profile?attempt_id=${signinAttempt?.id}`,
+				{
+					method: "POST",
+					body: form,
+				}
+			);
+			const result = await responseMapper<Session>(response);
+			if ("data" in result && result.data?.signin_attempts?.length) {
+				setSignInAttempt(result.data.signin_attempts.at(-1) || null);
+				setErrors(null);
+			} else {
+				setErrors(result);
+			}
+			return result;
+		},
 	};
 }
 
@@ -346,6 +382,7 @@ export type UseSignInWithStrategyReturnType<T extends SignInStrategy> =
 		signinAttempt: null;
 		discardSignInAttempt: () => void;
 		errors: null;
+		completeProfile: never;
 	}
 	| {
 		loading: false;
@@ -359,12 +396,18 @@ export type UseSignInWithStrategyReturnType<T extends SignInStrategy> =
 		signinAttempt: SigninAttempt | null;
 		discardSignInAttempt: () => void;
 		errors: ApiResult<unknown, ErrorInterface> | null;
+		completeProfile: (data: {
+			first_name?: string;
+			last_name?: string;
+			username?: string;
+			phone_number?: string;
+		}) => Promise<ApiResult<unknown, ErrorInterface>>;
 	};
 
 export function useSignInWithStrategy<T extends SignInStrategy>(
 	strategy: T,
 ): UseSignInWithStrategyReturnType<T> {
-	const { loading, signIn, signinAttempt, discardSignInAttempt, errors } =
+	const { loading, signIn, signinAttempt, discardSignInAttempt, errors, completeProfile } =
 		useSignIn();
 
 	if (loading) {
@@ -373,6 +416,7 @@ export function useSignInWithStrategy<T extends SignInStrategy>(
 			signinAttempt: null,
 			discardSignInAttempt,
 			errors: null,
+			completeProfile: null as never,
 		} as UseSignInWithStrategyReturnType<T>;
 	}
 
@@ -403,5 +447,6 @@ export function useSignInWithStrategy<T extends SignInStrategy>(
 		},
 		discardSignInAttempt,
 		errors,
+		completeProfile,
 	} as UseSignInWithStrategyReturnType<T>;
 }
