@@ -8,10 +8,10 @@ const breakpoints = {
 };
 
 export const Input = styled.input`
-  padding: 0.5rem 0.75rem;
+  padding: var(--space-sm) var(--space-md);
   width: 100%;
-  height: 2.5rem;
-  border: 0.0625rem solid var(--color-border);
+  height: 36px;
+  border: 1px solid var(--color-border);
   border-radius: var(--radius-md);
   font-size: var(--font-xs);
   color: var(--color-foreground);
@@ -31,8 +31,8 @@ export const Input = styled.input`
 
   &:focus:valid {
     outline: none;
-    border-color: #22c55e;
-    box-shadow: 0 0 0 0.1875rem rgba(34, 197, 94, 0.1);
+    border-color: var(--color-success);
+    box-shadow: 0 0 0 0.1875rem var(--color-success-background);
     background: var(--color-background);
   }
 
@@ -48,8 +48,8 @@ export const Input = styled.input`
   }
 
   @media (max-width: ${breakpoints.sm}) {
-    height: 2.25rem;
-    font-size: 0.8125rem;
-    padding: 0.375rem 0.625rem;
+    height: 32px;
+    font-size: var(--font-2xs);
+    padding: var(--space-xs) var(--space-sm);
   }
 `;

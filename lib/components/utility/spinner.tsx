@@ -20,8 +20,8 @@ const SpinnerWrapper = styled.div<{ $size?: number }>`
 const SpinnerCircle = styled.div<{ $size?: number }>`
   width: ${(props) => props.$size ? `${props.$size}px` : "40px"};
   height: ${(props) => props.$size ? `${props.$size}px` : "40px"};
-  border: 3px solid #f3f4f6;
-  border-top: 3px solid #6366f1;
+  border: 3px solid var(--color-border);
+  border-top: 3px solid var(--color-primary);
   border-radius: 50%;
   animation: ${spin} 1s linear infinite;
 `;

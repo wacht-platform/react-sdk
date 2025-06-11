@@ -9,12 +9,10 @@ const PopoverContainer = styled.div`
   right: 0;
   top: 100%;
   margin-top: 8px;
-  background: white;
-  border-radius: 8px;
-  box-shadow:
-    0 4px 6px -1px rgb(0 0 0 / 0.1),
-    0 2px 4px -2px rgb(0 0 0 / 0.1);
-  border: 1px solid #e2e8f0;
+  background: var(--color-background);
+  border-radius: var(--radius-md);
+  box-shadow: 0 4px 24px var(--color-shadow);
+  border: 1px solid var(--color-border);
   padding: 16px;
   width: 380px;
   z-index: 10;
@@ -22,10 +20,10 @@ const PopoverContainer = styled.div`
 
 export const Button = styled.button<{ $primary?: boolean }>`
   padding: 8px 12px;
-  background: ${(props) => (props.$primary ? "#6366f1" : "white")};
-  color: ${(props) => (props.$primary ? "white" : "#64748b")};
-  border: 1px solid ${(props) => (props.$primary ? "#6366f1" : "#e2e8f0")};
-  border-radius: 8px;
+  background: ${(props) => (props.$primary ? "var(--color-primary)" : "var(--color-background)")};
+  color: ${(props) => (props.$primary ? "white" : "var(--color-secondary-text)")};
+  border: 1px solid ${(props) => (props.$primary ? "var(--color-primary)" : "var(--color-border)")};
+  border-radius: var(--radius-md);
   font-size: 14px;
   cursor: pointer;
   display: flex;
@@ -34,7 +32,7 @@ export const Button = styled.button<{ $primary?: boolean }>`
   transition: all 0.2s ease;
 
   &:hover {
-    background: ${(props) => (props.$primary ? "#4f46e5" : "#f8fafc")};
+    background: ${(props) => (props.$primary ? "var(--color-primary-hover)" : "var(--color-input-background)")};
   }
 
   &:disabled {
@@ -53,7 +51,7 @@ export const ButtonGroup = styled.div`
 const Title = styled.div`
   font-size: 14px;
   font-weight: 500;
-  color: #1e293b;
+  color: var(--color-foreground);
   margin-bottom: 8px;
 `;
 

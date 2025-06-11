@@ -31,14 +31,14 @@ const socialAuthProviders = {
 const SocialAuthButtonsContainer = styled.div`
   display: flex;
   flex-direction: column;
-  gap: var(--space-sm);
-  margin-bottom: var(--space-lg);
+  gap: var(--space-xs);
+  margin-bottom: var(--space-md);
 `;
 
 const ButtonRow = styled.div`
   display: flex;
   flex-wrap: wrap;
-  gap: var(--space-sm);
+  gap: var(--space-xs);
 `;
 
 const SocialAuthButton = styled.button<{
@@ -49,7 +49,7 @@ const SocialAuthButton = styled.button<{
   align-items: center;
   justify-content: center;
   gap: var(--space-xs);
-  padding: var(--space-xs) var(--space-md);
+  padding: var(--space-xs) var(--space-sm);
   border: 1px solid var(--color-border);
   border-radius: var(--radius-md);
   background: var(--color-background);
@@ -58,7 +58,7 @@ const SocialAuthButton = styled.button<{
   font-size: var(--font-xs);
   color: var(--color-foreground);
   font-weight: 500;
-  height: 40px;
+  height: 36px;
 
   ${(props) => {
     if (props.$totalProviders <= 6) {
@@ -81,8 +81,8 @@ const SocialAuthButton = styled.button<{
   }
 
   svg {
-    width: 20px;
-    height: 20px;
+    width: 16px;
+    height: 16px;
     flex-shrink: 0;
   }
 `;

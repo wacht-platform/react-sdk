@@ -1,5 +1,5 @@
 import styled from "styled-components";
-import { Building2, Plus, Settings } from "lucide-react";
+import { Building2, Plus } from "lucide-react";
 import { DefaultStylesProvider } from "../utility/root";
 
 interface Organization {
@@ -12,9 +12,9 @@ interface Organization {
 const Container = styled.div`
   max-width: 30rem;
   width: 100%;
-  background: white;
+  background: var(--color-background);
   border-radius: 1rem;
-  box-shadow: 0 0.25rem 0.75rem rgba(0, 0, 0, 0.1);
+  box-shadow: 0 0.25rem 0.75rem var(--color-shadow);
 
   @media (max-width: 37.5rem) {
     width: 90%;
@@ -29,7 +29,7 @@ const Container = styled.div`
 
 const Header = styled.div`
   padding: 1.75rem;
-  border-bottom: 1px solid #e2e8f0;
+  border-bottom: 1px solid var(--color-border);
   display: flex;
   align-items: center;
   gap: 0.875rem;
@@ -48,7 +48,7 @@ const Header = styled.div`
 const Title = styled.h2`
   font-size: 1.25rem;
   font-weight: 600;
-  color: #1e293b;
+  color: var(--color-foreground);
   margin: 0;
 
   @media (max-width: 37.5rem) {
@@ -79,11 +79,11 @@ const OrganizationItem = styled.div<{ $active?: boolean }>`
   border-radius: 0.75rem;
   cursor: pointer;
   transition: all 0.2s;
-  background: ${(props) => (props.$active ? "#f1f5f9" : "transparent")};
+  background: ${(props) => (props.$active ? "var(--color-input-background)" : "transparent")};
   margin-bottom: 0.5rem;
 
   &:hover {
-    background: #f8fafc;
+    background: var(--color-input-background);
   }
 
   @media (max-width: 37.5rem) {
@@ -100,13 +100,13 @@ const OrgImage = styled.div<{ url?: string }>`
   width: 3.5rem;
   height: 3.5rem;
   border-radius: 0.75rem;
-  background: ${(props) => (props.url ? `url(${props.url})` : "#f1f5f9")};
+  background: ${(props) => (props.url ? `url(${props.url})` : "var(--color-input-background)")};
   background-size: cover;
   background-position: center;
   display: flex;
   align-items: center;
   justify-content: center;
-  color: #64748b;
+  color: var(--color-secondary-text);
 
   @media (max-width: 37.5rem) {
     width: 3rem;
@@ -136,7 +136,7 @@ const OrgInfo = styled.div`
 const OrgName = styled.div`
   font-size: 1.0625rem;
   font-weight: 500;
-  color: #1e293b;
+  color: var(--color-foreground);
   margin-bottom: 0.25rem;
 
   @media (max-width: 37.5rem) {
@@ -150,7 +150,7 @@ const OrgName = styled.div`
 
 const OrgRole = styled.div`
   font-size: 0.9375rem;
-  color: #64748b;
+  color: var(--color-secondary-text);
 
   @media (max-width: 37.5rem) {
     font-size: 0.8125rem;
@@ -165,12 +165,12 @@ const IconButton = styled.button`
   background: transparent;
   border: none;
   padding: 0.75rem;
-  color: #64748b;
+  color: var(--color-secondary-text);
   cursor: pointer;
   border-radius: 0.5rem;
 
   &:hover {
-    background: #f1f5f9;
+    background: var(--color-input-background);
   }
 
   @media (max-width: 37.5rem) {
@@ -184,7 +184,7 @@ const IconButton = styled.button`
 
 const Divider = styled.div`
   height: 1px;
-  background: #e2e8f0;
+  background: var(--color-border);
   margin: 0.75rem 0;
 `;
 
@@ -196,14 +196,14 @@ const ActionButton = styled.button`
   padding: 1rem;
   border: none;
   background: transparent;
-  color: #1e293b;
+  color: var(--color-foreground);
   font-size: 1rem;
   font-weight: 500;
   cursor: pointer;
   border-radius: 0.75rem;
 
   &:hover {
-    background: #f8fafc;
+    background: var(--color-input-background);
   }
 
   @media (max-width: 37.5rem) {
@@ -252,7 +252,7 @@ export const OrganizationList = ({
 								<OrgRole>{org.role}</OrgRole>
 							</OrgInfo>
 							<IconButton>
-								<Settings size={20} />
+								•••
 							</IconButton>
 						</OrganizationItem>
 					))}

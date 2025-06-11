@@ -5,7 +5,6 @@ import {
   // Shield,
   ArrowRight,
   ArrowLeft,
-  MoreVertical,
   LogOut,
   Ban,
   Plus,
@@ -15,7 +14,6 @@ import {
   Download,
   AlertTriangle,
   RefreshCw,
-  CheckCircle,
   // Smartphone,
   HelpCircle,
   ChevronUp,
@@ -39,7 +37,6 @@ import { GoogleIcon } from "../icons/google";
 import { MicrosoftIcon } from "../icons/microsoft";
 import { GithubIcon } from "../icons/github";
 import { XIcon } from "../icons/x";
-import { ChevronRightIcon } from "../icons/chevron-right";
 import { useDeployment } from "@/hooks/use-deployment";
 import { Form, FormGroup, Label } from "../utility/form";
 import { Input } from "../utility/input";
@@ -60,9 +57,9 @@ const Container = styled.div`
   width: 900px;
   max-width: 100%;
   height: 600px;
-  background: #ffffff;
+  background: var(--color-background);
   border-radius: 20px;
-  box-shadow: 0 8px 30px rgba(0, 0, 0, 0.06);
+  box-shadow: 0 8px 30px var(--color-shadow);
   padding: 24px;
   transition: all 0.3s ease;
   overflow: hidden;
@@ -121,7 +118,7 @@ const Layout = styled.div`
 // const Title = styled.h1`
 //   font-size: 18px;
 //   margin: 0;
-//   color: #1e293b;
+//   color: var(--color-text);
 //   font-weight: 400;
 // `;
 
@@ -132,7 +129,7 @@ const ProfileSection = styled.div`
 
 const SectionTitle = styled.h2`
   font-size: 16px;
-  color: #1e293b;
+  color: var(--color-foreground);
   margin-bottom: 0;
   display: flex;
   justify-content: space-between;
@@ -167,15 +164,15 @@ const ProfileName = styled.div`
 const Name = styled.h2`
   font-size: 16px;
   margin: 0;
-  color: #1e293b;
+  color: var(--color-foreground);
 `;
 
 const EditButton = styled.button`
   padding: 8px 16px;
-  border-radius: 6px;
+  border-radius: var(--radius-sm);
   border: none;
-  background: #f8f7f4;
-  color: #1e293b;
+  background: var(--color-input-background);
+  color: var(--color-foreground);
   font-size: 14px;
   font-weight: 500;
   cursor: pointer;
@@ -185,7 +182,7 @@ const EditButton = styled.button`
   transition: all 0.2s ease;
 
   &:hover {
-    background: #f1efe9;
+    background: var(--color-border);
   }
 `;
 
@@ -193,9 +190,9 @@ const InfoItem = styled.div`
   display: flex;
   align-items: center;
   padding: 16px 2px;
-  border-bottom: 1px solid #e2e8f0;
+  border-bottom: 1px solid var(--color-border);
   gap: 12px;
-  color: #1e293b;
+  color: var(--color-foreground);
   cursor: pointer;
   transition: background-color 0.2s ease;
 
@@ -204,12 +201,12 @@ const InfoItem = styled.div`
   }
 
   &:hover {
-    background-color: #f8fafc;
+    background-color: var(--color-input-background);
   }
 `;
 
 const InfoLabel = styled.div`
-  color: #64748b;
+  color: var(--color-secondary-text);
   font-size: 14px;
   width: 180px;
 `;
@@ -226,7 +223,7 @@ const InfoContent = styled.div`
 
 const LastLogin = styled.div`
   font-size: 13px;
-  color: #64748b;
+  color: var(--color-secondary-text);
   margin-top: 8px;
   display: flex;
   align-items: center;
@@ -238,24 +235,24 @@ const IconButton = styled.button`
   border: none;
   padding: 4px;
   cursor: pointer;
-  color: #64748b;
-  border-radius: 4px;
+  color: var(--color-secondary-text);
+  border-radius: var(--radius-xs);
   display: flex;
   align-items: center;
   justify-content: center;
   transition: all 0.2s ease;
 
   &:hover {
-    background: #f1f5f9;
-    color: #1e293b;
+    background: var(--color-input-background);
+    color: var(--color-foreground);
   }
 `;
 
 const Badge = styled.span`
-  background: #e0e7ff;
-  color: #4f46e5;
+  background: var(--color-primary-background);
+  color: var(--color-primary);
   padding: 2px 8px;
-  border-radius: 6px;
+  border-radius: var(--radius-sm);
   font-size: 10px;
   font-weight: 500;
 `;
@@ -293,7 +290,7 @@ const AddItemForm = styled.div<{ $isVisible: boolean }>`
   left: 100%;
   width: 100%;
   height: 100%;
-  background: white;
+  background: var(--color-background);
   overflow-y: auto;
   transform: translateX(${(props) => (props.$isVisible ? "-100%" : "0")});
   transition: transform 0.3s ease;
@@ -306,7 +303,7 @@ const BackButton = styled.button`
   display: flex;
   align-items: center;
   gap: 8px;
-  color: #64748b;
+  color: var(--color-secondary-text);
   background: none;
   border: none;
   padding: 8px 0;
@@ -314,21 +311,21 @@ const BackButton = styled.button`
   font-size: 14px;
 
   &:hover {
-    color: #1e293b;
+    color: var(--color-foreground);
   }
 `;
 
 const OutlinedButton = styled.button`
   background: none;
-  border: 1px solid #e2e8f0;
-  color: #1e293b;
+  border: 1px solid var(--color-border);
+  color: var(--color-foreground);
   padding: 4px;
-  border-radius: 6px;
+  border-radius: var(--radius-sm);
   cursor: pointer;
   font-size: 14px;
   transition: all 0.2s ease;
   &:hover {
-    background: #f8fafc;
+    background: var(--color-input-background);
   }
 `;
 
@@ -406,7 +403,7 @@ const ProfileManagementSection = ({
             </Name>
           </ProfileName>
 
-          <ArrowRight size={14} style={{ color: "#64748b" }} />
+          <ArrowRight size={14} style={{ color: "var(--color-muted)" }} />
         </ProfileHeader>
 
         <InfoItem onClick={() => setScreen("email")}>
@@ -426,7 +423,7 @@ const ProfileManagementSection = ({
                     .join(", ")
                 : "No email addresses added"}
             </div>
-            <ArrowRight size={14} style={{ color: "#64748b" }} />
+            <ArrowRight size={14} style={{ color: "var(--color-muted)" }} />
           </InfoContent>
         </InfoItem>
 
@@ -447,7 +444,7 @@ const ProfileManagementSection = ({
                     .join(", ")
                 : "No phone numbers added"}
             </div>
-            <ArrowRight size={14} style={{ color: "#64748b" }} />
+            <ArrowRight size={14} style={{ color: "var(--color-muted)" }} />
           </InfoContent>
         </InfoItem>
 
@@ -468,7 +465,7 @@ const ProfileManagementSection = ({
                     .join(", ")
                 : "No accounts connected"}
             </div>
-            <ArrowRight size={14} style={{ color: "#64748b" }} />
+            <ArrowRight size={14} style={{ color: "var(--color-muted)" }} />
           </InfoContent>
         </InfoItem>
 
@@ -489,7 +486,7 @@ const ProfileManagementSection = ({
             >
               Last changed 3 months ago
             </div>
-            <ArrowRight size={14} style={{ color: "#64748b" }} />
+            <ArrowRight size={14} style={{ color: "var(--color-muted)" }} />
           </InfoContent>
         </InfoItem>
 
@@ -508,7 +505,7 @@ const ProfileManagementSection = ({
                 ? "Add a second layer of security to your account"
                 : "Set up your second factors"}
             </div>
-            <ArrowRight size={14} style={{ color: "#64748b" }} />
+            <ArrowRight size={14} style={{ color: "var(--color-muted)" }} />
           </InfoContent>
         </InfoItem>
         <InfoItem onClick={() => setScreen("active-sessions")}>
@@ -524,7 +521,7 @@ const ProfileManagementSection = ({
             >
               Manage your active sessions
             </div>
-            <ArrowRight size={14} style={{ color: "#64748b" }} />
+            <ArrowRight size={14} style={{ color: "var(--color-muted)" }} />
           </InfoContent>
         </InfoItem>
       </ProfileSection>
@@ -571,7 +568,7 @@ const ActiveSessionsSection = () => {
               alignItems: "center",
               padding: "16px",
               background:
-                activeSession === signin.id ? "#f8fafc" : "transparent",
+                activeSession === signin.id ? "var(--color-background-hover)" : "transparent",
               borderRadius: "8px",
               marginTop: "12px",
               position: "relative",
@@ -582,7 +579,7 @@ const ActiveSessionsSection = () => {
               <div
                 style={{
                   fontSize: "14px",
-                  color: "#1e293b",
+                  color: "var(--color-foreground)",
                   fontWeight: 500,
                 }}
               >
@@ -606,7 +603,7 @@ const ActiveSessionsSection = () => {
                   )
                 }
               >
-                <MoreVertical size={16} />
+                •••
               </IconButton>
               <SessionDropdown
                 isOpen={activeSession === signin.id}
@@ -624,7 +621,7 @@ const ActiveSessionsSection = () => {
           style={{
             textAlign: "center",
             padding: "20px",
-            color: "#64748b",
+            color: "var(--color-muted)",
           }}
         >
           No active sign-ins found
@@ -688,7 +685,7 @@ const EmailManagementSection = () => {
             style={{
               textAlign: "center",
               padding: "20px",
-              color: "#64748b",
+              color: "var(--color-muted)",
             }}
           >
             No email addresses added
@@ -700,7 +697,7 @@ const EmailManagementSection = () => {
                 <div
                   style={{
                     fontSize: "14px",
-                    color: "#1e293b",
+                    color: "var(--color-foreground)",
                     display: "flex",
                     alignItems: "center",
                     gap: "8px",
@@ -719,7 +716,7 @@ const EmailManagementSection = () => {
                     setActiveEmail(activeEmail === email.id ? null : email.id)
                   }
                 >
-                  <MoreVertical size={16} />
+                  •••
                 </IconButton>
                 {emailIdInAction === email.id && (
                   <EmailAddPopover
@@ -835,7 +832,7 @@ const PhoneManagementSection = () => {
             style={{
               textAlign: "center",
               padding: "20px",
-              color: "#64748b",
+              color: "var(--color-muted)",
             }}
           >
             No phone numbers added
@@ -847,7 +844,7 @@ const PhoneManagementSection = () => {
                 <div
                   style={{
                     fontSize: "14px",
-                    color: "#1e293b",
+                    color: "var(--color-foreground)",
                     display: "flex",
                     alignItems: "center",
                     gap: "8px",
@@ -866,7 +863,7 @@ const PhoneManagementSection = () => {
                     setActivePhone(activePhone === phone.id ? null : phone.id)
                   }
                 >
-                  <MoreVertical size={16} />
+                  •••
                 </IconButton>
                 {phoneIdInAction === phone.id && (
                   <PhoneAddPopover
@@ -996,7 +993,7 @@ const SocialManagementSection = () => {
               alignItems: "center",
               justifyContent: "space-between",
               padding: "12px",
-              background: "#f8fafc",
+              background: "var(--color-background-hover)",
               borderRadius: "8px",
             }}
           >
@@ -1008,7 +1005,7 @@ const SocialManagementSection = () => {
               }}
             >
               <IconWrapper>{providerInfo.icon}</IconWrapper>
-              <div style={{ fontSize: "14px", color: "#1e293b" }}>
+              <div style={{ fontSize: "14px", color: "var(--color-foreground)" }}>
                 {providerInfo.label}
               </div>
             </div>
@@ -1020,12 +1017,12 @@ const SocialManagementSection = () => {
                   gap: "12px",
                 }}
               >
-                <div style={{ fontSize: "14px", color: "#64748b" }}>
+                <div style={{ fontSize: "14px", color: "var(--color-muted)" }}>
                   {connectedAccount.email_address}
                 </div>
                 <EditButton
                   onClick={() => console.log("Disconnect", connectedAccount.id)}
-                  style={{ background: "#fee2e2", color: "#ef4444" }}
+                  style={{ background: "var(--color-error-background)", color: "var(--color-error)" }}
                 >
                   Disconnect
                 </EditButton>
@@ -1037,12 +1034,12 @@ const SocialManagementSection = () => {
                   border: "none",
                   cursor: "pointer",
                   padding: 0,
-                  color: "#64748b",
+                  color: "var(--color-muted)",
                 }}
                 type="button"
               >
                 <IconWrapper>
-                  <ChevronRightIcon />
+                  {">"}  
                 </IconWrapper>
               </button>
             )}
@@ -1179,10 +1176,10 @@ const PasswordInput = styled.div`
     background: none;
     border: none;
     cursor: pointer;
-    color: #64748b;
+    color: var(--color-muted);
 
     &:hover {
-      color: #1e293b;
+      color: var(--color-text);
     }
   }
 `;
@@ -1260,7 +1257,7 @@ const PasswordManagementSection = () => {
           </PasswordInput>
           {errors.currentPassword && (
             <div
-              style={{ color: "#ef4444", fontSize: "12px", marginTop: "4px" }}
+              style={{ color: "var(--color-error)", fontSize: "12px", marginTop: "4px" }}
             >
               {errors.currentPassword}
             </div>
@@ -1286,7 +1283,7 @@ const PasswordManagementSection = () => {
           </PasswordInput>
           {errors.newPassword && (
             <div
-              style={{ color: "#ef4444", fontSize: "12px", marginTop: "4px" }}
+              style={{ color: "var(--color-error)", fontSize: "12px", marginTop: "4px" }}
             >
               {errors.newPassword}
             </div>
@@ -1312,7 +1309,7 @@ const PasswordManagementSection = () => {
           </PasswordInput>
           {errors.confirmPassword && (
             <div
-              style={{ color: "#ef4444", fontSize: "12px", marginTop: "4px" }}
+              style={{ color: "var(--color-error)", fontSize: "12px", marginTop: "4px" }}
             >
               {errors.confirmPassword}
             </div>
@@ -1326,8 +1323,8 @@ const PasswordManagementSection = () => {
             style={{
               width: "100%",
               padding: "9px 16px",
-              background: "#6366f1",
-              color: "white",
+              background: "var(--color-primary)",
+              color: "var(--color-background)",
               border: "none",
               borderRadius: "8px",
               fontWeight: 500,
@@ -1380,7 +1377,7 @@ const TwoFactorManagementSection = ({
           >
             Add an authenticator app to your account
           </div>
-          <ArrowRight size={14} style={{ color: "#64748b" }} />
+          <ArrowRight size={14} style={{ color: "var(--color-muted)" }} />
         </InfoContent>
       </InfoItem>
 
@@ -1394,7 +1391,7 @@ const TwoFactorManagementSection = ({
           >
             Add a phone number for 2FA
           </div>
-          <ArrowRight size={14} style={{ color: "#64748b" }} />
+          <ArrowRight size={14} style={{ color: "var(--color-muted)" }} />
         </InfoContent>
       </InfoItem>
 
@@ -1408,12 +1405,12 @@ const TwoFactorManagementSection = ({
           >
             Download backup codes for your account
           </div>
-          <ArrowRight size={14} style={{ color: "#64748b" }} />
+          <ArrowRight size={14} style={{ color: "var(--color-muted)" }} />
         </InfoContent>
       </InfoItem>
 
       <div style={{ marginTop: "24px" }}>
-        <p style={{ fontSize: "14px", color: "#64748b" }}>
+        <p style={{ fontSize: "14px", color: "var(--color-muted)" }}>
           Secure your account with an additional verification step during
           sign-in.
         </p>
@@ -1495,7 +1492,7 @@ const AuthenticatorManagementSection = () => {
               <p
                 style={{
                   fontSize: "14px",
-                  color: "#64748b",
+                  color: "var(--color-muted)",
                   marginBottom: "16px",
                   lineHeight: "1.5",
                 }}
@@ -1546,11 +1543,11 @@ const AuthenticatorManagementSection = () => {
                     width: "120px",
                     height: "120px",
                     borderRadius: "16px",
-                    background: "white",
+                    background: "var(--color-background)",
                     display: "flex",
                     alignItems: "center",
                     justifyContent: "center",
-                    boxShadow: "0 4px 12px rgba(0,0,0,0.08)",
+                    boxShadow: "0 4px 12px var(--color-shadow)",
                     overflow: "hidden",
                     position: "relative",
                     zIndex: 10,
@@ -1561,7 +1558,7 @@ const AuthenticatorManagementSection = () => {
                       width: "60px",
                       height: "60px",
                       background:
-                        "linear-gradient(135deg, #4285F4 0%, #EA4335 25%, #FBBC05 50%, #34A853 75%, #4285F4 100%)",
+                        "var(--color-primary)",
                       borderRadius: "50%",
                       transform: "rotate(45deg)",
                     }}
@@ -1573,7 +1570,7 @@ const AuthenticatorManagementSection = () => {
                     position: "absolute",
                     width: "140px",
                     height: "2px",
-                    background: "#e5e7eb",
+                    background: "var(--color-border)",
                     top: "50%",
                     left: "0",
                   }}
@@ -1583,7 +1580,7 @@ const AuthenticatorManagementSection = () => {
                     position: "absolute",
                     width: "2px",
                     height: "140px",
-                    background: "#e5e7eb",
+                    background: "var(--color-border)",
                     left: "50%",
                     top: "0",
                   }}
@@ -1594,8 +1591,8 @@ const AuthenticatorManagementSection = () => {
                     width: "20px",
                     height: "20px",
                     borderRadius: "50%",
-                    border: "2px solid #e5e7eb",
-                    background: "white",
+                    border: "2px solid var(--color-border)",
+                    background: "var(--color-background)",
                     top: 0,
                     left: 0,
                   }}
@@ -1606,8 +1603,8 @@ const AuthenticatorManagementSection = () => {
                     width: "20px",
                     height: "20px",
                     borderRadius: "50%",
-                    border: "2px solid #e5e7eb",
-                    background: "white",
+                    border: "2px solid var(--color-border)",
+                    background: "var(--color-background)",
                     top: 0,
                     right: 0,
                   }}
@@ -1618,8 +1615,8 @@ const AuthenticatorManagementSection = () => {
                     width: "20px",
                     height: "20px",
                     borderRadius: "50%",
-                    border: "2px solid #e5e7eb",
-                    background: "white",
+                    border: "2px solid var(--color-border)",
+                    background: "var(--color-background)",
                     bottom: 0,
                     left: 0,
                   }}
@@ -1630,8 +1627,8 @@ const AuthenticatorManagementSection = () => {
                     width: "20px",
                     height: "20px",
                     borderRadius: "50%",
-                    border: "2px solid #e5e7eb",
-                    background: "white",
+                    border: "2px solid var(--color-border)",
+                    background: "var(--color-background)",
                     bottom: 0,
                     right: 0,
                   }}
@@ -1650,10 +1647,10 @@ const AuthenticatorManagementSection = () => {
               alignItems: "center",
               gap: "16px",
               padding: "20px",
-              background: "#f0fdf4",
+              background: "var(--color-success-background)",
               borderRadius: "8px",
               marginBottom: "16px",
-              boxShadow: "0 1px 2px rgba(0, 0, 0, 0.05)",
+              boxShadow: "0 1px 2px var(--color-shadow)",
             }}
           >
             <div
@@ -1661,14 +1658,14 @@ const AuthenticatorManagementSection = () => {
                 width: "40px",
                 height: "40px",
                 borderRadius: "50%",
-                background: "#dcfce7",
+                background: "var(--color-success-background)",
                 display: "flex",
                 alignItems: "center",
                 justifyContent: "center",
-                boxShadow: "0 1px 3px rgba(0, 0, 0, 0.1)",
+                boxShadow: "0 1px 3px var(--color-shadow)",
               }}
             >
-              <CheckCircle size={20} style={{ color: "#16a34a" }} />
+              ✓
             </div>
             <div>
               <div
@@ -1676,12 +1673,12 @@ const AuthenticatorManagementSection = () => {
                   fontSize: "15px",
                   fontWeight: "600",
                   marginBottom: "4px",
-                  color: "#16a34a",
+                  color: "var(--color-primary)",
                 }}
               >
                 Authenticator App Connected
               </div>
-              <div style={{ fontSize: "13px", color: "#4b5563" }}>
+              <div style={{ fontSize: "13px", color: "var(--color-secondary-text)" }}>
                 Your account is protected with two-factor authentication.
               </div>
             </div>
@@ -1690,7 +1687,7 @@ const AuthenticatorManagementSection = () => {
           <EmailItem
             style={{
               padding: "12px 16px",
-              border: "1px solid #e5e7eb",
+              border: "1px solid var(--color-border)",
               borderRadius: "6px",
             }}
           >
@@ -1698,7 +1695,7 @@ const AuthenticatorManagementSection = () => {
               <div
                 style={{
                   fontSize: "14px",
-                  color: "#1e293b",
+                  color: "var(--color-foreground)",
                   display: "flex",
                   alignItems: "center",
                   gap: "8px",
@@ -1708,8 +1705,8 @@ const AuthenticatorManagementSection = () => {
                 Authenticator App
                 <Badge
                   style={{
-                    background: "#ecfdf5",
-                    color: "#047857",
+                    background: "var(--color-success-background)",
+                    color: "var(--color-primary)",
                     fontSize: "11px",
                     padding: "2px 8px",
                   }}
@@ -1717,7 +1714,7 @@ const AuthenticatorManagementSection = () => {
                   Verified
                 </Badge>
               </div>
-              <div style={{ fontSize: "12px", color: "#64748b" }}>
+              <div style={{ fontSize: "12px", color: "var(--color-muted)" }}>
                 Added on{" "}
                 {new Date(
                   user.user_authenticator.created_at,
@@ -1739,7 +1736,7 @@ const AuthenticatorManagementSection = () => {
                     height: "32px",
                   }}
                 >
-                  <MoreVertical size={15} />
+                  •••
                 </IconButton>
               </DropdownTrigger>
               <DropdownItems>
@@ -1767,10 +1764,10 @@ const AuthenticatorManagementSection = () => {
               gridTemplateColumns: "1fr 2fr",
               gap: "30px",
               maxWidth: "680px",
-              background: "#f9fafb",
+              background: "var(--color-background-hover)",
               padding: "24px",
               borderRadius: "8px",
-              border: "1px solid #e5e7eb",
+              border: "1px solid var(--color-border)",
             }}
           >
             <div
@@ -1782,10 +1779,10 @@ const AuthenticatorManagementSection = () => {
             >
               <div
                 style={{
-                  background: "white",
+                  background: "var(--color-background)",
                   padding: "16px",
                   borderRadius: "8px",
-                  boxShadow: "0 1px 3px rgba(0, 0, 0, 0.1)",
+                  boxShadow: "0 1px 3px var(--color-shadow)",
                   display: "inline-block",
                 }}
               >
@@ -1798,7 +1795,7 @@ const AuthenticatorManagementSection = () => {
               <div
                 style={{
                   fontSize: "13px",
-                  color: "#1e293b",
+                  color: "var(--color-foreground)",
                   marginTop: "16px",
                   fontWeight: "500",
                   textAlign: "center",
@@ -1814,10 +1811,10 @@ const AuthenticatorManagementSection = () => {
                   e.preventDefault();
                 }}
                 style={{
-                  background: "white",
+                  background: "var(--color-background)",
                   padding: "20px",
                   borderRadius: "8px",
-                  border: "1px solid #e5e7eb",
+                  border: "1px solid var(--color-border)",
                 }}
               >
                 <FormGroup>
@@ -1872,7 +1869,7 @@ const AuthenticatorManagementSection = () => {
                   <div
                     style={{
                       fontSize: "12px",
-                      color: "#64748b",
+                      color: "var(--color-muted)",
                       marginTop: "8px",
                     }}
                   >
@@ -1884,10 +1881,10 @@ const AuthenticatorManagementSection = () => {
                 {error && (
                   <div
                     style={{
-                      color: "#dc2626",
+                      color: "var(--color-error)",
                       marginTop: "12px",
                       padding: "8px 12px",
-                      background: "#fef2f2",
+                      background: "var(--color-error-background)",
                       borderRadius: "4px",
                       fontSize: "13px",
                     }}
@@ -1956,7 +1953,7 @@ const ManualSetupAccordion = ({
       style={{
         maxWidth: "700px",
         marginTop: "32px",
-        borderTop: "1px solid #e2e8f0",
+        borderTop: "1px solid var(--color-border)",
         paddingTop: "16px",
       }}
     >
@@ -1973,7 +1970,7 @@ const ManualSetupAccordion = ({
           border: "none",
           cursor: "pointer",
           textAlign: "left",
-          color: "#4b5563",
+          color: "var(--color-secondary-text)",
           fontWeight: 500,
           fontSize: "14px",
         }}
@@ -1991,13 +1988,13 @@ const ManualSetupAccordion = ({
         <div
           style={{
             padding: "16px",
-            background: "#f8fafc",
+            background: "var(--color-background-hover)",
             borderRadius: "8px",
             marginTop: "8px",
           }}
         >
           <p
-            style={{ fontSize: "14px", color: "#4b5563", margin: "0 0 16px 0" }}
+            style={{ fontSize: "14px", color: "var(--color-secondary-text)", margin: "0 0 16px 0" }}
           >
             If you're having trouble scanning the QR code, you can manually set
             up your authenticator app using the following details:
@@ -2010,18 +2007,18 @@ const ManualSetupAccordion = ({
                 style={{
                   fontSize: "14px",
                   fontFamily: "monospace",
-                  background: "#f1f5f9",
+                  background: "var(--color-background-hover)",
                   padding: "12px",
                   borderRadius: "6px",
                   wordBreak: "break-all",
                   marginTop: "4px",
-                  border: "1px solid #e2e8f0",
+                  border: "1px solid var(--color-border)",
                 }}
               >
                 {totp}
               </div>
               <div
-                style={{ fontSize: "12px", color: "#64748b", marginTop: "4px" }}
+                style={{ fontSize: "12px", color: "var(--color-muted)", marginTop: "4px" }}
               >
                 Enter this code manually in your authenticator app if you can't
                 scan the QR code.
@@ -2036,18 +2033,18 @@ const ManualSetupAccordion = ({
                 style={{
                   fontSize: "14px",
                   fontFamily: "monospace",
-                  background: "#f1f5f9",
+                  background: "var(--color-background-hover)",
                   padding: "12px",
                   borderRadius: "6px",
                   wordBreak: "break-all",
                   marginTop: "4px",
-                  border: "1px solid #e2e8f0",
+                  border: "1px solid var(--color-border)",
                 }}
               >
                 {otpUrl}
               </div>
               <div
-                style={{ fontSize: "12px", color: "#64748b", marginTop: "4px" }}
+                style={{ fontSize: "12px", color: "var(--color-muted)", marginTop: "4px" }}
               >
                 Some authenticator apps allow you to enter this URL directly.
               </div>
@@ -2153,7 +2150,7 @@ const BackupCodeManagementSection = () => {
               <p
                 style={{
                   fontSize: "14px",
-                  color: "#64748b",
+                  color: "var(--color-muted)",
                   marginBottom: "16px",
                   lineHeight: "1.5",
                 }}
@@ -2209,11 +2206,11 @@ const BackupCodeManagementSection = () => {
                     width: "120px",
                     height: "120px",
                     borderRadius: "16px",
-                    background: "white",
+                    background: "var(--color-background)",
                     display: "flex",
                     alignItems: "center",
                     justifyContent: "center",
-                    boxShadow: "0 4px 12px rgba(0,0,0,0.08)",
+                    boxShadow: "0 4px 12px var(--color-shadow)",
                     overflow: "hidden",
                     position: "relative",
                     zIndex: 10,
@@ -2226,11 +2223,11 @@ const BackupCodeManagementSection = () => {
                       display: "flex",
                       alignItems: "center",
                       justifyContent: "center",
-                      background: "#f1f5f9",
+                      background: "var(--color-background-hover)",
                       borderRadius: "50%",
                     }}
                   >
-                    <Key size={32} style={{ color: "#64748b" }} />
+                    <Key size={32} style={{ color: "var(--color-muted)" }} />
                   </div>
                 </div>
 
@@ -2239,7 +2236,7 @@ const BackupCodeManagementSection = () => {
                     position: "absolute",
                     width: "140px",
                     height: "2px",
-                    background: "#e5e7eb",
+                    background: "var(--color-border)",
                     top: "50%",
                     left: "0",
                   }}
@@ -2249,7 +2246,7 @@ const BackupCodeManagementSection = () => {
                     position: "absolute",
                     width: "2px",
                     height: "140px",
-                    background: "#e5e7eb",
+                    background: "var(--color-border)",
                     left: "50%",
                     top: "0",
                   }}
@@ -2260,8 +2257,8 @@ const BackupCodeManagementSection = () => {
                     width: "20px",
                     height: "20px",
                     borderRadius: "50%",
-                    border: "2px solid #e5e7eb",
-                    background: "white",
+                    border: "2px solid var(--color-border)",
+                    background: "var(--color-background)",
                     top: 0,
                     left: 0,
                   }}
@@ -2272,8 +2269,8 @@ const BackupCodeManagementSection = () => {
                     width: "20px",
                     height: "20px",
                     borderRadius: "50%",
-                    border: "2px solid #e5e7eb",
-                    background: "white",
+                    border: "2px solid var(--color-border)",
+                    background: "var(--color-background)",
                     top: 0,
                     right: 0,
                   }}
@@ -2284,8 +2281,8 @@ const BackupCodeManagementSection = () => {
                     width: "20px",
                     height: "20px",
                     borderRadius: "50%",
-                    border: "2px solid #e5e7eb",
-                    background: "white",
+                    border: "2px solid var(--color-border)",
+                    background: "var(--color-background)",
                     bottom: 0,
                     left: 0,
                   }}
@@ -2296,8 +2293,8 @@ const BackupCodeManagementSection = () => {
                     width: "20px",
                     height: "20px",
                     borderRadius: "50%",
-                    border: "2px solid #e5e7eb",
-                    background: "white",
+                    border: "2px solid var(--color-border)",
+                    background: "var(--color-background)",
                     bottom: 0,
                     right: 0,
                   }}
@@ -2314,7 +2311,7 @@ const BackupCodeManagementSection = () => {
             <div
               style={{
                 fontSize: "14px",
-                color: "#64748b",
+                color: "var(--color-muted)",
                 marginBottom: "12px",
               }}
             >
@@ -2394,14 +2391,14 @@ const BackupCodeManagementSection = () => {
                   alignItems: "center",
                   justifyContent: "space-between",
                   padding: "6px 10px",
-                  background: "#f1f5f9",
+                  background: "var(--color-background-hover)",
                   borderRadius: "6px",
                   fontFamily: "monospace",
                   fontSize: "14px",
                   minHeight: "32px",
                 }}
               >
-                <span style={{ color: "#1e293b" }}>{code}</span>
+                <span style={{ color: "var(--color-foreground)" }}>{code}</span>
                 <button
                   type="button"
                   onClick={() => handleCopyCode(code)}
@@ -2409,7 +2406,7 @@ const BackupCodeManagementSection = () => {
                     background: "transparent",
                     border: "none",
                     cursor: "pointer",
-                    color: copiedCode === code ? "#16a34a" : "#64748b",
+                    color: copiedCode === code ? "var(--color-success)" : "var(--color-muted)",
                     padding: "2px",
                     borderRadius: "4px",
                     display: "flex",
@@ -2432,9 +2429,9 @@ const BackupCodeManagementSection = () => {
             style={{
               marginTop: "24px",
               padding: "12px",
-              background: "#fef2f2",
+              background: "var(--color-error-background)",
               borderRadius: "8px",
-              color: "#b91c1c",
+              color: "var(--color-error)",
               fontSize: "14px",
               display: "flex",
               alignItems: "flex-start",
@@ -2538,14 +2535,14 @@ const ProfileDetailsManagementSection = () => {
             marginBottom: "20px",
             padding: "8px",
             background: "#dcfce7",
-            color: "#166534",
+            color: "var(--color-primary)",
             borderRadius: "4px",
             display: "flex",
             alignItems: "center",
             gap: "8px",
           }}
         >
-          <CheckCircle size={16} />
+          ✓
           {successMessage}
         </div>
       )}
@@ -2580,7 +2577,7 @@ const ProfileDetailsManagementSection = () => {
                   height: "100px",
                   borderRadius: "50%",
                   overflow: "hidden",
-                  boxShadow: "0 4px 10px rgba(0,0,0,0.08)",
+                  boxShadow: "0 4px 10px var(--color-shadow)",
                 }}
               >
                 <Avatar
@@ -2613,19 +2610,19 @@ const ProfileDetailsManagementSection = () => {
                 width: "24px",
                 height: "24px",
                 borderRadius: "50%",
-                backgroundColor: "#fff",
-                border: "1px solid #e2e8f0",
+                backgroundColor: "var(--color-background)",
+                border: "1px solid var(--color-border)",
                 display: "flex",
                 alignItems: "center",
                 justifyContent: "center",
                 cursor: "pointer",
                 padding: 0,
-                boxShadow: "0 2px 4px rgba(0,0,0,0.1)",
+                boxShadow: "0 2px 4px var(--color-shadow)",
               }}
               aria-label="Remove profile picture"
               type="button"
             >
-              <Trash2 size={14} color="#ef4444" />
+              <Trash2 size={14} color="var(--color-error)" />
             </button>
           </div>
 
@@ -2633,7 +2630,7 @@ const ProfileDetailsManagementSection = () => {
             style={{
               margin: "0 0 4px 0",
               fontSize: "15px",
-              color: "#334155",
+              color: "var(--color-foreground)",
               fontWeight: "500",
             }}
           >
@@ -2644,7 +2641,7 @@ const ProfileDetailsManagementSection = () => {
             style={{
               margin: "0 0 16px 0",
               fontSize: "14px",
-              color: "#64748b",
+              color: "var(--color-muted)",
             }}
           >
             @{user?.username || "username"}
@@ -2653,7 +2650,7 @@ const ProfileDetailsManagementSection = () => {
           {errors.profilePicture && (
             <div
               style={{
-                color: "#ef4444",
+                color: "var(--color-error)",
                 fontSize: "12px",
                 marginTop: "8px",
               }}
@@ -2678,14 +2675,14 @@ const ProfileDetailsManagementSection = () => {
                   padding: "10px 12px",
                   borderRadius: "6px",
                   fontSize: "14px",
-                  backgroundColor: "#fff",
-                  borderColor: errors.firstName ? "#ef4444" : undefined,
+                  backgroundColor: "var(--color-input-background)",
+                  borderColor: errors.firstName ? "var(--color-error)" : undefined,
                 }}
               />
               {errors.firstName && (
                 <div
                   style={{
-                    color: "#ef4444",
+                    color: "var(--color-error)",
                     fontSize: "12px",
                     marginTop: "4px",
                   }}
@@ -2708,14 +2705,14 @@ const ProfileDetailsManagementSection = () => {
                   padding: "10px 12px",
                   borderRadius: "6px",
                   fontSize: "14px",
-                  backgroundColor: "#fff",
-                  borderColor: errors.lastName ? "#ef4444" : undefined,
+                  backgroundColor: "var(--color-input-background)",
+                  borderColor: errors.lastName ? "var(--color-error)" : undefined,
                 }}
               />
               {errors.lastName && (
                 <div
                   style={{
-                    color: "#ef4444",
+                    color: "var(--color-error)",
                     fontSize: "12px",
                     marginTop: "4px",
                   }}
@@ -2741,14 +2738,14 @@ const ProfileDetailsManagementSection = () => {
                 padding: "10px 12px",
                 borderRadius: "6px",
                 fontSize: "14px",
-                backgroundColor: "#fff",
-                borderColor: errors.username ? "#ef4444" : undefined,
+                backgroundColor: "var(--color-input-background)",
+                borderColor: errors.username ? "var(--color-error)" : undefined,
               }}
             />
             {errors.username && (
               <div
                 style={{
-                  color: "#ef4444",
+                  color: "var(--color-error)",
                   fontSize: "12px",
                   marginTop: "4px",
                 }}
@@ -2793,7 +2790,7 @@ const DeleteAccountAccordion = ({
           border: "none",
           cursor: "pointer",
           textAlign: "left",
-          color: "#ef4444",
+          color: "var(--color-error)",
           fontWeight: 500,
           fontSize: "14px",
         }}
@@ -2811,7 +2808,7 @@ const DeleteAccountAccordion = ({
         <div
           style={{
             padding: "16px",
-            background: "#fef2f2",
+            background: "var(--color-error-background)",
             borderRadius: "8px",
             marginTop: "8px",
           }}
@@ -2819,7 +2816,7 @@ const DeleteAccountAccordion = ({
           <p
             style={{
               fontSize: "14px",
-              color: "#4b5563",
+              color: "var(--color-secondary-text)",
               margin: "0 0 16px 0",
               lineHeight: "1.5",
             }}
@@ -2832,12 +2829,12 @@ const DeleteAccountAccordion = ({
             onClick={handleDeleteAccount}
             style={{
               padding: "8px 16px",
-              backgroundColor: "#dc2626",
+              backgroundColor: "var(--color-error)",
               border: "none",
               borderRadius: "6px",
               fontSize: "14px",
               fontWeight: 500,
-              color: "white",
+              color: "var(--color-background)",
               cursor: "pointer",
             }}
           >

@@ -19,7 +19,7 @@ export const Switch = styled.label`
     left: 0;
     right: 0;
     bottom: 0;
-    background-color: #e2e8f0;
+    background-color: var(--color-border);
     transition: .4s;
     border-radius: 34px;
   }
@@ -31,13 +31,13 @@ export const Switch = styled.label`
     width: 16px;
     left: 2px;
     bottom: 2px;
-    background-color: white;
+    background-color: var(--color-background);
     transition: .4s;
     border-radius: 50%;
   }
   
   input:checked + span {
-    background-color: #6366f1;
+    background-color: var(--color-primary);
   }
   
   input:checked + span:before {

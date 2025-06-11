@@ -12,35 +12,40 @@ const Label = styled.label`
   margin-bottom: 8px;
   font-size: 14px;
   font-weight: 500;
+  color: var(--color-foreground);
 `;
 
 const Input = styled.input`
   width: 100%;
   padding: 8px 12px;
-  border: 1px solid #e4e4e7;
-  border-radius: 6px;
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-sm);
   font-size: 14px;
   outline: none;
+  background: var(--color-input-background);
+  color: var(--color-foreground);
 
   &:focus {
-    border-color: #8b5cf6;
-    box-shadow: 0 0 0 2px rgba(139, 92, 246, 0.2);
+    border-color: var(--color-primary);
+    box-shadow: 0 0 0 2px var(--color-primary-background);
   }
 `;
 
 const TextArea = styled.textarea`
   width: 100%;
   padding: 8px 12px;
-  border: 1px solid #e4e4e7;
-  border-radius: 6px;
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-sm);
   font-size: 14px;
   outline: none;
   resize: vertical;
   min-height: 80px;
+  background: var(--color-input-background);
+  color: var(--color-foreground);
 
   &:focus {
-    border-color: #8b5cf6;
-    box-shadow: 0 0 0 2px rgba(139, 92, 246, 0.2);
+    border-color: var(--color-primary);
+    box-shadow: 0 0 0 2px var(--color-primary-background);
   }
 `;
 
@@ -53,21 +58,21 @@ const ButtonGroup = styled.div`
 
 const Button = styled.button<{ variant?: "primary" | "outline" }>`
   padding: 8px 16px;
-  border-radius: 6px;
+  border-radius: var(--radius-sm);
   font-size: 14px;
   font-weight: 500;
   cursor: pointer;
   transition: all 0.2s ease;
 
   background: ${(props) =>
-    props.variant === "primary" ? "#8b5cf6" : "transparent"};
-  color: ${(props) => (props.variant === "primary" ? "white" : "#18181b")};
+    props.variant === "primary" ? "var(--color-primary)" : "var(--color-background)"};
+  color: ${(props) => (props.variant === "primary" ? "white" : "var(--color-foreground)")};
   border: ${(props) =>
-    props.variant === "primary" ? "none" : "1px solid #e4e4e7"};
+    props.variant === "primary" ? "none" : "1px solid var(--color-border)"};
 
   &:hover {
     background: ${(props) =>
-      props.variant === "primary" ? "#7c3aed" : "#f4f4f5"};
+      props.variant === "primary" ? "var(--color-primary-hover)" : "var(--color-input-background)"};
   }
 
   &:disabled {
@@ -89,14 +94,14 @@ const AvatarContainer = styled.div<{ hasImage: boolean }>`
   height: 80px;
   border-radius: 10px;
   overflow: hidden;
-  background: ${(props) => (props.hasImage ? "transparent" : "#f4f4f5")};
-  border: 1px solid #e4e4e7;
+  background: ${(props) => (props.hasImage ? "transparent" : "var(--color-input-background)")};
+  border: 1px solid var(--color-border);
   display: flex;
   align-items: center;
   justify-content: center;
   flex-shrink: 0;
-  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.05);
-  color: #71717a;
+  box-shadow: 0 2px 4px var(--color-shadow);
+  color: var(--color-secondary-text);
   font-size: 20px;
   font-weight: 500;
 `;
@@ -114,7 +119,7 @@ const AvatarPlaceholder = styled.div`
   justify-content: center;
   width: 100%;
   height: 100%;
-  color: #a1a1aa;
+  color: var(--color-secondary-text);
   font-size: 12px;
 `;
 
@@ -132,33 +137,33 @@ const ActionButton = styled.button<{
   align-items: center;
   gap: 8px;
   padding: 8px 12px;
-  border-radius: 6px;
+  border-radius: var(--radius-sm);
   font-size: 14px;
   font-weight: 500;
   width: fit-content;
   cursor: pointer;
   transition: all 0.2s ease;
   background: ${(props) => {
-    if (props.variant === "primary") return "#f4f4f5";
-    if (props.variant === "danger") return "#fee2e2";
+    if (props.variant === "primary") return "var(--color-input-background)";
+    if (props.variant === "danger") return "var(--color-error-background)";
     return "transparent";
   }};
   color: ${(props) => {
-    if (props.variant === "primary") return "#18181b";
-    if (props.variant === "danger") return "#dc2626";
-    return "#71717a";
+    if (props.variant === "primary") return "var(--color-foreground)";
+    if (props.variant === "danger") return "var(--color-error)";
+    return "var(--color-secondary-text)";
   }};
   border: ${(props) => {
     if (props.variant === "primary") return "none";
-    if (props.variant === "danger") return "1px solid #fecaca";
-    return "1px solid #e4e4e7";
+    if (props.variant === "danger") return "1px solid var(--color-error)";
+    return "1px solid var(--color-border)";
   }};
 
   &:hover {
     background: ${(props) => {
-      if (props.variant === "primary") return "#e4e4e7";
-      if (props.variant === "danger") return "#fecaca";
-      return "#f4f4f5";
+      if (props.variant === "primary") return "var(--color-border)";
+      if (props.variant === "danger") return "var(--color-error)";
+      return "var(--color-input-background)";
     }};
   }
 
@@ -174,7 +179,7 @@ const HiddenInput = styled.input`
 
 const HelperText = styled.div`
   font-size: 12px;
-  color: #71717a;
+  color: var(--color-secondary-text);
   margin-top: 4px;
 `;
 

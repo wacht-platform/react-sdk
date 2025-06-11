@@ -13,24 +13,24 @@ const ComboBoxTrigger = styled.button`
   justify-content: space-between;
   width: 100%;
   padding: 8px 12px;
-  background: #f8fafc;
-  border: 1px solid #e2e8f0;
+  background: var(--color-background);
+  border: 1px solid var(--color-border);
   border-radius: 6px;
   font-size: 14px;
-  color: #1e293b;
+  color: var(--color-text);
   text-align: left;
   cursor: pointer;
   transition: all 0.2s ease;
 
   &:hover {
-    background: #f1f5f9;
-    border-color: #cbd5e1;
+    background: var(--color-background-hover);
+    border-color: var(--color-border-hover);
   }
 
   &:focus {
     outline: none;
-    border-color: #6366f1;
-    box-shadow: 0 0 0 2px rgba(99, 102, 241, 0.1);
+    border-color: var(--color-primary);
+    box-shadow: 0 0 0 2px var(--color-primary-shadow);
   }
 
   &:disabled {
@@ -46,10 +46,10 @@ const DropdownMenu = styled.div<{ isOpen: boolean }>`
   width: 100%;
   max-height: 250px;
   overflow-y: auto;
-  background: white;
+  background: var(--color-background);
   border-radius: 6px;
-  border: 1px solid #e2e8f0;
-  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+  border: 1px solid var(--color-border);
+  box-shadow: 0 4px 24px var(--color-shadow);
   z-index: 50;
   opacity: ${(props) => (props.isOpen ? 1 : 0)};
   transform: ${(props) => (props.isOpen ? "scale(1)" : "scale(0.95)")};
@@ -62,12 +62,14 @@ const SearchInput = styled.input`
   width: 100%;
   padding: 8px 12px;
   border: none;
-  border-bottom: 1px solid #f1f5f9;
+  border-bottom: 1px solid var(--color-border);
   font-size: 14px;
   outline: none;
+  background: var(--color-background);
+  color: var(--color-text);
 
   &::placeholder {
-    color: #94a3b8;
+    color: var(--color-muted);
   }
 `;
 
@@ -78,23 +80,23 @@ const Option = styled.div<{ isSelected?: boolean; disabled?: boolean }>`
   padding: 8px 12px;
   cursor: ${(props) => (props.disabled ? "not-allowed" : "pointer")};
   font-size: 14px;
-  background: ${(props) => (props.isSelected ? "#f1f5f9" : "transparent")};
-  color: ${(props) => (props.disabled ? "#94a3b8" : "#1e293b")};
+  background: ${(props) => (props.isSelected ? "var(--color-background-hover)" : "transparent")};
+  color: ${(props) => (props.disabled ? "var(--color-muted)" : "var(--color-text)")};
   opacity: ${(props) => (props.disabled ? 0.6 : 1)};
   transition: background 0.2s ease;
 
   &:hover {
-    background: ${(props) => (!props.disabled ? "#f8fafc" : "transparent")};
+    background: ${(props) => (!props.disabled ? "var(--color-background-hover)" : "transparent")};
   }
 `;
 
 const Placeholder = styled.span`
-  color: #94a3b8;
+  color: var(--color-muted);
 `;
 
 const NoOptions = styled.div`
   padding: 8px 12px;
-  color: #94a3b8;
+  color: var(--color-muted);
   font-size: 14px;
   text-align: center;
 `;
@@ -104,8 +106,8 @@ const GroupHeading = styled.div`
   font-size: 12px;
   font-weight: 500;
   text-transform: uppercase;
-  color: #64748b;
-  background: #f8fafc;
+  color: var(--color-muted);
+  background: var(--color-background-hover);
 `;
 
 export interface ComboBoxOption {

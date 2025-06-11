@@ -8,18 +8,15 @@ import React, {
 import styled from "styled-components";
 import {
   Building,
-  CheckCircle,
   ArrowRight,
   ArrowLeft,
   AlertTriangle,
   ChevronDown,
-  MoreVertical,
   Copy,
   ExternalLink,
   Trash,
   FileText,
   Check,
-  Save,
   ChevronUp,
   Info,
   CircleAlert,
@@ -83,9 +80,9 @@ const TypographyProvider = styled.div`
 const Container = styled.div`
   width: 100%;
   height: 600px;
-  background: #ffffff;
+  background: var(--color-background);
   border-radius: 20px;
-  box-shadow: 0 8px 30px rgba(0, 0, 0, 0.06);
+  box-shadow: 0 8px 30px var(--color-shadow);
   padding: 24px;
   transition: all 0.3s ease;
   overflow: hidden;
@@ -122,7 +119,7 @@ const ProfileSection = styled.div`
 
 const SectionTitle = styled.h2`
   font-size: 16px;
-  color: #1e293b;
+  color: var(--color-foreground);
   margin-bottom: 0;
   display: flex;
   justify-content: space-between;
@@ -153,16 +150,16 @@ const ProfileName = styled.div`
 const Name = styled.h2`
   font-size: 16px;
   margin: 0;
-  color: #1e293b;
+  color: var(--color-foreground);
 `;
 
 const InfoItem = styled.div`
   display: flex;
   align-items: center;
   padding: 16px 2px;
-  border-bottom: 1px solid #e2e8f0;
+  border-bottom: 1px solid var(--color-border);
   gap: 12px;
-  color: #1e293b;
+  color: var(--color-foreground);
   cursor: pointer;
   transition: background-color 0.2s ease;
 
@@ -171,12 +168,12 @@ const InfoItem = styled.div`
   }
 
   &:hover {
-    background-color: #f8fafc;
+    background-color: var(--color-input-background);
   }
 `;
 
 const InfoLabel = styled.div`
-  color: #64748b;
+  color: var(--color-secondary-text);
   font-size: 14px;
   width: 180px;
 `;
@@ -197,7 +194,7 @@ const AddItemForm = styled.div<{ $isVisible: boolean }>`
   left: 100%;
   width: 100%;
   height: 100%;
-  background: white;
+  background: var(--color-background);
   overflow-y: auto;
   overflow-x: hidden;
   transform: translateX(${(props) => (props.$isVisible ? "-100%" : "0")});
@@ -247,7 +244,7 @@ const OrganizationManagementSection = () => {
             <Name>{organization.name}</Name>
           </ProfileName>
 
-          <ArrowRight size={14} style={{ color: "#64748b" }} />
+          <ArrowRight size={14} style={{ color: "var(--color-muted)" }} />
         </ProfileHeader>
 
         <InfoItem onClick={() => setScreen("domains")}>
@@ -263,7 +260,7 @@ const OrganizationManagementSection = () => {
             >
               Add verified domains for smooth onboarding
             </div>
-            <ArrowRight size={14} style={{ color: "#64748b" }} />
+            <ArrowRight size={14} style={{ color: "var(--color-muted)" }} />
           </InfoContent>
         </InfoItem>
 
@@ -280,7 +277,7 @@ const OrganizationManagementSection = () => {
             >
               Manage existing members and their roles
             </div>
-            <ArrowRight size={14} style={{ color: "#64748b" }} />
+            <ArrowRight size={14} style={{ color: "var(--color-muted)" }} />
           </InfoContent>
         </InfoItem>
 
@@ -297,7 +294,7 @@ const OrganizationManagementSection = () => {
             >
               Manage access to your organization resources
             </div>
-            <ArrowRight size={14} style={{ color: "#64748b" }} />
+            <ArrowRight size={14} style={{ color: "var(--color-muted)" }} />
           </InfoContent>
         </InfoItem>
 
@@ -318,7 +315,7 @@ const OrganizationManagementSection = () => {
             >
               Track usage and manage subscriptions for your organization
             </div>
-            <ArrowRight size={14} style={{ color: "#64748b" }} />
+            <ArrowRight size={14} style={{ color: "var(--color-muted)" }} />
           </InfoContent>
         </InfoItem>
 
@@ -335,7 +332,7 @@ const OrganizationManagementSection = () => {
             >
               Manage organization access and security settings
             </div>
-            <ArrowRight size={14} style={{ color: "#64748b" }} />
+            <ArrowRight size={14} style={{ color: "var(--color-muted)" }} />
           </InfoContent>
         </InfoItem>
 
@@ -352,7 +349,7 @@ const OrganizationManagementSection = () => {
             >
               Track organization activity and changes
             </div>
-            <ArrowRight size={14} style={{ color: "#64748b" }} />
+            <ArrowRight size={14} style={{ color: "var(--color-muted)" }} />
           </InfoContent>
         </InfoItem>
       </ProfileSection>
@@ -397,24 +394,18 @@ const SectionHeader = ({
       </div>
 
       {actionLabel && onAction && (
-        <button
+        <Button
           onClick={onAction}
           style={{
+            width: "auto",
             display: "flex",
             alignItems: "center",
             gap: "8px",
-            padding: "8px 16px",
-            background: "#6366f1",
-            color: "white",
-            border: "none",
-            borderRadius: "8px",
-            fontSize: "14px",
-            cursor: "pointer",
           }}
         >
           {buttonIcon}
           <span>{actionLabel}</span>
-        </button>
+        </Button>
       )}
     </div>
   );
@@ -428,11 +419,11 @@ const GeneralSettingsSection = () => {
   } = useActiveOrganization();
   const [name, setName] = useState(selectedOrganization?.name || "");
   const [description, setDescription] = useState(
-    selectedOrganization?.description || "",
+    selectedOrganization?.description || ""
   );
   const [image, setImage] = useState<File | null>(null);
   const [previewUrl, setPreviewUrl] = useState<string | null>(
-    selectedOrganization?.image_url || null,
+    selectedOrganization?.image_url || null
   );
   const [successMessage] = useState("");
   const [_, setIsSubmitting] = useState(false);
@@ -506,7 +497,6 @@ const GeneralSettingsSection = () => {
         title="Organization Settings"
         actionLabel="Save changes"
         onAction={handleSubmit}
-        buttonIcon={<Save size={14} />}
       />
 
       {successMessage && (
@@ -514,16 +504,15 @@ const GeneralSettingsSection = () => {
           style={{
             marginBottom: "20px",
             padding: "8px",
-            background: "#dcfce7",
-            color: "#166534",
+            background: "var(--color-success-background)",
+            color: "var(--color-success)",
             borderRadius: "4px",
             display: "flex",
             alignItems: "center",
             gap: "8px",
           }}
         >
-          <CheckCircle size={16} />
-          {successMessage}
+          ✓{successMessage}
         </div>
       )}
 
@@ -566,7 +555,7 @@ const GeneralSettingsSection = () => {
                   }}
                 />
               ) : (
-                <Building size={36} color="#64748b" />
+                <Building size={36} color="var(--color-muted)" />
               )}
               <input
                 type="file"
@@ -576,7 +565,7 @@ const GeneralSettingsSection = () => {
                 onChange={handleImageChange}
               />
             </button>
-            <div style={{ fontSize: "13px", color: "#64748b" }}>
+            <div style={{ fontSize: "13px", color: "var(--color-muted)" }}>
               Click to upload a new logo
             </div>
           </div>
@@ -595,7 +584,7 @@ const GeneralSettingsSection = () => {
               padding: "10px 12px",
               borderRadius: "6px",
               fontSize: "14px",
-              backgroundColor: "#fff",
+              backgroundColor: "var(--color-input-background)",
             }}
             required
           />
@@ -614,7 +603,7 @@ const GeneralSettingsSection = () => {
               padding: "10px 12px",
               borderRadius: "6px",
               fontSize: "14px",
-              backgroundColor: "#fff",
+              backgroundColor: "var(--color-input-background)",
               minHeight: "100px",
               resize: "vertical",
             }}
@@ -632,8 +621,8 @@ const GeneralSettingsSection = () => {
 };
 
 const Badge = styled.span`
-  background: #fff8e6;
-  color: #854d0e;
+  background: var(--color-primary-background);
+  color: var(--color-primary);
   padding: 0px 4px;
   border-radius: 4px;
   font-size: 12px;
@@ -642,16 +631,16 @@ const Badge = styled.span`
   align-items: center;
   max-width: max-content;
   gap: 2px;
-  border: 1px solid rgba(0, 0, 0, 0.05);
+  border: 1px solid var(--color-border);
   white-space: nowrap;
 `;
 
 const IconButton = styled.button`
   background: none;
-  border: 1px solid #e2e8f0;
+  border: 1px solid var(--color-border);
   padding: 3px;
   cursor: pointer;
-  color: #64748b;
+  color: var(--color-muted);
   border-radius: 3px;
   display: flex;
   align-items: center;
@@ -660,8 +649,8 @@ const IconButton = styled.button`
   font-size: 11px;
 
   &:hover {
-    background: #f1f5f9;
-    color: #1e293b;
+    background: var(--color-input-background);
+    color: var(--color-foreground);
   }
 
   &:disabled {
@@ -679,7 +668,7 @@ const DomainsSection = () => {
   } = useActiveOrganization();
   const tableRef = useRef<HTMLTableElement | null>(null);
   const [domainForDeletion, setDomainForDeletion] = useState<string | null>(
-    null,
+    null
   );
   const {
     data: domainsFromAPI = [],
@@ -700,7 +689,7 @@ const DomainsSection = () => {
       revalidateOnFocus: false,
       revalidateOnReconnect: false,
       dedupingInterval: 5000,
-    },
+    }
   );
   const domains = domainsFromAPI as Array<
     OrganizationDomain & { verified: boolean }
@@ -720,7 +709,7 @@ const DomainsSection = () => {
     if (searchQuery.trim() !== "") {
       const lowercasedQuery = searchQuery.toLowerCase();
       tempDomains = tempDomains.filter((domain) =>
-        domain.fqdn.toLowerCase().includes(lowercasedQuery),
+        domain.fqdn.toLowerCase().includes(lowercasedQuery)
       );
     }
     return tempDomains;
@@ -755,7 +744,12 @@ const DomainsSection = () => {
           placeholder="Search Domain"
         />
         <div>
-          <Button onClick={() => setIsAddingDomain(true)}>New Domain</Button>
+          <Button
+            onClick={() => setIsAddingDomain(true)}
+            style={{ width: "120px" }}
+          >
+            New Domain
+          </Button>
           {isAddingDomain && (
             <AddDomainPopover
               onClose={() => {
@@ -789,15 +783,20 @@ const DomainsSection = () => {
                 <TableCellFlex>{domain.fqdn}</TableCellFlex>
                 <StatusCell>
                   {domain.verified ? (
-                    <Badge style={{ background: "#E6F9F0", color: "#0A7156" }}>
-                      <CheckCircle size={12} /> Verified
+                    <Badge
+                      style={{
+                        background: "var(--color-primary-background)",
+                        color: "var(--color-primary)",
+                      }}
+                    >
+                      ✓ Verified
                     </Badge>
                   ) : (
                     <Badge
                       style={{
-                        background: "#FEF9C3",
-                        color: "#854D0E",
-                        border: "1px solid #FEF08A",
+                        background: "var(--color-warning-background)",
+                        color: "var(--color-warning)",
+                        border: "1px solid var(--color-warning-border)",
                       }}
                     >
                       <AlertTriangle size={9} /> Pending Verification
@@ -823,9 +822,7 @@ const DomainsSection = () => {
                     }
                   >
                     <DropdownTrigger>
-                      <IconButton>
-                        <MoreVertical size={14} />
-                      </IconButton>
+                      <IconButton>•••</IconButton>
                     </DropdownTrigger>
                     {domainInVerification === domain.id && (
                       <AddDomainPopover
@@ -849,8 +846,7 @@ const DomainsSection = () => {
                               gap: "8px",
                             }}
                           >
-                            <CheckCircle size={16} color="#6366f1" /> Verify
-                            Domain
+                            ✓ Verify Domain
                           </div>
                         </DropdownItem>
                       )}
@@ -867,7 +863,8 @@ const DomainsSection = () => {
                             gap: "8px",
                           }}
                         >
-                          <Copy size={16} color="#64748b" /> Copy Domain
+                          <Copy size={16} color="var(--color-muted)" /> Copy
+                          Domain
                         </div>
                       </DropdownItem>
                       <DropdownItem
@@ -883,8 +880,8 @@ const DomainsSection = () => {
                             gap: "8px",
                           }}
                         >
-                          <ExternalLink size={16} color="#64748b" /> Visit
-                          Domain
+                          <ExternalLink size={16} color="var(--color-muted)" />{" "}
+                          Visit Domain
                         </div>
                       </DropdownItem>
                       <DropdownDivider />
@@ -902,7 +899,8 @@ const DomainsSection = () => {
                             gap: "8px",
                           }}
                         >
-                          <Trash size={16} color="#ef4444" /> Remove Domain
+                          <Trash size={16} color="var(--color-error)" /> Remove
+                          Domain
                         </div>
                       </DropdownItem>
                     </DropdownItems>
@@ -922,18 +920,18 @@ const RoleDropdownButton = styled.button`
   align-items: center;
   gap: 4px;
   padding: 5px 10px;
-  background: #f8fafc;
+  background: var(--color-input-background);
   justify-content: space-between;
-  border: 1px solid #e2e8f0;
+  border: 1px solid var(--color-border);
   border-radius: 4px;
-  color: #64748b;
+  color: var(--color-muted);
   font-size: 12px;
   font-weight: 400;
   cursor: pointer;
   transition: all 0.2s ease;
 
   &:hover {
-    background: #f1f5f9;
+    background: var(--color-border);
   }
 `;
 
@@ -965,7 +963,7 @@ const MembersSection = () => {
     activeOrganization
       ? `/api/organizations/${activeOrganization.id}/members`
       : null,
-    () => getMembers?.() || [],
+    () => getMembers?.() || []
   );
   // const {
   //   data: invitations = [],
@@ -981,7 +979,7 @@ const MembersSection = () => {
     activeOrganization
       ? `/api/organizations/${activeOrganization.id}/roles`
       : null,
-    () => getRoles?.() || [],
+    () => getRoles?.() || []
   );
   const roles = rolesData as OrganizationRole[];
 
@@ -1026,7 +1024,7 @@ const MembersSection = () => {
   const toggleRole = async (
     member: OrganizationMembership,
     role: OrganizationRole,
-    hasRole: boolean,
+    hasRole: boolean
   ) => {
     try {
       if (hasRole) {
@@ -1070,19 +1068,21 @@ const MembersSection = () => {
           style={{
             marginBottom: "20px",
             padding: "8px",
-            background: message.type === "success" ? "#dcfce7" : "#fee2e2",
-            color: message.type === "success" ? "#166534" : "#b91c1c",
+            background:
+              message.type === "success"
+                ? "var(--color-success-background)"
+                : "var(--color-error-background)",
+            color:
+              message.type === "success"
+                ? "var(--color-success)"
+                : "var(--color-error)",
             borderRadius: "8px",
             display: "flex",
             alignItems: "center",
             gap: "8px",
           }}
         >
-          {message.type === "success" ? (
-            <CheckCircle size={16} />
-          ) : (
-            <AlertTriangle size={16} />
-          )}
+          {message.type === "success" ? "✓" : <AlertTriangle size={16} />}
           {message.text}
         </div>
       )}
@@ -1101,7 +1101,10 @@ const MembersSection = () => {
           placeholder="Search members"
         />
         <div>
-          <Button onClick={() => setIsInviting(true)}>
+          <Button
+            onClick={() => setIsInviting(true)}
+            style={{ width: "140px" }}
+          >
             <span>Invite Members</span>
           </Button>
           {isInviting && (
@@ -1123,7 +1126,7 @@ const MembersSection = () => {
           <TableHead>
             <TableRow>
               <TableHeader>Member</TableHeader>
-              <TableHeader>Roles</TableHeader>
+              <TableHeader style={{ paddingLeft: 8 }}>Roles</TableHeader>
             </TableRow>
           </TableHead>
           <TableBody>
@@ -1135,11 +1138,11 @@ const MembersSection = () => {
                       width: "40px",
                       height: "40px",
                       borderRadius: "50%",
-                      background: "#f1f5f9",
+                      background: "var(--color-input-background)",
                       display: "flex",
                       alignItems: "center",
                       justifyContent: "center",
-                      color: "#64748b",
+                      color: "var(--color-muted)",
                       fontWeight: 500,
                       fontSize: "16px",
                       overflow: "hidden",
@@ -1160,7 +1163,7 @@ const MembersSection = () => {
                     ) : (
                       getInitials(
                         member.user?.first_name,
-                        member.user?.last_name,
+                        member.user?.last_name
                       )
                     )}
                   </div>
@@ -1168,7 +1171,7 @@ const MembersSection = () => {
                     <div
                       style={{
                         fontWeight: 400,
-                        color: "#334155",
+                        color: "var(--color-foreground)",
                       }}
                     >
                       {member.user
@@ -1179,7 +1182,9 @@ const MembersSection = () => {
                           "User"
                         : "User"}
                     </div>
-                    <div style={{ fontSize: "13px", color: "#64748b" }}>
+                    <div
+                      style={{ fontSize: "13px", color: "var(--color-muted)" }}
+                    >
                       {member.user?.primary_email_address?.email}
                     </div>
                   </div>
@@ -1200,7 +1205,7 @@ const MembersSection = () => {
                             setActiveMemberRoleDropdown(
                               activeMemberRoleDropdown === member.id
                                 ? null
-                                : member.id,
+                                : member.id
                             )
                           }
                         >
@@ -1228,7 +1233,12 @@ const MembersSection = () => {
                                 }}
                               >
                                 <span>{role.name}</span>
-                                {hasRole && <Check size={16} color="#16a34a" />}
+                                {hasRole && (
+                                  <Check
+                                    size={16}
+                                    color="var(--color-success)"
+                                  />
+                                )}
                               </div>
                             </DropdownItem>
                           );
@@ -1347,8 +1357,12 @@ const BillingSection = () => {
           <button
             style={{
               padding: "8px 16px",
-              background: currentTab === "plans" ? "#6366f1" : "transparent",
-              color: currentTab === "plans" ? "white" : "#64748b",
+              background:
+                currentTab === "plans" ? "var(--color-primary)" : "transparent",
+              color:
+                currentTab === "plans"
+                  ? "var(--color-background)"
+                  : "var(--color-muted)",
               border: "none",
               borderRadius: "8px",
               fontWeight: 500,
@@ -1362,8 +1376,14 @@ const BillingSection = () => {
           <button
             style={{
               padding: "8px 16px",
-              background: currentTab === "invoices" ? "#6366f1" : "transparent",
-              color: currentTab === "invoices" ? "white" : "#64748b",
+              background:
+                currentTab === "invoices"
+                  ? "var(--color-primary)"
+                  : "transparent",
+              color:
+                currentTab === "invoices"
+                  ? "var(--color-background)"
+                  : "var(--color-muted)",
               border: "none",
               borderRadius: "8px",
               fontWeight: 500,
@@ -1381,7 +1401,7 @@ const BillingSection = () => {
             <p
               style={{
                 fontSize: "14px",
-                color: "#64748b",
+                color: "var(--color-muted)",
                 marginBottom: "16px",
               }}
             >
@@ -1402,7 +1422,9 @@ const BillingSection = () => {
                   <TableRow
                     key={plan.id}
                     style={{
-                      background: plan.current ? "#f5f7ff" : "white",
+                      background: plan.current
+                        ? "var(--color-primary-background)"
+                        : "var(--color-background)",
                     }}
                   >
                     <TableCellFlex>
@@ -1411,7 +1433,7 @@ const BillingSection = () => {
                           style={{
                             fontSize: "16px",
                             fontWeight: 600,
-                            color: "#1e293b",
+                            color: "var(--color-foreground)",
                           }}
                         >
                           {plan.name}
@@ -1420,8 +1442,8 @@ const BillingSection = () => {
                               style={{
                                 marginLeft: "8px",
                                 fontSize: "12px",
-                                background: "#6366f1",
-                                color: "white",
+                                background: "var(--color-primary)",
+                                color: "var(--color-background)",
                                 padding: "2px 8px",
                                 borderRadius: "20px",
                               }}
@@ -1433,7 +1455,7 @@ const BillingSection = () => {
                         <div
                           style={{
                             fontSize: "14px",
-                            color: "#64748b",
+                            color: "var(--color-muted)",
                           }}
                         >
                           {plan.description}
@@ -1445,7 +1467,7 @@ const BillingSection = () => {
                         style={{
                           fontSize: "18px",
                           fontWeight: 600,
-                          color: "#1e293b",
+                          color: "var(--color-foreground)",
                         }}
                       >
                         ${plan.price}
@@ -1461,7 +1483,7 @@ const BillingSection = () => {
                             key={idx}
                             style={{
                               fontSize: "14px",
-                              color: "#64748b",
+                              color: "var(--color-muted)",
                               marginBottom: "4px",
                             }}
                           >
@@ -1476,8 +1498,8 @@ const BillingSection = () => {
                           onClick={() => handleChangePlan(plan.id)}
                           style={{
                             padding: "6px 12px",
-                            background: "#6366f1",
-                            color: "white",
+                            background: "var(--color-primary)",
+                            color: "var(--color-background)",
                             border: "none",
                             borderRadius: "6px",
                             fontWeight: 500,
@@ -1501,7 +1523,7 @@ const BillingSection = () => {
             <p
               style={{
                 fontSize: "14px",
-                color: "#64748b",
+                color: "var(--color-muted)",
                 marginBottom: "16px",
               }}
             >
@@ -1533,12 +1555,18 @@ const BillingSection = () => {
                           borderRadius: "12px",
                           fontSize: "11px",
                           background:
-                            invoice.status === "paid" ? "#dcfce7" : "#fee2e2",
+                            invoice.status === "paid"
+                              ? "var(--color-success-background)"
+                              : "var(--color-error-background)",
                           color:
-                            invoice.status === "paid" ? "#166534" : "#b91c1c",
+                            invoice.status === "paid"
+                              ? "var(--color-success)"
+                              : "var(--color-error)",
                           border: "1px solid",
                           borderColor:
-                            invoice.status === "paid" ? "#86efac" : "#fecaca",
+                            invoice.status === "paid"
+                              ? "var(--color-success-background)"
+                              : "var(--color-error-background)",
                           fontWeight: 400,
                           whiteSpace: "nowrap",
                         }}
@@ -1582,7 +1610,7 @@ const SecuritySection = () => {
 
   const workspaces = useMemo(() => {
     const currentOrgWorkspaces = workspaceList.filter(
-      (workspace) => workspace.organization.id === activeOrganization?.id,
+      (workspace) => workspace.organization.id === activeOrganization?.id
     );
     return currentOrgWorkspaces;
   }, [workspaceList, activeOrganization?.id]);
@@ -1649,7 +1677,6 @@ const SecuritySection = () => {
         title="Security & Access"
         actionLabel="Save Settings"
         onAction={handleSubmit}
-        buttonIcon={<Save size={14} />}
       />
 
       {successMessage && (
@@ -1657,16 +1684,15 @@ const SecuritySection = () => {
           style={{
             marginBottom: "20px",
             padding: "8px 12px",
-            background: "#dcfce7",
-            color: "#166534",
+            background: "var(--color-success-background)",
+            color: "var(--color-success)",
             borderRadius: "4px",
             display: "flex",
             alignItems: "center",
             gap: "8px",
           }}
         >
-          <CheckCircle size={16} />
-          {successMessage}
+          ✓{successMessage}
         </div>
       )}
 
@@ -1677,7 +1703,7 @@ const SecuritySection = () => {
           flexDirection: "column",
           gap: "24px",
           paddingBottom: "32px",
-          borderBottom: "1px solid #e2e8f0",
+          borderBottom: "1px solid var(--color-border)",
         }}
       >
         <div
@@ -1696,7 +1722,7 @@ const SecuritySection = () => {
             >
               Multi-Factor Authentication (MFA)
             </div>
-            <div style={{ fontSize: "14px", color: "#64748b" }}>
+            <div style={{ fontSize: "14px", color: "var(--color-muted)" }}>
               Require all members to set up MFA for added security
             </div>
           </div>
@@ -1728,7 +1754,7 @@ const SecuritySection = () => {
               >
                 IP Restrictions
               </div>
-              <div style={{ fontSize: "14px", color: "#64748b" }}>
+              <div style={{ fontSize: "14px", color: "var(--color-muted)" }}>
                 Limit access to specific IP addresses
               </div>
             </div>
@@ -1758,14 +1784,14 @@ const SecuritySection = () => {
                   placeholder="Enter IP addresses (one per line)"
                   style={{
                     minHeight: "80px",
-                    backgroundColor: "#f8fafc",
-                    border: "1px solid #e2e8f0",
+                    backgroundColor: "var(--color-input-background)",
+                    border: "1px solid var(--color-border)",
                   }}
                 />
                 <div
                   style={{
                     fontSize: "12px",
-                    color: "#64748b",
+                    color: "var(--color-muted)",
                   }}
                 >
                   Enter one IP address or CIDR range per line (e.g., 192.168.1.1
@@ -1792,7 +1818,7 @@ const SecuritySection = () => {
             >
               Default Workspace
             </div>
-            <div style={{ fontSize: "14px", color: "#64748b" }}>
+            <div style={{ fontSize: "14px", color: "var(--color-muted)" }}>
               New members will be added to this workspace
             </div>
           </div>
@@ -1849,13 +1875,13 @@ const RolesSection = () => {
     activeOrganization
       ? `/api/organizations/${activeOrganization.id}/roles`
       : null,
-    () => getRoles?.() || [],
+    () => getRoles?.() || []
   );
 
   const filteredRoles = React.useMemo(() => {
     if (!searchQuery) return roles;
     return roles.filter((role) =>
-      role.name.toLowerCase().includes(searchQuery.toLowerCase()),
+      role.name.toLowerCase().includes(searchQuery.toLowerCase())
     );
   }, [roles, searchQuery]);
 
@@ -1936,19 +1962,21 @@ const RolesSection = () => {
           style={{
             marginBottom: "20px",
             padding: "8px",
-            background: message.type === "success" ? "#dcfce7" : "#fee2e2",
-            color: message.type === "success" ? "#166534" : "#b91c1c",
+            background:
+              message.type === "success"
+                ? "var(--color-success-background)"
+                : "var(--color-error-background)",
+            color:
+              message.type === "success"
+                ? "var(--color-success)"
+                : "var(--color-error)",
             borderRadius: "8px",
             display: "flex",
             alignItems: "center",
             gap: "8px",
           }}
         >
-          {message.type === "success" ? (
-            <CheckCircle size={16} />
-          ) : (
-            <AlertTriangle size={16} />
-          )}
+          {message.type === "success" ? "✓" : <AlertTriangle size={16} />}
           {message.text}
         </div>
       )}
@@ -1961,7 +1989,10 @@ const RolesSection = () => {
         />
 
         <div>
-          <Button onClick={() => setRolePopover({ isOpen: true })}>
+          <Button
+            onClick={() => setRolePopover({ isOpen: true })}
+            style={{ width: "100px" }}
+          >
             Add role
           </Button>
           {rolePopover.isOpen && (
@@ -2006,7 +2037,7 @@ const RolesSection = () => {
                   <div
                     style={{
                       fontSize: "14px",
-                      color: "#64748b",
+                      color: "var(--color-muted)",
                     }}
                   >
                     {role.permissions.join(", ")}
@@ -2029,7 +2060,7 @@ const RolesSection = () => {
                   >
                     <DropdownTrigger>
                       <IconButton disabled={!role.organization_id}>
-                        <MoreVertical size={14} />
+                        •••
                       </IconButton>
                     </DropdownTrigger>
 
@@ -2075,19 +2106,19 @@ const SeverityIndicator = ({ severity, style }: SeverityIndicatorProps) => {
 
   switch (severity) {
     case "critical":
-      bgColor = "#FEE2E2";
-      textColor = "#B91C1C";
+      bgColor = "var(--color-error-background)";
+      textColor = "var(--color-error)";
       label = "Critical";
       break;
     case "warning":
-      bgColor = "#FEF3C7";
-      textColor = "#92400E";
+      bgColor = "var(--color-warning-background)";
+      textColor = "var(--color-warning)";
       label = "Warning";
       break;
     case "info":
     default:
-      bgColor = "#E0F2FE";
-      textColor = "#0369A1";
+      bgColor = "var(--color-input-background)";
+      textColor = "var(--color-primary)";
       label = "Info";
   }
 
@@ -2101,7 +2132,7 @@ const SeverityIndicator = ({ severity, style }: SeverityIndicatorProps) => {
         borderRadius: "4px",
         backgroundColor: bgColor,
         color: textColor,
-        border: "1px solid rgba(0, 0, 0, 0.05)",
+        border: "1px solid var(--color-border)",
         ...style,
       }}
     >
@@ -2195,7 +2226,7 @@ const AuditLogsSection = () => {
         (log) =>
           log.action.toLowerCase().includes(lowercasedQuery) ||
           log.actor.toLowerCase().includes(lowercasedQuery) ||
-          log.description.toLowerCase().includes(lowercasedQuery),
+          log.description.toLowerCase().includes(lowercasedQuery)
       );
     }
     return tempLogs;
@@ -2234,7 +2265,7 @@ const AuditLogsSection = () => {
                 {severityOptions.find((opt) => opt.value === selectedSeverity)
                   ?.label || "Filter by Severity"}
               </span>
-              <ChevronDown size={16} color="#16a34a" />
+              <ChevronDown size={16} color="var(--color-success)" />
             </FilterButton>
           </DropdownTrigger>
           <DropdownItems>
@@ -2254,7 +2285,7 @@ const AuditLogsSection = () => {
                 >
                   <span>{option.label}</span>
                   {selectedSeverity === option.value && (
-                    <Check size={16} color="#16a34a" />
+                    <Check size={16} color="var(--color-success)" />
                   )}
                 </div>
               </DropdownItem>
@@ -2311,7 +2342,7 @@ export const ManageOrganization = () => {
       setToastLevel(level);
       setTimeout(() => setToastMessage(null), 3000);
     },
-    [setToastMessage],
+    [setToastMessage]
   );
 
   if (loading)
@@ -2366,9 +2397,11 @@ export const ManageOrganization = () => {
                   }}
                 >
                   {toastLevel === "error" && (
-                    <CircleAlert size={14} color="#FF0000" />
+                    <CircleAlert size={14} color="var(--color-error)" />
                   )}
-                  {toastLevel === "info" && <Info size={14} color="#0070f3" />}
+                  {toastLevel === "info" && (
+                    <Info size={14} color="var(--color-primary)" />
+                  )}
                   <span>{toastMessage}</span>
                 </div>
               )}
@@ -2384,25 +2417,25 @@ const Table = styled.table`
   width: 100%;
   border-collapse: separate;
   border-spacing: 0;
-  border: 1px solid #e2e8f0;
+  border: 1px solid var(--color-border);
   border-radius: 3px;
   overflow: hidden;
   font-size: 11px;
-  box-shadow: 0 1px 2px rgba(0, 0, 0, 0.03);
+  box-shadow: 0 1px 2px var(--color-shadow);
   line-height: 1.4;
 `;
 
 const TableHead = styled.thead`
-  background-color: #f8fafc;
-  border-bottom: 1px solid #e2e8f0;
+  background-color: var(--color-input-background);
+  border-bottom: 1px solid var(--color-border);
 `;
 
 const TableBody = styled.tbody`
-  background-color: white;
+  background-color: var(--color-background);
 `;
 
 const TableRow = styled.tr`
-  border-bottom: 1px solid #e2e8f0;
+  border-bottom: 1px solid var(--color-border);
   &:last-child {
     border-bottom: none;
   }
@@ -2413,7 +2446,7 @@ const TableHeader = styled.th`
   padding: 8px 16px;
   font-weight: 500;
   font-size: 12px;
-  color: #64748b;
+  color: var(--color-muted);
   white-space: nowrap;
   text-transform: uppercase;
   letter-spacing: 0.3px;
@@ -2422,8 +2455,8 @@ const TableHeader = styled.th`
 const TableCell = styled.td`
   padding: 10px 16px;
   font-size: 12px;
-  color: #475569;
-  border-bottom: 1px solid #e2e8f0;
+  color: var(--color-foreground);
+  border-bottom: 1px solid var(--color-border);
   vertical-align: middle;
 
   ${TableRow}:last-child & {
@@ -2451,9 +2484,9 @@ const ActionsCell = styled(TableCell)`
 const EmptyTableMessage = styled.div`
   text-align: center;
   padding: 12px;
-  background-color: #f8fafc;
-  color: #94a3b8;
-  border: 1px solid #e2e8f0;
+  background-color: var(--color-input-background);
+  color: var(--color-muted);
+  border: 1px solid var(--color-border);
   border-radius: 4px;
   margin-top: 12px;
   font-size: 11px;
@@ -2485,7 +2518,7 @@ const DeleteAccountAccordion = ({
           border: "none",
           cursor: "pointer",
           textAlign: "left",
-          color: "#ef4444",
+          color: "var(--color-error)",
           fontWeight: 500,
           fontSize: "14px",
         }}
@@ -2503,7 +2536,7 @@ const DeleteAccountAccordion = ({
         <div
           style={{
             padding: "16px",
-            background: "#fef2f2",
+            background: "var(--color-error-background)",
             borderRadius: "8px",
             marginTop: "8px",
           }}
@@ -2511,7 +2544,7 @@ const DeleteAccountAccordion = ({
           <p
             style={{
               fontSize: "14px",
-              color: "#4b5563",
+              color: "var(--color-muted)",
               margin: "0 0 16px 0",
               lineHeight: "1.5",
             }}
@@ -2523,12 +2556,12 @@ const DeleteAccountAccordion = ({
             onClick={handleDeleteAccount}
             style={{
               padding: "8px 16px",
-              backgroundColor: "#dc2626",
+              backgroundColor: "var(--color-error)",
               border: "none",
               borderRadius: "6px",
               fontSize: "14px",
               fontWeight: 500,
-              color: "white",
+              color: "var(--color-background)",
               cursor: "pointer",
             }}
           >

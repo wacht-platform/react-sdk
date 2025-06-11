@@ -24,9 +24,9 @@ import { Button } from "@/components/utility";
 import { AuthFormImage } from "./auth-image";
 
 const Container = styled.div`
-  max-width: 400px;
-  width: 400px;
-  padding: var(--space-2xl);
+  max-width: 360px;
+  width: 360px;
+  padding: var(--space-xl);
   background: var(--color-background);
   border-radius: var(--radius-lg);
   box-shadow: 0 4px 24px var(--color-shadow);
@@ -40,10 +40,11 @@ const Header = styled.div`
 `;
 
 const Title = styled.h1`
-  font-size: var(--font-md);
-  font-weight: 400;
+  font-size: var(--font-lg);
+  font-weight: 500;
   color: var(--color-foreground);
-  margin-bottom: var(--space-2xs);
+  margin-bottom: var(--space-xs);
+  margin-top: 0;
 `;
 
 const Subtitle = styled.p`
@@ -54,7 +55,7 @@ const Subtitle = styled.p`
 const Divider = styled.div`
   position: relative;
   text-align: center;
-  margin: var(--space-md) 0;
+  margin: var(--space-lg) 0;
 
   &::before {
     content: "";
@@ -87,8 +88,7 @@ const ErrorMessage = styled.p`
 `;
 
 const SubmitButton = styled(Button)`
-  padding: var(--space-md);
-  margin-top: var(--space-xs);
+  margin-top: var(--space-sm);
 `;
 
 const Footer = styled.p`

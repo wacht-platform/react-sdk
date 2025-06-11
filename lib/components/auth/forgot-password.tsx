@@ -5,9 +5,9 @@ import { DefaultStylesProvider } from "@/components/utility/root";
 import { OtherAuthOptions } from "@/components/auth/other-auth-options";
 
 const Container = styled.div`
-  max-width: 400px;
-  width: 400px;
-  padding: var(--space-2xl);
+  max-width: 360px;
+  width: 360px;
+  padding: var(--space-xl);
   background: var(--color-background);
   border-radius: var(--radius-lg);
   box-shadow: 0 4px 24px var(--color-shadow);
@@ -15,21 +15,22 @@ const Container = styled.div`
 
 const Header = styled.div`
   text-align: center;
-  margin-bottom: var(--space-md);
+  margin-bottom: var(--space-lg);
   position: relative;
 `;
 
 const Title = styled.h1`
-  font-size: var(--font-md);
-  font-weight: 400;
+  font-size: var(--font-lg);
+  font-weight: 500;
   color: var(--color-foreground);
-  margin-bottom: var(--space-2xs);
+  margin-bottom: var(--space-xs);
+  margin-top: 0;
 `;
 
 const Divider = styled.div`
   position: relative;
   text-align: center;
-  margin: var(--space-md) 0;
+  margin: var(--space-lg) 0;
 
   &::before {
     content: "";
@@ -54,7 +55,7 @@ const DividerText = styled.span`
 
 const ResetButton = styled.button`
   width: 100%;
-  padding: 9px var(--space-md);
+  padding: var(--space-sm) var(--space-md);
   background: var(--color-primary);
   color: white;
   border: none;
@@ -63,6 +64,7 @@ const ResetButton = styled.button`
   font-size: var(--font-xs);
   cursor: pointer;
   transition: background-color 0.2s;
+  height: 36px;
 
   &:hover:not(:disabled) {
     background: var(--color-primary-hover);
@@ -76,7 +78,7 @@ const ResetButton = styled.button`
 
 const Footer = styled.div`
   text-align: center;
-  margin-top: var(--space-md);
+  margin-top: var(--space-lg);
 `;
 
 const FooterText = styled.p`
@@ -124,7 +126,7 @@ export function ForgotPassword({ onBack }: ForgotPasswordProps) {
             Unable to reset password? <Link href="/contact">Get help</Link>
           </FooterText>
           <FooterText style={{ marginTop: 'var(--space-sm)' }}>
-            <Link onClick={onBack} style={{ cursor: 'pointer' }}>Use other method</Link>
+            <Link onClick={onBack} style={{ cursor: 'pointer' }}>Back to previous screen</Link>
           </FooterText>
         </Footer>
       </Container>

@@ -22,7 +22,7 @@ const AccountButton = styled.button`
 	transition: background-color 0.2s ease;
 	
 	&:hover {
-		background: rgba(0, 0, 0, 0.05);
+		background: var(--color-input-background);
 	}
 `;
 
@@ -35,13 +35,13 @@ const Avatar = styled.div`
 	height: 32px;
 	border-radius: 50%;
 	overflow: hidden;
-	background: #e2e8f0;
+	background: var(--color-input-background);
 	display: flex;
 	align-items: center;
 	justify-content: center;
 	font-size: 14px;
 	font-weight: 500;
-	color: #64748b;
+	color: var(--color-secondary-text);
 
 	img {
 		width: 100%;
@@ -53,7 +53,7 @@ const Avatar = styled.div`
 const UserName = styled.div`
 	font-size: 14px;
 	font-weight: 500;
-	color: #1e293b;
+	color: var(--color-foreground);
 `;
 
 const StatusIndicator = styled.span<{ $status: "available" | "busy" | "away" }>`
@@ -66,27 +66,27 @@ const StatusIndicator = styled.span<{ $status: "available" | "busy" | "away" }>`
 	background: ${(props) => {
 		switch (props.$status) {
 			case "available":
-				return "#10b981";
+				return "var(--color-success)";
 			case "busy":
-				return "#f59e0b";
+				return "var(--color-warning)";
 			case "away":
-				return "#f97316";
+				return "var(--color-error)";
 			default:
-				return "#10b981";
+				return "var(--color-success)";
 		}
 	}}
-	border: 1px solid white;
+	border: 1px solid var(--color-background);
 `;
 
 const AccountName = styled.span`
 	font-size: 14px;
 	font-weight: 500;
-	color: #1e293b;
+	color: var(--color-foreground);
 `;
 
 const AccountEmail = styled.span`
 	font-size: 12px;
-	color: #64748b;
+	color: var(--color-secondary-text);
 `;
 
 // Dropdown styled components
@@ -123,10 +123,10 @@ const DropdownContainer = styled.div<{
 				`;
 		}
 	}}
-	border-radius: 6px;
-	border: 1px solid #e2e8f0;
-	background: white;
-	box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+	border-radius: var(--radius-md);
+	border: 1px solid var(--color-border);
+	background: var(--color-background);
+	box-shadow: 0 4px 24px var(--color-shadow);
 	z-index: 50;
 	overflow: hidden;
 	min-width: 380px;
@@ -137,7 +137,7 @@ const DropdownContainer = styled.div<{
 
 const AccountSection = styled.div`
 	padding: 12px;
-	border-bottom: 1px solid #f1f5f9;
+	border-bottom: 1px solid var(--color-border);
 `;
 
 const AccountHeader = styled.div`
@@ -174,19 +174,19 @@ const ActionLink = styled.button<{ $destructive?: boolean }>`
 	align-items: center;
 	justify-content: center;
 	gap: 6px;
-	background: #f8fafc;
+	background: var(--color-input-background);
 	border: none;
-	border-radius: 4px;
+	border-radius: var(--radius-sm);
 	padding: 6px;
 	font-size: 12px;
-	color: ${(props) => (props.$destructive ? "#dc2626" : "#64748b")};
+	color: ${(props) => (props.$destructive ? "var(--color-error)" : "var(--color-secondary-text)")};
 	cursor: pointer;
 	text-align: center;
 	flex: 1;
 	
 	&:hover {
-		background: ${(props) => (props.$destructive ? "#fee2e2" : "#f1f5f9")};
-		color: ${(props) => (props.$destructive ? "#b91c1c" : "#334155")};
+		background: ${(props) => (props.$destructive ? "var(--color-error-background)" : "var(--color-input-background)")};
+		color: ${(props) => (props.$destructive ? "var(--color-error)" : "var(--color-foreground)")};
 	}
 
 	svg {
@@ -196,7 +196,7 @@ const ActionLink = styled.button<{ $destructive?: boolean }>`
 `;
 
 const FooterSection = styled.div`
-	background: #f8fafc;
+	background: var(--color-input-background);
 	padding: 12px;
 `;
 
@@ -209,12 +209,12 @@ const FooterButton = styled.button`
 	border: none;
 	padding: 8px;
 	font-size: 14px;
-	color: #64748b;
+	color: var(--color-secondary-text);
 	cursor: pointer;
 	text-align: left;
 
 	&:hover {
-		color: #334155;
+		color: var(--color-foreground);
 	}
 
 	svg {
@@ -436,7 +436,7 @@ export const UserButton: React.FC<UserButtonProps> = ({ showName = true }) => {
 								</AccountSection>
 							))}
 
-							<FooterSection style={{ borderBottom: "1px solid #e2e8f0" }}>
+							<FooterSection style={{ borderBottom: "1px solid var(--color-border)" }}>
 								<FooterButton onClick={() => handleSignOutAll()}>
 									<Plus />
 									Add new account

@@ -12,7 +12,7 @@ import { DeploymentSocialConnection } from "@/types/deployment";
 
 const EmailButton = styled.button`
   width: 100%;
-  padding: var(--space-xs) var(--space-md);
+  padding: var(--space-sm) var(--space-md);
   background: var(--color-input-background);
   color: var(--color-foreground);
   border: 1px solid var(--color-border);
@@ -22,6 +22,7 @@ const EmailButton = styled.button`
   text-align: center;
   transition: all 0.2s;
   margin-bottom: var(--space-xs);
+  height: 36px;
 
   &:hover:not(:disabled) {
     background: var(--color-input-background);

@@ -35,11 +35,13 @@ const SwitcherButton = styled.button`
   justify-content: space-between;
   width: 100%;
   padding: 8px 12px;
-  border-radius: 6px;
+  border-radius: var(--radius-sm);
   font-size: 14px;
   font-weight: 500;
   cursor: pointer;
-  border: 1px solid rgba(238, 238, 238, 0.8);
+  border: 1px solid var(--color-border);
+  background: var(--color-background);
+  color: var(--color-foreground);
 
   &:disabled {
     cursor: not-allowed;
@@ -52,8 +54,8 @@ const AvatarContainer = styled.div`
   height: 24px;
   border-radius: 50%;
   overflow: hidden;
-  border: 1px solid #e4e4e7;
-  box-shadow: 0 1px 2px rgba(0, 0, 0, 0.05);
+  border: 1px solid var(--color-border);
+  box-shadow: 0 1px 2px var(--color-shadow);
 `;
 
 const AvatarFallback = styled.div`
@@ -62,7 +64,7 @@ const AvatarFallback = styled.div`
   display: flex;
   align-items: center;
   justify-content: center;
-  background: linear-gradient(to bottom right, #8b5cf6, #7c3aed);
+  background: var(--color-primary);
   color: white;
   font-weight: 500;
   font-size: 12px;
@@ -90,7 +92,7 @@ const TruncateText = styled.span`
 `;
 
 const SubdueText = styled.span`
-  color: #71717a;
+  color: var(--color-secondary-text);
 `;
 
 const Dropdown = styled.div<{ isOpen: boolean }>`
@@ -98,10 +100,10 @@ const Dropdown = styled.div<{ isOpen: boolean }>`
   top: calc(100% + 8px);
   left: 0;
   width: 100%;
-  background: white;
-  border-radius: 6px;
-  border: 1px solid #e2e8f0;
-  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+  background: var(--color-background);
+  border-radius: var(--radius-sm);
+  border: 1px solid var(--color-border);
+  box-shadow: 0 4px 24px var(--color-shadow);
   z-index: 50;
   overflow: hidden;
   opacity: ${(props) => (props.isOpen ? 1 : 0)};
@@ -116,12 +118,14 @@ const SearchInput = styled.input`
   width: 100%;
   padding: 12px;
   border: none;
-  border-bottom: 1px solid #f4f4f5;
+  border-bottom: 1px solid var(--color-border);
   font-size: 14px;
   outline: none;
+  background: var(--color-background);
+  color: var(--color-foreground);
 
   &::placeholder {
-    color: #a1a1aa;
+    color: var(--color-secondary-text);
   }
 `;
 
@@ -130,7 +134,7 @@ const GroupHeading = styled.div`
   font-size: 12px;
   font-weight: 500;
   text-transform: uppercase;
-  color: #71717a;
+  color: var(--color-secondary-text);
 `;
 
 const MenuItem = styled.button<{ $isActive?: boolean }>`
@@ -143,11 +147,12 @@ const MenuItem = styled.button<{ $isActive?: boolean }>`
   font-size: 14px;
   border: none;
   height: 40px;
-  background: ${(props) => (props.$isActive ? "#f4f4f5" : "transparent")};
+  background: ${(props) => (props.$isActive ? "var(--color-input-background)" : "transparent")};
   cursor: pointer;
+  color: var(--color-foreground);
 
   &:hover {
-    background: #f4f4f5;
+    background: var(--color-input-background);
   }
 
   &:disabled {
@@ -164,7 +169,7 @@ const WorkspaceMenuItem = styled(MenuItem)`
 const Separator = styled.div`
   height: 1px;
   width: 100%;
-  background: #f4f4f5;
+  background: var(--color-border);
   margin: 4px 0;
 `;
 
@@ -174,14 +179,14 @@ const IconContainer = styled.div`
   justify-content: center;
   width: 28px;
   height: 28px;
-  border-radius: 6px;
-  background: linear-gradient(to bottom right, #8b5cf6, #7c3aed);
+  border-radius: var(--radius-sm);
+  background: var(--color-primary);
   color: white;
   margin-right: 2px;
 `;
 
 const WorkspaceIcon = styled.div`
-  color: #71717a;
+  color: var(--color-secondary-text);
 `;
 
 const ActionIconContainer = styled.div<{ $destructive?: boolean }>`
@@ -191,22 +196,22 @@ const ActionIconContainer = styled.div<{ $destructive?: boolean }>`
   width: 20px;
   height: 20px;
   border-radius: 50%;
-  background: #f4f4f5;
-  color: ${({ $destructive }) => ($destructive ? "#ff4d4f" : "#71717a")};
+  background: var(--color-input-background);
+  color: ${({ $destructive }) => ($destructive ? "var(--color-error)" : "var(--color-secondary-text)")};
   margin-right: 6px;
 `;
 
 const VioletIconContainer = styled(ActionIconContainer)`
-  background: #ede9fe;
-  color: #7c3aed;
+  background: var(--color-primary-background);
+  color: var(--color-primary);
 `;
 
 const Spinner = styled.span`
   display: inline-block;
   width: 12px;
   height: 12px;
-  border: 2px solid rgba(156, 163, 175, 0.5);
-  border-top-color: #8b5cf6;
+  border: 2px solid var(--color-border);
+  border-top-color: var(--color-primary);
   border-radius: 50%;
   animation: spin 1s linear infinite;
 
@@ -404,7 +409,7 @@ export const OrganizationSwitcher = () => {
           <FlexContainer>
             <AvatarContainer>
               {isSwitching ? (
-                <AvatarFallback style={{ background: "#e4e4e7" }}>
+                <AvatarFallback style={{ background: "var(--color-border)" }}>
                   <Spinner />
                 </AvatarFallback>
               ) : selectedOrg.image_url ? (
@@ -476,7 +481,7 @@ export const OrganizationSwitcher = () => {
                         <span style={{ marginTop: "-2px" }}>{org.name}</span>
                       </FlexContainer>
                       {selectedOrg.id === org.id && !selectedWorkspace && (
-                        <Check size={16} color="#8b5cf6" />
+                        <Check size={16} color="var(--color-primary)" />
                       )}
                     </MenuItem>
 
@@ -497,12 +502,12 @@ export const OrganizationSwitcher = () => {
                               alt={workspace.name}
                             />
                           ) : (
-                            <FolderKanban size={20} color="#8b5cf6" />
+                            <FolderKanban size={20} color="var(--color-primary)" />
                           )}
                           <span>{workspace.name}</span>
                         </FlexContainer>
                         {selectedWorkspace?.id === workspace.id && (
-                          <Check size={16} color="#8b5cf6" />
+                          <Check size={16} color="var(--color-primary)" />
                         )}
                       </WorkspaceMenuItem>
                     ))}
@@ -548,7 +553,7 @@ export const OrganizationSwitcher = () => {
                         <span style={{ marginTop: "-2px" }}>{org.name}</span>
                       </FlexContainer>
                       {selectedOrg.id === org.id && (
-                        <Check size={16} color="#8b5cf6" />
+                        <Check size={16} color="var(--color-primary)" />
                       )}
                     </MenuItem>
                     {index != filteredOrganizations.length - 1 && <Separator />}

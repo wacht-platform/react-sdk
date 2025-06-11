@@ -17,14 +17,14 @@ export const SearchInput = ({
         display: "flex",
         flexGrow: 1,
         alignItems: "center",
-        border: "1px solid #e2e8f0",
+        border: "1px solid var(--color-border)",
         borderRadius: "8px",
         padding: "8px 12px",
-        backgroundColor: "#fff",
+        backgroundColor: "var(--color-input-background)",
         minWidth: "250px",
       }}
     >
-      <Search size={16} color="#94a3b8" style={{ marginRight: "8px" }} />
+      <Search size={16} color="var(--color-secondary-text)" style={{ marginRight: "8px" }} />
       <input
         type="text"
         placeholder={placeholder}
@@ -35,7 +35,7 @@ export const SearchInput = ({
           outline: "none",
           width: "100%",
           fontSize: "14px",
-          color: "#1e293b",
+          color: "var(--color-text)",
         }}
       />
     </div>

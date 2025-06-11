@@ -14,12 +14,10 @@ const DropdownItemsContainer = styled.div`
   position: absolute;
   margin-top: 4px;
   right: 0;
-  background: white;
+  background: var(--color-background);
   border-radius: 8px;
-  box-shadow:
-    0 4px 6px -1px rgb(0 0 0 / 0.1),
-    0 2px 4px -2px rgb(0 0 0 / 0.1);
-  border: 1px solid #e2e8f0;
+  box-shadow: 0 4px 24px var(--color-shadow);
+  border: 1px solid var(--color-border);
   overflow: hidden;
   z-index: 10;
   min-width: 140px;
@@ -145,15 +143,15 @@ export const DropdownItem = styled.button<{ $destructive?: boolean }>`
   cursor: pointer;
   font-size: 14px;
   width: 200px;
-  color: ${(props) => (props.$destructive ? "#ef4444" : "#1e293b")};
+  color: ${(props) => (props.$destructive ? "var(--color-error)" : "var(--color-text)")};
 
   &:hover {
-    background: ${(props) => (props.$destructive ? "#fee2e2" : "#f8fafc")};
+    background: ${(props) => (props.$destructive ? "var(--color-error-background)" : "var(--color-background-hover)")};
   }
 `;
 
 export const DropdownDivider = styled.div`
   height: 1px;
-  background-color: #e2e8f0;
+  background-color: var(--color-border);
   width: 100%;
 `;

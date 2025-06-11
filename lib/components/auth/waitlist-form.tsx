@@ -10,9 +10,9 @@ import { useWaitlist, type WaitlistParams } from "@/hooks/use-waitlist";
 import { AuthFormImage } from "./auth-image";
 
 const Container = styled.div`
-  max-width: 400px;
-  width: 400px;
-  padding: var(--space-2xl);
+  max-width: 360px;
+  width: 360px;
+  padding: var(--space-xl);
   background: var(--color-background);
   border-radius: var(--radius-lg);
   box-shadow: 0 4px 24px var(--color-shadow);
@@ -24,14 +24,17 @@ const Header = styled.div`
 `;
 
 const Title = styled.h1`
-  font-size: var(--font-md);
+  font-size: var(--font-lg);
+  font-weight: 500;
   color: var(--color-foreground);
-  margin-bottom: var(--space-2xs);
+  margin-bottom: var(--space-xs);
+  margin-top: 0;
 `;
 
 const Subtitle = styled.p`
   color: var(--color-secondary-text);
   font-size: var(--font-xs);
+  margin: 0;
 `;
 
 const Form = styled.form`
@@ -43,19 +46,20 @@ const Form = styled.form`
 const FormGroup = styled.div`
   display: flex;
   flex-direction: column;
-  gap: var(--space-2xs);
+  gap: var(--space-xs);
 `;
 
 const NameFields = styled.div<{ $isBothEnabled: boolean }>`
   display: grid;
   grid-template-columns: ${(props) => (props.$isBothEnabled ? "1fr 1fr" : "1fr")};
-  gap: var(--space-sm);
+  gap: var(--space-xs);
 `;
 
 const Label = styled.label`
   font-size: var(--font-xs);
   font-weight: 500;
   color: var(--color-foreground);
+  text-align: left;
 `;
 
 const RequiredAsterisk = styled.span`
@@ -65,7 +69,7 @@ const RequiredAsterisk = styled.span`
 
 const Button = styled.button<{ $primary?: boolean }>`
   width: 100%;
-  padding: 0.5625rem 1rem;
+  padding: var(--space-sm) var(--space-md);
   border: ${(props) => (props.$primary ? "none" : "1px solid var(--color-input-border)")};
   border-radius: var(--radius-md);
   font-size: var(--font-xs);
@@ -74,7 +78,8 @@ const Button = styled.button<{ $primary?: boolean }>`
   transition: background-color 0.2s;
   background: ${(props) => (props.$primary ? "var(--color-primary)" : "var(--color-background)")};
   color: ${(props) => (props.$primary ? "white" : "var(--color-foreground)")};
-  margin-top: var(--space-xs);
+  margin-top: var(--space-sm);
+  height: 36px;
 
   &:hover:not(:disabled) {
     background: ${(props) => (props.$primary ? "var(--color-primary-hover)" : "var(--color-input-background)")};
@@ -101,9 +106,9 @@ const SuccessContainer = styled.div`
 `;
 
 const SuccessIcon = styled.div`
-  width: 64px;
-  height: 64px;
-  background: #10b981;
+  width: 48px;
+  height: 48px;
+  background: var(--color-success);
   border-radius: 50%;
   display: flex;
   align-items: center;
@@ -122,6 +127,23 @@ const SuccessMessage = styled.p`
   color: var(--color-secondary-text);
   margin: 0;
   line-height: 1.5;
+`;
+
+const Footer = styled.div`
+  text-align: center;
+  margin-top: var(--space-lg);
+`;
+
+const FooterText = styled.p`
+  font-size: var(--font-xs);
+  color: var(--color-muted);
+  margin: 0;
+`;
+
+const Link = styled.a`
+  color: var(--color-primary);
+  text-decoration: none;
+  cursor: pointer;
 `;
 
 export function WaitlistForm() {
@@ -300,6 +322,12 @@ export function WaitlistForm() {
 						{isSubmitting || loading ? "Joining waitlist..." : "Join waitlist"}
 					</Button>
 				</Form>
+
+				<Footer>
+					<FooterText>
+						Need assistance? <Link href="/contact">Get help</Link>
+					</FooterText>
+				</Footer>
 			</Container>
 		</DefaultStylesProvider>
 	);
