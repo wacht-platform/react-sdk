@@ -382,6 +382,7 @@ const ProfileManagementSection = ({
   >;
 }) => {
   const { user } = useUser();
+  const { deployment } = useDeployment();
 
   return (
     <>
@@ -406,47 +407,51 @@ const ProfileManagementSection = ({
           <ArrowRight size={14} style={{ color: "var(--color-muted)" }} />
         </ProfileHeader>
 
-        <InfoItem onClick={() => setScreen("email")}>
-          <InfoLabel>Email addresses</InfoLabel>
-          <InfoContent>
-            <div
-              style={{
-                flex: 1,
-                overflow: "hidden",
-                textOverflow: "ellipsis",
-                whiteSpace: "nowrap",
-              }}
-            >
-              {user?.user_email_addresses?.length
-                ? user.user_email_addresses
-                    .map((email) => email.email)
-                    .join(", ")
-                : "No email addresses added"}
-            </div>
-            <ArrowRight size={14} style={{ color: "var(--color-muted)" }} />
-          </InfoContent>
-        </InfoItem>
+        {deployment?.auth_settings?.email_address?.enabled && (
+          <InfoItem onClick={() => setScreen("email")}>
+            <InfoLabel>Email addresses</InfoLabel>
+            <InfoContent>
+              <div
+                style={{
+                  flex: 1,
+                  overflow: "hidden",
+                  textOverflow: "ellipsis",
+                  whiteSpace: "nowrap",
+                }}
+              >
+                {user?.user_email_addresses?.length
+                  ? user.user_email_addresses
+                      .map((email) => email.email)
+                      .join(", ")
+                  : "No email addresses added"}
+              </div>
+              <ArrowRight size={14} style={{ color: "var(--color-muted)" }} />
+            </InfoContent>
+          </InfoItem>
+        )}
 
-        <InfoItem onClick={() => setScreen("phone")}>
-          <InfoLabel>Phone number</InfoLabel>
-          <InfoContent>
-            <div
-              style={{
-                flex: 1,
-                overflow: "hidden",
-                textOverflow: "ellipsis",
-                whiteSpace: "nowrap",
-              }}
-            >
-              {user?.user_phone_numbers?.length
-                ? user.user_phone_numbers
-                    .map((phone) => phone.phone_number)
-                    .join(", ")
-                : "No phone numbers added"}
-            </div>
-            <ArrowRight size={14} style={{ color: "var(--color-muted)" }} />
-          </InfoContent>
-        </InfoItem>
+        {deployment?.auth_settings?.phone_number?.enabled && (
+          <InfoItem onClick={() => setScreen("phone")}>
+            <InfoLabel>Phone number</InfoLabel>
+            <InfoContent>
+              <div
+                style={{
+                  flex: 1,
+                  overflow: "hidden",
+                  textOverflow: "ellipsis",
+                  whiteSpace: "nowrap",
+                }}
+              >
+                {user?.user_phone_numbers?.length
+                  ? user.user_phone_numbers
+                      .map((phone) => phone.phone_number)
+                      .join(", ")
+                  : "No phone numbers added"}
+              </div>
+              <ArrowRight size={14} style={{ color: "var(--color-muted)" }} />
+            </InfoContent>
+          </InfoItem>
+        )}
 
         <InfoItem onClick={() => setScreen("social")}>
           <InfoLabel>Connected accounts</InfoLabel>
@@ -473,41 +478,47 @@ const ProfileManagementSection = ({
           Security settings
         </SectionTitle>
 
-        <InfoItem onClick={() => setScreen("password")}>
-          <InfoLabel>Password</InfoLabel>
-          <InfoContent>
-            <div
-              style={{
-                flex: 1,
-                overflow: "hidden",
-                textOverflow: "ellipsis",
-                whiteSpace: "nowrap",
-              }}
-            >
-              Last changed 3 months ago
-            </div>
-            <ArrowRight size={14} style={{ color: "var(--color-muted)" }} />
-          </InfoContent>
-        </InfoItem>
+        {deployment?.auth_settings?.password?.enabled && (
+          <InfoItem onClick={() => setScreen("password")}>
+            <InfoLabel>Password</InfoLabel>
+            <InfoContent>
+              <div
+                style={{
+                  flex: 1,
+                  overflow: "hidden",
+                  textOverflow: "ellipsis",
+                  whiteSpace: "nowrap",
+                }}
+              >
+                Last changed 3 months ago
+              </div>
+              <ArrowRight size={14} style={{ color: "var(--color-muted)" }} />
+            </InfoContent>
+          </InfoItem>
+        )}
 
-        <InfoItem onClick={() => setScreen("2fa")}>
-          <InfoLabel>Two Factor Verification</InfoLabel>
-          <InfoContent>
-            <div
-              style={{
-                flex: 1,
-                overflow: "hidden",
-                textOverflow: "ellipsis",
-                whiteSpace: "nowrap",
-              }}
-            >
-              {user.second_factor_policy === "none"
-                ? "Add a second layer of security to your account"
-                : "Set up your second factors"}
-            </div>
-            <ArrowRight size={14} style={{ color: "var(--color-muted)" }} />
-          </InfoContent>
-        </InfoItem>
+        {(deployment?.auth_settings?.auth_factors_enabled?.authenticator ||
+          deployment?.auth_settings?.auth_factors_enabled?.phone_otp ||
+          deployment?.auth_settings?.auth_factors_enabled?.backup_code) && (
+          <InfoItem onClick={() => setScreen("2fa")}>
+            <InfoLabel>Two Factor Verification</InfoLabel>
+            <InfoContent>
+              <div
+                style={{
+                  flex: 1,
+                  overflow: "hidden",
+                  textOverflow: "ellipsis",
+                  whiteSpace: "nowrap",
+                }}
+              >
+                {user.second_factor_policy === "none"
+                  ? "Add a second layer of security to your account"
+                  : "Set up your second factors"}
+              </div>
+              <ArrowRight size={14} style={{ color: "var(--color-muted)" }} />
+            </InfoContent>
+          </InfoItem>
+        )}
         <InfoItem onClick={() => setScreen("active-sessions")}>
           <InfoLabel>Active sessions</InfoLabel>
           <InfoContent>
@@ -632,6 +643,7 @@ const ActiveSessionsSection = () => {
 };
 
 const EmailManagementSection = () => {
+  const { deployment } = useDeployment();
   const [emailIdInAction, setEmailIdInAction] = useState<string | null>(null);
   const [activeEmail, setActiveEmail] = useState<string | null>(null);
   const [newEmail, setNewEmail] = useState("");
@@ -643,6 +655,11 @@ const EmailManagementSection = () => {
     prepareEmailVerification,
     attemptEmailVerification,
   } = useUser();
+
+  // Don't render if email is disabled
+  if (!deployment?.auth_settings?.email_address?.enabled) {
+    return null;
+  }
 
   return (
     <>
@@ -776,6 +793,7 @@ const EmailManagementSection = () => {
 };
 
 const PhoneManagementSection = () => {
+  const { deployment } = useDeployment();
   const [activePhone, setActivePhone] = useState<string | null>(null);
   const [isAddingPhone, setIsAddingPhone] = useState(false);
   const [newPhone, setNewPhone] = useState("");
@@ -790,6 +808,11 @@ const PhoneManagementSection = () => {
     attemptPhoneVerification,
     makePhonePrimary,
   } = useUser();
+
+  // Don't render if phone is disabled
+  if (!deployment?.auth_settings?.phone_number?.enabled) {
+    return null;
+  }
 
   return (
     <>
@@ -1185,6 +1208,7 @@ const PasswordInput = styled.div`
 `;
 
 const PasswordManagementSection = () => {
+  const { deployment } = useDeployment();
   const [currentPassword, setCurrentPassword] = useState("");
   const [newPassword, setNewPassword] = useState("");
   const [confirmPassword, setConfirmPassword] = useState("");
@@ -1193,6 +1217,11 @@ const PasswordManagementSection = () => {
   const [showConfirmPassword, setShowConfirmPassword] = useState(false);
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [errors, setErrors] = useState<Record<string, string>>({});
+
+  // Don't render if password is disabled
+  if (!deployment?.auth_settings?.password?.enabled) {
+    return null;
+  }
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -1361,53 +1390,72 @@ const TwoFactorManagementSection = ({
     >
   >;
 }) => {
+  const { deployment } = useDeployment();
+
+  const authFactorsEnabled = deployment?.auth_settings?.auth_factors_enabled;
+
+  // Don't render if no 2FA methods are enabled
+  const hasAny2FAEnabled = authFactorsEnabled?.authenticator ||
+                          authFactorsEnabled?.phone_otp ||
+                          authFactorsEnabled?.backup_code;
+
+  if (!hasAny2FAEnabled) {
+    return null;
+  }
+
   return (
     <div>
       <SectionTitle>
         <span>Two-Factor Verification</span>
       </SectionTitle>
 
-      <InfoItem onClick={() => setScreen("2fa/authenticator")}>
-        <InfoLabel>Authenticator App</InfoLabel>
-        <InfoContent>
-          <div
-            style={{
-              flex: 1,
-            }}
-          >
-            Add an authenticator app to your account
-          </div>
-          <ArrowRight size={14} style={{ color: "var(--color-muted)" }} />
-        </InfoContent>
-      </InfoItem>
+      {authFactorsEnabled?.authenticator && (
+        <InfoItem onClick={() => setScreen("2fa/authenticator")}>
+          <InfoLabel>Authenticator App</InfoLabel>
+          <InfoContent>
+            <div
+              style={{
+                flex: 1,
+              }}
+            >
+              Add an authenticator app to your account
+            </div>
+            <ArrowRight size={14} style={{ color: "var(--color-muted)" }} />
+          </InfoContent>
+        </InfoItem>
+      )}
 
-      <InfoItem onClick={() => setScreen("2fa/phone")}>
-        <InfoLabel>Phone number</InfoLabel>
-        <InfoContent>
-          <div
-            style={{
-              flex: 1,
-            }}
-          >
-            Add a phone number for 2FA
-          </div>
-          <ArrowRight size={14} style={{ color: "var(--color-muted)" }} />
-        </InfoContent>
-      </InfoItem>
+      {authFactorsEnabled?.phone_otp && (
+        <InfoItem onClick={() => setScreen("2fa/phone")}>
+          <InfoLabel>Phone number</InfoLabel>
+          <InfoContent>
+            <div
+              style={{
+                flex: 1,
+              }}
+            >
+              Add a phone number for 2FA
+            </div>
+            <ArrowRight size={14} style={{ color: "var(--color-muted)" }} />
+          </InfoContent>
+        </InfoItem>
+      )}
 
-      <InfoItem onClick={() => setScreen("2fa/backup_code")}>
-        <InfoLabel>Backup Codes</InfoLabel>
-        <InfoContent>
-          <div
-            style={{
-              flex: 1,
-            }}
-          >
-            Download backup codes for your account
-          </div>
-          <ArrowRight size={14} style={{ color: "var(--color-muted)" }} />
-        </InfoContent>
-      </InfoItem>
+      {authFactorsEnabled?.backup_code && (
+        <InfoItem onClick={() => setScreen("2fa/backup_code")}>
+          <InfoLabel>Backup Codes</InfoLabel>
+          <InfoContent>
+            <div
+              style={{
+                flex: 1,
+              }}
+            >
+              Download backup codes for your account
+            </div>
+            <ArrowRight size={14} style={{ color: "var(--color-muted)" }} />
+          </InfoContent>
+        </InfoItem>
+      )}
 
       <div style={{ marginTop: "24px" }}>
         <p style={{ fontSize: "14px", color: "var(--color-muted)" }}>
@@ -2456,6 +2504,7 @@ const BackupCodeManagementSection = () => {
 };
 
 const ProfileDetailsManagementSection = () => {
+  const { deployment } = useDeployment();
   const { user, updateProfile, updateProfilePicture } = useUser();
   const [firstName, setFirstName] = useState(user?.first_name || "");
   const [lastName, setLastName] = useState(user?.last_name || "");
@@ -2660,56 +2709,97 @@ const ProfileDetailsManagementSection = () => {
           )}
         </div>
 
-        <div>
-          <div style={{ display: "flex", gap: "12px" }}>
-            <FormGroup style={{ flex: 1 }}>
-              <Label>First Name</Label>
-              <Input
-                id="firstName"
-                type="text"
-                value={firstName}
-                onChange={(e) => setFirstName(e.target.value)}
-                placeholder="First Name"
-                style={{
-                  width: "100%",
-                  padding: "10px 12px",
-                  borderRadius: "6px",
-                  fontSize: "14px",
-                  backgroundColor: "var(--color-input-background)",
-                  borderColor: errors.firstName ? "var(--color-error)" : undefined,
-                }}
-              />
-              {errors.firstName && (
-                <div
-                  style={{
-                    color: "var(--color-error)",
-                    fontSize: "12px",
-                    marginTop: "4px",
-                  }}
-                >
-                  {errors.firstName}
-                </div>
+        {(deployment?.auth_settings?.first_name?.enabled ||
+          deployment?.auth_settings?.last_name?.enabled) && (
+          <div>
+            <div style={{ display: "flex", gap: "12px" }}>
+              {deployment?.auth_settings?.first_name?.enabled && (
+                <FormGroup style={{ flex: 1 }}>
+                  <Label>First Name</Label>
+                  <Input
+                    id="firstName"
+                    type="text"
+                    value={firstName}
+                    onChange={(e) => setFirstName(e.target.value)}
+                    placeholder="First Name"
+                    style={{
+                      width: "100%",
+                      padding: "10px 12px",
+                      borderRadius: "6px",
+                      fontSize: "14px",
+                      backgroundColor: "var(--color-input-background)",
+                      borderColor: errors.firstName ? "var(--color-error)" : undefined,
+                    }}
+                  />
+                  {errors.firstName && (
+                    <div
+                      style={{
+                        color: "var(--color-error)",
+                        fontSize: "12px",
+                        marginTop: "4px",
+                      }}
+                    >
+                      {errors.firstName}
+                    </div>
+                  )}
+                </FormGroup>
               )}
-            </FormGroup>
 
-            <FormGroup style={{ flex: 1 }}>
-              <Label>Last Name</Label>
+              {deployment?.auth_settings?.last_name?.enabled && (
+                <FormGroup style={{ flex: 1 }}>
+                  <Label>Last Name</Label>
+                  <Input
+                    id="lastName"
+                    type="text"
+                    value={lastName}
+                    onChange={(e) => setLastName(e.target.value)}
+                    placeholder="Last Name"
+                    style={{
+                      width: "100%",
+                      padding: "10px 12px",
+                      borderRadius: "6px",
+                      fontSize: "14px",
+                      backgroundColor: "var(--color-input-background)",
+                      borderColor: errors.lastName ? "var(--color-error)" : undefined,
+                    }}
+                  />
+                  {errors.lastName && (
+                    <div
+                      style={{
+                        color: "var(--color-error)",
+                        fontSize: "12px",
+                        marginTop: "4px",
+                      }}
+                    >
+                      {errors.lastName}
+                    </div>
+                  )}
+                </FormGroup>
+              )}
+            </div>
+          </div>
+        )}
+
+        {deployment?.auth_settings?.username?.enabled && (
+          <div style={{ marginTop: "12px" }}>
+            <FormGroup>
+              <Label>Username</Label>
               <Input
-                id="lastName"
+                id="username"
                 type="text"
-                value={lastName}
-                onChange={(e) => setLastName(e.target.value)}
-                placeholder="Last Name"
+                value={username}
+                onChange={(e) => setUsername(e.target.value)}
+                placeholder="Username"
                 style={{
                   width: "100%",
                   padding: "10px 12px",
                   borderRadius: "6px",
                   fontSize: "14px",
                   backgroundColor: "var(--color-input-background)",
-                  borderColor: errors.lastName ? "var(--color-error)" : undefined,
+                  borderColor: errors.username ? "var(--color-error)" : undefined,
                 }}
               />
-              {errors.lastName && (
+              {errors.username && (
                 <div
                   style={{
                     color: "var(--color-error)",
@@ -2717,44 +2807,12 @@ const ProfileDetailsManagementSection = () => {
                     marginTop: "4px",
                   }}
                 >
-                  {errors.lastName}
+                  {errors.username}
                 </div>
               )}
             </FormGroup>
           </div>
-        </div>
-
-        <div style={{ marginTop: "12px" }}>
-          <FormGroup>
-            <Label>Username</Label>
-            <Input
-              id="username"
-              type="text"
-              value={username}
-              onChange={(e) => setUsername(e.target.value)}
-              placeholder="Username"
-              style={{
-                width: "100%",
-                padding: "10px 12px",
-                borderRadius: "6px",
-                fontSize: "14px",
-                backgroundColor: "var(--color-input-background)",
-                borderColor: errors.username ? "var(--color-error)" : undefined,
-              }}
-            />
-            {errors.username && (
-              <div
-                style={{
-                  color: "var(--color-error)",
-                  fontSize: "12px",
-                  marginTop: "4px",
-                }}
-              >
-                {errors.username}
-              </div>
-            )}
-          </FormGroup>
-        </div>
+        )}
 
         <div style={{ marginBottom: "12px" }}>
           <DeleteAccountAccordion handleDeleteAccount={handleDeleteAccount} />

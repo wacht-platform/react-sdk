@@ -22,6 +22,7 @@ import {
   CircleAlert,
 } from "lucide-react";
 import { useActiveOrganization } from "@/hooks/use-organization";
+import { useDeployment } from "@/hooks/use-deployment";
 import { match } from "ts-pattern";
 import { AddDomainPopover } from "./add-domain-popover";
 import useSWR from "swr";
@@ -215,6 +216,7 @@ const OrganizationManagementSection = () => {
   const { activeOrganization: selectedOrganization, loading } =
     useActiveOrganization();
   const { setScreen } = useScreenContext();
+  const { deployment } = useDeployment();
 
   if (loading || !selectedOrganization) {
     return (
@@ -281,22 +283,24 @@ const OrganizationManagementSection = () => {
           </InfoContent>
         </InfoItem>
 
-        <InfoItem onClick={() => setScreen("roles")}>
-          <InfoLabel>Organization Roles</InfoLabel>
-          <InfoContent>
-            <div
-              style={{
-                flex: 1,
-                overflow: "hidden",
-                textOverflow: "ellipsis",
-                whiteSpace: "nowrap",
-              }}
-            >
-              Manage access to your organization resources
-            </div>
-            <ArrowRight size={14} style={{ color: "var(--color-muted)" }} />
-          </InfoContent>
-        </InfoItem>
+        {deployment?.b2b_settings?.custom_org_role_enabled && (
+          <InfoItem onClick={() => setScreen("roles")}>
+            <InfoLabel>Organization Roles</InfoLabel>
+            <InfoContent>
+              <div
+                style={{
+                  flex: 1,
+                  overflow: "hidden",
+                  textOverflow: "ellipsis",
+                  whiteSpace: "nowrap",
+                }}
+              >
+                Manage access to your organization resources
+              </div>
+              <ArrowRight size={14} style={{ color: "var(--color-muted)" }} />
+            </InfoContent>
+          </InfoItem>
+        )}
 
         <SectionTitle style={{ marginTop: "32px", marginBottom: "16px" }}>
           Administration
@@ -1597,6 +1601,7 @@ const SecuritySection = () => {
   const { activeOrganization, loading, updateOrganization } =
     useActiveOrganization();
   const { workspaces: workspaceList } = useWorkspaceList();
+  const { deployment } = useDeployment();
 
   const [security, setSecurity] = useState({
     mfa_required: false,
@@ -1736,13 +1741,80 @@ const SecuritySection = () => {
           </Switch>
         </div>
 
-        <div>
+        {deployment?.b2b_settings?.ip_allowlist_per_org_enabled && (
+          <div>
+            <div
+              style={{
+                display: "flex",
+                justifyContent: "space-between",
+                alignItems: "center",
+                marginBottom: security.ip_restrictions ? "16px" : "0",
+              }}
+            >
+              <div>
+                <div
+                  style={{
+                    fontWeight: 500,
+                    fontSize: "14px",
+                  }}
+                >
+                  IP Restrictions
+                </div>
+                <div style={{ fontSize: "14px", color: "var(--color-muted)" }}>
+                  Limit access to specific IP addresses
+                </div>
+              </div>
+              <Switch>
+                <input
+                  type="checkbox"
+                  checked={security.ip_restrictions}
+                  onChange={handleToggleIpRestrictions}
+                />
+                <span></span>
+              </Switch>
+            </div>
+
+            {security.ip_restrictions && (
+              <div style={{ marginTop: "16px" }}>
+                <FormGroup>
+                  <Label>Allowed IP Addresses</Label>
+                  <Input
+                    as="textarea"
+                    value={security.allowed_ips}
+                    onChange={(e) =>
+                      setSecurity((prev) => ({
+                        ...prev,
+                        allowed_ips: e.target.value,
+                      }))
+                    }
+                    placeholder="Enter IP addresses (one per line)"
+                    style={{
+                      minHeight: "80px",
+                      backgroundColor: "var(--color-input-background)",
+                      border: "1px solid var(--color-border)",
+                    }}
+                  />
+                  <div
+                    style={{
+                      fontSize: "12px",
+                      color: "var(--color-muted)",
+                    }}
+                  >
+                    Enter one IP address or CIDR range per line (e.g., 192.168.1.1
+                    or 192.168.1.0/24)
+                  </div>
+                </FormGroup>
+              </div>
+            )}
+          </div>
+        )}
+
+        {deployment?.b2b_settings?.workspaces_enabled && (
           <div
             style={{
               display: "flex",
               justifyContent: "space-between",
               alignItems: "center",
-              marginBottom: security.ip_restrictions ? "16px" : "0",
             }}
           >
             <div>
@@ -1752,100 +1824,39 @@ const SecuritySection = () => {
                   fontSize: "14px",
                 }}
               >
-                IP Restrictions
+                Default Workspace
               </div>
               <div style={{ fontSize: "14px", color: "var(--color-muted)" }}>
-                Limit access to specific IP addresses
+                New members will be added to this workspace
               </div>
             </div>
-            <Switch>
-              <input
-                type="checkbox"
-                checked={security.ip_restrictions}
-                onChange={handleToggleIpRestrictions}
+            <div style={{ width: "180px" }}>
+              <ComboBox
+                options={workspaces.map((workspace) => ({
+                  value: workspace.id,
+                  label: workspace.name,
+                }))}
+                value={security.default_workspace_id}
+                onChange={(value) =>
+                  setSecurity((prev) => ({
+                    ...prev,
+                    default_workspace_id: value,
+                  }))
+                }
+                placeholder="Select workspace"
               />
-              <span></span>
-            </Switch>
-          </div>
-
-          {security.ip_restrictions && (
-            <div style={{ marginTop: "16px" }}>
-              <FormGroup>
-                <Label>Allowed IP Addresses</Label>
-                <Input
-                  as="textarea"
-                  value={security.allowed_ips}
-                  onChange={(e) =>
-                    setSecurity((prev) => ({
-                      ...prev,
-                      allowed_ips: e.target.value,
-                    }))
-                  }
-                  placeholder="Enter IP addresses (one per line)"
-                  style={{
-                    minHeight: "80px",
-                    backgroundColor: "var(--color-input-background)",
-                    border: "1px solid var(--color-border)",
-                  }}
-                />
-                <div
-                  style={{
-                    fontSize: "12px",
-                    color: "var(--color-muted)",
-                  }}
-                >
-                  Enter one IP address or CIDR range per line (e.g., 192.168.1.1
-                  or 192.168.1.0/24)
-                </div>
-              </FormGroup>
-            </div>
-          )}
-        </div>
-
-        <div
-          style={{
-            display: "flex",
-            justifyContent: "space-between",
-            alignItems: "center",
-          }}
-        >
-          <div>
-            <div
-              style={{
-                fontWeight: 500,
-                fontSize: "14px",
-              }}
-            >
-              Default Workspace
-            </div>
-            <div style={{ fontSize: "14px", color: "var(--color-muted)" }}>
-              New members will be added to this workspace
             </div>
           </div>
-          <div style={{ width: "180px" }}>
-            <ComboBox
-              options={workspaces.map((workspace) => ({
-                value: workspace.id,
-                label: workspace.name,
-              }))}
-              value={security.default_workspace_id}
-              onChange={(value) =>
-                setSecurity((prev) => ({
-                  ...prev,
-                  default_workspace_id: value,
-                }))
-              }
-              placeholder="Select workspace"
-            />
-          </div>
-        </div>
+        )}
       </Form>
 
-      <DeleteAccountAccordion
-        handleDeleteAccount={console.log}
-        title="Delete Organization"
-        description="Delete this organization, all associated members and workspaces will be deleted, and all associated data will be permanently removed."
-      />
+      {deployment?.b2b_settings?.allow_org_deletion && (
+        <DeleteAccountAccordion
+          handleDeleteAccount={console.log}
+          title="Delete Organization"
+          description="Delete this organization, all associated members and workspaces will be deleted, and all associated data will be permanently removed."
+        />
+      )}
     </>
   );
 };
@@ -1853,6 +1864,12 @@ const SecuritySection = () => {
 const RolesSection = () => {
   const { activeOrganization, loading, getRoles, removeRole } =
     useActiveOrganization();
+  const { deployment } = useDeployment();
+
+  // Don't render if custom roles are disabled
+  if (!deployment?.b2b_settings?.custom_org_role_enabled) {
+    return null;
+  }
   const [rolePopover, setRolePopover] = useState<{
     isOpen: boolean;
     role?: OrganizationRole;

@@ -3,6 +3,11 @@ import { GithubIcon } from "../icons/github";
 import { MicrosoftIcon } from "../icons/microsoft";
 import { GoogleIcon } from "../icons/google";
 import { XIcon } from "../icons/x";
+import { FacebookIcon } from "../icons/facebook";
+import { LinkedInIcon } from "../icons/linkedin";
+import { GitLabIcon } from "../icons/gitlab";
+import { AppleIcon } from "../icons/apple";
+import { DiscordIcon } from "../icons/discord";
 import { DeploymentSocialConnection } from "@/types/deployment";
 
 const socialAuthProviders = {
@@ -25,6 +30,31 @@ const socialAuthProviders = {
     shortLabel: "X",
     fullLabel: "Continue with X",
     icon: <XIcon />,
+  },
+  facebook_oauth: {
+    shortLabel: "Facebook",
+    fullLabel: "Continue with Facebook",
+    icon: <FacebookIcon />,
+  },
+  linkedin_oauth: {
+    shortLabel: "LinkedIn",
+    fullLabel: "Continue with LinkedIn",
+    icon: <LinkedInIcon />,
+  },
+  gitlab_oauth: {
+    shortLabel: "GitLab",
+    fullLabel: "Continue with GitLab",
+    icon: <GitLabIcon />,
+  },
+  apple_oauth: {
+    shortLabel: "Apple",
+    fullLabel: "Continue with Apple",
+    icon: <AppleIcon />,
+  },
+  discord_oauth: {
+    shortLabel: "Discord",
+    fullLabel: "Continue with Discord",
+    icon: <DiscordIcon />,
   },
 };
 

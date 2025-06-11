@@ -150,11 +150,6 @@ const ErrorMessage = styled.p`
   margin-top: var(--space-2xs);
 `;
 
-const RequiredAsterisk = styled.span`
-  color: var(--color-error);
-  margin-left: var(--space-2xs);
-  vertical-align: middle;
-`;
 
 const SubmitButton = styled.button`
   width: 100%;
@@ -207,6 +202,64 @@ const Link = styled.span`
   }
 `;
 
+const RestrictedMessage = styled.div`
+  text-align: center;
+  padding: var(--space-xl);
+  background: var(--color-background-secondary);
+  border-radius: var(--border-radius-lg);
+  border: 1px solid var(--color-border);
+  margin-bottom: var(--space-lg);
+`;
+
+const RestrictedIcon = styled.div`
+  font-size: 48px;
+  margin-bottom: var(--space-md);
+  opacity: 0.8;
+`;
+
+const RestrictedTitle = styled.h2`
+  font-size: var(--font-size-xl);
+  font-weight: var(--font-weight-semibold);
+  color: var(--color-text-primary);
+  margin: 0 0 var(--space-md) 0;
+`;
+
+const RestrictedText = styled.p`
+  font-size: var(--font-size-md);
+  color: var(--color-text-secondary);
+  margin: 0 0 var(--space-sm) 0;
+  line-height: 1.5;
+`;
+
+const RestrictedSubtext = styled.p`
+  font-size: var(--font-size-sm);
+  color: var(--color-text-muted);
+  margin: 0;
+  line-height: 1.4;
+`;
+
+const RestrictedFooter = styled.div`
+  text-align: center;
+  margin-top: var(--space-lg);
+`;
+
+const RestrictedFooterText = styled.p`
+  font-size: var(--font-xs);
+  color: var(--color-muted);
+  margin: 0;
+`;
+
+const RestrictedLink = styled.a`
+  color: var(--color-primary);
+  text-decoration: none;
+  cursor: pointer;
+`;
+
+const RequiredAsterisk = styled.span`
+  color: var(--color-danger);
+  margin-left: 2px;
+`;
+
 export function SignUpForm() {
   const {
     loading,
@@ -230,6 +283,22 @@ export function SignUpForm() {
   const [countryCode, setCountryCode] = useState(
     Intl.DateTimeFormat().resolvedOptions().locale.split("-")?.pop()
   );
+
+  // Check if signup is restricted
+  const isSignupRestricted = deployment?.restrictions?.sign_up_mode === "restricted";
+  const isWaitlistMode = deployment?.restrictions?.sign_up_mode === "waitlist";
+
+  // Redirect to waitlist if in waitlist mode
+  useEffect(() => {
+    if (!deployment) return;
+
+    if (isWaitlistMode) {
+      // Redirect to waitlist page
+      const waitlistUrl = deployment.ui_settings?.waitlist_page_url || `${deployment.frontend_host}/waitlist` || "/waitlist";
+      window.location.href = waitlistUrl;
+      return;
+    }
+  }, [deployment, isWaitlistMode]);
 
   const [otpSent, setOtpSent] = useState(false);
   const [otpCode, setOtpCode] = useState("");
@@ -440,6 +509,39 @@ export function SignUpForm() {
     console.log("newErrors", newErrors);
     setErrors(newErrors);
   }, [signUpErrors]);
+
+  // Show restricted message if signup is restricted
+  if (isSignupRestricted) {
+    return (
+      <DefaultStylesProvider>
+        <Container>
+          <RestrictedMessage>
+            <RestrictedIcon>🔒</RestrictedIcon>
+            <RestrictedTitle>Registration Closed</RestrictedTitle>
+            <RestrictedText>
+              New account registration is currently restricted.
+            </RestrictedText>
+            <RestrictedSubtext>
+              If you need access, please contact support for assistance.
+            </RestrictedSubtext>
+          </RestrictedMessage>
+
+          <RestrictedFooter>
+            <RestrictedFooterText>
+              Need assistance? <RestrictedLink
+                href={deployment?.ui_settings?.sign_in_page_url ?
+                  `${deployment.ui_settings.sign_in_page_url}?help=true` :
+                  "/contact"
+                }
+              >
+                Get help
+              </RestrictedLink>
+            </RestrictedFooterText>
+          </RestrictedFooter>
+        </Container>
+      </DefaultStylesProvider>
+    );
+  }
 
   return (
     <DefaultStylesProvider>

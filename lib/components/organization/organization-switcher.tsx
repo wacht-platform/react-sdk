@@ -259,8 +259,16 @@ export const OrganizationSwitcher = () => {
   } = useSession();
   const { deployment } = useDeployment();
 
+  const organizationsEnabled = useMemo(() => {
+    return deployment?.b2b_settings.organizations_enabled;
+  }, [deployment]);
+
   const workspacesEnabled = useMemo(() => {
     return deployment?.b2b_settings.workspaces_enabled;
+  }, [deployment]);
+
+  const allowUsersToCreateOrgs = useMemo(() => {
+    return deployment?.b2b_settings.allow_users_to_create_orgs;
   }, [deployment]);
 
   const { dropdownOrgList, selectedOrg, selectedWorkspace } = useMemo(() => {
@@ -381,6 +389,11 @@ export const OrganizationSwitcher = () => {
   };
 
   if (organizationLoading || sessionLoading || workspaceMembershipsLoading) {
+    return null;
+  }
+
+  // Don't render if organizations are disabled
+  if (!organizationsEnabled) {
     return null;
   }
 
@@ -563,17 +576,19 @@ export const OrganizationSwitcher = () => {
 
           <Separator />
 
-          <MenuItem
-            onClick={() => createOrgDialog.open()}
-            disabled={isSwitching}
-          >
-            <FlexContainer>
-              <VioletIconContainer>
-                <PlusCircle size={14} />
-              </VioletIconContainer>
-              <span>Create Organization</span>
-            </FlexContainer>
-          </MenuItem>
+          {allowUsersToCreateOrgs && (
+            <MenuItem
+              onClick={() => createOrgDialog.open()}
+              disabled={isSwitching}
+            >
+              <FlexContainer>
+                <VioletIconContainer>
+                  <PlusCircle size={14} />
+                </VioletIconContainer>
+                <span>Create Organization</span>
+              </FlexContainer>
+            </MenuItem>
+          )}
 
           {!selectedOrg.personal && (
             <>
@@ -605,11 +620,13 @@ export const OrganizationSwitcher = () => {
           />
         )}
 
-        <CreateOrganizationDialog
-          isOpen={createOrgDialog.isOpen}
-          onClose={createOrgDialog.close}
-          onCreated={handleOrganizationCreated}
-        />
+        {organizationsEnabled && allowUsersToCreateOrgs && (
+          <CreateOrganizationDialog
+            isOpen={createOrgDialog.isOpen}
+            onClose={createOrgDialog.close}
+            onCreated={handleOrganizationCreated}
+          />
+        )}
 
         <ManageOrganizationDialog
           isOpen={manageOrgDialog.isOpen}

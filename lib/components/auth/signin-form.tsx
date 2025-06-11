@@ -365,7 +365,8 @@ function SignInFormContent() {
 
 						<Form onSubmit={createSignIn} noValidate>
 							{(firstFactor === "email_password" ||
-								firstFactor === "email_otp") && (
+								firstFactor === "email_otp") &&
+								deployment?.auth_settings?.email_address?.enabled && (
 									<FormGroup>
 										<Label htmlFor="email">Email address</Label>
 										<Input
@@ -381,7 +382,8 @@ function SignInFormContent() {
 									</FormGroup>
 								)}
 
-							{firstFactor === "username_password" && (
+							{firstFactor === "username_password" &&
+								deployment?.auth_settings?.username?.enabled && (
 								<FormGroup>
 									<Label htmlFor="username">Username</Label>
 									<Input
@@ -399,7 +401,8 @@ function SignInFormContent() {
 								</FormGroup>
 							)}
 
-							{firstFactor === "phone_otp" && (
+							{firstFactor === "phone_otp" &&
+								deployment?.auth_settings?.phone_number?.enabled && (
 								<FormGroup>
 									<Label htmlFor="phone">Phone number</Label>
 									<Input
@@ -416,7 +419,8 @@ function SignInFormContent() {
 							)}
 
 							{(firstFactor === "email_password" ||
-								firstFactor === "username_password") && (
+								firstFactor === "username_password") &&
+								deployment?.auth_settings?.password?.enabled && (
 									<FormGroup>
 										<div
 											style={{ display: "flex", justifyContent: "space-between" }}

@@ -55,6 +55,7 @@ export enum OAuthProvider {
 	MicrosoftOauth = "microsoft_oauth",
 	LinkedinOauth = "linkedin_oauth",
 	DiscordOauth = "discord_oauth",
+	AppleOauth = "apple_oauth",
 }
 
 type SignInOauth = ({
