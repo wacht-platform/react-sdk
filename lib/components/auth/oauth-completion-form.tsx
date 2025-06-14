@@ -4,20 +4,14 @@ import React, { useState } from "react";
 import styled from "styled-components";
 import { ArrowLeft } from "lucide-react";
 import { useDeployment } from "../../hooks/use-deployment";
-import {
-  Button,
-  Input,
-  FormGroup,
-  Label,
-  Form,
-} from "../utility";
+import { Button, Input, FormGroup, Label, Form } from "../utility";
 import { PhoneNumberInput } from "../utility/phone";
 import { OTPInput } from "../utility/otp-input";
 
 const Container = styled.div`
-  max-width: 360px;
-  width: 360px;
-  padding: var(--space-xl);
+  max-width: 380px;
+  width: 380px;
+  padding: var(--space-3xl);
   background: var(--color-background);
   border-radius: var(--radius-lg);
   box-shadow: 0 4px 24px var(--color-shadow);
@@ -105,14 +99,17 @@ export function OAuthCompletionForm({
   const authSettings = deployment?.auth_settings;
   const missingFields = signupAttempt?.missing_fields || [];
 
-  const isVerifying = requiresVerification || signupAttempt?.current_step === "verify_phone" || signupAttempt?.current_step === "verify_email";
+  const isVerifying =
+    requiresVerification ||
+    signupAttempt?.current_step === "verify_phone" ||
+    signupAttempt?.current_step === "verify_email";
 
   const handleInputChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const { name, value } = e.target;
-    setFormData(prev => ({ ...prev, [name]: value }));
+    setFormData((prev) => ({ ...prev, [name]: value }));
 
     if (errors[name]) {
-      setErrors(prev => ({ ...prev, [name]: "" }));
+      setErrors((prev) => ({ ...prev, [name]: "" }));
     }
   };
 
@@ -140,16 +137,28 @@ export function OAuthCompletionForm({
     }
 
     const dataToSend: any = {};
-    if (missingFields.includes("first_name") || formData.first_name !== signupAttempt?.first_name) {
+    if (
+      missingFields.includes("first_name") ||
+      formData.first_name !== signupAttempt?.first_name
+    ) {
       dataToSend.first_name = formData.first_name;
     }
-    if (missingFields.includes("last_name") || formData.last_name !== signupAttempt?.last_name) {
+    if (
+      missingFields.includes("last_name") ||
+      formData.last_name !== signupAttempt?.last_name
+    ) {
       dataToSend.last_name = formData.last_name;
     }
-    if (missingFields.includes("username") || formData.username !== signupAttempt?.username) {
+    if (
+      missingFields.includes("username") ||
+      formData.username !== signupAttempt?.username
+    ) {
       dataToSend.username = formData.username;
     }
-    if (missingFields.includes("phone_number") || formData.phone_number !== signupAttempt?.phone_number) {
+    if (
+      missingFields.includes("phone_number") ||
+      formData.phone_number !== signupAttempt?.phone_number
+    ) {
       dataToSend.phone_number = formData.phone_number;
     }
 
@@ -180,7 +189,8 @@ export function OAuthCompletionForm({
 
         <Header>
           <Title>
-            Verify Your {signupAttempt?.current_step === "verify_email" ? "Email" : "Phone"}
+            Verify Your{" "}
+            {signupAttempt?.current_step === "verify_email" ? "Email" : "Phone"}
           </Title>
           <Message>
             Please enter the verification code sent to{" "}
@@ -197,7 +207,10 @@ export function OAuthCompletionForm({
             }}
             onResend={async () => {
               if (onPrepareVerification) {
-                const strategy = signupAttempt?.current_step === "verify_email" ? "email_otp" : "phone_otp";
+                const strategy =
+                  signupAttempt?.current_step === "verify_email"
+                    ? "email_otp"
+                    : "phone_otp";
                 await onPrepareVerification(strategy);
               }
             }}
@@ -216,7 +229,13 @@ export function OAuthCompletionForm({
             disabled={loading || !otpCode}
             style={{ width: "100%" }}
           >
-            {loading ? "Verifying..." : `Verify ${signupAttempt?.current_step === "verify_email" ? "Email" : "Phone"}`}
+            {loading
+              ? "Verifying..."
+              : `Verify ${
+                  signupAttempt?.current_step === "verify_email"
+                    ? "Email"
+                    : "Phone"
+                }`}
           </Button>
         </Form>
       </Container>
@@ -235,7 +254,8 @@ export function OAuthCompletionForm({
       <Header>
         <Title>Complete Your Profile</Title>
         <Message>
-          Please provide the following information to complete your account setup.
+          Please provide the following information to complete your account
+          setup.
         </Message>
       </Header>
 
@@ -255,7 +275,9 @@ export function OAuthCompletionForm({
               aria-invalid={!!errors.first_name}
               disabled={loading}
             />
-            {errors.first_name && <ErrorMessage>{errors.first_name}</ErrorMessage>}
+            {errors.first_name && (
+              <ErrorMessage>{errors.first_name}</ErrorMessage>
+            )}
           </FormGroup>
         )}
 
@@ -274,7 +296,9 @@ export function OAuthCompletionForm({
               aria-invalid={!!errors.last_name}
               disabled={loading}
             />
-            {errors.last_name && <ErrorMessage>{errors.last_name}</ErrorMessage>}
+            {errors.last_name && (
+              <ErrorMessage>{errors.last_name}</ErrorMessage>
+            )}
           </FormGroup>
         )}
 
@@ -309,7 +333,9 @@ export function OAuthCompletionForm({
               countryCode={countryCode}
               setCountryCode={setCountryCode}
             />
-            {errors.phone_number && <ErrorMessage>{errors.phone_number}</ErrorMessage>}
+            {errors.phone_number && (
+              <ErrorMessage>{errors.phone_number}</ErrorMessage>
+            )}
           </FormGroup>
         )}
 
@@ -319,11 +345,7 @@ export function OAuthCompletionForm({
           </ErrorMessage>
         )}
 
-        <Button
-          type="submit"
-          disabled={loading}
-          style={{ width: "100%" }}
-        >
+        <Button type="submit" disabled={loading} style={{ width: "100%" }}>
           {loading ? "Completing..." : "Complete Profile"}
         </Button>
       </Form>

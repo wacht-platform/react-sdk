@@ -4,20 +4,14 @@ import React, { useState } from "react";
 import styled from "styled-components";
 import { ArrowLeft } from "lucide-react";
 import { useDeployment } from "../../hooks/use-deployment";
-import {
-  Button,
-  Input,
-  FormGroup,
-  Label,
-  Form,
-} from "../utility";
+import { Button, Input, FormGroup, Label, Form } from "../utility";
 import { PhoneNumberInput } from "../utility/phone";
 import { OTPInput } from "../utility/otp-input";
 
 const Container = styled.div`
-  max-width: 360px;
-  width: 360px;
-  padding: var(--space-xl);
+  max-width: 380px;
+  width: 380px;
+  padding: var(--space-3xl);
   background: var(--color-background);
   border-radius: var(--radius-lg);
   box-shadow: 0 4px 24px var(--color-shadow);
@@ -51,7 +45,7 @@ const BackButton = styled.button`
   font-size: var(--font-sm);
   cursor: pointer;
   margin-bottom: var(--space-md);
-  
+
   &:hover {
     color: var(--color-foreground);
   }
@@ -99,20 +93,21 @@ export function SignInProfileCompletion({
   const authSettings = deployment?.auth_settings;
   const missingFields = signinAttempt?.missing_fields || [];
 
-  const isVerifying = signinAttempt?.current_step === "verify_phone" || showVerification;
+  const isVerifying =
+    signinAttempt?.current_step === "verify_phone" || showVerification;
 
   const handleInputChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const { name, value } = e.target;
-    setFormData(prev => ({ ...prev, [name]: value }));
+    setFormData((prev) => ({ ...prev, [name]: value }));
 
     if (errors[name]) {
-      setErrors(prev => ({ ...prev, [name]: "" }));
+      setErrors((prev) => ({ ...prev, [name]: "" }));
     }
   };
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    
+
     const newErrors: Record<string, string> = {};
 
     if (missingFields.includes("first_name") && !formData.first_name.trim()) {
@@ -124,7 +119,10 @@ export function SignInProfileCompletion({
     if (missingFields.includes("username") && !formData.username.trim()) {
       newErrors.username = "Username is required";
     }
-    if (missingFields.includes("phone_number") && !formData.phone_number.trim()) {
+    if (
+      missingFields.includes("phone_number") &&
+      !formData.phone_number.trim()
+    ) {
       newErrors.phone_number = "Phone number is required";
     }
 
@@ -149,7 +147,7 @@ export function SignInProfileCompletion({
 
     const result = await onComplete(dataToSend);
 
-    if (result && typeof result === 'object' && 'signin_attempt' in result) {
+    if (result && typeof result === "object" && "signin_attempt" in result) {
       const attempt = (result as any).signin_attempt;
       if (attempt?.current_step === "verify_phone") {
         setShowVerification(true);
@@ -187,8 +185,7 @@ export function SignInProfileCompletion({
             onComplete={async (code) => {
               setOtpCode(code);
             }}
-            onResend={async () => {
-            }}
+            onResend={async () => {}}
             error={errors.otp}
             isSubmitting={loading}
           />
@@ -228,78 +225,90 @@ export function SignInProfileCompletion({
       </Header>
 
       <Form onSubmit={handleSubmit} noValidate>
-        {missingFields.includes("first_name") && authSettings?.first_name?.enabled && (
-          <FormGroup>
-            <Label htmlFor="first_name">
-              First Name {authSettings.first_name.required && "*"}
-            </Label>
-            <Input
-              type="text"
-              id="first_name"
-              name="first_name"
-              value={formData.first_name}
-              onChange={handleInputChange}
-              placeholder="Enter your first name"
-              aria-invalid={!!errors.first_name}
-              disabled={loading}
-            />
-            {errors.first_name && <ErrorMessage>{errors.first_name}</ErrorMessage>}
-          </FormGroup>
-        )}
+        {missingFields.includes("first_name") &&
+          authSettings?.first_name?.enabled && (
+            <FormGroup>
+              <Label htmlFor="first_name">
+                First Name {authSettings.first_name.required && "*"}
+              </Label>
+              <Input
+                type="text"
+                id="first_name"
+                name="first_name"
+                value={formData.first_name}
+                onChange={handleInputChange}
+                placeholder="Enter your first name"
+                aria-invalid={!!errors.first_name}
+                disabled={loading}
+              />
+              {errors.first_name && (
+                <ErrorMessage>{errors.first_name}</ErrorMessage>
+              )}
+            </FormGroup>
+          )}
 
-        {missingFields.includes("last_name") && authSettings?.last_name?.enabled && (
-          <FormGroup>
-            <Label htmlFor="last_name">
-              Last Name {authSettings.last_name.required && "*"}
-            </Label>
-            <Input
-              type="text"
-              id="last_name"
-              name="last_name"
-              value={formData.last_name}
-              onChange={handleInputChange}
-              placeholder="Enter your last name"
-              aria-invalid={!!errors.last_name}
-              disabled={loading}
-            />
-            {errors.last_name && <ErrorMessage>{errors.last_name}</ErrorMessage>}
-          </FormGroup>
-        )}
+        {missingFields.includes("last_name") &&
+          authSettings?.last_name?.enabled && (
+            <FormGroup>
+              <Label htmlFor="last_name">
+                Last Name {authSettings.last_name.required && "*"}
+              </Label>
+              <Input
+                type="text"
+                id="last_name"
+                name="last_name"
+                value={formData.last_name}
+                onChange={handleInputChange}
+                placeholder="Enter your last name"
+                aria-invalid={!!errors.last_name}
+                disabled={loading}
+              />
+              {errors.last_name && (
+                <ErrorMessage>{errors.last_name}</ErrorMessage>
+              )}
+            </FormGroup>
+          )}
 
-        {missingFields.includes("username") && authSettings?.username?.enabled && (
-          <FormGroup>
-            <Label htmlFor="username">
-              Username {authSettings.username.required && "*"}
-            </Label>
-            <Input
-              type="text"
-              id="username"
-              name="username"
-              value={formData.username}
-              onChange={handleInputChange}
-              placeholder="Enter your username"
-              aria-invalid={!!errors.username}
-              disabled={loading}
-            />
-            {errors.username && <ErrorMessage>{errors.username}</ErrorMessage>}
-          </FormGroup>
-        )}
+        {missingFields.includes("username") &&
+          authSettings?.username?.enabled && (
+            <FormGroup>
+              <Label htmlFor="username">
+                Username {authSettings.username.required && "*"}
+              </Label>
+              <Input
+                type="text"
+                id="username"
+                name="username"
+                value={formData.username}
+                onChange={handleInputChange}
+                placeholder="Enter your username"
+                aria-invalid={!!errors.username}
+                disabled={loading}
+              />
+              {errors.username && (
+                <ErrorMessage>{errors.username}</ErrorMessage>
+              )}
+            </FormGroup>
+          )}
 
-        {missingFields.includes("phone_number") && authSettings?.phone_number?.enabled && (
-          <FormGroup>
-            <Label htmlFor="phone_number">
-              Phone Number {authSettings.phone_number.required && "*"}
-            </Label>
-            <PhoneNumberInput
-              value={formData.phone_number}
-              onChange={handleInputChange}
-              error={errors.phone_number}
-              countryCode={countryCode}
-              setCountryCode={setCountryCode}
-            />
-            {errors.phone_number && <ErrorMessage>{errors.phone_number}</ErrorMessage>}
-          </FormGroup>
-        )}
+        {missingFields.includes("phone_number") &&
+          authSettings?.phone_number?.enabled && (
+            <FormGroup>
+              <Label htmlFor="phone_number">
+                Phone Number {authSettings.phone_number.required && "*"}
+              </Label>
+              <PhoneNumberInput
+                value={formData.phone_number}
+                onChange={handleInputChange}
+                error={errors.phone_number}
+                countryCode={countryCode}
+                setCountryCode={setCountryCode}
+              />
+              {errors.phone_number && (
+                <ErrorMessage>{errors.phone_number}</ErrorMessage>
+              )}
+            </FormGroup>
+          )}
 
         {error && (
           <ErrorMessage style={{ marginBottom: "var(--space-md)" }}>
@@ -307,11 +316,7 @@ export function SignInProfileCompletion({
           </ErrorMessage>
         )}
 
-        <Button
-          type="submit"
-          disabled={loading}
-          style={{ width: "100%" }}
-        >
+        <Button type="submit" disabled={loading} style={{ width: "100%" }}>
           {loading ? "Completing..." : "Complete Profile"}
         </Button>
       </Form>

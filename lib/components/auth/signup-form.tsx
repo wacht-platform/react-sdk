@@ -26,9 +26,9 @@ const breakpoints = {
 };
 
 const Container = styled.div`
-  max-width: 360px;
-  width: 100%;
-  padding: var(--space-xl);
+  max-width: 380px;
+  width: 380px;
+  padding: var(--space-3xl);
   background: var(--color-background);
   border-radius: var(--radius-lg);
   box-shadow: 0 4px 24px var(--color-shadow);
@@ -149,7 +149,6 @@ const ErrorMessage = styled.p`
   margin: 0;
   margin-top: var(--space-2xs);
 `;
-
 
 const SubmitButton = styled.button`
   width: 100%;
@@ -285,7 +284,8 @@ export function SignUpForm() {
   );
 
   // Check if signup is restricted
-  const isSignupRestricted = deployment?.restrictions?.sign_up_mode === "restricted";
+  const isSignupRestricted =
+    deployment?.restrictions?.sign_up_mode === "restricted";
   const isWaitlistMode = deployment?.restrictions?.sign_up_mode === "waitlist";
 
   // Redirect to waitlist if in waitlist mode
@@ -294,7 +294,10 @@ export function SignUpForm() {
 
     if (isWaitlistMode) {
       // Redirect to waitlist page
-      const waitlistUrl = deployment.ui_settings?.waitlist_page_url || `${deployment.frontend_host}/waitlist` || "/waitlist";
+      const waitlistUrl =
+        deployment.ui_settings?.waitlist_page_url ||
+        `${deployment.frontend_host}/waitlist` ||
+        "/waitlist";
       window.location.href = waitlistUrl;
       return;
     }
@@ -528,10 +531,12 @@ export function SignUpForm() {
 
           <RestrictedFooter>
             <RestrictedFooterText>
-              Need assistance? <RestrictedLink
-                href={deployment?.ui_settings?.sign_in_page_url ?
-                  `${deployment.ui_settings.sign_in_page_url}?help=true` :
-                  "/contact"
+              Need assistance?{" "}
+              <RestrictedLink
+                href={
+                  deployment?.ui_settings?.sign_in_page_url
+                    ? `${deployment.ui_settings.sign_in_page_url}?help=true`
+                    : "/contact"
                 }
               >
                 Get help
@@ -551,7 +556,9 @@ export function SignUpForm() {
             <Header>
               <Title>
                 Check your{" "}
-                {signupAttempt?.current_step === "verify_email" ? "email" : "phone"}
+                {signupAttempt?.current_step === "verify_email"
+                  ? "email"
+                  : "phone"}
               </Title>
               <Subtitle>
                 {signupAttempt?.current_step === "verify_email"
@@ -569,7 +576,10 @@ export function SignUpForm() {
                   setOtpCode(code);
                 }}
                 onResend={async () => {
-                  const strategy = signupAttempt?.current_step === "verify_email" ? "email_otp" : "phone_otp";
+                  const strategy =
+                    signupAttempt?.current_step === "verify_email"
+                      ? "email_otp"
+                      : "phone_otp";
                   await signUp.prepareVerification(strategy);
                 }}
                 error={errors.otp}

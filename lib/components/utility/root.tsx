@@ -39,6 +39,7 @@ export const DefaultStylesProvider = styled.div`
   --space-lg: 16px;
   --space-xl: 20px;
   --space-2xl: 24px;
+  --space-3xl: 28px;
 
   /* Font Sizes */
   --font-2xs: 11px;
@@ -81,7 +82,7 @@ export const DefaultStylesProvider = styled.div`
     --color-scrollbar-track: #2a2a2a;
     --color-scrollbar-thumb: #525252;
     --color-scrollbar-thumb-hover: #737373;
-    --color-shadow: rgba(0, 0, 0, 0.85);
+    --color-shadow: rgba(0, 0, 0, 0.1);
     --color-dialog-backdrop: rgba(0, 0, 0, 0.9);
   }
 

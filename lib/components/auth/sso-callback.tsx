@@ -10,7 +10,7 @@ import { OAuthCompletionForm } from "./oauth-completion-form";
 const Container = styled.div`
   max-width: 360px;
   width: 360px;
-  padding: var(--space-xl);
+  padding: var(--space-2xl);
   background: var(--color-background);
   border-radius: var(--radius-lg);
   box-shadow: 0 4px 24px var(--color-shadow);

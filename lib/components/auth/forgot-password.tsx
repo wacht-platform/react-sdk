@@ -5,9 +5,9 @@ import { DefaultStylesProvider } from "@/components/utility/root";
 import { OtherAuthOptions } from "@/components/auth/other-auth-options";
 
 const Container = styled.div`
-  max-width: 360px;
-  width: 360px;
-  padding: var(--space-xl);
+  max-width: 380px;
+  width: 380px;
+  padding: var(--space-3xl);
   background: var(--color-background);
   border-radius: var(--radius-lg);
   box-shadow: 0 4px 24px var(--color-shadow);
@@ -50,8 +50,6 @@ const DividerText = styled.span`
   color: var(--color-secondary-text);
   font-size: var(--font-xs);
 `;
-
-
 
 const ResetButton = styled.button`
   width: 100%;
@@ -125,8 +123,10 @@ export function ForgotPassword({ onBack }: ForgotPasswordProps) {
           <FooterText>
             Unable to reset password? <Link href="/contact">Get help</Link>
           </FooterText>
-          <FooterText style={{ marginTop: 'var(--space-sm)' }}>
-            <Link onClick={onBack} style={{ cursor: 'pointer' }}>Back to previous screen</Link>
+          <FooterText style={{ marginTop: "var(--space-sm)" }}>
+            <Link onClick={onBack} style={{ cursor: "pointer" }}>
+              Back to previous screen
+            </Link>
           </FooterText>
         </Footer>
       </Container>
