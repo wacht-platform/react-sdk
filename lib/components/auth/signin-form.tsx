@@ -320,14 +320,7 @@ function SignInFormContent() {
   }
 
   if (showForgotPassword) {
-    return (
-      <ForgotPassword
-        onBack={() => setShowForgotPassword(false)}
-        onHelp={() => {
-          console.log("Help requested");
-        }}
-      />
-    );
+    return <ForgotPassword onBack={() => setShowForgotPassword(false)} />;
   }
 
   if (signinAttempt?.requires_completion) {

@@ -1,16 +1,16 @@
 import { useState } from "react";
 import styled from "styled-components";
-import { ArrowLeft } from "lucide-react";
 import { Button, Input, FormGroup, Label, Form } from "../utility";
 import { OTPInput } from "../utility/otp-input";
 import {
   useForgotPassword,
   useResetPassword,
 } from "../../hooks/use-forgot-password";
+import { OtherAuthOptions } from "./other-auth-options";
+import { DefaultStylesProvider } from "../utility/root";
 
 interface ForgotPasswordProps {
   onBack: () => void;
-  onHelp: () => void;
 }
 
 const Container = styled.div`
@@ -40,22 +40,6 @@ const Message = styled.p`
   margin: 0;
 `;
 
-const BackButton = styled.button`
-  display: flex;
-  align-items: center;
-  gap: var(--space-xs);
-  background: none;
-  border: none;
-  color: var(--color-muted);
-  font-size: var(--font-sm);
-  cursor: pointer;
-  margin-bottom: var(--space-md);
-
-  &:hover {
-    color: var(--color-foreground);
-  }
-`;
-
 const ErrorMessage = styled.p`
   font-size: var(--font-2xs);
   color: var(--color-error);
@@ -63,8 +47,63 @@ const ErrorMessage = styled.p`
   margin-top: var(--space-2xs);
 `;
 
+const ResetButton = styled(Button)`
+  width: 100%;
+  margin-bottom: var(--space-lg);
+`;
+
+const Divider = styled.div`
+  display: flex;
+  align-items: center;
+  text-align: center;
+  margin: var(--space-lg) 0;
+  color: var(--color-muted);
+  font-size: var(--font-xs);
+
+  &::before,
+  &::after {
+    content: "";
+    flex: 1;
+    border-bottom: 1px solid var(--color-border);
+  }
+
+  &::before {
+    margin-right: var(--space-sm);
+  }
+
+  &::after {
+    margin-left: var(--space-sm);
+  }
+`;
+
+const DividerText = styled.span`
+  white-space: nowrap;
+`;
+
+const Footer = styled.div`
+  text-align: center;
+  margin-top: var(--space-lg);
+`;
+
+const FooterText = styled.p`
+  font-size: var(--font-sm);
+  color: var(--color-muted);
+  margin: 0;
+`;
+
+const Link = styled.a`
+  color: var(--color-primary);
+  text-decoration: none;
+
+  &:hover {
+    text-decoration: underline;
+  }
+`;
+
 export function ForgotPassword({ onBack }: ForgotPasswordProps) {
-  const [step, setStep] = useState<"email" | "otp" | "reset">("email");
+  const [step, setStep] = useState<"start" | "email" | "otp" | "reset">(
+    "start"
+  );
   const [email, setEmail] = useState("");
   const [otp, setOtp] = useState("");
   const [password, setPassword] = useState("");
@@ -113,121 +152,173 @@ export function ForgotPassword({ onBack }: ForgotPasswordProps) {
     }
   };
 
+  const renderInitialView = () => (
+    <>
+      <Header>
+        <Title>Forgot Password</Title>
+      </Header>
+
+      <ResetButton
+        onClick={() => setStep("email")}
+        disabled={forgotPasswordLoading}
+      >
+        Reset your password
+      </ResetButton>
+
+      <Divider>
+        <DividerText>Or, sign in with another method</DividerText>
+      </Divider>
+
+      <OtherAuthOptions />
+
+      <Footer>
+        <FooterText>
+          Unable to reset password? <Link href="/contact">Get help</Link>
+        </FooterText>
+        <FooterText style={{ marginTop: "var(--space-sm)" }}>
+          <Link onClick={onBack} style={{ cursor: "pointer" }}>
+            Back to login
+          </Link>
+        </FooterText>
+      </Footer>
+    </>
+  );
+
   return (
-    <Container>
-      <BackButton onClick={onBack}>
-        <ArrowLeft size={16} />
-        Back to Sign In
-      </BackButton>
+    <DefaultStylesProvider>
+      <Container>
+        {step === "start" && renderInitialView()}
 
-      {step === "email" && (
-        <>
-          <Header>
-            <Title>Forgot Password</Title>
-            <Message>
-              Enter your email address and we'll send you a code to reset your
-              password.
-            </Message>
-          </Header>
-          <Form onSubmit={handleEmailSubmit} noValidate>
-            <FormGroup>
-              <Label htmlFor="email">Email Address</Label>
-              <Input
-                type="email"
-                id="email"
-                value={email}
-                onChange={(e) => setEmail(e.target.value)}
-                placeholder="Enter your email"
-                required
-              />
-            </FormGroup>
-            {forgotPasswordError && (
-              <ErrorMessage>{forgotPasswordError.message}</ErrorMessage>
-            )}
-            <Button
-              type="submit"
-              disabled={forgotPasswordLoading}
-              style={{ width: "100%", marginTop: "var(--space-md)" }}
-            >
-              {forgotPasswordLoading ? "Sending..." : "Send Code"}
-            </Button>
-          </Form>
-        </>
-      )}
+        {step === "email" && (
+          <>
+            <Header>
+              <Title>Forgot Password</Title>
+              <Message>
+                Enter your email address and we'll send you a code to reset your
+                password.
+              </Message>
+            </Header>
+            <Form onSubmit={handleEmailSubmit} noValidate>
+              <FormGroup>
+                <Label htmlFor="email">Email Address</Label>
+                <Input
+                  type="email"
+                  id="email"
+                  value={email}
+                  onChange={(e) => setEmail(e.target.value)}
+                  placeholder="Enter your email"
+                  required
+                />
+              </FormGroup>
+              {forgotPasswordError && (
+                <ErrorMessage>{forgotPasswordError.message}</ErrorMessage>
+              )}
+              <Button
+                type="submit"
+                disabled={forgotPasswordLoading}
+                style={{ width: "100%", marginTop: "var(--space-md)" }}
+              >
+                {forgotPasswordLoading ? "Sending..." : "Send Code"}
+              </Button>
+            </Form>
+            <Footer>
+              <FooterText style={{ marginTop: "var(--space-sm)" }}>
+                <Link onClick={onBack} style={{ cursor: "pointer" }}>
+                  Back to login
+                </Link>
+              </FooterText>
+            </Footer>
+          </>
+        )}
 
-      {step === "otp" && (
-        <>
-          <Header>
-            <Title>Enter Verification Code</Title>
-            <Message>
-              We've sent a 6-digit code to {email}. Please enter it below.
-            </Message>
-          </Header>
-          <Form onSubmit={handleOtpSubmit} noValidate>
-            <OTPInput
-              onComplete={(code) => setOtp(code)}
-              isSubmitting={resetPasswordLoading}
-              error={resetPasswordError?.message}
-              onResend={async () => {
-                await forgotPassword(email);
-              }}
-            />
-            {resetPasswordError && (
-              <ErrorMessage>{resetPasswordError.message}</ErrorMessage>
-            )}
-            <Button
-              type="submit"
-              disabled={resetPasswordLoading || otp.length !== 6}
-              style={{ width: "100%", marginTop: "var(--space-md)" }}
-            >
-              {resetPasswordLoading ? "Verifying..." : "Verify"}
-            </Button>
-          </Form>
-        </>
-      )}
+        {step === "otp" && (
+          <>
+            <Header>
+              <Title>Enter Verification Code</Title>
+              <Message>
+                We've sent a 6-digit code to {email}. Please enter it below.
+              </Message>
+            </Header>
+            <Form onSubmit={handleOtpSubmit} noValidate>
+              <OTPInput
+                onComplete={(code) => setOtp(code)}
+                isSubmitting={resetPasswordLoading}
+                error={resetPasswordError?.message}
+                onResend={async () => {
+                  await forgotPassword(email);
+                }}
+              />
+              {resetPasswordError && (
+                <ErrorMessage>{resetPasswordError.message}</ErrorMessage>
+              )}
+              <Button
+                type="submit"
+                disabled={resetPasswordLoading || otp.length !== 6}
+                style={{ width: "100%", marginTop: "var(--space-md)" }}
+              >
+                {resetPasswordLoading ? "Verifying..." : "Verify"}
+              </Button>
+            </Form>
+            <Footer>
+              <FooterText style={{ marginTop: "var(--space-sm)" }}>
+                <Link onClick={onBack} style={{ cursor: "pointer" }}>
+                  Back to login
+                </Link>
+              </FooterText>
+            </Footer>
+          </>
+        )}
 
-      {step === "reset" && (
-        <>
-          <Header>
-            <Title>Reset Password</Title>
-            <Message>Create a new password for your account.</Message>
-          </Header>
-          <Form onSubmit={handleResetSubmit} noValidate>
-            <FormGroup>
-              <Label htmlFor="password">New Password</Label>
-              <Input
-                type="password"
-                id="password"
-                value={password}
-                onChange={(e) => setPassword(e.target.value)}
-                placeholder="Enter new password"
-                required
-              />
-            </FormGroup>
-            <FormGroup>
-              <Label htmlFor="confirmPassword">Confirm New Password</Label>
-              <Input
-                type="password"
-                id="confirmPassword"
-                value={confirmPassword}
-                onChange={(e) => setConfirmPassword(e.target.value)}
-                placeholder="Confirm new password"
-                required
-              />
-            </FormGroup>
-            {resetPasswordError && (
-              <ErrorMessage>{resetPasswordError.message}</ErrorMessage>
-            )}
-            <Button
-              type="submit"
-              disabled={resetPasswordLoading}
-              style={{ width: "100%", marginTop: "var(--space-md)" }}
-            >
-              {resetPasswordLoading ? "Resetting..." : "Reset Password"}
-            </Button>
-          </Form>
-        </>
-      )}
-    </Container>
+        {step === "reset" && (
+          <>
+            <Header>
+              <Title>Reset Password</Title>
+              <Message>Create a new password for your account.</Message>
+            </Header>
+            <Form onSubmit={handleResetSubmit} noValidate>
+              <FormGroup>
+                <Label htmlFor="password">New Password</Label>
+                <Input
+                  type="password"
+                  id="password"
+                  value={password}
+                  onChange={(e) => setPassword(e.target.value)}
+                  placeholder="Enter new password"
+                  required
+                />
+              </FormGroup>
+              <FormGroup>
+                <Label htmlFor="confirmPassword">Confirm New Password</Label>
+                <Input
+                  type="password"
+                  id="confirmPassword"
+                  value={confirmPassword}
+                  onChange={(e) => setConfirmPassword(e.target.value)}
+                  placeholder="Confirm new password"
+                  required
+                />
+              </FormGroup>
+              {resetPasswordError && (
+                <ErrorMessage>{resetPasswordError.message}</ErrorMessage>
+              )}
+              <Button
+                type="submit"
+                disabled={resetPasswordLoading}
+                style={{ width: "100%", marginTop: "var(--space-md)" }}
+              >
+                {resetPasswordLoading ? "Resetting..." : "Reset Password"}
+              </Button>
+            </Form>
+            <Footer>
+              <FooterText style={{ marginTop: "var(--space-sm)" }}>
+                <Link onClick={onBack} style={{ cursor: "pointer" }}>
+                  Back to login
+                </Link>
+              </FooterText>
+            </Footer>
+          </>
+        )}
+      </Container>
+    </DefaultStylesProvider>
   );
 }
