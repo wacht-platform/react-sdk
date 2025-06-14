@@ -1,8 +1,17 @@
 import { useState } from "react";
 import styled from "styled-components";
-import { DefaultStylesProvider } from "@/components/utility/root";
+import { ArrowLeft } from "lucide-react";
+import { Button, Input, FormGroup, Label, Form } from "../utility";
+import { OTPInput } from "../utility/otp-input";
+import {
+  useForgotPassword,
+  useResetPassword,
+} from "../../hooks/use-forgot-password";
 
-import { OtherAuthOptions } from "@/components/auth/other-auth-options";
+interface ForgotPasswordProps {
+  onBack: () => void;
+  onHelp: () => void;
+}
 
 const Container = styled.div`
   max-width: 380px;
@@ -16,120 +25,209 @@ const Container = styled.div`
 const Header = styled.div`
   text-align: center;
   margin-bottom: var(--space-lg);
-  position: relative;
 `;
 
 const Title = styled.h1`
   font-size: var(--font-lg);
-  font-weight: 500;
+  font-weight: 600;
   color: var(--color-foreground);
-  margin-bottom: var(--space-xs);
-  margin-top: 0;
+  margin: 0 0 var(--space-xs) 0;
 `;
 
-const Divider = styled.div`
-  position: relative;
-  text-align: center;
-  margin: var(--space-lg) 0;
-
-  &::before {
-    content: "";
-    position: absolute;
-    top: 50%;
-    left: 0;
-    right: 0;
-    height: 1px;
-    background: var(--color-divider);
-  }
-`;
-
-const DividerText = styled.span`
-  position: relative;
-  background: var(--color-background);
-  padding: 0 var(--space-sm);
-  color: var(--color-secondary-text);
-  font-size: var(--font-xs);
-`;
-
-const ResetButton = styled.button`
-  width: 100%;
-  padding: var(--space-sm) var(--space-md);
-  background: var(--color-primary);
-  color: white;
-  border: none;
-  border-radius: var(--radius-md);
-  font-weight: 500;
-  font-size: var(--font-xs);
-  cursor: pointer;
-  transition: background-color 0.2s;
-  height: 36px;
-
-  &:hover:not(:disabled) {
-    background: var(--color-primary-hover);
-  }
-
-  &:disabled {
-    opacity: 0.7;
-    cursor: not-allowed;
-  }
-`;
-
-const Footer = styled.div`
-  text-align: center;
-  margin-top: var(--space-lg);
-`;
-
-const FooterText = styled.p`
-  font-size: var(--font-xs);
+const Message = styled.p`
+  font-size: var(--font-sm);
   color: var(--color-muted);
+  margin: 0;
 `;
 
-const Link = styled.a`
-  color: var(--color-primary);
-  text-decoration: none;
+const BackButton = styled.button`
+  display: flex;
+  align-items: center;
+  gap: var(--space-xs);
+  background: none;
+  border: none;
+  color: var(--color-muted);
+  font-size: var(--font-sm);
+  cursor: pointer;
+  margin-bottom: var(--space-md);
+
+  &:hover {
+    color: var(--color-foreground);
+  }
 `;
 
-interface ForgotPasswordProps {
-  onBack: () => void;
-  onHelp: () => void;
-}
+const ErrorMessage = styled.p`
+  font-size: var(--font-2xs);
+  color: var(--color-error);
+  margin: 0;
+  margin-top: var(--space-2xs);
+`;
 
 export function ForgotPassword({ onBack }: ForgotPasswordProps) {
-  const [isSubmitting, setIsSubmitting] = useState(false);
+  const [step, setStep] = useState<"email" | "otp" | "reset">("email");
+  const [email, setEmail] = useState("");
+  const [otp, setOtp] = useState("");
+  const [password, setPassword] = useState("");
+  const [confirmPassword, setConfirmPassword] = useState("");
+  const {
+    forgotPassword,
+    loading: forgotPasswordLoading,
+    error: forgotPasswordError,
+  } = useForgotPassword();
+  const {
+    resetPassword,
+    loading: resetPasswordLoading,
+    error: resetPasswordError,
+  } = useResetPassword();
 
-  const handleResetPassword = async () => {
-    setIsSubmitting(true);
-    setIsSubmitting(false);
+  const handleEmailSubmit = async (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!email) {
+      return;
+    }
+    const result = await forgotPassword(email);
+    if (!result.errors) {
+      setStep("otp");
+    }
+  };
+
+  const handleOtpSubmit = async (e: React.FormEvent) => {
+    e.preventDefault();
+    if (otp.length !== 6) {
+      return;
+    }
+    setStep("reset");
+  };
+
+  const handleResetSubmit = async (e: React.FormEvent) => {
+    e.preventDefault();
+    if (password !== confirmPassword) {
+      return;
+    }
+    if (password.length < 8) {
+      return;
+    }
+    const result = await resetPassword(email, otp, password);
+    if (!result.errors) {
+      onBack(); // Go back to sign in form
+    }
   };
 
   return (
-    <DefaultStylesProvider>
-      <Container>
-        <Header>
-          <Title>Forgot Password</Title>
-        </Header>
+    <Container>
+      <BackButton onClick={onBack}>
+        <ArrowLeft size={16} />
+        Back to Sign In
+      </BackButton>
 
-        <ResetButton onClick={handleResetPassword} disabled={isSubmitting}>
-          Reset your password
-        </ResetButton>
+      {step === "email" && (
+        <>
+          <Header>
+            <Title>Forgot Password</Title>
+            <Message>
+              Enter your email address and we'll send you a code to reset your
+              password.
+            </Message>
+          </Header>
+          <Form onSubmit={handleEmailSubmit} noValidate>
+            <FormGroup>
+              <Label htmlFor="email">Email Address</Label>
+              <Input
+                type="email"
+                id="email"
+                value={email}
+                onChange={(e) => setEmail(e.target.value)}
+                placeholder="Enter your email"
+                required
+              />
+            </FormGroup>
+            {forgotPasswordError && (
+              <ErrorMessage>{forgotPasswordError.message}</ErrorMessage>
+            )}
+            <Button
+              type="submit"
+              disabled={forgotPasswordLoading}
+              style={{ width: "100%", marginTop: "var(--space-md)" }}
+            >
+              {forgotPasswordLoading ? "Sending..." : "Send Code"}
+            </Button>
+          </Form>
+        </>
+      )}
 
-        <Divider>
-          <DividerText>Or, sign in with another method</DividerText>
-        </Divider>
+      {step === "otp" && (
+        <>
+          <Header>
+            <Title>Enter Verification Code</Title>
+            <Message>
+              We've sent a 6-digit code to {email}. Please enter it below.
+            </Message>
+          </Header>
+          <Form onSubmit={handleOtpSubmit} noValidate>
+            <OTPInput
+              onComplete={(code) => setOtp(code)}
+              isSubmitting={resetPasswordLoading}
+              error={resetPasswordError?.message}
+              onResend={async () => {
+                await forgotPassword(email);
+              }}
+            />
+            {resetPasswordError && (
+              <ErrorMessage>{resetPasswordError.message}</ErrorMessage>
+            )}
+            <Button
+              type="submit"
+              disabled={resetPasswordLoading || otp.length !== 6}
+              style={{ width: "100%", marginTop: "var(--space-md)" }}
+            >
+              {resetPasswordLoading ? "Verifying..." : "Verify"}
+            </Button>
+          </Form>
+        </>
+      )}
 
-        <OtherAuthOptions />
-
-        <Footer>
-          <FooterText>
-            Unable to reset password? <Link href="/contact">Get help</Link>
-          </FooterText>
-          <FooterText style={{ marginTop: "var(--space-sm)" }}>
-            <Link onClick={onBack} style={{ cursor: "pointer" }}>
-              Back to previous screen
-            </Link>
-          </FooterText>
-        </Footer>
-      </Container>
-    </DefaultStylesProvider>
+      {step === "reset" && (
+        <>
+          <Header>
+            <Title>Reset Password</Title>
+            <Message>Create a new password for your account.</Message>
+          </Header>
+          <Form onSubmit={handleResetSubmit} noValidate>
+            <FormGroup>
+              <Label htmlFor="password">New Password</Label>
+              <Input
+                type="password"
+                id="password"
+                value={password}
+                onChange={(e) => setPassword(e.target.value)}
+                placeholder="Enter new password"
+                required
+              />
+            </FormGroup>
+            <FormGroup>
+              <Label htmlFor="confirmPassword">Confirm New Password</Label>
+              <Input
+                type="password"
+                id="confirmPassword"
+                value={confirmPassword}
+                onChange={(e) => setConfirmPassword(e.target.value)}
+                placeholder="Confirm new password"
+                required
+              />
+            </FormGroup>
+            {resetPasswordError && (
+              <ErrorMessage>{resetPasswordError.message}</ErrorMessage>
+            )}
+            <Button
+              type="submit"
+              disabled={resetPasswordLoading}
+              style={{ width: "100%", marginTop: "var(--space-md)" }}
+            >
+              {resetPasswordLoading ? "Resetting..." : "Reset Password"}
+            </Button>
+          </Form>
+        </>
+      )}
+    </Container>
   );
 }

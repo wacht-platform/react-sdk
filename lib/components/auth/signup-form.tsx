@@ -397,6 +397,8 @@ export function SignUpForm() {
 
     if (authSettings?.password.required && !formData.password) {
       newErrors.password = "Password is required";
+    } else if (authSettings?.password.enabled && !formData.password) {
+      newErrors.password = "Password is required";
     } else if (
       authSettings?.password.enabled &&
       formData.password &&
@@ -596,7 +598,7 @@ export function SignUpForm() {
             <Footer>
               Having trouble?{" "}
               <Link>
-                <NavigationLink to={deployment!.ui_settings.sign_in_page_url}>
+                <NavigationLink to={deployment!.ui_settings.support_page_url}>
                   Contact support
                 </NavigationLink>
               </Link>

@@ -6,7 +6,6 @@ import {
   ArrowRight,
   ArrowLeft,
   LogOut,
-  Ban,
   Plus,
   Eye,
   EyeOff,
@@ -333,16 +332,12 @@ const SessionDropdown = ({
   isOpen,
   onClose,
   sessionId,
-  location,
   onLogout,
-  onBanIp,
 }: {
   isOpen: boolean;
   onClose: () => void;
   sessionId: string;
-  location: string;
   onLogout: (id: string) => void;
-  onBanIp: (ip: string) => void;
 }) => {
   return (
     <Dropdown open={isOpen} openChange={onClose}>
@@ -350,12 +345,6 @@ const SessionDropdown = ({
         <div style={{ display: "flex", alignItems: "center", gap: "8px" }}>
           <LogOut size={14} />
           Logout Session
-        </div>
-      </DropdownItem>
-      <DropdownItem $destructive onClick={() => onBanIp(location)}>
-        <div style={{ display: "flex", alignItems: "center", gap: "8px" }}>
-          <Ban size={14} />
-          Ban IP Address
         </div>
       </DropdownItem>
     </Dropdown>
@@ -553,10 +542,6 @@ const ActiveSessionsSection = () => {
     setActiveSession(null);
   };
 
-  const banIpAddress = (ipAddress: string) => {
-    console.log("Banning IP address:", ipAddress);
-  };
-
   if (loading) {
     return (
       <div
@@ -579,7 +564,9 @@ const ActiveSessionsSection = () => {
               alignItems: "center",
               padding: "16px",
               background:
-                activeSession === signin.id ? "var(--color-background-hover)" : "transparent",
+                activeSession === signin.id
+                  ? "var(--color-background-hover)"
+                  : "transparent",
               borderRadius: "8px",
               marginTop: "12px",
               position: "relative",
@@ -610,7 +597,7 @@ const ActiveSessionsSection = () => {
               <IconButton
                 onClick={() =>
                   setActiveSession(
-                    activeSession === signin.id ? null : signin.id,
+                    activeSession === signin.id ? null : signin.id
                   )
                 }
               >
@@ -620,9 +607,7 @@ const ActiveSessionsSection = () => {
                 isOpen={activeSession === signin.id}
                 onClose={handleCloseDropdown}
                 sessionId={signin.id}
-                location={signin.ipAddress || "Unknown"}
                 onLogout={logoutSession}
-                onBanIp={banIpAddress}
               />
             </div>
           </div>
@@ -654,6 +639,7 @@ const EmailManagementSection = () => {
     deleteEmailAddress,
     prepareEmailVerification,
     attemptEmailVerification,
+    makeEmailPrimary,
   } = useUser();
 
   // Don't render if email is disabled
@@ -771,7 +757,12 @@ const EmailManagementSection = () => {
                       </DropdownItem>
                     )}
                     {email.id !== user?.primary_email_address_id && (
-                      <DropdownItem onClick={() => email.id}>
+                      <DropdownItem
+                        onClick={async () => {
+                          await makeEmailPrimary(email.id);
+                          user.refetch();
+                        }}
+                      >
                         Make primary
                       </DropdownItem>
                     )}
@@ -963,7 +954,7 @@ const IconWrapper = styled.div`
 `;
 
 const SocialManagementSection = () => {
-  const { user } = useUser();
+  const { user, disconnectSocialConnection } = useUser();
   const { deployment } = useDeployment();
 
   const socialAuthProviders = {
@@ -986,7 +977,7 @@ const SocialManagementSection = () => {
   };
 
   const enabledProviders = deployment?.social_connections.filter(
-    (conn) => conn.enabled,
+    (conn) => conn.enabled
   );
 
   return (
@@ -999,7 +990,7 @@ const SocialManagementSection = () => {
     >
       {enabledProviders?.map((provider) => {
         const connectedAccount = user?.social_connections?.find(
-          (conn) => conn.provider === provider.provider,
+          (conn) => conn.provider === provider.provider
         );
         const providerInfo =
           socialAuthProviders[
@@ -1028,7 +1019,9 @@ const SocialManagementSection = () => {
               }}
             >
               <IconWrapper>{providerInfo.icon}</IconWrapper>
-              <div style={{ fontSize: "14px", color: "var(--color-foreground)" }}>
+              <div
+                style={{ fontSize: "14px", color: "var(--color-foreground)" }}
+              >
                 {providerInfo.label}
               </div>
             </div>
@@ -1044,8 +1037,16 @@ const SocialManagementSection = () => {
                   {connectedAccount.email_address}
                 </div>
                 <EditButton
-                  onClick={() => console.log("Disconnect", connectedAccount.id)}
-                  style={{ background: "var(--color-error-background)", color: "var(--color-error)" }}
+                  onClick={async () => {
+                    await disconnectSocialConnection(
+                      connectedAccount.id.toString()
+                    );
+                    user.refetch();
+                  }}
+                  style={{
+                    background: "var(--color-error-background)",
+                    color: "var(--color-error)",
+                  }}
                 >
                   Disconnect
                 </EditButton>
@@ -1061,9 +1062,7 @@ const SocialManagementSection = () => {
                 }}
                 type="button"
               >
-                <IconWrapper>
-                  {">"}  
-                </IconWrapper>
+                <IconWrapper>{">"}</IconWrapper>
               </button>
             )}
           </div>
@@ -1208,6 +1207,7 @@ const PasswordInput = styled.div`
 `;
 
 const PasswordManagementSection = () => {
+  const { updatePassword } = useUser();
   const { deployment } = useDeployment();
   const [currentPassword, setCurrentPassword] = useState("");
   const [newPassword, setNewPassword] = useState("");
@@ -1251,6 +1251,7 @@ const PasswordManagementSection = () => {
     setIsSubmitting(true);
 
     try {
+      await updatePassword(newPassword);
       setCurrentPassword("");
       setNewPassword("");
       setConfirmPassword("");
@@ -1286,7 +1287,11 @@ const PasswordManagementSection = () => {
           </PasswordInput>
           {errors.currentPassword && (
             <div
-              style={{ color: "var(--color-error)", fontSize: "12px", marginTop: "4px" }}
+              style={{
+                color: "var(--color-error)",
+                fontSize: "12px",
+                marginTop: "4px",
+              }}
             >
               {errors.currentPassword}
             </div>
@@ -1312,7 +1317,11 @@ const PasswordManagementSection = () => {
           </PasswordInput>
           {errors.newPassword && (
             <div
-              style={{ color: "var(--color-error)", fontSize: "12px", marginTop: "4px" }}
+              style={{
+                color: "var(--color-error)",
+                fontSize: "12px",
+                marginTop: "4px",
+              }}
             >
               {errors.newPassword}
             </div>
@@ -1338,7 +1347,11 @@ const PasswordManagementSection = () => {
           </PasswordInput>
           {errors.confirmPassword && (
             <div
-              style={{ color: "var(--color-error)", fontSize: "12px", marginTop: "4px" }}
+              style={{
+                color: "var(--color-error)",
+                fontSize: "12px",
+                marginTop: "4px",
+              }}
             >
               {errors.confirmPassword}
             </div>
@@ -1395,9 +1408,10 @@ const TwoFactorManagementSection = ({
   const authFactorsEnabled = deployment?.auth_settings?.auth_factors_enabled;
 
   // Don't render if no 2FA methods are enabled
-  const hasAny2FAEnabled = authFactorsEnabled?.authenticator ||
-                          authFactorsEnabled?.phone_otp ||
-                          authFactorsEnabled?.backup_code;
+  const hasAny2FAEnabled =
+    authFactorsEnabled?.authenticator ||
+    authFactorsEnabled?.phone_otp ||
+    authFactorsEnabled?.backup_code;
 
   if (!hasAny2FAEnabled) {
     return null;
@@ -1472,7 +1486,7 @@ const AuthenticatorManagementSection = () => {
   const [secondOtpCode, setSecondOtpCode] = useState("");
   const [isSettingUp, setIsSettingUp] = useState(false);
   const [activeAuthenticator, setActiveAuthenticator] = useState<string | null>(
-    null,
+    null
   );
   const { user, setupAuthenticator, verifyAuthenticator, deleteAuthenticator } =
     useUser();
@@ -1605,8 +1619,7 @@ const AuthenticatorManagementSection = () => {
                     style={{
                       width: "60px",
                       height: "60px",
-                      background:
-                        "var(--color-primary)",
+                      background: "var(--color-primary)",
                       borderRadius: "50%",
                       transform: "rotate(45deg)",
                     }}
@@ -1726,7 +1739,12 @@ const AuthenticatorManagementSection = () => {
               >
                 Authenticator App Connected
               </div>
-              <div style={{ fontSize: "13px", color: "var(--color-secondary-text)" }}>
+              <div
+                style={{
+                  fontSize: "13px",
+                  color: "var(--color-secondary-text)",
+                }}
+              >
                 Your account is protected with two-factor authentication.
               </div>
             </div>
@@ -1765,7 +1783,7 @@ const AuthenticatorManagementSection = () => {
               <div style={{ fontSize: "12px", color: "var(--color-muted)" }}>
                 Added on{" "}
                 {new Date(
-                  user.user_authenticator.created_at,
+                  user.user_authenticator.created_at
                 ).toLocaleDateString()}
               </div>
             </EmailContent>
@@ -1776,7 +1794,7 @@ const AuthenticatorManagementSection = () => {
                     setActiveAuthenticator(
                       activeAuthenticator === user.user_authenticator?.id
                         ? null
-                        : user.user_authenticator?.id || null,
+                        : user.user_authenticator?.id || null
                     )
                   }
                   style={{
@@ -1882,7 +1900,7 @@ const AuthenticatorManagementSection = () => {
                       value={firstOtpCode}
                       onChange={(e) =>
                         setFirstOtpCode(
-                          e.target.value.replace(/[^0-9]/g, "").slice(0, 6),
+                          e.target.value.replace(/[^0-9]/g, "").slice(0, 6)
                         )
                       }
                       placeholder="••••••"
@@ -1901,7 +1919,7 @@ const AuthenticatorManagementSection = () => {
                     value={secondOtpCode}
                     onChange={(e) =>
                       setSecondOtpCode(
-                        e.target.value.replace(/[^0-9]/g, "").slice(0, 6),
+                        e.target.value.replace(/[^0-9]/g, "").slice(0, 6)
                       )
                     }
                     placeholder="••••••"
@@ -2042,7 +2060,11 @@ const ManualSetupAccordion = ({
           }}
         >
           <p
-            style={{ fontSize: "14px", color: "var(--color-secondary-text)", margin: "0 0 16px 0" }}
+            style={{
+              fontSize: "14px",
+              color: "var(--color-secondary-text)",
+              margin: "0 0 16px 0",
+            }}
           >
             If you're having trouble scanning the QR code, you can manually set
             up your authenticator app using the following details:
@@ -2066,7 +2088,11 @@ const ManualSetupAccordion = ({
                 {totp}
               </div>
               <div
-                style={{ fontSize: "12px", color: "var(--color-muted)", marginTop: "4px" }}
+                style={{
+                  fontSize: "12px",
+                  color: "var(--color-muted)",
+                  marginTop: "4px",
+                }}
               >
                 Enter this code manually in your authenticator app if you can't
                 scan the QR code.
@@ -2092,7 +2118,11 @@ const ManualSetupAccordion = ({
                 {otpUrl}
               </div>
               <div
-                style={{ fontSize: "12px", color: "var(--color-muted)", marginTop: "4px" }}
+                style={{
+                  fontSize: "12px",
+                  color: "var(--color-muted)",
+                  marginTop: "4px",
+                }}
               >
                 Some authenticator apps allow you to enter this URL directly.
               </div>
@@ -2454,7 +2484,10 @@ const BackupCodeManagementSection = () => {
                     background: "transparent",
                     border: "none",
                     cursor: "pointer",
-                    color: copiedCode === code ? "var(--color-success)" : "var(--color-muted)",
+                    color:
+                      copiedCode === code
+                        ? "var(--color-success)"
+                        : "var(--color-muted)",
                     padding: "2px",
                     borderRadius: "4px",
                     display: "flex",
@@ -2505,7 +2538,8 @@ const BackupCodeManagementSection = () => {
 
 const ProfileDetailsManagementSection = () => {
   const { deployment } = useDeployment();
-  const { user, updateProfile, updateProfilePicture } = useUser();
+  const { user, updateProfile, updateProfilePicture, deleteAccount } =
+    useUser();
   const [firstName, setFirstName] = useState(user?.first_name || "");
   const [lastName, setLastName] = useState(user?.last_name || "");
   const [username, setUsername] = useState(user?.username || "");
@@ -2523,7 +2557,7 @@ const ProfileDetailsManagementSection = () => {
   }, [user]);
 
   const handleProfilePictureChange = async (
-    e: React.ChangeEvent<HTMLInputElement>,
+    e: React.ChangeEvent<HTMLInputElement>
   ) => {
     const file = e.target.files?.[0];
     if (!file) return;
@@ -2555,13 +2589,14 @@ const ProfileDetailsManagementSection = () => {
     }
   };
 
-  const handleDeleteAccount = () => {
+  const handleDeleteAccount = async () => {
     if (
       window.confirm(
-        "Are you sure you want to delete your account? This action cannot be undone.",
+        "Are you sure you want to delete your account? This action cannot be undone."
       )
     ) {
-      alert("Account deletion would be processed here");
+      await deleteAccount();
+      alert("Account deleted successfully");
     }
   };
 
@@ -2591,8 +2626,7 @@ const ProfileDetailsManagementSection = () => {
             gap: "8px",
           }}
         >
-          ✓
-          {successMessage}
+          ✓{successMessage}
         </div>
       )}
 
@@ -2728,7 +2762,9 @@ const ProfileDetailsManagementSection = () => {
                       borderRadius: "6px",
                       fontSize: "14px",
                       backgroundColor: "var(--color-input-background)",
-                      borderColor: errors.firstName ? "var(--color-error)" : undefined,
+                      borderColor: errors.firstName
+                        ? "var(--color-error)"
+                        : undefined,
                     }}
                   />
                   {errors.firstName && (
@@ -2760,7 +2796,9 @@ const ProfileDetailsManagementSection = () => {
                       borderRadius: "6px",
                       fontSize: "14px",
                       backgroundColor: "var(--color-input-background)",
-                      borderColor: errors.lastName ? "var(--color-error)" : undefined,
+                      borderColor: errors.lastName
+                        ? "var(--color-error)"
+                        : undefined,
                     }}
                   />
                   {errors.lastName && (
@@ -2796,7 +2834,9 @@ const ProfileDetailsManagementSection = () => {
                   borderRadius: "6px",
                   fontSize: "14px",
                   backgroundColor: "var(--color-input-background)",
-                  borderColor: errors.username ? "var(--color-error)" : undefined,
+                  borderColor: errors.username
+                    ? "var(--color-error)"
+                    : undefined,
                 }}
               />
               {errors.username && (

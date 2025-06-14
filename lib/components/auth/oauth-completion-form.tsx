@@ -3,6 +3,7 @@
 import React, { useState } from "react";
 import styled from "styled-components";
 import { ArrowLeft } from "lucide-react";
+import { useOAuthCompletion } from "../../hooks/use-oauth-completion";
 import { useDeployment } from "../../hooks/use-deployment";
 import { Button, Input, FormGroup, Label, Form } from "../utility";
 import { PhoneNumberInput } from "../utility/phone";
@@ -76,7 +77,6 @@ interface OAuthCompletionFormProps {
 
 export function OAuthCompletionForm({
   signupAttempt,
-  onComplete,
   onCompleteVerification,
   onPrepareVerification,
   onBack,
@@ -85,6 +85,11 @@ export function OAuthCompletionForm({
   requiresVerification = false,
 }: OAuthCompletionFormProps) {
   const { deployment } = useDeployment();
+  const {
+    completeOAuthSignup,
+    error: completionError,
+    loading: completionLoading,
+  } = useOAuthCompletion(signupAttempt?.id);
   const [formData, setFormData] = useState({
     first_name: signupAttempt?.first_name || "",
     last_name: signupAttempt?.last_name || "",
@@ -162,7 +167,7 @@ export function OAuthCompletionForm({
       dataToSend.phone_number = formData.phone_number;
     }
 
-    await onComplete(dataToSend);
+    await completeOAuthSignup(dataToSend);
   };
 
   const handleVerification = async (e: React.FormEvent) => {
@@ -226,10 +231,10 @@ export function OAuthCompletionForm({
 
           <Button
             type="submit"
-            disabled={loading || !otpCode}
+            disabled={completionLoading || !otpCode}
             style={{ width: "100%" }}
           >
-            {loading
+            {completionLoading
               ? "Verifying..."
               : `Verify ${
                   signupAttempt?.current_step === "verify_email"
@@ -339,14 +344,18 @@ export function OAuthCompletionForm({
           </FormGroup>
         )}
 
-        {error && (
+        {completionError && (
           <ErrorMessage style={{ marginBottom: "var(--space-md)" }}>
-            {error.message}
+            {completionError.message}
           </ErrorMessage>
         )}
 
-        <Button type="submit" disabled={loading} style={{ width: "100%" }}>
-          {loading ? "Completing..." : "Complete Profile"}
+        <Button
+          type="submit"
+          disabled={completionLoading}
+          style={{ width: "100%" }}
+        >
+          {completionLoading ? "Completing..." : "Complete Profile"}
         </Button>
       </Form>
     </Container>

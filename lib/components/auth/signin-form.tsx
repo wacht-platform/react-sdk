@@ -525,7 +525,12 @@ function SignInFormContent() {
               </SubmitButton>
             </Form>
             <Footer>
-              Having trouble? <Link>Get help</Link>
+              Having trouble?{" "}
+              <Link>
+                <NavigationLink to={deployment!.ui_settings.support_page_url}>
+                  Get help
+                </NavigationLink>
+              </Link>
               <div style={{ marginTop: "var(--space-sm)" }}>
                 <Link
                   onClick={() => {

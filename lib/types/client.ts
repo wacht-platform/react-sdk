@@ -1,6 +1,6 @@
 export type Client = (
   url: URL | string,
-  options?: RequestInit,
+  options?: RequestInit
 ) => Promise<Response>;
 
 export type ClinetReponse<T> = {
@@ -37,18 +37,17 @@ export enum ErrorCode {
   InvalidCredentials = "INVALID_CREDENTIALS",
   UserAlreadySignedIn = "USER_ALREADY_SIGNED_IN",
   PhoneNumberExists = "PHONE_NUMBER_EXISTS",
+  OauthCompletionFailed = "OAUTH_COMPLETION_FAILED",
 }
-
 
 export type ResultInterface<T, E> =
   | {
-    data: never;
-    errors: E[];
-  }
+      data: never;
+      errors: E[];
+    }
   | {
-    data: T;
-    errors?: never;
-  };
-
+      data: T;
+      errors: never;
+    };
 
 export type ApiResult<T, E = ErrorInterface> = ResultInterface<T, E>;

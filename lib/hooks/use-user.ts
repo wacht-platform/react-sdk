@@ -44,7 +44,7 @@ export function useUser() {
       await client("/me", {
         method: "PATCH",
         body: JSON.stringify(data),
-      }),
+      })
     );
     mutate();
     return response;
@@ -54,7 +54,7 @@ export function useUser() {
     const response = await responseMapper(
       await client("/me/email-addresses", {
         method: "GET",
-      }),
+      })
     );
     return response;
   };
@@ -63,7 +63,7 @@ export function useUser() {
     const response = await responseMapper(
       await client(`/me/email-addresses/${id}`, {
         method: "GET",
-      }),
+      })
     );
     return response;
   };
@@ -73,7 +73,7 @@ export function useUser() {
       await client("/me/email-addresses", {
         method: "POST",
         body: JSON.stringify({ email }),
-      }),
+      })
     );
     return response;
   };
@@ -82,7 +82,7 @@ export function useUser() {
     const response = await responseMapper(
       await client(`/me/email-addresses/${id}`, {
         method: "DELETE",
-      }),
+      })
     );
     return response;
   };
@@ -91,7 +91,7 @@ export function useUser() {
     const response = await responseMapper(
       await client(`/me/email-addresses/${id}/prepare-verification`, {
         method: "POST",
-      }),
+      })
     );
     return response;
   };
@@ -102,8 +102,8 @@ export function useUser() {
         `/me/email-addresses/${id}/attempt-verification?code=${otp}`,
         {
           method: "POST",
-        },
-      ),
+        }
+      )
     );
     return response;
   };
@@ -113,7 +113,7 @@ export function useUser() {
       await client("/me/phone-numbers", {
         method: "POST",
         body: JSON.stringify({ phone_number }),
-      }),
+      })
     );
     return response;
   };
@@ -122,7 +122,7 @@ export function useUser() {
     const response = await responseMapper(
       await client(`/me/phone-numbers/${id}`, {
         method: "DELETE",
-      }),
+      })
     );
     return response;
   };
@@ -131,7 +131,7 @@ export function useUser() {
     const response = await responseMapper(
       await client(`/me/phone-numbers/${id}/prepare-verification`, {
         method: "POST",
-      }),
+      })
     );
     return response;
   };
@@ -140,7 +140,7 @@ export function useUser() {
     const response = await responseMapper(
       await client(`/me/phone-numbers/${id}/attempt-verification?code=${otp}`, {
         method: "POST",
-      }),
+      })
     );
     return response;
   };
@@ -149,7 +149,16 @@ export function useUser() {
     const response = await responseMapper(
       await client(`/me/phone-numbers/${id}/make-primary`, {
         method: "POST",
-      }),
+      })
+    );
+    return response;
+  };
+
+  const makeEmailPrimary = async (id: string) => {
+    const response = await responseMapper(
+      await client(`/me/email-addresses/${id}/make-primary`, {
+        method: "POST",
+      })
     );
     return response;
   };
@@ -158,7 +167,7 @@ export function useUser() {
     const response = await responseMapper<UserAuthenticator>(
       await client("/me/authenticator", {
         method: "POST",
-      }),
+      })
     );
     return response.data;
   };
@@ -168,7 +177,7 @@ export function useUser() {
       await client("/me/authenticator/attempt-verification", {
         method: "POST",
         body: JSON.stringify({ codes, authenticator_id: id }),
-      }),
+      })
     );
     return response;
   };
@@ -177,7 +186,7 @@ export function useUser() {
     const response = await responseMapper(
       await client(`/me/authenticator/${id}`, {
         method: "DELETE",
-      }),
+      })
     );
     return response;
   };
@@ -186,7 +195,7 @@ export function useUser() {
     const response = await responseMapper<string[]>(
       await client("/me/backup-codes", {
         method: "POST",
-      }),
+      })
     );
     return response.data;
   };
@@ -199,7 +208,7 @@ export function useUser() {
       await client("/me/profile-picture", {
         method: "POST",
         body: formData,
-      }),
+      })
     );
     return response;
   };
@@ -208,9 +217,37 @@ export function useUser() {
     const response = await responseMapper<string[]>(
       await client("/me/backup-codes/regenerate", {
         method: "POST",
-      }),
+      })
     );
     return response.data;
+  };
+
+  const updatePassword = async (password: string) => {
+    const response = await responseMapper(
+      await client("/me/password", {
+        method: "PATCH",
+        body: JSON.stringify({ password }),
+      })
+    );
+    return response;
+  };
+
+  const deleteAccount = async () => {
+    const response = await responseMapper(
+      await client("/me", {
+        method: "DELETE",
+      })
+    );
+    return response;
+  };
+
+  const disconnectSocialConnection = async (id: string) => {
+    const response = await responseMapper(
+      await client(`/me/social-connections/${id}`, {
+        method: "DELETE",
+      })
+    );
+    return response;
   };
 
   return {
@@ -225,6 +262,7 @@ export function useUser() {
     deleteEmailAddress,
     prepareEmailVerification,
     attemptEmailVerification,
+    makeEmailPrimary,
     createPhoneNumber,
     deletePhoneNumber,
     preparePhoneVerification,
@@ -236,6 +274,9 @@ export function useUser() {
     generateBackupCodes,
     regenerateBackupCodes,
     updateProfilePicture,
+    disconnectSocialConnection,
+    updatePassword,
+    deleteAccount,
     loading: isLoading || loading,
   };
 }
@@ -244,14 +285,14 @@ export function useUserSignins() {
   const { client, loading } = useClient();
   const { data: signins, isLoading } = useSWR(
     loading ? null : "/me/signins",
-    () => fetchUserSignins(client),
+    () => fetchUserSignins(client)
   );
 
   const removeSignin = async (id: string) => {
     const response = await responseMapper(
       await client(`/me/signins/${id}/signout`, {
         method: "PATCH",
-      }),
+      })
     );
     return response;
   };

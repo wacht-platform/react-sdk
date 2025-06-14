@@ -3,6 +3,7 @@ import { useClient } from "./use-client";
 import { useDeployment } from "./use-deployment";
 import { responseMapper } from "../utils/response-mapper";
 import type { Session } from "@/types/session";
+import { ApiResult, ErrorInterface } from "@/types/client";
 
 interface SSOCallbackResult {
   session: Session;
@@ -47,7 +48,12 @@ interface SSOCallbackOptions {
 export function useSSOCallback(
   options: SSOCallbackOptions = {}
 ): SSOCallbackState {
-  const { onSuccess, onError, onRequiresCompletion, autoRedirect = true } = options;
+  const {
+    onSuccess,
+    onError,
+    onRequiresCompletion,
+    autoRedirect = true,
+  } = options;
   const { client, loading: clientLoading } = useClient();
   const { deployment } = useDeployment();
 
@@ -159,7 +165,9 @@ export function useSSOCallback(
     }
   };
 
-  const completeOAuthSignup = async (data: OAuthCompletionData): Promise<boolean> => {
+  const completeOAuthSignup = async (
+    data: OAuthCompletionData
+  ): Promise<boolean> => {
     if (!signupAttempt) {
       setCompletionError(new Error("No signup attempt found"));
       return false;
@@ -183,9 +191,10 @@ export function useSSOCallback(
         }
       );
 
-      const result = await responseMapper<SSOCallbackResult>(response);
+      const result: ApiResult<SSOCallbackResult, ErrorInterface> =
+        await responseMapper<SSOCallbackResult>(response);
 
-      if ("data" in result) {
+      if (!result?.errors?.length) {
         const sessionData = result.data.session;
         const signupAttemptData = result.data.signup_attempt;
 
@@ -194,7 +203,10 @@ export function useSSOCallback(
         if (signupAttemptData) {
           setSignupAttempt(signupAttemptData);
 
-          if (signupAttemptData.current_step === "verify_phone" || signupAttemptData.current_step === "verify_email") {
+          if (
+            signupAttemptData.current_step === "verify_phone" ||
+            signupAttemptData.current_step === "verify_email"
+          ) {
             setRequiresVerification(true);
             setRequiresCompletion(false);
           } else {
@@ -214,13 +226,17 @@ export function useSSOCallback(
         setCompletionLoading(false);
         return true;
       } else {
-        const err = new Error("OAuth completion failed");
-        setCompletionError(err);
+        if ("errors" in result && result.errors && result.errors.length > 0) {
+          setCompletionError(new Error(result.errors[0].message));
+        } else {
+          setCompletionError(new Error("OAuth completion failed"));
+        }
         setCompletionLoading(false);
         return false;
       }
     } catch (err) {
-      const error = err instanceof Error ? err : new Error("Unknown error occurred");
+      const error =
+        err instanceof Error ? err : new Error("Unknown error occurred");
       setCompletionError(error);
       setCompletionLoading(false);
       return false;
@@ -272,7 +288,8 @@ export function useSSOCallback(
         return false;
       }
     } catch (err) {
-      const error = err instanceof Error ? err : new Error("Unknown error occurred");
+      const error =
+        err instanceof Error ? err : new Error("Unknown error occurred");
       setCompletionError(error);
       setCompletionLoading(false);
       return false;
@@ -296,14 +313,23 @@ export function useSSOCallback(
       const result = await responseMapper<any>(response);
       return "data" in result;
     } catch (err) {
-      const error = err instanceof Error ? err : new Error("Unknown error occurred");
+      const error =
+        err instanceof Error ? err : new Error("Unknown error occurred");
       setCompletionError(error);
       return false;
     }
   };
 
   useEffect(() => {
-    if (!autoRedirect || !session || !processed || loading || requiresCompletion || requiresVerification) return;
+    if (
+      !autoRedirect ||
+      !session ||
+      !processed ||
+      loading ||
+      requiresCompletion ||
+      requiresVerification
+    )
+      return;
 
     let finalRedirectUrl = redirectUri;
 
@@ -315,7 +341,16 @@ export function useSSOCallback(
     if (finalRedirectUrl) {
       window.location.href = finalRedirectUrl;
     }
-  }, [autoRedirect, session, processed, loading, redirectUri, deployment, requiresCompletion, requiresVerification]);
+  }, [
+    autoRedirect,
+    session,
+    processed,
+    loading,
+    redirectUri,
+    deployment,
+    requiresCompletion,
+    requiresVerification,
+  ]);
 
   return {
     loading,
@@ -358,8 +393,7 @@ export function useSSORedirect() {
           url.searchParams.set("dev_session", devSession);
         }
         finalRedirectUrl = url.toString();
-      } catch {
-      }
+      } catch {}
     }
 
     if (finalRedirectUrl) {

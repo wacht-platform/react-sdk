@@ -21,7 +21,10 @@ import {
   Info,
   CircleAlert,
 } from "lucide-react";
-import { useActiveOrganization } from "@/hooks/use-organization";
+import {
+  useActiveOrganization,
+  useOrganizationList,
+} from "@/hooks/use-organization";
 import { useDeployment } from "@/hooks/use-deployment";
 import { match } from "ts-pattern";
 import { AddDomainPopover } from "./add-domain-popover";
@@ -421,6 +424,7 @@ const GeneralSettingsSection = () => {
     loading,
     updateOrganization,
   } = useActiveOrganization();
+  const { leaveOrganization } = useOrganizationList();
   const [name, setName] = useState(selectedOrganization?.name || "");
   const [description, setDescription] = useState(
     selectedOrganization?.description || ""
@@ -616,7 +620,11 @@ const GeneralSettingsSection = () => {
       </Form>
 
       <DeleteAccountAccordion
-        handleDeleteAccount={console.log}
+        handleDeleteAccount={async () => {
+          if (selectedOrganization) {
+            await leaveOrganization?.(selectedOrganization);
+          }
+        }}
         title="Leave Organization"
         description="Leave this orgnization, you will not be able to join back unless invited by an admin"
       />
@@ -857,7 +865,7 @@ const DomainsSection = () => {
                       <DropdownItem
                         onClick={() => {
                           setSelectedDomainAction(null);
-                          console.log("copy", domain.fqdn);
+                          navigator.clipboard.writeText(domain.fqdn);
                         }}
                       >
                         <div
@@ -1600,6 +1608,7 @@ const BillingSection = () => {
 const SecuritySection = () => {
   const { activeOrganization, loading, updateOrganization } =
     useActiveOrganization();
+  const { deleteOrganization } = useOrganizationList();
   const { workspaces: workspaceList } = useWorkspaceList();
   const { deployment } = useDeployment();
 
@@ -1800,8 +1809,8 @@ const SecuritySection = () => {
                       color: "var(--color-muted)",
                     }}
                   >
-                    Enter one IP address or CIDR range per line (e.g., 192.168.1.1
-                    or 192.168.1.0/24)
+                    Enter one IP address or CIDR range per line (e.g.,
+                    192.168.1.1 or 192.168.1.0/24)
                   </div>
                 </FormGroup>
               </div>
@@ -1852,7 +1861,11 @@ const SecuritySection = () => {
 
       {deployment?.b2b_settings?.allow_org_deletion && (
         <DeleteAccountAccordion
-          handleDeleteAccount={console.log}
+          handleDeleteAccount={async () => {
+            if (activeOrganization) {
+              await deleteOrganization?.(activeOrganization);
+            }
+          }}
           title="Delete Organization"
           description="Delete this organization, all associated members and workspaces will be deleted, and all associated data will be permanently removed."
         />
