@@ -7,6 +7,7 @@ import { Session, SessionToken } from "@/types/session";
 import { Client } from "@/types/client";
 import { useOrganizationMemberships } from "./use-organization";
 import { useWorkspaceMemberships } from "./use-workspace";
+import { useDeployment } from "./use-deployment";
 
 type UseSessionReturnType =
   | {
@@ -17,6 +18,7 @@ type UseSessionReturnType =
     switchWorkspace: never;
     signOut: never;
     getToken: never;
+    addNewAccount: never;
     error: Error | null;
     refetch: () => Promise<void>;
   }
@@ -29,6 +31,7 @@ type UseSessionReturnType =
     getToken: (template?: string) => Promise<string>;
     switchOrganization: (organizationId?: string) => Promise<void>;
     switchWorkspace: (workspaceId: string) => Promise<void>;
+    addNewAccount: () => void;
     refetch: () => Promise<void>;
   };
 
@@ -108,6 +111,7 @@ async function getSessionToken(
 
 export function useSession(): UseSessionReturnType {
   const { client, loading } = useClient();
+  const { deployment } = useDeployment();
   const {
     data: session,
     error,
@@ -148,6 +152,27 @@ export function useSession(): UseSessionReturnType {
     [client, session?.active_signin],
   );
 
+  const addNewAccount = useCallback(() => {
+    if (!deployment) return;
+
+    // Use deployment configuration for sign-in URL with proper redirect
+    const signinLink = deployment.ui_settings.sign_in_page_url;
+
+    const currentHost = window.location.href;
+    const url = new URL(signinLink);
+    url.searchParams.set("redirect_uri", currentHost);
+
+    // Handle staging mode dev session
+    if (deployment.mode === "staging") {
+      const devSession = localStorage.getItem("__dev_session__");
+      if (devSession) {
+        url.searchParams.set("dev_session", devSession);
+      }
+    }
+
+    window.location.href = url.toString();
+  }, [deployment]);
+
   if (loading || !session || isLoading || organizationLoading || workspaceLoading) {
     return {
       loading: true,
@@ -158,6 +183,7 @@ export function useSession(): UseSessionReturnType {
       switchWorkspace: null as never,
       signOut: null as never,
       getToken: null as never,
+      addNewAccount: null as never,
       refetch,
     };
   }
@@ -183,6 +209,7 @@ export function useSession(): UseSessionReturnType {
       await mutate();
     },
     getToken,
+    addNewAccount,
     refetch,
   };
 }

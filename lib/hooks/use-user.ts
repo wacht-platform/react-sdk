@@ -151,6 +151,7 @@ export function useUser() {
         method: "POST",
       })
     );
+    mutate();
     return response;
   };
 
@@ -222,20 +223,40 @@ export function useUser() {
     return response.data;
   };
 
-  const updatePassword = async (password: string) => {
+  const updatePassword = async (
+    currentPassword: string,
+    newPassword: string
+  ) => {
     const response = await responseMapper(
-      await client("/me/password", {
-        method: "PATCH",
-        body: JSON.stringify({ password }),
+      await client("/me/update-password", {
+        method: "POST",
+        body: JSON.stringify({
+          current_password: currentPassword,
+          new_password: newPassword,
+        }),
       })
     );
     return response;
   };
 
-  const deleteAccount = async () => {
+  const removePassword = async (currentPassword: string) => {
     const response = await responseMapper(
-      await client("/me", {
+      await client("/me/password", {
         method: "DELETE",
+        body: JSON.stringify({
+          current_password: currentPassword,
+        }),
+      })
+    );
+    mutate(); // Refresh user data after removing password
+    return response;
+  };
+
+  const deleteAccount = async (password: string) => {
+    const response = await responseMapper(
+      await client("/me/account", {
+        method: "DELETE",
+        body: JSON.stringify({ password }),
       })
     );
     return response;
@@ -276,6 +297,7 @@ export function useUser() {
     updateProfilePicture,
     disconnectSocialConnection,
     updatePassword,
+    removePassword,
     deleteAccount,
     loading: isLoading || loading,
   };

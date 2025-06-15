@@ -865,7 +865,7 @@ const PhoneManagementSection = () => {
                   }}
                 >
                   {phone.phone_number}
-                  {phone.id === user?.primary_email_address_id && (
+                  {phone.id === user?.primary_phone_number_id && (
                     <Badge>Primary</Badge>
                   )}
                   <Badge>{!phone.verified ? "Not Verified" : "Verified"}</Badge>
@@ -1052,18 +1052,22 @@ const SocialManagementSection = () => {
                 </EditButton>
               </div>
             ) : (
-              <button
-                style={{
-                  background: "none",
-                  border: "none",
-                  cursor: "pointer",
-                  padding: 0,
-                  color: "var(--color-muted)",
+              <EditButton
+                onClick={() => {
+                  // Redirect to OAuth flow for this provider
+                  const baseUrl = deployment?.backend_host || "";
+                  const redirectUrl = `${baseUrl}/auth/oauth2/init?provider=${provider.provider}&redirect_url=${encodeURIComponent(window.location.href)}`;
+                  window.location.href = redirectUrl;
                 }}
-                type="button"
+                style={{
+                  background: "var(--color-primary)",
+                  color: "var(--color-background)",
+                  fontSize: "12px",
+                  padding: "6px 12px",
+                }}
               >
-                <IconWrapper>{">"}</IconWrapper>
-              </button>
+                Connect
+              </EditButton>
             )}
           </div>
         );
@@ -1207,7 +1211,7 @@ const PasswordInput = styled.div`
 `;
 
 const PasswordManagementSection = () => {
-  const { updatePassword } = useUser();
+  const { updatePassword, removePassword, user } = useUser();
   const { deployment } = useDeployment();
   const [currentPassword, setCurrentPassword] = useState("");
   const [newPassword, setNewPassword] = useState("");
@@ -1216,6 +1220,9 @@ const PasswordManagementSection = () => {
   const [showNewPassword, setShowNewPassword] = useState(false);
   const [showConfirmPassword, setShowConfirmPassword] = useState(false);
   const [isSubmitting, setIsSubmitting] = useState(false);
+  const [isRemoving, setIsRemoving] = useState(false);
+  const [removePasswordInput, setRemovePasswordInput] = useState("");
+  const [showRemovePassword, setShowRemovePassword] = useState(false);
   const [errors, setErrors] = useState<Record<string, string>>({});
 
   // Don't render if password is disabled
@@ -1251,7 +1258,7 @@ const PasswordManagementSection = () => {
     setIsSubmitting(true);
 
     try {
-      await updatePassword(newPassword);
+      await updatePassword(currentPassword, newPassword);
       setCurrentPassword("");
       setNewPassword("");
       setConfirmPassword("");
@@ -1263,6 +1270,48 @@ const PasswordManagementSection = () => {
     } finally {
       setIsSubmitting(false);
     }
+  };
+
+  const handleRemovePassword = async () => {
+    if (!removePasswordInput) {
+      setErrors({ removePassword: "Current password is required" });
+      return;
+    }
+
+    setIsRemoving(true);
+    setErrors({});
+
+    try {
+      await removePassword(removePasswordInput);
+      setRemovePasswordInput("");
+      alert("Password removed successfully. You can now sign in using alternative methods.");
+    } catch (error: any) {
+      setErrors({
+        removePassword: error?.message || "Failed to remove password. Please check your password and ensure you have alternative authentication methods configured."
+      });
+    } finally {
+      setIsRemoving(false);
+    }
+  };
+
+  // Check if user has alternative auth methods to show remove password option
+  const hasAlternativeAuthMethods = () => {
+    // Check for verified email (for OTP/magic link)
+    const hasVerifiedEmail = user?.user_email_addresses?.some(email => email.verified);
+
+    // Check for social connections
+    const hasSocialConnections = (user?.social_connections?.length || 0) > 0;
+
+    // Check for authenticator
+    const hasAuthenticator = !!user?.user_authenticator;
+
+    // Check if email OTP is enabled
+    const emailOtpEnabled = deployment?.auth_settings?.first_factor === "email_otp";
+
+    // For now, we'll consider these as valid alternative methods
+    return (hasVerifiedEmail && emailOtpEnabled) ||
+           hasSocialConnections ||
+           hasAuthenticator;
   };
 
   return (
@@ -1380,6 +1429,83 @@ const PasswordManagementSection = () => {
           </button>
         </div>
       </Form>
+
+      {/* Remove Password Section */}
+      {hasAlternativeAuthMethods() && (
+        <div style={{ marginTop: "32px", paddingTop: "24px", borderTop: "1px solid var(--color-border)" }}>
+          <div style={{ marginBottom: "16px" }}>
+            <h3 style={{
+              fontSize: "16px",
+              fontWeight: 600,
+              margin: "0 0 8px 0",
+              color: "var(--color-foreground)"
+            }}>
+              Remove Password
+            </h3>
+            <p style={{
+              fontSize: "14px",
+              color: "var(--color-muted)",
+              margin: 0,
+              lineHeight: "1.5"
+            }}>
+              Remove password authentication and use only alternative methods like email OTP, social sign-in, or authenticator apps.
+            </p>
+          </div>
+
+          <FormGroup>
+            <Label htmlFor="removePasswordInput">Current Password</Label>
+            <PasswordInput>
+              <Input
+                id="removePasswordInput"
+                type={showRemovePassword ? "text" : "password"}
+                value={removePasswordInput}
+                onChange={(e) => setRemovePasswordInput(e.target.value)}
+                placeholder="Enter your current password"
+              />
+              <button
+                type="button"
+                onClick={() => setShowRemovePassword(!showRemovePassword)}
+              >
+                {showRemovePassword ? <EyeOff size={16} /> : <Eye size={16} />}
+              </button>
+            </PasswordInput>
+            {errors.removePassword && (
+              <div
+                style={{
+                  color: "var(--color-error)",
+                  fontSize: "12px",
+                  marginTop: "4px",
+                }}
+              >
+                {errors.removePassword}
+              </div>
+            )}
+          </FormGroup>
+
+          <div style={{ marginTop: "16px" }}>
+            <button
+              type="button"
+              onClick={handleRemovePassword}
+              disabled={isRemoving || !removePasswordInput}
+              style={{
+                width: "100%",
+                padding: "9px 16px",
+                background: "var(--color-error)",
+                color: "var(--color-background)",
+                border: "none",
+                borderRadius: "8px",
+                fontWeight: 500,
+                fontSize: "14px",
+                cursor: isRemoving || !removePasswordInput ? "not-allowed" : "pointer",
+                transition: "background-color 0.2s",
+                opacity: isRemoving || !removePasswordInput ? 0.6 : 1,
+              }}
+            >
+              {isRemoving ? "Removing..." : "Remove Password"}
+            </button>
+          </div>
+        </div>
+      )}
     </div>
   );
 };
@@ -2589,14 +2715,16 @@ const ProfileDetailsManagementSection = () => {
     }
   };
 
-  const handleDeleteAccount = async () => {
-    if (
-      window.confirm(
-        "Are you sure you want to delete your account? This action cannot be undone."
-      )
-    ) {
-      await deleteAccount();
+  const handleDeleteAccount = async (password: string) => {
+    try {
+      await deleteAccount(password);
       alert("Account deleted successfully");
+      // Redirect to sign-in page or home page
+      window.location.href = "/";
+    } catch (error) {
+      setErrors({
+        deleteAccount: "Failed to delete account. Please check your password and try again."
+      });
     }
   };
 
@@ -2865,9 +2993,29 @@ const ProfileDetailsManagementSection = () => {
 const DeleteAccountAccordion = ({
   handleDeleteAccount,
 }: {
-  handleDeleteAccount: () => void;
+  handleDeleteAccount: (password: string) => void;
 }) => {
   const [isOpen, setIsOpen] = useState(false);
+  const [password, setPassword] = useState("");
+  const [showPassword, setShowPassword] = useState(false);
+  const [isDeleting, setIsDeleting] = useState(false);
+
+  const onDeleteClick = async () => {
+    if (!password) {
+      alert("Please enter your password to confirm account deletion.");
+      return;
+    }
+
+    if (window.confirm("Are you absolutely sure? This action cannot be undone.")) {
+      setIsDeleting(true);
+      try {
+        await handleDeleteAccount(password);
+      } finally {
+        setIsDeleting(false);
+        setPassword("");
+      }
+    }
+  };
 
   return (
     <div
@@ -2922,9 +3070,46 @@ const DeleteAccountAccordion = ({
             Permanently remove your account from the platform. This action is
             not reversible, so please continue with caution.
           </p>
+
+          <div style={{ marginBottom: "16px" }}>
+            <Label htmlFor="deletePassword" style={{ fontSize: "14px", marginBottom: "8px", display: "block" }}>
+              Enter your password to confirm
+            </Label>
+            <div style={{ position: "relative" }}>
+              <Input
+                id="deletePassword"
+                type={showPassword ? "text" : "password"}
+                value={password}
+                onChange={(e) => setPassword(e.target.value)}
+                placeholder="Enter your password"
+                style={{
+                  width: "100%",
+                  paddingRight: "40px",
+                }}
+              />
+              <button
+                type="button"
+                onClick={() => setShowPassword(!showPassword)}
+                style={{
+                  position: "absolute",
+                  right: "8px",
+                  top: "50%",
+                  transform: "translateY(-50%)",
+                  background: "none",
+                  border: "none",
+                  cursor: "pointer",
+                  color: "var(--color-muted)",
+                }}
+              >
+                {showPassword ? <EyeOff size={16} /> : <Eye size={16} />}
+              </button>
+            </div>
+          </div>
+
           <button
             type="button"
-            onClick={handleDeleteAccount}
+            onClick={onDeleteClick}
+            disabled={isDeleting || !password}
             style={{
               padding: "8px 16px",
               backgroundColor: "var(--color-error)",
@@ -2933,10 +3118,11 @@ const DeleteAccountAccordion = ({
               fontSize: "14px",
               fontWeight: 500,
               color: "var(--color-background)",
-              cursor: "pointer",
+              cursor: isDeleting || !password ? "not-allowed" : "pointer",
+              opacity: isDeleting || !password ? 0.6 : 1,
             }}
           >
-            Delete Account
+            {isDeleting ? "Deleting..." : "Delete Account"}
           </button>
         </div>
       )}

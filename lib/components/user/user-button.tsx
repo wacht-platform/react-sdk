@@ -2,7 +2,7 @@ import { useState, useRef, useEffect } from "react";
 import styled from "styled-components";
 import { LogOut, Settings, Plus } from "lucide-react";
 import { DefaultStylesProvider } from "../utility/root";
-import { useSession } from "@/hooks";
+import { useSession, useDeployment } from "@/hooks";
 import { ManageAccountDialog } from "./manage-account-dialog";
 import { useDialog } from "../utility/use-dialog";
 
@@ -135,9 +135,20 @@ const DropdownContainer = styled.div<{
 	overflow-y: auto;
 `;
 
-const AccountSection = styled.div`
+const AccountSection = styled.div<{ $isActive?: boolean; $isClickable?: boolean }>`
 	padding: 12px;
 	border-bottom: 1px solid var(--color-border);
+	cursor: ${(props) => (props.$isClickable ? "pointer" : "default")};
+	transition: background-color 0.2s ease;
+
+	&:hover {
+		background: ${(props) => (props.$isClickable ? "var(--color-input-background)" : "transparent")};
+	}
+
+	${(props) => props.$isActive && `
+		background: var(--color-primary-background);
+		border-left: 3px solid var(--color-primary);
+	`}
 `;
 
 const AccountHeader = styled.div`
@@ -235,9 +246,12 @@ export const UserButton: React.FC<UserButtonProps> = ({ showName = true }) => {
 	const manageAccountDialog = useDialog(false);
 	const containerRef = useRef<HTMLDivElement>(null);
 	const dropdownRef = useRef<HTMLDivElement>(null);
-	const { session, signOut, refetch } = useSession();
+	const { session, signOut, switchSignIn, addNewAccount, refetch } = useSession();
+	const { deployment } = useDeployment();
 
 	const selectedAccount = session?.active_signin?.user;
+	const isMultiSessionEnabled = deployment?.auth_settings?.multi_session_support?.enabled ?? false;
+	const hasMultipleAccounts = (session?.signins?.length ?? 0) > 1;
 
 	useEffect(() => {
 		const handleClickOutside = (event: MouseEvent) => {
@@ -322,23 +336,42 @@ export const UserButton: React.FC<UserButtonProps> = ({ showName = true }) => {
 			.toUpperCase();
 	};
 
-	// const handleUserSwitch = async (signInId: string) => {
-	// 	await switchSignIn(signInId);
-	// 	await refetch();
-	// 	setIsOpen(false);
-	// };
+
 
 	const handleSignOut = async (signInId: string) => {
-		await signOut(signInId);
-		await refetch();
-		setIsOpen(false);
+		try {
+			await signOut(signInId);
+			await refetch();
+			setIsOpen(false);
+		} catch (error) {
+			console.error('Failed to sign out:', error);
+			// You could add a toast notification here for better UX
+		}
 	};
 
 	const handleSignOutAll = async () => {
-		await signOut();
-		await refetch();
-		setIsOpen(false);
+		try {
+			await signOut();
+			await refetch();
+			setIsOpen(false);
+		} catch (error) {
+			console.error('Failed to sign out all accounts:', error);
+			// You could add a toast notification here for better UX
+		}
 	};
+
+	const handleSwitchUser = async (signInId: string) => {
+		try {
+			await switchSignIn(signInId);
+			await refetch();
+			setIsOpen(false);
+		} catch (error) {
+			console.error('Failed to switch user:', error);
+			// You could add a toast notification here for better UX
+		}
+	};
+
+
 
 	const handleOpenManageAccount = () => {
 		manageAccountDialog.open();
@@ -380,75 +413,154 @@ export const UserButton: React.FC<UserButtonProps> = ({ showName = true }) => {
 				{isOpen && (
 					<DropdownContainer ref={dropdownRef} $position={dropdownPosition}>
 						<div>
-							{session?.signins?.map(({ user: account, id: signInId }) => (
-								<AccountSection key={account.id}>
-									<AccountHeader>
-										<AvatarContainer>
-											<LargerAvatar>
-												{account.has_profile_picture ? (
-													<img
-														src={account.profile_picture_url}
-														alt={account.first_name}
-													/>
-												) : (
-													getInitials(
-														`${account?.first_name || ""} ${
-															account?.last_name || ""
-														}`,
-													)
-												)}
-											</LargerAvatar>
-											{account.id === selectedAccount?.id ? (
-												<StatusIndicator $status={account.availability} />
-											) : (
-												<StatusIndicator $status="away" />
-											)}
-										</AvatarContainer>
-										<AccountDetails>
-											<NameRow>
-												<AccountName>
-													{`${account?.first_name || ""} ${
-														account?.last_name || ""
-													}`}
-												</AccountName>
-											</NameRow>
-											<AccountEmail>
-												{account.user_email_addresses[0].email}
-											</AccountEmail>
-										</AccountDetails>
-									</AccountHeader>
+							{isMultiSessionEnabled ? (
+								// Multi-session enabled: Show all accounts with switching capability
+								session?.signins?.map(({ user: account, id: signInId }) => {
+									const isActive = account.id === selectedAccount?.id;
+									const isClickable = !isActive;
 
-									{account.id === selectedAccount?.id && (
+									return (
+										<AccountSection
+											key={account.id}
+											$isActive={isActive}
+											$isClickable={isClickable}
+											onClick={isClickable ? () => handleSwitchUser(signInId) : undefined}
+										>
+											<AccountHeader>
+												<AvatarContainer>
+													<LargerAvatar>
+														{account.has_profile_picture ? (
+															<img
+																src={account.profile_picture_url}
+																alt={account.first_name}
+															/>
+														) : (
+															getInitials(
+																`${account?.first_name || ""} ${
+																	account?.last_name || ""
+																}`,
+															)
+														)}
+													</LargerAvatar>
+													{isActive ? (
+														<StatusIndicator $status={account.availability} />
+													) : (
+														<StatusIndicator $status="away" />
+													)}
+												</AvatarContainer>
+												<AccountDetails>
+													<NameRow>
+														<AccountName>
+															{`${account?.first_name || ""} ${
+																account?.last_name || ""
+															}`}
+														</AccountName>
+														{isActive && (
+															<span style={{
+																fontSize: '12px',
+																color: 'var(--color-primary)',
+																fontWeight: '500'
+															}}>
+																Active
+															</span>
+														)}
+													</NameRow>
+													<AccountEmail>
+														{account.user_email_addresses[0].email}
+													</AccountEmail>
+												</AccountDetails>
+											</AccountHeader>
+
+											{isActive && (
+												<ActionRow>
+													<ActionLink onClick={handleOpenManageAccount}>
+														<Settings />
+														Manage account
+													</ActionLink>
+													<ActionLink
+														$destructive
+														onClick={() => handleSignOut(signInId)}
+													>
+														<LogOut />
+														Sign out
+													</ActionLink>
+												</ActionRow>
+											)}
+										</AccountSection>
+									);
+								})
+							) : (
+								// Single session: Show only active account
+								selectedAccount && (
+									<AccountSection $isActive={true} $isClickable={false}>
+										<AccountHeader>
+											<AvatarContainer>
+												<LargerAvatar>
+													{selectedAccount.has_profile_picture ? (
+														<img
+															src={selectedAccount.profile_picture_url}
+															alt={selectedAccount.first_name}
+														/>
+													) : (
+														getInitials(
+															`${selectedAccount?.first_name || ""} ${
+																selectedAccount?.last_name || ""
+															}`,
+														)
+													)}
+												</LargerAvatar>
+												<StatusIndicator $status={selectedAccount.availability} />
+											</AvatarContainer>
+											<AccountDetails>
+												<NameRow>
+													<AccountName>
+														{`${selectedAccount?.first_name || ""} ${
+															selectedAccount?.last_name || ""
+														}`}
+													</AccountName>
+												</NameRow>
+												<AccountEmail>
+													{selectedAccount.user_email_addresses[0].email}
+												</AccountEmail>
+											</AccountDetails>
+										</AccountHeader>
+
 										<ActionRow>
-											<ActionLink onClick={() => handleOpenManageAccount()}>
+											<ActionLink onClick={handleOpenManageAccount}>
 												<Settings />
 												Manage account
 											</ActionLink>
 											<ActionLink
 												$destructive
-												onClick={() => handleSignOut(signInId)}
+												onClick={() => handleSignOut(session?.active_signin?.id || "")}
 											>
 												<LogOut />
 												Sign out
 											</ActionLink>
 										</ActionRow>
+									</AccountSection>
+								)
+							)}
+
+							{isMultiSessionEnabled && (
+								<>
+									<FooterSection style={{ borderBottom: "1px solid var(--color-border)" }}>
+										<FooterButton onClick={addNewAccount}>
+											<Plus />
+											Add new account
+										</FooterButton>
+									</FooterSection>
+
+									{hasMultipleAccounts && (
+										<FooterSection>
+											<FooterButton onClick={handleSignOutAll}>
+												<LogOut />
+												Sign out of all accounts
+											</FooterButton>
+										</FooterSection>
 									)}
-								</AccountSection>
-							))}
-
-							<FooterSection style={{ borderBottom: "1px solid var(--color-border)" }}>
-								<FooterButton onClick={() => handleSignOutAll()}>
-									<Plus />
-									Add new account
-								</FooterButton>
-							</FooterSection>
-
-							<FooterSection>
-								<FooterButton onClick={() => handleSignOutAll()}>
-									<LogOut />
-									Sign out of all accounts
-								</FooterButton>
-							</FooterSection>
+								</>
+							)}
 						</div>
 					</DropdownContainer>
 				)}

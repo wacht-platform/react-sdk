@@ -62,6 +62,12 @@ export type FirstFactor =
 
 export type SecondFactorPolicy = "none" | "optional" | "enforced";
 
+export interface MultiSessionSupport {
+  enabled: boolean;
+  max_accounts_per_session: number;
+  max_sessions_per_account: number;
+}
+
 export interface AuthSettings {
   id: number;
   created_at: string;
@@ -83,6 +89,7 @@ export interface AuthSettings {
   second_factor: SecondFactor | null;
   alternate_first_factors: FirstFactor[] | null;
   alternate_second_factors: SecondFactor[] | null;
+  multi_session_support: MultiSessionSupport;
   deployment_id: number;
 }
 
