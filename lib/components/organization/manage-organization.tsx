@@ -20,6 +20,7 @@ import {
   ChevronUp,
   Info,
   CircleAlert,
+  Mail,
 } from "lucide-react";
 import {
   useActiveOrganization,
@@ -35,6 +36,7 @@ import {
   OrganizationDomain,
   OrganizationUpdate,
   OrganizationMembership,
+  OrganizationInvitation,
 } from "@/types/organization";
 import { AddRolePopover } from "./add-role-popover";
 import {
@@ -53,6 +55,17 @@ import {
   DropdownDivider,
   Form,
 } from "@/components/utility";
+import {
+  Table,
+  TableBody,
+  TableCell,
+  TableCellFlex,
+  TableHead,
+  TableHeader,
+  TableRow,
+  ActionsCell,
+} from "@/components/utility/table";
+import { EmptyState } from "@/components/utility/empty-state";
 import { useWorkspaceList } from "@/hooks/use-workspace";
 import { ConfirmationPopover } from "../utility/confirmation-popover";
 import { ScreenContext, Screen, useScreenContext } from "./context";
@@ -774,11 +787,14 @@ const DomainsSection = () => {
       </HeaderCTAContainer>
 
       {!filteredDomains?.length ? (
-        <EmptyTableMessage>
-          {searchQuery !== "all"
-            ? "No domains match your criteria"
-            : "No domains added"}
-        </EmptyTableMessage>
+        <EmptyState
+          title={
+            searchQuery !== "all"
+              ? "No domains match your criteria"
+              : "No domains added"
+          }
+          description="Add a domain to get started"
+        />
       ) : (
         <Table ref={tableRef}>
           <TableHead>
@@ -793,7 +809,7 @@ const DomainsSection = () => {
             {filteredDomains.map((domain) => (
               <TableRow key={domain.id}>
                 <TableCellFlex>{domain.fqdn}</TableCellFlex>
-                <StatusCell>
+                <TableCell>
                   {domain.verified ? (
                     <Badge
                       style={{
@@ -814,7 +830,7 @@ const DomainsSection = () => {
                       <AlertTriangle size={9} /> Pending Verification
                     </Badge>
                   )}
-                </StatusCell>
+                </TableCell>
                 <TableCell>
                   {new Date(domain.created_at).toLocaleDateString()}
                 </TableCell>
@@ -947,24 +963,76 @@ const RoleDropdownButton = styled.button`
   }
 `;
 
+const MemberListItem = styled.div`
+  background: var(--color-background);
+  padding: 16px 4px;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  border-bottom: 1px solid var(--color-border);
+  transition: all 0.2s ease;
+
+  &:hover {
+    background: var(--color-input-background);
+  }
+`;
+
+const MemberListItemContent = styled.div`
+  display: flex;
+  align-items: center;
+  gap: 12px;
+`;
+
+const AvatarPlaceholder = styled.div`
+  width: 40px;
+  height: 40px;
+  border-radius: 50%;
+  background: var(--color-input-background);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: var(--color-muted);
+  font-weight: 500;
+  font-size: 14px;
+  overflow: hidden;
+`;
+
+const MemberInfo = styled.div`
+  display: flex;
+  flex-direction: column;
+`;
+
+const MemberName = styled.div`
+  font-size: 14px;
+  color: var(--color-foreground);
+`;
+
+const MemberEmail = styled.div`
+  font-size: 12px;
+  color: var(--color-muted);
+`;
+
+const MemberListItemActions = styled.div`
+  display: flex;
+  align-items: center;
+  gap: 8px;
+`;
+
 const MembersSection = () => {
   const {
     activeOrganization,
     loading,
     getMembers,
-    // getInvitations,
+    getInvitations,
     getRoles,
     addMemberRole,
     removeMemberRole,
+    discardInvitation,
+    resendInvitation,
   } = useActiveOrganization();
+  const { toast } = useScreenContext();
   const [isInviting, setIsInviting] = useState(false);
-  const [message, setMessage] = useState<{
-    text: string;
-    type: "success" | "error";
-  } | null>(null);
-  const [activeMemberRoleDropdown, setActiveMemberRoleDropdown] = useState<
-    string | null
-  >(null);
   const [searchQuery, setSearchQuery] = useState("");
 
   const {
@@ -977,16 +1045,16 @@ const MembersSection = () => {
       : null,
     () => getMembers?.() || []
   );
-  // const {
-  //   data: invitations = [],
-  //   isLoading: invitationsLoading,
-  //   mutate: reloadInvitations,
-  // } = useSWR(
-  //   activeOrganization
-  //     ? `/api/organizations/${activeOrganization.id}/invitations`
-  //     : null,
-  //   () => getInvitations?.() || [],
-  // );
+  const {
+    data: invitations = [],
+    isLoading: invitationsLoading,
+    mutate: reloadInvitations,
+  } = useSWR(
+    activeOrganization
+      ? `/api/organizations/${activeOrganization.id}/invitations`
+      : null,
+    () => getInvitations?.() || []
+  );
   const { data: rolesData = [], isLoading: rolesLoading } = useSWR(
     activeOrganization
       ? `/api/organizations/${activeOrganization.id}/roles`
@@ -1010,28 +1078,39 @@ const MembersSection = () => {
     });
   }, [members, searchQuery]);
 
-  // const handleInvitationSuccess = () => {
-  //   setMessage({ text: "Invitation sent successfully", type: "success" });
-  //   reloadInvitations();
-  //   setIsInviting(false);
-  //   setTimeout(() => setMessage(null), 3000);
-  // };
+  const filteredInvitations = React.useMemo(() => {
+    if (!searchQuery) return invitations;
+    return invitations.filter((invitation: OrganizationInvitation) =>
+      invitation.email.toLowerCase().includes(searchQuery.toLowerCase())
+    );
+  }, [invitations, searchQuery]);
 
-  // const handleCancelInvitation = async (invitationId: string) => {
-  //   try {
-  //     await discardInvitation(invitationId);
-  //     reloadInvitations();
-  //     setMessage({
-  //       text: "Invitation cancelled successfully",
-  //       type: "success",
-  //     });
-  //   } catch (error) {
-  //     console.error("Failed to cancel invitation", error);
-  //     setMessage({ text: "Failed to cancel invitation", type: "error" });
-  //   } finally {
-  //     setTimeout(() => setMessage(null), 3000);
-  //   }
-  // };
+  const handleInvitationSuccess = () => {
+    toast("Invitation sent successfully", "info");
+    reloadInvitations();
+    setIsInviting(false);
+  };
+
+  const handleCancelInvitation = async (invitation: OrganizationInvitation) => {
+    try {
+      await discardInvitation(invitation);
+      reloadInvitations();
+      toast("Invitation cancelled successfully", "info");
+    } catch (error) {
+      console.error("Failed to cancel invitation", error);
+      toast("Failed to cancel invitation", "error");
+    }
+  };
+
+  const handleResendInvitation = async (invitation: OrganizationInvitation) => {
+    try {
+      await resendInvitation(invitation);
+      toast("Invitation resent successfully", "info");
+    } catch (error) {
+      console.error("Failed to resend invitation", error);
+      toast("Failed to resend invitation", "error");
+    }
+  };
 
   const toggleRole = async (
     member: OrganizationMembership,
@@ -1041,18 +1120,15 @@ const MembersSection = () => {
     try {
       if (hasRole) {
         await removeMemberRole(member, role);
-        setMessage({ text: "Role removed successfully", type: "success" });
+        toast("Role removed successfully", "info");
       } else {
         await addMemberRole(member, role);
-        setMessage({ text: "Role added successfully", type: "success" });
+        toast("Role added successfully", "info");
       }
       reloadMembers();
-      setActiveMemberRoleDropdown(null); // Close dropdown after role change
     } catch (error) {
       console.error("Failed to update role", error);
-      setMessage({ text: "Failed to update role", type: "error" });
-    } finally {
-      setTimeout(() => setMessage(null), 3000);
+      toast("Failed to update role", "error");
     }
   };
   const getInitials = (firstName = "", lastName = "") =>
@@ -1060,7 +1136,7 @@ const MembersSection = () => {
   const memberHasRole = (member: any, roleId: string) =>
     member.roles?.some((r: any) => r.id === roleId) || false;
 
-  if (loading || membersLoading || rolesLoading)
+  if (loading || membersLoading || rolesLoading || invitationsLoading)
     return (
       <div
         style={{ display: "flex", justifyContent: "center", padding: "40px 0" }}
@@ -1075,91 +1151,62 @@ const MembersSection = () => {
         <SectionHeader title="Organization Members" />
       </div>
 
-      {message && (
-        <div
-          style={{
-            marginBottom: "20px",
-            padding: "8px",
-            background:
-              message.type === "success"
-                ? "var(--color-success-background)"
-                : "var(--color-error-background)",
-            color:
-              message.type === "success"
-                ? "var(--color-success)"
-                : "var(--color-error)",
-            borderRadius: "8px",
-            display: "flex",
-            alignItems: "center",
-            gap: "8px",
-          }}
-        >
-          {message.type === "success" ? "✓" : <AlertTriangle size={16} />}
-          {message.text}
-        </div>
-      )}
-
       <div
         style={{
           display: "flex",
           gap: "8px",
           alignItems: "center",
           flexWrap: "wrap",
+          justifyContent: "space-between",
         }}
       >
         <SearchInput
           value={searchQuery}
           onChange={setSearchQuery}
-          placeholder="Search members"
+          placeholder="Search..."
         />
         <div>
           <Button
             onClick={() => setIsInviting(true)}
             style={{ width: "140px" }}
+            $primary
           >
             <span>Invite Members</span>
           </Button>
           {isInviting && (
             <InviteMemberPopover
               onClose={() => setIsInviting(false)}
-              onSuccess={console.log}
+              onSuccess={handleInvitationSuccess}
               roles={roles}
             />
           )}
         </div>
       </div>
 
-      {filteredMembers.length === 0 ? (
-        <EmptyTableMessage>
-          {searchQuery ? "No members match your search" : "No members yet"}
-        </EmptyTableMessage>
-      ) : (
-        <Table>
-          <TableHead>
-            <TableRow>
-              <TableHeader>Member</TableHeader>
-              <TableHeader style={{ paddingLeft: 8 }}>Roles</TableHeader>
-            </TableRow>
-          </TableHead>
-          <TableBody>
+      <div>
+        <h3
+          style={{
+            fontSize: "14px",
+            fontWeight: 400,
+            marginBottom: "8px",
+            color: "var(--color-muted)",
+          }}
+        >
+          Members ({members.length})
+        </h3>
+        {filteredMembers.length === 0 ? (
+          <EmptyState
+            title={
+              searchQuery ? "No members match your search" : "No members yet"
+            }
+            description="Invite members to your organization to get started."
+          />
+        ) : (
+          <div style={{ borderTop: "1px solid var(--color-border)" }}>
             {filteredMembers.map((member) => (
-              <TableRow key={member.id}>
-                <TableCellFlex>
-                  <div
-                    style={{
-                      width: "40px",
-                      height: "40px",
-                      borderRadius: "50%",
-                      background: "var(--color-input-background)",
-                      display: "flex",
-                      alignItems: "center",
-                      justifyContent: "center",
-                      color: "var(--color-muted)",
-                      fontWeight: 500,
-                      fontSize: "16px",
-                      overflow: "hidden",
-                    }}
-                  >
+              <MemberListItem key={member.id}>
+                <MemberListItemContent>
+                  <AvatarPlaceholder>
                     {member.user && member.user.profile_picture_url ? (
                       <img
                         src={member.user.profile_picture_url}
@@ -1178,14 +1225,9 @@ const MembersSection = () => {
                         member.user?.last_name
                       )
                     )}
-                  </div>
-                  <div>
-                    <div
-                      style={{
-                        fontWeight: 400,
-                        color: "var(--color-foreground)",
-                      }}
-                    >
+                  </AvatarPlaceholder>
+                  <MemberInfo>
+                    <MemberName>
                       {member.user
                         ? `${member.user.first_name || ""} ${
                             member.user.last_name || ""
@@ -1193,78 +1235,137 @@ const MembersSection = () => {
                           member.user.primary_email_address?.email ||
                           "User"
                         : "User"}
-                    </div>
-                    <div
-                      style={{ fontSize: "13px", color: "var(--color-muted)" }}
-                    >
+                    </MemberName>
+                    <MemberEmail>
                       {member.user?.primary_email_address?.email}
-                    </div>
-                  </div>
-                </TableCellFlex>
-                <ActionsCell>
-                  <div
-                    style={{
-                      display: "flex",
-                      gap: "10px",
-                      alignItems: "center",
-                      paddingRight: "8px",
-                    }}
-                  >
-                    <Dropdown>
-                      <DropdownTrigger>
-                        <RoleDropdownButton
-                          onClick={() =>
-                            setActiveMemberRoleDropdown(
-                              activeMemberRoleDropdown === member.id
-                                ? null
-                                : member.id
-                            )
-                          }
-                        >
-                          <span>
-                            {member.roles?.[0]?.name || "Assign Role"}
-                            {member.roles?.length > 1
-                              ? ` +${member.roles.length - 1}`
-                              : ""}
-                          </span>
-                        </RoleDropdownButton>
-                      </DropdownTrigger>
-                      <DropdownItems style={{ right: 40 }}>
-                        {roles.map((role) => {
-                          const hasRole = memberHasRole(member, role.id);
-                          return (
-                            <DropdownItem
-                              key={role.id}
-                              onClick={() => toggleRole(member, role, hasRole)}
+                    </MemberEmail>
+                  </MemberInfo>
+                </MemberListItemContent>
+                <MemberListItemActions>
+                  <Dropdown>
+                    <DropdownTrigger>
+                      <IconButton>•••</IconButton>
+                    </DropdownTrigger>
+                    <DropdownItems>
+                      {roles.map((role) => {
+                        const hasRole = memberHasRole(member, role.id);
+                        return (
+                          <DropdownItem
+                            key={role.id}
+                            onClick={() => toggleRole(member, role, hasRole)}
+                          >
+                            <div
+                              style={{
+                                display: "flex",
+                                justifyContent: "space-between",
+                                width: "100%",
+                              }}
                             >
-                              <div
-                                style={{
-                                  display: "flex",
-                                  justifyContent: "space-between",
-                                  width: "100%",
-                                }}
-                              >
-                                <span>{role.name}</span>
-                                {hasRole && (
-                                  <Check
-                                    size={16}
-                                    color="var(--color-success)"
-                                  />
-                                )}
-                              </div>
-                            </DropdownItem>
-                          );
-                        })}
-                      </DropdownItems>
-                    </Dropdown>
-                    <Trash size={16} />
-                  </div>
-                </ActionsCell>
-              </TableRow>
+                              <span>{role.name}</span>
+                              {hasRole && (
+                                <Check size={16} color="var(--color-success)" />
+                              )}
+                            </div>
+                          </DropdownItem>
+                        );
+                      })}
+                      <DropdownDivider />
+                      <DropdownItem $destructive>
+                        <div
+                          style={{
+                            display: "flex",
+                            alignItems: "center",
+                            gap: "8px",
+                          }}
+                        >
+                          <Trash size={16} color="var(--color-error)" />
+                          <span>Remove Member</span>
+                        </div>
+                      </DropdownItem>
+                    </DropdownItems>
+                  </Dropdown>
+                </MemberListItemActions>
+              </MemberListItem>
             ))}
-          </TableBody>
-        </Table>
-      )}
+          </div>
+        )}
+      </div>
+
+      <div>
+        <h3
+          style={{
+            fontSize: "14px",
+            fontWeight: 400,
+            marginBottom: "8px",
+            color: "var(--color-muted)",
+          }}
+        >
+          Pending Invitations ({invitations.length})
+        </h3>
+        {filteredInvitations.length === 0 ? (
+          <EmptyState
+            title={
+              searchQuery
+                ? "No invitations match your search"
+                : "No pending invitations"
+            }
+            description="Invite new members to your organization."
+          />
+        ) : (
+          <div style={{ borderTop: "1px solid var(--color-border)" }}>
+            {filteredInvitations.map((invitation) => (
+              <MemberListItem key={invitation.id}>
+                <MemberListItemContent>
+                  <MemberInfo>
+                    <MemberName>{invitation.email}</MemberName>
+                    <MemberEmail>
+                      {invitation.initial_organization_role?.name}
+                    </MemberEmail>
+                  </MemberInfo>
+                </MemberListItemContent>
+                <MemberListItemActions>
+                  <Dropdown>
+                    <DropdownTrigger>
+                      <IconButton>•••</IconButton>
+                    </DropdownTrigger>
+                    <DropdownItems>
+                      <DropdownItem
+                        onClick={() => handleResendInvitation(invitation)}
+                      >
+                        <div
+                          style={{
+                            display: "flex",
+                            alignItems: "center",
+                            gap: "8px",
+                          }}
+                        >
+                          <Mail size={16} color="var(--color-muted)" />
+                          <span>Resend Invitation</span>
+                        </div>
+                      </DropdownItem>
+                      <DropdownItem
+                        $destructive
+                        onClick={() => handleCancelInvitation(invitation)}
+                      >
+                        <div
+                          style={{
+                            display: "flex",
+                            alignItems: "center",
+                            gap: "8px",
+                          }}
+                        >
+                          <Trash size={16} color="var(--color-error)" />
+                          <span>Cancel Invitation</span>
+                        </div>
+                      </DropdownItem>
+                    </DropdownItems>
+                  </Dropdown>
+                </MemberListItemActions>
+              </MemberListItem>
+            ))}
+          </div>
+        )}
+      </div>
     </>
   );
 };
@@ -1717,7 +1818,9 @@ const SecuritySection = () => {
           flexDirection: "column",
           gap: "24px",
           paddingBottom: "32px",
-          borderBottom: "1px solid var(--color-border)",
+          borderBottom: deployment?.b2b_settings?.allow_org_deletion
+            ? "1px solid var(--color-border)"
+            : "none",
         }}
       >
         <div
@@ -2036,11 +2139,14 @@ const RolesSection = () => {
       </HeaderCTAContainer>
 
       {filteredRoles.length === 0 ? (
-        <EmptyTableMessage>
-          {searchQuery
-            ? "No roles match your search"
-            : "No roles defined yet. Create your first role to get started."}
-        </EmptyTableMessage>
+        <EmptyState
+          title={
+            searchQuery
+              ? "No roles match your search"
+              : "No roles defined yet. Create your first role to get started."
+          }
+          description="Create a role to get started"
+        />
       ) : (
         <Table>
           <TableHead>
@@ -2074,46 +2180,54 @@ const RolesSection = () => {
                   </div>
                 </TableCell>
                 <ActionsCell>
-                  {roleForDeletion === role.id && (
-                    <ConfirmationPopover
-                      title="Are you sure you want to delete this domain?"
-                      onConfirm={() => handleDeleteRole(role)}
-                      onCancel={() => setRoleForDeletion(null)}
-                    />
-                  )}
-                  <Dropdown
-                    open={roleForOptionPopover === role.id}
-                    openChange={(open) =>
-                      setRoleForOptionPopover(open ? role.id : null)
-                    }
-                    style={{ marginLeft: "auto" }}
+                  <div
+                    style={{
+                      display: "flex",
+                      gap: "10px",
+                      alignItems: "center",
+                      justifyContent: "flex-end",
+                    }}
                   >
-                    <DropdownTrigger>
-                      <IconButton disabled={!role.organization_id}>
-                        •••
-                      </IconButton>
-                    </DropdownTrigger>
+                    {roleForDeletion === role.id && (
+                      <ConfirmationPopover
+                        title="Are you sure you want to delete this domain?"
+                        onConfirm={() => handleDeleteRole(role)}
+                        onCancel={() => setRoleForDeletion(null)}
+                      />
+                    )}
+                    <Dropdown
+                      open={roleForOptionPopover === role.id}
+                      openChange={(open) =>
+                        setRoleForOptionPopover(open ? role.id : null)
+                      }
+                    >
+                      <DropdownTrigger>
+                        <IconButton disabled={!role.organization_id}>
+                          •••
+                        </IconButton>
+                      </DropdownTrigger>
 
-                    <DropdownItems>
-                      <DropdownItem
-                        onClick={() => {
-                          setRoleForOptionPopover(null);
-                          setRolePopover({ isOpen: true, role });
-                        }}
-                      >
-                        Edit Role
-                      </DropdownItem>
-                      <DropdownItem
-                        $destructive
-                        onClick={() => {
-                          setRoleForOptionPopover(null);
-                          setRoleForDeletion(role.id);
-                        }}
-                      >
-                        Remove Role
-                      </DropdownItem>
-                    </DropdownItems>
-                  </Dropdown>
+                      <DropdownItems>
+                        <DropdownItem
+                          onClick={() => {
+                            setRoleForOptionPopover(null);
+                            setRolePopover({ isOpen: true, role });
+                          }}
+                        >
+                          Edit Role
+                        </DropdownItem>
+                        <DropdownItem
+                          $destructive
+                          onClick={() => {
+                            setRoleForOptionPopover(null);
+                            setRoleForDeletion(role.id);
+                          }}
+                        >
+                          Remove Role
+                        </DropdownItem>
+                      </DropdownItems>
+                    </Dropdown>
+                  </div>
                 </ActionsCell>
               </TableRow>
             ))}
@@ -2325,11 +2439,14 @@ const AuditLogsSection = () => {
       </div>
 
       {filteredLogs.length === 0 ? (
-        <EmptyTableMessage>
-          {searchQuery.trim() !== "" || selectedSeverity !== "all"
-            ? "No audit logs match your search criteria."
-            : "No audit log events found."}
-        </EmptyTableMessage>
+        <EmptyState
+          title={
+            searchQuery.trim() !== "" || selectedSeverity !== "all"
+              ? "No audit logs match your search criteria."
+              : "No audit log events found."
+          }
+          description="Audit logs will appear here."
+        />
       ) : (
         <Table>
           <TableHead>
@@ -2419,18 +2536,28 @@ export const ManageOrganization = () => {
               {toastMessage && (
                 <div
                   style={{
-                    position: "relative",
+                    position: "absolute",
                     bottom: "20px",
                     right: "20px",
+                    background: "var(--color-input-background)",
+                    padding: "12px 16px",
+                    borderRadius: "8px",
+                    boxShadow: "0 4px 12px var(--color-shadow)",
                     display: "flex",
+                    alignItems: "center",
                     gap: "8px",
+                    zIndex: 100,
+                    color:
+                      toastLevel === "error"
+                        ? "var(--color-error)"
+                        : "var(--color-secondary-text)",
                   }}
                 >
                   {toastLevel === "error" && (
                     <CircleAlert size={14} color="var(--color-error)" />
                   )}
                   {toastLevel === "info" && (
-                    <Info size={14} color="var(--color-primary)" />
+                    <Info size={14} color="var(--color-secondary-text)" />
                   )}
                   <span>{toastMessage}</span>
                 </div>
@@ -2442,85 +2569,6 @@ export const ManageOrganization = () => {
     </TypographyProvider>
   );
 };
-
-const Table = styled.table`
-  width: 100%;
-  border-collapse: separate;
-  border-spacing: 0;
-  border: 1px solid var(--color-border);
-  border-radius: 3px;
-  overflow: hidden;
-  font-size: 11px;
-  box-shadow: 0 1px 2px var(--color-shadow);
-  line-height: 1.4;
-`;
-
-const TableHead = styled.thead`
-  background-color: var(--color-input-background);
-  border-bottom: 1px solid var(--color-border);
-`;
-
-const TableBody = styled.tbody`
-  background-color: var(--color-background);
-`;
-
-const TableRow = styled.tr`
-  border-bottom: 1px solid var(--color-border);
-  &:last-child {
-    border-bottom: none;
-  }
-`;
-
-const TableHeader = styled.th`
-  text-align: left;
-  padding: 8px 16px;
-  font-weight: 500;
-  font-size: 12px;
-  color: var(--color-muted);
-  white-space: nowrap;
-  text-transform: uppercase;
-  letter-spacing: 0.3px;
-`;
-
-const TableCell = styled.td`
-  padding: 10px 16px;
-  font-size: 12px;
-  color: var(--color-foreground);
-  border-bottom: 1px solid var(--color-border);
-  vertical-align: middle;
-
-  ${TableRow}:last-child & {
-    border-bottom: none;
-  }
-`;
-
-const TableCellFlex = styled(TableCell)`
-  display: flex;
-  align-items: center;
-  gap: 8px;
-`;
-
-const StatusCell = styled(TableCell)`
-  padding: 6px 12px;
-`;
-
-const ActionsCell = styled(TableCell)`
-  text-align: right;
-  width: 50px;
-  white-space: nowrap;
-  padding: 4px 6px;
-`;
-
-const EmptyTableMessage = styled.div`
-  text-align: center;
-  padding: 12px;
-  background-color: var(--color-input-background);
-  color: var(--color-muted);
-  border: 1px solid var(--color-border);
-  border-radius: 4px;
-  margin-top: 12px;
-  font-size: 11px;
-`;
 
 const DeleteAccountAccordion = ({
   handleDeleteAccount,

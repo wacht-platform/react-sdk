@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useCallback, useState } from "react";
 import styled from "styled-components";
 import {
   // User,
@@ -39,11 +39,12 @@ import { XIcon } from "../icons/x";
 import { useDeployment } from "@/hooks/use-deployment";
 import { Form, FormGroup, Label } from "../utility/form";
 import { Input } from "../utility/input";
-import { Spinner } from "../utility";
-import { Button } from "../user/add-phone-popover";
+import { Spinner, Button } from "../utility";
+import { EmptyState } from "@/components/utility/empty-state";
 import { QRCodeSVG } from "qrcode.react";
 import React from "react";
 import { UserAuthenticator } from "@/types/user";
+import { Screen, ScreenContext, useScreenContext } from "./context";
 
 const TypographyProvider = styled.div`
   * {
@@ -69,13 +70,6 @@ const Container = styled.div`
   }
 `;
 
-// const Sidebar = styled.div`
-//   @media (min-width: 601px) {
-//     position: sticky;
-//     height: fit-content;
-//   }
-// `;
-
 const MainContent = styled.div<{ $isAdding: boolean }>`
   display: flex;
   flex-direction: column;
@@ -94,32 +88,6 @@ const Layout = styled.div`
     gap: 24px;
   }
 `;
-
-// const MenuItem = styled.div<{ $active?: boolean }>`
-//   padding: 8px 12px;
-//   margin: 2px 0;
-//   border-radius: 6px;
-//   cursor: pointer;
-//   display: flex;
-//   font-size: 14px;
-//   align-items: center;
-//   gap: 8px;
-//   background: ${(props) => (props.$active ? "#f8f7f4" : "transparent")};
-//   color: ${(props) => (props.$active ? "#1e293b" : "#64748b")};
-//   font-weight: ${(props) => (props.$active ? "500" : "normal")};
-//   transition: all 0.2s ease;
-
-//   &:hover {
-//     background: #f8f7f4;
-//   }
-// `;
-
-// const Title = styled.h1`
-//   font-size: 18px;
-//   margin: 0;
-//   color: var(--color-text);
-//   font-weight: 400;
-// `;
 
 const ProfileSection = styled.div`
   display: flex;
@@ -270,19 +238,6 @@ const EmailContent = styled.div`
   gap: 4px;
 `;
 
-// const SidebarHeader = styled.div`
-//   display: flex;
-//   align-items: center;
-//   gap: 12px;
-//   margin-bottom: 20px;
-//   padding-left: 12px;
-// `;
-
-// const SidebarTitle = styled.div`
-//   display: flex;
-//   flex-direction: column;
-// `;
-
 const AddItemForm = styled.div<{ $isVisible: boolean }>`
   position: absolute;
   top: 0;
@@ -295,37 +250,49 @@ const AddItemForm = styled.div<{ $isVisible: boolean }>`
   transition: transform 0.3s ease;
   display: flex;
   flex-direction: column;
-  gap: 8px;
+  gap: 12px;
 `;
 
-const BackButton = styled.button`
+const MemberListItem = styled.div`
+  background: var(--color-background);
+  padding: 16px 4px;
   display: flex;
   align-items: center;
-  gap: 8px;
-  color: var(--color-secondary-text);
-  background: none;
-  border: none;
-  padding: 8px 0;
-  cursor: pointer;
-  font-size: 14px;
-
-  &:hover {
-    color: var(--color-foreground);
-  }
-`;
-
-const OutlinedButton = styled.button`
-  background: none;
-  border: 1px solid var(--color-border);
-  color: var(--color-foreground);
-  padding: 4px;
-  border-radius: var(--radius-sm);
-  cursor: pointer;
-  font-size: 14px;
+  justify-content: space-between;
+  gap: 12px;
+  border-bottom: 1px solid var(--color-border);
   transition: all 0.2s ease;
+
   &:hover {
     background: var(--color-input-background);
   }
+`;
+
+const MemberListItemContent = styled.div`
+  display: flex;
+  align-items: center;
+  gap: 12px;
+`;
+
+const MemberInfo = styled.div`
+  display: flex;
+  flex-direction: column;
+`;
+
+const MemberName = styled.div`
+  font-size: 14px;
+  color: var(--color-foreground);
+`;
+
+const MemberEmail = styled.div`
+  font-size: 12px;
+  color: var(--color-muted);
+`;
+
+const MemberListItemActions = styled.div`
+  display: flex;
+  align-items: center;
+  gap: 8px;
 `;
 
 const SessionDropdown = ({
@@ -341,35 +308,77 @@ const SessionDropdown = ({
 }) => {
   return (
     <Dropdown open={isOpen} openChange={onClose}>
-      <DropdownItem onClick={() => onLogout(sessionId)}>
-        <div style={{ display: "flex", alignItems: "center", gap: "8px" }}>
-          <LogOut size={14} />
-          Logout Session
-        </div>
-      </DropdownItem>
+      <DropdownTrigger>
+        <IconButton>•••</IconButton>
+      </DropdownTrigger>
+      <DropdownItems>
+        <DropdownItem onClick={() => onLogout(sessionId)}>
+          <div style={{ display: "flex", alignItems: "center", gap: "8px" }}>
+            <LogOut size={14} />
+            Logout Session
+          </div>
+        </DropdownItem>
+      </DropdownItems>
     </Dropdown>
   );
 };
 
-const ProfileManagementSection = ({
-  setScreen,
+const SectionHeader = ({
+  title,
+  actionLabel,
+  onAction,
+  buttonIcon,
 }: {
-  setScreen: React.Dispatch<
-    React.SetStateAction<
-      | "email"
-      | "phone"
-      | "social"
-      | "password"
-      | "2fa"
-      | "2fa/authenticator"
-      | "2fa/backup_code"
-      | "2fa/phone"
-      | "profile-details"
-      | "active-sessions"
-      | null
-    >
-  >;
+  title: string;
+  actionLabel?: string;
+  onAction?: () => void;
+  buttonIcon?: React.ReactNode;
 }) => {
+  const { setScreen } = useScreenContext();
+
+  return (
+    <div
+      style={{
+        display: "flex",
+        alignItems: "center",
+        justifyContent: "space-between",
+        width: "100%",
+      }}
+    >
+      <div
+        style={{
+          display: "flex",
+          alignItems: "center",
+          gap: "8px",
+          fontSize: 16,
+          cursor: "pointer",
+        }}
+        onClick={() => setScreen(null)}
+      >
+        <ArrowLeft size={16} />
+        <SectionTitle style={{ fontSize: 14 }}>{title}</SectionTitle>
+      </div>
+
+      {actionLabel && onAction && (
+        <Button
+          onClick={onAction}
+          style={{
+            width: "auto",
+            display: "flex",
+            alignItems: "center",
+            gap: "8px",
+          }}
+        >
+          {buttonIcon}
+          <span>{actionLabel}</span>
+        </Button>
+      )}
+    </div>
+  );
+};
+
+const ProfileManagementSection = () => {
+  const { setScreen } = useScreenContext();
   const { user } = useUser();
   const { deployment } = useDeployment();
 
@@ -554,7 +563,7 @@ const ActiveSessionsSection = () => {
 
   return (
     <ProfileSection>
-      <SectionTitle>Active Sessions</SectionTitle>
+      <SectionHeader title="Active Sessions" />
       {signins && signins.length > 0 ? (
         signins.map((signin) => (
           <div
@@ -629,8 +638,7 @@ const ActiveSessionsSection = () => {
 
 const EmailManagementSection = () => {
   const { deployment } = useDeployment();
-  const [emailIdInAction, setEmailIdInAction] = useState<string | null>(null);
-  const [activeEmail, setActiveEmail] = useState<string | null>(null);
+  const [activeDropdown, setActiveDropdown] = useState<string | null>(null);
   const [newEmail, setNewEmail] = useState("");
   const [isAddingEmail, setIsAddingEmail] = useState(false);
   const {
@@ -649,134 +657,178 @@ const EmailManagementSection = () => {
 
   return (
     <>
-      <SectionTitle>
-        <span>Email addresses</span>
-        <div style={{ position: "relative" }}>
-          <OutlinedButton onClick={() => setIsAddingEmail(true)}>
-            <Plus size={16} />
-          </OutlinedButton>
-          {isAddingEmail && (
-            <EmailAddPopover
-              onClose={() => setIsAddingEmail(false)}
-              onAddEmail={async (email) => {
-                const newEmail = await createEmailAddress(email);
-                setNewEmail(newEmail.data.id);
-                await prepareEmailVerification(newEmail.data.id);
-                user.refetch();
-              }}
-              onPrepareVerification={async () => {
-                await prepareEmailVerification(newEmail);
-                user.refetch();
-              }}
-              onAttemptVerification={async (otp) => {
-                await attemptEmailVerification(newEmail, otp);
-                user.refetch();
-              }}
-            />
-          )}
-        </div>
-      </SectionTitle>
-      <div
-        style={{
-          display: "flex",
-          flexDirection: "column",
-          gap: "4px",
-        }}
-      >
+      <SectionHeader
+        title="Email addresses"
+        actionLabel="Add Email"
+        onAction={() => setIsAddingEmail(true)}
+      />
+      {isAddingEmail && (
+        <EmailAddPopover
+          onClose={() => setIsAddingEmail(false)}
+          onAddEmail={async (email) => {
+            const newEmailData = await createEmailAddress(email);
+            setNewEmail(newEmailData.data.id);
+            await prepareEmailVerification(newEmailData.data.id);
+            user.refetch();
+            setIsAddingEmail(false);
+          }}
+          onPrepareVerification={async () => {
+            await prepareEmailVerification(newEmail);
+            user.refetch();
+          }}
+          onAttemptVerification={async (otp) => {
+            await attemptEmailVerification(newEmail, otp);
+            user.refetch();
+            setIsAddingEmail(false);
+          }}
+        />
+      )}
+      <div>
         {!user?.user_email_addresses?.length ? (
-          <div
-            style={{
-              textAlign: "center",
-              padding: "20px",
-              color: "var(--color-muted)",
-            }}
-          >
-            No email addresses added
-          </div>
+          <EmptyState
+            title="No email addresses"
+            description="Add an email address to get started."
+          />
         ) : (
-          user.user_email_addresses.map((email) => (
-            <EmailItem key={email.email}>
-              <EmailContent>
-                <div
-                  style={{
-                    fontSize: "14px",
-                    color: "var(--color-foreground)",
-                    display: "flex",
-                    alignItems: "center",
-                    gap: "8px",
-                  }}
-                >
-                  {email.email}
-                  {email.id === user?.primary_email_address_id && (
-                    <Badge>Primary</Badge>
-                  )}
-                  <Badge>{!email.verified ? "Not Verified" : "Verified"}</Badge>
-                </div>
-              </EmailContent>
-              <div style={{ position: "relative" }}>
-                <IconButton
-                  onClick={() =>
-                    setActiveEmail(activeEmail === email.id ? null : email.id)
-                  }
-                >
-                  •••
-                </IconButton>
-                {emailIdInAction === email.id && (
-                  <EmailAddPopover
-                    existingEmail={email.email}
-                    onClose={() => setEmailIdInAction(null)}
-                    onAddEmail={async (email) => {
-                      const newEmail = await createEmailAddress(email);
-                      setNewEmail(newEmail.data.id);
-                      await prepareEmailVerification(newEmail.data.id);
-                      user.refetch();
-                    }}
-                    onPrepareVerification={async () => {
-                      await prepareEmailVerification(newEmail);
-                      user.refetch();
-                    }}
-                    onAttemptVerification={async (otp) => {
-                      await attemptEmailVerification(email.id, otp);
-                      user.refetch();
-                    }}
+          <>
+            <div>
+              <h3
+                style={{
+                  fontSize: "14px",
+                  fontWeight: 400,
+                  marginBottom: "8px",
+                  color: "var(--color-muted)",
+                }}
+              >
+                Verified
+              </h3>
+              <div style={{ borderTop: "1px solid var(--color-border)" }}>
+                {user.user_email_addresses.filter((email) => email.verified)
+                  .length === 0 ? (
+                  <EmptyState
+                    title="No verified emails"
+                    description="Verify an email to see it here."
                   />
-                )}
-                {!emailIdInAction && (
-                  <Dropdown
-                    open={activeEmail === email.id}
-                    openChange={() => setActiveEmail(null)}
-                  >
-                    {!email.verified && (
-                      <DropdownItem
-                        onClick={() => {
-                          prepareEmailVerification(email.id);
-                          setEmailIdInAction(email.id);
-                        }}
-                      >
-                        Verify email
-                      </DropdownItem>
-                    )}
-                    {email.id !== user?.primary_email_address_id && (
-                      <DropdownItem
-                        onClick={async () => {
-                          await makeEmailPrimary(email.id);
-                          user.refetch();
-                        }}
-                      >
-                        Make primary
-                      </DropdownItem>
-                    )}
-                    <DropdownItem
-                      $destructive
-                      onClick={() => deleteEmailAddress(email.id)}
-                    >
-                      Remove
-                    </DropdownItem>
-                  </Dropdown>
+                ) : (
+                  user.user_email_addresses
+                    .filter((email) => email.verified)
+                    .map((email) => (
+                      <MemberListItem key={email.id}>
+                        <MemberListItemContent>
+                          <MemberInfo>
+                            <MemberName>{email.email}</MemberName>
+                            <MemberEmail>
+                              {email.id === user?.primary_email_address_id
+                                ? "Primary"
+                                : "Verified"}
+                            </MemberEmail>
+                          </MemberInfo>
+                        </MemberListItemContent>
+                        <MemberListItemActions>
+                          <Dropdown
+                            open={activeDropdown === email.id}
+                            openChange={(isOpen) =>
+                              setActiveDropdown(isOpen ? email.id : null)
+                            }
+                          >
+                            <DropdownTrigger>
+                              <IconButton>•••</IconButton>
+                            </DropdownTrigger>
+                            <DropdownItems>
+                              {email.id !== user?.primary_email_address_id && (
+                                <DropdownItem
+                                  onClick={async () => {
+                                    await makeEmailPrimary(email.id);
+                                    user.refetch();
+                                    setActiveDropdown(null);
+                                  }}
+                                >
+                                  Make primary
+                                </DropdownItem>
+                              )}
+                              <DropdownItem
+                                $destructive
+                                onClick={() => {
+                                  deleteEmailAddress(email.id);
+                                  setActiveDropdown(null);
+                                }}
+                              >
+                                Remove
+                              </DropdownItem>
+                            </DropdownItems>
+                          </Dropdown>
+                        </MemberListItemActions>
+                      </MemberListItem>
+                    ))
                 )}
               </div>
-            </EmailItem>
-          ))
+            </div>
+            <div style={{ marginTop: "24px" }}>
+              <h3
+                style={{
+                  fontSize: "14px",
+                  fontWeight: 400,
+                  marginBottom: "8px",
+                  color: "var(--color-muted)",
+                }}
+              >
+                Unverified
+              </h3>
+              <div style={{ borderTop: "1px solid var(--color-border)" }}>
+                {user.user_email_addresses.filter((email) => !email.verified)
+                  .length === 0 ? (
+                  <EmptyState
+                    title="No unverified emails"
+                    description="You are all set!"
+                  />
+                ) : (
+                  user.user_email_addresses
+                    .filter((email) => !email.verified)
+                    .map((email) => (
+                      <MemberListItem key={email.id}>
+                        <MemberListItemContent>
+                          <MemberInfo>
+                            <MemberName>{email.email}</MemberName>
+                            <MemberEmail>Not Verified</MemberEmail>
+                          </MemberInfo>
+                        </MemberListItemContent>
+                        <MemberListItemActions>
+                          <Dropdown
+                            open={activeDropdown === email.id}
+                            openChange={(isOpen) =>
+                              setActiveDropdown(isOpen ? email.id : null)
+                            }
+                          >
+                            <DropdownTrigger>
+                              <IconButton>•••</IconButton>
+                            </DropdownTrigger>
+                            <DropdownItems>
+                              <DropdownItem
+                                onClick={() => {
+                                  prepareEmailVerification(email.id);
+                                  setActiveDropdown(null);
+                                }}
+                              >
+                                Verify email
+                              </DropdownItem>
+                              <DropdownItem
+                                $destructive
+                                onClick={() => {
+                                  deleteEmailAddress(email.id);
+                                  setActiveDropdown(null);
+                                }}
+                              >
+                                Remove
+                              </DropdownItem>
+                            </DropdownItems>
+                          </Dropdown>
+                        </MemberListItemActions>
+                      </MemberListItem>
+                    ))
+                )}
+              </div>
+            </div>
+          </>
         )}
       </div>
     </>
@@ -785,12 +837,9 @@ const EmailManagementSection = () => {
 
 const PhoneManagementSection = () => {
   const { deployment } = useDeployment();
-  const [activePhone, setActivePhone] = useState<string | null>(null);
-  const [isAddingPhone, setIsAddingPhone] = useState(false);
+  const [activeDropdown, setActiveDropdown] = useState<string | null>(null);
   const [newPhone, setNewPhone] = useState("");
-
-  const [phoneIdInAction, setPhoneIdInAction] = useState<string | null>(null);
-
+  const [isAddingPhone, setIsAddingPhone] = useState(false);
   const {
     user,
     createPhoneNumber,
@@ -807,138 +856,180 @@ const PhoneManagementSection = () => {
 
   return (
     <>
-      <SectionTitle>
-        <span>Phone number</span>
-        <div style={{ position: "relative" }}>
-          <OutlinedButton onClick={() => setIsAddingPhone(true)}>
-            <Plus size={16} />
-          </OutlinedButton>
-          {isAddingPhone && (
-            <PhoneAddPopover
-              onClose={() => setIsAddingPhone(false)}
-              onAddPhone={async (phone) => {
-                const newPhone = await createPhoneNumber(phone);
-                setNewPhone(newPhone.data.id);
-                await preparePhoneVerification(newPhone.data.id);
-                user.refetch();
-              }}
-              onPrepareVerification={async () => {
-                await preparePhoneVerification(newPhone);
-                user.refetch();
-              }}
-              onAttemptVerification={async (otp) => {
-                await attemptPhoneVerification(newPhone, otp);
-                user.refetch();
-              }}
-            />
-          )}
-        </div>
-      </SectionTitle>
-      <div
-        style={{
-          display: "flex",
-          flexDirection: "column",
-          gap: "12px",
-        }}
-      >
+      <SectionHeader
+        title="Phone number"
+        actionLabel="Add Phone"
+        onAction={() => setIsAddingPhone(true)}
+      />
+      {isAddingPhone && (
+        <PhoneAddPopover
+          onClose={() => setIsAddingPhone(false)}
+          onAddPhone={async (phone) => {
+            const newPhoneData = await createPhoneNumber(phone);
+            setNewPhone(newPhoneData.data.id);
+            await preparePhoneVerification(newPhoneData.data.id);
+            user.refetch();
+            setIsAddingPhone(false);
+          }}
+          onPrepareVerification={async () => {
+            await preparePhoneVerification(newPhone);
+            user.refetch();
+          }}
+          onAttemptVerification={async (otp) => {
+            await attemptPhoneVerification(newPhone, otp);
+            user.refetch();
+            setIsAddingPhone(false);
+          }}
+        />
+      )}
+      <div>
         {!user?.user_phone_numbers?.length ? (
-          <div
-            style={{
-              textAlign: "center",
-              padding: "20px",
-              color: "var(--color-muted)",
-            }}
-          >
-            No phone numbers added
-          </div>
+          <EmptyState
+            title="No phone numbers"
+            description="Add a phone number to get started."
+          />
         ) : (
-          user.user_phone_numbers.map((phone) => (
-            <EmailItem key={phone.phone_number}>
-              <EmailContent>
-                <div
-                  style={{
-                    fontSize: "14px",
-                    color: "var(--color-foreground)",
-                    display: "flex",
-                    alignItems: "center",
-                    gap: "8px",
-                  }}
-                >
-                  {phone.phone_number}
-                  {phone.id === user?.primary_phone_number_id && (
-                    <Badge>Primary</Badge>
-                  )}
-                  <Badge>{!phone.verified ? "Not Verified" : "Verified"}</Badge>
-                </div>
-              </EmailContent>
-              <div style={{ position: "relative" }}>
-                <IconButton
-                  onClick={() =>
-                    setActivePhone(activePhone === phone.id ? null : phone.id)
-                  }
-                >
-                  •••
-                </IconButton>
-                {phoneIdInAction === phone.id && (
-                  <PhoneAddPopover
-                    existingPhone={phone.phone_number}
-                    onClose={() => setPhoneIdInAction(null)}
-                    onAddPhone={async (phone) => {
-                      const newPhone = await createPhoneNumber(phone);
-                      setNewPhone(newPhone.data.id);
-                      await preparePhoneVerification(newPhone.data.id);
-                      user.refetch();
-                    }}
-                    onPrepareVerification={async () => {
-                      await preparePhoneVerification(newPhone);
-                      user.refetch();
-                    }}
-                    onAttemptVerification={async (otp) => {
-                      await attemptPhoneVerification(phone.id, otp);
-                      user.refetch();
-                    }}
+          <>
+            <div>
+              <h3
+                style={{
+                  fontSize: "14px",
+                  fontWeight: 400,
+                  marginBottom: "8px",
+                  color: "var(--color-muted)",
+                }}
+              >
+                Verified
+              </h3>
+              <div style={{ borderTop: "1px solid var(--color-border)" }}>
+                {user.user_phone_numbers.filter((phone) => phone.verified)
+                  .length === 0 ? (
+                  <EmptyState
+                    title="No verified phone numbers"
+                    description="Verify a phone number to see it here."
                   />
-                )}
-                {!phoneIdInAction && (
-                  <Dropdown
-                    open={activePhone === phone.id}
-                    openChange={() => setActivePhone(null)}
-                  >
-                    {!phone.verified && (
-                      <DropdownItem
-                        onClick={() => {
-                          preparePhoneVerification(phone.id);
-                          setPhoneIdInAction(phone.id);
-                        }}
-                      >
-                        Verify phone
-                      </DropdownItem>
-                    )}
-                    {phone.id !== user?.primary_phone_number_id && (
-                      <DropdownItem
-                        onClick={async () => {
-                          await makePhonePrimary(phone.id);
-                          setActivePhone(null);
-                          user.refetch();
-                        }}
-                      >
-                        Make primary
-                      </DropdownItem>
-                    )}
-                    <DropdownItem
-                      $destructive
-                      onClick={async () => {
-                        await deletePhoneNumber(phone.id);
-                        user.refetch();
-                      }}
-                    >
-                      Remove
-                    </DropdownItem>
-                  </Dropdown>
+                ) : (
+                  user.user_phone_numbers
+                    .filter((phone) => phone.verified)
+                    .map((phone) => (
+                      <MemberListItem key={phone.id}>
+                        <MemberListItemContent>
+                          <MemberInfo>
+                            <MemberName>{phone.phone_number}</MemberName>
+                            <MemberEmail>
+                              {phone.id === user?.primary_phone_number_id
+                                ? "Primary"
+                                : "Verified"}
+                            </MemberEmail>
+                          </MemberInfo>
+                        </MemberListItemContent>
+                        <MemberListItemActions>
+                          <Dropdown
+                            open={activeDropdown === phone.id}
+                            openChange={(isOpen) =>
+                              setActiveDropdown(isOpen ? phone.id : null)
+                            }
+                          >
+                            <DropdownTrigger>
+                              <IconButton>•••</IconButton>
+                            </DropdownTrigger>
+                            <DropdownItems>
+                              {phone.id !== user?.primary_phone_number_id && (
+                                <DropdownItem
+                                  onClick={async () => {
+                                    await makePhonePrimary(phone.id);
+                                    setActiveDropdown(null);
+                                    user.refetch();
+                                  }}
+                                >
+                                  Make primary
+                                </DropdownItem>
+                              )}
+                              <DropdownItem
+                                $destructive
+                                onClick={async () => {
+                                  await deletePhoneNumber(phone.id);
+                                  setActiveDropdown(null);
+                                  user.refetch();
+                                }}
+                              >
+                                Remove
+                              </DropdownItem>
+                            </DropdownItems>
+                          </Dropdown>
+                        </MemberListItemActions>
+                      </MemberListItem>
+                    ))
                 )}
               </div>
-            </EmailItem>
-          ))
+            </div>
+            <div style={{ marginTop: "24px" }}>
+              <h3
+                style={{
+                  fontSize: "14px",
+                  fontWeight: 400,
+                  marginBottom: "8px",
+                  color: "var(--color-muted)",
+                }}
+              >
+                Unverified
+              </h3>
+              <div style={{ borderTop: "1px solid var(--color-border)" }}>
+                {user.user_phone_numbers.filter((phone) => !phone.verified)
+                  .length === 0 ? (
+                  <EmptyState
+                    title="No unverified phone numbers"
+                    description="Add a new phone number to see it here."
+                  />
+                ) : (
+                  user.user_phone_numbers
+                    .filter((phone) => !phone.verified)
+                    .map((phone) => (
+                      <MemberListItem key={phone.id}>
+                        <MemberListItemContent>
+                          <MemberInfo>
+                            <MemberName>{phone.phone_number}</MemberName>
+                            <MemberEmail>Not Verified</MemberEmail>
+                          </MemberInfo>
+                        </MemberListItemContent>
+                        <MemberListItemActions>
+                          <Dropdown
+                            open={activeDropdown === phone.id}
+                            openChange={(isOpen) =>
+                              setActiveDropdown(isOpen ? phone.id : null)
+                            }
+                          >
+                            <DropdownTrigger>
+                              <IconButton>•••</IconButton>
+                            </DropdownTrigger>
+                            <DropdownItems>
+                              <DropdownItem
+                                onClick={() => {
+                                  preparePhoneVerification(phone.id);
+                                  setActiveDropdown(null);
+                                }}
+                              >
+                                Verify phone
+                              </DropdownItem>
+                              <DropdownItem
+                                $destructive
+                                onClick={async () => {
+                                  await deletePhoneNumber(phone.id);
+                                  setActiveDropdown(null);
+                                  user.refetch();
+                                }}
+                              >
+                                Remove
+                              </DropdownItem>
+                            </DropdownItems>
+                          </Dropdown>
+                        </MemberListItemActions>
+                      </MemberListItem>
+                    ))
+                )}
+              </div>
+            </div>
+          </>
         )}
       </div>
     </>
@@ -981,51 +1072,38 @@ const SocialManagementSection = () => {
   );
 
   return (
-    <div
-      style={{
-        display: "flex",
-        flexDirection: "column",
-        gap: "12px",
-      }}
-    >
-      {enabledProviders?.map((provider) => {
-        const connectedAccount = user?.social_connections?.find(
-          (conn) => conn.provider === provider.provider
-        );
-        const providerInfo =
-          socialAuthProviders[
-            provider.provider as keyof typeof socialAuthProviders
-          ];
+    <>
+      <SectionHeader title="Connected Accounts" />
+      <div
+        style={{
+          display: "flex",
+          flexDirection: "column",
+          gap: "12px",
+        }}
+      >
+        {enabledProviders?.map((provider) => {
+          const connectedAccount = user?.social_connections?.find(
+            (conn) => conn.provider === provider.provider
+          );
+          const providerInfo =
+            socialAuthProviders[
+              provider.provider as keyof typeof socialAuthProviders
+            ];
 
-        if (!providerInfo) return null;
+          if (!providerInfo) return null;
 
-        return (
-          <div
-            key={provider.provider}
-            style={{
-              display: "flex",
-              alignItems: "center",
-              justifyContent: "space-between",
-              padding: "12px",
-              background: "var(--color-background-hover)",
-              borderRadius: "8px",
-            }}
-          >
+          return (
             <div
+              key={provider.provider}
               style={{
                 display: "flex",
                 alignItems: "center",
-                gap: "12px",
+                justifyContent: "space-between",
+                padding: "12px",
+                background: "var(--color-background-hover)",
+                borderRadius: "8px",
               }}
             >
-              <IconWrapper>{providerInfo.icon}</IconWrapper>
-              <div
-                style={{ fontSize: "14px", color: "var(--color-foreground)" }}
-              >
-                {providerInfo.label}
-              </div>
-            </div>
-            {connectedAccount ? (
               <div
                 style={{
                   display: "flex",
@@ -1033,64 +1111,83 @@ const SocialManagementSection = () => {
                   gap: "12px",
                 }}
               >
-                <div style={{ fontSize: "14px", color: "var(--color-muted)" }}>
-                  {connectedAccount.email_address}
+                <IconWrapper>{providerInfo.icon}</IconWrapper>
+                <div
+                  style={{ fontSize: "14px", color: "var(--color-foreground)" }}
+                >
+                  {providerInfo.label}
                 </div>
-                <EditButton
-                  onClick={async () => {
-                    await disconnectSocialConnection(
-                      connectedAccount.id.toString()
-                    );
-                    user.refetch();
-                  }}
+              </div>
+              {connectedAccount ? (
+                <div
                   style={{
-                    background: "var(--color-error-background)",
-                    color: "var(--color-error)",
+                    display: "flex",
+                    alignItems: "center",
+                    gap: "12px",
                   }}
                 >
-                  Disconnect
+                  <div
+                    style={{ fontSize: "14px", color: "var(--color-muted)" }}
+                  >
+                    {connectedAccount.email_address}
+                  </div>
+                  <EditButton
+                    onClick={async () => {
+                      await disconnectSocialConnection(
+                        connectedAccount.id.toString()
+                      );
+                      user.refetch();
+                    }}
+                    style={{
+                      background: "var(--color-error-background)",
+                      color: "var(--color-error)",
+                    }}
+                  >
+                    Disconnect
+                  </EditButton>
+                </div>
+              ) : (
+                <EditButton
+                  onClick={() => {
+                    // Redirect to OAuth flow for this provider
+                    const baseUrl = deployment?.backend_host || "";
+                    const redirectUrl = `${baseUrl}/auth/oauth2/init?provider=${
+                      provider.provider
+                    }&redirect_url=${encodeURIComponent(window.location.href)}`;
+                    window.location.href = redirectUrl;
+                  }}
+                  style={{
+                    background: "var(--color-primary)",
+                    color: "var(--color-background)",
+                    fontSize: "12px",
+                    padding: "6px 12px",
+                  }}
+                >
+                  Connect
                 </EditButton>
-              </div>
-            ) : (
-              <EditButton
-                onClick={() => {
-                  // Redirect to OAuth flow for this provider
-                  const baseUrl = deployment?.backend_host || "";
-                  const redirectUrl = `${baseUrl}/auth/oauth2/init?provider=${provider.provider}&redirect_url=${encodeURIComponent(window.location.href)}`;
-                  window.location.href = redirectUrl;
-                }}
-                style={{
-                  background: "var(--color-primary)",
-                  color: "var(--color-background)",
-                  fontSize: "12px",
-                  padding: "6px 12px",
-                }}
-              >
-                Connect
-              </EditButton>
-            )}
-          </div>
-        );
-      })}
-    </div>
+              )}
+            </div>
+          );
+        })}
+      </div>
+    </>
   );
 };
 
 export const ManageAccount = () => {
-  const [intermediateScreen, setIntermediateScreen] = useState<
-    | "email"
-    | "phone"
-    | "social"
-    | "password"
-    | "2fa"
-    | "2fa/authenticator"
-    | "2fa/backup_code"
-    | "2fa/phone"
-    | "profile-details"
-    | "active-sessions"
-    | null
-  >(null);
   const { loading } = useUser();
+  const [screen, setScreen] = useState<Screen>(null);
+  const [toastMessage, setToastMessage] = useState<string | null>(null);
+  const [toastLevel, setToastLevel] = useState<"info" | "error">("info");
+
+  const toast = useCallback(
+    (message: string, level: "info" | "error" = "info") => {
+      setToastMessage(message);
+      setToastLevel(level);
+      setTimeout(() => setToastMessage(null), 3000);
+    },
+    [setToastMessage]
+  );
 
   if (loading)
     return (
@@ -1107,81 +1204,74 @@ export const ManageAccount = () => {
 
   return (
     <TypographyProvider>
-      <Container>
-        <Layout>
-          {/* <Sidebar>
-            <SidebarHeader>
-              <SidebarTitle>
-                <Title>Manage Account</Title>
-              </SidebarTitle>
-            </SidebarHeader>
-            <MenuItem
-              $active={activeTab === "manage-account"}
-              onClick={() => setActiveTab("manage-account")}
+      <ScreenContext.Provider value={{ screen, setScreen, toast }}>
+        <Container>
+          <Layout>
+            <div
+              style={{
+                position: "relative",
+                width: "100%",
+                overflow: "hidden",
+              }}
             >
-              <User size={16} />
-              User Settings
-            </MenuItem>
-            <MenuItem
-              $active={activeTab === "active-sessions"}
-              onClick={() => setActiveTab("active-sessions")}
-            >
-              <Shield size={16} />
-              Active Sessions
-            </MenuItem>
-          </Sidebar> */}
+              <MainContent $isAdding={!!screen}>
+                <ProfileManagementSection />
+              </MainContent>
 
-          <div
-            style={{ position: "relative", width: "100%", overflow: "hidden" }}
-          >
-            <MainContent $isAdding={!!intermediateScreen}>
-              {/* {match(activeTab)
-                .with("manage-account", () => ( */}
-              <ProfileManagementSection setScreen={setIntermediateScreen} />
-              {/* ))
-                .with("active-sessions", () => <ActiveSessionsSection />)
-                .otherwise(() => null)} */}
-            </MainContent>
-
-            <AddItemForm $isVisible={!!intermediateScreen}>
-              {match(intermediateScreen)
-                .with(P.string.startsWith("2fa/"), () => (
-                  <BackButton onClick={() => setIntermediateScreen("2fa")}>
-                    <ArrowLeft size={16} />
-                    Back to 2FA
-                  </BackButton>
-                ))
-                .otherwise(() => (
-                  <BackButton onClick={() => setIntermediateScreen(null)}>
-                    <ArrowLeft size={16} />
-                    Back to Profile
-                  </BackButton>
-                ))}
-              {match(intermediateScreen)
-                .with("email", () => <EmailManagementSection />)
-                .with(P.union("phone", "2fa/phone"), () => (
-                  <PhoneManagementSection />
-                ))
-                .with("social", () => <SocialManagementSection />)
-                .with("password", () => <PasswordManagementSection />)
-                .with("2fa", () => (
-                  <TwoFactorManagementSection
-                    setScreen={setIntermediateScreen}
-                  />
-                ))
-                .with("2fa/authenticator", () => (
-                  <AuthenticatorManagementSection />
-                ))
-                .with("active-sessions", () => <ActiveSessionsSection />)
-                .with("2fa/backup_code", () => <BackupCodeManagementSection />)
-                .with("profile-details", () => (
-                  <ProfileDetailsManagementSection />
-                ))
-                .otherwise(() => null)}
-            </AddItemForm>
-          </div>
-        </Layout>
-      </Container>
+              <AddItemForm $isVisible={!!screen}>
+                {match(screen)
+                  .with("email", () => <EmailManagementSection />)
+                  .with(P.union("phone", "2fa/phone"), () => (
+                    <PhoneManagementSection />
+                  ))
+                  .with("social", () => <SocialManagementSection />)
+                  .with("password", () => <PasswordManagementSection />)
+                  .with("2fa", () => <TwoFactorManagementSection />)
+                  .with("2fa/authenticator", () => (
+                    <AuthenticatorManagementSection />
+                  ))
+                  .with("active-sessions", () => <ActiveSessionsSection />)
+                  .with("2fa/backup_code", () => (
+                    <BackupCodeManagementSection />
+                  ))
+                  .with("profile-details", () => (
+                    <ProfileDetailsManagementSection />
+                  ))
+                  .otherwise(() => null)}
+              </AddItemForm>
+              {toastMessage && (
+                <div
+                  style={{
+                    position: "absolute",
+                    bottom: "20px",
+                    right: "20px",
+                    background: "var(--color-input-background)",
+                    padding: "12px 16px",
+                    borderRadius: "8px",
+                    boxShadow: "0 4px 12px var(--color-shadow)",
+                    display: "flex",
+                    alignItems: "center",
+                    gap: "8px",
+                    zIndex: 100,
+                    color:
+                      toastLevel === "error"
+                        ? "var(--color-error)"
+                        : "var(--color-secondary-text)",
+                  }}
+                >
+                  {toastLevel === "error" && (
+                    <AlertTriangle size={14} color="var(--color-error)" />
+                  )}
+                  {toastLevel === "info" && (
+                    <Check size={14} color="var(--color-secondary-text)" />
+                  )}
+                  <span>{toastMessage}</span>
+                </div>
+              )}
+            </div>
+          </Layout>
+        </Container>
+      </ScreenContext.Provider>
     </TypographyProvider>
   );
 };
@@ -1224,6 +1314,8 @@ const PasswordManagementSection = () => {
   const [removePasswordInput, setRemovePasswordInput] = useState("");
   const [showRemovePassword, setShowRemovePassword] = useState(false);
   const [errors, setErrors] = useState<Record<string, string>>({});
+  const [isChangePasswordOpen, setChangePasswordOpen] = useState(false);
+  const [isRemovePasswordOpen, setRemovePasswordOpen] = useState(false);
 
   // Don't render if password is disabled
   if (!deployment?.auth_settings?.password?.enabled) {
@@ -1263,7 +1355,7 @@ const PasswordManagementSection = () => {
       setNewPassword("");
       setConfirmPassword("");
       setErrors({});
-
+      setChangePasswordOpen(false);
       alert("Password updated successfully");
     } catch (error) {
       setErrors({ form: "Failed to update password. Please try again." });
@@ -1284,251 +1376,322 @@ const PasswordManagementSection = () => {
     try {
       await removePassword(removePasswordInput);
       setRemovePasswordInput("");
-      alert("Password removed successfully. You can now sign in using alternative methods.");
+      setRemovePasswordOpen(false);
+      alert(
+        "Password removed successfully. You can now sign in using alternative methods."
+      );
     } catch (error: any) {
       setErrors({
-        removePassword: error?.message || "Failed to remove password. Please check your password and ensure you have alternative authentication methods configured."
+        removePassword:
+          error?.message ||
+          "Failed to remove password. Please check your password and ensure you have alternative authentication methods configured.",
       });
     } finally {
       setIsRemoving(false);
     }
   };
 
-  // Check if user has alternative auth methods to show remove password option
   const hasAlternativeAuthMethods = () => {
-    // Check for verified email (for OTP/magic link)
-    const hasVerifiedEmail = user?.user_email_addresses?.some(email => email.verified);
-
-    // Check for social connections
+    const hasVerifiedEmail = user?.user_email_addresses?.some(
+      (email) => email.verified
+    );
     const hasSocialConnections = (user?.social_connections?.length || 0) > 0;
-
-    // Check for authenticator
     const hasAuthenticator = !!user?.user_authenticator;
-
-    // Check if email OTP is enabled
-    const emailOtpEnabled = deployment?.auth_settings?.first_factor === "email_otp";
-
-    // For now, we'll consider these as valid alternative methods
-    return (hasVerifiedEmail && emailOtpEnabled) ||
-           hasSocialConnections ||
-           hasAuthenticator;
+    const emailOtpEnabled =
+      deployment?.auth_settings?.first_factor === "email_otp";
+    return (
+      (hasVerifiedEmail && emailOtpEnabled) ||
+      hasSocialConnections ||
+      hasAuthenticator
+    );
   };
 
   return (
     <div>
-      <Form onSubmit={handleSubmit}>
-        <FormGroup>
-          <Label htmlFor="currentPassword">Current Password</Label>
-          <PasswordInput>
-            <Input
-              id="currentPassword"
-              type={showCurrentPassword ? "text" : "password"}
-              value={currentPassword}
-              onChange={(e) => setCurrentPassword(e.target.value)}
-              placeholder="Enter your current password"
-            />
-            <button
-              type="button"
-              onClick={() => setShowCurrentPassword(!showCurrentPassword)}
-            >
-              {showCurrentPassword ? <EyeOff size={16} /> : <Eye size={16} />}
-            </button>
-          </PasswordInput>
-          {errors.currentPassword && (
-            <div
-              style={{
-                color: "var(--color-error)",
-                fontSize: "12px",
-                marginTop: "4px",
-              }}
-            >
-              {errors.currentPassword}
-            </div>
-          )}
-        </FormGroup>
-
-        <FormGroup>
-          <Label htmlFor="newPassword">New Password</Label>
-          <PasswordInput>
-            <Input
-              id="newPassword"
-              type={showNewPassword ? "text" : "password"}
-              value={newPassword}
-              onChange={(e) => setNewPassword(e.target.value)}
-              placeholder="Enter your new password"
-            />
-            <button
-              type="button"
-              onClick={() => setShowNewPassword(!showNewPassword)}
-            >
-              {showNewPassword ? <EyeOff size={16} /> : <Eye size={16} />}
-            </button>
-          </PasswordInput>
-          {errors.newPassword && (
-            <div
-              style={{
-                color: "var(--color-error)",
-                fontSize: "12px",
-                marginTop: "4px",
-              }}
-            >
-              {errors.newPassword}
-            </div>
-          )}
-        </FormGroup>
-
-        <FormGroup>
-          <Label htmlFor="confirmPassword">Confirm New Password</Label>
-          <PasswordInput>
-            <Input
-              id="confirmPassword"
-              type={showConfirmPassword ? "text" : "password"}
-              value={confirmPassword}
-              onChange={(e) => setConfirmPassword(e.target.value)}
-              placeholder="Confirm your new password"
-            />
-            <button
-              type="button"
-              onClick={() => setShowConfirmPassword(!showConfirmPassword)}
-            >
-              {showConfirmPassword ? <EyeOff size={16} /> : <Eye size={16} />}
-            </button>
-          </PasswordInput>
-          {errors.confirmPassword && (
-            <div
-              style={{
-                color: "var(--color-error)",
-                fontSize: "12px",
-                marginTop: "4px",
-              }}
-            >
-              {errors.confirmPassword}
-            </div>
-          )}
-        </FormGroup>
-
-        <div style={{ marginTop: "16px" }}>
-          <button
-            type="submit"
-            disabled={isSubmitting}
+      <SectionHeader title="Password" />
+      <InfoItem
+        onClick={() => setChangePasswordOpen(!isChangePasswordOpen)}
+        style={{
+          borderBottom: "1px solid var(--color-border)",
+        }}
+      >
+        <InfoLabel>Change password</InfoLabel>
+        <InfoContent>
+          <div
             style={{
-              width: "100%",
-              padding: "9px 16px",
-              background: "var(--color-primary)",
-              color: "var(--color-background)",
-              border: "none",
-              borderRadius: "8px",
-              fontWeight: 500,
-              fontSize: "14px",
-              cursor: "pointer",
-              transition: "background-color 0.2s",
-              opacity: isSubmitting ? 0.7 : 1,
+              flex: 1,
+              overflow: "hidden",
+              textOverflow: "ellipsis",
+              whiteSpace: "nowrap",
             }}
-          >
-            {isSubmitting ? "Updating..." : "Update Password"}
-          </button>
-        </div>
-      </Form>
+          ></div>
+          {isChangePasswordOpen ? (
+            <ChevronUp size={14} />
+          ) : (
+            <ChevronDown size={14} />
+          )}
+        </InfoContent>
+      </InfoItem>
 
-      {/* Remove Password Section */}
-      {hasAlternativeAuthMethods() && (
-        <div style={{ marginTop: "32px", paddingTop: "24px", borderTop: "1px solid var(--color-border)" }}>
-          <div style={{ marginBottom: "16px" }}>
-            <h3 style={{
-              fontSize: "16px",
-              fontWeight: 600,
-              margin: "0 0 8px 0",
-              color: "var(--color-foreground)"
-            }}>
-              Remove Password
-            </h3>
-            <p style={{
-              fontSize: "14px",
-              color: "var(--color-muted)",
-              margin: 0,
-              lineHeight: "1.5"
-            }}>
-              Remove password authentication and use only alternative methods like email OTP, social sign-in, or authenticator apps.
-            </p>
-          </div>
+      {isChangePasswordOpen && (
+        <div
+          style={{
+            paddingTop: "16px",
+            borderBottom: "1px solid var(--color-border)",
+          }}
+        >
+          <Form onSubmit={handleSubmit}>
+            <FormGroup>
+              <Label htmlFor="currentPassword">Current Password</Label>
+              <PasswordInput>
+                <Input
+                  id="currentPassword"
+                  type={showCurrentPassword ? "text" : "password"}
+                  value={currentPassword}
+                  onChange={(e) => setCurrentPassword(e.target.value)}
+                  placeholder="Enter your current password"
+                />
+                <button
+                  type="button"
+                  onClick={() => setShowCurrentPassword(!showCurrentPassword)}
+                >
+                  {showCurrentPassword ? (
+                    <EyeOff size={16} />
+                  ) : (
+                    <Eye size={16} />
+                  )}
+                </button>
+              </PasswordInput>
+              {errors.currentPassword && (
+                <div
+                  style={{
+                    color: "var(--color-error)",
+                    fontSize: "12px",
+                    marginTop: "4px",
+                  }}
+                >
+                  {errors.currentPassword}
+                </div>
+              )}
+            </FormGroup>
 
-          <FormGroup>
-            <Label htmlFor="removePasswordInput">Current Password</Label>
-            <PasswordInput>
-              <Input
-                id="removePasswordInput"
-                type={showRemovePassword ? "text" : "password"}
-                value={removePasswordInput}
-                onChange={(e) => setRemovePasswordInput(e.target.value)}
-                placeholder="Enter your current password"
-              />
+            <FormGroup>
+              <Label htmlFor="newPassword">New Password</Label>
+              <PasswordInput>
+                <Input
+                  id="newPassword"
+                  type={showNewPassword ? "text" : "password"}
+                  value={newPassword}
+                  onChange={(e) => setNewPassword(e.target.value)}
+                  placeholder="Enter your new password"
+                />
+                <button
+                  type="button"
+                  onClick={() => setShowNewPassword(!showNewPassword)}
+                >
+                  {showNewPassword ? <EyeOff size={16} /> : <Eye size={16} />}
+                </button>
+              </PasswordInput>
+              {errors.newPassword && (
+                <div
+                  style={{
+                    color: "var(--color-error)",
+                    fontSize: "12px",
+                    marginTop: "4px",
+                  }}
+                >
+                  {errors.newPassword}
+                </div>
+              )}
+            </FormGroup>
+
+            <FormGroup>
+              <Label htmlFor="confirmPassword">Confirm New Password</Label>
+              <PasswordInput>
+                <Input
+                  id="confirmPassword"
+                  type={showConfirmPassword ? "text" : "password"}
+                  value={confirmPassword}
+                  onChange={(e) => setConfirmPassword(e.target.value)}
+                  placeholder="Confirm your new password"
+                />
+                <button
+                  type="button"
+                  onClick={() => setShowConfirmPassword(!showConfirmPassword)}
+                >
+                  {showConfirmPassword ? (
+                    <EyeOff size={16} />
+                  ) : (
+                    <Eye size={16} />
+                  )}
+                </button>
+              </PasswordInput>
+              {errors.confirmPassword && (
+                <div
+                  style={{
+                    color: "var(--color-error)",
+                    fontSize: "12px",
+                    marginTop: "4px",
+                  }}
+                >
+                  {errors.confirmPassword}
+                </div>
+              )}
+            </FormGroup>
+
+            <div style={{ marginTop: "16px" }}>
               <button
-                type="button"
-                onClick={() => setShowRemovePassword(!showRemovePassword)}
-              >
-                {showRemovePassword ? <EyeOff size={16} /> : <Eye size={16} />}
-              </button>
-            </PasswordInput>
-            {errors.removePassword && (
-              <div
+                type="submit"
+                disabled={isSubmitting}
                 style={{
-                  color: "var(--color-error)",
-                  fontSize: "12px",
-                  marginTop: "4px",
+                  width: "100%",
+                  padding: "9px 16px",
+                  background: "var(--color-primary)",
+                  color: "var(--color-background)",
+                  border: "none",
+                  borderRadius: "8px",
+                  fontWeight: 500,
+                  fontSize: "14px",
+                  cursor: "pointer",
+                  transition: "background-color 0.2s",
+                  opacity: isSubmitting ? 0.7 : 1,
                 }}
               >
-                {errors.removePassword}
-              </div>
-            )}
-          </FormGroup>
-
-          <div style={{ marginTop: "16px" }}>
-            <button
-              type="button"
-              onClick={handleRemovePassword}
-              disabled={isRemoving || !removePasswordInput}
-              style={{
-                width: "100%",
-                padding: "9px 16px",
-                background: "var(--color-error)",
-                color: "var(--color-background)",
-                border: "none",
-                borderRadius: "8px",
-                fontWeight: 500,
-                fontSize: "14px",
-                cursor: isRemoving || !removePasswordInput ? "not-allowed" : "pointer",
-                transition: "background-color 0.2s",
-                opacity: isRemoving || !removePasswordInput ? 0.6 : 1,
-              }}
-            >
-              {isRemoving ? "Removing..." : "Remove Password"}
-            </button>
-          </div>
+                {isSubmitting ? "Updating..." : "Update Password"}
+              </button>
+            </div>
+          </Form>
         </div>
       )}
+
+      <>
+        <InfoItem onClick={() => setRemovePasswordOpen(!isRemovePasswordOpen)}>
+          <InfoLabel>Remove password</InfoLabel>
+          <InfoContent>
+            <div
+              style={{
+                flex: 1,
+                overflow: "hidden",
+                textOverflow: "ellipsis",
+                whiteSpace: "nowrap",
+              }}
+            ></div>
+            {isRemovePasswordOpen ? (
+              <ChevronUp size={14} />
+            ) : (
+              <ChevronDown size={14} />
+            )}
+          </InfoContent>
+        </InfoItem>
+        {isRemovePasswordOpen && (
+          <div style={{ paddingTop: "16px" }}>
+            {!hasAlternativeAuthMethods() && (
+              <div
+                style={{
+                  padding: "12px",
+                  background: "var(--color-warning-background)",
+                  color: "var(--color-warning-text)",
+                  borderRadius: "8px",
+                  marginBottom: "16px",
+                  fontSize: "14px",
+                }}
+              >
+                You must set up an alternative sign-in method (like Social
+                connection, phone otp) before you can remove your password.
+              </div>
+            )}
+            <div style={{ marginBottom: "16px" }}>
+              <p
+                style={{
+                  fontSize: "14px",
+                  color: "var(--color-muted)",
+                  margin: 0,
+                  lineHeight: "1.5",
+                }}
+              >
+                Remove password authentication and use only alternative methods
+                like email OTP, social sign-in, or authenticator apps.
+              </p>
+            </div>
+
+            <FormGroup>
+              <Label htmlFor="removePasswordInput">Current Password</Label>
+              <PasswordInput>
+                <Input
+                  id="removePasswordInput"
+                  type={showRemovePassword ? "text" : "password"}
+                  value={removePasswordInput}
+                  onChange={(e) => setRemovePasswordInput(e.target.value)}
+                  placeholder="Enter your current password"
+                />
+                <button
+                  type="button"
+                  onClick={() => setShowRemovePassword(!showRemovePassword)}
+                >
+                  {showRemovePassword ? (
+                    <EyeOff size={16} />
+                  ) : (
+                    <Eye size={16} />
+                  )}
+                </button>
+              </PasswordInput>
+              {errors.removePassword && (
+                <div
+                  style={{
+                    color: "var(--color-error)",
+                    fontSize: "12px",
+                    marginTop: "4px",
+                  }}
+                >
+                  {errors.removePassword}
+                </div>
+              )}
+            </FormGroup>
+
+            <div style={{ marginTop: "16px" }}>
+              <button
+                type="button"
+                onClick={handleRemovePassword}
+                disabled={
+                  isRemoving ||
+                  !removePasswordInput ||
+                  !hasAlternativeAuthMethods()
+                }
+                style={{
+                  width: "100%",
+                  padding: "9px 16px",
+                  background: "var(--color-error)",
+                  color: "var(--color-background)",
+                  border: "none",
+                  borderRadius: "8px",
+                  fontWeight: 500,
+                  fontSize: "14px",
+                  cursor:
+                    isRemoving ||
+                    !removePasswordInput ||
+                    !hasAlternativeAuthMethods()
+                      ? "not-allowed"
+                      : "pointer",
+                  transition: "background-color 0.2s",
+                  opacity:
+                    isRemoving ||
+                    !removePasswordInput ||
+                    !hasAlternativeAuthMethods()
+                      ? 0.6
+                      : 1,
+                }}
+              >
+                {isRemoving ? "Removing..." : "Remove Password"}
+              </button>
+            </div>
+          </div>
+        )}
+      </>
     </div>
   );
 };
 
-const TwoFactorManagementSection = ({
-  setScreen,
-}: {
-  setScreen: React.Dispatch<
-    React.SetStateAction<
-      | "email"
-      | "phone"
-      | "social"
-      | "password"
-      | "2fa"
-      | "2fa/authenticator"
-      | "2fa/backup_code"
-      | "2fa/phone"
-      | "profile-details"
-      | "active-sessions"
-      | null
-    >
-  >;
-}) => {
+const TwoFactorManagementSection = () => {
   const { deployment } = useDeployment();
 
   const authFactorsEnabled = deployment?.auth_settings?.auth_factors_enabled;
@@ -1543,11 +1706,10 @@ const TwoFactorManagementSection = ({
     return null;
   }
 
+  const { setScreen } = useScreenContext();
   return (
     <div>
-      <SectionTitle>
-        <span>Two-Factor Verification</span>
-      </SectionTitle>
+      <SectionHeader title="Two-Factor Verification" />
 
       {authFactorsEnabled?.authenticator && (
         <InfoItem onClick={() => setScreen("2fa/authenticator")}>
@@ -2673,7 +2835,6 @@ const ProfileDetailsManagementSection = () => {
   const [successMessage, setSuccessMessage] = useState("");
   const fileInputRef = React.useRef<HTMLInputElement>(null);
 
-  // Update state when user data is loaded
   React.useEffect(() => {
     if (user) {
       setFirstName(user.first_name || "");
@@ -2723,23 +2884,15 @@ const ProfileDetailsManagementSection = () => {
       window.location.href = "/";
     } catch (error) {
       setErrors({
-        deleteAccount: "Failed to delete account. Please check your password and try again."
+        deleteAccount:
+          "Failed to delete account. Please check your password and try again.",
       });
     }
   };
 
   return (
     <div>
-      <div
-        style={{
-          display: "flex",
-          justifyContent: "space-between",
-          alignItems: "center",
-          marginBottom: "16px",
-        }}
-      >
-        <SectionTitle>Your Account</SectionTitle>
-      </div>
+      <SectionHeader title="Your Account" />
 
       {successMessage && (
         <div
@@ -2792,10 +2945,7 @@ const ProfileDetailsManagementSection = () => {
                 }}
               >
                 <Avatar
-                  src={
-                    user?.profile_picture_url ||
-                    "https://images.unsplash.com/photo-1472099645785-5658abf4ff4e?ixlib=rb-1.2.1&auto=format&fit=facearea&facepad=2&w=256&h=256&q=80"
-                  }
+                  src={user?.profile_picture_url}
                   alt="Profile"
                   style={{
                     width: "100%",
@@ -3006,7 +3156,9 @@ const DeleteAccountAccordion = ({
       return;
     }
 
-    if (window.confirm("Are you absolutely sure? This action cannot be undone.")) {
+    if (
+      window.confirm("Are you absolutely sure? This action cannot be undone.")
+    ) {
       setIsDeleting(true);
       try {
         await handleDeleteAccount(password);
@@ -3072,7 +3224,14 @@ const DeleteAccountAccordion = ({
           </p>
 
           <div style={{ marginBottom: "16px" }}>
-            <Label htmlFor="deletePassword" style={{ fontSize: "14px", marginBottom: "8px", display: "block" }}>
+            <Label
+              htmlFor="deletePassword"
+              style={{
+                fontSize: "14px",
+                marginBottom: "8px",
+                display: "block",
+              }}
+            >
               Enter your password to confirm
             </Label>
             <div style={{ position: "relative" }}>

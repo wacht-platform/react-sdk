@@ -3,7 +3,7 @@ import styled from "styled-components";
 import { Input } from "@/components/utility/input";
 import { FormGroup, Label } from "../utility/form";
 import { useActiveOrganization } from "@/hooks/use-organization";
-import { Spinner } from "../utility";
+import { Button, Spinner } from "../utility";
 import { ComboBox, ComboBoxOption } from "../utility/combo-box";
 import { OrganizationRole } from "@/types/organization";
 
@@ -18,26 +18,6 @@ const PopoverContainer = styled.div`
   padding: 16px;
   width: 380px;
   z-index: 10;
-`;
-
-const Button = styled.button<{ $primary?: boolean }>`
-  padding: 8px 16px;
-  background: ${(props) => (props.$primary ? "var(--color-primary)" : "var(--color-background)")};
-  color: ${(props) => (props.$primary ? "white" : "var(--color-secondary-text)")};
-  border: 1px solid ${(props) => (props.$primary ? "var(--color-primary)" : "var(--color-border)")};
-  border-radius: var(--radius-md);
-  font-size: 14px;
-  cursor: pointer;
-  transition: all 0.2s ease;
-
-  &:hover {
-    background: ${(props) => (props.$primary ? "var(--color-primary-hover)" : "var(--color-input-background)")};
-  }
-
-  &:disabled {
-    opacity: 0.5;
-    cursor: not-allowed;
-  }
 `;
 
 const ButtonGroup = styled.div`
@@ -68,7 +48,7 @@ export const InviteMemberPopover = ({
   const popoverRef = useRef<HTMLDivElement>(null);
   const [email, setEmail] = useState("");
   const [selectedRole, setSelectedRole] = useState<OrganizationRole | null>(
-    null,
+    null
   );
   const [loading, setLoading] = useState(false);
   const { inviteMember } = useActiveOrganization();
@@ -83,14 +63,7 @@ export const InviteMemberPopover = ({
 
     setLoading(true);
     try {
-      console.log("Inviting member", { email, role: selectedRole });
-      // Use the inviteMember function from the hook if available
-      if (inviteMember) {
-        await inviteMember({ email, organizationRole: selectedRole });
-      } else {
-        // Mock implementation for testing
-        await new Promise((resolve) => setTimeout(resolve, 1000));
-      }
+      await inviteMember({ email, organizationRole: selectedRole });
 
       onSuccess?.();
     } catch (error) {
@@ -149,7 +122,7 @@ export const InviteMemberPopover = ({
         >
           {loading ? (
             <>
-              <Spinner /> Sending...
+              <Spinner size={14} /> Sending...
             </>
           ) : (
             "Send Invitation"

@@ -289,6 +289,21 @@ export const useOrganizationList = () => {
     [client]
   );
 
+  const resendOrganizationInvitation = useCallback(
+    async (organization: Organization, invitation: OrganizationInvitation) => {
+      const response = await responseMapper<OrganizationInvitation>(
+        await client(
+          `/organizations/${organization.id}/invitations/${invitation.id}/resend`,
+          {
+            method: "POST",
+          }
+        )
+      );
+      return response.data;
+    },
+    [client]
+  );
+
   const organizations = useMemo(() => {
     return organizationMemberships?.map(
       (membership) => membership.organization
@@ -314,6 +329,7 @@ export const useOrganizationList = () => {
     removeRoleFromOrganizationMember,
     inviteOrganizationMember,
     discardOrganizationInvitation,
+    resendOrganizationInvitation,
     updateOrganization,
     addRole,
     removeOrganizationRoles,
@@ -339,6 +355,7 @@ export const useActiveOrganization = () => {
     removeRoleFromOrganizationMember,
     inviteOrganizationMember,
     discardOrganizationInvitation,
+    resendOrganizationInvitation,
     updateOrganization,
     removeOrganizationRoles,
   } = useOrganizationList();
@@ -482,6 +499,18 @@ export const useActiveOrganization = () => {
     [activeOrganization, discardOrganizationInvitation]
   );
 
+  const resendInvitationToOrganization = useCallback(
+    async (invitation: OrganizationInvitation) => {
+      if (!activeOrganization) return;
+      const data = await resendOrganizationInvitation(
+        activeOrganization,
+        invitation
+      );
+      return data;
+    },
+    [activeOrganization, resendOrganizationInvitation]
+  );
+
   const leaveCurrentOrganization = useCallback(async () => {
     if (!activeOrganization) return;
     await leaveOrganization(activeOrganization);
@@ -512,6 +541,7 @@ export const useActiveOrganization = () => {
       removeMemberRole: null as never,
       inviteMember: null as never,
       discardInvitation: null as never,
+      resendInvitation: null as never,
       leave: null as never,
     };
   }
@@ -535,6 +565,7 @@ export const useActiveOrganization = () => {
     removeMemberRole: removeRoleFromCurrentOrganizationMember,
     inviteMember: inviteMemberToOrganization,
     discardInvitation: discardInvitationToOrganization,
+    resendInvitation: resendInvitationToOrganization,
     error: null,
   };
 };
