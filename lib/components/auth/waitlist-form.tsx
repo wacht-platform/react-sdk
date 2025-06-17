@@ -15,7 +15,7 @@ const Container = styled.div`
   padding: var(--space-3xl);
   background: var(--color-background);
   border-radius: var(--radius-lg);
-  box-shadow: 0 4px 24px var(--color-shadow);
+  box-shadow: 0 4px 12px var(--color-shadow);
 `;
 
 const Header = styled.div`
@@ -53,7 +53,7 @@ const NameFields = styled.div<{ $isBothEnabled: boolean }>`
   display: grid;
   grid-template-columns: ${(props) =>
     props.$isBothEnabled ? "1fr 1fr" : "1fr"};
-  gap: var(--space-xs);
+  gap: var(--space-md);
 `;
 
 const Label = styled.label`
@@ -163,20 +163,17 @@ export function WaitlistForm() {
   const [isSubmitted, setIsSubmitted] = useState(false);
   const [isSubmitting, setIsSubmitting] = useState(false);
 
-  // Helper function to extract error messages from the API result
   const getErrorMessage = (field?: string): string | undefined => {
     if (!errors?.errors) return undefined;
 
     if (field) {
-      // Look for field-specific errors
       const fieldError = errors.errors.find((err) =>
         err.code?.toLowerCase().includes(field.toLowerCase())
       );
       if (fieldError) return fieldError.message;
     }
 
-    // Return first general error
-    return errors.errors[0]?.message;
+    return undefined;
   };
 
   const authSettings = deployment?.auth_settings;
@@ -203,9 +200,7 @@ export function WaitlistForm() {
       if (result.data) {
         setIsSubmitted(true);
       }
-      // Error handling is done in the hook via errors state
     } catch (error) {
-      // Error handling is done in the hook
     } finally {
       setIsSubmitting(false);
     }

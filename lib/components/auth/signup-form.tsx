@@ -31,7 +31,7 @@ const Container = styled.div`
   padding: var(--space-3xl);
   background: var(--color-background);
   border-radius: var(--radius-lg);
-  box-shadow: 0 4px 24px var(--color-shadow);
+  box-shadow: 0 4px 12px var(--color-shadow);
 
   @media (max-width: ${breakpoints.sm}) {
     max-width: 100%;
@@ -204,23 +204,7 @@ const Link = styled.span`
 const RestrictedMessage = styled.div`
   text-align: center;
   padding: var(--space-xl);
-  background: var(--color-background-secondary);
-  border-radius: var(--border-radius-lg);
-  border: 1px solid var(--color-border);
   margin-bottom: var(--space-lg);
-`;
-
-const RestrictedIcon = styled.div`
-  font-size: 48px;
-  margin-bottom: var(--space-md);
-  opacity: 0.8;
-`;
-
-const RestrictedTitle = styled.h2`
-  font-size: var(--font-size-xl);
-  font-weight: var(--font-weight-semibold);
-  color: var(--color-text-primary);
-  margin: 0 0 var(--space-md) 0;
 `;
 
 const RestrictedText = styled.p`
@@ -228,13 +212,6 @@ const RestrictedText = styled.p`
   color: var(--color-text-secondary);
   margin: 0 0 var(--space-sm) 0;
   line-height: 1.5;
-`;
-
-const RestrictedSubtext = styled.p`
-  font-size: var(--font-size-sm);
-  color: var(--color-text-muted);
-  margin: 0;
-  line-height: 1.4;
 `;
 
 const RestrictedFooter = styled.div`
@@ -283,17 +260,14 @@ export function SignUpForm() {
     Intl.DateTimeFormat().resolvedOptions().locale.split("-")?.pop()
   );
 
-  // Check if signup is restricted
   const isSignupRestricted =
     deployment?.restrictions?.sign_up_mode === "restricted";
   const isWaitlistMode = deployment?.restrictions?.sign_up_mode === "waitlist";
 
-  // Redirect to waitlist if in waitlist mode
   useEffect(() => {
     if (!deployment) return;
 
     if (isWaitlistMode) {
-      // Redirect to waitlist page
       const waitlistUrl =
         deployment.ui_settings?.waitlist_page_url ||
         `${deployment.frontend_host}/waitlist` ||
@@ -520,15 +494,17 @@ export function SignUpForm() {
     return (
       <DefaultStylesProvider>
         <Container>
+          <AuthFormImage />
+
+          <Header>
+            <Title>Sign up Restricted!</Title>
+          </Header>
+
           <RestrictedMessage>
-            <RestrictedIcon>🔒</RestrictedIcon>
-            <RestrictedTitle>Registration Closed</RestrictedTitle>
             <RestrictedText>
-              New account registration is currently restricted.
+              New account registration is currently restricted. Please check
+              back later.
             </RestrictedText>
-            <RestrictedSubtext>
-              If you need access, please contact support for assistance.
-            </RestrictedSubtext>
           </RestrictedMessage>
 
           <RestrictedFooter>

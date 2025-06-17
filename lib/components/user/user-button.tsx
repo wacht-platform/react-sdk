@@ -126,7 +126,7 @@ const DropdownContainer = styled.div<{
   border-radius: var(--radius-md);
   border: 1px solid var(--color-border);
   background: var(--color-background);
-  box-shadow: 0 4px 24px var(--color-shadow);
+  box-shadow: 0 4px 12px var(--color-shadow);
   z-index: 50;
   overflow: hidden;
   min-width: 380px;

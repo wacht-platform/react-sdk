@@ -8,6 +8,7 @@ import {
 } from "../../hooks/use-forgot-password";
 import { OtherAuthOptions } from "./other-auth-options";
 import { DefaultStylesProvider } from "../utility/root";
+import { AuthFormImage } from "./auth-image";
 
 interface ForgotPasswordProps {
   onBack: () => void;
@@ -19,7 +20,7 @@ const Container = styled.div`
   padding: var(--space-3xl);
   background: var(--color-background);
   border-radius: var(--radius-lg);
-  box-shadow: 0 4px 24px var(--color-shadow);
+  box-shadow: 0 4px 12px var(--color-shadow);
 `;
 
 const Header = styled.div`
@@ -29,7 +30,6 @@ const Header = styled.div`
 
 const Title = styled.h1`
   font-size: var(--font-lg);
-  font-weight: 600;
   color: var(--color-foreground);
   margin: 0 0 var(--space-xs) 0;
 `;
@@ -154,6 +154,8 @@ export function ForgotPassword({ onBack }: ForgotPasswordProps) {
 
   const renderInitialView = () => (
     <>
+      <AuthFormImage />
+
       <Header>
         <Title>Forgot Password</Title>
       </Header>

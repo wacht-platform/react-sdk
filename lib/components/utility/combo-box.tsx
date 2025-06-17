@@ -49,7 +49,7 @@ const DropdownMenu = styled.div<{ isOpen: boolean }>`
   background: var(--color-background);
   border-radius: 6px;
   border: 1px solid var(--color-border);
-  box-shadow: 0 4px 24px var(--color-shadow);
+  box-shadow: 0 4px 12px var(--color-shadow);
   z-index: 50;
   opacity: ${(props) => (props.isOpen ? 1 : 0)};
   transform: ${(props) => (props.isOpen ? "scale(1)" : "scale(0.95)")};
@@ -80,13 +80,16 @@ const Option = styled.div<{ isSelected?: boolean; disabled?: boolean }>`
   padding: 8px 12px;
   cursor: ${(props) => (props.disabled ? "not-allowed" : "pointer")};
   font-size: 14px;
-  background: ${(props) => (props.isSelected ? "var(--color-background-hover)" : "transparent")};
-  color: ${(props) => (props.disabled ? "var(--color-muted)" : "var(--color-text)")};
+  background: ${(props) =>
+    props.isSelected ? "var(--color-background-hover)" : "transparent"};
+  color: ${(props) =>
+    props.disabled ? "var(--color-muted)" : "var(--color-text)"};
   opacity: ${(props) => (props.disabled ? 0.6 : 1)};
   transition: background 0.2s ease;
 
   &:hover {
-    background: ${(props) => (!props.disabled ? "var(--color-background-hover)" : "transparent")};
+    background: ${(props) =>
+      !props.disabled ? "var(--color-background-hover)" : "transparent"};
   }
 `;
 
@@ -165,16 +168,16 @@ export const ComboBox: React.FC<ComboBoxProps> = ({
   const filteredOptions = searchQuery
     ? isGrouped
       ? (options as ComboBoxGroup[])
-        .map((group) => ({
-          ...group,
-          options: group.options.filter((option) =>
-            option.label.toLowerCase().includes(searchQuery.toLowerCase())
-          ),
-        }))
-        .filter((group) => group.options.length > 0)
+          .map((group) => ({
+            ...group,
+            options: group.options.filter((option) =>
+              option.label.toLowerCase().includes(searchQuery.toLowerCase())
+            ),
+          }))
+          .filter((group) => group.options.length > 0)
       : (options as ComboBoxOption[]).filter((option) =>
-        option.label.toLowerCase().includes(searchQuery.toLowerCase())
-      )
+          option.label.toLowerCase().includes(searchQuery.toLowerCase())
+        )
     : options;
 
   const handleOptionClick = (
@@ -356,16 +359,16 @@ export const ComboBoxMulti: React.FC<ComboBoxMultiProps> = ({
   const filteredOptions = searchQuery
     ? isGrouped
       ? (options as ComboBoxGroup[])
-        .map((group) => ({
-          ...group,
-          options: group.options.filter((option) =>
-            option.label.toLowerCase().includes(searchQuery.toLowerCase())
-          ),
-        }))
-        .filter((group) => group.options.length > 0)
+          .map((group) => ({
+            ...group,
+            options: group.options.filter((option) =>
+              option.label.toLowerCase().includes(searchQuery.toLowerCase())
+            ),
+          }))
+          .filter((group) => group.options.length > 0)
       : (options as ComboBoxOption[]).filter((option) =>
-        option.label.toLowerCase().includes(searchQuery.toLowerCase())
-      )
+          option.label.toLowerCase().includes(searchQuery.toLowerCase())
+        )
     : options;
 
   const handleOptionClick = (

@@ -14,7 +14,7 @@ const Container = styled.div`
   padding: var(--space-3xl);
   background: var(--color-background);
   border-radius: var(--radius-lg);
-  box-shadow: 0 4px 24px var(--color-shadow);
+  box-shadow: 0 4px 12px var(--color-shadow);
 `;
 
 const Header = styled.div`

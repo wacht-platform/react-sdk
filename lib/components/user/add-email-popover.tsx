@@ -11,7 +11,7 @@ const PopoverContainer = styled.div`
   margin-top: 8px;
   background: var(--color-background);
   border-radius: var(--radius-md);
-  box-shadow: 0 4px 24px var(--color-shadow);
+  box-shadow: 0 4px 12px var(--color-shadow);
   border: 1px solid var(--color-border);
   padding: 16px;
   width: 380px;
@@ -20,16 +20,23 @@ const PopoverContainer = styled.div`
 
 const Button = styled.button<{ $primary?: boolean }>`
   padding: 8px 16px;
-  background: ${(props) => (props.$primary ? "var(--color-primary)" : "var(--color-background)")};
-  color: ${(props) => (props.$primary ? "white" : "var(--color-secondary-text)")};
-  border: 1px solid ${(props) => (props.$primary ? "var(--color-primary)" : "var(--color-border)")};
+  background: ${(props) =>
+    props.$primary ? "var(--color-primary)" : "var(--color-background)"};
+  color: ${(props) =>
+    props.$primary ? "white" : "var(--color-secondary-text)"};
+  border: 1px solid
+    ${(props) =>
+      props.$primary ? "var(--color-primary)" : "var(--color-border)"};
   border-radius: var(--radius-md);
   font-size: 14px;
   cursor: pointer;
   transition: all 0.2s ease;
 
   &:hover {
-    background: ${(props) => (props.$primary ? "var(--color-primary-hover)" : "var(--color-input-background)")};
+    background: ${(props) =>
+      props.$primary
+        ? "var(--color-primary-hover)"
+        : "var(--color-input-background)"};
   }
 
   &:disabled {
@@ -86,7 +93,7 @@ export const EmailAddPopover = ({
     };
   }, [onClose]);
   const [step, setStep] = useState<"email" | "otp">(
-    existingEmail ? "otp" : "email",
+    existingEmail ? "otp" : "email"
   );
   const [email, setEmail] = useState(existingEmail || "");
   const [otp, setOtp] = useState("");
@@ -121,7 +128,11 @@ export const EmailAddPopover = ({
         <>
           <Title>Add email address</Title>
           <div
-            style={{ fontSize: "14px", color: "var(--color-muted)", marginBottom: "10px" }}
+            style={{
+              fontSize: "14px",
+              color: "var(--color-muted)",
+              marginBottom: "10px",
+            }}
           >
             You will have to verify this email address before you can start
             using it.
@@ -151,7 +162,11 @@ export const EmailAddPopover = ({
         <>
           <Title>Verify your email</Title>
           <div
-            style={{ fontSize: "14px", color: "var(--color-muted)", marginBottom: "16px" }}
+            style={{
+              fontSize: "14px",
+              color: "var(--color-muted)",
+              marginBottom: "16px",
+            }}
           >
             Enter the 6-digit code sent to {email}
           </div>

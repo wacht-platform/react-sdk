@@ -21,8 +21,8 @@ export const Button = styled.button<ButtonProps>`
   gap: var(--space-xs);
   height: 36px;
   background-color: var(--color-primary);
-  color: var(--color-background);
   border-color: var(--color-primary);
+  color: white;
 
   &:hover:not(:disabled) {
     background-color: var(--color-primary-hover);

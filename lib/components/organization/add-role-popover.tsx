@@ -14,7 +14,7 @@ const PopoverContainer = styled.div`
   margin-top: 8px;
   background: var(--color-background);
   border-radius: var(--radius-md);
-  box-shadow: 0 4px 24px var(--color-shadow);
+  box-shadow: 0 4px 12px var(--color-shadow);
   border: 1px solid var(--color-border);
   padding: 16px;
   width: 380px;
@@ -23,16 +23,23 @@ const PopoverContainer = styled.div`
 
 const Button = styled.button<{ $primary?: boolean }>`
   padding: 8px 16px;
-  background: ${(props) => (props.$primary ? "var(--color-primary)" : "var(--color-background)")};
-  color: ${(props) => (props.$primary ? "white" : "var(--color-secondary-text)")};
-  border: 1px solid ${(props) => (props.$primary ? "var(--color-primary)" : "var(--color-border)")};
+  background: ${(props) =>
+    props.$primary ? "var(--color-primary)" : "var(--color-background)"};
+  color: ${(props) =>
+    props.$primary ? "white" : "var(--color-secondary-text)"};
+  border: 1px solid
+    ${(props) =>
+      props.$primary ? "var(--color-primary)" : "var(--color-border)"};
   border-radius: var(--radius-md);
   font-size: 14px;
   cursor: pointer;
   transition: all 0.2s ease;
 
   &:hover {
-    background: ${(props) => (props.$primary ? "var(--color-primary-hover)" : "var(--color-input-background)")};
+    background: ${(props) =>
+      props.$primary
+        ? "var(--color-primary-hover)"
+        : "var(--color-input-background)"};
   }
 
   &:disabled {
@@ -69,7 +76,7 @@ export const AddRolePopover = ({
   const popoverRef = useRef<HTMLDivElement>(null);
   const [name, setName] = useState(role?.name || "");
   const [permissions, setPermissions] = useState<string[]>(
-    role?.permissions || [],
+    role?.permissions || []
   );
   const {} = useActiveOrganization();
   const [loading, setLoading] = useState(false);
@@ -78,7 +85,7 @@ export const AddRolePopover = ({
   const isEditing = !!role;
 
   const permissionOptions = Array.isArray(
-    deployment?.b2b_settings?.organization_permissions,
+    deployment?.b2b_settings?.organization_permissions
   )
     ? deployment.b2b_settings.organization_permissions.map((perm) => ({
         value: perm,

@@ -103,7 +103,7 @@ const Dropdown = styled.div<{ isOpen: boolean }>`
   background: var(--color-background);
   border-radius: var(--radius-sm);
   border: 1px solid var(--color-border);
-  box-shadow: 0 4px 24px var(--color-shadow);
+  box-shadow: 0 4px 12px var(--color-shadow);
   z-index: 50;
   overflow: hidden;
   opacity: ${(props) => (props.isOpen ? 1 : 0)};
@@ -147,7 +147,8 @@ const MenuItem = styled.button<{ $isActive?: boolean }>`
   font-size: 14px;
   border: none;
   height: 40px;
-  background: ${(props) => (props.$isActive ? "var(--color-input-background)" : "transparent")};
+  background: ${(props) =>
+    props.$isActive ? "var(--color-input-background)" : "transparent"};
   cursor: pointer;
   color: var(--color-foreground);
 
@@ -197,7 +198,8 @@ const ActionIconContainer = styled.div<{ $destructive?: boolean }>`
   height: 20px;
   border-radius: 50%;
   background: var(--color-input-background);
-  color: ${({ $destructive }) => ($destructive ? "var(--color-error)" : "var(--color-secondary-text)")};
+  color: ${({ $destructive }) =>
+    $destructive ? "var(--color-error)" : "var(--color-secondary-text)"};
   margin-right: 6px;
 `;
 
@@ -285,21 +287,18 @@ export const OrganizationSwitcher = () => {
 
     const workspacesByOrg =
       (workspacesEnabled &&
-        workspaceMemberships?.reduce(
-          (acc, membership) => {
-            if (!acc[membership.organization_id]) {
-              acc[membership.organization_id] = [];
-            }
+        workspaceMemberships?.reduce((acc, membership) => {
+          if (!acc[membership.organization_id]) {
+            acc[membership.organization_id] = [];
+          }
 
-            const enhancedWorkspace = {
-              ...membership.workspace,
-            };
+          const enhancedWorkspace = {
+            ...membership.workspace,
+          };
 
-            acc[membership.organization_id].push(enhancedWorkspace);
-            return acc;
-          },
-          {} as Record<string, Workspace[]>,
-        )) ||
+          acc[membership.organization_id].push(enhancedWorkspace);
+          return acc;
+        }, {} as Record<string, Workspace[]>)) ||
       {};
 
     organizationMemberships?.forEach(({ organization: org }) => {
@@ -331,7 +330,7 @@ export const OrganizationSwitcher = () => {
         selectedWorkspace =
           workspaceMemberships?.find(
             (ws) =>
-              ws.id === session?.active_signin?.active_workspace_membership_id,
+              ws.id === session?.active_signin?.active_workspace_membership_id
           )?.workspace ?? null;
       }
     }
@@ -374,7 +373,7 @@ export const OrganizationSwitcher = () => {
       const workspaceMatches =
         workspacesEnabled &&
         org.workspaces?.some((ws) =>
-          ws.name.toLowerCase().includes(searchQuery.toLowerCase()),
+          ws.name.toLowerCase().includes(searchQuery.toLowerCase())
         );
       return orgMatches || workspaceMatches;
     });
@@ -478,7 +477,7 @@ export const OrganizationSwitcher = () => {
                       }
                       onClick={() => {
                         handleSwitchOrganization(
-                          org.personal ? undefined : org.id,
+                          org.personal ? undefined : org.id
                         );
                       }}
                       disabled={isSwitching}
@@ -515,7 +514,10 @@ export const OrganizationSwitcher = () => {
                               alt={workspace.name}
                             />
                           ) : (
-                            <FolderKanban size={20} color="var(--color-primary)" />
+                            <FolderKanban
+                              size={20}
+                              color="var(--color-primary)"
+                            />
                           )}
                           <span>{workspace.name}</span>
                         </FlexContainer>
@@ -550,7 +552,7 @@ export const OrganizationSwitcher = () => {
                       $isActive={selectedOrg.id === org.id}
                       onClick={() => {
                         handleSwitchOrganization(
-                          org.personal ? undefined : org.id,
+                          org.personal ? undefined : org.id
                         );
                       }}
                       disabled={isSwitching}

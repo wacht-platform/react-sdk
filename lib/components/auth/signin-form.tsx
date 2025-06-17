@@ -30,7 +30,7 @@ const Container = styled.div`
   padding: var(--space-3xl);
   background: var(--color-background);
   border-radius: var(--radius-lg);
-  box-shadow: 0 4px 24px var(--color-shadow);
+  box-shadow: 0 4px 12px var(--color-shadow);
 `;
 
 const Header = styled.div`
@@ -355,7 +355,10 @@ function SignInFormContent() {
         ) : (
           <Header>
             <Title>Sign in to your account</Title>
-            <Subtitle>Welcome back! Please enter your details.</Subtitle>
+            <Subtitle>
+              Please enter your details to continue to{" "}
+              {deployment?.ui_settings.app_name || "App"}!
+            </Subtitle>
           </Header>
         )}
 
@@ -484,7 +487,7 @@ function SignInFormContent() {
             <Footer>
               Don't have an account?{" "}
               <Link>
-                <NavigationLink to={deployment!.ui_settings.sign_in_page_url}>
+                <NavigationLink to={deployment!.ui_settings.sign_up_page_url}>
                   Sign up
                 </NavigationLink>
               </Link>

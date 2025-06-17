@@ -16,7 +16,7 @@ const DropdownItemsContainer = styled.div`
   right: 0;
   background: var(--color-background);
   border-radius: 8px;
-  box-shadow: 0 4px 24px var(--color-shadow);
+  box-shadow: 0 4px 12px var(--color-shadow);
   border: 1px solid var(--color-border);
   overflow: hidden;
   z-index: 10;
@@ -41,14 +41,14 @@ type DropdownContextProps = {
 };
 
 const DropdownContext = createContext<DropdownContextProps | undefined>(
-  undefined,
+  undefined
 );
 
 const useDropdownContext = () => {
   const context = useContext(DropdownContext);
   if (!context) {
     throw new Error(
-      "useDropdownContext must be used within a DropdownProvider",
+      "useDropdownContext must be used within a DropdownProvider"
     );
   }
   return context;
@@ -143,10 +143,14 @@ export const DropdownItem = styled.button<{ $destructive?: boolean }>`
   cursor: pointer;
   font-size: 14px;
   width: 200px;
-  color: ${(props) => (props.$destructive ? "var(--color-error)" : "var(--color-text)")};
+  color: ${(props) =>
+    props.$destructive ? "var(--color-error)" : "var(--color-text)"};
 
   &:hover {
-    background: ${(props) => (props.$destructive ? "var(--color-error-background)" : "var(--color-background-hover)")};
+    background: ${(props) =>
+      props.$destructive
+        ? "var(--color-error-background)"
+        : "var(--color-background-hover)"};
   }
 `;
 

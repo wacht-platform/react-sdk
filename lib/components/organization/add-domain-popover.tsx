@@ -12,7 +12,7 @@ const PopoverContainer = styled.div`
   margin-top: 8px;
   background: var(--color-background);
   border-radius: var(--radius-md);
-  box-shadow: 0 4px 24px var(--color-shadow);
+  box-shadow: 0 4px 12px var(--color-shadow);
   border: 1px solid var(--color-border);
   padding: 16px;
   width: 380px;

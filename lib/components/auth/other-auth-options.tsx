@@ -38,7 +38,12 @@ const EmailButton = styled.button`
 export function OtherAuthOptions() {
   const { deployment } = useDeployment();
   const { signIn: oauthSignIn } = useSignInWithStrategy(SignInStrategy.Oauth);
-  const { setFirstFactor, firstFactor } = useSignInContext();
+  const {
+    setFirstFactor,
+    firstFactor,
+    setShowOtherOptions,
+    setShowForgotPassword,
+  } = useSignInContext();
   const [isSubmitting, setIsSubmitting] = useState(false);
 
   const authSettings = deployment?.auth_settings;
@@ -65,6 +70,11 @@ export function OtherAuthOptions() {
     }
   };
 
+  const handleBack = () => {
+    setShowForgotPassword(false);
+    setShowOtherOptions(true);
+  };
+
   return (
     <>
       {enabledSocialsProviders.length > 0 && (
@@ -77,31 +87,56 @@ export function OtherAuthOptions() {
       <div>
         {firstFactor !== "email_magic_link" &&
           authSettings?.auth_factors_enabled.email_magic_link && (
-            <EmailButton onClick={() => setFirstFactor("email_magic_link")}>
+            <EmailButton
+              onClick={() => {
+                setFirstFactor("email_magic_link");
+                handleBack();
+              }}
+            >
               Get a magic link on your email
             </EmailButton>
           )}
         {firstFactor !== "email_password" &&
           authSettings?.auth_factors_enabled.email_password && (
-            <EmailButton onClick={() => setFirstFactor("email_password")}>
+            <EmailButton
+              onClick={() => {
+                setFirstFactor("email_password");
+                handleBack();
+              }}
+            >
               Sign in with email and password
             </EmailButton>
           )}
         {firstFactor !== "email_otp" &&
           authSettings?.auth_factors_enabled.email_otp && (
-            <EmailButton onClick={() => setFirstFactor("email_otp")}>
+            <EmailButton
+              onClick={() => {
+                setFirstFactor("email_otp");
+                handleBack();
+              }}
+            >
               Sign in with email and OTP
             </EmailButton>
           )}
         {firstFactor !== "phone_otp" &&
           authSettings?.auth_factors_enabled.phone_otp && (
-            <EmailButton onClick={() => setFirstFactor("phone_otp")}>
+            <EmailButton
+              onClick={() => {
+                setFirstFactor("phone_otp");
+                handleBack();
+              }}
+            >
               Sign in with phone number
             </EmailButton>
           )}
         {firstFactor !== "username_password" &&
           authSettings?.auth_factors_enabled.username_password && (
-            <EmailButton onClick={() => setFirstFactor("username_password")}>
+            <EmailButton
+              onClick={() => {
+                setFirstFactor("username_password");
+                handleBack();
+              }}
+            >
               Sign in with username and password
             </EmailButton>
           )}

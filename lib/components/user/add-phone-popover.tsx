@@ -11,7 +11,7 @@ const PopoverContainer = styled.div`
   margin-top: 8px;
   background: var(--color-background);
   border-radius: var(--radius-md);
-  box-shadow: 0 4px 24px var(--color-shadow);
+  box-shadow: 0 4px 12px var(--color-shadow);
   border: 1px solid var(--color-border);
   padding: 16px;
   width: 380px;
@@ -20,9 +20,13 @@ const PopoverContainer = styled.div`
 
 export const Button = styled.button<{ $primary?: boolean }>`
   padding: 8px 12px;
-  background: ${(props) => (props.$primary ? "var(--color-primary)" : "var(--color-background)")};
-  color: ${(props) => (props.$primary ? "white" : "var(--color-secondary-text)")};
-  border: 1px solid ${(props) => (props.$primary ? "var(--color-primary)" : "var(--color-border)")};
+  background: ${(props) =>
+    props.$primary ? "var(--color-primary)" : "var(--color-background)"};
+  color: ${(props) =>
+    props.$primary ? "white" : "var(--color-secondary-text)"};
+  border: 1px solid
+    ${(props) =>
+      props.$primary ? "var(--color-primary)" : "var(--color-border)"};
   border-radius: var(--radius-md);
   font-size: 14px;
   cursor: pointer;
@@ -32,7 +36,10 @@ export const Button = styled.button<{ $primary?: boolean }>`
   transition: all 0.2s ease;
 
   &:hover {
-    background: ${(props) => (props.$primary ? "var(--color-primary-hover)" : "var(--color-input-background)")};
+    background: ${(props) =>
+      props.$primary
+        ? "var(--color-primary-hover)"
+        : "var(--color-input-background)"};
   }
 
   &:disabled {
@@ -90,13 +97,13 @@ export const PhoneAddPopover = ({
   }, [onClose]);
 
   const [step, setStep] = useState<"phone" | "otp">(
-    existingPhone ? "otp" : "phone",
+    existingPhone ? "otp" : "phone"
   );
   const [phoneNumber, setPhoneNumber] = useState(
-    existingPhone?.replace(/^\+\d+/, "") || "",
+    existingPhone?.replace(/^\+\d+/, "") || ""
   );
   const [countryCode, setCountryCode] = useState(
-    Intl.DateTimeFormat().resolvedOptions().locale.split("-")?.pop(),
+    Intl.DateTimeFormat().resolvedOptions().locale.split("-")?.pop()
   );
   const [otp, setOtp] = useState("");
   const [loading, setLoading] = useState(false);

@@ -13,7 +13,7 @@ const Container = styled.div`
   padding: var(--space-2xl);
   background: var(--color-background);
   border-radius: var(--radius-lg);
-  box-shadow: 0 4px 24px var(--color-shadow);
+  box-shadow: 0 4px 12px var(--color-shadow);
   text-align: center;
 `;
 
@@ -55,7 +55,9 @@ const spin = keyframes`
   }
 `;
 
-const IconContainer = styled.div<{ $status: "loading" | "success" | "error" | "redirecting" }>`
+const IconContainer = styled.div<{
+  $status: "loading" | "success" | "error" | "redirecting";
+}>`
   display: flex;
   align-items: center;
   justify-content: center;
@@ -97,7 +99,9 @@ const IconContainer = styled.div<{ $status: "loading" | "success" | "error" | "r
   }
 `;
 
-const StatusText = styled.div<{ $status: "loading" | "success" | "error" | "redirecting" }>`
+const StatusText = styled.div<{
+  $status: "loading" | "success" | "error" | "redirecting";
+}>`
   font-size: var(--font-sm);
   font-weight: 500;
   color: ${(props) => {
@@ -163,7 +167,7 @@ export function SSOCallback({
     completeVerification,
     prepareVerification,
     completionLoading,
-    completionError
+    completionError,
   } = useSSOCallback({
     onSuccess,
     onError,
@@ -172,8 +176,14 @@ export function SSOCallback({
   });
 
   const getStatus = () => {
-    if ((requiresCompletion || requiresVerification) && signupAttempt && showCompletionForm) return "completion";
-    if (error && error.message.includes("No OAuth callback data found")) return "redirecting";
+    if (
+      (requiresCompletion || requiresVerification) &&
+      signupAttempt &&
+      showCompletionForm
+    )
+      return "completion";
+    if (error && error.message.includes("No OAuth callback data found"))
+      return "redirecting";
     if (error) return "error";
     if (session && processed) return "success";
     return "loading";

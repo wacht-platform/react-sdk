@@ -1,6 +1,7 @@
 import styled from "styled-components";
 import { DefaultStylesProvider } from "@/components/utility/root";
 import { OtherAuthOptions } from "@/components/auth/other-auth-options";
+import { AuthFormImage } from "./auth-image";
 
 const Container = styled.div`
   max-width: 360px;
@@ -8,7 +9,7 @@ const Container = styled.div`
   padding: var(--space-2xl);
   background: var(--color-background);
   border-radius: var(--radius-lg);
-  box-shadow: 0 4px 24px var(--color-shadow);
+  box-shadow: 0 4px 12px var(--color-shadow);
 `;
 
 const Header = styled.div`
@@ -30,8 +31,6 @@ const Subtitle = styled.p`
   font-size: var(--font-xs);
   margin: 0;
 `;
-
-
 
 const Footer = styled.div`
   text-align: center;
@@ -56,6 +55,7 @@ export function OtherSignInOptions({ onBack }: OtherSignInOptionsProps) {
   return (
     <DefaultStylesProvider>
       <Container>
+        <AuthFormImage />
         <Header>
           <Title>Supported Options</Title>
           <Subtitle>Choose one of the following options to continue</Subtitle>
@@ -65,8 +65,10 @@ export function OtherSignInOptions({ onBack }: OtherSignInOptionsProps) {
           <FooterText>
             Don't have an account? <Link href="/signup">Sign up</Link>
           </FooterText>
-          <FooterText style={{ marginTop: 'var(--space-sm)' }}>
-            <Link onClick={onBack} style={{ cursor: 'pointer' }}>Use other method</Link>
+          <FooterText style={{ marginTop: "var(--space-sm)" }}>
+            <Link onClick={onBack} style={{ cursor: "pointer" }}>
+              Back to login
+            </Link>
           </FooterText>
         </Footer>
       </Container>
