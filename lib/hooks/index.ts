@@ -9,3 +9,4 @@ export * from "./use-waitlist";
 export * from "./use-organization";
 export * from "./use-workspace";
 export * from "./use-sso-callback";
+export * from "./use-magic-link";

@@ -17,6 +17,7 @@ export interface SignInParams {
   username?: string;
   password?: string;
   phone?: string;
+  strategy?: string;
 }
 
 export interface SignInResponse {

@@ -29,6 +29,7 @@ type GenericSignInParams = {
 	username?: string;
 	password?: string;
 	phone?: string;
+	strategy?: string;
 };
 
 type SignInGeneric = ({
@@ -36,6 +37,7 @@ type SignInGeneric = ({
 	username,
 	password,
 	phone,
+	strategy,
 }: GenericSignInParams) => Promise<ApiResult<Session>>;
 
 type PhoneSignInParams = {
@@ -45,6 +47,22 @@ type PhoneSignInParams = {
 type SignInPhone = ({
 	phone,
 }: PhoneSignInParams) => Promise<ApiResult<Session>>;
+
+type EmailOTPSignInParams = {
+	email: string;
+};
+
+type SignInEmailOTP = ({
+	email,
+}: EmailOTPSignInParams) => Promise<ApiResult<Session>>;
+
+type MagicLinkSignInParams = {
+	email: string;
+};
+
+type SignInMagicLink = ({
+	email,
+}: MagicLinkSignInParams) => Promise<ApiResult<Session>>;
 
 export enum OAuthProvider {
 	XOauth = "x_oauth",
@@ -70,6 +88,8 @@ export enum SignInStrategy {
 	Username = "username",
 	Email = "email",
 	Phone = "phone",
+	EmailOTP = "email_otp",
+	MagicLink = "magic_link",
 	Oauth = "oauth",
 	Generic = "generic",
 }
@@ -77,6 +97,7 @@ export enum SignInStrategy {
 type VerificationStrategy =
 	| "email_otp"
 	| "phone_otp"
+	| "magic_link"
 	| "email_magiclink"
 	| "auth_code";
 
@@ -84,6 +105,8 @@ type CreateSignInStrategyResult = {
 	(strategy: SignInStrategy.Username): SignInPlainUsername;
 	(strategy: SignInStrategy.Email): SignInPlainEmail;
 	(strategy: SignInStrategy.Phone): SignInPhone;
+	(strategy: SignInStrategy.EmailOTP): SignInEmailOTP;
+	(strategy: SignInStrategy.MagicLink): SignInMagicLink;
 	(strategy: SignInStrategy.Oauth): SignInOauth;
 	(strategy: SignInStrategy.Generic): SignInGeneric;
 };
@@ -135,6 +158,8 @@ function builder(
 		),
 		[SignInStrategy.Email]: builderEmail(client, setSignInAttempt, setErrors),
 		[SignInStrategy.Phone]: builderPhone(client, setSignInAttempt, setErrors),
+		[SignInStrategy.EmailOTP]: builderEmailOTP(client, setSignInAttempt, setErrors),
+		[SignInStrategy.MagicLink]: builderMagicLink(client, setSignInAttempt, setErrors),
 		[SignInStrategy.Oauth]: builderOauth(client, setErrors),
 		[SignInStrategy.Generic]: builderGeneric(
 			client,
@@ -155,6 +180,7 @@ function builderUsername(
 ): SignInPlainUsername {
 	return async ({ username, password }: UsernameSignInParams) => {
 		const form = new FormData();
+		form.append("strategy", "plain_username");
 		form.append("username", username);
 		form.append("password", password);
 
@@ -180,6 +206,7 @@ function builderEmail(
 ): SignInPlainEmail {
 	return async ({ email, password }: EmailSignInParams) => {
 		const form = new FormData();
+		form.append("strategy", "plain_email");
 		form.append("email", email);
 		form.append("password", password);
 
@@ -205,7 +232,58 @@ function builderPhone(
 ): SignInPhone {
 	return async ({ phone }: PhoneSignInParams) => {
 		const form = new FormData();
+		form.append("strategy", "phone_otp");
 		form.append("phone", phone);
+
+		const response = await client("/auth/signin", {
+			method: "POST",
+			body: form,
+		});
+		const result = await responseMapper<Session>(response);
+		if ("data" in result && result.data?.signin_attempts?.length) {
+			setSignInAttempt(result.data.signin_attempts.at(-1) || null);
+			setErrors(null);
+		} else {
+			setErrors(result);
+		}
+		return result;
+	};
+}
+
+function builderEmailOTP(
+	client: Client,
+	setSignInAttempt: (attempt: SigninAttempt | null) => void,
+	setErrors: (errors: ApiResult<unknown, ErrorInterface> | null) => void,
+): SignInEmailOTP {
+	return async ({ email }: EmailOTPSignInParams) => {
+		const form = new FormData();
+		form.append("strategy", "email_otp");
+		form.append("email", email);
+
+		const response = await client("/auth/signin", {
+			method: "POST",
+			body: form,
+		});
+		const result = await responseMapper<Session>(response);
+		if ("data" in result && result.data?.signin_attempts?.length) {
+			setSignInAttempt(result.data.signin_attempts.at(-1) || null);
+			setErrors(null);
+		} else {
+			setErrors(result);
+		}
+		return result;
+	};
+}
+
+function builderMagicLink(
+	client: Client,
+	setSignInAttempt: (attempt: SigninAttempt | null) => void,
+	setErrors: (errors: ApiResult<unknown, ErrorInterface> | null) => void,
+): SignInMagicLink {
+	return async ({ email }: MagicLinkSignInParams) => {
+		const form = new FormData();
+		form.append("strategy", "magic_link");
+		form.append("email", email);
 
 		const response = await client("/auth/signin", {
 			method: "POST",
@@ -256,9 +334,12 @@ function builderGeneric(
 	setSignInAttempt: (attempt: SigninAttempt | null) => void,
 	setErrors: (errors: ApiResult<unknown, ErrorInterface> | null) => void,
 ): SignInGeneric {
-	return async ({ email, username, password, phone }: GenericSignInParams) => {
+	return async ({ email, username, password, phone, strategy }: GenericSignInParams) => {
 		const form = new FormData();
-		form.append("strategy", "generic");
+
+		if (strategy) {
+			form.append("strategy", strategy);
+		}
 		if (email) form.append("email", email);
 		if (username) form.append("username", username);
 		if (password) form.append("password", password);
@@ -322,13 +403,18 @@ export function useSignIn(): UseSignInReturnType {
 					},
 				);
 			},
-			prepareVerification: async (strategy: VerificationStrategy) => {
-				await client(
-					`/auth/prepare-verification?attempt_identifier=${signinAttempt?.id}&strategy=${strategy}&identifier_type=signin`,
-					{
-						method: "POST",
-					},
-				);
+			prepareVerification: async (strategy: VerificationStrategy, redirectUri?: string) => {
+				const url = new URL(`/auth/prepare-verification`, window.location.origin);
+				url.searchParams.set('attempt_identifier', signinAttempt?.id?.toString() || '');
+				url.searchParams.set('strategy', strategy);
+				url.searchParams.set('identifier_type', 'signin');
+				if (redirectUri) {
+					url.searchParams.set('redirect_uri', redirectUri);
+				}
+
+				await client(url.pathname + url.search, {
+					method: "POST",
+				});
 			},
 		},
 		discardSignInAttempt: () => {
@@ -371,6 +457,8 @@ type SignInFunction<T extends SignInStrategy> = {
 	[SignInStrategy.Username]: SignInPlainUsername;
 	[SignInStrategy.Email]: SignInPlainEmail;
 	[SignInStrategy.Phone]: SignInPhone;
+	[SignInStrategy.EmailOTP]: SignInEmailOTP;
+	[SignInStrategy.MagicLink]: SignInMagicLink;
 	[SignInStrategy.Oauth]: SignInOauth;
 	[SignInStrategy.Generic]: SignInGeneric;
 }[T];
@@ -391,6 +479,7 @@ export type UseSignInWithStrategyReturnType<T extends SignInStrategy> =
 			completeVerification: (verificationCode: string) => Promise<unknown>;
 			prepareVerification: (
 				verification: VerificationStrategy,
+				redirectUri?: string,
 			) => Promise<unknown>;
 		};
 		signinAttempt: SigninAttempt | null;
@@ -428,6 +517,10 @@ export function useSignInWithStrategy<T extends SignInStrategy>(
 				return signIn.createStrategy(SignInStrategy.Email);
 			case SignInStrategy.Phone:
 				return signIn.createStrategy(SignInStrategy.Phone);
+			case SignInStrategy.EmailOTP:
+				return signIn.createStrategy(SignInStrategy.EmailOTP);
+			case SignInStrategy.MagicLink:
+				return signIn.createStrategy(SignInStrategy.MagicLink);
 			case SignInStrategy.Oauth:
 				return signIn.createStrategy(SignInStrategy.Oauth);
 			case SignInStrategy.Generic:

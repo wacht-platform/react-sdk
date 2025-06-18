@@ -72,7 +72,7 @@ export function OtherAuthOptions() {
 
   const handleBack = () => {
     setShowForgotPassword(false);
-    setShowOtherOptions(true);
+    setShowOtherOptions(false);
   };
 
   return (

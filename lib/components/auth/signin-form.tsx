@@ -196,6 +196,10 @@ function SignInFormContent() {
       if (otpSent && !otpCode) {
         newErrors.otp = "OTP code is required";
       }
+    } else if (firstFactor === "email_magic_link") {
+      if (!formData.email) {
+        newErrors.email = "Email address is required";
+      }
     } else if (firstFactor === "phone_otp") {
       if (!formData.phone) {
         newErrors.phone = "Phone number is required";
@@ -211,9 +215,32 @@ function SignInFormContent() {
       return;
     }
 
+    // Determine strategy based on firstFactor
+    let strategy = "";
+    switch (firstFactor) {
+      case "email_password":
+        strategy = "plain_email";
+        break;
+      case "username_password":
+        strategy = "plain_username";
+        break;
+      case "email_otp":
+        strategy = "email_otp";
+        break;
+      case "email_magic_link":
+        strategy = "magic_link";
+        break;
+      case "phone_otp":
+        strategy = "phone_otp";
+        break;
+    }
+
     setIsSubmitting(true);
     try {
-      await signIn.create(formData);
+      await signIn.create({
+        ...formData,
+        strategy
+      });
     } catch (err) {
       setErrors({ submit: (err as Error).message });
     } finally {
@@ -283,7 +310,9 @@ function SignInFormContent() {
     switch (signinAttempt.current_step) {
       case "verify_email":
       case "verify_email_otp":
-        signIn.prepareVerification("email_otp");
+        // Determine strategy based on signin method
+        const strategy = firstFactor === "email_magic_link" ? "magic_link" : "email_otp";
+        signIn.prepareVerification(strategy);
         break;
       case "verify_phone":
       case "verify_phone_otp":
@@ -304,6 +333,8 @@ function SignInFormContent() {
               ErrorCode.InvalidCredentials,
               ErrorCode.UserNotFound,
               ErrorCode.UserAlreadySignedIn,
+              ErrorCode.Internal,
+              ErrorCode.UserDisabled,
             ].includes(err.code)
           ) {
             newErrors.submit = err.message;
@@ -349,7 +380,12 @@ function SignInFormContent() {
           <>
             <Header>
               <Title>Check your email</Title>
-              <Subtitle>{formData.email} to continue to Wacht</Subtitle>
+              <Subtitle>
+                {firstFactor === "email_magic_link"
+                  ? `We've sent a magic link to ${formData.email}. Click the link to sign in.`
+                  : `We've sent a verification code to ${formData.email}. Enter it below to continue.`
+                }
+              </Subtitle>
             </Header>
           </>
         ) : (
@@ -379,7 +415,8 @@ function SignInFormContent() {
 
             <Form onSubmit={createSignIn} noValidate>
               {(firstFactor === "email_password" ||
-                firstFactor === "email_otp") &&
+                firstFactor === "email_otp" ||
+                firstFactor === "email_magic_link") &&
                 deployment?.auth_settings?.email_address?.enabled && (
                   <FormGroup>
                     <Label htmlFor="email">Email address</Label>
@@ -471,11 +508,13 @@ function SignInFormContent() {
                   </FormGroup>
                 )}
 
-              {errors.submit && <ErrorMessage>{errors.submit}</ErrorMessage>}
+              <div>
+                {errors.submit && <ErrorMessage>{errors.submit}</ErrorMessage>}
 
-              <SubmitButton type="submit" disabled={isSubmitting || loading}>
-                {isSubmitting ? "Signing in..." : "Sign in"}
-              </SubmitButton>
+                <SubmitButton type="submit" disabled={isSubmitting || loading}>
+                  {isSubmitting ? "Signing in..." : "Sign in"}
+                </SubmitButton>
+              </div>
 
               <Link
                 style={{ fontSize: "12px", textAlign: "center" }}
@@ -492,6 +531,17 @@ function SignInFormContent() {
                 </NavigationLink>
               </Link>
             </Footer>
+          </>
+        ) : firstFactor === "email_magic_link" ? (
+          <>
+            <div style={{ textAlign: "center", padding: "var(--space-lg)" }}>
+              <p style={{ color: "var(--color-text-secondary)", margin: "0 0 var(--space-md) 0" }}>
+                Check your email and click the magic link to complete your sign in.
+              </p>
+              <p style={{ color: "var(--color-text-secondary)", fontSize: "var(--font-size-sm)", margin: 0 }}>
+                The magic link will expire in 5 minutes.
+              </p>
+            </div>
           </>
         ) : (
           <>

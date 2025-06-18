@@ -171,9 +171,7 @@ export function WaitlistForm() {
         err.code?.toLowerCase().includes(field.toLowerCase())
       );
       if (fieldError) return fieldError.message;
-    }
-
-    return undefined;
+    } else return errors?.errors[0]?.message;
   };
 
   const authSettings = deployment?.auth_settings;
