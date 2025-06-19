@@ -239,7 +239,7 @@ function SignInFormContent() {
     try {
       await signIn.create({
         ...formData,
-        strategy
+        strategy,
       });
     } catch (err) {
       setErrors({ submit: (err as Error).message });
@@ -310,8 +310,8 @@ function SignInFormContent() {
     switch (signinAttempt.current_step) {
       case "verify_email":
       case "verify_email_otp":
-        // Determine strategy based on signin method
-        const strategy = firstFactor === "email_magic_link" ? "magic_link" : "email_otp";
+        const strategy =
+          firstFactor === "email_magic_link" ? "magic_link" : "email_otp";
         signIn.prepareVerification(strategy);
         break;
       case "verify_phone":
@@ -383,8 +383,7 @@ function SignInFormContent() {
               <Subtitle>
                 {firstFactor === "email_magic_link"
                   ? `We've sent a magic link to ${formData.email}. Click the link to sign in.`
-                  : `We've sent a verification code to ${formData.email}. Enter it below to continue.`
-                }
+                  : `We've sent a verification code to ${formData.email}. Enter it below to continue.`}
               </Subtitle>
             </Header>
           </>
@@ -535,10 +534,22 @@ function SignInFormContent() {
         ) : firstFactor === "email_magic_link" ? (
           <>
             <div style={{ textAlign: "center", padding: "var(--space-lg)" }}>
-              <p style={{ color: "var(--color-text-secondary)", margin: "0 0 var(--space-md) 0" }}>
-                Check your email and click the magic link to complete your sign in.
+              <p
+                style={{
+                  color: "var(--color-text-secondary)",
+                  margin: "0 0 var(--space-md) 0",
+                }}
+              >
+                Check your email and click the magic link to complete your sign
+                in.
               </p>
-              <p style={{ color: "var(--color-text-secondary)", fontSize: "var(--font-size-sm)", margin: 0 }}>
+              <p
+                style={{
+                  color: "var(--color-text-secondary)",
+                  fontSize: "var(--font-size-sm)",
+                  margin: 0,
+                }}
+              >
                 The magic link will expire in 5 minutes.
               </p>
             </div>

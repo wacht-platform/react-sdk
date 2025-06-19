@@ -6,90 +6,91 @@ import { useState, useEffect, useMemo, createContext, useRef } from "react";
 import type { ReactNode } from "react";
 
 const DeploymentContext = createContext<DeploymentContextType | undefined>(
-	undefined,
+  undefined
 );
 
 interface DeploymentProviderProps {
-	children: ReactNode;
-	publicKey: string;
+  children: ReactNode;
+  publicKey: string;
 }
 
 function DeploymentProvider({ children, publicKey }: DeploymentProviderProps) {
-	const [loading, setLoading] = useState(true);
-	const [deployment, setDeployment] = useState<Deployment | null>(null);
-	const singletonLock = useRef(false);
+  const [loading, setLoading] = useState(true);
+  const [deployment, setDeployment] = useState<Deployment | null>(null);
+  const singletonLock = useRef(false);
 
-	useEffect(() => {
-		async function initializeDeployment() {
-			if (singletonLock.current) {
-				return;
-			}
+  useEffect(() => {
+    async function initializeDeployment() {
+      if (singletonLock.current) {
+        return;
+      }
 
-			singletonLock.current = true;
-			setLoading(true);
+      singletonLock.current = true;
+      setLoading(true);
 
-			const baseUrlEncoded = publicKey.split("_").pop();
+      const baseUrlEncoded = publicKey.split("_").pop();
 
-			if (!baseUrlEncoded) {
-				throw new Error("Invalid public key");
-			}
+      if (!baseUrlEncoded) {
+        throw new Error("Invalid public key");
+      }
 
-			const baseUrl = atob(baseUrlEncoded);
-			// get query param
-			let devSession = null;
-			if (new URLSearchParams(window.location.search).has("dev_session")) {
-				devSession = new URLSearchParams(window.location.search).get(
-					"dev_session",
-				);
-				localStorage.setItem("__dev_session__", devSession ?? "");
-				const newUrl = new URL(window.location.href);
-				newUrl.searchParams.delete("dev_session");
-				window.history.replaceState({}, "", newUrl.toString());
-			} else {
-				devSession = localStorage.getItem("__dev_session__");
-			}
+      const baseUrl = atob(baseUrlEncoded);
 
-			const deployment = await fetch(`${baseUrl}/deployment`, {
-				headers: { "X-Development-Session": devSession ?? "" },
-			});
+      let devSession = null;
+      if (new URLSearchParams(window.location.search).has("dev_session")) {
+        devSession = new URLSearchParams(window.location.search).get(
+          "dev_session"
+        );
+        localStorage.setItem("__dev_session__", devSession ?? "");
+        const newUrl = new URL(window.location.href);
+        newUrl.searchParams.delete("dev_session");
+        window.history.replaceState({}, "", newUrl.toString());
+      } else {
+        devSession = localStorage.getItem("__dev_session__");
+      }
 
-			if (!deployment.ok) {
-				setLoading(false);
-				return;
-			}
+      const deployment = await fetch(`${baseUrl}/deployment`, {
+        headers: { "X-Development-Session": devSession ?? "" },
+        credentials: "include",
+      });
 
-			const deploymentConfig =
-				(await deployment.json()) as ClinetReponse<Deployment>;
+      if (!deployment.ok) {
+        setLoading(false);
+        return;
+      }
 
-			deploymentConfig.data.backend_host = baseUrl;
-			setDeployment(deploymentConfig.data);
+      const deploymentConfig =
+        (await deployment.json()) as ClinetReponse<Deployment>;
 
-			if (deployment.headers.get("X-Development-Session")) {
-				localStorage.setItem(
-					"__dev_session__",
-					deployment.headers.get("X-Development-Session") ?? "",
-				);
-			}
+      deploymentConfig.data.backend_host = baseUrl;
+      setDeployment(deploymentConfig.data);
 
-			setLoading(false);
-		}
+      if (deployment.headers.get("X-Development-Session")) {
+        localStorage.setItem(
+          "__dev_session__",
+          deployment.headers.get("X-Development-Session") ?? ""
+        );
+      }
 
-		initializeDeployment();
-	}, [publicKey]);
+      setLoading(false);
+    }
 
-	const value = useMemo(
-		() => ({
-			loading,
-			deployment,
-		}),
-		[loading, deployment],
-	);
+    initializeDeployment();
+  }, [publicKey]);
 
-	return (
-		<DeploymentContext.Provider value={value}>
-			{children}
-		</DeploymentContext.Provider>
-	);
+  const value = useMemo(
+    () => ({
+      loading,
+      deployment,
+    }),
+    [loading, deployment]
+  );
+
+  return (
+    <DeploymentContext.Provider value={value}>
+      {children}
+    </DeploymentContext.Provider>
+  );
 }
 
 export { DeploymentProvider, DeploymentContext };
