@@ -1,6 +1,6 @@
 {
 	"name": "@snipextt/wacht",
-	"version": "0.0.1-alpha.31",
+	"version": "0.0.1-alpha.34",
 	"description": "",
 	"type": "module",
 	"main": "dist/index.cjs.js",

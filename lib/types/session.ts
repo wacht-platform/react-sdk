@@ -33,6 +33,7 @@ export type SSOProvider =
 export type CurrentSessionStep =
   | "verify_password"
   | "verify_email"
+  | "verify_email_link"
   | "verify_email_otp"
   | "verify_phone"
   | "verify_phone_otp"

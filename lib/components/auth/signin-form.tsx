@@ -15,6 +15,7 @@ import {
 } from "../../context/signin-provider";
 import { NavigationLink } from "../utility/navigation";
 import { Input } from "@/components/utility/input";
+import { PhoneNumberInput } from "../utility/phone";
 import { Form, FormGroup, Label } from "../utility/form";
 import { ErrorCode } from "@/types/client";
 import type { SignInParams } from "@/types/auth";
@@ -149,11 +150,16 @@ function SignInFormContent() {
   const [errors, setErrors] = useState<Record<string, string>>({});
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [otpCode, setOtpCode] = useState("");
+  const [countryCode, setCountryCode] = useState<string | undefined>("US");
 
   const handleInputChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-    const { name, value } = e.target;
-    if (name === "email") {
+    let { name, value } = e.target;
+    if (name === "phone") {
+      // Format phone number like in signup
+      value = value.replace(/[^0-9-]/g, "");
+    } else if (name === "email") {
       setEmail(value);
+      value = value.toLowerCase();
     }
     setFormData((prev) => ({ ...prev, [name]: value }));
     setErrors((prev) => ({ ...prev, [name]: "" }));
@@ -167,6 +173,7 @@ function SignInFormContent() {
       phone: "",
     });
     setErrors({});
+    setCountryCode("US");
   };
 
   const createSignIn = async (e: React.FormEvent) => {
@@ -203,6 +210,12 @@ function SignInFormContent() {
     } else if (firstFactor === "phone_otp") {
       if (!formData.phone) {
         newErrors.phone = "Phone number is required";
+      } else {
+        // Validate phone number format like in signup
+        const phonePattern = /^\d{7,15}$/;
+        if (!phonePattern.test(formData.phone)) {
+          newErrors.phone = "Phone number must contain 7-15 digits";
+        }
       }
       if (otpSent && !otpCode) {
         newErrors.otp = "OTP code is required";
@@ -289,11 +302,13 @@ function SignInFormContent() {
     }
 
     if (signinAttempt.completed) {
-      const redirectUri = new URLSearchParams(window.location.search).get(
+      let redirectUri = new URLSearchParams(window.location.search).get(
         "redirect_uri"
       );
 
-      if (!redirectUri) return;
+      if (!redirectUri) {
+        redirectUri = "https://" + window.location.hostname;
+      }
 
       const uri = new URL(redirectUri);
 
@@ -310,6 +325,7 @@ function SignInFormContent() {
     switch (signinAttempt.current_step) {
       case "verify_email":
       case "verify_email_otp":
+      case "verify_email_link":
         const strategy =
           firstFactor === "email_magic_link" ? "magic_link" : "email_otp";
         signIn.prepareVerification(strategy);
@@ -379,11 +395,17 @@ function SignInFormContent() {
         {otpSent ? (
           <>
             <Header>
-              <Title>Check your email</Title>
+              <Title>
+                {firstFactor === "phone_otp"
+                  ? "Check your phone"
+                  : "Check your email"}
+              </Title>
               <Subtitle>
                 {firstFactor === "email_magic_link"
-                  ? `We've sent a magic link to ${formData.email}. Click the link to sign in.`
-                  : `We've sent a verification code to ${formData.email}. Enter it below to continue.`}
+                  ? `If ${formData.email} exists in our records, you will receive a magic link. Click the link to sign in.`
+                  : firstFactor === "phone_otp"
+                  ? `If ${formData.phone} exists in our records, you will receive a verification code via SMS. Enter it below to continue.`
+                  : `If ${formData.email} exists in our records, you will receive a verification code. Enter it below to continue.`}
               </Subtitle>
             </Header>
           </>
@@ -457,14 +479,12 @@ function SignInFormContent() {
                 deployment?.auth_settings?.phone_number?.enabled && (
                   <FormGroup>
                     <Label htmlFor="phone">Phone number</Label>
-                    <Input
-                      type="tel"
-                      id="phone"
-                      name="phone"
+                    <PhoneNumberInput
                       value={formData.phone}
                       onChange={handleInputChange}
-                      placeholder="Enter your phone number"
-                      aria-invalid={!!errors.phone}
+                      error={errors.phone}
+                      countryCode={countryCode}
+                      setCountryCode={setCountryCode}
                     />
                     {errors.phone && (
                       <ErrorMessage>{errors.phone}</ErrorMessage>
@@ -532,28 +552,26 @@ function SignInFormContent() {
             </Footer>
           </>
         ) : firstFactor === "email_magic_link" ? (
-          <>
-            <div style={{ textAlign: "center", padding: "var(--space-lg)" }}>
-              <p
-                style={{
-                  color: "var(--color-text-secondary)",
-                  margin: "0 0 var(--space-md) 0",
+          <Footer>
+            Having trouble?{" "}
+            <Link>
+              <NavigationLink to={deployment!.ui_settings.support_page_url}>
+                Get help
+              </NavigationLink>
+            </Link>
+            <div style={{ marginTop: "var(--space-sm)" }}>
+              <Link
+                onClick={() => {
+                  setOtpSent(false);
+                  discardSignInAttempt();
+                  resetFormData();
                 }}
+                style={{ cursor: "pointer" }}
               >
-                Check your email and click the magic link to complete your sign
-                in.
-              </p>
-              <p
-                style={{
-                  color: "var(--color-text-secondary)",
-                  fontSize: "var(--font-size-sm)",
-                  margin: 0,
-                }}
-              >
-                The magic link will expire in 5 minutes.
-              </p>
+                Back to login
+              </Link>
             </div>
-          </>
+          </Footer>
         ) : (
           <>
             <Form
@@ -597,7 +615,7 @@ function SignInFormContent() {
                   }}
                   style={{ cursor: "pointer" }}
                 >
-                  Use other method
+                  Back to login
                 </Link>
               </div>
             </Footer>
