@@ -36,10 +36,12 @@ export function useClient(): UseClientReturnType {
       ...defaultOptions,
       ...options,
       headers,
-      credentials: "include",
     });
 
-    if (response.headers.get("X-Development-Session")) {
+    if (
+      deployment.mode === "staging" &&
+      response.headers.get("X-Development-Session")
+    ) {
       localStorage.setItem(
         "__dev_session__",
         response.headers.get("X-Development-Session") ?? ""
@@ -66,7 +68,9 @@ function getDefaultOptions(deployment: Deployment): RequestInit {
     return {
       headers,
     };
+  } else {
+    return {
+      credentials: "include",
+    };
   }
-
-  return {};
 }

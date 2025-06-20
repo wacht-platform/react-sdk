@@ -23,7 +23,7 @@ import type { DeploymentSocialConnection } from "@/types/deployment";
 import { useDeployment } from "@/hooks/use-deployment";
 import { Button } from "@/components/utility";
 import { AuthFormImage } from "./auth-image";
-import { SignInProfileCompletion } from "./signin-profile-completion";
+
 
 const Container = styled.div`
   max-width: 380px;
@@ -138,7 +138,6 @@ function SignInFormContent() {
     signinAttempt,
     discardSignInAttempt,
     errors: signInErrors,
-    completeProfile,
   } = useSignInWithStrategy(SignInStrategy.Generic);
   const { signIn: oauthSignIn } = useSignInWithStrategy(SignInStrategy.Oauth);
   const [formData, setFormData] = useState<SignInParams>({
@@ -371,20 +370,14 @@ function SignInFormContent() {
   }
 
   if (signinAttempt?.requires_completion) {
-    return (
-      <DefaultStylesProvider>
-        <SignInProfileCompletion
-          signinAttempt={signinAttempt}
-          onComplete={completeProfile}
-          loading={isSubmitting}
-          error={
-            signInErrors?.errors?.[0]
-              ? new Error(signInErrors.errors[0].message)
-              : null
-          }
-        />
-      </DefaultStylesProvider>
-    );
+    // Redirect to profile completion
+    const redirectUri = new URLSearchParams(window.location.search).get("redirect_uri") ||
+                       window.location.origin;
+
+    // Use the utility function for consistent redirect behavior
+    const url = `/profile-completion?redirect_uri=${encodeURIComponent(redirectUri)}`;
+    window.location.href = url;
+    return null;
   }
 
   return (

@@ -28,13 +28,14 @@ function DeploymentProvider({ children, publicKey }: DeploymentProviderProps) {
       singletonLock.current = true;
       setLoading(true);
 
-      const baseUrlEncoded = publicKey.split("_").pop();
+      const [prefix, ...baseUrlEncodedParts] = publicKey.split("_");
 
-      if (!baseUrlEncoded) {
+      if (!baseUrlEncodedParts) {
         throw new Error("Invalid public key");
       }
 
-      const baseUrl = atob(baseUrlEncoded);
+      const baseUrl = atob(baseUrlEncodedParts.join("_")) + "/api";
+      let staging = prefix === "pk_test";
 
       let devSession = null;
       if (new URLSearchParams(window.location.search).has("dev_session")) {
@@ -49,10 +50,19 @@ function DeploymentProvider({ children, publicKey }: DeploymentProviderProps) {
         devSession = localStorage.getItem("__dev_session__");
       }
 
-      const deployment = await fetch(`${baseUrl}/deployment`, {
-        headers: { "X-Development-Session": devSession ?? "" },
-        credentials: "include",
-      });
+      let opts: RequestInit = {};
+
+      if (!staging) {
+        opts = {
+          credentials: "include",
+        };
+      } else {
+        opts = {
+          headers: { "X-Development-Session": devSession ?? "" },
+        };
+      }
+
+      const deployment = await fetch(`${baseUrl}/deployment`, opts);
 
       if (!deployment.ok) {
         setLoading(false);
@@ -65,7 +75,7 @@ function DeploymentProvider({ children, publicKey }: DeploymentProviderProps) {
       deploymentConfig.data.backend_host = baseUrl;
       setDeployment(deploymentConfig.data);
 
-      if (deployment.headers.get("X-Development-Session")) {
+      if (staging && deployment.headers.get("X-Development-Session")) {
         localStorage.setItem(
           "__dev_session__",
           deployment.headers.get("X-Development-Session") ?? ""
