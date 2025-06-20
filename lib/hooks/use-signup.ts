@@ -66,17 +66,14 @@ function builder(
       );
     },
     completeVerification: async (verificationCode: string) => {
-      const headers = new Headers();
-      headers.append("Content-Type", "application/json");
+      const form = new FormData();
+      form.append("verification_code", verificationCode);
 
       await client(
         `/auth/attempt-verification?attempt_identifier=${signupAttempt?.id}&identifier_type=signup`,
         {
           method: "POST",
-          headers,
-          body: JSON.stringify({
-            verification_code: verificationCode,
-          }),
+          body: form,
         },
       );
     },

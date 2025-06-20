@@ -68,10 +68,17 @@ export function useProfileCompletion() {
     try {
       const endpoint = `/auth/complete-profile?attempt_id=${attempt.id}`;
 
+      const form = new FormData();
+      for (const [key, value] of Object.entries(data)) {
+        if (value) {
+          form.append(key, value);
+        }
+      }
+
       const response = await responseMapper(
         await client(endpoint, {
           method: "POST",
-          body: JSON.stringify(data),
+          body: form,
         })
       );
 
@@ -111,10 +118,13 @@ export function useProfileCompletion() {
           ? `/auth/verify-signin?attempt_id=${attempt.id}`
           : `/auth/verify-signup?attempt_id=${attempt.id}`;
 
+      const form = new FormData();
+      form.append("verification_code", code);
+
       const response = await responseMapper(
         await client(endpoint, {
           method: "POST",
-          body: JSON.stringify({ verification_code: code }),
+          body: form,
         })
       );
 
@@ -154,10 +164,13 @@ export function useProfileCompletion() {
           ? `/auth/prepare-signin-verification?attempt_id=${attempt.id}`
           : `/auth/prepare-signup-verification?attempt_id=${attempt.id}`;
 
+      const form = new FormData();
+      form.append("strategy", strategy);
+
       await responseMapper(
         await client(endpoint, {
           method: "POST",
-          body: JSON.stringify({ strategy }),
+          body: form,
         })
       );
 

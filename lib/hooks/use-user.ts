@@ -40,10 +40,17 @@ export function useUser() {
   } = useSWR(loading ? null : "/user", () => fetchUser(client));
 
   const updateProfile = async (data: ProfileUpdateData) => {
+    const form = new FormData();
+    for (const [key, value] of Object.entries(data)) {
+      if (value !== undefined && value !== null) {
+        form.append(key, String(value));
+      }
+    }
+
     const response = await responseMapper(
       await client("/me", {
         method: "PATCH",
-        body: JSON.stringify(data),
+        body: form,
       })
     );
     mutate();
@@ -69,10 +76,13 @@ export function useUser() {
   };
 
   const createEmailAddress = async (email: string) => {
+    const form = new FormData();
+    form.append("email", email);
+
     const response = await responseMapper<UserEmailAddress>(
       await client("/me/email-addresses", {
         method: "POST",
-        body: JSON.stringify({ email }),
+        body: form,
       })
     );
     return response;
@@ -109,10 +119,13 @@ export function useUser() {
   };
 
   const createPhoneNumber = async (phone_number: string) => {
+    const form = new FormData();
+    form.append("phone_number", phone_number);
+
     const response = await responseMapper<UserPhoneNumber>(
       await client("/me/phone-numbers", {
         method: "POST",
-        body: JSON.stringify({ phone_number }),
+        body: form,
       })
     );
     return response;
@@ -174,10 +187,16 @@ export function useUser() {
   };
 
   const verifyAuthenticator = async (id: string, codes: string[]) => {
+    const form = new FormData();
+    form.append("authenticator_id", id);
+    codes.forEach((code, index) => {
+      form.append(`codes[${index}]`, code);
+    });
+
     const response = await responseMapper(
       await client("/me/authenticator/attempt-verification", {
         method: "POST",
-        body: JSON.stringify({ codes, authenticator_id: id }),
+        body: form,
       })
     );
     return response;
@@ -227,25 +246,27 @@ export function useUser() {
     currentPassword: string,
     newPassword: string
   ) => {
+    const form = new FormData();
+    form.append("current_password", currentPassword);
+    form.append("new_password", newPassword);
+
     const response = await responseMapper(
       await client("/me/update-password", {
         method: "POST",
-        body: JSON.stringify({
-          current_password: currentPassword,
-          new_password: newPassword,
-        }),
+        body: form,
       })
     );
     return response;
   };
 
   const removePassword = async (currentPassword: string) => {
+    const form = new FormData();
+    form.append("current_password", currentPassword);
+
     const response = await responseMapper(
       await client("/me/password", {
         method: "DELETE",
-        body: JSON.stringify({
-          current_password: currentPassword,
-        }),
+        body: form,
       })
     );
     mutate(); // Refresh user data after removing password
@@ -253,10 +274,13 @@ export function useUser() {
   };
 
   const deleteAccount = async (password: string) => {
+    const form = new FormData();
+    form.append("password", password);
+
     const response = await responseMapper(
       await client("/me/account", {
         method: "DELETE",
-        body: JSON.stringify({ password }),
+        body: form,
       })
     );
     return response;

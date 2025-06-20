@@ -44,12 +44,13 @@ export function useVerifyEmailOTP(): UseVerifyEmailOTPReturnType {
 		setVerificationSuccess(null);
 
 		try {
+			const form = new FormData();
+			form.append("verification_code", otp);
+			form.append("email", email);
+
 			const response = await client("/auth/verify-otp", {
 				method: "POST",
-				body: JSON.stringify({
-					otp,
-					email,
-				}),
+				body: form,
 			});
 
 			const result = await response.json();

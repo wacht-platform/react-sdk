@@ -28,14 +28,18 @@ function DeploymentProvider({ children, publicKey }: DeploymentProviderProps) {
       singletonLock.current = true;
       setLoading(true);
 
-      const [prefix, ...baseUrlEncodedParts] = publicKey.split("_");
+      const [_, mode, baseUrlBase64] = publicKey.split("_");
 
-      if (!baseUrlEncodedParts) {
+      if (!baseUrlBase64) {
         throw new Error("Invalid public key");
       }
 
-      const baseUrl = atob(baseUrlEncodedParts.join("_")) + "/api";
-      let staging = prefix === "pk_test";
+      let baseUrl = atob(baseUrlBase64);
+      let staging = mode === "test";
+
+      if (staging) {
+        baseUrl = baseUrl + "/api";
+      }
 
       let devSession = null;
       if (new URLSearchParams(window.location.search).has("dev_session")) {

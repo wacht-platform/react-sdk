@@ -28,7 +28,7 @@ export function useClient(): UseClientReturnType {
       });
     }
 
-    if (!(options?.body instanceof FormData)) {
+    if (!(options?.body instanceof FormData) && options?.method !== "GET") {
       headers.set("Content-Type", "application/json");
     }
 

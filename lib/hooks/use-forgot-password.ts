@@ -16,9 +16,12 @@ export function useForgotPassword() {
     setForgotPasswordLoading(true);
     setForgotPasswordError(null);
 
+    const form = new FormData();
+    form.append("email", email);
+
     const response = await client("/auth/forgot-password", {
       method: "POST",
-      body: JSON.stringify({ email }),
+      body: form,
     });
 
     const result = await responseMapper<{}>(response);
@@ -54,9 +57,14 @@ export function useResetPassword() {
     setResetPasswordLoading(true);
     setResetPasswordError(null);
 
+    const form = new FormData();
+    form.append("email", email);
+    form.append("otp", otp);
+    form.append("password", password);
+
     const response = await client("/auth/reset-password", {
       method: "POST",
-      body: JSON.stringify({ email, otp, password }),
+      body: form,
     });
 
     const result = await responseMapper<{}>(response);

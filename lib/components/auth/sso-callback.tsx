@@ -5,7 +5,6 @@ import { Loader2, AlertCircle, CheckCircle } from "lucide-react";
 import { DefaultStylesProvider } from "../utility/root";
 import { useSSOCallback } from "../../hooks/use-sso-callback";
 import { AuthFormImage } from "./auth-image";
-import { OAuthCompletionForm } from "./oauth-completion-form";
 
 const Container = styled.div`
   max-width: 360px;
@@ -163,11 +162,6 @@ export function SSOCallback({
     requiresCompletion,
     requiresVerification,
     signupAttempt,
-    completeOAuthSignup,
-    completeVerification,
-    prepareVerification,
-    completionLoading,
-    completionError,
   } = useSSOCallback({
     onSuccess,
     onError,
@@ -181,7 +175,7 @@ export function SSOCallback({
       signupAttempt &&
       showCompletionForm
     )
-      return "completion";
+      return "success";
     if (error && error.message.includes("No OAuth callback data found"))
       return "redirecting";
     if (error) return "error";
@@ -220,22 +214,6 @@ export function SSOCallback({
         return loadingMessage;
     }
   };
-
-  if (status === "completion") {
-    return (
-      <DefaultStylesProvider>
-        <OAuthCompletionForm
-          signupAttempt={signupAttempt}
-          onComplete={completeOAuthSignup}
-          onCompleteVerification={completeVerification}
-          onPrepareVerification={prepareVerification}
-          loading={completionLoading}
-          error={completionError}
-          requiresVerification={requiresVerification}
-        />
-      </DefaultStylesProvider>
-    );
-  }
 
   return (
     <DefaultStylesProvider>

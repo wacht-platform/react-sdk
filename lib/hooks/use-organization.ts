@@ -136,10 +136,13 @@ export const useOrganizationList = () => {
 
   const addOrganizationDomain = useCallback(
     async (organization: Organization, domain: NewDomain) => {
+      const form = new FormData();
+      form.append("domain", domain.fqdn);
+
       const response = await responseMapper<OrganizationDomain>(
         await client(`/organizations/${organization.id}/domains`, {
           method: "POST",
-          body: JSON.stringify({ domain: domain.fqdn }),
+          body: form,
         })
       );
 
@@ -179,10 +182,18 @@ export const useOrganizationList = () => {
 
   const addRole = useCallback(
     async (organization: Organization, newRole: RoleCreate) => {
+      const form = new FormData();
+      form.append("name", newRole.name);
+      if (newRole.permissions) {
+        newRole.permissions.forEach((permission, index) => {
+          form.append(`permissions[${index}]`, permission);
+        });
+      }
+
       const response = await responseMapper<OrganizationRole>(
         await client(`/organizations/${organization.id}/roles`, {
           method: "POST",
-          body: JSON.stringify(newRole),
+          body: form,
         })
       );
 
@@ -258,15 +269,20 @@ export const useOrganizationList = () => {
       organization: Organization,
       invitation: OrganizationInvitationPayload
     ) => {
+      const form = new FormData();
+      form.append("email", invitation.email);
+      form.append("role_id", invitation.organizationRole.id);
+      if (invitation.workspace?.id) {
+        form.append("workspace_id", invitation.workspace.id);
+      }
+      if (invitation.workspaceRole?.id) {
+        form.append("workspace_role_id", invitation.workspaceRole.id);
+      }
+
       const response = await responseMapper<OrganizationInvitation>(
         await client(`/organizations/${organization.id}/invitations`, {
           method: "POST",
-          body: JSON.stringify({
-            email: invitation.email,
-            role_id: invitation.organizationRole.id,
-            workspace_id: invitation.workspace?.id,
-            workspace_role_id: invitation.workspaceRole?.id,
-          }),
+          body: form,
         })
       );
       return response.data;

@@ -253,16 +253,14 @@ export function useSSOCallback(
     setCompletionError(null);
 
     try {
+      const form = new FormData();
+      form.append("verification_code", code);
+
       const response = await client(
         `/auth/attempt-verification?attempt_identifier=${signupAttempt.id}&identifier_type=signup`,
         {
           method: "POST",
-          headers: {
-            "Content-Type": "application/json",
-          },
-          body: JSON.stringify({
-            verification_code: code,
-          }),
+          body: form,
         }
       );
 
