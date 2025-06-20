@@ -28,10 +28,6 @@ export function useClient(): UseClientReturnType {
       });
     }
 
-    if (!(options?.body instanceof FormData) && options?.method !== "GET") {
-      headers.set("Content-Type", "application/json");
-    }
-
     const response = await fetch(new URL(url, deployment?.backend_host ?? ""), {
       ...defaultOptions,
       ...options,
