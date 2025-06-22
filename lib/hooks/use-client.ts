@@ -28,7 +28,7 @@ export function useClient(): UseClientReturnType {
       });
     }
 
-    const response = await fetch(new URL(url, deployment?.backend_host ?? ""), {
+    const response = await fetch((deployment.backend_host ?? "") + url, {
       ...defaultOptions,
       ...options,
       headers,
