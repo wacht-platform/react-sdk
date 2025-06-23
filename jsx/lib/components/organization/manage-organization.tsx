@@ -2650,5 +2650,3 @@ const DeleteAccountAccordion = ({
     </div>
   );
 };
-
-export default ManageOrganization;
