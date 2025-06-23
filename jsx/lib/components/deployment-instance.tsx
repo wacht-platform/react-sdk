@@ -1,3 +1,5 @@
+"use client";
+
 import type { ReactNode } from "react";
 import { useDeployment } from "../hooks/use-deployment";
 

@@ -28,7 +28,16 @@ export function useClient(): UseClientReturnType {
       });
     }
 
-    const response = await fetch((deployment.backend_host ?? "") + url, {
+    const backendUrl = new URL(`${deployment.backend_host ?? ""}${url}`);
+
+    if (deployment.mode === "staging") {
+      backendUrl.searchParams.append(
+        "__dev_session__",
+        localStorage.getItem("__dev_session__") ?? ""
+      );
+    }
+
+    const response = await fetch(backendUrl, {
       ...defaultOptions,
       ...options,
       headers,
@@ -54,19 +63,10 @@ export function useClient(): UseClientReturnType {
 }
 
 function getDefaultOptions(deployment: Deployment): RequestInit {
-  const headers = new Headers();
-
   if (deployment.mode === "staging") {
-    headers.append(
-      "X-Development-Session",
-      localStorage.getItem("__dev_session__") ?? ""
-    );
-    return {
-      headers,
-    };
-  } else {
-    return {
-      credentials: "include",
-    };
+    return {};
   }
+  return {
+    credentials: "include",
+  };
 }

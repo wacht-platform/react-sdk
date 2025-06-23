@@ -192,7 +192,10 @@ export interface Deployment {
   mode: "production" | "staging";
 }
 
+import type { PlatformAdapter } from "./platform-adapter";
+
 export interface DeploymentContextType {
   loading: boolean;
   deployment: Deployment | null;
+  adapter: PlatformAdapter;
 }

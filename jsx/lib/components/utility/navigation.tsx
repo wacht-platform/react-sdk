@@ -1,4 +1,5 @@
 import React, { useCallback } from "react";
+import { useNavigation } from "@/hooks";
 
 export interface NavigationProps {
   to: string;
@@ -13,23 +14,14 @@ export const NavigationLink: React.FC<NavigationProps> = ({
   children,
   ...props
 }) => {
+  const { navigate } = useNavigation();
+
   const handleNavigation = useCallback(
     (e: React.MouseEvent<HTMLAnchorElement>) => {
       e.preventDefault();
-      const searchParams = new URLSearchParams(window.location.search);
-      let newUrl = new URL(to);
-      searchParams.forEach((value, key) => {
-        newUrl.searchParams.set(key, value);
-      });
-
-      if (replace) {
-        window.history.replaceState({}, "", newUrl.toString());
-      } else {
-        window.history.pushState({}, "", newUrl.toString());
-      }
-      window.dispatchEvent(new PopStateEvent("popstate", { state: {} }));
+      navigate(to, { replace });
     },
-    [to, replace]
+    [to, replace, navigate]
   );
 
   return (

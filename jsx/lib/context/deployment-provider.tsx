@@ -2,6 +2,7 @@
 
 import type { ClinetReponse } from "@/types/client";
 import type { Deployment, DeploymentContextType } from "@/types/deployment";
+import type { PlatformAdapter } from "@/types/platform-adapter";
 import { useState, useEffect, useMemo, createContext, useRef } from "react";
 import type { ReactNode } from "react";
 
@@ -12,9 +13,10 @@ const DeploymentContext = createContext<DeploymentContextType | undefined>(
 interface DeploymentProviderProps {
   children: ReactNode;
   publicKey: string;
+  adapter: PlatformAdapter;
 }
 
-function DeploymentProvider({ children, publicKey }: DeploymentProviderProps) {
+function DeploymentProvider({ children, publicKey, adapter }: DeploymentProviderProps) {
   const [loading, setLoading] = useState(true);
   const [deployment, setDeployment] = useState<Deployment | null>(null);
   const singletonLock = useRef(false);
@@ -37,10 +39,6 @@ function DeploymentProvider({ children, publicKey }: DeploymentProviderProps) {
       let baseUrl = atob(baseUrlBase64);
       let staging = mode === "test";
 
-      if (staging) {
-        baseUrl = baseUrl + "/api";
-      }
-
       let devSession = null;
       if (new URLSearchParams(window.location.search).has("dev_session")) {
         devSession = new URLSearchParams(window.location.search).get(
@@ -55,18 +53,20 @@ function DeploymentProvider({ children, publicKey }: DeploymentProviderProps) {
       }
 
       let opts: RequestInit = {};
+      const params = new URLSearchParams();
 
       if (!staging) {
         opts = {
           credentials: "include",
         };
       } else {
-        opts = {
-          headers: { "X-Development-Session": devSession ?? "" },
-        };
+        params.append("__dev_session__", devSession ?? "");
       }
 
-      const deployment = await fetch(`${baseUrl}/deployment`, opts);
+      const deployment = await fetch(
+        `${baseUrl}/deployment${staging ? "?" : "" }${params.toString()}`,
+        opts
+      );
 
       if (!deployment.ok) {
         setLoading(false);
@@ -96,8 +96,9 @@ function DeploymentProvider({ children, publicKey }: DeploymentProviderProps) {
     () => ({
       loading,
       deployment,
+      adapter,
     }),
-    [loading, deployment]
+    [loading, deployment, adapter]
   );
 
   return (
