@@ -19,8 +19,8 @@ importers:
         version: 3.0.1(rollup@4.44.0)
     devDependencies:
       '@snipextt/wacht':
-        specifier: 0.0.1-alpha.47
-        version: 0.0.1-alpha.47(react-dom@19.1.0(react@19.1.0))(react@19.1.0)(rollup@4.44.0)
+        specifier: 0.0.1-alpha.48
+        version: 0.0.1-alpha.48(react-dom@19.1.0(react@19.1.0))(react@19.1.0)(rollup@4.44.0)
       '@types/node':
         specifier: ^22.13.1
         version: 22.15.32
@@ -684,8 +684,8 @@ packages:
   '@rushstack/ts-command-line@5.0.1':
     resolution: {integrity: sha512-bsbUucn41UXrQK7wgM8CNM/jagBytEyJqXw/umtI8d68vFm1Jwxh1OtLrlW7uGZgjCWiiPH6ooUNa1aVsuVr3Q==}
 
-  '@snipextt/wacht@0.0.1-alpha.47':
-    resolution: {integrity: sha512-lA00sfNEcI0y2oEK6DW3Dj9M1ObXSvgYqQxD3Ysnxw527JVR/BsuQWAttrbhAiyaLXeh+yIdL7qHVH+kT0ncWA==}
+  '@snipextt/wacht@0.0.1-alpha.48':
+    resolution: {integrity: sha512-NLLu3dKP9rqq2Dm857gBowRskptmcDyNWARr6EeGch6A2jE7zRxEQlu2OOna3KBAof70l7vjb+xDwtZE8hEEgQ==}
     peerDependencies:
       react: ^19.0.0
 
@@ -1890,7 +1890,7 @@ snapshots:
     transitivePeerDependencies:
       - '@types/node'
 
-  '@snipextt/wacht@0.0.1-alpha.47(react-dom@19.1.0(react@19.1.0))(react@19.1.0)(rollup@4.44.0)':
+  '@snipextt/wacht@0.0.1-alpha.48(react-dom@19.1.0(react@19.1.0))(react@19.1.0)(rollup@4.44.0)':
     dependencies:
       '@headlessui/react': 2.2.4(react-dom@19.1.0(react@19.1.0))(react@19.1.0)
       lucide-react: 0.474.0(react@19.1.0)
