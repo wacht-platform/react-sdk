@@ -45,11 +45,11 @@ export function useClient(): UseClientReturnType {
 
     if (
       deployment.mode === "staging" &&
-      response.headers.get("X-Development-Session")
+      response.headers.get("x-development-session")
     ) {
       localStorage.setItem(
         "__dev_session__",
-        response.headers.get("X-Development-Session") ?? ""
+        response.headers.get("x-development-session") ?? ""
       );
     }
 

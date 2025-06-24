@@ -16,7 +16,11 @@ interface DeploymentProviderProps {
   adapter: PlatformAdapter;
 }
 
-function DeploymentProvider({ children, publicKey, adapter }: DeploymentProviderProps) {
+function DeploymentProvider({
+  children,
+  publicKey,
+  adapter,
+}: DeploymentProviderProps) {
   const [loading, setLoading] = useState(true);
   const [deployment, setDeployment] = useState<Deployment | null>(null);
   const singletonLock = useRef(false);
@@ -64,7 +68,7 @@ function DeploymentProvider({ children, publicKey, adapter }: DeploymentProvider
       }
 
       const deployment = await fetch(
-        `${baseUrl}/deployment${staging ? "?" : "" }${params.toString()}`,
+        `${baseUrl}/deployment${staging ? "?" : ""}${params.toString()}`,
         opts
       );
 
@@ -79,10 +83,10 @@ function DeploymentProvider({ children, publicKey, adapter }: DeploymentProvider
       deploymentConfig.data.backend_host = baseUrl;
       setDeployment(deploymentConfig.data);
 
-      if (staging && deployment.headers.get("X-Development-Session")) {
+      if (staging && deployment.headers.get("x-development-session")) {
         localStorage.setItem(
           "__dev_session__",
-          deployment.headers.get("X-Development-Session") ?? ""
+          deployment.headers.get("x-development-session") ?? ""
         );
       }
 

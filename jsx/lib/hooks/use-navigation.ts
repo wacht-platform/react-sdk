@@ -10,21 +10,7 @@ export const useNavigation = () => {
     if (platformNavigate) {
       platformNavigate(to, options);
     } else {
-      const searchParams = new URLSearchParams(window.location.search);
-      let newUrl = new URL(to, window.location.origin);
-
-      searchParams.forEach((value, key) => {
-        if (!newUrl.searchParams.has(key)) {
-          newUrl.searchParams.set(key, value);
-        }
-      });
-
-      if (options?.replace) {
-        window.location.replace(newUrl.toString());
-      } else {
-        window.location.assign(newUrl.toString());
-      }
-      window.dispatchEvent(new PopStateEvent("popstate", { state: options?.state || {} }));
+      window.location.href = to;
     }
   };
 
