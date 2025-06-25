@@ -1,18 +1,14 @@
 "use client";
 
-import { useNavigate } from "react-router";
+// import { useNavigate } from "react-router";
 import type { PlatformAdapter, NavigateOptions } from "@snipextt/wacht";
 
 export const createReactRouterAdapter = (): PlatformAdapter => {
   return {
     useNavigate: () => {
       try {
-        const navigate = useNavigate();
-        return (to: string, options?: NavigateOptions) => {
-          navigate(to, {
-            replace: options?.replace,
-            state: options?.state,
-          });
+        return (to: string, _options?: NavigateOptions) => {
+          window.location.href = to;
         };
       } catch (error) {
         return null;
