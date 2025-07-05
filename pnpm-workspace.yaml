@@ -1,0 +1,13 @@
+packages:
+  - 'jsx'
+  - 'nextjs'
+  - 'react-router'
+
+catalog:
+  react: ^19.0.0
+  react-dom: ^19.0.0
+  next: ^15.0.0
+  react-router: ^7.0.0
+  typescript: ^5.7.2
+  "@types/react": ^19.0.2
+  "@types/react-dom": ^19.0.2
