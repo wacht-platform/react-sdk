@@ -2,19 +2,19 @@ import styled from "styled-components";
 
 export const DefaultStylesProvider = styled.div`
   /* Colors - Light Mode */
-  --color-background: #f8f9fa;
+  --color-background: #ffffff;
   --color-foreground: #111827;
   --color-secondary-text: #6b7280;
   --color-muted: #64748b;
   --color-border: #e5e7eb;
-  --color-input-background: #f8f9fa;
+  --color-input-background: #ffffff;
   --color-input-border: #e2e8f0;
   --color-input-focus-border: #a5b4fc;
   --color-primary: #6366f1;
   --color-primary-hover: #4f46e5;
-  --color-primary-background: rgba(99, 102, 241, 0.1);
-  --color-primary-shadow: rgba(99, 102, 241, 0.1);
-  --color-background-hover: #f1f5f9;
+  --color-primary-background: rgba(99, 102, 241, 0.08);
+  --color-primary-shadow: rgba(99, 102, 241, 0.15);
+  --color-background-hover: #f8fafb;
   --color-border-hover: #e2e8f0;
   --color-text: #1e293b;
   --color-error: #ef4444;
@@ -25,10 +25,10 @@ export const DefaultStylesProvider = styled.div`
   --color-success: #166534;
   --color-success-background: #dcfce7;
   --color-divider: #e5e7eb;
-  --color-scrollbar-track: #f1f1f1;
-  --color-scrollbar-thumb: #888;
-  --color-scrollbar-thumb-hover: #555;
-  --color-shadow: rgba(0, 0, 0, 0.1);
+  --color-scrollbar-track: #f5f5f5;
+  --color-scrollbar-thumb: #d1d5db;
+  --color-scrollbar-thumb-hover: #9ca3af;
+  --color-shadow: rgba(0, 0, 0, 0.08);
   --color-dialog-backdrop: rgba(0, 0, 0, 0.86);
 
   /* Spacing */

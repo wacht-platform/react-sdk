@@ -9,6 +9,7 @@ interface SSOCallbackResult {
   session: Session;
   redirect_uri?: string;
   signup_attempt?: any;
+  signin_attempt?: any;
 }
 
 interface OAuthCompletionData {
@@ -25,8 +26,10 @@ interface SSOCallbackState {
   redirectUri: string | null;
   processed: boolean;
   signupAttempt: any | null;
+  signinAttempt: any | null;
   requiresCompletion: boolean;
   requiresVerification: boolean;
+  requires2FA: boolean;
   completeOAuthSignup: (data: OAuthCompletionData) => Promise<boolean>;
   completeVerification: (code: string) => Promise<boolean>;
   prepareVerification: (strategy: string) => Promise<boolean>;
@@ -63,8 +66,10 @@ export function useSSOCallback(
   const [redirectUri, setRedirectUri] = useState<string | null>(null);
   const [processed, setProcessed] = useState(false);
   const [signupAttempt, setSignupAttempt] = useState<any | null>(null);
+  const [signinAttempt, setSigninAttempt] = useState<any | null>(null);
   const [requiresCompletion, setRequiresCompletion] = useState(false);
   const [requiresVerification, setRequiresVerification] = useState(false);
+  const [requires2FA, setRequires2FA] = useState(false);
   const [completionLoading, setCompletionLoading] = useState(false);
   const [completionError, setCompletionError] = useState<Error | null>(null);
 
@@ -134,9 +139,28 @@ export function useSSOCallback(
         const sessionData = result.data.session;
         const redirectUriData = result.data.redirect_uri || null;
         const signupAttemptData = result.data.signup_attempt || null;
+        const signinAttemptData = result.data.signin_attempt || null;
 
         setSession(sessionData);
         setRedirectUri(redirectUriData);
+
+        // Check for signin attempt that requires 2FA
+        if (signinAttemptData && sessionData.signin_attempts) {
+          const attempt = sessionData.signin_attempts.find(
+            (a: any) => a.id === signinAttemptData.id
+          );
+          
+          if (attempt && 
+              attempt.current_step === "verify_second_factor" && 
+              !attempt.completed &&
+              attempt.second_method_authentication_required) {
+            setSigninAttempt(attempt);
+            setRequires2FA(true);
+            
+            // Don't trigger onSuccess yet, need 2FA
+            return;
+          }
+        }
 
         if (signupAttemptData) {
           setSignupAttempt(signupAttemptData);
@@ -325,7 +349,8 @@ export function useSSOCallback(
       !processed ||
       loading ||
       requiresCompletion ||
-      requiresVerification
+      requiresVerification ||
+      requires2FA
     )
       return;
 
@@ -348,6 +373,7 @@ export function useSSOCallback(
     deployment,
     requiresCompletion,
     requiresVerification,
+    requires2FA,
   ]);
 
   return {
@@ -357,8 +383,10 @@ export function useSSOCallback(
     redirectUri,
     processed,
     signupAttempt,
+    signinAttempt,
     requiresCompletion,
     requiresVerification,
+    requires2FA,
     completeOAuthSignup,
     completeVerification,
     prepareVerification,

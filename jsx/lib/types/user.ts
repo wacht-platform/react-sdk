@@ -55,9 +55,13 @@ export interface CurrentUser {
   second_factor_policy: SecondFactorPolicy;
   user_email_addresses: UserEmailAddress[];
   user_phone_numbers: UserPhoneNumber[];
+  email_addresses?: UserEmailAddress[];
+  phone_numbers?: UserPhoneNumber[];
   social_connections: SocialConnection[];
   user_authenticator?: UserAuthenticator;
+  authenticators?: UserAuthenticator[];
   backup_codes_generated?: boolean;
+  backup_codes?: string[];
   public_metadata: Record<string, unknown>;
 }
 

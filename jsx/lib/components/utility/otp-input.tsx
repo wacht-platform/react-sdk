@@ -77,7 +77,7 @@ const Timer = styled.span`
 interface OTPInputProps {
 	length?: number;
 	onComplete: ((code: string) => Promise<void>) | ((code: string) => void);
-	onResend: () => Promise<void>;
+	onResend?: () => Promise<void>;
 	error?: string;
 	isSubmitting?: boolean;
 }
@@ -115,7 +115,7 @@ export function OTPInput({
 	}, [startTimer]);
 
 	const handleResend = async () => {
-		if (!canResend || isSubmitting) return;
+		if (!canResend || isSubmitting || !onResend) return;
 		await onResend();
 		setCanResend(false);
 		setResendTimer(60);
@@ -177,19 +177,21 @@ export function OTPInput({
 				))}
 			</InputGroup>
 			{error && <ErrorMessage>{error}</ErrorMessage>}
-			<div>
-				{canResend ? (
-					<ResendButton
-						type="button"
-						onClick={handleResend}
-						disabled={isSubmitting}
-					>
-						Didn't receive a code? Resend
-					</ResendButton>
-				) : (
-					<Timer>Resend code in {resendTimer}s</Timer>
-				)}
-			</div>
+			{onResend && (
+				<div>
+					{canResend ? (
+						<ResendButton
+							type="button"
+							onClick={handleResend}
+							disabled={isSubmitting}
+						>
+							Didn't receive a code? Resend
+						</ResendButton>
+					) : (
+						<Timer>Resend code in {resendTimer}s</Timer>
+					)}
+				</div>
+			)}
 		</Container>
 	);
 }

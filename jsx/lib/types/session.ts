@@ -37,7 +37,7 @@ export type CurrentSessionStep =
   | "verify_email_otp"
   | "verify_phone"
   | "verify_phone_otp"
-  | "verify_authenticator"
+  | "verify_second_factor"
   | "add_second_factor";
 
 export interface SigninAttempt {
@@ -50,6 +50,7 @@ export interface SigninAttempt {
   first_method_authenticated: boolean;
   second_method_authenticated: boolean;
   second_method_authentication_required: boolean;
+  available_2fa_methods?: string[];
   user_id: number;
   last_active_org_id: number;
   current_step: CurrentSessionStep;

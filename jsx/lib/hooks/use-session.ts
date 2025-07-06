@@ -5,35 +5,33 @@ import { useCallback } from "react";
 import { ApiResult } from "@/types/client";
 import { Session, SessionToken } from "@/types/session";
 import { Client } from "@/types/client";
-import { useOrganizationMemberships } from "./use-organization";
-import { useWorkspaceMemberships } from "./use-workspace";
 import { useDeployment } from "./use-deployment";
 
 type UseSessionReturnType =
   | {
-    loading: true;
-    session: never;
-    switchSignIn: never;
-    switchOrganization: never;
-    switchWorkspace: never;
-    signOut: never;
-    getToken: never;
-    addNewAccount: never;
-    error: Error | null;
-    refetch: () => Promise<void>;
-  }
+      loading: true;
+      session: never;
+      switchSignIn: never;
+      switchOrganization: never;
+      switchWorkspace: never;
+      signOut: never;
+      getToken: never;
+      addNewAccount: never;
+      error: Error | null;
+      refetch: () => Promise<void>;
+    }
   | {
-    loading: false;
-    error: Error | null;
-    session: Session;
-    switchSignIn: (signInId: string) => Promise<void>;
-    signOut: (signInId?: string) => Promise<void>;
-    getToken: (template?: string) => Promise<string>;
-    switchOrganization: (organizationId?: string) => Promise<void>;
-    switchWorkspace: (workspaceId: string) => Promise<void>;
-    addNewAccount: () => void;
-    refetch: () => Promise<void>;
-  };
+      loading: false;
+      error: Error | null;
+      session: Session;
+      switchSignIn: (signInId: string) => Promise<void>;
+      signOut: (signInId?: string) => Promise<void>;
+      getToken: (template?: string) => Promise<string>;
+      switchOrganization: (organizationId?: string) => Promise<void>;
+      switchWorkspace: (workspaceId: string) => Promise<void>;
+      addNewAccount: () => void;
+      refetch: () => Promise<void>;
+    };
 
 async function fetchSession(client: Client): Promise<Session> {
   const response = await client("/session", {
@@ -74,7 +72,8 @@ async function switchOrganization(
   organizationId?: string,
 ): Promise<ApiResult<Session>> {
   const response = await client(
-    `/session/switch-organization${organizationId ? `?organization_id=${organizationId}` : ""
+    `/session/switch-organization${
+      organizationId ? `?organization_id=${organizationId}` : ""
     }`,
     {
       method: "PUT",
@@ -124,8 +123,6 @@ export function useSession(): UseSessionReturnType {
     revalidateIfStale: false,
     dedupingInterval: 5000,
   });
-  const { loading: organizationLoading } = useOrganizationMemberships();
-  const { loading: workspaceLoading } = useWorkspaceMemberships();
 
   const refetch = useCallback(async () => {
     await mutate();
@@ -173,7 +170,7 @@ export function useSession(): UseSessionReturnType {
     window.location.href = url.toString();
   }, [deployment]);
 
-  if (loading || !session || isLoading || organizationLoading || workspaceLoading) {
+  if (loading || !session || isLoading) {
     return {
       loading: true,
       error,
@@ -189,7 +186,7 @@ export function useSession(): UseSessionReturnType {
   }
 
   return {
-    loading: isLoading || organizationLoading || workspaceLoading,
+    loading: isLoading,
     error,
     session,
     switchSignIn: async (signInId: string) => {

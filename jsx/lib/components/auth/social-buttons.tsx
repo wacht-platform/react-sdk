@@ -88,7 +88,7 @@ const SocialAuthButton = styled.button<{
   font-size: var(--font-xs);
   color: var(--color-foreground);
   font-weight: 500;
-  height: 36px;
+  height: 34px;
 
   ${(props) => {
     if (props.$totalProviders <= 6) {
@@ -97,17 +97,17 @@ const SocialAuthButton = styled.button<{
       `;
     }
     return css`
-      flex: 0 0 calc((100% - (var(--space-sm) * 5)) / 6);
+      flex: 0 0 calc((100% - (var(--space-xs) * 5)) / 6);
       ${props.$isWide &&
       css`
-        flex: 0 0 calc((100% - (var(--space-sm) * 3)) / 4);
+        flex: 0 0 calc((100% - (var(--space-xs) * 3)) / 4);
       `}
     `;
   }}
 
   &:hover {
-    background-color: var(--color-input-background);
-    border-color: var(--color-input-border);
+    background-color: var(--color-background-hover);
+    border-color: var(--color-border-hover);
   }
 
   svg {

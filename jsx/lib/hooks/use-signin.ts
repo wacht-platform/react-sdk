@@ -113,7 +113,7 @@ type CreateSignInStrategyResult = {
 
 type SignIn = {
 	createStrategy: CreateSignInStrategyResult;
-	prepareVerification: (verification: VerificationStrategy) => Promise<unknown>;
+	prepareVerification: (verification: VerificationStrategy, additionalParam?: string) => Promise<ApiResult<any>>;
 	completeVerification: (verificationCode: string) => Promise<unknown>;
 };
 
@@ -393,18 +393,26 @@ export function useSignIn(): UseSignInReturnType {
 					},
 				);
 			},
-			prepareVerification: async (strategy: VerificationStrategy, redirectUri?: string) => {
+			prepareVerification: async (strategy: VerificationStrategy, additionalParam?: string) => {
 				const url = new URL(`/auth/prepare-verification`, window.location.origin);
 				url.searchParams.set('attempt_identifier', signinAttempt?.id?.toString() || '');
 				url.searchParams.set('strategy', strategy);
 				url.searchParams.set('identifier_type', 'signin');
-				if (redirectUri) {
-					url.searchParams.set('redirect_uri', redirectUri);
+				
+				// Handle additional parameters based on strategy
+				if (strategy === 'phone_otp' && additionalParam) {
+					// additionalParam is last_digits for phone verification
+					url.searchParams.set('last_digits', additionalParam);
+				} else if (additionalParam) {
+					// additionalParam is redirect_uri for other strategies
+					url.searchParams.set('redirect_uri', additionalParam);
 				}
 
-				await client(url.pathname + url.search, {
+				const response = await client(url.pathname + url.search, {
 					method: "POST",
 				});
+				
+				return responseMapper(response);
 			},
 		},
 		discardSignInAttempt: () => {
@@ -440,8 +448,8 @@ export type UseSignInWithStrategyReturnType<T extends SignInStrategy> =
 			completeVerification: (verificationCode: string) => Promise<unknown>;
 			prepareVerification: (
 				verification: VerificationStrategy,
-				redirectUri?: string,
-			) => Promise<unknown>;
+				additionalParam?: string,
+			) => Promise<ApiResult<any>>;
 		};
 		signinAttempt: SigninAttempt | null;
 		discardSignInAttempt: () => void;

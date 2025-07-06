@@ -2,77 +2,42 @@
 
 import { useEffect, useState } from "react";
 import styled from "styled-components";
-import { ArrowLeft } from "lucide-react";
 import { useDeployment } from "../../hooks/use-deployment";
 import { useProfileCompletion } from "../../hooks/use-profile-completion";
 import { PhoneNumberInput } from "../utility/phone";
 import { OTPInput } from "../utility/otp-input";
 import { ProfileCompletionData, ProfileCompletionProps } from "../../types/profile";
-import { hasIncompleteProfile, redirectToProfileCompletion } from "../../utils/profile-completion";
-import { useSession } from "@/hooks";
-
-const PageContainer = styled.div`
-  min-height: 100vh;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  background: var(--color-background);
-  padding: var(--space-lg);
-`;
-
-const ContentWrapper = styled.div`
-  width: 100%;
-  max-width: 480px;
-  background: var(--color-surface);
-  border-radius: var(--radius-lg);
-  box-shadow: 0 4px 12px var(--color-shadow);
-  overflow: hidden;
-`;
+import { AuthFormImage } from "./auth-image";
+import { NavigationLink } from "../utility/navigation";
+import { DefaultStylesProvider } from "../utility/root";
 
 const Container = styled.div`
-  display: flex;
-  flex-direction: column;
-  gap: var(--space-lg);
-  width: 100%;
-  max-width: 400px;
-  margin: 0 auto;
-  padding: var(--space-xl);
-`;
-
-const BackButton = styled.button`
-  display: flex;
-  align-items: center;
-  gap: var(--space-xs);
-  background: none;
-  border: none;
-  color: var(--color-muted);
-  cursor: pointer;
-  font-size: 14px;
-  padding: 0;
-  margin-bottom: var(--space-md);
-
-  &:hover {
-    color: var(--color-text);
-  }
+  max-width: 380px;
+  width: 380px;
+  padding: var(--space-3xl);
+  background: var(--color-background);
+  border-radius: var(--radius-lg);
+  box-shadow: 0 4px 12px var(--color-shadow);
 `;
 
 const Header = styled.div`
   text-align: center;
   margin-bottom: var(--space-lg);
+  position: relative;
 `;
 
 const Title = styled.h1`
-  font-size: 24px;
-  font-weight: 600;
-  color: var(--color-text);
-  margin: 0 0 var(--space-sm) 0;
+  font-size: var(--font-lg);
+  font-weight: 500;
+  color: var(--color-foreground);
+  margin-bottom: var(--space-xs);
+  margin-top: 0;
 `;
 
 const Message = styled.p`
-  color: var(--color-muted);
+  color: var(--color-secondary-text);
+  font-size: var(--font-xs);
   margin: 0;
-  font-size: 14px;
-  line-height: 1.5;
 `;
 
 const Form = styled.form`
@@ -88,27 +53,29 @@ const FormGroup = styled.div`
 `;
 
 const Label = styled.label`
-  font-size: 14px;
+  font-size: var(--font-xs);
   font-weight: 500;
-  color: var(--color-text);
+  color: var(--color-foreground);
 `;
 
 const Input = styled.input`
-  padding: 12px 16px;
-  border: 1px solid var(--color-border);
-  border-radius: 8px;
-  font-size: 14px;
+  width: 100%;
+  padding: var(--space-sm) var(--space-md);
   background: var(--color-input-background);
-  color: var(--color-text);
-  transition: border-color 0.2s ease;
+  border: 1px solid var(--color-input-border);
+  border-radius: var(--radius-md);
+  font-size: var(--font-sm);
+  color: var(--color-foreground);
+  transition: all 0.2s;
 
   &:focus {
     outline: none;
     border-color: var(--color-primary);
+    box-shadow: 0 0 0 3px var(--color-primary-shadow);
   }
 
   &:disabled {
-    opacity: 0.6;
+    opacity: 0.5;
     cursor: not-allowed;
   }
 
@@ -118,33 +85,52 @@ const Input = styled.input`
 `;
 
 const Button = styled.button`
-  padding: 12px 24px;
+  width: 100%;
+  padding: var(--space-md);
   background: var(--color-primary);
   color: white;
   border: none;
-  border-radius: 8px;
-  font-size: 14px;
+  border-radius: var(--radius-md);
+  font-size: var(--font-sm);
   font-weight: 500;
   cursor: pointer;
-  transition: background-color 0.2s ease;
+  transition: all 0.2s;
 
   &:hover:not(:disabled) {
     background: var(--color-primary-hover);
   }
 
   &:disabled {
-    opacity: 0.6;
+    opacity: 0.5;
     cursor: not-allowed;
   }
 `;
 
 const ErrorMessage = styled.div`
+  font-size: var(--font-2xs);
   color: var(--color-error);
-  font-size: 12px;
-  margin-top: var(--space-xs);
+  margin: 0;
+  margin-top: var(--space-2xs);
 `;
 
+const Footer = styled.p`
+  margin-top: var(--space-lg);
+  text-align: center;
+  font-size: var(--font-xs);
+  color: var(--color-secondary-text);
+`;
 
+const Link = styled.span`
+  color: var(--color-primary);
+  text-decoration: none;
+  font-weight: 500;
+  transition: color 0.2s;
+  cursor: pointer;
+
+  &:hover {
+    color: var(--color-primary-hover);
+  }
+`;
 
 export function ProfileCompletion({
   redirectUri,
@@ -163,7 +149,6 @@ export function ProfileCompletion({
     handleCompleteVerification,
     handlePrepareVerification,
   } = useProfileCompletion();
-  const { session } = useSession()
 
   const [formData, setFormData] = useState<ProfileCompletionData>({});
   const [errors, setErrors] = useState<Record<string, string>>({});
@@ -176,13 +161,6 @@ export function ProfileCompletion({
   const displayError = error || hookError;
   const isLoading = loading || hookLoading;
 
-  // Auto-redirect logic
-  useEffect(() => {
-    if (autoRedirect && attempt && hasIncompleteProfile(session)) {
-      redirectToProfileCompletion(redirectUri);
-    }
-  }, [autoRedirect, attempt, redirectUri]);
-
   // Handle completion with success/error callbacks
   const handleComplete = async (data: ProfileCompletionData) => {
     setLoading(true);
@@ -194,16 +172,26 @@ export function ProfileCompletion({
       if (result.success) {
         if (onComplete) {
           onComplete(result.data.session || result.data);
-        } else if (redirectUri) {
-          window.location.href = redirectUri;
         } else {
-          window.location.href = "/dashboard";
+          // Redirect logic
+          let finalRedirectUri = redirectUri || new URLSearchParams(window.location.search).get("redirect_uri");
+          if (!finalRedirectUri) {
+            finalRedirectUri = "https://" + window.location.hostname;
+          }
+          const uri = new URL(finalRedirectUri);
+          if (deployment?.mode === "staging") {
+            uri.searchParams.set("dev_session", localStorage.getItem("__dev_session__") ?? "");
+          }
+          window.location.href = uri.toString();
         }
       } else {
         // Still has remaining steps, check if verification is needed
         const attemptData = result.data.signin_attempt || result.data.signup_attempt;
         if (attemptData?.current_step === "verify_phone" || attemptData?.current_step === "verify_email") {
           setShowVerification(true);
+          // Prepare verification
+          const strategy = attemptData.current_step === "verify_phone" ? "phone_otp" : "email_otp";
+          await handlePrepareVerification(strategy);
         }
       }
 
@@ -231,10 +219,17 @@ export function ProfileCompletion({
       if (result.success) {
         if (onComplete) {
           onComplete(result.data.session || result.data);
-        } else if (redirectUri) {
-          window.location.href = redirectUri;
         } else {
-          window.location.href = "/dashboard";
+          // Redirect logic
+          let finalRedirectUri = redirectUri || new URLSearchParams(window.location.search).get("redirect_uri");
+          if (!finalRedirectUri) {
+            finalRedirectUri = "https://" + window.location.hostname;
+          }
+          const uri = new URL(finalRedirectUri);
+          if (deployment?.mode === "staging") {
+            uri.searchParams.set("dev_session", localStorage.getItem("__dev_session__") ?? "");
+          }
+          window.location.href = uri.toString();
         }
       }
 
@@ -251,71 +246,18 @@ export function ProfileCompletion({
     }
   };
 
-  const handleBack = () => {
-    if (onBack) {
-      onBack();
-    } else if (redirectUri) {
-      window.location.href = redirectUri;
-    } else {
-      window.history.back();
-    }
-  };
-
-  // Show loading while detecting attempt
-  if (isLoading || (!attempt && !displayError)) {
-    return (
-      <PageContainer>
-        <ContentWrapper>
-          <div style={{
-            display: "flex",
-            justifyContent: "center",
-            alignItems: "center",
-            minHeight: "400px"
-          }}>
-            <div>Loading...</div>
-          </div>
-        </ContentWrapper>
-      </PageContainer>
-    );
-  }
-
-  // Show error if no attempt found
-  if (displayError && !attempt) {
-    return (
-      <PageContainer>
-        <ContentWrapper>
-          <div style={{
-            display: "flex",
-            flexDirection: "column",
-            justifyContent: "center",
-            alignItems: "center",
-            minHeight: "400px",
-            gap: "16px",
-            padding: "var(--space-lg)"
-          }}>
-            <div style={{ color: "var(--color-error)" }}>
-              {displayError?.message}
-            </div>
-            <button onClick={handleBack}>
-              Go Back
-            </button>
-          </div>
-        </ContentWrapper>
-      </PageContainer>
-    );
-  }
-
-  if (!attempt) {
+  // Show loading or no attempt
+  if (isLoading || !attempt) {
     return null;
   }
 
   const missingFields = attempt.missing_fields || [];
   const title = attemptType === "signin"
     ? "Complete Your Profile"
-    : "Complete Your Account Setup";
+    : "Complete Your Account";
   const message = attemptType === "signin"
-    ? "Please provide the following information to complete your sign in."
-    : "Please provide the following information to complete your account setup.";
+    ? "Please provide the following information to continue"
+    : "Just a few more details to finish setting up your account";
 
   const authSettings = deployment?.auth_settings;
   const isVerifying = attempt?.current_step === "verify_phone" ||
@@ -372,186 +314,222 @@ export function ProfileCompletion({
       }
     });
 
+    // Additional validation
+    if (formData.username && missingFields.includes("username")) {
+      const usernameRegex = /^[a-zA-Z0-9_-]{3,30}$/;
+      if (!usernameRegex.test(formData.username)) {
+        newErrors.username = "Username must be 3-30 characters and contain only letters, numbers, underscores, and hyphens";
+      }
+    }
+    
+    if (formData.phone_number && missingFields.includes("phone_number")) {
+      const phonePattern = /^\d{7,15}$/;
+      if (!phonePattern.test(formData.phone_number)) {
+        newErrors.phone_number = "Phone number must contain 7-15 digits";
+      }
+    }
+
     setErrors(newErrors);
     return Object.keys(newErrors).length === 0;
   };
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-
+    
     if (!validateForm()) {
       return;
     }
 
-    const dataToSend: ProfileCompletionData = {};
-    missingFields.forEach((field: string) => {
-      const fieldValue = formData[field as keyof ProfileCompletionData];
-      if (fieldValue) {
-        dataToSend[field as keyof ProfileCompletionData] = fieldValue;
-      }
-    });
+    await handleComplete(formData);
+  };
 
-    const result = await handleComplete(dataToSend);
-
-    if (result && typeof result === "object") {
-      const resultData = result as any;
-      const attemptData = resultData.signin_attempt || resultData.signup_attempt;
-      if (attemptData?.current_step === "verify_phone" || attemptData?.current_step === "verify_email") {
-        setShowVerification(true);
-      }
+  const handlePhoneChange = (value: string) => {
+    setFormData((prev) => ({ ...prev, phone_number: value }));
+    if (errors.phone_number) {
+      setErrors((prev) => ({ ...prev, phone_number: "" }));
     }
   };
 
+  const handleCountryCodeChange = (value: string) => {
+    setCountryCode(value);
+  };
+
   if (isVerifying) {
-    const isEmailVerification = attempt?.current_step === "verify_email";
-    const verificationTitle = isEmailVerification ? "Verify Your Email" : "Verify Your Phone";
-    const verificationMessage = isEmailVerification
-      ? "Please enter the verification code sent to your email address."
-      : "Please enter the verification code sent to your phone number.";
-    const resendStrategy = isEmailVerification ? "email_otp" : "phone_otp";
+    const verificationTitle = attempt.current_step === "verify_phone" 
+      ? "Verify Your Phone Number" 
+      : "Verify Your Email";
+    const verificationMessage = attempt.current_step === "verify_phone"
+      ? "Enter the 6-digit code sent to your phone"
+      : "Enter the 6-digit code sent to your email";
+    const resendStrategy = attempt.current_step === "verify_phone" ? "phone_otp" : "email_otp";
 
     return (
-      <PageContainer>
-        <ContentWrapper>
-          <Container>
-            {onBack && (
-              <BackButton onClick={() => setShowVerification(false)}>
-                <ArrowLeft size={16} />
-                Back
-              </BackButton>
-            )}
-
-            <Header>
-              <Title>{verificationTitle}</Title>
-              <Message>{verificationMessage}</Message>
-            </Header>
-
-            <Form onSubmit={(e) => e.preventDefault()} noValidate>
-              <OTPInput
-                onComplete={handleVerificationComplete}
-                onResend={async () => {
-                  if (handlePrepareVerification) {
-                    await handlePrepareVerification(resendStrategy);
-                  }
-                }}
-                error={displayError?.message}
-                isSubmitting={isLoading}
-              />
-
-              {displayError && (
-                <ErrorMessage style={{ marginBottom: "var(--space-md)" }}>
-                  {displayError.message}
-                </ErrorMessage>
-              )}
-            </Form>
-          </Container>
-        </ContentWrapper>
-      </PageContainer>
-    );
-  }
-
-  return (
-    <PageContainer>
-      <ContentWrapper>
+      <DefaultStylesProvider>
         <Container>
-          {onBack && (
-            <BackButton onClick={handleBack}>
-              <ArrowLeft size={16} />
-              Back
-            </BackButton>
-          )}
-
+          <AuthFormImage />
+          
           <Header>
-            <Title>{title}</Title>
-            <Message>{message}</Message>
+            <Title>{verificationTitle}</Title>
+            <Message>{verificationMessage}</Message>
           </Header>
 
-          <Form onSubmit={handleSubmit} noValidate>
-            {missingFields.includes("first_name") && authSettings?.first_name?.enabled && (
-              <FormGroup>
-                <Label htmlFor="first_name">
-                  First Name {authSettings.first_name.required && "*"}
-                </Label>
-                <Input
-                  type="text"
-                  id="first_name"
-                  name="first_name"
-                  value={formData.first_name || ""}
-                  onChange={handleInputChange}
-                  placeholder="Enter your first name"
-                  aria-invalid={!!errors.first_name}
-                  disabled={isLoading}
-                />
-                {errors.first_name && <ErrorMessage>{errors.first_name}</ErrorMessage>}
-              </FormGroup>
-            )}
-
-            {missingFields.includes("last_name") && authSettings?.last_name?.enabled && (
-              <FormGroup>
-                <Label htmlFor="last_name">
-                  Last Name {authSettings.last_name.required && "*"}
-                </Label>
-                <Input
-                  type="text"
-                  id="last_name"
-                  name="last_name"
-                  value={formData.last_name || ""}
-                  onChange={handleInputChange}
-                  placeholder="Enter your last name"
-                  aria-invalid={!!errors.last_name}
-                  disabled={isLoading}
-                />
-                {errors.last_name && <ErrorMessage>{errors.last_name}</ErrorMessage>}
-              </FormGroup>
-            )}
-
-            {missingFields.includes("username") && authSettings?.username?.enabled && (
-              <FormGroup>
-                <Label htmlFor="username">
-                  Username {authSettings.username.required && "*"}
-                </Label>
-                <Input
-                  type="text"
-                  id="username"
-                  name="username"
-                  value={formData.username || ""}
-                  onChange={handleInputChange}
-                  placeholder="Enter your username"
-                  aria-invalid={!!errors.username}
-                  disabled={isLoading}
-                />
-                {errors.username && <ErrorMessage>{errors.username}</ErrorMessage>}
-              </FormGroup>
-            )}
-
-            {missingFields.includes("phone_number") && authSettings?.phone_number?.enabled && (
-              <FormGroup>
-                <Label htmlFor="phone_number">
-                  Phone Number {authSettings.phone_number.required && "*"}
-                </Label>
-                <PhoneNumberInput
-                  value={formData.phone_number || ""}
-                  onChange={handleInputChange}
-                  error={errors.phone_number}
-                  countryCode={countryCode}
-                  setCountryCode={setCountryCode}
-                />
-                {errors.phone_number && <ErrorMessage>{errors.phone_number}</ErrorMessage>}
-              </FormGroup>
-            )}
+          <Form onSubmit={(e) => e.preventDefault()} noValidate>
+            <OTPInput
+              onComplete={handleVerificationComplete}
+              onResend={async () => {
+                if (handlePrepareVerification) {
+                  await handlePrepareVerification(resendStrategy);
+                }
+              }}
+              error={displayError?.message}
+              isSubmitting={isLoading}
+            />
 
             {displayError && (
               <ErrorMessage style={{ marginBottom: "var(--space-md)" }}>
                 {displayError.message}
               </ErrorMessage>
             )}
-
-            <Button type="submit" disabled={isLoading} style={{ width: "100%" }}>
-              {isLoading ? "Completing..." : "Complete Profile"}
-            </Button>
           </Form>
+
+          <Footer>
+            <div>
+              <Link onClick={() => setShowVerification(false)} style={{ cursor: "pointer" }}>
+                Back to profile completion
+              </Link>
+            </div>
+            <div style={{ marginTop: "var(--space-sm)" }}>
+              Having trouble?{" "}
+              <Link>
+                <NavigationLink to={deployment?.ui_settings.support_page_url || "#"}>
+                  Get help
+                </NavigationLink>
+              </Link>
+            </div>
+          </Footer>
         </Container>
-      </ContentWrapper>
-    </PageContainer>
+      </DefaultStylesProvider>
+    );
+  }
+
+  return (
+    <DefaultStylesProvider>
+      <Container>
+        <AuthFormImage />
+        
+        <Header>
+          <Title>{title}</Title>
+          <Message>{message}</Message>
+        </Header>
+
+        <Form onSubmit={handleSubmit} noValidate>
+          {missingFields.includes("first_name") && authSettings?.first_name?.enabled && (
+            <FormGroup>
+              <Label htmlFor="first_name">
+                First name {authSettings.first_name.required && "*"}
+              </Label>
+              <Input
+                type="text"
+                id="first_name"
+                name="first_name"
+                value={formData.first_name || ""}
+                onChange={handleInputChange}
+                placeholder="Enter your first name"
+                aria-invalid={!!errors.first_name}
+                disabled={isLoading}
+                autoComplete="given-name"
+              />
+              {errors.first_name && <ErrorMessage>{errors.first_name}</ErrorMessage>}
+            </FormGroup>
+          )}
+
+          {missingFields.includes("last_name") && authSettings?.last_name?.enabled && (
+            <FormGroup>
+              <Label htmlFor="last_name">
+                Last name {authSettings.last_name.required && "*"}
+              </Label>
+              <Input
+                type="text"
+                id="last_name"
+                name="last_name"
+                value={formData.last_name || ""}
+                onChange={handleInputChange}
+                placeholder="Enter your last name"
+                aria-invalid={!!errors.last_name}
+                disabled={isLoading}
+                autoComplete="family-name"
+              />
+              {errors.last_name && <ErrorMessage>{errors.last_name}</ErrorMessage>}
+            </FormGroup>
+          )}
+
+          {missingFields.includes("username") && authSettings?.username?.enabled && (
+            <FormGroup>
+              <Label htmlFor="username">
+                Username {authSettings.username.required && "*"}
+              </Label>
+              <Input
+                type="text"
+                id="username"
+                name="username"
+                value={formData.username || ""}
+                onChange={handleInputChange}
+                placeholder="Choose a username"
+                aria-invalid={!!errors.username}
+                disabled={isLoading}
+                autoComplete="username"
+              />
+              {errors.username && <ErrorMessage>{errors.username}</ErrorMessage>}
+            </FormGroup>
+          )}
+
+          {missingFields.includes("phone_number") && authSettings?.phone_number?.enabled && (
+            <FormGroup>
+              <Label htmlFor="phone_number">
+                Phone number {authSettings.phone_number.required && "*"}
+              </Label>
+              <PhoneNumberInput
+                value={formData.phone_number || ""}
+                onChange={handlePhoneChange}
+                error={errors.phone_number}
+                countryCode={countryCode}
+                setCountryCode={handleCountryCodeChange}
+                placeholder="Enter your phone number"
+                disabled={isLoading}
+              />
+              {errors.phone_number && <ErrorMessage>{errors.phone_number}</ErrorMessage>}
+            </FormGroup>
+          )}
+
+          {displayError && (
+            <ErrorMessage style={{ marginBottom: "var(--space-md)" }}>
+              {displayError.message}
+            </ErrorMessage>
+          )}
+
+          <Button type="submit" disabled={isLoading}>
+            {isLoading ? "Completing..." : "Complete Profile"}
+          </Button>
+        </Form>
+
+        <Footer>
+          {onBack && (
+            <div>
+              <Link onClick={onBack} style={{ cursor: "pointer" }}>
+                Back to login
+              </Link>
+            </div>
+          )}
+          <div style={{ marginTop: "var(--space-sm)" }}>
+            Having trouble?{" "}
+            <Link>
+              <NavigationLink to={deployment?.ui_settings.support_page_url || "#"}>
+                Get help
+              </NavigationLink>
+            </Link>
+          </div>
+        </Footer>
+      </Container>
+    </DefaultStylesProvider>
   );
 }

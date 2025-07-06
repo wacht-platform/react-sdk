@@ -4,7 +4,10 @@ import styled, { keyframes, css } from "styled-components";
 import { Loader2, AlertCircle, CheckCircle } from "lucide-react";
 import { DefaultStylesProvider } from "../utility/root";
 import { useSSOCallback } from "../../hooks/use-sso-callback";
+import { useDeployment } from "../../hooks/use-deployment";
 import { AuthFormImage } from "./auth-image";
+import { TwoFactorVerification } from "./two-factor-verification";
+import { ProfileCompletion } from "./profile-completion";
 
 const Container = styled.div`
   max-width: 360px;
@@ -155,6 +158,7 @@ export function SSOCallback({
   errorMessage = "Sign in failed",
   showCompletionForm = true,
 }: SSOCallbackProps = {}) {
+  const { deployment } = useDeployment();
   const {
     error,
     session,
@@ -162,6 +166,8 @@ export function SSOCallback({
     requiresCompletion,
     requiresVerification,
     signupAttempt,
+    signinAttempt,
+    requires2FA,
   } = useSSOCallback({
     onSuccess,
     onError,
@@ -170,6 +176,7 @@ export function SSOCallback({
   });
 
   const getStatus = () => {
+    if (requires2FA && signinAttempt) return "requires2fa";
     if (
       (requiresCompletion || requiresVerification) &&
       signupAttempt &&
@@ -214,6 +221,50 @@ export function SSOCallback({
         return loadingMessage;
     }
   };
+
+  // If 2FA is required, show the TwoFactorVerification component
+  if (requires2FA && signinAttempt) {
+    return (
+      <TwoFactorVerification
+        onBack={() => {
+          // Redirect back to login if user cancels
+          const loginUrl =
+            deployment?.ui_settings?.sign_in_page_url ||
+            deployment?.frontend_host ||
+            "/";
+          window.location.href = loginUrl;
+        }}
+      />
+    );
+  }
+
+  // If profile completion is required, show the ProfileCompletion component
+  if (requiresCompletion && (signupAttempt || signinAttempt)) {
+    return (
+      <ProfileCompletion
+        onComplete={(session) => {
+          if (onSuccess) {
+            onSuccess(session, redirectUri || undefined);
+          } else if (autoRedirect) {
+            const finalRedirectUrl = redirectUri || 
+              deployment?.ui_settings?.sign_in_page_url || 
+              deployment?.frontend_host ||
+              "/";
+            window.location.href = finalRedirectUrl;
+          }
+        }}
+        onError={onError}
+        onBack={() => {
+          // Redirect back to login if user cancels
+          const loginUrl =
+            deployment?.ui_settings?.sign_in_page_url ||
+            deployment?.frontend_host ||
+            "/";
+          window.location.href = loginUrl;
+        }}
+      />
+    );
+  }
 
   return (
     <DefaultStylesProvider>

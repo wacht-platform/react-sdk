@@ -9,6 +9,8 @@ import { OTPInput } from "@/components/utility/otp-input";
 import { SocialAuthButtons } from "./social-buttons";
 import { ForgotPassword } from "./forgot-password";
 import { OtherSignInOptions } from "./other-signin-options";
+import { TwoFactorVerification } from "./two-factor-verification";
+import { ProfileCompletion } from "./profile-completion";
 import {
   useSignInContext,
   SignInProvider,
@@ -23,7 +25,6 @@ import type { DeploymentSocialConnection } from "@/types/deployment";
 import { useDeployment } from "@/hooks/use-deployment";
 import { Button } from "@/components/utility";
 import { AuthFormImage } from "./auth-image";
-
 
 const Container = styled.div`
   max-width: 380px;
@@ -56,7 +57,7 @@ const Subtitle = styled.p`
 const Divider = styled.div`
   position: relative;
   text-align: center;
-  margin: var(--space-lg) 0;
+  margin: var(--space-2xl) 0;
 
   &::before {
     content: "";
@@ -65,16 +66,19 @@ const Divider = styled.div`
     left: 0;
     right: 0;
     height: 1px;
-    background: var(--color-divider);
+    background: var(--color-border);
   }
 `;
 
 const DividerText = styled.span`
   position: relative;
   background: var(--color-background);
-  padding: 0 var(--space-sm);
-  color: var(--color-secondary-text);
+  padding: 0 var(--space-md);
+  color: var(--color-muted);
   font-size: var(--font-xs);
+  font-weight: 500;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
 `;
 
 const PasswordGroup = styled.div`
@@ -150,6 +154,8 @@ function SignInFormContent() {
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [otpCode, setOtpCode] = useState("");
   const [countryCode, setCountryCode] = useState<string | undefined>("US");
+  const [showTwoFactor, setShowTwoFactor] = useState(false);
+  const [showProfileCompletion, setShowProfileCompletion] = useState(false);
 
   const handleInputChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     let { name, value } = e.target;
@@ -274,7 +280,7 @@ function SignInFormContent() {
   };
 
   const initSocialAuthSignIn = async (
-    connection: DeploymentSocialConnection
+    connection: DeploymentSocialConnection,
   ) => {
     if (loading || isSubmitting) return;
 
@@ -300,9 +306,27 @@ function SignInFormContent() {
       return;
     }
 
+    // Check if profile completion is required
+    if (signinAttempt.requires_completion) {
+      setShowProfileCompletion(true);
+      return;
+    }
+
+    // Check if first factor is authenticated but second factor is required
+    if (
+      signinAttempt.first_method_authenticated &&
+      signinAttempt.second_method_authentication_required &&
+      !signinAttempt.second_method_authenticated &&
+      signinAttempt.current_step === "verify_second_factor"
+    ) {
+      // User needs to complete 2FA
+      setShowTwoFactor(true);
+      return;
+    }
+
     if (signinAttempt.completed) {
       let redirectUri = new URLSearchParams(window.location.search).get(
-        "redirect_uri"
+        "redirect_uri",
       );
 
       if (!redirectUri) {
@@ -314,7 +338,7 @@ function SignInFormContent() {
       if (deployment?.mode === "staging") {
         uri.searchParams.set(
           "dev_session",
-          localStorage.getItem("__dev_session__") ?? ""
+          localStorage.getItem("__dev_session__") ?? "",
         );
       }
 
@@ -333,6 +357,9 @@ function SignInFormContent() {
       case "verify_phone_otp":
         signIn.prepareVerification("phone_otp");
         break;
+      case "verify_second_factor":
+        // Don't set otpSent for 2FA flow
+        return;
     }
 
     setOtpSent(true);
@@ -369,15 +396,40 @@ function SignInFormContent() {
     return <ForgotPassword onBack={() => setShowForgotPassword(false)} />;
   }
 
-  if (signinAttempt?.requires_completion) {
-    // Redirect to profile completion
-    const redirectUri = new URLSearchParams(window.location.search).get("redirect_uri") ||
-                       window.location.origin;
+  if (showTwoFactor && signinAttempt) {
+    return (
+      <TwoFactorVerification
+        onBack={() => {
+          setShowTwoFactor(false);
+          discardSignInAttempt();
+          resetFormData();
+        }}
+      />
+    );
+  }
 
-    // Use the utility function for consistent redirect behavior
-    const url = `/profile-completion?redirect_uri=${encodeURIComponent(redirectUri)}`;
-    window.location.href = url;
-    return null;
+  if (signinAttempt?.requires_completion || showProfileCompletion) {
+    return (
+      <ProfileCompletion
+        onComplete={(session) => {
+          // Handle successful completion
+          let redirectUri = new URLSearchParams(window.location.search).get("redirect_uri");
+          if (!redirectUri) {
+            redirectUri = "https://" + window.location.hostname;
+          }
+          const uri = new URL(redirectUri);
+          if (deployment?.mode === "staging") {
+            uri.searchParams.set("dev_session", localStorage.getItem("__dev_session__") ?? "");
+          }
+          window.location.href = uri.toString();
+        }}
+        onBack={() => {
+          setShowProfileCompletion(false);
+          discardSignInAttempt();
+          resetFormData();
+        }}
+      />
+    );
   }
 
   return (
@@ -397,8 +449,8 @@ function SignInFormContent() {
                 {firstFactor === "email_magic_link"
                   ? `If ${formData.email} exists in our records, you will receive a magic link. Click the link to sign in.`
                   : firstFactor === "phone_otp"
-                  ? `If ${formData.phone} exists in our records, you will receive a verification code via SMS. Enter it below to continue.`
-                  : `If ${formData.email} exists in our records, you will receive a verification code. Enter it below to continue.`}
+                    ? `If ${formData.phone} exists in our records, you will receive a verification code via SMS. Enter it below to continue.`
+                    : `If ${formData.email} exists in our records, you will receive a verification code. Enter it below to continue.`}
               </Subtitle>
             </Header>
           </>
