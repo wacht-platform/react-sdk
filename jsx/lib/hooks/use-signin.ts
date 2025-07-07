@@ -94,12 +94,32 @@ export enum SignInStrategy {
 	Generic = "generic",
 }
 
-type VerificationStrategy =
-	| "email_otp"
-	| "phone_otp"
-	| "magic_link"
-	| "email_magiclink"
-	| "auth_code";
+
+// Declarative verification parameter types
+type EmailOTPVerificationParams = {
+	strategy: 'email_otp';
+	redirectUri?: string;
+};
+
+type PhoneOTPVerificationParams = {
+	strategy: 'phone_otp';
+	lastDigits?: string;
+};
+
+type MagicLinkVerificationParams = {
+	strategy: 'magic_link';
+	redirectUri?: string;
+};
+
+type VerificationParams = EmailOTPVerificationParams | PhoneOTPVerificationParams | MagicLinkVerificationParams;
+
+// Response type for prepareVerification
+type PrepareVerificationResponse = {
+	otp_sent?: boolean;
+	masked_phone?: string;
+	masked_email?: string;
+	verification_method?: string;
+};
 
 type CreateSignInStrategyResult = {
 	(strategy: SignInStrategy.Username): SignInPlainUsername;
@@ -113,7 +133,7 @@ type CreateSignInStrategyResult = {
 
 type SignIn = {
 	createStrategy: CreateSignInStrategyResult;
-	prepareVerification: (verification: VerificationStrategy, additionalParam?: string) => Promise<ApiResult<any>>;
+	prepareVerification: (params: VerificationParams) => Promise<ApiResult<PrepareVerificationResponse>>;
 	completeVerification: (verificationCode: string) => Promise<unknown>;
 };
 
@@ -393,26 +413,24 @@ export function useSignIn(): UseSignInReturnType {
 					},
 				);
 			},
-			prepareVerification: async (strategy: VerificationStrategy, additionalParam?: string) => {
+			prepareVerification: async (params: VerificationParams) => {
 				const url = new URL(`/auth/prepare-verification`, window.location.origin);
 				url.searchParams.set('attempt_identifier', signinAttempt?.id?.toString() || '');
-				url.searchParams.set('strategy', strategy);
+				url.searchParams.set('strategy', params.strategy);
 				url.searchParams.set('identifier_type', 'signin');
 				
-				// Handle additional parameters based on strategy
-				if (strategy === 'phone_otp' && additionalParam) {
-					// additionalParam is last_digits for phone verification
-					url.searchParams.set('last_digits', additionalParam);
-				} else if (additionalParam) {
-					// additionalParam is redirect_uri for other strategies
-					url.searchParams.set('redirect_uri', additionalParam);
+				// Handle parameters based on strategy type
+				if (params.strategy === 'phone_otp' && params.lastDigits) {
+					url.searchParams.set('last_digits', params.lastDigits);
+				} else if (params.strategy === 'email_otp' && params.redirectUri) {
+					url.searchParams.set('redirect_uri', params.redirectUri);
 				}
 
 				const response = await client(url.pathname + url.search, {
 					method: "POST",
 				});
 				
-				return responseMapper(response);
+				return responseMapper(response) as Promise<ApiResult<PrepareVerificationResponse>>;
 			},
 		},
 		discardSignInAttempt: () => {
@@ -446,10 +464,7 @@ export type UseSignInWithStrategyReturnType<T extends SignInStrategy> =
 		signIn: {
 			create: SignInFunction<T>;
 			completeVerification: (verificationCode: string) => Promise<unknown>;
-			prepareVerification: (
-				verification: VerificationStrategy,
-				additionalParam?: string,
-			) => Promise<ApiResult<any>>;
+			prepareVerification: (params: VerificationParams) => Promise<ApiResult<PrepareVerificationResponse>>;
 		};
 		signinAttempt: SigninAttempt | null;
 		discardSignInAttempt: () => void;

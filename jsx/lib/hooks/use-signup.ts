@@ -9,12 +9,34 @@ import { SignUpParams } from "@/types/auth";
 export type SignUpFunction = {
   create: (params: SignUpParams) => Promise<ApiResult<unknown, ErrorInterface>>;
   prepareVerification: (
-    strategy: SignupVerificationStrategy,
-  ) => Promise<unknown>;
+    params: SignupVerificationParams,
+  ) => Promise<ApiResult<PrepareVerificationResponse>>;
   completeVerification: (verificationCode: string) => Promise<unknown>;
 };
 
 export type SignupVerificationStrategy = "email_otp" | "phone_otp";
+
+type SignupEmailOTPVerificationParams = {
+  strategy: "email_otp";
+  redirectUri?: string;
+};
+
+type SignupPhoneOTPVerificationParams = {
+  strategy: "phone_otp";
+  lastDigits?: string;
+};
+
+type SignupVerificationParams =
+  | SignupEmailOTPVerificationParams
+  | SignupPhoneOTPVerificationParams;
+
+// Response type for prepareVerification
+type PrepareVerificationResponse = {
+  otp_sent?: boolean;
+  masked_phone?: string;
+  masked_email?: string;
+  verification_method?: string;
+};
 
 export type UseSignUpReturnType =
   | {
@@ -57,13 +79,29 @@ function builder(
       }
       return result;
     },
-    prepareVerification: async (strategy: SignupVerificationStrategy) => {
-      await client(
-        `/auth/prepare-verification?attempt_identifier=${signupAttempt?.id}&strategy=${strategy}&identifier_type=signup`,
-        {
-          method: "POST",
-        },
+    prepareVerification: async (params: SignupVerificationParams) => {
+      const url = new URL(`/auth/prepare-verification`, window.location.origin);
+      url.searchParams.set(
+        "attempt_identifier",
+        signupAttempt?.id?.toString() || "",
       );
+      url.searchParams.set("strategy", params.strategy);
+      url.searchParams.set("identifier_type", "signup");
+
+      // Handle parameters based on strategy type
+      if (params.strategy === "phone_otp" && params.lastDigits) {
+        url.searchParams.set("last_digits", params.lastDigits);
+      } else if (params.strategy === "email_otp" && params.redirectUri) {
+        url.searchParams.set("redirect_uri", params.redirectUri);
+      }
+
+      const response = await client(url.pathname + url.search, {
+        method: "POST",
+      });
+
+      return responseMapper(response) as Promise<
+        ApiResult<PrepareVerificationResponse>
+      >;
     },
     completeVerification: async (verificationCode: string) => {
       const form = new FormData();

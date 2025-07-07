@@ -1,4 +1,4 @@
-import { useEffect, useState } from "react";
+import { useEffect, useState, useRef } from "react";
 import styled from "styled-components";
 import { useSignInWithStrategy } from "../../hooks/use-signin";
 import type { OAuthProvider } from "../../hooks/use-signin";
@@ -156,12 +156,14 @@ function SignInFormContent() {
   const [countryCode, setCountryCode] = useState<string | undefined>("US");
   const [showTwoFactor, setShowTwoFactor] = useState(false);
   const [showProfileCompletion, setShowProfileCompletion] = useState(false);
+  const lastSubmitTime = useRef<number>(0);
+  const DEBOUNCE_DELAY = 1000; // 1 second debounce
 
   const handleInputChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     let { name, value } = e.target;
     if (name === "phone") {
-      // Format phone number like in signup
-      value = value.replace(/[^0-9-]/g, "");
+      // Allow only digits for phone number
+      value = value.replace(/[^0-9]/g, "");
     } else if (name === "email") {
       setEmail(value);
       value = value.toLowerCase();
@@ -184,6 +186,13 @@ function SignInFormContent() {
   const createSignIn = async (e: React.FormEvent) => {
     e.preventDefault();
     if (loading || isSubmitting) return;
+    
+    // Debounce check
+    const now = Date.now();
+    if (now - lastSubmitTime.current < DEBOUNCE_DELAY) {
+      return;
+    }
+    lastSubmitTime.current = now;
 
     const newErrors: Record<string, string> = {};
 
@@ -351,11 +360,11 @@ function SignInFormContent() {
       case "verify_email_link":
         const strategy =
           firstFactor === "email_magic_link" ? "magic_link" : "email_otp";
-        signIn.prepareVerification(strategy);
+        signIn.prepareVerification({ strategy });
         break;
       case "verify_phone":
       case "verify_phone_otp":
-        signIn.prepareVerification("phone_otp");
+        signIn.prepareVerification({ strategy: "phone_otp" });
         break;
       case "verify_second_factor":
         // Don't set otpSent for 2FA flow
@@ -377,6 +386,12 @@ function SignInFormContent() {
               ErrorCode.UserAlreadySignedIn,
               ErrorCode.Internal,
               ErrorCode.UserDisabled,
+              ErrorCode.CountryRestricted,
+              ErrorCode.EmailNotAllowed,
+              ErrorCode.EmailBlocked,
+              ErrorCode.DisposableEmailBlocked,
+              ErrorCode.VoipNumberBlocked,
+              ErrorCode.BannedKeyword,
             ].includes(err.code)
           ) {
             newErrors.submit = err.message;
@@ -411,7 +426,7 @@ function SignInFormContent() {
   if (signinAttempt?.requires_completion || showProfileCompletion) {
     return (
       <ProfileCompletion
-        onComplete={(session) => {
+        onComplete={() => {
           // Handle successful completion
           let redirectUri = new URLSearchParams(window.location.search).get("redirect_uri");
           if (!redirectUri) {
@@ -631,7 +646,7 @@ function SignInFormContent() {
                 onResend={async () => {
                   const strategy =
                     firstFactor === "email_otp" ? "email_otp" : "phone_otp";
-                  await signIn.prepareVerification(strategy);
+                  await signIn.prepareVerification({ strategy });
                 }}
                 error={errors.otp}
                 isSubmitting={isSubmitting}

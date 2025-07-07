@@ -9,7 +9,10 @@ import { Button } from "@/components/utility";
 import { AuthFormImage } from "./auth-image";
 import { useDeployment } from "@/hooks/use-deployment";
 import { NavigationLink } from "../utility/navigation";
-import { TwoFactorMethodSelector, type TwoFactorMethod } from "./two-factor-method-selector";
+import {
+  TwoFactorMethodSelector,
+  type TwoFactorMethod,
+} from "./two-factor-method-selector";
 import { PhoneVerification } from "./phone-verification";
 import { ShieldIcon } from "../icons/shield";
 import { SmartphoneIcon } from "../icons/smartphone";
@@ -97,7 +100,7 @@ export function TwoFactorVerification({ onBack }: TwoFactorVerificationProps) {
 
   // Determine available 2FA methods from signin attempt
   const available2FAMethods = signinAttempt?.available_2fa_methods || [];
-  
+
   const availableMethods: TwoFactorMethod[] = [
     {
       id: "authenticator",
@@ -121,39 +124,31 @@ export function TwoFactorVerification({ onBack }: TwoFactorVerificationProps) {
       icon: <KeyIcon />,
       available: available2FAMethods.includes("backup_code"),
     },
-  ].filter(method => method.available);
+  ].filter((method) => method.available);
 
   const handleMethodSelect = async (methodId: string) => {
     setSelectedMethod(methodId);
     setShowMethodSelector(false);
 
     if (methodId === "phone_otp" && signIn) {
-      // Request phone verification
-      setIsSubmitting(true);
-      try {
-        const response = await signIn.prepareVerification("phone_otp");
-        if (response && "data" in response && response.data?.masked_phone) {
-          setMaskedPhone(response.data.masked_phone);
-          setShowPhoneVerification(true);
-        }
-      } catch (err) {
-        setErrors({ submit: (err as Error).message });
-        setShowMethodSelector(true);
-      } finally {
-        setIsSubmitting(false);
-      }
+      setShowPhoneVerification(true);
     }
   };
 
   const handlePhoneVerification = async (lastFourDigits: string) => {
     if (!signIn || !signinAttempt) return;
-    
+
     setIsSubmitting(true);
     try {
-      // Call prepareVerification again with last_digits parameter
-      const response = await signIn.prepareVerification("phone_otp", lastFourDigits);
-      
+      const response = await signIn.prepareVerification({
+        strategy: "phone_otp",
+        lastDigits: lastFourDigits,
+      });
+
       if (response && "data" in response && response.data?.otp_sent) {
+        if (response.data?.masked_phone) {
+          setMaskedPhone(response.data.masked_phone);
+        }
         setShowPhoneVerification(false);
       } else {
         setErrors({ phone: "Phone number verification failed" });
@@ -170,12 +165,18 @@ export function TwoFactorVerification({ onBack }: TwoFactorVerificationProps) {
     if (loading || isSubmitting || !signIn) return;
 
     const newErrors: Record<string, string> = {};
-    
+
     if (!verificationCode) {
       newErrors.code = "Verification code is required";
-    } else if (selectedMethod === "authenticator" && verificationCode.length !== 6) {
+    } else if (
+      selectedMethod === "authenticator" &&
+      verificationCode.length !== 6
+    ) {
       newErrors.code = "Authentication code must be 6 digits";
-    } else if (selectedMethod === "phone_otp" && verificationCode.length !== 6) {
+    } else if (
+      selectedMethod === "phone_otp" &&
+      verificationCode.length !== 6
+    ) {
       newErrors.code = "SMS code must be 6 digits";
     }
 
@@ -216,7 +217,9 @@ export function TwoFactorVerification({ onBack }: TwoFactorVerificationProps) {
   useEffect(() => {
     // Check if sign-in is completed after verification
     if (signinAttempt?.completed) {
-      let redirectUri = new URLSearchParams(window.location.search).get("redirect_uri");
+      let redirectUri = new URLSearchParams(window.location.search).get(
+        "redirect_uri",
+      );
 
       if (!redirectUri) {
         redirectUri = "https://" + window.location.hostname;
@@ -227,7 +230,7 @@ export function TwoFactorVerification({ onBack }: TwoFactorVerificationProps) {
       if (deployment?.mode === "staging") {
         uri.searchParams.set(
           "dev_session",
-          localStorage.getItem("__dev_session__") ?? ""
+          localStorage.getItem("__dev_session__") ?? "",
         );
       }
 
@@ -246,8 +249,9 @@ export function TwoFactorVerification({ onBack }: TwoFactorVerificationProps) {
             <Header>
               <Title>Set Up Two-Factor Authentication</Title>
               <Subtitle>
-                Your account requires two-factor authentication, but you haven't set up any methods yet.
-                Please contact your administrator to set up 2FA.
+                Your account requires two-factor authentication, but you haven't
+                set up any methods yet. Please contact your administrator to set
+                up 2FA.
               </Subtitle>
             </Header>
             <Footer>
@@ -261,7 +265,9 @@ export function TwoFactorVerification({ onBack }: TwoFactorVerificationProps) {
               <div style={{ marginTop: "var(--space-sm)" }}>
                 Having trouble?{" "}
                 <Link>
-                  <NavigationLink to={deployment?.ui_settings.support_page_url || "#"}>
+                  <NavigationLink
+                    to={deployment?.ui_settings.support_page_url || "#"}
+                  >
                     Get help
                   </NavigationLink>
                 </Link>
@@ -271,7 +277,7 @@ export function TwoFactorVerification({ onBack }: TwoFactorVerificationProps) {
         </DefaultStylesProvider>
       );
     }
-    
+
     return (
       <TwoFactorMethodSelector
         methods={availableMethods}
@@ -306,9 +312,12 @@ export function TwoFactorVerification({ onBack }: TwoFactorVerificationProps) {
         <Header>
           <Title>Two-factor authentication</Title>
           <Subtitle>
-            {selectedMethod === "authenticator" && "Enter the 6-digit code from your authenticator app"}
-            {selectedMethod === "phone_otp" && "Enter the 6-digit code sent to your phone"}
-            {selectedMethod === "backup_code" && "Enter one of your backup codes"}
+            {selectedMethod === "authenticator" &&
+              "Enter the 6-digit code from your authenticator app"}
+            {selectedMethod === "phone_otp" &&
+              "Enter the 6-digit code sent to your phone"}
+            {selectedMethod === "backup_code" &&
+              "Enter one of your backup codes"}
           </Subtitle>
         </Header>
 
@@ -336,15 +345,24 @@ export function TwoFactorVerification({ onBack }: TwoFactorVerificationProps) {
                 setVerificationCode(code);
                 // Auto-submit when OTP is complete for non-backup codes
                 if (selectedMethod !== "backup_code") {
-                  const event = new Event('submit', { bubbles: true, cancelable: true });
+                  const event = new Event("submit", {
+                    bubbles: true,
+                    cancelable: true,
+                  });
                   await handleSubmit(event as any);
                 }
               }}
-              onResend={selectedMethod === "phone_otp" ? async () => {
-                if (signIn) {
-                  await signIn.prepareVerification("phone_otp");
-                }
-              } : undefined}
+              onResend={
+                selectedMethod === "phone_otp"
+                  ? async () => {
+                      if (signIn) {
+                        await signIn.prepareVerification({
+                          strategy: "phone_otp"
+                        });
+                      }
+                    }
+                  : undefined
+              }
               error={errors.code || errors.submit}
               isSubmitting={isSubmitting}
             />
@@ -353,25 +371,33 @@ export function TwoFactorVerification({ onBack }: TwoFactorVerificationProps) {
           <div>
             {errors.submit && <ErrorMessage>{errors.submit}</ErrorMessage>}
 
-            <SubmitButton type="submit" disabled={isSubmitting || loading || !verificationCode}>
+            <SubmitButton
+              type="submit"
+              disabled={isSubmitting || loading || !verificationCode}
+            >
               {isSubmitting ? "Verifying..." : "Verify"}
             </SubmitButton>
           </div>
         </Form>
 
         <Footer>
-          <Link onClick={() => {
-            setShowMethodSelector(true);
-            setSelectedMethod(null);
-            setVerificationCode("");
-            setErrors({});
-          }} style={{ cursor: "pointer" }}>
+          <Link
+            onClick={() => {
+              setShowMethodSelector(true);
+              setSelectedMethod(null);
+              setVerificationCode("");
+              setErrors({});
+            }}
+            style={{ cursor: "pointer" }}
+          >
             Try another method
           </Link>
           <div style={{ marginTop: "var(--space-sm)" }}>
             Having trouble?{" "}
             <Link>
-              <NavigationLink to={deployment?.ui_settings.support_page_url || "#"}>
+              <NavigationLink
+                to={deployment?.ui_settings.support_page_url || "#"}
+              >
                 Get help
               </NavigationLink>
             </Link>

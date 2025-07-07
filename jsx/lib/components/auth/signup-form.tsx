@@ -257,7 +257,7 @@ export function SignUpForm() {
   const [errors, setErrors] = useState<Record<string, string>>({});
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [countryCode, setCountryCode] = useState(
-    Intl.DateTimeFormat().resolvedOptions().locale.split("-")?.pop()
+    Intl.DateTimeFormat().resolvedOptions().locale.split("-")?.pop(),
   );
 
   const isSignupRestricted =
@@ -425,7 +425,7 @@ export function SignUpForm() {
   const authSettings = deployment?.auth_settings;
 
   const isBothNamesEnabled = Boolean(
-    authSettings?.first_name?.enabled && authSettings?.last_name?.enabled
+    authSettings?.first_name?.enabled && authSettings?.last_name?.enabled,
   );
 
   const completeVerification = async (e: React.FormEvent) => {
@@ -450,10 +450,10 @@ export function SignUpForm() {
 
     switch (signupAttempt.current_step) {
       case "verify_email":
-        signUp.prepareVerification("email_otp");
+        signUp.prepareVerification({ strategy: "email_otp" });
         break;
       case "verify_phone":
-        signUp.prepareVerification("phone_otp");
+        signUp.prepareVerification({ strategy: "phone_otp" });
         break;
     }
 
@@ -480,6 +480,18 @@ export function SignUpForm() {
 
           if (err.code === "INVALID_CREDENTIALS") {
             newErrors.password = err.message;
+          }
+          if (
+            [
+              "COUNTRY_RESTRICTED",
+              "EMAIL_NOT_ALLOWED",
+              "EMAIL_BLOCKED",
+              "DISPOSABLE_EMAIL_BLOCKED",
+              "VOIP_NUMBER_BLOCKED",
+              "BANNED_KEYWORD",
+            ].includes(err.code)
+          ) {
+            newErrors.submit = err.message;
           }
         }
       }
@@ -558,7 +570,7 @@ export function SignUpForm() {
                     signupAttempt?.current_step === "verify_email"
                       ? "email_otp"
                       : "phone_otp";
-                  await signUp.prepareVerification(strategy);
+                  await signUp.prepareVerification({ strategy });
                 }}
                 error={errors.otp}
                 isSubmitting={isSubmitting}

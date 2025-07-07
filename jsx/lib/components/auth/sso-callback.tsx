@@ -58,7 +58,7 @@ const spin = keyframes`
 `;
 
 const IconContainer = styled.div<{
-  $status: "loading" | "success" | "error" | "redirecting";
+  $status: "loading" | "success" | "error" | "redirecting" | "requires2fa";
 }>`
   display: flex;
   align-items: center;
@@ -102,7 +102,7 @@ const IconContainer = styled.div<{
 `;
 
 const StatusText = styled.div<{
-  $status: "loading" | "success" | "error" | "redirecting";
+  $status: "loading" | "success" | "error" | "redirecting" | "requires2fa";
 }>`
   font-size: var(--font-sm);
   font-weight: 500;
@@ -175,6 +175,10 @@ export function SSOCallback({
     autoRedirect,
   });
 
+  const redirectUri =
+    new URLSearchParams(window.location.search).get("redirect_uri") ||
+    undefined;
+
   const getStatus = () => {
     if (requires2FA && signinAttempt) return "requires2fa";
     if (
@@ -246,8 +250,9 @@ export function SSOCallback({
           if (onSuccess) {
             onSuccess(session, redirectUri || undefined);
           } else if (autoRedirect) {
-            const finalRedirectUrl = redirectUri || 
-              deployment?.ui_settings?.sign_in_page_url || 
+            const finalRedirectUrl =
+              redirectUri ||
+              deployment?.ui_settings?.sign_in_page_url ||
               deployment?.frontend_host ||
               "/";
             window.location.href = finalRedirectUrl;

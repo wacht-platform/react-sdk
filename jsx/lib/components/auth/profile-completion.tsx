@@ -137,7 +137,6 @@ export function ProfileCompletion({
   onComplete,
   onError,
   onBack,
-  autoRedirect = false,
 }: ProfileCompletionProps) {
   const { deployment } = useDeployment();
   const {
@@ -343,15 +342,12 @@ export function ProfileCompletion({
     await handleComplete(formData);
   };
 
-  const handlePhoneChange = (value: string) => {
+  const handlePhoneChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const value = e.target.value;
     setFormData((prev) => ({ ...prev, phone_number: value }));
     if (errors.phone_number) {
       setErrors((prev) => ({ ...prev, phone_number: "" }));
     }
-  };
-
-  const handleCountryCodeChange = (value: string) => {
-    setCountryCode(value);
   };
 
   if (isVerifying) {
@@ -493,9 +489,7 @@ export function ProfileCompletion({
                 onChange={handlePhoneChange}
                 error={errors.phone_number}
                 countryCode={countryCode}
-                setCountryCode={handleCountryCodeChange}
-                placeholder="Enter your phone number"
-                disabled={isLoading}
+                setCountryCode={setCountryCode}
               />
               {errors.phone_number && <ErrorMessage>{errors.phone_number}</ErrorMessage>}
             </FormGroup>

@@ -7,19 +7,22 @@ import preserveUseClientDirective from "rollup-plugin-preserve-use-client";
 export default defineConfig({
   build: {
     lib: {
-      entry: "./lib/index.ts",
+      entry: {
+        index: "./lib/index.ts",
+        server: "./lib/server/index.ts",
+      },
       name: "@snipextt/wacht-nextjs",
-      fileName: (format) => `index.${format}.js`,
       formats: ["cjs", "es"],
     },
     rollupOptions: {
-      external: [...Object.keys(peerDependencies), "react/jsx-runtime"],
+      external: [...Object.keys(peerDependencies), "react/jsx-runtime", "next/server"],
       plugins: [preserveUseClientDirective()],
       output: {
         globals: {
           react: "React",
           "react/jsx-runtime": "jsxRuntime",
           "next": "Next",
+          "next/server": "NextServer",
           "@snipextt/wacht": "Wacht",
         },
       },
