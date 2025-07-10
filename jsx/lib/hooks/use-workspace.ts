@@ -16,9 +16,13 @@ async function fetchWorkspaceMemberships(client: Client) {
   return response.data;
 }
 
-async function leaveWorkspace(client: Client, workspaceId: string) {
+async function leaveWorkspace(
+  client: Client,
+  workspaceId: string,
+  userId: string,
+) {
   const response = await responseMapper<void>(
-    await client(`/workspace-memberships/${workspaceId}`, {
+    await client(`/workspaces/${workspaceId}/members/${userId}`, {
       method: "DELETE",
     }),
   );
@@ -92,8 +96,8 @@ export const useWorkspaceList = () => {
   );
 
   const leaveWorkspaceCallback = useCallback(
-    async (id: string) => {
-      const result = await leaveWorkspace(client, id);
+    async (id: string, userId: string) => {
+      const result = await leaveWorkspace(client, id, userId);
       await refetch();
       return result;
     },
@@ -135,9 +139,9 @@ export const useActiveWorkspace = () => {
   }, [workspaceMemberships, session]);
 
   const leaveCurrentWorkspace = useCallback(async () => {
-    if (!activeWorkspace) return;
-    return await leaveWorkspaceFromList(activeWorkspace.id);
-  }, [activeWorkspace, leaveWorkspaceFromList]);
+    if (!activeWorkspace || !session?.active_signin?.user_id) return;
+    return await leaveWorkspaceFromList(activeWorkspace.id, session.active_signin.user_id);
+  }, [activeWorkspace, leaveWorkspaceFromList, session]);
 
   const currentLoading = loading || sessionLoading;
   const currentError = listError || sessionError;

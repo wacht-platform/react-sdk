@@ -322,7 +322,7 @@ const OrganizationManagementSection = () => {
           Administration
         </SectionTitle>
 
-        <InfoItem onClick={() => setScreen("security")}>
+        {/* <InfoItem onClick={() => setScreen("security")}>
           <InfoLabel>Manage Billing</InfoLabel>
           <InfoContent>
             <div
@@ -337,7 +337,7 @@ const OrganizationManagementSection = () => {
             </div>
             <ArrowRight size={14} style={{ color: "var(--color-muted)" }} />
           </InfoContent>
-        </InfoItem>
+        </InfoItem> */}
 
         <InfoItem onClick={() => setScreen("security")}>
           <InfoLabel>Access & Security</InfoLabel>
@@ -440,11 +440,11 @@ const GeneralSettingsSection = () => {
   const { leaveOrganization } = useOrganizationList();
   const [name, setName] = useState(selectedOrganization?.name || "");
   const [description, setDescription] = useState(
-    selectedOrganization?.description || ""
+    selectedOrganization?.description || "",
   );
   const [image, setImage] = useState<File | null>(null);
   const [previewUrl, setPreviewUrl] = useState<string | null>(
-    selectedOrganization?.image_url || null
+    selectedOrganization?.image_url || null,
   );
   const [successMessage] = useState("");
   const [_, setIsSubmitting] = useState(false);
@@ -693,7 +693,7 @@ const DomainsSection = () => {
   } = useActiveOrganization();
   const tableRef = useRef<HTMLTableElement | null>(null);
   const [domainForDeletion, setDomainForDeletion] = useState<string | null>(
-    null
+    null,
   );
   const {
     data: domainsFromAPI = [],
@@ -714,7 +714,7 @@ const DomainsSection = () => {
       revalidateOnFocus: false,
       revalidateOnReconnect: false,
       dedupingInterval: 5000,
-    }
+    },
   );
   const domains = domainsFromAPI as Array<
     OrganizationDomain & { verified: boolean }
@@ -734,7 +734,7 @@ const DomainsSection = () => {
     if (searchQuery.trim() !== "") {
       const lowercasedQuery = searchQuery.toLowerCase();
       tempDomains = tempDomains.filter((domain) =>
-        domain.fqdn.toLowerCase().includes(lowercasedQuery)
+        domain.fqdn.toLowerCase().includes(lowercasedQuery),
       );
     }
     return tempDomains;
@@ -1043,7 +1043,7 @@ const MembersSection = () => {
     activeOrganization
       ? `/api/organizations/${activeOrganization.id}/members`
       : null,
-    () => getMembers?.() || []
+    () => getMembers?.() || [],
   );
   const {
     data: invitations = [],
@@ -1053,13 +1053,13 @@ const MembersSection = () => {
     activeOrganization
       ? `/api/organizations/${activeOrganization.id}/invitations`
       : null,
-    () => getInvitations?.() || []
+    () => getInvitations?.() || [],
   );
   const { data: rolesData = [], isLoading: rolesLoading } = useSWR(
     activeOrganization
       ? `/api/organizations/${activeOrganization.id}/roles`
       : null,
-    () => getRoles?.() || []
+    () => getRoles?.() || [],
   );
   const roles = rolesData as OrganizationRole[];
 
@@ -1081,7 +1081,7 @@ const MembersSection = () => {
   const filteredInvitations = React.useMemo(() => {
     if (!searchQuery) return invitations;
     return invitations.filter((invitation: OrganizationInvitation) =>
-      invitation.email.toLowerCase().includes(searchQuery.toLowerCase())
+      invitation.email.toLowerCase().includes(searchQuery.toLowerCase()),
     );
   }, [invitations, searchQuery]);
 
@@ -1115,7 +1115,7 @@ const MembersSection = () => {
   const toggleRole = async (
     member: OrganizationMembership,
     role: OrganizationRole,
-    hasRole: boolean
+    hasRole: boolean,
   ) => {
     try {
       if (hasRole) {
@@ -1222,7 +1222,7 @@ const MembersSection = () => {
                     ) : (
                       getInitials(
                         member.user?.first_name,
-                        member.user?.last_name
+                        member.user?.last_name,
                       )
                     )}
                   </AvatarPlaceholder>
@@ -1725,7 +1725,7 @@ const SecuritySection = () => {
 
   const workspaces = useMemo(() => {
     const currentOrgWorkspaces = workspaceList.filter(
-      (workspace) => workspace.organization.id === activeOrganization?.id
+      (workspace) => workspace.organization.id === activeOrganization?.id,
     );
     return currentOrgWorkspaces;
   }, [workspaceList, activeOrganization?.id]);
@@ -2008,13 +2008,13 @@ const RolesSection = () => {
     activeOrganization
       ? `/api/organizations/${activeOrganization.id}/roles`
       : null,
-    () => getRoles?.() || []
+    () => getRoles?.() || [],
   );
 
   const filteredRoles = React.useMemo(() => {
     if (!searchQuery) return roles;
     return roles.filter((role) =>
-      role.name.toLowerCase().includes(searchQuery.toLowerCase())
+      role.name.toLowerCase().includes(searchQuery.toLowerCase()),
     );
   }, [roles, searchQuery]);
 
@@ -2370,7 +2370,7 @@ const AuditLogsSection = () => {
         (log) =>
           log.action.toLowerCase().includes(lowercasedQuery) ||
           log.actor.toLowerCase().includes(lowercasedQuery) ||
-          log.description.toLowerCase().includes(lowercasedQuery)
+          log.description.toLowerCase().includes(lowercasedQuery),
       );
     }
     return tempLogs;
@@ -2489,7 +2489,7 @@ export const ManageOrganization = () => {
       setToastLevel(level);
       setTimeout(() => setToastMessage(null), 3000);
     },
-    [setToastMessage]
+    [setToastMessage],
   );
 
   if (loading)

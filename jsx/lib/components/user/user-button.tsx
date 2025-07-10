@@ -322,7 +322,7 @@ export const UserButton: React.FC<UserButtonProps> = ({ showName = true }) => {
               | "bottom-right"
               | "bottom-left"
               | "top-right"
-              | "top-left"
+              | "top-left",
           );
         }
       }, 0);
@@ -394,7 +394,7 @@ export const UserButton: React.FC<UserButtonProps> = ({ showName = true }) => {
                 getInitials(
                   `${selectedAccount?.first_name || ""} ${
                     selectedAccount?.last_name || ""
-                  }`
+                  }`,
                 )
               )}
             </Avatar>
@@ -415,11 +415,21 @@ export const UserButton: React.FC<UserButtonProps> = ({ showName = true }) => {
           <DropdownContainer ref={dropdownRef} $position={dropdownPosition}>
             <div>
               {isMultiSessionEnabled
-                ? session?.signins?.map(({ user: account, id: signInId }) => {
-                    const isActive = account.id === selectedAccount?.id;
-                    const isClickable = !isActive;
+                ? (() => {
+                    // Sort signins to put active account first
+                    const sortedSignins = [...(session?.signins || [])].sort((a, b) => {
+                      const aIsActive = a.user.id === selectedAccount?.id;
+                      const bIsActive = b.user.id === selectedAccount?.id;
+                      if (aIsActive && !bIsActive) return -1;
+                      if (!aIsActive && bIsActive) return 1;
+                      return 0;
+                    });
 
-                    return (
+                    return sortedSignins.map(({ user: account, id: signInId }) => {
+                      const isActive = account.id === selectedAccount?.id;
+                      const isClickable = !isActive;
+
+                      return (
                       <AccountSection
                         key={account.id}
                         $isClickable={isClickable}
@@ -441,7 +451,7 @@ export const UserButton: React.FC<UserButtonProps> = ({ showName = true }) => {
                                 getInitials(
                                   `${account?.first_name || ""} ${
                                     account?.last_name || ""
-                                  }`
+                                  }`,
                                 )
                               )}
                             </LargerAvatar>
@@ -460,7 +470,7 @@ export const UserButton: React.FC<UserButtonProps> = ({ showName = true }) => {
                               </AccountName>
                             </NameRow>
                             <AccountEmail>
-                              {account.user_email_addresses[0].email}
+                              {account.primary_email_address.email}
                             </AccountEmail>
                           </AccountDetails>
                         </AccountHeader>
@@ -482,7 +492,8 @@ export const UserButton: React.FC<UserButtonProps> = ({ showName = true }) => {
                         )}
                       </AccountSection>
                     );
-                  })
+                  });
+                })()
                 : selectedAccount && (
                     <AccountSection $isClickable={false}>
                       <AccountHeader>
@@ -497,7 +508,7 @@ export const UserButton: React.FC<UserButtonProps> = ({ showName = true }) => {
                               getInitials(
                                 `${selectedAccount?.first_name || ""} ${
                                   selectedAccount?.last_name || ""
-                                }`
+                                }`,
                               )
                             )}
                           </LargerAvatar>
@@ -514,7 +525,7 @@ export const UserButton: React.FC<UserButtonProps> = ({ showName = true }) => {
                             </AccountName>
                           </NameRow>
                           <AccountEmail>
-                            {selectedAccount.user_email_addresses[0].email}
+                            {selectedAccount.primary_email_address.email}
                           </AccountEmail>
                         </AccountDetails>
                       </AccountHeader>

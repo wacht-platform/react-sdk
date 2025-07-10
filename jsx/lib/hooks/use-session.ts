@@ -43,20 +43,20 @@ async function fetchSession(client: Client): Promise<Session> {
 
 async function switchSignIn(
   client: Client,
-  signInId: string,
+  signInId: string
 ): Promise<ApiResult<Session>> {
   const response = await client(
     `/session/switch-sign-in?sign_in_id=${signInId}`,
     {
       method: "POST",
-    },
+    }
   );
   return responseMapper(response);
 }
 
 async function signOut(
   client: Client,
-  signInId?: string,
+  signInId?: string
 ): Promise<ApiResult<Session>> {
   const url = signInId
     ? `/session/sign-out?sign_in_id=${signInId}`
@@ -69,28 +69,28 @@ async function signOut(
 
 async function switchOrganization(
   client: Client,
-  organizationId?: string,
+  organizationId?: string
 ): Promise<ApiResult<Session>> {
   const response = await client(
     `/session/switch-organization${
       organizationId ? `?organization_id=${organizationId}` : ""
     }`,
     {
-      method: "PUT",
-    },
+      method: "POST",
+    }
   );
   return responseMapper(response);
 }
 
 async function switchWorkspace(
   client: Client,
-  workspaceId: string,
+  workspaceId: string
 ): Promise<ApiResult<Session>> {
   const response = await client(
     `/session/switch-workspace?workspace_id=${workspaceId}`,
     {
-      method: "PUT",
-    },
+      method: "POST",
+    }
   );
   return responseMapper(response);
 }
@@ -100,10 +100,10 @@ const fetchSingleton = new Map<string, Promise<ApiResult<SessionToken>>>();
 
 async function getSessionToken(
   client: Client,
-  template?: string,
+  template?: string
 ): Promise<ApiResult<SessionToken>> {
   const response = await client(
-    `/session/token${template ? `?template=${template}` : ""}`,
+    `/session/token${template ? `?template=${template}` : ""}`
   );
   return responseMapper(response);
 }
@@ -146,7 +146,7 @@ export function useSession(): UseSessionReturnType {
       tokenSingletonMap.set(template, data.data);
       return data.data.token;
     },
-    [client, session?.active_signin],
+    [client, session?.active_signin]
   );
 
   const addNewAccount = useCallback(() => {

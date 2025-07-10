@@ -6,6 +6,7 @@ export type Screen =
   | "social"
   | "password"
   | "2fa"
+  | "security"
   | "2fa/authenticator"
   | "2fa/backup_code"
   | "2fa/phone"

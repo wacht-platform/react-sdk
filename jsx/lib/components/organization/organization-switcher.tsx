@@ -3,45 +3,55 @@
 import React, { useState, useRef, useEffect, useMemo } from "react";
 import styled from "styled-components";
 import {
-  Check,
-  ChevronsUpDown,
-  PlusCircle,
+  ChevronDown,
+  ChevronRight,
+  Plus,
+  User,
   Settings,
-  Building,
-  FolderKanban,
+  LogOut,
 } from "lucide-react";
 import { DefaultStylesProvider } from "../utility/root";
 import {
   useActiveOrganization,
   useOrganizationMemberships,
 } from "@/hooks/use-organization";
-import { useWorkspaceMemberships } from "@/hooks/use-workspace";
+import { useActiveWorkspace, useWorkspaceList } from "@/hooks/use-workspace";
 import { useDeployment, useSession } from "@/hooks";
-import { Workspace } from "@/types/organization";
 import CreateOrganizationDialog from "./create-organization-dialog";
 import { ManageOrganizationDialog } from "./manage-organization-dialog";
-import { CreateWorkspaceDialog } from "../workspace/create-workspace-dialog";
+import CreateWorkspaceDialog from "../workspace/create-workspace-dialog";
+import { ManageWorkspaceDialog } from "../workspace/manage-workspace-dialog";
 import { useDialog } from "../utility/use-dialog";
+import type { WorkspaceWithOrganization } from "@/types/organization";
 
 const Container = styled.div`
   position: relative;
-  max-width: 100%;
-  min-width: 224px;
+  display: inline-block;
+  width: 100%;
+  max-width: 300px;
 `;
 
 const SwitcherButton = styled.button`
   display: flex;
   align-items: center;
   justify-content: space-between;
-  width: 100%;
-  padding: 8px 12px;
-  border-radius: var(--radius-sm);
+  gap: 8px;
+  padding: 9px 12px;
+  border-radius: 6px;
   font-size: 14px;
   font-weight: 500;
   cursor: pointer;
-  border: 1px solid var(--color-border);
-  background: var(--color-background);
-  color: var(--color-foreground);
+  border: 1px solid #e5e5e5;
+  background: #ffffff;
+  color: #000000;
+  transition: all 0.15s ease;
+  min-width: 200px;
+  width: 100%;
+
+  &:hover {
+    background: #fafafa;
+    border-color: #d4d4d4;
+  }
 
   &:disabled {
     cursor: not-allowed;
@@ -49,92 +59,60 @@ const SwitcherButton = styled.button`
   }
 `;
 
-const AvatarContainer = styled.div`
-  width: 24px;
-  height: 24px;
+const Avatar = styled.div`
+  width: 20px;
+  height: 20px;
   border-radius: 50%;
   overflow: hidden;
-  border: 1px solid var(--color-border);
-  box-shadow: 0 1px 2px var(--color-shadow);
-`;
-
-const AvatarFallback = styled.div`
-  width: 100%;
-  height: 100%;
   display: flex;
   align-items: center;
   justify-content: center;
-  background: var(--color-primary);
+  background: #6366f1;
   color: white;
-  font-weight: 500;
-  font-size: 12px;
+  font-size: 10px;
+  font-weight: 600;
+  flex-shrink: 0;
 `;
 
 const AvatarImage = styled.img`
   width: 100%;
   height: 100%;
   object-fit: cover;
-  border-radius: 50%;
-  width: 24px;
-  height: 24px;
 `;
 
-const FlexContainer = styled.div`
+const ButtonContent = styled.div`
   display: flex;
   align-items: center;
   gap: 8px;
 `;
 
-const TruncateText = styled.span`
+const OrgName = styled.span`
+  font-weight: 500;
+  font-size: 14px;
   overflow: hidden;
   text-overflow: ellipsis;
   white-space: nowrap;
-`;
-
-const SubdueText = styled.span`
-  color: var(--color-secondary-text);
+  color: #000000;
 `;
 
 const Dropdown = styled.div<{ isOpen: boolean }>`
   position: absolute;
   top: calc(100% + 8px);
   left: 0;
-  width: 100%;
-  background: var(--color-background);
-  border-radius: var(--radius-sm);
-  border: 1px solid var(--color-border);
-  box-shadow: 0 4px 12px var(--color-shadow);
+  width: 320px;
+  background: #ffffff;
+  border-radius: 8px;
+  border: 1px solid #e5e5e5;
+  box-shadow:
+    0 2px 8px rgba(0, 0, 0, 0.08),
+    0 0 0 1px rgba(0, 0, 0, 0.02);
   z-index: 50;
   overflow: hidden;
   opacity: ${(props) => (props.isOpen ? 1 : 0)};
-  transform: ${(props) => (props.isOpen ? "scale(1)" : "scale(0.95)")};
-  transform-origin: top;
+  transform: ${(props) =>
+    props.isOpen ? "translateY(0)" : "translateY(-4px)"};
   pointer-events: ${(props) => (props.isOpen ? "auto" : "none")};
-  transition: all 0.2s ease;
-  width: 360px;
-`;
-
-const SearchInput = styled.input`
-  width: 100%;
-  padding: 12px;
-  border: none;
-  border-bottom: 1px solid var(--color-border);
-  font-size: 14px;
-  outline: none;
-  background: var(--color-background);
-  color: var(--color-foreground);
-
-  &::placeholder {
-    color: var(--color-secondary-text);
-  }
-`;
-
-const GroupHeading = styled.div`
-  padding: 6px 12px;
-  font-size: 12px;
-  font-weight: 500;
-  text-transform: uppercase;
-  color: var(--color-secondary-text);
+  transition: all 0.2s cubic-bezier(0.16, 1, 0.3, 1);
 `;
 
 const MenuItem = styled.button<{ $isActive?: boolean }>`
@@ -142,80 +120,215 @@ const MenuItem = styled.button<{ $isActive?: boolean }>`
   align-items: center;
   justify-content: space-between;
   width: 100%;
-  padding: 10px;
+  padding: 9px 12px 9px 24px;
   text-align: left;
   font-size: 14px;
   border: none;
-  height: 40px;
-  background: ${(props) =>
-    props.$isActive ? "var(--color-input-background)" : "transparent"};
+  background: transparent;
   cursor: pointer;
-  color: var(--color-foreground);
+  color: #000000;
+  transition: background 0.1s ease;
+  position: relative;
 
   &:hover {
-    background: var(--color-input-background);
+    background: #f5f5f5;
+
+    .hover-arrow {
+      opacity: 1;
+    }
   }
 
   &:disabled {
     cursor: not-allowed;
     opacity: 0.7;
-    pointer-events: none;
   }
 `;
 
-const WorkspaceMenuItem = styled(MenuItem)`
-  padding-left: 36px;
+const HoverArrow = styled(ChevronRight)`
+  opacity: 0;
+  transition: opacity 0.1s ease;
+  color: #666666;
 `;
 
 const Separator = styled.div`
   height: 1px;
-  width: 100%;
-  background: var(--color-border);
-  margin: 4px 0;
+  background: #e5e5e5;
+  margin: 0;
 `;
 
-const IconContainer = styled.div`
+const MenuItemContent = styled.div`
   display: flex;
   align-items: center;
-  justify-content: center;
-  width: 28px;
-  height: 28px;
-  border-radius: var(--radius-sm);
-  background: var(--color-primary);
-  color: white;
-  margin-right: 2px;
+  gap: 8px;
+  flex: 1;
 `;
 
-const WorkspaceIcon = styled.div`
-  color: var(--color-secondary-text);
-`;
-
-const ActionIconContainer = styled.div<{ $destructive?: boolean }>`
-  display: flex;
-  align-items: center;
-  justify-content: center;
+const MenuItemAvatar = styled.div`
   width: 20px;
   height: 20px;
   border-radius: 50%;
-  background: var(--color-input-background);
-  color: ${({ $destructive }) =>
-    $destructive ? "var(--color-error)" : "var(--color-secondary-text)"};
-  margin-right: 6px;
+  overflow: hidden;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: #6366f1;
+  color: white;
+  font-size: 10px;
+  font-weight: 600;
+  flex-shrink: 0;
 `;
 
-const VioletIconContainer = styled(ActionIconContainer)`
-  background: var(--color-primary-background);
-  color: var(--color-primary);
+const MenuItemAvatarImage = styled.img`
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
 `;
 
-const Spinner = styled.span`
-  display: inline-block;
-  width: 12px;
-  height: 12px;
-  border: 2px solid var(--color-border);
-  border-top-color: var(--color-primary);
+const MenuItemInfo = styled.div`
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  overflow: hidden;
+`;
+
+const MenuItemName = styled.span`
+  font-weight: 500;
+  font-size: 14px;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  color: #000000;
+`;
+
+const MenuItemRole = styled.span`
+  font-size: 13px;
+  color: #666666;
+  font-weight: 400;
+`;
+
+const ManageButton = styled.button`
+  padding: 4px;
+  border-radius: 4px;
+  border: 1px solid #d4d4d4;
+  background: transparent;
+  color: #666666;
+  cursor: pointer;
+  transition: all 0.1s ease;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 24px;
+  height: 24px;
+
+  &:hover {
+    background: #f5f5f5;
+    color: #000000;
+  }
+`;
+
+const LogoutButton = styled(ManageButton)`
+  &:hover:not(:disabled) {
+    background: #fee;
+    color: #d73a49;
+    border-color: #fcc;
+  }
+
+  &:disabled {
+    opacity: 0.5;
+    cursor: not-allowed;
+  }
+`;
+
+const CreateOrgButton = styled(MenuItem)`
+  padding: 9px 12px;
+  color: #000000;
+
+  &:hover {
+    background: #f5f5f5;
+  }
+`;
+
+const PlusIcon = styled.div`
+  width: 20px;
+  height: 20px;
   border-radius: 50%;
-  animation: spin 1s linear infinite;
+  border: 1px dashed #d4d4d4;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: #666666;
+  background: #fafafa;
+`;
+
+const ActiveIndicator = styled.div`
+  width: 8px;
+  height: 8px;
+  border-radius: 50%;
+  background: #6366f1;
+  position: absolute;
+  left: 8px;
+  top: 50%;
+  transform: translateY(-50%);
+`;
+
+const PersonalIcon = styled.div`
+  width: 20px;
+  height: 20px;
+  border-radius: 50%;
+  background: #f5f5f5;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: #666666;
+  overflow: hidden;
+`;
+
+const PersonalAvatar = styled.img`
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+`;
+
+const WorkspaceItem = styled(MenuItem)`
+  padding-left: 48px;
+  font-size: 13px;
+`;
+
+const WorkspaceAvatar = styled.div`
+  width: 16px;
+  height: 16px;
+  border-radius: 50%;
+  overflow: hidden;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: #e5e5e5;
+  color: #666666;
+  font-size: 9px;
+  font-weight: 600;
+  flex-shrink: 0;
+`;
+
+const StatusMessage = styled.div<{ $isError?: boolean }>`
+  padding: 9px 12px;
+  margin: 4px 8px;
+  border-radius: 4px;
+  font-size: 13px;
+  background: ${(props) => (props.$isError ? "#fee" : "#e3f2fd")};
+  color: ${(props) => (props.$isError ? "#d73a49" : "#1976d2")};
+  border: 1px solid ${(props) => (props.$isError ? "#fcc" : "#bbdefb")};
+  display: flex;
+  align-items: center;
+  gap: 8px;
+`;
+
+const Spinner = styled.div`
+  width: 14px;
+  height: 14px;
+  border: 2px solid transparent;
+  border-top-color: currentColor;
+  border-radius: 50%;
+  animation: spin 0.8s linear infinite;
 
   @keyframes spin {
     to {
@@ -224,35 +337,83 @@ const Spinner = styled.span`
   }
 `;
 
-interface EnhancedOrganization {
-  id: string;
-  name: string;
-  image_url?: string;
-  workspaces?: Workspace[];
-  personal?: boolean;
-}
+const ShimmerWrapper = styled.div`
+  padding: 8px;
+`;
+
+const ShimmerItem = styled.div`
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 9px 12px;
+  animation: shimmer 1.5s ease-in-out infinite;
+  
+  @keyframes shimmer {
+    0% {
+      opacity: 0.5;
+    }
+    50% {
+      opacity: 1;
+    }
+    100% {
+      opacity: 0.5;
+    }
+  }
+`;
+
+const ShimmerAvatar = styled.div`
+  width: 20px;
+  height: 20px;
+  border-radius: 50%;
+  background: #e5e5e5;
+`;
+
+const ShimmerContent = styled.div`
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+`;
+
+const ShimmerLine = styled.div<{ width?: string }>`
+  height: 12px;
+  background: #e5e5e5;
+  border-radius: 4px;
+  width: ${props => props.width || '100%'};
+`;
+
+const ShimmerSmallLine = styled.div<{ width?: string }>`
+  height: 10px;
+  background: #e5e5e5;
+  border-radius: 4px;
+  width: ${props => props.width || '60%'};
+`;
 
 export const OrganizationSwitcher = () => {
   const [open, setOpen] = useState(false);
-  const [searchQuery, setSearchQuery] = useState("");
   const [isSwitching, setIsSwitching] = useState(false);
+  const [expandedOrgs, setExpandedOrgs] = useState<Set<string>>(new Set());
   const dropdownRef = useRef<HTMLDivElement>(null);
 
   const createOrgDialog = useDialog(false);
   const manageOrgDialog = useDialog(false);
   const createWorkspaceDialog = useDialog(false);
+  const manageWorkspaceDialog = useDialog(false);
+  const [selectedOrgForWorkspace, setSelectedOrgForWorkspace] = useState<
+    string | null
+  >(null);
+  const [leavingOrg, setLeavingOrg] = useState(false);
+  const [leaveError, setLeaveError] = useState<string | null>(null);
 
   const {
     organizationMemberships,
     loading: organizationLoading,
     refetch: refetchOrganizations,
   } = useOrganizationMemberships();
-  const { activeOrganization: selectedOrganization } = useActiveOrganization();
-  const {
-    workspaceMemberships,
-    loading: workspaceMembershipsLoading,
-    refetch: refetchWorkspaceMemberships,
-  } = useWorkspaceMemberships();
+  const { activeOrganization, leave: leaveOrganization } =
+    useActiveOrganization();
+  const { activeWorkspace, leave: leaveWorkspace } = useActiveWorkspace();
+  const { workspaces: workspaceList, loading: workspacesLoading } = useWorkspaceList();
   const {
     session,
     loading: sessionLoading,
@@ -261,88 +422,37 @@ export const OrganizationSwitcher = () => {
   } = useSession();
   const { deployment } = useDeployment();
 
-  const organizationsEnabled = useMemo(() => {
-    return deployment?.b2b_settings.organizations_enabled;
-  }, [deployment]);
+  const organizationsEnabled = deployment?.b2b_settings.organizations_enabled;
+  const workspacesEnabled = deployment?.b2b_settings.workspaces_enabled;
+  const allowUsersToCreateOrgs =
+    deployment?.b2b_settings.allow_users_to_create_orgs;
 
-  const workspacesEnabled = useMemo(() => {
-    return deployment?.b2b_settings.workspaces_enabled;
-  }, [deployment]);
+  const isPersonalActive =
+    !session?.active_signin?.active_organization_membership_id;
 
-  const allowUsersToCreateOrgs = useMemo(() => {
-    return deployment?.b2b_settings.allow_users_to_create_orgs;
-  }, [deployment]);
-
-  const { dropdownOrgList, selectedOrg, selectedWorkspace } = useMemo(() => {
-    const orgs: EnhancedOrganization[] = [];
-
-    const personalOrg: EnhancedOrganization = {
-      id: session?.active_signin?.user?.id ?? "",
-      name: "Personal Account",
-      image_url: session?.active_signin?.user?.profile_picture_url,
-      personal: true,
-    };
-
-    orgs.push(personalOrg);
-
-    const workspacesByOrg =
-      (workspacesEnabled &&
-        workspaceMemberships?.reduce((acc, membership) => {
-          if (!acc[membership.organization_id]) {
-            acc[membership.organization_id] = [];
-          }
-
-          const enhancedWorkspace = {
-            ...membership.workspace,
-          };
-
-          acc[membership.organization_id].push(enhancedWorkspace);
-          return acc;
-        }, {} as Record<string, Workspace[]>)) ||
-      {};
-
-    organizationMemberships?.forEach(({ organization: org }) => {
-      orgs.push({
-        id: org.id,
-        name: org.name,
-        image_url: org.image_url,
-        workspaces: workspacesEnabled
-          ? workspacesByOrg[org.id] || []
-          : undefined,
-      });
-    });
-
-    const defaultOrg = orgs[0];
-    let selectedOrg = defaultOrg;
-    let selectedWorkspace: Workspace | null = null;
-
-    if (session?.active_signin?.active_organization_membership_id) {
-      selectedOrg = {
-        id: selectedOrganization?.id ?? "",
-        name: selectedOrganization?.name ?? "",
-        image_url: selectedOrganization?.image_url ?? "",
-        workspaces: workspacesEnabled
-          ? workspacesByOrg[selectedOrganization?.id ?? ""] || []
-          : undefined,
-        personal: false,
+  const currentDisplay = useMemo(() => {
+    if (isPersonalActive) {
+      return {
+        name: "Personal account",
+        image_url: session?.active_signin?.user?.profile_picture_url,
+        isPersonal: true,
       };
-      if (workspacesEnabled && selectedOrg.workspaces) {
-        selectedWorkspace =
-          workspaceMemberships?.find(
-            (ws) =>
-              ws.id === session?.active_signin?.active_workspace_membership_id
-          )?.workspace ?? null;
-      }
+    }
+
+    let displayName = activeOrganization?.name || "";
+    if (workspacesEnabled && activeWorkspace) {
+      displayName = `${activeOrganization?.name} / ${activeWorkspace.name}`;
     }
 
     return {
-      dropdownOrgList: orgs,
-      selectedOrg,
-      selectedWorkspace,
+      name: displayName,
+      image_url: activeOrganization?.image_url,
+      isPersonal: false,
     };
   }, [
-    organizationMemberships,
-    workspaceMemberships,
+    isPersonalActive,
+    activeOrganization,
+    activeWorkspace,
     session,
     workspacesEnabled,
   ]);
@@ -354,6 +464,7 @@ export const OrganizationSwitcher = () => {
         !dropdownRef.current.contains(event.target as Node)
       ) {
         setOpen(false);
+        setLeaveError(null); // Clear error when closing
       }
     };
 
@@ -363,41 +474,29 @@ export const OrganizationSwitcher = () => {
     };
   }, []);
 
-  const filteredOrganizations = useMemo(() => {
-    if (!searchQuery) return dropdownOrgList;
-
-    return dropdownOrgList.filter((org) => {
-      const orgMatches = org.name
-        .toLowerCase()
-        .includes(searchQuery.toLowerCase());
-      const workspaceMatches =
-        workspacesEnabled &&
-        org.workspaces?.some((ws) =>
-          ws.name.toLowerCase().includes(searchQuery.toLowerCase())
-        );
-      return orgMatches || workspaceMatches;
-    });
-  }, [dropdownOrgList, searchQuery, workspacesEnabled]);
+  // Clear error after 5 seconds
+  useEffect(() => {
+    if (leaveError) {
+      const timer = setTimeout(() => {
+        setLeaveError(null);
+      }, 5000);
+      return () => clearTimeout(timer);
+    }
+  }, [leaveError]);
 
   const handleOrganizationCreated = () => {
     refetchOrganizations();
   };
 
-  const handleWorkspaceCreated = () => {
-    refetchWorkspaceMemberships();
-  };
-
-  if (organizationLoading || sessionLoading || workspaceMembershipsLoading) {
+  if (organizationLoading || sessionLoading) {
     return null;
   }
 
-  // Don't render if organizations are disabled
   if (!organizationsEnabled) {
     return null;
   }
 
   const handleSwitchOrganization = (orgId?: string) => {
-    if (selectedOrg.id === (orgId || session?.active_signin?.user?.id)) return;
     setIsSwitching(true);
     switchOrganization(orgId).finally(() => {
       setIsSwitching(false);
@@ -406,7 +505,6 @@ export const OrganizationSwitcher = () => {
   };
 
   const handleSwitchWorkspace = (workspaceId: string) => {
-    if (selectedWorkspace?.id === workspaceId) return;
     setIsSwitching(true);
     switchWorkspace(workspaceId).finally(() => {
       setIsSwitching(false);
@@ -414,213 +512,579 @@ export const OrganizationSwitcher = () => {
     });
   };
 
+  const toggleOrgExpanded = (orgId: string) => {
+    const newExpanded = new Set(expandedOrgs);
+    if (newExpanded.has(orgId)) {
+      newExpanded.delete(orgId);
+    } else {
+      newExpanded.add(orgId);
+    }
+    setExpandedOrgs(newExpanded);
+  };
+
+  const getInitials = (name: string) => {
+    return name
+      .split(" ")
+      .map((n) => n[0])
+      .join("")
+      .toUpperCase()
+      .slice(0, 2);
+  };
+
   return (
     <DefaultStylesProvider>
       <Container ref={dropdownRef}>
-        <SwitcherButton onClick={() => setOpen(!open)} disabled={isSwitching}>
-          <FlexContainer>
-            <AvatarContainer>
-              {isSwitching ? (
-                <AvatarFallback style={{ background: "var(--color-border)" }}>
-                  <Spinner />
-                </AvatarFallback>
-              ) : selectedOrg.image_url ? (
+        <SwitcherButton
+          onClick={() => {
+            setOpen(!open);
+            if (!open) {
+              setLeaveError(null);
+            }
+          }}
+          disabled={isSwitching}
+        >
+          <ButtonContent>
+            <Avatar>
+              {currentDisplay.image_url ? (
                 <AvatarImage
-                  src={selectedOrg.image_url}
-                  alt={selectedOrg.name}
+                  src={currentDisplay.image_url}
+                  alt={currentDisplay.name}
                 />
+              ) : currentDisplay.isPersonal ? (
+                <User size={12} />
               ) : (
-                <IconContainer>
-                  <Building size={14} />
-                </IconContainer>
+                getInitials(currentDisplay.name)
               )}
-            </AvatarContainer>
-            <TruncateText>
-              {selectedOrg.name}
-              {workspacesEnabled && selectedWorkspace && (
-                <SubdueText> / {selectedWorkspace.name}</SubdueText>
-              )}
-            </TruncateText>
-          </FlexContainer>
-          {isSwitching ? (
-            <span style={{ width: "16px", height: "16px" }}></span>
-          ) : (
-            <ChevronsUpDown size={16} opacity={0.5} />
-          )}
+            </Avatar>
+            <OrgName>{currentDisplay.name}</OrgName>
+          </ButtonContent>
+          <ChevronDown size={16} style={{ color: "#666666" }} />
         </SwitcherButton>
 
         <Dropdown isOpen={open}>
-          <SearchInput
-            placeholder={
-              workspacesEnabled
-                ? "Search organization or workspace..."
-                : "Search organization..."
-            }
-            value={searchQuery}
-            onChange={(e) => setSearchQuery(e.target.value)}
-          />
-
-          <div style={{ maxHeight: "360px", overflowY: "auto" }}>
-            {filteredOrganizations.length === 0 && (
-              <MenuItem>
-                No organization{workspacesEnabled ? " or workspace" : ""} found.
-              </MenuItem>
-            )}
-
-            {workspacesEnabled
-              ? filteredOrganizations.map((org, index) => (
-                  <React.Fragment key={org.id}>
-                    <GroupHeading>{org.name}</GroupHeading>
-                    <MenuItem
-                      $isActive={
-                        selectedOrg.id === org.id && !selectedWorkspace
-                      }
-                      onClick={() => {
-                        handleSwitchOrganization(
-                          org.personal ? undefined : org.id
-                        );
-                      }}
-                      disabled={isSwitching}
-                    >
-                      <FlexContainer>
-                        {org.image_url ? (
-                          <AvatarImage src={org.image_url} alt={org.name} />
-                        ) : (
-                          <IconContainer>
-                            <Building size={14} />
-                          </IconContainer>
-                        )}
-                        <span style={{ marginTop: "-2px" }}>{org.name}</span>
-                      </FlexContainer>
-                      {selectedOrg.id === org.id && !selectedWorkspace && (
-                        <Check size={16} color="var(--color-primary)" />
-                      )}
-                    </MenuItem>
-
-                    {org.workspaces?.map((workspace) => (
-                      <WorkspaceMenuItem
-                        key={workspace.id}
-                        $isActive={selectedWorkspace?.id === workspace.id}
-                        onClick={() => {
-                          handleSwitchWorkspace(workspace.id);
-                        }}
-                        disabled={isSwitching}
-                      >
-                        <FlexContainer>
-                          {workspace.image_url ? (
-                            <AvatarImage
-                              style={{ width: 20, height: 20 }}
-                              src={workspace.image_url}
-                              alt={workspace.name}
-                            />
-                          ) : (
-                            <FolderKanban
-                              size={20}
-                              color="var(--color-primary)"
-                            />
-                          )}
-                          <span>{workspace.name}</span>
-                        </FlexContainer>
-                        {selectedWorkspace?.id === workspace.id && (
-                          <Check size={16} color="var(--color-primary)" />
-                        )}
-                      </WorkspaceMenuItem>
-                    ))}
-
-                    {!org.personal && (
-                      <WorkspaceMenuItem
-                        onClick={() => {
-                          createWorkspaceDialog.open();
-                        }}
-                        disabled={isSwitching}
-                      >
-                        <FlexContainer>
-                          <WorkspaceIcon>
-                            <PlusCircle size={14} />
-                          </WorkspaceIcon>
-                          <SubdueText>Add Workspace</SubdueText>
-                        </FlexContainer>
-                      </WorkspaceMenuItem>
-                    )}
-                    {index != filteredOrganizations.length - 1 && <Separator />}
-                  </React.Fragment>
-                ))
-              : filteredOrganizations.map((org, index) => (
-                  <React.Fragment key={org.id}>
-                    <MenuItem
-                      key={org.id}
-                      $isActive={selectedOrg.id === org.id}
-                      onClick={() => {
-                        handleSwitchOrganization(
-                          org.personal ? undefined : org.id
-                        );
-                      }}
-                      disabled={isSwitching}
-                    >
-                      <FlexContainer>
-                        {org.image_url ? (
-                          <AvatarImage src={org.image_url} alt={org.name} />
-                        ) : (
-                          <IconContainer>
-                            <Building size={14} />
-                          </IconContainer>
-                        )}
-                        <span style={{ marginTop: "-2px" }}>{org.name}</span>
-                      </FlexContainer>
-                      {selectedOrg.id === org.id && (
-                        <Check size={16} color="var(--color-primary)" />
-                      )}
-                    </MenuItem>
-                    {index != filteredOrganizations.length - 1 && <Separator />}
-                  </React.Fragment>
-                ))}
-          </div>
-
-          <Separator />
-
-          {allowUsersToCreateOrgs && (
-            <MenuItem
-              onClick={() => createOrgDialog.open()}
-              disabled={isSwitching}
-            >
-              <FlexContainer>
-                <VioletIconContainer>
-                  <PlusCircle size={14} />
-                </VioletIconContainer>
-                <span>Create Organization</span>
-              </FlexContainer>
-            </MenuItem>
-          )}
-
-          {!selectedOrg.personal && (
-            <>
+          {(organizationLoading || workspacesLoading) ? (
+            <ShimmerWrapper>
+              {/* Show current active item shimmer */}
+              <ShimmerItem>
+                <ShimmerAvatar />
+                <ShimmerContent>
+                  <ShimmerLine width="120px" />
+                  <ShimmerSmallLine width="80px" />
+                </ShimmerContent>
+              </ShimmerItem>
+              <Separator />
+              
+              {/* Show 2-3 organization shimmers */}
+              <ShimmerItem>
+                <ShimmerAvatar />
+                <ShimmerContent>
+                  <ShimmerLine width="100px" />
+                </ShimmerContent>
+              </ShimmerItem>
+              <Separator />
+              
+              <ShimmerItem>
+                <ShimmerAvatar />
+                <ShimmerContent>
+                  <ShimmerLine width="140px" />
+                  <ShimmerSmallLine width="60px" />
+                </ShimmerContent>
+              </ShimmerItem>
+              <Separator />
+              
+              <ShimmerItem>
+                <ShimmerAvatar />
+                <ShimmerContent>
+                  <ShimmerLine width="110px" />
+                </ShimmerContent>
+              </ShimmerItem>
+            </ShimmerWrapper>
+          ) : (
+          <div>
+            {/* Show active item first */}
+            {isPersonalActive ? (
               <MenuItem
-                onClick={() => {
-                  manageOrgDialog.open();
-                  setOpen(false);
-                }}
+                $isActive={true}
+                onClick={() => handleSwitchOrganization()}
                 disabled={isSwitching}
               >
-                <FlexContainer>
-                  <ActionIconContainer>
-                    <Settings size={14} />
-                  </ActionIconContainer>
-                  <span>Manage Organizations</span>
-                </FlexContainer>
+                <ActiveIndicator />
+                <MenuItemContent>
+                  <PersonalIcon>
+                    {session?.active_signin?.user?.profile_picture_url ? (
+                      <PersonalAvatar
+                        src={session.active_signin.user.profile_picture_url}
+                        alt="Personal account"
+                      />
+                    ) : (
+                      <User size={12} />
+                    )}
+                  </PersonalIcon>
+                  <MenuItemInfo>
+                    <MenuItemName>Personal account</MenuItemName>
+                  </MenuItemInfo>
+                </MenuItemContent>
               </MenuItem>
-            </>
+            ) : (
+              activeOrganization && (
+                <MenuItem
+                  $isActive={true}
+                  onClick={() => {
+                    if (workspacesEnabled) {
+                      toggleOrgExpanded(activeOrganization.id);
+                    }
+                  }}
+                  disabled={isSwitching}
+                >
+                  <ActiveIndicator />
+                  <MenuItemContent>
+                    {workspacesEnabled && (
+                        <ChevronDown
+                          size={14}
+                          style={{
+                            marginRight: "4px",
+                            transform: expandedOrgs.has(activeOrganization.id)
+                              ? "rotate(0deg)"
+                              : "rotate(-90deg)",
+                            transition: "transform 0.2s ease",
+                            color: "#666666",
+                          }}
+                        />
+                      )}
+                    <MenuItemAvatar>
+                      {activeOrganization.image_url ? (
+                        <MenuItemAvatarImage
+                          src={activeOrganization.image_url}
+                          alt={activeOrganization.name}
+                        />
+                      ) : (
+                        getInitials(activeOrganization.name)
+                      )}
+                    </MenuItemAvatar>
+                    <MenuItemInfo>
+                      <MenuItemName>{activeOrganization.name}</MenuItemName>
+                      {(() => {
+                        const membership = organizationMemberships?.find(
+                          (m) => m.organization.id === activeOrganization.id,
+                        );
+                        if (membership?.role && membership.role.length > 0) {
+                          return (
+                            <MenuItemRole>
+                              {membership.role[0].name === "owner"
+                                ? "Owner"
+                                : membership.role[0].name === "admin"
+                                  ? "Admin"
+                                  : "Member"}
+                            </MenuItemRole>
+                          );
+                        }
+                        return null;
+                      })()}
+                    </MenuItemInfo>
+                  </MenuItemContent>
+                  <div
+                    style={{
+                      display: "flex",
+                      alignItems: "center",
+                      gap: "8px",
+                    }}
+                  >
+                    <ManageButton
+                      onClick={(e) => {
+                        e.stopPropagation();
+                        manageOrgDialog.open();
+                        setOpen(false);
+                      }}
+                      title="Manage organization"
+                    >
+                      <Settings size={14} />
+                    </ManageButton>
+                    <LogoutButton
+                      onClick={async (e) => {
+                        e.stopPropagation();
+                        setLeavingOrg(true);
+                        setLeaveError(null);
+                        try {
+                          await leaveOrganization();
+                          await refetchOrganizations();
+                          setTimeout(() => {
+                            setOpen(false);
+                            setLeavingOrg(false);
+                          }, 500);
+                        } catch (error) {
+                          setLeaveError(
+                            error instanceof Error
+                              ? error.message
+                              : "Failed to leave organization",
+                          );
+                          setLeavingOrg(false);
+                        }
+                      }}
+                      disabled={leavingOrg}
+                      title="Leave organization"
+                    >
+                      <LogOut size={14} />
+                    </LogoutButton>
+                  </div>
+                </MenuItem>
+              )
+            )}
+
+            {/* Show workspaces if active org is expanded */}
+            {activeOrganization &&
+              workspacesEnabled &&
+              expandedOrgs.has(activeOrganization.id) && (
+                <>
+                  {workspaceList
+                    ?.filter(
+                      (w: WorkspaceWithOrganization) =>
+                        w.organization.id === activeOrganization.id,
+                    )
+                    .map((workspace: WorkspaceWithOrganization) => {
+                      const isWorkspaceActive =
+                        activeWorkspace?.id === workspace.id;
+                      return (
+                        <WorkspaceItem
+                          key={workspace.id}
+                          $isActive={isWorkspaceActive}
+                          onClick={() => handleSwitchWorkspace(workspace.id)}
+                          disabled={isSwitching}
+                        >
+                          {isWorkspaceActive && <ActiveIndicator />}
+                          <MenuItemContent>
+                            <WorkspaceAvatar>
+                              {workspace.image_url ? (
+                                <img
+                                  src={workspace.image_url}
+                                  alt={workspace.name}
+                                  style={{
+                                    width: "100%",
+                                    height: "100%",
+                                    objectFit: "cover",
+                                  }}
+                                />
+                              ) : (
+                                getInitials(workspace.name).charAt(0)
+                              )}
+                            </WorkspaceAvatar>
+                            <MenuItemInfo>
+                              <MenuItemName>{workspace.name}</MenuItemName>
+                            </MenuItemInfo>
+                          </MenuItemContent>
+                          {isWorkspaceActive ? (
+                            <div
+                              style={{
+                                display: "flex",
+                                alignItems: "center",
+                                gap: "8px",
+                              }}
+                            >
+                              <ManageButton
+                                onClick={(e) => {
+                                  e.stopPropagation();
+                                  manageWorkspaceDialog.open();
+                                  setOpen(false);
+                                }}
+                                title="Manage workspace"
+                              >
+                                <Settings size={14} />
+                              </ManageButton>
+                              <LogoutButton
+                                onClick={async (e) => {
+                                  e.stopPropagation();
+                                  try {
+                                    if (leaveWorkspace) {
+                                      await leaveWorkspace();
+                                      setOpen(false);
+                                    }
+                                  } catch (error) {
+                                    console.error("Failed to leave workspace", error);
+                                  }
+                                }}
+                                title="Leave workspace"
+                              >
+                                <LogOut size={14} />
+                              </LogoutButton>
+                            </div>
+                          ) : (
+                            <HoverArrow className="hover-arrow" size={16} />
+                          )}
+                        </WorkspaceItem>
+                      );
+                    })}
+                  <WorkspaceItem
+                    onClick={() => {
+                      setSelectedOrgForWorkspace(activeOrganization.id);
+                      createWorkspaceDialog.open();
+                      setOpen(false);
+                    }}
+                    disabled={isSwitching}
+                  >
+                    <MenuItemContent>
+                      <PlusIcon style={{ width: "16px", height: "16px" }}>
+                        <Plus size={12} />
+                      </PlusIcon>
+                      <MenuItemInfo>
+                        <MenuItemName>Create workspace</MenuItemName>
+                      </MenuItemInfo>
+                    </MenuItemContent>
+                  </WorkspaceItem>
+                </>
+              )}
+
+            {/* Show status messages */}
+            {(leavingOrg || leaveError) && (
+              <>
+                {leavingOrg && (
+                  <StatusMessage>
+                    <Spinner />
+                    Leaving organization...
+                  </StatusMessage>
+                )}
+                {leaveError && (
+                  <StatusMessage $isError>
+                    <span>⚠️</span>
+                    {leaveError}
+                  </StatusMessage>
+                )}
+              </>
+            )}
+
+            <Separator />
+
+            {/* Show personal account if not active */}
+            {!isPersonalActive && (
+              <>
+                <MenuItem
+                  $isActive={false}
+                  onClick={() => handleSwitchOrganization()}
+                  disabled={isSwitching}
+                >
+                  <MenuItemContent>
+                    <PersonalIcon>
+                      {session?.active_signin?.user?.profile_picture_url ? (
+                        <PersonalAvatar
+                          src={session.active_signin.user.profile_picture_url}
+                          alt="Personal account"
+                        />
+                      ) : (
+                        <User size={12} />
+                      )}
+                    </PersonalIcon>
+                    <MenuItemInfo>
+                      <MenuItemName>Personal account</MenuItemName>
+                    </MenuItemInfo>
+                  </MenuItemContent>
+                  <HoverArrow className="hover-arrow" size={16} />
+                </MenuItem>
+                <Separator />
+              </>
+            )}
+
+            {/* Show other organizations */}
+            {organizationMemberships && organizationMemberships.length > 0 && (
+              <>
+                {organizationMemberships
+                  .filter((m) => m.organization.id !== activeOrganization?.id)
+                  .map((membership, index, filteredArray) => {
+                    const org = membership.organization;
+                    const orgWorkspaces =
+                      workspaceList?.filter(
+                        (w: WorkspaceWithOrganization) =>
+                          w.organization.id === org.id,
+                      ) || [];
+                    const isExpanded = expandedOrgs.has(org.id);
+
+                    return (
+                      <React.Fragment key={org.id}>
+                        <MenuItem
+                          $isActive={false}
+                          onClick={() => {
+                            if (workspacesEnabled) {
+                              toggleOrgExpanded(org.id);
+                            } else {
+                              handleSwitchOrganization(org.id);
+                            }
+                          }}
+                          disabled={isSwitching}
+                        >
+                          <MenuItemContent>
+                            {workspacesEnabled && (
+                              <ChevronDown
+                                size={14}
+                                style={{
+                                  marginRight: "4px",
+                                  transform: isExpanded
+                                    ? "rotate(0deg)"
+                                    : "rotate(-90deg)",
+                                  transition: "transform 0.2s ease",
+                                  color: "#666666",
+                                }}
+                              />
+                            )}
+                            <MenuItemAvatar>
+                              {org.image_url ? (
+                                <MenuItemAvatarImage
+                                  src={org.image_url}
+                                  alt={org.name}
+                                />
+                              ) : (
+                                getInitials(org.name)
+                              )}
+                            </MenuItemAvatar>
+                            <MenuItemInfo>
+                              <MenuItemName>{org.name}</MenuItemName>
+                              {membership.role &&
+                                membership.role.length > 0 && (
+                                  <MenuItemRole>
+                                    {membership.role[0].name === "owner"
+                                      ? "Owner"
+                                      : membership.role[0].name === "admin"
+                                        ? "Admin"
+                                        : "Member"}
+                                  </MenuItemRole>
+                                )}
+                            </MenuItemInfo>
+                          </MenuItemContent>
+                          <HoverArrow className="hover-arrow" size={16} />
+                        </MenuItem>
+
+                        {workspacesEnabled && isExpanded && (
+                          <>
+                            {orgWorkspaces.map(
+                              (workspace: WorkspaceWithOrganization) => {
+                                const isWorkspaceActive =
+                                  activeWorkspace?.id === workspace.id;
+                                return (
+                                  <WorkspaceItem
+                                    key={workspace.id}
+                                    $isActive={isWorkspaceActive}
+                                    onClick={() =>
+                                      handleSwitchWorkspace(workspace.id)
+                                    }
+                                    disabled={isSwitching}
+                                  >
+                                    {isWorkspaceActive && <ActiveIndicator />}
+                                    <MenuItemContent>
+                                      <WorkspaceAvatar>
+                                        {workspace.image_url ? (
+                                          <img
+                                            src={workspace.image_url}
+                                            alt={workspace.name}
+                                            style={{
+                                              width: "100%",
+                                              height: "100%",
+                                              objectFit: "cover",
+                                            }}
+                                          />
+                                        ) : (
+                                          getInitials(workspace.name).charAt(0)
+                                        )}
+                                      </WorkspaceAvatar>
+                                      <MenuItemInfo>
+                                        <MenuItemName>
+                                          {workspace.name}
+                                        </MenuItemName>
+                                      </MenuItemInfo>
+                                    </MenuItemContent>
+                                    {isWorkspaceActive ? (
+                                      <div
+                                        style={{
+                                          display: "flex",
+                                          alignItems: "center",
+                                          gap: "8px",
+                                        }}
+                                      >
+                                        <ManageButton
+                                          onClick={(e) => {
+                                            e.stopPropagation();
+                                            manageWorkspaceDialog.open();
+                                            setOpen(false);
+                                          }}
+                                          title="Manage workspace"
+                                        >
+                                          <Settings size={14} />
+                                        </ManageButton>
+                                        <LogoutButton
+                                          onClick={async (e) => {
+                                            e.stopPropagation();
+                                            try {
+                                              if (leaveWorkspace) {
+                                                await leaveWorkspace();
+                                                setOpen(false);
+                                              }
+                                            } catch (error) {
+                                              console.error("Failed to leave workspace", error);
+                                            }
+                                          }}
+                                          title="Leave workspace"
+                                        >
+                                          <LogOut size={14} />
+                                        </LogoutButton>
+                                      </div>
+                                    ) : (
+                                      <HoverArrow
+                                        className="hover-arrow"
+                                        size={16}
+                                      />
+                                    )}
+                                  </WorkspaceItem>
+                                );
+                              },
+                            )}
+                            <WorkspaceItem
+                              onClick={() => {
+                                setSelectedOrgForWorkspace(org.id);
+                                createWorkspaceDialog.open();
+                                setOpen(false);
+                              }}
+                              disabled={isSwitching}
+                            >
+                              <MenuItemContent>
+                                <PlusIcon
+                                  style={{ width: "16px", height: "16px" }}
+                                >
+                                  <Plus size={12} />
+                                </PlusIcon>
+                                <MenuItemInfo>
+                                  <MenuItemName>Create workspace</MenuItemName>
+                                </MenuItemInfo>
+                              </MenuItemContent>
+                            </WorkspaceItem>
+                          </>
+                        )}
+                        {index < filteredArray.length - 1 && <Separator />}
+                      </React.Fragment>
+                    );
+                  })}
+              </>
+            )}
+
+            {/* Always show create organization button at bottom */}
+            {allowUsersToCreateOrgs && (
+              <>
+                <Separator />
+                <CreateOrgButton
+                  onClick={() => {
+                    createOrgDialog.open();
+                    setOpen(false);
+                  }}
+                  disabled={isSwitching}
+                >
+                  <MenuItemContent>
+                    <PlusIcon>
+                      <Plus size={14} />
+                    </PlusIcon>
+                    <MenuItemInfo>
+                      <MenuItemName>Create organization</MenuItemName>
+                    </MenuItemInfo>
+                  </MenuItemContent>
+                </CreateOrgButton>
+              </>
+            )}
+          </div>
           )}
         </Dropdown>
-
-        {workspacesEnabled && selectedOrg && !selectedOrg.personal && (
-          <CreateWorkspaceDialog
-            isOpen={createWorkspaceDialog.isOpen}
-            onClose={createWorkspaceDialog.close}
-            onCreated={handleWorkspaceCreated}
-            organizationId={selectedOrg.id}
-            organizationName={selectedOrg.name}
-          />
-        )}
 
         {organizationsEnabled && allowUsersToCreateOrgs && (
           <CreateOrganizationDialog
@@ -634,6 +1098,22 @@ export const OrganizationSwitcher = () => {
           isOpen={manageOrgDialog.isOpen}
           onClose={manageOrgDialog.close}
         />
+
+        <ManageWorkspaceDialog
+          isOpen={manageWorkspaceDialog.isOpen}
+          onClose={manageWorkspaceDialog.close}
+        />
+
+        {selectedOrgForWorkspace && (
+          <CreateWorkspaceDialog
+            isOpen={createWorkspaceDialog.isOpen}
+            onClose={() => {
+              createWorkspaceDialog.close();
+              setSelectedOrgForWorkspace(null);
+            }}
+            organizationId={selectedOrgForWorkspace}
+          />
+        )}
       </Container>
     </DefaultStylesProvider>
   );

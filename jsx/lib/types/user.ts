@@ -52,6 +52,7 @@ export interface CurrentUser {
   profile_picture_url: string;
   primary_email_address_id: string;
   primary_phone_number_id: string;
+  primary_email_address: UserEmailAddress;
   second_factor_policy: SecondFactorPolicy;
   user_email_addresses: UserEmailAddress[];
   user_phone_numbers: UserPhoneNumber[];

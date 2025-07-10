@@ -1,6 +1,7 @@
 export * from "./deployment-instance";
 export * from "./auth";
 export * from "./organization";
+export * from "./workspace";
 export * from "./user";
 export * from "./control";
 export * from "./utility/dialog";

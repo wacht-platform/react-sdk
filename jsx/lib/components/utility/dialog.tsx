@@ -186,10 +186,11 @@ const DialogHeader: FC<DialogHeaderProps> = ({
 // Dialog Body Component
 interface DialogBodyProps {
   children: ReactNode;
+  style?: React.CSSProperties;
 }
 
-const DialogBody: FC<DialogBodyProps> = ({ children }) => {
-  return <StyledBody>{children}</StyledBody>;
+const DialogBody: FC<DialogBodyProps> = ({ children, style }) => {
+  return <StyledBody style={style}>{children}</StyledBody>;
 };
 
 // Dialog Footer Component
