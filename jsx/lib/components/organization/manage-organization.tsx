@@ -1,33 +1,23 @@
-import React, {
-  useCallback,
-  useEffect,
-  useMemo,
-  useRef,
-  useState,
-} from "react";
+import React, { useCallback, useMemo, useRef, useState } from "react";
 import styled from "styled-components";
 import {
   Building,
-  ArrowRight,
-  ArrowLeft,
   AlertTriangle,
-  ChevronDown,
   Copy,
   ExternalLink,
   Trash,
-  FileText,
   Check,
-  ChevronUp,
-  Info,
-  CircleAlert,
   Mail,
+  Settings,
+  Globe,
+  Users,
+  Shield,
 } from "lucide-react";
 import {
   useActiveOrganization,
   useOrganizationList,
 } from "@/hooks/use-organization";
 import { useDeployment } from "@/hooks/use-deployment";
-import { match } from "ts-pattern";
 import { AddDomainPopover } from "./add-domain-popover";
 import useSWR from "swr";
 import { InviteMemberPopover } from "./invite-member-popover";
@@ -53,7 +43,6 @@ import {
   FormGroup,
   Label,
   DropdownDivider,
-  Form,
 } from "@/components/utility";
 import {
   Table,
@@ -68,24 +57,7 @@ import {
 import { EmptyState } from "@/components/utility/empty-state";
 import { useWorkspaceList } from "@/hooks/use-workspace";
 import { ConfirmationPopover } from "../utility/confirmation-popover";
-import { ScreenContext, Screen, useScreenContext } from "./context";
-
-interface BillingPlan {
-  id: string;
-  name: string;
-  description: string;
-  price: number;
-  features: string[];
-  current: boolean;
-}
-
-interface BillingInvoice {
-  id: string;
-  amount: number;
-  status: string;
-  date: string;
-  pdf_url: string;
-}
+import { ScreenContext, useScreenContext } from "./context";
 
 const TypographyProvider = styled.div`
   * {
@@ -100,125 +72,79 @@ const Container = styled.div`
   background: var(--color-background);
   border-radius: 20px;
   box-shadow: 0 8px 30px var(--color-shadow);
-  padding: 24px;
   transition: all 0.3s ease;
   overflow: hidden;
+  display: flex;
+  flex-direction: column;
 
   @media (max-width: 768px) {
-    padding: 20px;
     border-radius: 16px;
   }
 `;
 
-const MainContent = styled.div<{ $isAdding: boolean }>`
-  display: flex;
-  flex-direction: column;
-  transform: translateX(${(props) => (props.$isAdding ? "-100%" : "0")});
-  transition: transform 0.3s ease;
-  width: 100%;
-`;
-
-const Layout = styled.div`
-  display: grid;
-  grid-template-columns: 1fr;
-  gap: 28px;
-  height: 100%;
-  @media (max-width: 768px) {
-    grid-template-columns: 1fr;
-    gap: 24px;
-  }
-`;
-
-const ProfileSection = styled.div`
-  display: flex;
-  flex-direction: column;
-`;
-
-const SectionTitle = styled.h2`
-  font-size: 16px;
-  color: var(--color-foreground);
-  margin-bottom: 0;
-  display: flex;
-  justify-content: space-between;
-  align-items: center;
-`;
-
-const ProfileHeader = styled.div`
-  display: flex;
-  padding: 0 4px;
-  gap: 8px;
-  align-items: center;
-  justify-content: space-between;
-  cursor: pointer;
-  margin-bottom: 24px;
-`;
-
-const Avatar = styled.img`
-  width: 60px;
-  height: 60px;
-  border-radius: 50%;
-  object-fit: cover;
-`;
-
-const ProfileName = styled.div`
-  flex: 1;
-`;
-
-const Name = styled.h2`
-  font-size: 16px;
-  margin: 0;
-  color: var(--color-foreground);
-`;
-
-const InfoItem = styled.div`
-  display: flex;
-  align-items: center;
-  padding: 16px 2px;
+const TabsContainer = styled.div`
+  padding: 8px 24px 0;
   border-bottom: 1px solid var(--color-border);
-  gap: 12px;
-  color: var(--color-foreground);
-  cursor: pointer;
-  transition: background-color 0.2s ease;
 
-  &:last-child {
-    border-bottom: none;
+  @media (max-width: 768px) {
+    padding: 20px 20px 0;
   }
+`;
+
+const TabsList = styled.div`
+  display: flex;
+  gap: 24px;
+  overflow-x: auto;
+
+  &::-webkit-scrollbar {
+    display: none;
+  }
+`;
+
+const Tab = styled.button<{ $isActive: boolean }>`
+  padding: 12px 0;
+  border: none;
+  background: none;
+  font-size: 14px;
+  font-weight: 500;
+  color: ${(props) =>
+    props.$isActive ? "var(--color-foreground)" : "var(--color-muted)"};
+  cursor: pointer;
+  position: relative;
+  transition: color 0.15s ease;
+  white-space: nowrap;
 
   &:hover {
-    background-color: var(--color-input-background);
+    color: var(--color-foreground);
+  }
+
+  &::after {
+    content: "";
+    position: absolute;
+    bottom: -1px;
+    left: 0;
+    right: 0;
+    height: 2px;
+    background: var(--color-primary);
+    opacity: ${(props) => (props.$isActive ? 1 : 0)};
+    transition: opacity 0.15s ease;
   }
 `;
 
-const InfoLabel = styled.div`
-  color: var(--color-secondary-text);
-  font-size: 14px;
-  width: 180px;
-`;
-
-const InfoContent = styled.div`
-  flex: 1;
-  display: flex;
+const TabIcon = styled.span`
+  display: inline-flex;
   align-items: center;
-  gap: 8px;
-  flex-wrap: wrap;
-  pointer-events: none;
-  font-size: 14px;
+  gap: 6px;
 `;
 
-const AddItemForm = styled.div<{ $isVisible: boolean }>`
-  position: absolute;
-  top: 0;
-  left: 100%;
-  width: 100%;
-  height: 100%;
-  background: var(--color-background);
+const TabContent = styled.div`
+  flex: 1;
+  padding: 24px;
   overflow-y: auto;
-  overflow-x: hidden;
-  transform: translateX(${(props) => (props.$isVisible ? "-100%" : "0")});
-  transition: transform 0.3s ease;
-  display: flex;
-  flex-direction: column;
-  gap: 16px;
+
+  @media (max-width: 768px) {
+    padding: 20px;
+  }
 `;
 
 const HeaderCTAContainer = styled.div`
@@ -228,216 +154,16 @@ const HeaderCTAContainer = styled.div`
   gap: 8px;
 `;
 
-const OrganizationManagementSection = () => {
-  const { activeOrganization: selectedOrganization, loading } =
-    useActiveOrganization();
-  const { setScreen } = useScreenContext();
-  const { deployment } = useDeployment();
-
-  if (loading || !selectedOrganization) {
-    return (
-      <div
-        style={{
-          display: "flex",
-          justifyContent: "center",
-          padding: "40px 0",
-        }}
-      >
-        <Spinner />
-      </div>
-    );
-  }
-
-  const organization = selectedOrganization;
-
-  return (
-    <>
-      <SectionTitle style={{ marginBottom: "20px" }}>
-        Manage {organization.name}
-      </SectionTitle>
-      <ProfileSection>
-        <ProfileHeader onClick={() => setScreen("general")}>
-          <Avatar src={organization.image_url} alt="Organization Logo" />
-          <ProfileName>
-            <Name>{organization.name}</Name>
-          </ProfileName>
-
-          <ArrowRight size={14} style={{ color: "var(--color-muted)" }} />
-        </ProfileHeader>
-
-        <InfoItem onClick={() => setScreen("domains")}>
-          <InfoLabel>Verified Domains</InfoLabel>
-          <InfoContent>
-            <div
-              style={{
-                flex: 1,
-                overflow: "hidden",
-                textOverflow: "ellipsis",
-                whiteSpace: "nowrap",
-              }}
-            >
-              Add verified domains for smooth onboarding
-            </div>
-            <ArrowRight size={14} style={{ color: "var(--color-muted)" }} />
-          </InfoContent>
-        </InfoItem>
-
-        <InfoItem onClick={() => setScreen("members")}>
-          <InfoLabel>Manage Members</InfoLabel>
-          <InfoContent>
-            <div
-              style={{
-                flex: 1,
-                overflow: "hidden",
-                textOverflow: "ellipsis",
-                whiteSpace: "nowrap",
-              }}
-            >
-              Manage existing members and their roles
-            </div>
-            <ArrowRight size={14} style={{ color: "var(--color-muted)" }} />
-          </InfoContent>
-        </InfoItem>
-
-        {deployment?.b2b_settings?.custom_org_role_enabled && (
-          <InfoItem onClick={() => setScreen("roles")}>
-            <InfoLabel>Organization Roles</InfoLabel>
-            <InfoContent>
-              <div
-                style={{
-                  flex: 1,
-                  overflow: "hidden",
-                  textOverflow: "ellipsis",
-                  whiteSpace: "nowrap",
-                }}
-              >
-                Manage access to your organization resources
-              </div>
-              <ArrowRight size={14} style={{ color: "var(--color-muted)" }} />
-            </InfoContent>
-          </InfoItem>
-        )}
-
-        <SectionTitle style={{ marginTop: "32px", marginBottom: "16px" }}>
-          Administration
-        </SectionTitle>
-
-        {/* <InfoItem onClick={() => setScreen("security")}>
-          <InfoLabel>Manage Billing</InfoLabel>
-          <InfoContent>
-            <div
-              style={{
-                flex: 1,
-                overflow: "hidden",
-                textOverflow: "ellipsis",
-                whiteSpace: "nowrap",
-              }}
-            >
-              Track usage and manage subscriptions for your organization
-            </div>
-            <ArrowRight size={14} style={{ color: "var(--color-muted)" }} />
-          </InfoContent>
-        </InfoItem> */}
-
-        <InfoItem onClick={() => setScreen("security")}>
-          <InfoLabel>Access & Security</InfoLabel>
-          <InfoContent>
-            <div
-              style={{
-                flex: 1,
-                overflow: "hidden",
-                textOverflow: "ellipsis",
-                whiteSpace: "nowrap",
-              }}
-            >
-              Manage organization access and security settings
-            </div>
-            <ArrowRight size={14} style={{ color: "var(--color-muted)" }} />
-          </InfoContent>
-        </InfoItem>
-
-        <InfoItem onClick={() => setScreen("audit-logs")}>
-          <InfoLabel>Audit Logs</InfoLabel>
-          <InfoContent>
-            <div
-              style={{
-                flex: 1,
-                overflow: "hidden",
-                textOverflow: "ellipsis",
-                whiteSpace: "nowrap",
-              }}
-            >
-              Track organization activity and changes
-            </div>
-            <ArrowRight size={14} style={{ color: "var(--color-muted)" }} />
-          </InfoContent>
-        </InfoItem>
-      </ProfileSection>
-    </>
-  );
-};
-
-const SectionHeader = ({
-  title,
-  actionLabel,
-  onAction,
-  buttonIcon,
-}: {
-  title: string;
-  actionLabel?: string;
-  onAction?: () => void;
-  buttonIcon?: React.ReactNode;
-}) => {
-  const { setScreen } = useScreenContext();
-
-  return (
-    <div
-      style={{
-        display: "flex",
-        alignItems: "center",
-        justifyContent: "space-between",
-        width: "100%",
-      }}
-    >
-      <div
-        style={{
-          display: "flex",
-          alignItems: "center",
-          gap: "8px",
-          fontSize: 16,
-          cursor: "pointer",
-        }}
-        onClick={() => setScreen(null)}
-      >
-        <ArrowLeft size={16} />
-        <SectionTitle style={{ fontSize: 14 }}>{title}</SectionTitle>
-      </div>
-
-      {actionLabel && onAction && (
-        <Button
-          onClick={onAction}
-          style={{
-            width: "auto",
-            display: "flex",
-            alignItems: "center",
-            gap: "8px",
-          }}
-        >
-          {buttonIcon}
-          <span>{actionLabel}</span>
-        </Button>
-      )}
-    </div>
-  );
-};
-
 const GeneralSettingsSection = () => {
   const {
     activeOrganization: selectedOrganization,
     loading,
     updateOrganization,
   } = useActiveOrganization();
-  const { leaveOrganization } = useOrganizationList();
+  const { workspaces: workspaceList } = useWorkspaceList();
+  const { deployment } = useDeployment();
+  const { deleteOrganization: deleteOrgFromList } = useOrganizationList();
+  const { toast } = useScreenContext();
   const [name, setName] = useState(selectedOrganization?.name || "");
   const [description, setDescription] = useState(
     selectedOrganization?.description || "",
@@ -446,17 +172,56 @@ const GeneralSettingsSection = () => {
   const [previewUrl, setPreviewUrl] = useState<string | null>(
     selectedOrganization?.image_url || null,
   );
-  const [successMessage] = useState("");
+  const [successMessage, setSuccessMessage] = useState("");
   const [_, setIsSubmitting] = useState(false);
   const fileInputRef = React.useRef<HTMLInputElement>(null);
+  const [security, setSecurity] = useState({
+    mfa_required: false,
+    ip_restrictions: false,
+    allowed_ips: "",
+    default_workspace_id: "",
+  });
+  const [confirmName, setConfirmName] = useState("");
+  const [isDeleting, setIsDeleting] = useState(false);
+  const [showDeleteConfirm, setShowDeleteConfirm] = useState(false);
 
   React.useEffect(() => {
     if (selectedOrganization) {
       setName(selectedOrganization.name || "");
       setDescription(selectedOrganization.description || "");
       setPreviewUrl(selectedOrganization.image_url || null);
+      setSecurity({
+        allowed_ips: selectedOrganization.whitelisted_ips?.join("\n") || "",
+        ip_restrictions: selectedOrganization.enable_ip_restriction || false,
+        mfa_required: selectedOrganization.enforce_mfa || false,
+        default_workspace_id:
+          selectedOrganization.auto_assigned_workspace_id || "",
+      });
     }
   }, [selectedOrganization]);
+
+  const workspaces = useMemo(() => {
+    const currentOrgWorkspaces = workspaceList.filter(
+      (workspace) => workspace.organization.id === selectedOrganization?.id,
+    );
+    return currentOrgWorkspaces;
+  }, [workspaceList, selectedOrganization?.id]);
+
+  const handleDeleteOrganization = async () => {
+    if (!selectedOrganization || confirmName !== selectedOrganization.name)
+      return;
+
+    try {
+      setIsDeleting(true);
+      await deleteOrgFromList(selectedOrganization);
+      toast("Organization deleted successfully", "info");
+    } catch (error) {
+      toast("Failed to delete organization", "error");
+    } finally {
+      setIsDeleting(false);
+      setConfirmName("");
+    }
+  };
 
   if (loading || !selectedOrganization) {
     return (
@@ -504,7 +269,17 @@ const GeneralSettingsSection = () => {
         data.description = description;
       }
 
+      // Add security settings
+      data.enable_ip_restriction = security.ip_restrictions;
+      data.enforce_mfa_setup = security.mfa_required;
+      data.whitelisted_ips = security.allowed_ips
+        ?.split("\n")
+        .filter((ip) => ip.trim());
+      data.auto_assigned_workspace_id = security.default_workspace_id;
+
       await updateOrganization?.(data);
+      setSuccessMessage("Settings updated successfully");
+      setTimeout(() => setSuccessMessage(""), 3000);
     } catch (error) {
       console.error("Failed to update organization", error);
     } finally {
@@ -514,12 +289,6 @@ const GeneralSettingsSection = () => {
 
   return (
     <>
-      <SectionHeader
-        title="Organization Settings"
-        actionLabel="Save changes"
-        onAction={handleSubmit}
-      />
-
       {successMessage && (
         <div
           style={{
@@ -537,110 +306,459 @@ const GeneralSettingsSection = () => {
         </div>
       )}
 
-      <Form
-        onSubmit={handleSubmit}
+      <div
         style={{
+          display: "flex",
           width: "100%",
-          gap: "16px",
+          gap: "1px",
         }}
       >
+        {/* Left Panel - Logo Upload */}
         <div
           style={{
+            width: "280px",
+            paddingRight: "24px",
             display: "flex",
             flexDirection: "column",
             alignItems: "center",
-            textAlign: "center",
+            justifyContent: "center",
+            gap: "12px",
+            borderRight: "1px solid var(--color-border)",
           }}
         >
-          <div style={{ position: "relative" }}>
-            <button
-              type="button"
-              onClick={triggerFileInput}
+          <div
+            style={{
+              width: "240px",
+              height: "240px",
+              borderRadius: "16px",
+              border: "2px solid #e5e7eb",
+              background: previewUrl ? "transparent" : "#ffffff",
+              cursor: "pointer",
+              display: "flex",
+              alignItems: "center",
+              justifyContent: "center",
+              overflow: "hidden",
+              transition: "all 0.2s ease",
+              position: "relative",
+            }}
+            onClick={triggerFileInput}
+            onMouseEnter={(e) => {
+              e.currentTarget.style.borderColor = "#d1d5db";
+              e.currentTarget.style.transform = "scale(1.02)";
+            }}
+            onMouseLeave={(e) => {
+              e.currentTarget.style.borderColor = "#e5e7eb";
+              e.currentTarget.style.transform = "scale(1)";
+            }}
+          >
+            {previewUrl ? (
+              <img
+                src={previewUrl}
+                alt="Organization Logo"
+                style={{
+                  width: "100%",
+                  height: "100%",
+                  objectFit: "cover",
+                }}
+              />
+            ) : (
+              <div
+                style={{
+                  width: "100%",
+                  height: "100%",
+                  background: "#e5e7eb",
+                  display: "flex",
+                  alignItems: "center",
+                  justifyContent: "center",
+                  color: "#9ca3af",
+                  fontSize: "32px",
+                  fontWeight: 500,
+                }}
+              >
+                {selectedOrganization?.name?.charAt(0)?.toUpperCase() || (
+                  <Building size={48} />
+                )}
+              </div>
+            )}
+            <input
+              type="file"
+              ref={fileInputRef}
+              style={{ display: "none" }}
+              accept="image/*"
+              onChange={handleImageChange}
+            />
+          </div>
+
+          <div
+            style={{ textAlign: "center", marginTop: "20px", width: "240px" }}
+          >
+            <div
               style={{
-                background: "none",
-                border: "none",
-                padding: 0,
-                cursor: "pointer",
+                display: "flex",
+                flexDirection: "column",
+                gap: "8px",
+                marginBottom: "12px",
               }}
             >
-              {previewUrl ? (
-                <img
-                  src={previewUrl}
-                  alt="Organization Logo"
-                  style={{
-                    objectFit: "cover",
-
-                    width: "84px",
-                    height: "84px",
-                    borderRadius: "50%",
-                  }}
-                />
-              ) : (
-                <Building size={36} color="var(--color-muted)" />
-              )}
-              <input
-                type="file"
-                ref={fileInputRef}
-                style={{ display: "none" }}
-                accept="image/*"
-                onChange={handleImageChange}
-              />
-            </button>
-            <div style={{ fontSize: "13px", color: "var(--color-muted)" }}>
-              Click to upload a new logo
+              <Button
+                onClick={() => fileInputRef.current?.click()}
+                style={{
+                  background: "#6366f1",
+                  color: "white",
+                  border: "none",
+                  padding: "8px 16px",
+                  borderRadius: "6px",
+                  fontSize: "14px",
+                  fontWeight: 500,
+                  width: "100%",
+                }}
+              >
+                Change Logo
+              </Button>
+              <Button
+                onClick={() => {
+                  setPreviewUrl(null);
+                  setImage(null);
+                  if (fileInputRef.current) {
+                    fileInputRef.current.value = "";
+                  }
+                }}
+                disabled={!previewUrl}
+                style={{
+                  background: previewUrl ? "#ef4444" : "#e5e7eb",
+                  color: previewUrl ? "white" : "#9ca3af",
+                  border: "none",
+                  padding: "8px 16px",
+                  borderRadius: "6px",
+                  fontSize: "14px",
+                  fontWeight: 500,
+                  cursor: previewUrl ? "pointer" : "not-allowed",
+                  width: "100%",
+                }}
+              >
+                Remove Logo
+              </Button>
+            </div>
+            <div
+              style={{ fontSize: "11px", color: "#9ca3af", lineHeight: "1.4" }}
+            >
+              <div>JPG, PNG, GIF • Max 2MB</div>
             </div>
           </div>
+
         </div>
 
-        <FormGroup>
-          <Label>Organization Name</Label>
-          <Input
-            id="name"
-            type="text"
-            value={name}
-            onChange={(e) => setName(e.target.value)}
-            placeholder="Organization Name"
-            style={{
-              width: "100%",
-              padding: "10px 12px",
-              borderRadius: "6px",
-              fontSize: "14px",
-              backgroundColor: "var(--color-input-background)",
-            }}
-            required
-          />
-        </FormGroup>
+        {/* Right Panel - Form Fields */}
+        <div style={{ flex: 1, paddingLeft: "24px" }}>
+          <div
+            style={{ display: "flex", flexDirection: "column", gap: "16px" }}
+          >
+            <FormGroup>
+              <Label
+                style={{ fontSize: "13px", fontWeight: 500, color: "#374151" }}
+              >
+                Organization Name
+              </Label>
+              <Input
+                id="name"
+                type="text"
+                value={name}
+                onChange={(e) => setName(e.target.value)}
+                placeholder="Enter organization name"
+                style={{
+                  width: "100%",
+                  padding: "8px 12px",
+                  borderRadius: "6px",
+                  fontSize: "14px",
+                  border: "1px solid #e5e7eb",
+                }}
+                required
+              />
+            </FormGroup>
 
-        <FormGroup>
-          <Label>Description</Label>
-          <Input
-            id="description"
-            as="textarea"
-            value={description}
-            onChange={(e) => setDescription(e.target.value)}
-            placeholder="Enter organization description"
-            style={{
-              width: "100%",
-              padding: "10px 12px",
-              borderRadius: "6px",
-              fontSize: "14px",
-              backgroundColor: "var(--color-input-background)",
-              minHeight: "100px",
-              resize: "vertical",
-            }}
-          />
-        </FormGroup>
-      </Form>
+            <FormGroup>
+              <Label
+                style={{ fontSize: "13px", fontWeight: 500, color: "#374151" }}
+              >
+                Description
+              </Label>
+              <Input
+                id="description"
+                as="textarea"
+                value={description}
+                onChange={(e) => setDescription(e.target.value)}
+                placeholder="Enter organization description"
+                style={{
+                  width: "100%",
+                  padding: "8px 12px",
+                  borderRadius: "6px",
+                  fontSize: "14px",
+                  border: "1px solid #e5e7eb",
+                  minHeight: "80px",
+                  resize: "vertical",
+                }}
+              />
+              <div
+                style={{ fontSize: "12px", color: "#6b7280", marginTop: "4px" }}
+              >
+                Brief description of your organization
+              </div>
+            </FormGroup>
 
-      <DeleteAccountAccordion
-        handleDeleteAccount={async () => {
-          if (selectedOrganization) {
-            await leaveOrganization?.(selectedOrganization);
-          }
-        }}
-        title="Leave Organization"
-        description="Leave this orgnization, you will not be able to join back unless invited by an admin"
-      />
+            <div
+              style={{
+                display: "flex",
+                alignItems: "center",
+                justifyContent: "space-between",
+              }}
+            >
+              <div>
+                <Label
+                  style={{
+                    fontSize: "13px",
+                    fontWeight: 500,
+                    color: "#374151",
+                    display: "block",
+                    marginBottom: "2px",
+                  }}
+                >
+                  Multi-Factor Authentication
+                </Label>
+                <div style={{ fontSize: "12px", color: "#6b7280" }}>
+                  Require all members to set up MFA for added security
+                </div>
+              </div>
+              <Switch>
+                <input
+                  type="checkbox"
+                  checked={security.mfa_required}
+                  onChange={() =>
+                    setSecurity((prev) => ({
+                      ...prev,
+                      mfa_required: !prev.mfa_required,
+                    }))
+                  }
+                />
+                <span></span>
+              </Switch>
+            </div>
+
+            {deployment?.b2b_settings?.ip_allowlist_per_org_enabled && (
+              <>
+                <div
+                  style={{
+                    display: "flex",
+                    alignItems: "center",
+                    justifyContent: "space-between",
+                  }}
+                >
+                  <div>
+                    <Label
+                      style={{
+                        fontSize: "13px",
+                        fontWeight: 500,
+                        color: "#374151",
+                        display: "block",
+                        marginBottom: "2px",
+                      }}
+                    >
+                      IP Restrictions
+                    </Label>
+                    <div style={{ fontSize: "12px", color: "#6b7280" }}>
+                      Only allow access from specific IP addresses
+                    </div>
+                  </div>
+                  <Switch>
+                    <input
+                      type="checkbox"
+                      checked={security.ip_restrictions}
+                      onChange={() =>
+                        setSecurity((prev) => ({
+                          ...prev,
+                          ip_restrictions: !prev.ip_restrictions,
+                        }))
+                      }
+                    />
+                    <span></span>
+                  </Switch>
+                </div>
+
+                {security.ip_restrictions && (
+                  <FormGroup>
+                    <Label
+                      style={{
+                        fontSize: "13px",
+                        fontWeight: 500,
+                        color: "#374151",
+                      }}
+                    >
+                      Allowed IP Addresses
+                    </Label>
+                    <Input
+                      as="textarea"
+                      value={security.allowed_ips}
+                      onChange={(e) =>
+                        setSecurity((prev) => ({
+                          ...prev,
+                          allowed_ips: e.target.value,
+                        }))
+                      }
+                      placeholder="192.168.1.1&#10;10.0.0.0/24"
+                      style={{
+                        width: "100%",
+                        padding: "8px 12px",
+                        borderRadius: "6px",
+                        fontSize: "14px",
+                        border: "1px solid #e5e7eb",
+                        minHeight: "80px",
+                        resize: "vertical",
+                        fontFamily: "monospace",
+                      }}
+                    />
+                    <div
+                      style={{
+                        fontSize: "12px",
+                        color: "#6b7280",
+                        marginTop: "4px",
+                      }}
+                    >
+                      Enter one IP address or CIDR block per line
+                    </div>
+                  </FormGroup>
+                )}
+              </>
+            )}
+
+            {deployment?.b2b_settings?.workspaces_enabled &&
+              workspaces.length > 0 && (
+                <FormGroup>
+                  <Label
+                    style={{
+                      fontSize: "13px",
+                      fontWeight: 500,
+                      color: "#374151",
+                    }}
+                  >
+                    Default Workspace
+                  </Label>
+                  <ComboBox
+                    options={workspaces.map((workspace) => ({
+                      value: workspace.id,
+                      label: workspace.name,
+                    }))}
+                    value={security.default_workspace_id}
+                    onChange={(value) =>
+                      setSecurity((prev) => ({
+                        ...prev,
+                        default_workspace_id: value,
+                      }))
+                    }
+                    placeholder="Select default workspace"
+                  />
+                  <div
+                    style={{
+                      fontSize: "12px",
+                      color: "#6b7280",
+                      marginTop: "4px",
+                    }}
+                  >
+                    Workspace that new members will be added to automatically
+                  </div>
+                </FormGroup>
+              )}
+
+
+            {/* Button Group */}
+            <div
+              style={{
+                display: "flex",
+                justifyContent: "flex-end",
+                marginTop: "20px",
+              }}
+            >
+              <Button
+                onClick={handleSubmit}
+                style={{
+                  background: "#6366f1",
+                  color: "white",
+                  border: "none",
+                  padding: "8px 16px",
+                  borderRadius: "6px",
+                  fontSize: "14px",
+                  fontWeight: 500,
+                }}
+              >
+                Save Changes
+              </Button>
+            </div>
+
+            {/* Delete Section */}
+            {deployment?.b2b_settings?.allow_org_deletion && (
+              <div style={{ marginTop: "40px", paddingTop: "24px", borderTop: "1px solid #f3f4f6" }}>
+                <button
+                  onClick={() => {
+                    if (!showDeleteConfirm) {
+                      setShowDeleteConfirm(true);
+                    } else {
+                      setShowDeleteConfirm(false);
+                      setConfirmName("");
+                    }
+                  }}
+                  style={{
+                    background: "none",
+                    border: "none",
+                    color: "#6b7280",
+                    fontSize: "13px",
+                    cursor: "pointer",
+                    textDecoration: "underline",
+                    padding: "0",
+                  }}
+                >
+                  {showDeleteConfirm ? "Cancel" : "Delete organization"}
+                </button>
+                
+                {showDeleteConfirm && (
+                  <div style={{ marginTop: "16px", maxWidth: "300px" }}>
+                    <p style={{ fontSize: "12px", color: "#6b7280", margin: "0 0 12px 0" }}>
+                      This action cannot be undone.
+                    </p>
+                    <Input
+                      type="text"
+                      value={confirmName}
+                      onChange={(e) => setConfirmName(e.target.value)}
+                      placeholder={`Type "${selectedOrganization?.name}" to confirm`}
+                      style={{
+                        width: "100%",
+                        padding: "8px 12px",
+                        borderRadius: "4px",
+                        fontSize: "13px",
+                        border: "1px solid #e5e7eb",
+                        marginBottom: "12px",
+                      }}
+                    />
+                    <Button
+                      onClick={handleDeleteOrganization}
+                      disabled={confirmName !== selectedOrganization?.name || isDeleting}
+                      style={{
+                        background: confirmName === selectedOrganization?.name ? "#dc2626" : "#e5e7eb",
+                        color: confirmName === selectedOrganization?.name ? "white" : "#9ca3af",
+                        border: "none",
+                        padding: "6px 12px",
+                        borderRadius: "4px",
+                        fontSize: "12px",
+                        fontWeight: 500,
+                        cursor: confirmName === selectedOrganization?.name ? "pointer" : "not-allowed",
+                      }}
+                    >
+                      {isDeleting ? <Spinner size={12} /> : "Delete"}
+                    </Button>
+                  </div>
+                )}
+              </div>
+            )}
+          </div>
+        </div>
+      </div>
     </>
   );
 };
@@ -761,7 +879,6 @@ const DomainsSection = () => {
 
   return (
     <>
-      <SectionHeader title="Organization Domains" />
       <HeaderCTAContainer>
         <SearchInput
           value={searchQuery}
@@ -943,26 +1060,6 @@ const DomainsSection = () => {
   );
 };
 
-const RoleDropdownButton = styled.button`
-  display: flex;
-  align-items: center;
-  gap: 4px;
-  padding: 5px 10px;
-  background: var(--color-input-background);
-  justify-content: space-between;
-  border: 1px solid var(--color-border);
-  border-radius: 4px;
-  color: var(--color-muted);
-  font-size: 12px;
-  font-weight: 400;
-  cursor: pointer;
-  transition: all 0.2s ease;
-
-  &:hover {
-    background: var(--color-border);
-  }
-`;
-
 const MemberListItem = styled.div`
   background: var(--color-background);
   padding: 16px 4px;
@@ -1024,16 +1121,13 @@ const MembersSection = () => {
     activeOrganization,
     loading,
     getMembers,
-    getInvitations,
     getRoles,
     addMemberRole,
     removeMemberRole,
-    discardInvitation,
-    resendInvitation,
   } = useActiveOrganization();
   const { toast } = useScreenContext();
-  const [isInviting, setIsInviting] = useState(false);
   const [searchQuery, setSearchQuery] = useState("");
+  const [isInviting, setIsInviting] = useState(false);
 
   const {
     data: members = [],
@@ -1045,16 +1139,7 @@ const MembersSection = () => {
       : null,
     () => getMembers?.() || [],
   );
-  const {
-    data: invitations = [],
-    isLoading: invitationsLoading,
-    mutate: reloadInvitations,
-  } = useSWR(
-    activeOrganization
-      ? `/api/organizations/${activeOrganization.id}/invitations`
-      : null,
-    () => getInvitations?.() || [],
-  );
+
   const { data: rolesData = [], isLoading: rolesLoading } = useSWR(
     activeOrganization
       ? `/api/organizations/${activeOrganization.id}/roles`
@@ -1078,40 +1163,6 @@ const MembersSection = () => {
     });
   }, [members, searchQuery]);
 
-  const filteredInvitations = React.useMemo(() => {
-    if (!searchQuery) return invitations;
-    return invitations.filter((invitation: OrganizationInvitation) =>
-      invitation.email.toLowerCase().includes(searchQuery.toLowerCase()),
-    );
-  }, [invitations, searchQuery]);
-
-  const handleInvitationSuccess = () => {
-    toast("Invitation sent successfully", "info");
-    reloadInvitations();
-    setIsInviting(false);
-  };
-
-  const handleCancelInvitation = async (invitation: OrganizationInvitation) => {
-    try {
-      await discardInvitation(invitation);
-      reloadInvitations();
-      toast("Invitation cancelled successfully", "info");
-    } catch (error) {
-      console.error("Failed to cancel invitation", error);
-      toast("Failed to cancel invitation", "error");
-    }
-  };
-
-  const handleResendInvitation = async (invitation: OrganizationInvitation) => {
-    try {
-      await resendInvitation(invitation);
-      toast("Invitation resent successfully", "info");
-    } catch (error) {
-      console.error("Failed to resend invitation", error);
-      toast("Failed to resend invitation", "error");
-    }
-  };
-
   const toggleRole = async (
     member: OrganizationMembership,
     role: OrganizationRole,
@@ -1131,12 +1182,19 @@ const MembersSection = () => {
       toast("Failed to update role", "error");
     }
   };
+
   const getInitials = (firstName = "", lastName = "") =>
     `${firstName[0] || ""}${lastName[0] || ""}`.toUpperCase();
   const memberHasRole = (member: any, roleId: string) =>
     member.roles?.some((r: any) => r.id === roleId) || false;
 
-  if (loading || membersLoading || rolesLoading || invitationsLoading)
+  const handleInvitationSuccess = () => {
+    setIsInviting(false);
+    reloadMembers();
+    toast("Invitation sent successfully", "info");
+  };
+
+  if (loading || membersLoading || rolesLoading)
     return (
       <div
         style={{ display: "flex", justifyContent: "center", padding: "40px 0" }}
@@ -1147,61 +1205,69 @@ const MembersSection = () => {
 
   return (
     <>
-      <div style={{ position: "relative" }}>
-        <SectionHeader title="Organization Members" />
-      </div>
-
       <div
         style={{
+          marginBottom: "16px",
           display: "flex",
-          gap: "8px",
-          alignItems: "center",
-          flexWrap: "wrap",
           justifyContent: "space-between",
+          alignItems: "center",
+          gap: "16px",
         }}
       >
-        <SearchInput
-          value={searchQuery}
-          onChange={setSearchQuery}
-          placeholder="Search..."
-        />
-        <div>
-          <Button
-            onClick={() => setIsInviting(true)}
-            style={{ width: "140px" }}
-            $primary
-          >
-            <span>Invite Members</span>
-          </Button>
-          {isInviting && (
-            <InviteMemberPopover
-              onClose={() => setIsInviting(false)}
-              onSuccess={handleInvitationSuccess}
-              roles={roles}
-            />
-          )}
+        <div style={{ flex: 1 }}>
+          <SearchInput
+            value={searchQuery}
+            onChange={setSearchQuery}
+            placeholder="Search members..."
+          />
         </div>
-      </div>
-
-      <div>
-        <h3
+        <Button
+          onClick={() => setIsInviting(true)}
           style={{
-            fontSize: "14px",
-            fontWeight: 400,
-            marginBottom: "8px",
-            color: "var(--color-muted)",
+            background: "#6366f1",
+            color: "white",
+            border: "none",
+            padding: "6px 12px",
+            borderRadius: "4px",
+            fontSize: "13px",
+            fontWeight: 500,
+            whiteSpace: "nowrap",
+            height: "32px",
+            width: "auto",
           }}
         >
-          Members ({members.length})
-        </h3>
-        {filteredMembers.length === 0 ? (
-          <EmptyState
-            title={
-              searchQuery ? "No members match your search" : "No members yet"
-            }
-            description="Invite members to your organization to get started."
-          />
-        ) : (
+          Invite Members
+        </Button>
+      </div>
+
+      {isInviting && (
+        <InviteMemberPopover
+          onClose={() => setIsInviting(false)}
+          onSuccess={handleInvitationSuccess}
+          roles={roles}
+        />
+      )}
+
+      {filteredMembers.length === 0 ? (
+        <EmptyState
+          title={
+            searchQuery ? "No members match your search" : "No members yet"
+          }
+          description="Invite members to your organization to get started."
+        />
+      ) : (
+        <div>
+          <div
+            style={{
+              fontSize: "14px",
+              fontWeight: 400,
+              marginBottom: "8px",
+              color: "var(--color-muted)",
+            }}
+          >
+            {filteredMembers.length} member
+            {filteredMembers.length !== 1 ? "s" : ""}
+          </div>
           <div style={{ borderTop: "1px solid var(--color-border)" }}>
             {filteredMembers.map((member) => (
               <MemberListItem key={member.id}>
@@ -1288,30 +1354,154 @@ const MembersSection = () => {
               </MemberListItem>
             ))}
           </div>
-        )}
-      </div>
+        </div>
+      )}
+    </>
+  );
+};
 
-      <div>
-        <h3
+const InvitationsSection = () => {
+  const {
+    activeOrganization,
+    loading,
+    getInvitations,
+    getRoles,
+    discardInvitation,
+    resendInvitation,
+  } = useActiveOrganization();
+  const { toast } = useScreenContext();
+  const [isInviting, setIsInviting] = useState(false);
+  const [searchQuery, setSearchQuery] = useState("");
+
+  const {
+    data: invitations = [],
+    isLoading: invitationsLoading,
+    mutate: reloadInvitations,
+  } = useSWR(
+    activeOrganization
+      ? `/api/organizations/${activeOrganization.id}/invitations`
+      : null,
+    () => getInvitations?.() || [],
+  );
+
+  const { data: rolesData = [], isLoading: rolesLoading } = useSWR(
+    activeOrganization
+      ? `/api/organizations/${activeOrganization.id}/roles`
+      : null,
+    () => getRoles?.() || [],
+  );
+  const roles = rolesData as OrganizationRole[];
+
+  const filteredInvitations = React.useMemo(() => {
+    if (!searchQuery) return invitations;
+    return invitations.filter((invitation: OrganizationInvitation) =>
+      invitation.email.toLowerCase().includes(searchQuery.toLowerCase()),
+    );
+  }, [invitations, searchQuery]);
+
+  const handleInvitationSuccess = () => {
+    toast("Invitation sent successfully", "info");
+    reloadInvitations();
+    setIsInviting(false);
+  };
+
+  const handleCancelInvitation = async (invitation: OrganizationInvitation) => {
+    try {
+      await discardInvitation(invitation);
+      reloadInvitations();
+      toast("Invitation cancelled successfully", "info");
+    } catch (error) {
+      console.error("Failed to cancel invitation", error);
+      toast("Failed to cancel invitation", "error");
+    }
+  };
+
+  const handleResendInvitation = async (invitation: OrganizationInvitation) => {
+    try {
+      await resendInvitation(invitation);
+      toast("Invitation resent successfully", "info");
+    } catch (error) {
+      console.error("Failed to resend invitation", error);
+      toast("Failed to resend invitation", "error");
+    }
+  };
+
+  if (loading || invitationsLoading || rolesLoading)
+    return (
+      <div
+        style={{ display: "flex", justifyContent: "center", padding: "40px 0" }}
+      >
+        <Spinner />
+      </div>
+    );
+
+  return (
+    <>
+      <div
+        style={{
+          marginBottom: "16px",
+          display: "flex",
+          justifyContent: "space-between",
+          alignItems: "center",
+          gap: "16px",
+        }}
+      >
+        <div style={{ flex: 1 }}>
+          <SearchInput
+            value={searchQuery}
+            onChange={setSearchQuery}
+            placeholder="Search invitations..."
+          />
+        </div>
+        <Button
+          onClick={() => setIsInviting(true)}
           style={{
-            fontSize: "14px",
-            fontWeight: 400,
-            marginBottom: "8px",
-            color: "var(--color-muted)",
+            background: "#6366f1",
+            color: "white",
+            border: "none",
+            padding: "6px 12px",
+            borderRadius: "4px",
+            fontSize: "13px",
+            fontWeight: 500,
+            whiteSpace: "nowrap",
+            height: "32px",
+            width: "auto",
           }}
         >
-          Pending Invitations ({invitations.length})
-        </h3>
-        {filteredInvitations.length === 0 ? (
-          <EmptyState
-            title={
-              searchQuery
-                ? "No invitations match your search"
-                : "No pending invitations"
-            }
-            description="Invite new members to your organization."
-          />
-        ) : (
+          Invite Members
+        </Button>
+      </div>
+
+      {isInviting && (
+        <InviteMemberPopover
+          onClose={() => setIsInviting(false)}
+          onSuccess={handleInvitationSuccess}
+          roles={roles}
+        />
+      )}
+
+      {filteredInvitations.length === 0 ? (
+        <EmptyState
+          title={
+            searchQuery
+              ? "No invitations match your search"
+              : "No pending invitations"
+          }
+          description="Invite new members to your organization."
+        />
+      ) : (
+        <div>
+          <div
+            style={{
+              fontSize: "14px",
+              fontWeight: 400,
+              marginBottom: "8px",
+              color: "var(--color-muted)",
+            }}
+          >
+            {filteredInvitations.length} pending invitation
+            {filteredInvitations.length !== 1 ? "s" : ""}
+          </div>
           <div style={{ borderTop: "1px solid var(--color-border)" }}>
             {filteredInvitations.map((invitation) => (
               <MemberListItem key={invitation.id}>
@@ -1364,614 +1554,7 @@ const MembersSection = () => {
               </MemberListItem>
             ))}
           </div>
-        )}
-      </div>
-    </>
-  );
-};
-
-const BillingSection = () => {
-  const { activeOrganization: selectedOrganization, loading } =
-    useActiveOrganization();
-
-  const [currentTab, setCurrentTab] = useState<"plans" | "invoices">("plans");
-
-  const plans: BillingPlan[] = [
-    {
-      id: "free",
-      name: "Free",
-      description: "Basic features for small teams",
-      price: 0,
-      features: ["Up to 5 team members", "Basic analytics", "1 GB storage"],
-      current: true,
-    },
-    {
-      id: "pro",
-      name: "Professional",
-      description: "Advanced features for growing teams",
-      price: 19.99,
-      features: [
-        "Unlimited team members",
-        "Advanced analytics",
-        "10 GB storage",
-        "Premium support",
-      ],
-      current: false,
-    },
-    {
-      id: "enterprise",
-      name: "Enterprise",
-      description: "Full features for large organizations",
-      price: 49.99,
-      features: [
-        "Unlimited everything",
-        "Dedicated support",
-        "Custom integrations",
-        "Advanced security",
-      ],
-      current: false,
-    },
-  ];
-
-  const invoices: BillingInvoice[] = [
-    {
-      id: "inv-001",
-      amount: 19.99,
-      status: "paid",
-      date: "2023-05-15",
-      pdf_url: "#",
-    },
-    {
-      id: "inv-002",
-      amount: 19.99,
-      status: "paid",
-      date: "2023-04-15",
-      pdf_url: "#",
-    },
-    {
-      id: "inv-003",
-      amount: 19.99,
-      status: "paid",
-      date: "2023-03-15",
-      pdf_url: "#",
-    },
-  ];
-
-  const handleChangePlan = (planId: string) => {
-    // Would implement API call to change plan
-    console.log(`Changing to plan: ${planId}`);
-  };
-
-  const handleDownloadInvoice = (invoiceId: string) => {
-    // Would implement logic to download invoice
-    console.log(`Downloading invoice: ${invoiceId}`);
-  };
-
-  if (loading || !selectedOrganization) {
-    return (
-      <div
-        style={{
-          display: "flex",
-          justifyContent: "center",
-          padding: "40px 0",
-        }}
-      >
-        <Spinner />
-      </div>
-    );
-  }
-
-  return (
-    <div>
-      <SectionHeader title="Billing & Usage" />
-
-      <div style={{ marginBottom: "24px" }}>
-        <div style={{ display: "flex", gap: "16px", marginBottom: "24px" }}>
-          <button
-            style={{
-              padding: "8px 16px",
-              background:
-                currentTab === "plans" ? "var(--color-primary)" : "transparent",
-              color:
-                currentTab === "plans"
-                  ? "var(--color-background)"
-                  : "var(--color-muted)",
-              border: "none",
-              borderRadius: "8px",
-              fontWeight: 500,
-              fontSize: "14px",
-              cursor: "pointer",
-            }}
-            onClick={() => setCurrentTab("plans")}
-          >
-            Subscription Plans
-          </button>
-          <button
-            style={{
-              padding: "8px 16px",
-              background:
-                currentTab === "invoices"
-                  ? "var(--color-primary)"
-                  : "transparent",
-              color:
-                currentTab === "invoices"
-                  ? "var(--color-background)"
-                  : "var(--color-muted)",
-              border: "none",
-              borderRadius: "8px",
-              fontWeight: 500,
-              fontSize: "14px",
-              cursor: "pointer",
-            }}
-            onClick={() => setCurrentTab("invoices")}
-          >
-            Billing History
-          </button>
         </div>
-
-        {currentTab === "plans" && (
-          <div>
-            <p
-              style={{
-                fontSize: "14px",
-                color: "var(--color-muted)",
-                marginBottom: "16px",
-              }}
-            >
-              Select a subscription plan that fits your organization's needs
-            </p>
-
-            <Table>
-              <TableHead>
-                <TableRow>
-                  <TableHeader>Plan</TableHeader>
-                  <TableHeader>Price</TableHeader>
-                  <TableHeader>Features</TableHeader>
-                  <TableHeader></TableHeader>
-                </TableRow>
-              </TableHead>
-              <TableBody>
-                {plans.map((plan) => (
-                  <TableRow
-                    key={plan.id}
-                    style={{
-                      background: plan.current
-                        ? "var(--color-primary-background)"
-                        : "var(--color-background)",
-                    }}
-                  >
-                    <TableCellFlex>
-                      <div>
-                        <div
-                          style={{
-                            fontSize: "16px",
-                            fontWeight: 600,
-                            color: "var(--color-foreground)",
-                          }}
-                        >
-                          {plan.name}
-                          {plan.current && (
-                            <span
-                              style={{
-                                marginLeft: "8px",
-                                fontSize: "12px",
-                                background: "var(--color-primary)",
-                                color: "var(--color-background)",
-                                padding: "2px 8px",
-                                borderRadius: "20px",
-                              }}
-                            >
-                              Current Plan
-                            </span>
-                          )}
-                        </div>
-                        <div
-                          style={{
-                            fontSize: "14px",
-                            color: "var(--color-muted)",
-                          }}
-                        >
-                          {plan.description}
-                        </div>
-                      </div>
-                    </TableCellFlex>
-                    <TableCell>
-                      <div
-                        style={{
-                          fontSize: "18px",
-                          fontWeight: 600,
-                          color: "var(--color-foreground)",
-                        }}
-                      >
-                        ${plan.price}
-                        <span style={{ fontSize: "14px", fontWeight: 400 }}>
-                          /month
-                        </span>
-                      </div>
-                    </TableCell>
-                    <TableCell>
-                      <ul style={{ margin: 0, paddingLeft: "20px" }}>
-                        {plan.features.map((feature, idx) => (
-                          <li
-                            key={idx}
-                            style={{
-                              fontSize: "14px",
-                              color: "var(--color-muted)",
-                              marginBottom: "4px",
-                            }}
-                          >
-                            {feature}
-                          </li>
-                        ))}
-                      </ul>
-                    </TableCell>
-                    <TableCell>
-                      {!plan.current && (
-                        <button
-                          onClick={() => handleChangePlan(plan.id)}
-                          style={{
-                            padding: "6px 12px",
-                            background: "var(--color-primary)",
-                            color: "var(--color-background)",
-                            border: "none",
-                            borderRadius: "6px",
-                            fontWeight: 500,
-                            fontSize: "14px",
-                            cursor: "pointer",
-                          }}
-                        >
-                          Upgrade
-                        </button>
-                      )}
-                    </TableCell>
-                  </TableRow>
-                ))}
-              </TableBody>
-            </Table>
-          </div>
-        )}
-
-        {currentTab === "invoices" && (
-          <div>
-            <p
-              style={{
-                fontSize: "14px",
-                color: "var(--color-muted)",
-                marginBottom: "16px",
-              }}
-            >
-              View and download your billing history
-            </p>
-
-            <Table>
-              <TableHead>
-                <TableRow>
-                  <TableHeader>Date</TableHeader>
-                  <TableHeader>Amount</TableHeader>
-                  <TableHeader>Status</TableHeader>
-                  <TableHeader></TableHeader>
-                </TableRow>
-              </TableHead>
-              <TableBody>
-                {invoices.map((invoice) => (
-                  <TableRow key={invoice.id}>
-                    <TableCell>
-                      {new Date(invoice.date).toLocaleDateString()}
-                    </TableCell>
-                    <TableCell>${invoice.amount.toFixed(2)}</TableCell>
-                    <TableCell>
-                      <span
-                        style={{
-                          display: "inline-flex",
-                          alignItems: "center",
-                          padding: "1px 6px",
-                          borderRadius: "12px",
-                          fontSize: "11px",
-                          background:
-                            invoice.status === "paid"
-                              ? "var(--color-success-background)"
-                              : "var(--color-error-background)",
-                          color:
-                            invoice.status === "paid"
-                              ? "var(--color-success)"
-                              : "var(--color-error)",
-                          border: "1px solid",
-                          borderColor:
-                            invoice.status === "paid"
-                              ? "var(--color-success-background)"
-                              : "var(--color-error-background)",
-                          fontWeight: 400,
-                          whiteSpace: "nowrap",
-                        }}
-                      >
-                        {invoice.status.charAt(0).toUpperCase() +
-                          invoice.status.slice(1)}
-                      </span>
-                    </TableCell>
-                    <ActionsCell>
-                      <IconButton
-                        onClick={() => handleDownloadInvoice(invoice.id)}
-                      >
-                        <FileText size={14} />
-                      </IconButton>
-                    </ActionsCell>
-                  </TableRow>
-                ))}
-              </TableBody>
-            </Table>
-          </div>
-        )}
-      </div>
-    </div>
-  );
-};
-
-const SecuritySection = () => {
-  const { activeOrganization, loading, updateOrganization } =
-    useActiveOrganization();
-  const { deleteOrganization } = useOrganizationList();
-  const { workspaces: workspaceList } = useWorkspaceList();
-  const { deployment } = useDeployment();
-
-  const [security, setSecurity] = useState({
-    mfa_required: false,
-    ip_restrictions: false,
-    allowed_ips: "",
-    default_workspace_id: "",
-  });
-
-  const [successMessage, setSuccessMessage] = useState("");
-  const [_, setIsSubmitting] = useState(false);
-
-  const workspaces = useMemo(() => {
-    const currentOrgWorkspaces = workspaceList.filter(
-      (workspace) => workspace.organization.id === activeOrganization?.id,
-    );
-    return currentOrgWorkspaces;
-  }, [workspaceList, activeOrganization?.id]);
-
-  const handleSubmit = async (e?: React.FormEvent) => {
-    e?.preventDefault();
-    if (!activeOrganization) return;
-
-    try {
-      const data: OrganizationUpdate = {};
-
-      data.enable_ip_restriction = security.ip_restrictions;
-      data.enforce_mfa_setup = security.mfa_required;
-      data.whitelisted_ips = security.allowed_ips?.split("\n");
-      data.auto_assigned_workspace_id = security.default_workspace_id;
-
-      await updateOrganization?.(data);
-      setSuccessMessage("Security settings updated successfully");
-    } catch (error) {
-      console.error("Failed to update security settings", error);
-    } finally {
-      setIsSubmitting(false);
-    }
-  };
-
-  useEffect(() => {
-    if (!activeOrganization) return;
-    setSecurity({
-      allowed_ips: activeOrganization.whitelisted_ips?.join("\n"),
-      ip_restrictions: activeOrganization.enable_ip_restriction,
-      mfa_required: activeOrganization.enforce_mfa,
-      default_workspace_id: activeOrganization.auto_assigned_workspace_id,
-    });
-  }, [activeOrganization]);
-
-  const handleToggleMfa = () => {
-    setSecurity((prev) => ({ ...prev, mfa_required: !prev.mfa_required }));
-  };
-
-  const handleToggleIpRestrictions = () => {
-    setSecurity((prev) => ({
-      ...prev,
-      ip_restrictions: !prev.ip_restrictions,
-    }));
-  };
-
-  if (loading || !activeOrganization) {
-    return (
-      <div
-        style={{
-          display: "flex",
-          justifyContent: "center",
-          padding: "40px 0",
-        }}
-      >
-        <Spinner />
-      </div>
-    );
-  }
-
-  return (
-    <>
-      <SectionHeader
-        title="Security & Access"
-        actionLabel="Save Settings"
-        onAction={handleSubmit}
-      />
-
-      {successMessage && (
-        <div
-          style={{
-            marginBottom: "20px",
-            padding: "8px 12px",
-            background: "var(--color-success-background)",
-            color: "var(--color-success)",
-            borderRadius: "4px",
-            display: "flex",
-            alignItems: "center",
-            gap: "8px",
-          }}
-        >
-          ✓{successMessage}
-        </div>
-      )}
-
-      <Form
-        onSubmit={handleSubmit}
-        style={{
-          display: "flex",
-          flexDirection: "column",
-          gap: "24px",
-          paddingBottom: "32px",
-          borderBottom: deployment?.b2b_settings?.allow_org_deletion
-            ? "1px solid var(--color-border)"
-            : "none",
-        }}
-      >
-        <div
-          style={{
-            display: "flex",
-            justifyContent: "space-between",
-            alignItems: "center",
-          }}
-        >
-          <div>
-            <div
-              style={{
-                fontWeight: 500,
-                fontSize: "14px",
-              }}
-            >
-              Multi-Factor Authentication (MFA)
-            </div>
-            <div style={{ fontSize: "14px", color: "var(--color-muted)" }}>
-              Require all members to set up MFA for added security
-            </div>
-          </div>
-          <Switch>
-            <input
-              type="checkbox"
-              checked={security.mfa_required}
-              onChange={handleToggleMfa}
-            />
-            <span></span>
-          </Switch>
-        </div>
-
-        {deployment?.b2b_settings?.ip_allowlist_per_org_enabled && (
-          <div>
-            <div
-              style={{
-                display: "flex",
-                justifyContent: "space-between",
-                alignItems: "center",
-                marginBottom: security.ip_restrictions ? "16px" : "0",
-              }}
-            >
-              <div>
-                <div
-                  style={{
-                    fontWeight: 500,
-                    fontSize: "14px",
-                  }}
-                >
-                  IP Restrictions
-                </div>
-                <div style={{ fontSize: "14px", color: "var(--color-muted)" }}>
-                  Limit access to specific IP addresses
-                </div>
-              </div>
-              <Switch>
-                <input
-                  type="checkbox"
-                  checked={security.ip_restrictions}
-                  onChange={handleToggleIpRestrictions}
-                />
-                <span></span>
-              </Switch>
-            </div>
-
-            {security.ip_restrictions && (
-              <div style={{ marginTop: "16px" }}>
-                <FormGroup>
-                  <Label>Allowed IP Addresses</Label>
-                  <Input
-                    as="textarea"
-                    value={security.allowed_ips}
-                    onChange={(e) =>
-                      setSecurity((prev) => ({
-                        ...prev,
-                        allowed_ips: e.target.value,
-                      }))
-                    }
-                    placeholder="Enter IP addresses (one per line)"
-                    style={{
-                      minHeight: "80px",
-                      backgroundColor: "var(--color-input-background)",
-                      border: "1px solid var(--color-border)",
-                    }}
-                  />
-                  <div
-                    style={{
-                      fontSize: "12px",
-                      color: "var(--color-muted)",
-                    }}
-                  >
-                    Enter one IP address or CIDR range per line (e.g.,
-                    192.168.1.1 or 192.168.1.0/24)
-                  </div>
-                </FormGroup>
-              </div>
-            )}
-          </div>
-        )}
-
-        {deployment?.b2b_settings?.workspaces_enabled && (
-          <div
-            style={{
-              display: "flex",
-              justifyContent: "space-between",
-              alignItems: "center",
-            }}
-          >
-            <div>
-              <div
-                style={{
-                  fontWeight: 500,
-                  fontSize: "14px",
-                }}
-              >
-                Default Workspace
-              </div>
-              <div style={{ fontSize: "14px", color: "var(--color-muted)" }}>
-                New members will be added to this workspace
-              </div>
-            </div>
-            <div style={{ width: "180px" }}>
-              <ComboBox
-                options={workspaces.map((workspace) => ({
-                  value: workspace.id,
-                  label: workspace.name,
-                }))}
-                value={security.default_workspace_id}
-                onChange={(value) =>
-                  setSecurity((prev) => ({
-                    ...prev,
-                    default_workspace_id: value,
-                  }))
-                }
-                placeholder="Select workspace"
-              />
-            </div>
-          </div>
-        )}
-      </Form>
-
-      {deployment?.b2b_settings?.allow_org_deletion && (
-        <DeleteAccountAccordion
-          handleDeleteAccount={async () => {
-            if (activeOrganization) {
-              await deleteOrganization?.(activeOrganization);
-            }
-          }}
-          title="Delete Organization"
-          description="Delete this organization, all associated members and workspaces will be deleted, and all associated data will be permanently removed."
-        />
       )}
     </>
   );
@@ -1980,12 +1563,7 @@ const SecuritySection = () => {
 const RolesSection = () => {
   const { activeOrganization, loading, getRoles, removeRole } =
     useActiveOrganization();
-  const { deployment } = useDeployment();
 
-  // Don't render if custom roles are disabled
-  if (!deployment?.b2b_settings?.custom_org_role_enabled) {
-    return null;
-  }
   const [rolePopover, setRolePopover] = useState<{
     isOpen: boolean;
     role?: OrganizationRole;
@@ -2089,7 +1667,6 @@ const RolesSection = () => {
 
   return (
     <>
-      <SectionHeader title="Organization Roles" />
       {message && (
         <div
           style={{
@@ -2238,248 +1815,11 @@ const RolesSection = () => {
   );
 };
 
-interface SeverityIndicatorProps {
-  severity: "critical" | "warning" | "info";
-  style?: React.CSSProperties;
-}
-
-const SeverityIndicator = ({ severity, style }: SeverityIndicatorProps) => {
-  let bgColor = "";
-  let textColor = "";
-  let label = "";
-
-  switch (severity) {
-    case "critical":
-      bgColor = "var(--color-error-background)";
-      textColor = "var(--color-error)";
-      label = "Critical";
-      break;
-    case "warning":
-      bgColor = "var(--color-warning-background)";
-      textColor = "var(--color-warning)";
-      label = "Warning";
-      break;
-    case "info":
-    default:
-      bgColor = "var(--color-input-background)";
-      textColor = "var(--color-primary)";
-      label = "Info";
-  }
-
-  return (
-    <span
-      style={{
-        display: "inline-flex",
-        alignItems: "center",
-        fontWeight: 400,
-        padding: "0px 4px",
-        borderRadius: "4px",
-        backgroundColor: bgColor,
-        color: textColor,
-        border: "1px solid var(--color-border)",
-        ...style,
-      }}
-    >
-      <span
-        style={{
-          width: "5px",
-          height: "5px",
-          borderRadius: "50%",
-          backgroundColor: textColor,
-          marginRight: "4px",
-        }}
-      />
-      {label}
-    </span>
-  );
-};
-
-const FilterButton = styled(RoleDropdownButton)`
-  padding: 8px 12px;
-  gap: 12px;
-  width: fit-content;
-`;
-
-// Define the AuditLogEntry interface (Restored)
-interface AuditLogEntry {
-  id: string;
-  date: string;
-  actor: string;
-  action: string;
-  description: string;
-  severity: "critical" | "warning" | "info";
-}
-
-const AuditLogsSection = () => {
-  const [searchQuery, setSearchQuery] = useState("");
-  const [selectedSeverity, setSelectedSeverity] = useState<
-    "all" | "critical" | "warning" | "info"
-  >("all");
-
-  const logs: AuditLogEntry[] = [
-    {
-      id: "1",
-      date: "2024-06-01T10:15:00Z",
-      actor: "Alice Smith",
-      action: "Added member",
-      description: "Added Bob Jones to the organization as Admin.",
-      severity: "info",
-    },
-    {
-      id: "2",
-      date: "2024-06-02T14:30:00Z",
-      actor: "Bob Jones",
-      action: "Changed role",
-      description: "Changed Charlie Brown's role from Member to Admin.",
-      severity: "warning",
-    },
-    {
-      id: "3",
-      date: "2024-06-03T09:00:00Z",
-      actor: "Alice Smith",
-      action: "Removed domain",
-      description: "Removed domain example.com from verified domains.",
-      severity: "critical",
-    },
-    {
-      id: "4",
-      date: "2024-06-04T16:45:00Z",
-      actor: "Charlie Brown",
-      action: "Updated security settings",
-      description: "Enabled MFA requirement for all members.",
-      severity: "warning",
-    },
-    {
-      id: "5",
-      date: "2024-06-05T11:00:00Z",
-      actor: "System",
-      action: "Generated report",
-      description: "Monthly activity report generated successfully.",
-      severity: "info",
-    },
-  ];
-
-  const filteredLogs = React.useMemo(() => {
-    let tempLogs = logs;
-    if (selectedSeverity !== "all") {
-      tempLogs = tempLogs.filter((log) => log.severity === selectedSeverity);
-    }
-    if (searchQuery.trim() !== "") {
-      const lowercasedQuery = searchQuery.toLowerCase();
-      tempLogs = tempLogs.filter(
-        (log) =>
-          log.action.toLowerCase().includes(lowercasedQuery) ||
-          log.actor.toLowerCase().includes(lowercasedQuery) ||
-          log.description.toLowerCase().includes(lowercasedQuery),
-      );
-    }
-    return tempLogs;
-  }, [searchQuery, selectedSeverity, logs]);
-
-  const severityOptions: { value: typeof selectedSeverity; label: string }[] = [
-    { value: "all", label: "All Levels" },
-    { value: "critical", label: "Critical" },
-    { value: "warning", label: "Warning" },
-    { value: "info", label: "Info" },
-  ];
-
-  // *** RESTORED RETURN STATEMENT AND JSX ***
-  return (
-    <div>
-      <SectionHeader title="Audit Logs" />
-      <div
-        style={{
-          display: "flex",
-          gap: "16px",
-          marginTop: "16px",
-          marginBottom: "16px",
-          alignItems: "center",
-          flexWrap: "wrap",
-        }}
-      >
-        <SearchInput
-          value={searchQuery}
-          onChange={setSearchQuery}
-          placeholder="search by action, actor, or description"
-        />
-        <Dropdown>
-          <DropdownTrigger>
-            <FilterButton>
-              <span>
-                {severityOptions.find((opt) => opt.value === selectedSeverity)
-                  ?.label || "Filter by Severity"}
-              </span>
-              <ChevronDown size={16} color="var(--color-success)" />
-            </FilterButton>
-          </DropdownTrigger>
-          <DropdownItems>
-            {severityOptions.map((option) => (
-              <DropdownItem
-                key={option.value}
-                onClick={() => {
-                  setSelectedSeverity(option.value);
-                }}
-              >
-                <div
-                  style={{
-                    display: "flex",
-                    justifyContent: "space-between",
-                    width: "100%",
-                  }}
-                >
-                  <span>{option.label}</span>
-                  {selectedSeverity === option.value && (
-                    <Check size={16} color="var(--color-success)" />
-                  )}
-                </div>
-              </DropdownItem>
-            ))}
-          </DropdownItems>
-        </Dropdown>
-      </div>
-
-      {filteredLogs.length === 0 ? (
-        <EmptyState
-          title={
-            searchQuery.trim() !== "" || selectedSeverity !== "all"
-              ? "No audit logs match your search criteria."
-              : "No audit log events found."
-          }
-          description="Audit logs will appear here."
-        />
-      ) : (
-        <Table>
-          <TableHead>
-            <TableRow>
-              <TableHeader>Severity</TableHeader>
-              <TableHeader>Action</TableHeader>
-              <TableHeader>Actor</TableHeader>
-              <TableHeader>Description</TableHeader>
-              <TableHeader>Timestamp</TableHeader>
-            </TableRow>
-          </TableHead>
-          <TableBody>
-            {filteredLogs.map((log) => (
-              <TableRow key={log.id}>
-                <TableCell>
-                  <SeverityIndicator severity={log.severity} />
-                </TableCell>
-                <TableCell>{log.action}</TableCell>
-                <TableCell>{log.actor}</TableCell>
-                <TableCell>{log.description}</TableCell>
-                <TableCell>{new Date(log.date).toLocaleString()}</TableCell>
-              </TableRow>
-            ))}
-          </TableBody>
-        </Table>
-      )}
-    </div>
-  );
-};
+type TabType = "general" | "domains" | "members" | "invitations" | "roles";
 
 export const ManageOrganization = () => {
   const { loading } = useActiveOrganization();
-  const [screen, setScreen] = useState<Screen>(null);
+  const [activeTab, setActiveTab] = useState<TabType>("general");
   const [toastMessage, setToastMessage] = useState<string | null>(null);
   const [toastLevel, setToastLevel] = useState<"info" | "error">("info");
 
@@ -2507,69 +1847,106 @@ export const ManageOrganization = () => {
 
   return (
     <TypographyProvider>
-      <ScreenContext.Provider value={{ screen, setScreen, toast }}>
+      <ScreenContext.Provider
+        value={{ screen: null, setScreen: () => {}, toast }}
+      >
         <Container>
-          <Layout>
+          <TabsContainer>
+            <TabsList>
+              <Tab
+                $isActive={activeTab === "general"}
+                onClick={() => setActiveTab("general")}
+              >
+                <TabIcon>
+                  <Settings size={16} />
+                  General
+                </TabIcon>
+              </Tab>
+              <Tab
+                $isActive={activeTab === "domains"}
+                onClick={() => setActiveTab("domains")}
+              >
+                <TabIcon>
+                  <Globe size={16} />
+                  Domains
+                </TabIcon>
+              </Tab>
+              <Tab
+                $isActive={activeTab === "members"}
+                onClick={() => setActiveTab("members")}
+              >
+                <TabIcon>
+                  <Users size={16} />
+                  Members
+                </TabIcon>
+              </Tab>
+              <Tab
+                $isActive={activeTab === "invitations"}
+                onClick={() => setActiveTab("invitations")}
+              >
+                <TabIcon>
+                  <Mail size={16} />
+                  Invitations
+                </TabIcon>
+              </Tab>
+              <Tab
+                $isActive={activeTab === "roles"}
+                onClick={() => setActiveTab("roles")}
+              >
+                <TabIcon>
+                  <Shield size={16} />
+                  Roles
+                </TabIcon>
+              </Tab>
+            </TabsList>
+          </TabsContainer>
+
+          <TabContent>
+            {activeTab === "general" && <GeneralSettingsSection />}
+            {activeTab === "domains" && <DomainsSection />}
+            {activeTab === "members" && <MembersSection />}
+            {activeTab === "invitations" && <InvitationsSection />}
+            {activeTab === "roles" && <RolesSection />}
+          </TabContent>
+
+          {toastMessage && (
             <div
               style={{
-                position: "relative",
-                width: "100%",
-                overflow: "hidden",
+                position: "absolute",
+                bottom: "20px",
+                right: "20px",
+                background: "var(--color-input-background)",
+                border: "1px solid var(--color-border)",
+                borderRadius: "8px",
+                padding: "12px 16px",
+                boxShadow: "0 4px 12px var(--color-shadow)",
+                animation: "slideUp 0.3s ease-out",
               }}
             >
-              <MainContent $isAdding={!!screen}>
-                <OrganizationManagementSection />
-              </MainContent>
-
-              <AddItemForm $isVisible={!!screen}>
-                {match(screen)
-                  .with("general", () => <GeneralSettingsSection />)
-                  .with("domains", () => <DomainsSection />)
-                  .with("members", () => <MembersSection />)
-                  .with("billing", () => <BillingSection />)
-                  .with("security", () => <SecuritySection />)
-                  .with("roles", () => <RolesSection />)
-                  .with("audit-logs", () => <AuditLogsSection />)
-                  .otherwise(() => null)}
-              </AddItemForm>
-
-              {toastMessage && (
-                <div
-                  style={{
-                    position: "absolute",
-                    bottom: "20px",
-                    right: "20px",
-                    background: "var(--color-input-background)",
-                    padding: "12px 16px",
-                    borderRadius: "8px",
-                    boxShadow: "0 4px 12px var(--color-shadow)",
-                    display: "flex",
-                    alignItems: "center",
-                    gap: "8px",
-                    zIndex: 100,
-                    color:
-                      toastLevel === "error"
-                        ? "var(--color-error)"
-                        : "var(--color-secondary-text)",
-                  }}
+              <div
+                style={{ display: "flex", alignItems: "center", gap: "8px" }}
+              >
+                {toastLevel === "error" ? (
+                  <AlertTriangle size={16} color="var(--color-error)" />
+                ) : (
+                  <Check size={16} color="var(--color-success)" />
+                )}
+                <span
+                  style={{ fontSize: "14px", color: "var(--color-foreground)" }}
                 >
-                  {toastLevel === "error" && (
-                    <CircleAlert size={14} color="var(--color-error)" />
-                  )}
-                  {toastLevel === "info" && (
-                    <Info size={14} color="var(--color-secondary-text)" />
-                  )}
-                  <span>{toastMessage}</span>
-                </div>
-              )}
+                  {toastMessage}
+                </span>
+              </div>
             </div>
-          </Layout>
+          )}
         </Container>
       </ScreenContext.Provider>
     </TypographyProvider>
   );
 };
 
+// Removed DeleteAccountAccordion - functionality moved to Danger tab
+/*
 const DeleteAccountAccordion = ({
   handleDeleteAccount,
   title,
@@ -2650,3 +2027,4 @@ const DeleteAccountAccordion = ({
     </div>
   );
 };
+*/

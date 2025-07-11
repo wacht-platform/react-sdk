@@ -1,9 +1,7 @@
 import { useCallback, useState, useEffect } from "react";
 import styled from "styled-components";
 import {
-  // User,
-  ArrowRight,
-  ArrowLeft,
+  User,
   LogOut,
   Eye,
   EyeOff,
@@ -12,7 +10,11 @@ import {
   ChevronUp,
   ChevronDown,
   Check,
-  Trash2,
+  Mail,
+  Phone,
+  Link2,
+  Shield,
+  Activity,
 } from "lucide-react";
 import * as TFA2 from "./2fa-redesign";
 import { EmailAddPopover } from "@/components/user/add-email-popover";
@@ -24,7 +26,6 @@ import {
   DropdownTrigger,
 } from "@/components/utility/dropdown";
 import { useUser, useUserSignins } from "@/hooks/use-user";
-import { match, P } from "ts-pattern";
 import { GoogleIcon } from "../icons/google";
 import { MicrosoftIcon } from "../icons/microsoft";
 import { GithubIcon } from "../icons/github";
@@ -37,7 +38,7 @@ import { EmptyState } from "@/components/utility/empty-state";
 import { QRCodeSVG } from "qrcode.react";
 import React from "react";
 import { UserAuthenticator } from "@/types/user";
-import { Screen, ScreenContext, useScreenContext } from "./context";
+import { ScreenContext, useScreenContext } from "./context";
 
 const TypographyProvider = styled.div`
   * {
@@ -60,45 +61,88 @@ const TypographyProvider = styled.div`
 `;
 
 const Container = styled.div`
-  width: 900px;
-  max-width: 100%;
+  width: 100%;
   height: 600px;
   background: var(--color-background);
   border-radius: 20px;
   box-shadow: 0 8px 30px var(--color-shadow);
-  padding: 24px;
   transition: all 0.3s ease;
   overflow: hidden;
+  display: flex;
+  flex-direction: column;
 
   @media (max-width: 768px) {
-    padding: 20px;
     border-radius: 16px;
   }
 `;
 
-const MainContent = styled.div<{ $isAdding: boolean }>`
-  display: flex;
-  flex-direction: column;
-  transform: translateX(${(props) => (props.$isAdding ? "-100%" : "0")});
-  transition: transform 0.3s ease;
-  width: 100%;
-`;
+const TabsContainer = styled.div`
+  padding: 8px 24px 0;
+  border-bottom: 1px solid var(--color-border);
 
-const Layout = styled.div`
-  display: grid;
-  grid-template-columns: 1fr;
-  gap: 28px;
-  height: 100%;
   @media (max-width: 768px) {
-    grid-template-columns: 1fr;
-    gap: 24px;
+    padding: 20px 20px 0;
   }
 `;
 
-const ProfileSection = styled.div`
+const TabsList = styled.div`
   display: flex;
-  flex-direction: column;
+  gap: 24px;
+  overflow-x: auto;
+  
+  &::-webkit-scrollbar {
+    display: none;
+  }
 `;
+
+const Tab = styled.button<{ $isActive: boolean }>`
+  padding: 12px 0;
+  border: none;
+  background: none;
+  font-size: 14px;
+  font-weight: 500;
+  color: ${(props) =>
+    props.$isActive ? "var(--color-foreground)" : "var(--color-muted)"};
+  cursor: pointer;
+  position: relative;
+  transition: color 0.15s ease;
+  white-space: nowrap;
+
+  &:hover {
+    color: var(--color-foreground);
+  }
+
+  &::after {
+    content: "";
+    position: absolute;
+    bottom: -1px;
+    left: 0;
+    right: 0;
+    height: 2px;
+    background: var(--color-primary);
+    opacity: ${(props) => (props.$isActive ? 1 : 0)};
+    transition: opacity 0.15s ease;
+  }
+`;
+
+const TabIcon = styled.span`
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+`;
+
+const TabContent = styled.div`
+  flex: 1;
+  padding: 24px;
+  overflow-y: auto;
+
+  @media (max-width: 768px) {
+    padding: 20px;
+  }
+`;
+
+
+
 
 const SectionTitle = styled.h2`
   font-size: 16px;
@@ -109,36 +153,9 @@ const SectionTitle = styled.h2`
   align-items: center;
 `;
 
-const ProfileHeader = styled.div`
-  display: flex;
-  padding: 0 4px;
-  gap: 8px;
-  align-items: center;
-  justify-content: space-between;
-  cursor: pointer;
-  margin-bottom: 24px;
-`;
 
-const Avatar = styled.img`
-  width: 60px;
-  height: 60px;
-  border-radius: 50%;
-  object-fit: cover;
-  @media (max-width: 600px) {
-    width: 60px;
-    height: 60px;
-  }
-`;
 
-const ProfileName = styled.div`
-  flex: 1;
-`;
 
-const Name = styled.h2`
-  font-size: 16px;
-  margin: 0;
-  color: var(--color-foreground);
-`;
 
 const EditButton = styled.button`
   padding: 8px 16px;
@@ -159,40 +176,8 @@ const EditButton = styled.button`
   }
 `;
 
-const InfoItem = styled.div`
-  display: flex;
-  align-items: center;
-  padding: 16px 2px;
-  border-bottom: 1px solid var(--color-border);
-  gap: 12px;
-  color: var(--color-foreground);
-  cursor: pointer;
-  transition: background-color 0.2s ease;
 
-  &:last-child {
-    border-bottom: none;
-  }
 
-  &:hover {
-    background-color: var(--color-input-background);
-  }
-`;
-
-const InfoLabel = styled.div`
-  color: var(--color-secondary-text);
-  font-size: 14px;
-  width: 180px;
-`;
-
-const InfoContent = styled.div`
-  flex: 1;
-  display: flex;
-  align-items: center;
-  gap: 8px;
-  flex-wrap: wrap;
-  pointer-events: none;
-  font-size: 14px;
-`;
 
 const LastLogin = styled.div`
   font-size: 13px;
@@ -202,6 +187,7 @@ const LastLogin = styled.div`
   align-items: center;
   gap: 4px;
 `;
+
 
 const IconButton = styled.button`
   background: none;
@@ -221,20 +207,6 @@ const IconButton = styled.button`
   }
 `;
 
-const AddItemForm = styled.div<{ $isVisible: boolean }>`
-  position: absolute;
-  top: 0;
-  left: 100%;
-  width: 100%;
-  height: 100%;
-  background: var(--color-background);
-  overflow-y: auto;
-  transform: translateX(${(props) => (props.$isVisible ? "-100%" : "0")});
-  transition: transform 0.3s ease;
-  display: flex;
-  flex-direction: column;
-  gap: 12px;
-`;
 
 const MemberListItem = styled.div`
   background: var(--color-background);
@@ -278,6 +250,11 @@ const MemberListItemActions = styled.div`
   gap: 8px;
 `;
 
+const ProfileSection = styled.div`
+  padding: 24px;
+`;
+
+
 const SessionDropdown = ({
   isOpen,
   onClose,
@@ -317,7 +294,6 @@ const SectionHeader = ({
   onAction?: () => void;
   buttonIcon?: React.ReactNode;
 }) => {
-  const { setScreen } = useScreenContext();
 
   return (
     <div
@@ -328,19 +304,7 @@ const SectionHeader = ({
         width: "100%",
       }}
     >
-      <div
-        style={{
-          display: "flex",
-          alignItems: "center",
-          gap: "8px",
-          fontSize: 16,
-          cursor: "pointer",
-        }}
-        onClick={() => setScreen(null)}
-      >
-        <ArrowLeft size={16} />
-        <SectionTitle style={{ fontSize: 14 }}>{title}</SectionTitle>
-      </div>
+      <SectionTitle style={{ fontSize: 14 }}>{title}</SectionTitle>
 
       {actionLabel && onAction && (
         <Button
@@ -360,6 +324,8 @@ const SectionHeader = ({
   );
 };
 
+// Removed ProfileManagementSection - using tabs instead
+/*
 const ProfileManagementSection = () => {
   const { setScreen } = useScreenContext();
   const { user } = useUser();
@@ -500,6 +466,7 @@ const ProfileManagementSection = () => {
     </>
   );
 };
+*/
 
 const ActiveSessionsSection = () => {
   const [activeSession, setActiveSession] = useState<string | null>(null);
@@ -1167,9 +1134,13 @@ const SocialManagementSection = () => {
   );
 };
 
+
+type TabType = "profile" | "email" | "phone" | "social" | "security" | "sessions";
+
 export const ManageAccount = () => {
   const { loading } = useUser();
-  const [screen, setScreen] = useState<Screen>(null);
+  const { deployment } = useDeployment();
+  const [activeTab, setActiveTab] = useState<TabType>("profile");
   const [toastMessage, setToastMessage] = useState<string | null>(null);
   const [toastLevel, setToastLevel] = useState<"info" | "error">("info");
 
@@ -1195,67 +1166,118 @@ export const ManageAccount = () => {
       </Container>
     );
 
+  const authSettings = deployment?.auth_settings;
+  const showEmailTab = authSettings?.email_address?.enabled;
+  const showPhoneTab = authSettings?.phone_number?.enabled;
+  const showSecurityTab = authSettings?.password?.enabled || 
+    authSettings?.auth_factors_enabled?.authenticator ||
+    authSettings?.auth_factors_enabled?.phone_otp ||
+    authSettings?.auth_factors_enabled?.backup_code;
+
   return (
     <TypographyProvider>
-      <ScreenContext.Provider value={{ screen, setScreen, toast }}>
+      <ScreenContext.Provider value={{ screen: null, setScreen: () => {}, toast }}>
         <Container>
-          <Layout>
+          <TabsContainer>
+            <TabsList>
+              <Tab
+                $isActive={activeTab === "profile"}
+                onClick={() => setActiveTab("profile")}
+              >
+                <TabIcon>
+                  <User size={16} />
+                  Profile
+                </TabIcon>
+              </Tab>
+              {showEmailTab && (
+                <Tab
+                  $isActive={activeTab === "email"}
+                  onClick={() => setActiveTab("email")}
+                >
+                  <TabIcon>
+                    <Mail size={16} />
+                    Email
+                  </TabIcon>
+                </Tab>
+              )}
+              {showPhoneTab && (
+                <Tab
+                  $isActive={activeTab === "phone"}
+                  onClick={() => setActiveTab("phone")}
+                >
+                  <TabIcon>
+                    <Phone size={16} />
+                    Phone
+                  </TabIcon>
+                </Tab>
+              )}
+              <Tab
+                $isActive={activeTab === "social"}
+                onClick={() => setActiveTab("social")}
+              >
+                <TabIcon>
+                  <Link2 size={16} />
+                  Connected
+                </TabIcon>
+              </Tab>
+              {showSecurityTab && (
+                <Tab
+                  $isActive={activeTab === "security"}
+                  onClick={() => setActiveTab("security")}
+                >
+                  <TabIcon>
+                    <Shield size={16} />
+                    Security
+                  </TabIcon>
+                </Tab>
+              )}
+              <Tab
+                $isActive={activeTab === "sessions"}
+                onClick={() => setActiveTab("sessions")}
+              >
+                <TabIcon>
+                  <Activity size={16} />
+                  Sessions
+                </TabIcon>
+              </Tab>
+            </TabsList>
+          </TabsContainer>
+
+          <TabContent>
+            {activeTab === "profile" && <ProfileDetailsManagementSection />}
+            {activeTab === "email" && showEmailTab && <EmailManagementSection />}
+            {activeTab === "phone" && showPhoneTab && <PhoneManagementSection />}
+            {activeTab === "social" && <SocialManagementSection />}
+            {activeTab === "security" && showSecurityTab && <SecurityManagementSection />}
+            {activeTab === "sessions" && <ActiveSessionsSection />}
+          </TabContent>
+
+          {toastMessage && (
             <div
               style={{
-                position: "relative",
-                width: "100%",
-                overflow: "hidden",
+                position: "absolute",
+                bottom: "20px",
+                right: "20px",
+                background: "var(--color-input-background)",
+                border: "1px solid var(--color-border)",
+                borderRadius: "8px",
+                padding: "12px 16px",
+                boxShadow: "0 4px 12px var(--color-shadow)",
+                animation: "slideUp 0.3s ease-out",
               }}
             >
-              <MainContent $isAdding={!!screen}>
-                <ProfileManagementSection />
-              </MainContent>
-
-              <AddItemForm $isVisible={!!screen}>
-                {match(screen)
-                  .with("email", () => <EmailManagementSection />)
-                  .with(P.union("phone", "2fa/phone"), () => (
-                    <PhoneManagementSection />
-                  ))
-                  .with("social", () => <SocialManagementSection />)
-                  .with("security", () => <SecurityManagementSection />)
-                  .with("active-sessions", () => <ActiveSessionsSection />)
-                  .with("profile-details", () => (
-                    <ProfileDetailsManagementSection />
-                  ))
-                  .otherwise(() => null)}
-              </AddItemForm>
-              {toastMessage && (
-                <div
-                  style={{
-                    position: "absolute",
-                    bottom: "20px",
-                    right: "20px",
-                    background: "var(--color-input-background)",
-                    padding: "12px 16px",
-                    borderRadius: "8px",
-                    boxShadow: "0 4px 12px var(--color-shadow)",
-                    display: "flex",
-                    alignItems: "center",
-                    gap: "8px",
-                    zIndex: 100,
-                    color:
-                      toastLevel === "error"
-                        ? "var(--color-error)"
-                        : "var(--color-secondary-text)",
-                  }}
-                >
-                  {toastLevel === "error" && (
-                    <AlertTriangle size={14} color="var(--color-error)" />
-                  )}
-                  {toastLevel === "info" && (
-                    <Check size={14} color="var(--color-secondary-text)" />
-                  )}
-                  <span>{toastMessage}</span>
-                </div>
-              )}
+              <div style={{ display: "flex", alignItems: "center", gap: "8px" }}>
+                {toastLevel === "error" ? (
+                  <AlertTriangle size={16} color="var(--color-error)" />
+                ) : (
+                  <Check size={16} color="var(--color-success)" />
+                )}
+                <span style={{ fontSize: "14px", color: "var(--color-foreground)" }}>
+                  {toastMessage}
+                </span>
+              </div>
             </div>
-          </Layout>
+          )}
         </Container>
       </ScreenContext.Provider>
     </TypographyProvider>
@@ -3194,6 +3216,11 @@ const ProfileDetailsManagementSection = () => {
   const [username, setUsername] = useState(user?.username || "");
   const [errors, setErrors] = useState<Record<string, string>>({});
   const [isUpdating, setIsUpdating] = useState(false);
+  const [successMessage, setSuccessMessage] = useState("");
+  const [password, setPassword] = useState("");
+  const [showPassword, setShowPassword] = useState(false);
+  const [isDeleting, setIsDeleting] = useState(false);
+  const [showDeleteConfirm, setShowDeleteConfirm] = useState(false);
   const fileInputRef = React.useRef<HTMLInputElement>(null);
 
   React.useEffect(() => {
@@ -3212,7 +3239,8 @@ const ProfileDetailsManagementSection = () => {
 
     try {
       await updateProfilePicture(file);
-      toast("Profile picture updated successfully", "info");
+      setSuccessMessage("Profile picture updated successfully");
+      setTimeout(() => setSuccessMessage(""), 3000);
     } catch (error) {
       toast("Failed to update profile picture. Please try again.", "error");
     }
@@ -3225,12 +3253,15 @@ const ProfileDetailsManagementSection = () => {
   const removeProfilePicture = async () => {
     try {
       await updateProfile({});
-      toast("Profile picture removed successfully", "info");
+      setSuccessMessage("Profile picture removed successfully");
+      setTimeout(() => setSuccessMessage(""), 3000);
     } catch (error) {
       toast("Failed to remove profile picture. Please try again.", "error");
     }
   };
 
+  // Delete account functionality moved to Danger tab
+  /*
   const handleDeleteAccount = async (password: string) => {
     try {
       await deleteAccount(password);
@@ -3246,6 +3277,7 @@ const ProfileDetailsManagementSection = () => {
       );
     }
   };
+  */
 
   const handleUpdateProfile = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -3268,7 +3300,8 @@ const ProfileDetailsManagementSection = () => {
       }
 
       await updateProfile(updateData);
-      toast("Profile updated successfully", "info");
+      setSuccessMessage("Settings updated successfully");
+      setTimeout(() => setSuccessMessage(""), 3000);
     } catch (error: any) {
       toast(
         error.message || "Failed to update profile. Please try again.",
@@ -3279,276 +3312,411 @@ const ProfileDetailsManagementSection = () => {
     }
   };
 
-  return (
-    <div>
-      <SectionHeader title="Your Account" />
+  const handleDeleteAccount = async () => {
+    if (!password) {
+      setSuccessMessage("");
+      // We'll show error in the form validation instead
+      return;
+    }
 
-      <form onSubmit={handleUpdateProfile}>
+    if (window.confirm("Are you absolutely sure? This action cannot be undone.")) {
+      setIsDeleting(true);
+      try {
+        await deleteAccount(password);
+        setSuccessMessage("Account deleted successfully");
+      } catch (error) {
+        setSuccessMessage("");
+        // Handle error appropriately
+      } finally {
+        setIsDeleting(false);
+        setPassword("");
+      }
+    }
+  };
+
+  return (
+    <>
+      {successMessage && (
         <div
           style={{
+            marginBottom: "20px",
+            padding: "8px",
+            background: "var(--color-success-background)",
+            color: "var(--color-success)",
+            borderRadius: "4px",
+            display: "flex",
+            alignItems: "center",
+            gap: "8px",
+          }}
+        >
+          ✓{successMessage}
+        </div>
+      )}
+
+      <div
+        style={{
+          display: "flex",
+          width: "100%",
+          gap: "1px",
+        }}
+      >
+        {/* Left Panel - Profile Picture */}
+        <div
+          style={{
+            width: "280px",
+            paddingRight: "24px",
             display: "flex",
             flexDirection: "column",
             alignItems: "center",
-            textAlign: "center",
+            justifyContent: "center",
+            gap: "12px",
+            borderRight: "1px solid var(--color-border)",
           }}
         >
-          <div style={{ position: "relative", marginBottom: "12px" }}>
-            <button
-              type="button"
-              onClick={triggerFileInput}
-              style={{
-                background: "none",
-                border: "none",
-                padding: 0,
-                cursor: "pointer",
-              }}
-            >
-              <div
-                style={{
-                  width: "100px",
-                  height: "100px",
-                  borderRadius: "50%",
-                  overflow: "hidden",
-                  boxShadow: "0 4px 10px var(--color-shadow)",
-                }}
-              >
-                <Avatar
-                  src={user?.profile_picture_url}
-                  alt="Profile"
-                  style={{
-                    width: "100%",
-                    height: "100%",
-                    objectFit: "cover",
-                  }}
-                />
-              </div>
-              <input
-                type="file"
-                ref={fileInputRef}
-                style={{ display: "none" }}
-                accept="image/*"
-                onChange={handleProfilePictureChange}
-              />
-            </button>
-            <button
-              onClick={removeProfilePicture}
-              style={{
-                position: "absolute",
-                bottom: "0",
-                right: "0",
-                width: "24px",
-                height: "24px",
-                borderRadius: "50%",
-                backgroundColor: "var(--color-background)",
-                border: "1px solid var(--color-border)",
-                display: "flex",
-                alignItems: "center",
-                justifyContent: "center",
-                cursor: "pointer",
-                padding: 0,
-                boxShadow: "0 2px 4px var(--color-shadow)",
-              }}
-              aria-label="Remove profile picture"
-              type="button"
-            >
-              <Trash2 size={14} color="var(--color-error)" />
-            </button>
-          </div>
-
-          <p
+          <div
             style={{
-              margin: "0 0 4px 0",
-              fontSize: "15px",
-              color: "var(--color-foreground)",
-              fontWeight: "500",
+              width: "240px",
+              height: "240px",
+              borderRadius: "50%",
+              border: "2px solid #e5e7eb",
+              background: "transparent",
+              cursor: "pointer",
+              display: "flex",
+              alignItems: "center",
+              justifyContent: "center",
+              overflow: "hidden",
+              transition: "all 0.2s ease",
+              position: "relative",
+            }}
+            onClick={triggerFileInput}
+            onMouseEnter={(e) => {
+              e.currentTarget.style.borderColor = "#d1d5db";
+              e.currentTarget.style.transform = "scale(1.02)";
+            }}
+            onMouseLeave={(e) => {
+              e.currentTarget.style.borderColor = "#e5e7eb";
+              e.currentTarget.style.transform = "scale(1)";
             }}
           >
-            {user?.first_name} {user?.last_name}
-          </p>
-
-          <p
-            style={{
-              margin: "0 0 16px 0",
-              fontSize: "14px",
-              color: "var(--color-muted)",
-            }}
-          >
-            @{user?.username || "username"}
-          </p>
-
-          {errors.profilePicture && (
-            <div
-              style={{
-                color: "var(--color-error)",
-                fontSize: "12px",
-                marginTop: "8px",
-              }}
-            >
-              {errors.profilePicture}
-            </div>
-          )}
-        </div>
-
-        {(deployment?.auth_settings?.first_name?.enabled ||
-          deployment?.auth_settings?.last_name?.enabled) && (
-          <div>
-            <div style={{ display: "flex", gap: "12px" }}>
-              {deployment?.auth_settings?.first_name?.enabled && (
-                <FormGroup style={{ flex: 1 }}>
-                  <Label>First Name</Label>
-                  <input
-                    id="firstName"
-                    type="text"
-                    value={firstName}
-                    onChange={(e) => setFirstName(e.target.value)}
-                    placeholder="First Name"
-                    style={{
-                      width: "100%",
-                      padding: "10px 12px",
-                      borderRadius: "6px",
-                      fontSize: "14px",
-                      backgroundColor: "var(--color-input-background)",
-                      border: `1px solid ${
-                        errors.firstName
-                          ? "var(--color-error)"
-                          : "var(--color-border)"
-                      }`,
-                      color: "var(--color-foreground)",
-                      outline: "none",
-                      transition: "all 0.2s",
-                    }}
-                  />
-                  {errors.firstName && (
-                    <div
-                      style={{
-                        color: "var(--color-error)",
-                        fontSize: "12px",
-                        marginTop: "4px",
-                      }}
-                    >
-                      {errors.firstName}
-                    </div>
-                  )}
-                </FormGroup>
-              )}
-
-              {deployment?.auth_settings?.last_name?.enabled && (
-                <FormGroup style={{ flex: 1 }}>
-                  <Label>Last Name</Label>
-                  <Input
-                    id="lastName"
-                    type="text"
-                    value={lastName}
-                    onChange={(e) => setLastName(e.target.value)}
-                    placeholder="Last Name"
-                    style={{
-                      width: "100%",
-                      padding: "10px 12px",
-                      borderRadius: "6px",
-                      fontSize: "14px",
-                      backgroundColor: "var(--color-input-background)",
-                      borderColor: errors.lastName
-                        ? "var(--color-error)"
-                        : undefined,
-                    }}
-                  />
-                  {errors.lastName && (
-                    <div
-                      style={{
-                        color: "var(--color-error)",
-                        fontSize: "12px",
-                        marginTop: "4px",
-                      }}
-                    >
-                      {errors.lastName}
-                    </div>
-                  )}
-                </FormGroup>
-              )}
-            </div>
-          </div>
-        )}
-
-        {deployment?.auth_settings?.username?.enabled && (
-          <div style={{ marginTop: "12px" }}>
-            <FormGroup>
-              <Label>Username</Label>
-              <Input
-                id="username"
-                type="text"
-                value={username}
-                onChange={(e) => setUsername(e.target.value)}
-                placeholder="Username"
+            {user?.profile_picture_url ? (
+              <img
+                src={user?.profile_picture_url}
+                alt="Profile Picture"
                 style={{
                   width: "100%",
-                  padding: "10px 12px",
-                  borderRadius: "6px",
-                  fontSize: "14px",
-                  backgroundColor: "var(--color-input-background)",
-                  borderColor: errors.username
-                    ? "var(--color-error)"
-                    : undefined,
+                  height: "100%",
+                  objectFit: "cover",
                 }}
               />
-              {errors.username && (
-                <div
-                  style={{
-                    color: "var(--color-error)",
-                    fontSize: "12px",
-                    marginTop: "4px",
-                  }}
-                >
-                  {errors.username}
+            ) : (
+              <div
+                style={{
+                  width: "100%",
+                  height: "100%",
+                  background: "#e5e7eb",
+                  display: "flex",
+                  alignItems: "center",
+                  justifyContent: "center",
+                  color: "#9ca3af",
+                  fontSize: "32px",
+                  fontWeight: 500,
+                }}
+              >
+                {user?.first_name?.charAt(0)?.toUpperCase() || (
+                  <User size={48} />
+                )}
+              </div>
+            )}
+            <input
+              type="file"
+              ref={fileInputRef}
+              style={{ display: "none" }}
+              accept="image/*"
+              onChange={handleProfilePictureChange}
+            />
+          </div>
+
+          <div style={{ textAlign: "center", marginTop: "20px", width: "240px" }}>
+            <div style={{ display: "flex", flexDirection: "column", gap: "8px", marginBottom: "12px" }}>
+              <Button
+                onClick={() => fileInputRef.current?.click()}
+                style={{
+                  background: "#6366f1",
+                  color: "white",
+                  border: "none",
+                  padding: "8px 16px",
+                  borderRadius: "6px",
+                  fontSize: "14px",
+                  fontWeight: 500,
+                  width: "100%",
+                }}
+              >
+                Change Picture
+              </Button>
+              <Button
+                onClick={removeProfilePicture}
+                disabled={!user?.profile_picture_url}
+                style={{
+                  background: user?.profile_picture_url ? "#ef4444" : "#e5e7eb",
+                  color: user?.profile_picture_url ? "white" : "#9ca3af",
+                  border: "none",
+                  padding: "8px 16px",
+                  borderRadius: "6px",
+                  fontSize: "14px",
+                  fontWeight: 500,
+                  cursor: user?.profile_picture_url ? "pointer" : "not-allowed",
+                  width: "100%",
+                }}
+              >
+                Remove Picture
+              </Button>
+            </div>
+            <div
+              style={{ fontSize: "11px", color: "#9ca3af", lineHeight: "1.4" }}
+            >
+              <div>JPG, PNG, GIF • Max 2MB</div>
+            </div>
+          </div>
+
+        </div>
+
+        {/* Right Panel - Form Fields */}
+        <div style={{ flex: 1, paddingLeft: "24px" }}>
+          <form onSubmit={handleUpdateProfile}>
+            <div
+              style={{ display: "flex", flexDirection: "column", gap: "16px" }}
+            >
+              {(deployment?.auth_settings?.first_name?.enabled ||
+                deployment?.auth_settings?.last_name?.enabled) && (
+                <div style={{ display: "flex", gap: "12px" }}>
+                  {deployment?.auth_settings?.first_name?.enabled && (
+                    <FormGroup style={{ flex: 1 }}>
+                      <Label
+                        style={{ fontSize: "13px", fontWeight: 500, color: "#374151" }}
+                      >
+                        First Name
+                      </Label>
+                      <Input
+                        id="firstName"
+                        type="text"
+                        value={firstName}
+                        onChange={(e) => setFirstName(e.target.value)}
+                        placeholder="Enter first name"
+                        style={{
+                          width: "100%",
+                          padding: "8px 12px",
+                          borderRadius: "6px",
+                          fontSize: "14px",
+                          border: "1px solid #e5e7eb",
+                        }}
+                        required
+                      />
+                      {errors.firstName && (
+                        <div
+                          style={{
+                            color: "var(--color-error)",
+                            fontSize: "12px",
+                            marginTop: "4px",
+                          }}
+                        >
+                          {errors.firstName}
+                        </div>
+                      )}
+                    </FormGroup>
+                  )}
+
+                  {deployment?.auth_settings?.last_name?.enabled && (
+                    <FormGroup style={{ flex: 1 }}>
+                      <Label
+                        style={{ fontSize: "13px", fontWeight: 500, color: "#374151" }}
+                      >
+                        Last Name
+                      </Label>
+                      <Input
+                        id="lastName"
+                        type="text"
+                        value={lastName}
+                        onChange={(e) => setLastName(e.target.value)}
+                        placeholder="Enter last name"
+                        style={{
+                          width: "100%",
+                          padding: "8px 12px",
+                          borderRadius: "6px",
+                          fontSize: "14px",
+                          border: "1px solid #e5e7eb",
+                        }}
+                      />
+                      {errors.lastName && (
+                        <div
+                          style={{
+                            color: "var(--color-error)",
+                            fontSize: "12px",
+                            marginTop: "4px",
+                          }}
+                        >
+                          {errors.lastName}
+                        </div>
+                      )}
+                    </FormGroup>
+                  )}
                 </div>
               )}
-            </FormGroup>
-          </div>
-        )}
 
-        {(deployment?.auth_settings?.first_name?.enabled ||
-          deployment?.auth_settings?.last_name?.enabled ||
-          deployment?.auth_settings?.username?.enabled) && (
-          <div style={{ marginTop: "20px", marginBottom: "20px" }}>
-            <Button
-              type="submit"
-              disabled={isUpdating}
-              style={{
-                backgroundColor: "var(--color-primary)",
-                color: "white",
-                padding: "12px 24px",
-                borderRadius: "6px",
-                border: "none",
-                fontSize: "14px",
-                fontWeight: "500",
-                cursor: isUpdating ? "not-allowed" : "pointer",
-                opacity: isUpdating ? 0.6 : 1,
-                display: "flex",
-                alignItems: "center",
-                justifyContent: "center",
-                minWidth: "140px",
-                height: "40px",
-              }}
-            >
-              {isUpdating ? (
-                <>
-                  <Spinner size={16} />
-                  <span style={{ marginLeft: "8px" }}>Updating...</span>
-                </>
-              ) : (
-                "Save Changes"
+              {deployment?.auth_settings?.username?.enabled && (
+                <FormGroup>
+                  <Label
+                    style={{ fontSize: "13px", fontWeight: 500, color: "#374151" }}
+                  >
+                    Username
+                  </Label>
+                  <Input
+                    id="username"
+                    type="text"
+                    value={username}
+                    onChange={(e) => setUsername(e.target.value)}
+                    placeholder="Enter username"
+                    style={{
+                      width: "100%",
+                      padding: "8px 12px",
+                      borderRadius: "6px",
+                      fontSize: "14px",
+                      border: "1px solid #e5e7eb",
+                    }}
+                  />
+                  {errors.username && (
+                    <div
+                      style={{
+                        color: "var(--color-error)",
+                        fontSize: "12px",
+                        marginTop: "4px",
+                      }}
+                    >
+                      {errors.username}
+                    </div>
+                  )}
+                </FormGroup>
               )}
-            </Button>
-          </div>
-        )}
 
-        <div style={{ marginBottom: "12px" }}>
-          <DeleteAccountAccordion handleDeleteAccount={handleDeleteAccount} />
+
+              {/* Button Group */}
+              {(deployment?.auth_settings?.first_name?.enabled ||
+                deployment?.auth_settings?.last_name?.enabled ||
+                deployment?.auth_settings?.username?.enabled) && (
+                <div
+                  style={{
+                    display: "flex",
+                    justifyContent: "flex-end",
+                    marginTop: "20px",
+                  }}
+                >
+                  <Button
+                    type="submit"
+                    disabled={isUpdating}
+                    style={{
+                      background: "#6366f1",
+                      color: "white",
+                      border: "none",
+                      padding: "8px 16px",
+                      borderRadius: "6px",
+                      fontSize: "14px",
+                      fontWeight: 500,
+                    }}
+                  >
+                    {isUpdating ? <Spinner size={16} /> : "Save Changes"}
+                  </Button>
+                </div>
+              )}
+
+              {/* Delete Section */}
+              <div style={{ marginTop: "40px", paddingTop: "24px", borderTop: "1px solid #f3f4f6" }}>
+                <button
+                  onClick={() => {
+                    if (!showDeleteConfirm) {
+                      setShowDeleteConfirm(true);
+                    } else {
+                      setShowDeleteConfirm(false);
+                      setPassword("");
+                    }
+                  }}
+                  style={{
+                    background: "none",
+                    border: "none",
+                    color: "#6b7280",
+                    fontSize: "13px",
+                    cursor: "pointer",
+                    textDecoration: "underline",
+                    padding: "0",
+                  }}
+                >
+                  {showDeleteConfirm ? "Cancel" : "Delete account"}
+                </button>
+                
+                {showDeleteConfirm && (
+                  <div style={{ marginTop: "16px", maxWidth: "300px" }}>
+                    <p style={{ fontSize: "12px", color: "#6b7280", margin: "0 0 12px 0" }}>
+                      This action cannot be undone.
+                    </p>
+                    <div style={{ position: "relative", marginBottom: "12px" }}>
+                      <Input
+                        type={showPassword ? "text" : "password"}
+                        value={password}
+                        onChange={(e) => setPassword(e.target.value)}
+                        placeholder="Enter password"
+                        style={{
+                          width: "100%",
+                          padding: "8px 12px",
+                          borderRadius: "4px",
+                          fontSize: "13px",
+                          border: "1px solid #e5e7eb",
+                          paddingRight: "40px",
+                        }}
+                      />
+                      <button
+                        type="button"
+                        onClick={() => setShowPassword(!showPassword)}
+                        style={{
+                          position: "absolute",
+                          right: "12px",
+                          top: "50%",
+                          transform: "translateY(-50%)",
+                          background: "none",
+                          border: "none",
+                          cursor: "pointer",
+                          color: "#6b7280",
+                        }}
+                      >
+                        {showPassword ? <EyeOff size={14} /> : <Eye size={14} />}
+                      </button>
+                    </div>
+                    <Button
+                      onClick={handleDeleteAccount}
+                      disabled={isDeleting || !password}
+                      style={{
+                        background: password ? "#dc2626" : "#e5e7eb",
+                        color: password ? "white" : "#9ca3af",
+                        border: "none",
+                        padding: "6px 12px",
+                        borderRadius: "4px",
+                        fontSize: "12px",
+                        fontWeight: 500,
+                        cursor: password ? "pointer" : "not-allowed",
+                      }}
+                    >
+                      {isDeleting ? <Spinner size={12} /> : "Delete"}
+                    </Button>
+                  </div>
+                )}
+              </div>
+            </div>
+          </form>
         </div>
-      </form>
-    </div>
+      </div>
+    </>
   );
 };
 
+// Removed DeleteAccountAccordion - functionality moved to Danger tab
+/*
 const DeleteAccountAccordion = ({
   handleDeleteAccount,
 }: {
@@ -3697,5 +3865,6 @@ const DeleteAccountAccordion = ({
     </div>
   );
 };
+*/
 
 export default ManageAccount;

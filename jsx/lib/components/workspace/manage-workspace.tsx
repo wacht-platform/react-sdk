@@ -1,6 +1,6 @@
 import React, { useState, useCallback, useEffect } from "react";
 import styled from "styled-components";
-import { Building, Settings, Users, Mail, Trash2, Send, Check, Shield, AlertTriangle } from "lucide-react";
+import { Building, Settings, Users, Mail, Trash2, Send, Check, Shield } from "lucide-react";
 import { useActiveWorkspace } from "@/hooks/use-workspace";
 import type { WorkspaceMembership, WorkspaceRole } from "@/types/organization";
 import { InviteMemberPopover } from "./invite-member-popover";
@@ -10,7 +10,6 @@ import {
   Spinner,
   FormGroup,
   Label,
-  Form,
   SearchInput,
   Dropdown,
   DropdownItems,
@@ -57,6 +56,11 @@ const TabsContainer = styled.div`
 const TabsList = styled.div`
   display: flex;
   gap: 24px;
+  overflow-x: auto;
+
+  &::-webkit-scrollbar {
+    display: none;
+  }
 `;
 
 const Tab = styled.button<{ $isActive: boolean }>`
@@ -70,6 +74,7 @@ const Tab = styled.button<{ $isActive: boolean }>`
   cursor: pointer;
   position: relative;
   transition: color 0.15s ease;
+  white-space: nowrap;
 
   &:hover {
     color: var(--color-foreground);
@@ -104,22 +109,11 @@ const TabContent = styled.div`
   }
 `;
 
-const Avatar = styled.img`
-  width: 84px;
-  height: 84px;
-  border-radius: 50%;
-  object-fit: cover;
-`;
-
-const FallbackAvatar = styled.div`
-  width: 84px;
-  height: 84px;
-  border-radius: 50%;
-  background: var(--color-input-background);
+const HeaderCTAContainer = styled.div`
   display: flex;
   align-items: center;
-  justify-content: center;
-  border: 2px dashed var(--color-border);
+  flex-wrap: wrap;
+  gap: 8px;
 `;
 
 interface WorkspaceUpdate {
@@ -209,14 +203,6 @@ const IconButton = styled.button`
   }
 `;
 
-const SectionHeader = styled.div`
-  display: flex;
-  gap: 8px;
-  align-items: center;
-  flex-wrap: wrap;
-  justify-content: space-between;
-  margin-bottom: 16px;
-`;
 
 
 // Helper hooks for workspace operations
@@ -504,19 +490,18 @@ const InvitationsSection = () => {
       )}
 
 
-      <SectionHeader>
+      <HeaderCTAContainer>
         <SearchInput
           value={searchQuery}
           onChange={setSearchQuery}
-          placeholder="Search..."
+          placeholder="Search Invitation"
         />
-        <div style={{ position: "relative" }}>
+        <div>
           <Button
             onClick={() => setShowInvitePopover(!showInvitePopover)}
-            style={{ width: "140px" }}
-            $primary
+            style={{ width: "120px" }}
           >
-            <span>Invite Members</span>
+            Invite Members
           </Button>
           {showInvitePopover && (
             <InviteMemberPopover
@@ -527,10 +512,10 @@ const InvitationsSection = () => {
             />
           )}
         </div>
-      </SectionHeader>
+      </HeaderCTAContainer>
 
       <div>
-        <h3
+        <div
           style={{
             fontSize: "14px",
             fontWeight: 400,
@@ -538,8 +523,8 @@ const InvitationsSection = () => {
             color: "var(--color-muted)",
           }}
         >
-          Pending Invitations ({filteredInvitations.length})
-        </h3>
+          {filteredInvitations.length} pending invitation{filteredInvitations.length !== 1 ? "s" : ""}
+        </div>
         {filteredInvitations.length === 0 ? (
           <EmptyState
             title={searchQuery ? "No invitations match your search" : "No pending invitations"}
@@ -678,16 +663,16 @@ const MembersSection = () => {
 
   return (
     <>
-      <SectionHeader>
+      <HeaderCTAContainer>
         <SearchInput
           value={searchQuery}
           onChange={setSearchQuery}
-          placeholder="Search..."
+          placeholder="Search members..."
         />
-      </SectionHeader>
+      </HeaderCTAContainer>
 
       <div>
-        <h3
+        <div
           style={{
             fontSize: "14px",
             fontWeight: 400,
@@ -695,8 +680,8 @@ const MembersSection = () => {
             color: "var(--color-muted)",
           }}
         >
-          Members ({members.length})
-        </h3>
+          {members.length} member{members.length !== 1 ? "s" : ""}
+        </div>
         {filteredMembers.length === 0 ? (
           <EmptyState
             title={searchQuery ? "No members match your search" : "No members yet"}
@@ -787,30 +772,10 @@ const MembersSection = () => {
   );
 };
 
-const DangerZone = styled.div`
-  margin-top: 48px;
-  padding: 24px;
-  border: 1px solid var(--color-error);
-  border-radius: 8px;
-  background: var(--color-error-background);
-`;
-
-const DangerZoneTitle = styled.h4`
-  font-size: 16px;
-  font-weight: 500;
-  color: var(--color-error);
-  margin: 0 0 8px 0;
-`;
-
-const DangerZoneDescription = styled.p`
-  font-size: 14px;
-  color: var(--color-muted);
-  margin: 0 0 16px 0;
-`;
 
 const GeneralSettingsSection = () => {
   const { activeWorkspace, loading } = useActiveWorkspace();
-  const { updateWorkspace } = useWorkspaceOperations();
+  const { updateWorkspace, deleteWorkspace } = useWorkspaceOperations();
   const [name, setName] = useState(activeWorkspace?.name || "");
   const [description, setDescription] = useState(
     activeWorkspace?.description || "",
@@ -820,7 +785,10 @@ const GeneralSettingsSection = () => {
     activeWorkspace?.image_url || null,
   );
   const [successMessage, setSuccessMessage] = useState("");
-  const [isSubmitting, setIsSubmitting] = useState(false);
+  const [_, setIsSubmitting] = useState(false);
+  const [showDeleteConfirm, setShowDeleteConfirm] = useState(false);
+  const [deleteConfirmName, setDeleteConfirmName] = useState("");
+  const [isDeleting, setIsDeleting] = useState(false);
   const fileInputRef = React.useRef<HTMLInputElement>(null);
 
   React.useEffect(() => {
@@ -870,15 +838,15 @@ const GeneralSettingsSection = () => {
       if (image) {
         data.image = image;
       }
-      if (name && name !== activeWorkspace.name) {
+      if (name) {
         data.name = name;
       }
-      if (description !== activeWorkspace.description) {
+      if (description) {
         data.description = description;
       }
 
       await updateWorkspace(data);
-      setSuccessMessage("Workspace updated successfully");
+      setSuccessMessage("Settings updated successfully");
       setTimeout(() => setSuccessMessage(""), 3000);
     } catch (error) {
       console.error("Failed to update workspace", error);
@@ -887,161 +855,321 @@ const GeneralSettingsSection = () => {
     }
   };
 
+  const handleDeleteWorkspace = async () => {
+    if (deleteConfirmName !== activeWorkspace?.name || !activeWorkspace) return;
+    
+    try {
+      setIsDeleting(true);
+      await deleteWorkspace();
+      // Workspace deleted successfully - the UI should handle navigation
+    } catch (error) {
+      console.error("Failed to delete workspace:", error);
+    } finally {
+      setIsDeleting(false);
+      setShowDeleteConfirm(false);
+      setDeleteConfirmName("");
+    }
+  };
+
   return (
     <>
-      <div
-        style={{
-          display: "flex",
-          justifyContent: "space-between",
-          alignItems: "center",
-          marginBottom: "24px",
-        }}
-      >
-        <h3
-          style={{
-            fontSize: "16px",
-            fontWeight: 500,
-            margin: 0,
-            color: "var(--color-foreground)",
-          }}
-        >
-          General Settings
-        </h3>
-        <Button
-          onClick={handleSubmit}
-          disabled={isSubmitting}
-          style={{
-            width: "auto",
-            padding: "8px 16px",
-          }}
-        >
-          {isSubmitting ? <Spinner /> : "Save changes"}
-        </Button>
-      </div>
-
       {successMessage && (
         <div
           style={{
             marginBottom: "20px",
-            padding: "12px 16px",
+            padding: "8px",
             background: "var(--color-success-background)",
             color: "var(--color-success)",
-            borderRadius: "6px",
+            borderRadius: "4px",
             display: "flex",
             alignItems: "center",
             gap: "8px",
-            fontSize: "14px",
           }}
         >
-          ✓ {successMessage}
+          ✓{successMessage}
         </div>
       )}
 
-      <Form
-        onSubmit={handleSubmit}
+      <div
         style={{
+          display: "flex",
           width: "100%",
-          gap: "20px",
+          gap: "1px",
         }}
       >
+        {/* Left Panel - Logo Upload */}
         <div
           style={{
+            width: "280px",
+            paddingRight: "24px",
             display: "flex",
             flexDirection: "column",
             alignItems: "center",
-            textAlign: "center",
-            marginBottom: "20px",
+            justifyContent: "center",
+            gap: "12px",
+            borderRight: "1px solid var(--color-border)",
           }}
         >
-          <div style={{ position: "relative" }}>
-            <button
-              type="button"
-              onClick={triggerFileInput}
-              style={{
-                background: "none",
-                border: "none",
-                padding: 0,
-                cursor: "pointer",
-              }}
-            >
-              {previewUrl ? (
-                <Avatar
-                  src={previewUrl}
-                  alt="Workspace Logo"
-                  onError={(e) => {
-                    const img = e.currentTarget as HTMLImageElement;
-                    img.style.display = "none";
-                    const fallback = img.nextElementSibling as HTMLElement;
-                    if (fallback) {
-                      fallback.style.display = "flex";
-                    }
-                  }}
-                />
-              ) : null}
-              <FallbackAvatar
-                style={previewUrl ? { display: "none" } : { display: "flex" }}
-              >
-                <Building size={36} color="var(--color-muted)" />
-              </FallbackAvatar>
-              <input
-                type="file"
-                ref={fileInputRef}
-                style={{ display: "none" }}
-                accept="image/*"
-                onChange={handleImageChange}
+          <div
+            style={{
+              width: "240px",
+              height: "240px",
+              borderRadius: "16px",
+              border: "2px solid #e5e7eb",
+              background: previewUrl ? "transparent" : "#ffffff",
+              cursor: "pointer",
+              display: "flex",
+              alignItems: "center",
+              justifyContent: "center",
+              overflow: "hidden",
+              transition: "all 0.2s ease",
+              position: "relative",
+            }}
+            onClick={triggerFileInput}
+            onMouseEnter={(e) => {
+              e.currentTarget.style.borderColor = "#d1d5db";
+              e.currentTarget.style.transform = "scale(1.02)";
+            }}
+            onMouseLeave={(e) => {
+              e.currentTarget.style.borderColor = "#e5e7eb";
+              e.currentTarget.style.transform = "scale(1)";
+            }}
+          >
+            {previewUrl ? (
+              <img
+                src={previewUrl}
+                alt="Workspace Logo"
+                style={{
+                  width: "100%",
+                  height: "100%",
+                  objectFit: "cover",
+                }}
               />
-            </button>
+            ) : (
+              <div
+                style={{
+                  width: "100%",
+                  height: "100%",
+                  background: "#e5e7eb",
+                  display: "flex",
+                  alignItems: "center",
+                  justifyContent: "center",
+                  color: "#9ca3af",
+                  fontSize: "32px",
+                  fontWeight: 500,
+                }}
+              >
+                {activeWorkspace?.name?.charAt(0)?.toUpperCase() || (
+                  <Building size={48} />
+                )}
+              </div>
+            )}
+            <input
+              type="file"
+              ref={fileInputRef}
+              style={{ display: "none" }}
+              accept="image/*"
+              onChange={handleImageChange}
+            />
+          </div>
+
+          <div style={{ textAlign: "center", marginTop: "20px", width: "240px" }}>
+            <div style={{ display: "flex", flexDirection: "column", gap: "8px", marginBottom: "12px" }}>
+              <Button
+                onClick={() => fileInputRef.current?.click()}
+                style={{
+                  background: "#6366f1",
+                  color: "white",
+                  border: "none",
+                  padding: "8px 16px",
+                  borderRadius: "6px",
+                  fontSize: "14px",
+                  fontWeight: 500,
+                  width: "100%",
+                }}
+              >
+                Change Logo
+              </Button>
+              <Button
+                onClick={() => {
+                  setPreviewUrl(null);
+                  setImage(null);
+                  if (fileInputRef.current) {
+                    fileInputRef.current.value = "";
+                  }
+                }}
+                disabled={!previewUrl}
+                style={{
+                  background: previewUrl ? "#ef4444" : "#e5e7eb",
+                  color: previewUrl ? "white" : "#9ca3af",
+                  border: "none",
+                  padding: "8px 16px",
+                  borderRadius: "6px",
+                  fontSize: "14px",
+                  fontWeight: 500,
+                  cursor: previewUrl ? "pointer" : "not-allowed",
+                  width: "100%",
+                }}
+              >
+                Remove Logo
+              </Button>
+            </div>
+            <div
+              style={{ fontSize: "11px", color: "#9ca3af", lineHeight: "1.4" }}
+            >
+              <div>JPG, PNG, GIF • Max 2MB</div>
+            </div>
+          </div>
+
+        </div>
+
+        {/* Right Panel - Form Fields */}
+        <div style={{ flex: 1, paddingLeft: "24px" }}>
+          <div
+            style={{ display: "flex", flexDirection: "column", gap: "16px" }}
+          >
+            <FormGroup>
+              <Label
+                style={{ fontSize: "13px", fontWeight: 500, color: "#374151" }}
+              >
+                Workspace Name
+              </Label>
+              <Input
+                id="name"
+                type="text"
+                value={name}
+                onChange={(e) => setName(e.target.value)}
+                placeholder="Enter workspace name"
+                style={{
+                  width: "100%",
+                  padding: "8px 12px",
+                  borderRadius: "6px",
+                  fontSize: "14px",
+                  border: "1px solid #e5e7eb",
+                }}
+                required
+              />
+            </FormGroup>
+
+            <FormGroup>
+              <Label
+                style={{ fontSize: "13px", fontWeight: 500, color: "#374151" }}
+              >
+                Description
+              </Label>
+              <Input
+                id="description"
+                as="textarea"
+                value={description}
+                onChange={(e) => setDescription(e.target.value)}
+                placeholder="Enter workspace description"
+                style={{
+                  width: "100%",
+                  padding: "8px 12px",
+                  borderRadius: "6px",
+                  fontSize: "14px",
+                  border: "1px solid #e5e7eb",
+                  minHeight: "80px",
+                  resize: "vertical",
+                }}
+              />
+              <div
+                style={{ fontSize: "12px", color: "#6b7280", marginTop: "4px" }}
+              >
+                Brief description of your workspace
+              </div>
+            </FormGroup>
+
+
+            {/* Button Group */}
             <div
               style={{
-                fontSize: "13px",
-                color: "var(--color-muted)",
-                marginTop: "8px",
+                display: "flex",
+                justifyContent: "flex-end",
+                marginTop: "20px",
               }}
             >
-              Click to upload a new logo
+              <Button
+                onClick={handleSubmit}
+                style={{
+                  background: "#6366f1",
+                  color: "white",
+                  border: "none",
+                  padding: "8px 16px",
+                  borderRadius: "6px",
+                  fontSize: "14px",
+                  fontWeight: 500,
+                }}
+              >
+                Save Changes
+              </Button>
+            </div>
+
+            {/* Delete Section */}
+            <div style={{ marginTop: "40px", paddingTop: "24px", borderTop: "1px solid #f3f4f6" }}>
+              <button
+                onClick={() => {
+                  if (!showDeleteConfirm) {
+                    setShowDeleteConfirm(true);
+                  } else {
+                    setShowDeleteConfirm(false);
+                    setDeleteConfirmName("");
+                  }
+                }}
+                style={{
+                  background: "none",
+                  border: "none",
+                  color: "#6b7280",
+                  fontSize: "13px",
+                  cursor: "pointer",
+                  textDecoration: "underline",
+                  padding: "0",
+                }}
+              >
+                {showDeleteConfirm ? "Cancel" : "Delete workspace"}
+              </button>
+              
+              {showDeleteConfirm && (
+                <div style={{ marginTop: "16px", maxWidth: "300px" }}>
+                  <p style={{ fontSize: "12px", color: "#6b7280", margin: "0 0 12px 0" }}>
+                    This action cannot be undone.
+                  </p>
+                  <Input
+                    type="text"
+                    value={deleteConfirmName}
+                    onChange={(e) => setDeleteConfirmName(e.target.value)}
+                    placeholder={`Type "${activeWorkspace?.name}" to confirm`}
+                    style={{
+                      width: "100%",
+                      padding: "8px 12px",
+                      borderRadius: "4px",
+                      fontSize: "13px",
+                      border: "1px solid #e5e7eb",
+                      marginBottom: "12px",
+                    }}
+                  />
+                  <Button
+                    onClick={handleDeleteWorkspace}
+                    disabled={deleteConfirmName !== activeWorkspace?.name || isDeleting}
+                    style={{
+                      background: deleteConfirmName === activeWorkspace?.name ? "#dc2626" : "#e5e7eb",
+                      color: deleteConfirmName === activeWorkspace?.name ? "white" : "#9ca3af",
+                      border: "none",
+                      padding: "6px 12px",
+                      borderRadius: "4px",
+                      fontSize: "12px",
+                      fontWeight: 500,
+                      cursor: deleteConfirmName === activeWorkspace?.name ? "pointer" : "not-allowed",
+                    }}
+                  >
+                    {isDeleting ? <Spinner size={12} /> : "Delete"}
+                  </Button>
+                </div>
+              )}
             </div>
           </div>
         </div>
-
-        <FormGroup>
-          <Label>Workspace Name</Label>
-          <Input
-            id="name"
-            type="text"
-            value={name}
-            onChange={(e) => setName(e.target.value)}
-            placeholder="Workspace Name"
-            style={{
-              width: "100%",
-              padding: "10px 12px",
-              borderRadius: "6px",
-              fontSize: "14px",
-              backgroundColor: "var(--color-input-background)",
-            }}
-            required
-          />
-        </FormGroup>
-
-        <FormGroup>
-          <Label>Description</Label>
-          <Input
-            id="description"
-            as="textarea"
-            value={description}
-            onChange={(e) => setDescription(e.target.value)}
-            placeholder="Enter workspace description"
-            style={{
-              width: "100%",
-              padding: "10px 12px",
-              borderRadius: "6px",
-              fontSize: "14px",
-              backgroundColor: "var(--color-input-background)",
-              minHeight: "100px",
-              resize: "vertical",
-            }}
-          />
-        </FormGroup>
-      </Form>
+      </div>
     </>
   );
 };
@@ -1143,27 +1271,29 @@ const RolesSection = () => {
 
   return (
     <>
-      <div style={{ marginBottom: "24px" }}>
-        <h3
-          style={{
-            fontSize: "16px",
-            fontWeight: 500,
-            margin: "0 0 8px 0",
-            color: "var(--color-foreground)",
-          }}
-        >
-          Workspace Roles
-        </h3>
-        <p
-          style={{
-            fontSize: "14px",
-            color: "var(--color-muted)",
-            margin: 0,
-          }}
-        >
-          Roles define what members can do in your workspace. Roles are managed at the deployment or organization level.
-        </p>
-      </div>
+      <HeaderCTAContainer>
+        <div style={{ flex: 1 }}>
+          <h3
+            style={{
+              fontSize: "16px",
+              fontWeight: 500,
+              margin: "0 0 4px 0",
+              color: "var(--color-foreground)",
+            }}
+          >
+            Workspace Roles
+          </h3>
+          <p
+            style={{
+              fontSize: "14px",
+              color: "var(--color-muted)",
+              margin: "0 0 16px 0",
+            }}
+          >
+            Roles define what members can do in your workspace. Roles are managed at the deployment or organization level.
+          </p>
+        </div>
+      </HeaderCTAContainer>
 
       {roles.length === 0 ? (
         <EmptyState
@@ -1172,157 +1302,53 @@ const RolesSection = () => {
         />
       ) : (
         <div>
-          {roles.map((role) => {
-            const memberCount = getMemberCountForRole(role.id);
-            return (
-              <RoleCard key={role.id}>
-                <RoleHeader>
-                  <div>
-                    <RoleName>{role.name}</RoleName>
-                  </div>
-                  <RoleMemberCount>
-                    <Users size={14} />
-                    {memberCount} {memberCount === 1 ? "member" : "members"}
-                  </RoleMemberCount>
-                </RoleHeader>
-                {role.permissions && role.permissions.length > 0 && (
-                  <PermissionsList>
-                    {role.permissions.map((permission: string) => (
-                      <PermissionBadge key={permission}>
-                        {permission}
-                      </PermissionBadge>
-                    ))}
-                  </PermissionsList>
-                )}
-              </RoleCard>
-            );
-          })}
+          <div
+            style={{
+              fontSize: "14px",
+              fontWeight: 400,
+              marginBottom: "8px",
+              color: "var(--color-muted)",
+            }}
+          >
+            {roles.length} role{roles.length !== 1 ? "s" : ""}
+          </div>
+          <div>
+            {roles.map((role) => {
+              const memberCount = getMemberCountForRole(role.id);
+              return (
+                <RoleCard key={role.id}>
+                  <RoleHeader>
+                    <div>
+                      <RoleName>{role.name}</RoleName>
+                    </div>
+                    <RoleMemberCount>
+                      <Users size={14} />
+                      {memberCount} {memberCount === 1 ? "member" : "members"}
+                    </RoleMemberCount>
+                  </RoleHeader>
+                  {role.permissions && role.permissions.length > 0 && (
+                    <PermissionsList>
+                      {role.permissions.map((permission: string) => (
+                        <PermissionBadge key={permission}>
+                          {permission}
+                        </PermissionBadge>
+                      ))}
+                    </PermissionsList>
+                  )}
+                </RoleCard>
+              );
+            })}
+          </div>
         </div>
       )}
     </>
   );
 };
 
-const DangerSection = () => {
-  const { activeWorkspace, loading } = useActiveWorkspace();
-  const { deleteWorkspace } = useWorkspaceOperations();
-  const [showDeleteConfirm, setShowDeleteConfirm] = useState(false);
-  const [deleteConfirmName, setDeleteConfirmName] = useState("");
-  const [isDeleting, setIsDeleting] = useState(false);
-
-  const handleDeleteWorkspace = async () => {
-    if (deleteConfirmName !== activeWorkspace?.name || !activeWorkspace) return;
-    
-    try {
-      setIsDeleting(true);
-      await deleteWorkspace();
-      // Workspace deleted successfully - the UI should handle navigation
-    } catch (error) {
-      console.error("Failed to delete workspace:", error);
-    } finally {
-      setIsDeleting(false);
-      setShowDeleteConfirm(false);
-      setDeleteConfirmName("");
-    }
-  };
-
-  if (loading) {
-    return (
-      <div style={{ display: "flex", justifyContent: "center", padding: "40px 0" }}>
-        <Spinner />
-      </div>
-    );
-  }
-
-  return (
-    <>
-      <div style={{ marginBottom: "24px" }}>
-        <h3
-          style={{
-            fontSize: "16px",
-            fontWeight: 500,
-            margin: "0 0 8px 0",
-            color: "var(--color-error)",
-          }}
-        >
-          Danger Zone
-        </h3>
-        <p
-          style={{
-            fontSize: "14px",
-            color: "var(--color-muted)",
-            margin: 0,
-          }}
-        >
-          Irreversible and destructive actions for your workspace.
-        </p>
-      </div>
-
-      <DangerZone>
-        <DangerZoneTitle>Delete Workspace</DangerZoneTitle>
-        <DangerZoneDescription>
-          Once you delete a workspace, there is no going back. Please be certain.
-        </DangerZoneDescription>
-        {!showDeleteConfirm ? (
-          <Button
-            onClick={() => setShowDeleteConfirm(true)}
-            style={{
-              background: "var(--color-error)",
-              color: "white",
-              border: "none",
-            }}
-          >
-            Delete Workspace
-          </Button>
-        ) : (
-          <div style={{ display: "flex", flexDirection: "column", gap: "12px" }}>
-            <FormGroup>
-              <Label>Type "{activeWorkspace?.name}" to confirm</Label>
-              <Input
-                type="text"
-                value={deleteConfirmName}
-                onChange={(e) => setDeleteConfirmName(e.target.value)}
-                placeholder="Enter workspace name"
-                style={{
-                  width: "100%",
-                  padding: "10px 12px",
-                  borderRadius: "6px",
-                  fontSize: "14px",
-                  backgroundColor: "var(--color-input-background)",
-                }}
-              />
-            </FormGroup>
-            <div style={{ display: "flex", gap: "8px" }}>
-              <Button onClick={() => {
-                setShowDeleteConfirm(false);
-                setDeleteConfirmName("");
-              }}>
-                Cancel
-              </Button>
-              <Button
-                onClick={handleDeleteWorkspace}
-                disabled={deleteConfirmName !== activeWorkspace?.name || isDeleting}
-                style={{
-                  background: deleteConfirmName === activeWorkspace?.name
-                    ? "var(--color-error)"
-                    : "var(--color-muted)",
-                  color: "white",
-                  border: "none",
-                }}
-              >
-                {isDeleting ? <Spinner /> : "Delete Workspace"}
-              </Button>
-            </div>
-          </div>
-        )}
-      </DangerZone>
-    </>
-  );
-};
 
 export const ManageWorkspace = () => {
   const { activeWorkspace, loading } = useActiveWorkspace();
-  const [activeTab, setActiveTab] = useState<"general" | "members" | "invitations" | "roles" | "danger">("general");
+  const [activeTab, setActiveTab] = useState<"general" | "members" | "invitations" | "roles">("general");
 
   if (loading)
     return (
@@ -1380,15 +1406,6 @@ export const ManageWorkspace = () => {
                 Roles
               </TabIcon>
             </Tab>
-            <Tab
-              $isActive={activeTab === "danger"}
-              onClick={() => setActiveTab("danger")}
-            >
-              <TabIcon>
-                <AlertTriangle size={16} />
-                Danger
-              </TabIcon>
-            </Tab>
           </TabsList>
         </TabsContainer>
 
@@ -1397,7 +1414,6 @@ export const ManageWorkspace = () => {
           {activeTab === "members" && <MembersSection />}
           {activeTab === "invitations" && <InvitationsSection />}
           {activeTab === "roles" && <RolesSection />}
-          {activeTab === "danger" && <DangerSection />}
         </TabContent>
       </Container>
     </TypographyProvider>
