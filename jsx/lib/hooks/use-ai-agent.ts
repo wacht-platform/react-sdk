@@ -1,4 +1,4 @@
-import { useCallback, useEffect, useRef, useState, useMemo } from "react";
+import { useCallback, useEffect, useRef, useState } from "react";
 import { useDeployment } from "./use-deployment";
 import { 
   CONNECTION_STATES, 
@@ -7,7 +7,7 @@ import {
   DEFAULT_OPTIONS 
 } from "../constants/ai-agent";
 
-export interface AgentMessage {
+export interface AIAgentMessage {
   id: string;
   type: typeof MESSAGE_TYPES[keyof typeof MESSAGE_TYPES];
   content: string;
@@ -18,7 +18,7 @@ export interface AgentMessage {
     toolExecution?: { name: string; status: string };
     workflowExecution?: { stage: string };
     platformEvent?: { label: string; data: any };
-    platformFunction?: { name: string; result: any };
+    platformFunction?: { name: string; result?: any; parameters?: any; error?: string };
   };
 }
 
@@ -36,7 +36,7 @@ export interface UseAgentOptions {
   reconnectInterval?: number;
   maxReconnectAttempts?: number;
   enableExponentialBackoff?: boolean;
-  onMessage?: (message: AgentMessage) => void;
+  onMessage?: (message: AIAgentMessage) => void;
   onConnectionChange?: (state: AgentConnectionState) => void;
   onError?: (error: Error) => void;
   messageHistory?: boolean;
@@ -70,7 +70,7 @@ export function useAIAgent(options: UseAgentOptions) {
   const { deployment } = useDeployment();
   
   // State
-  const [messages, setMessages] = useState<AgentMessage[]>([]);
+  const [messages, setMessages] = useState<AIAgentMessage[]>([]);
   const [connectionState, setConnectionState] = useState<AgentConnectionState>({
     status: CONNECTION_STATES.DISCONNECTED,
   });
@@ -117,10 +117,10 @@ export function useAIAgent(options: UseAgentOptions) {
     `${Date.now()}-${Math.random().toString(36).substr(2, 9)}`;
 
   const createMessage = (
-    type: AgentMessage["type"], 
+    type: AIAgentMessage["type"], 
     content: string, 
-    metadata?: AgentMessage["metadata"]
-  ): AgentMessage => ({
+    metadata?: AIAgentMessage["metadata"]
+  ): AIAgentMessage => ({
     id: generateMessageId(),
     type,
     content,
@@ -128,7 +128,7 @@ export function useAIAgent(options: UseAgentOptions) {
     metadata,
   });
 
-  const addMessage = useCallback((message: Omit<AgentMessage, "id" | "timestamp">) => {
+  const addMessage = useCallback((message: Omit<AIAgentMessage, "id" | "timestamp">) => {
     const newMessage = createMessage(message.type, message.content, message.metadata);
     
     if (messageHistory) {
@@ -142,7 +142,7 @@ export function useAIAgent(options: UseAgentOptions) {
     return newMessage;
   }, [messageHistory, emit, onMessage]);
 
-  const updateMessage = useCallback((id: string, updates: Partial<AgentMessage>) => {
+  const updateMessage = useCallback((id: string, updates: Partial<AIAgentMessage>) => {
     if (messageHistory) {
       setMessages(prev =>
         prev.map(msg => msg.id === id ? { ...msg, ...updates } : msg)
@@ -232,7 +232,7 @@ export function useAIAgent(options: UseAgentOptions) {
   ) => {
     if (!streamingMessageIdRef.current) return;
 
-    const metadata: AgentMessage["metadata"] = {};
+    const metadata: AIAgentMessage["metadata"] = {};
     
     switch (type) {
       case "task":

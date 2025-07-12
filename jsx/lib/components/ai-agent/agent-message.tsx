@@ -1,7 +1,15 @@
-import React from "react";
 import styled from "styled-components";
-import { Bot, User, AlertCircle, Info, Wrench, Workflow, Zap, Code } from "lucide-react";
-import type { AgentMessage as AgentMessageType } from "../../hooks/use-ai-agent";
+import {
+  Bot,
+  User,
+  AlertCircle,
+  Info,
+  Wrench,
+  Workflow,
+  Zap,
+  Code,
+} from "lucide-react";
+import type { AIAgentMessage as AgentMessageType } from "../../hooks/use-ai-agent";
 import { MESSAGE_TYPES } from "../../constants/ai-agent";
 
 const MessageContainer = styled.div`
@@ -30,8 +38,8 @@ const Avatar = styled.div<{ $type: string }>`
   align-items: center;
   justify-content: center;
   flex-shrink: 0;
-  background: ${props => getAvatarBackground(props.$type, props.theme)};
-  color: ${props => getAvatarColor(props.$type, props.theme)};
+  background: ${(props) => getAvatarBackground(props.$type, props.theme)};
+  color: ${(props) => getAvatarColor(props.$type, props.theme)};
 `;
 
 const Content = styled.div`
@@ -46,7 +54,7 @@ const Header = styled.div`
   align-items: center;
   gap: 8px;
   font-size: 13px;
-  color: ${props => props.theme?.mutedText || "#6b7280"};
+  color: "#6b7280";
 `;
 
 const MessageBubble = styled.div<{ $type: string }>`
@@ -56,9 +64,9 @@ const MessageBubble = styled.div<{ $type: string }>`
   line-height: 1.5;
   white-space: pre-wrap;
   word-break: break-word;
-  background: ${props => getMessageBackground(props.$type, props.theme)};
-  color: ${props => getMessageColor(props.$type, props.theme)};
-  border: 1px solid ${props => getMessageBorder(props.$type, props.theme)};
+  background: ${(props) => getMessageBackground(props.$type, props.theme)};
+  color: ${(props) => getMessageColor(props.$type, props.theme)};
+  border: 1px solid ${(props) => getMessageBorder(props.$type, props.theme)};
 `;
 
 const MetadataContainer = styled.div`
@@ -75,13 +83,13 @@ const MetadataBadge = styled.div<{ $type: string }>`
   padding: 4px 8px;
   border-radius: 6px;
   font-size: 12px;
-  background: ${props => getBadgeBackground(props.$type, props.theme)};
-  color: ${props => getBadgeColor(props.$type, props.theme)};
+  background: ${(props) => getBadgeBackground(props.$type, props.theme)};
+  color: ${(props) => getBadgeColor(props.$type, props.theme)};
 `;
 
 const Timestamp = styled.time`
   font-size: 11px;
-  color: ${props => props.theme?.timestampColor || "#9ca3af"};
+  color: #9ca3af;
 `;
 
 // Style helper functions
@@ -92,7 +100,7 @@ function getAvatarBackground(type: string, theme: any) {
     [MESSAGE_TYPES.SYSTEM]: theme?.systemAvatarBg || "#f3f4f6",
     [MESSAGE_TYPES.ERROR]: "#fee",
   };
-  return styles[type] || "#f3f4f6";
+  return styles[type as keyof typeof styles] || "#f3f4f6";
 }
 
 function getAvatarColor(type: string, theme: any) {
@@ -102,7 +110,7 @@ function getAvatarColor(type: string, theme: any) {
     [MESSAGE_TYPES.SYSTEM]: theme?.systemAvatarColor || "#6b7280",
     [MESSAGE_TYPES.ERROR]: "#c33",
   };
-  return styles[type] || "#6b7280";
+  return styles[type as keyof typeof styles] || "#6b7280";
 }
 
 function getMessageBackground(type: string, theme: any) {
@@ -112,7 +120,7 @@ function getMessageBackground(type: string, theme: any) {
     [MESSAGE_TYPES.SYSTEM]: theme?.systemMessageBg || "#fef3c7",
     [MESSAGE_TYPES.ERROR]: "#fee",
   };
-  return styles[type] || "#f3f4f6";
+  return styles[type as keyof typeof styles] || "#f3f4f6";
 }
 
 function getMessageColor(type: string, theme: any) {
@@ -122,7 +130,7 @@ function getMessageColor(type: string, theme: any) {
     [MESSAGE_TYPES.SYSTEM]: theme?.systemMessageColor || "#78350f",
     [MESSAGE_TYPES.ERROR]: "#c33",
   };
-  return styles[type] || "#111827";
+  return styles[type as keyof typeof styles] || "#111827";
 }
 
 function getMessageBorder(type: string, theme: any) {
@@ -132,7 +140,7 @@ function getMessageBorder(type: string, theme: any) {
     [MESSAGE_TYPES.SYSTEM]: theme?.systemMessageBorder || "#fde68a",
     [MESSAGE_TYPES.ERROR]: "#fcc",
   };
-  return styles[type] || "#e5e7eb";
+  return styles[type as keyof typeof styles] || "#e5e7eb";
 }
 
 function getBadgeBackground(type: string, theme: any) {
@@ -143,7 +151,7 @@ function getBadgeBackground(type: string, theme: any) {
     platformEvent: theme?.platformEventBadgeBg || "#fef3c7",
     platformFunction: theme?.platformFunctionBadgeBg || "#fce7f3",
   };
-  return styles[type] || "#f3f4f6";
+  return styles[type as keyof typeof styles] || "#f3f4f6";
 }
 
 function getBadgeColor(type: string, theme: any) {
@@ -154,7 +162,7 @@ function getBadgeColor(type: string, theme: any) {
     platformEvent: theme?.platformEventBadgeColor || "#92400e",
     platformFunction: theme?.platformFunctionBadgeColor || "#9f1239",
   };
-  return styles[type] || "#374151";
+  return styles[type as keyof typeof styles] || "#374151";
 }
 
 // Icon mapping
@@ -195,46 +203,47 @@ export function AgentMessage({ message, theme }: AgentMessageProps) {
       <Avatar $type={message.type} theme={theme}>
         <Icon size={20} />
       </Avatar>
-      
+
       <Content>
         <Header>
           <span>{label}</span>
           <Timestamp>{formatTime(message.timestamp)}</Timestamp>
         </Header>
-        
+
         <MessageBubble $type={message.type} theme={theme}>
           {message.content}
         </MessageBubble>
-        
+
         {message.metadata && (
           <MetadataContainer>
             {message.metadata.taskUpdate && (
               <MetadataBadge $type="task" theme={theme}>
-                Tasks: {message.metadata.taskUpdate.completedTasks}/{message.metadata.taskUpdate.taskCount}
+                Tasks: {message.metadata.taskUpdate.completedTasks}/
+                {message.metadata.taskUpdate.taskCount}
               </MetadataBadge>
             )}
-            
+
             {message.metadata.toolExecution && (
               <MetadataBadge $type="tool" theme={theme}>
                 <Wrench size={12} />
                 {message.metadata.toolExecution.name}
               </MetadataBadge>
             )}
-            
+
             {message.metadata.workflowExecution && (
               <MetadataBadge $type="workflow" theme={theme}>
                 <Workflow size={12} />
                 {message.metadata.workflowExecution.stage}
               </MetadataBadge>
             )}
-            
+
             {message.metadata.platformEvent && (
               <MetadataBadge $type="platformEvent" theme={theme}>
                 <Zap size={12} />
                 Event: {message.metadata.platformEvent.label}
               </MetadataBadge>
             )}
-            
+
             {message.metadata.platformFunction && (
               <MetadataBadge $type="platformFunction" theme={theme}>
                 <Code size={12} />

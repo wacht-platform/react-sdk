@@ -1,4 +1,3 @@
-import React from "react";
 import styled, { keyframes } from "styled-components";
 import { Bot } from "lucide-react";
 
@@ -49,22 +48,22 @@ const TypingBubble = styled.div`
   gap: 4px;
   padding: 12px 16px;
   border-radius: 12px;
-  background: ${props => props.theme?.agentMessageBg || "#f3f4f6"};
-  border: 1px solid ${props => props.theme?.agentMessageBorder || "#e5e7eb"};
+  background: #f3f4f6;
+  border: 1px solid #e5e7eb;
 `;
 
 const Dot = styled.div<{ delay: number }>`
   width: 8px;
   height: 8px;
   border-radius: 50%;
-  background: ${props => props.theme?.typingDotColor || "#6b7280"};
+  background: #6b7280;
   animation: ${bounce} 1.4s infinite ease-in-out;
-  animation-delay: ${props => props.delay}s;
+  animation-delay: ${(props) => props.delay}s;
 `;
 
 const TypingLabel = styled.span`
   font-size: 13px;
-  color: ${props => props.theme?.mutedText || "#6b7280"};
+  color: #6b7280;
   margin-right: 8px;
 `;
 
@@ -73,14 +72,19 @@ export interface AgentTypingIndicatorProps {
   showLabel?: boolean;
 }
 
-export function AgentTypingIndicator({ theme, showLabel = false }: AgentTypingIndicatorProps) {
+export function AgentTypingIndicator({
+  theme,
+  showLabel = false,
+}: AgentTypingIndicatorProps) {
   return (
     <TypingContainer>
       <AvatarContainer>
         <Bot size={20} />
       </AvatarContainer>
       <TypingBubble theme={theme}>
-        {showLabel && <TypingLabel theme={theme}>AI Agent is thinking</TypingLabel>}
+        {showLabel && (
+          <TypingLabel theme={theme}>AI Agent is thinking</TypingLabel>
+        )}
         <Dot delay={0} theme={theme} />
         <Dot delay={0.2} theme={theme} />
         <Dot delay={0.4} theme={theme} />

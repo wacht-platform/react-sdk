@@ -10,7 +10,7 @@ const ChatContainer = styled.div`
   display: flex;
   flex-direction: column;
   height: 100%;
-  background: ${props => props.theme?.background || "#ffffff"};
+  background: #ffffff;
   border-radius: 12px;
   box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1), 0 2px 4px -1px rgba(0, 0, 0, 0.06);
   overflow: hidden;
@@ -21,8 +21,8 @@ const ChatHeader = styled.div`
   align-items: center;
   justify-content: space-between;
   padding: 16px 20px;
-  background: ${props => props.theme?.headerBackground || "#f9fafb"};
-  border-bottom: 1px solid ${props => props.theme?.borderColor || "#e5e7eb"};
+  background: #f9fafb;
+  border-bottom: 1px solid #e5e7eb;
 `;
 
 const AgentInfo = styled.div`
@@ -51,7 +51,7 @@ const AgentName = styled.h3`
   margin: 0;
   font-size: 16px;
   font-weight: 600;
-  color: ${props => props.theme?.textColor || "#111827"};
+  color: #111827;
 `;
 
 const ConnectionStatus = styled.div<{ $connected: boolean }>`
@@ -79,7 +79,7 @@ const EmptyState = styled.div`
   align-items: center;
   justify-content: center;
   text-align: center;
-  color: ${props => props.theme?.mutedText || "#6b7280"};
+  color: #6b7280;
   gap: 12px;
 `;
 
@@ -87,27 +87,27 @@ const InputForm = styled.form`
   display: flex;
   gap: 12px;
   padding: 16px 20px;
-  background: ${props => props.theme?.inputBackground || "#f9fafb"};
-  border-top: 1px solid ${props => props.theme?.borderColor || "#e5e7eb"};
+  background: #f9fafb;
+  border-top: 1px solid #e5e7eb;
 `;
 
 const MessageInput = styled.input`
   flex: 1;
   padding: 12px 16px;
-  border: 1px solid ${props => props.theme?.borderColor || "#e5e7eb"};
+  border: 1px solid #e5e7eb;
   border-radius: 8px;
   font-size: 14px;
-  background: ${props => props.theme?.background || "#ffffff"};
-  color: ${props => props.theme?.textColor || "#111827"};
+  background: #ffffff;
+  color: #111827;
   outline: none;
   transition: border-color 0.2s;
 
   &:focus {
-    border-color: ${props => props.theme?.primaryColor || "#667eea"};
+    border-color: #667eea;
   }
 
   &::placeholder {
-    color: ${props => props.theme?.placeholderColor || "#9ca3af"};
+    color: #9ca3af;
   }
 `;
 
@@ -116,8 +116,8 @@ const SendButton = styled.button<{ $disabled: boolean }>`
   border: none;
   border-radius: 8px;
   background: ${props => props.$disabled 
-    ? props.theme?.disabledBackground || "#e5e7eb"
-    : props.theme?.primaryColor || "#667eea"};
+    ? "#e5e7eb"
+    : "#667eea"};
   color: white;
   font-weight: 500;
   cursor: ${props => props.$disabled ? "not-allowed" : "pointer"};
@@ -127,7 +127,7 @@ const SendButton = styled.button<{ $disabled: boolean }>`
   transition: all 0.2s;
 
   &:hover:not(:disabled) {
-    background: ${props => props.theme?.primaryColorHover || "#5a67d8"};
+    background: #5a67d8;
     transform: translateY(-1px);
   }
 
