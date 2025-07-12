@@ -12,3 +12,4 @@ export * from "./use-magic-link";
 export * from "./use-navigation";
 export * from "./use-forgot-password";
 export * from "./use-profile-completion";
+export * from "./use-ai-agent";
