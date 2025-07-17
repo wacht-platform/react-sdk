@@ -2,8 +2,8 @@ import { useState, useEffect } from "react";
 import { useClient } from "./use-client";
 import { useDeployment } from "./use-deployment";
 import { responseMapper } from "../utils/response-mapper";
-import type { Session } from "@/types/session";
-import { ApiResult, ErrorInterface } from "@/types/client";
+import type { Session } from "@/types";
+import { ApiResult, ErrorInterface } from "@/types";
 
 interface SSOCallbackResult {
   session: Session;

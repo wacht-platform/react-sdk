@@ -1,6 +1,6 @@
-import type { Deployment } from "@/types/deployment";
+import type { Deployment } from "@/types";
 import { useDeployment } from "./use-deployment";
-import type { Client } from "@/types/client";
+import type { Client } from "@/types";
 
 type UseClientReturnType = {
   client: Client;

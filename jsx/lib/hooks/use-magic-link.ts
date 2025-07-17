@@ -1,7 +1,7 @@
 import { useState, useEffect } from "react";
 import { useClient } from "./use-client";
 import { responseMapper } from "../utils/response-mapper";
-import { ApiResult, ErrorInterface, ErrorCode } from "@/types/client";
+import { ApiResult, ErrorInterface, ErrorCode } from "@/types";
 
 export interface MagicLinkParams {
   token?: string;

@@ -2,7 +2,7 @@ import { useState, useRef, useEffect } from "react";
 import styled from "styled-components";
 import { Input } from "@/components/utility/input";
 import { FormGroup, Label } from "../utility/form";
-import { OrganizationDomain } from "@/types/organization";
+import { OrganizationDomain } from "@/types";
 import { useActiveOrganization } from "@/hooks/use-organization";
 import { useScreenContext } from "./context";
 

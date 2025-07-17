@@ -2,9 +2,9 @@
 
 import { createContext, useContext, useState } from "react";
 import { useDeployment } from "../hooks";
-import { FirstFactor } from "@/types/deployment";
-import { DeploymentSocialConnection } from "@/types/deployment";
-import { AuthSettings } from "@/types/deployment";
+import { FirstFactor } from "@/types";
+import { DeploymentSocialConnection } from "@/types";
+import { AuthSettings } from "@/types";
 
 interface SignInContextType {
   email: string;

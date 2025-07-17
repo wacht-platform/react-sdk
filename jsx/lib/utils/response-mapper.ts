@@ -1,4 +1,4 @@
-import { ApiResult } from "@/types/client";
+import { ApiResult } from "@/types";
 
 export async function responseMapper<T>(
   response: Response,

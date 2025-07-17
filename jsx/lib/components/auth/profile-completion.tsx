@@ -6,7 +6,7 @@ import { useDeployment } from "../../hooks/use-deployment";
 import { useProfileCompletion } from "../../hooks/use-profile-completion";
 import { PhoneNumberInput } from "../utility/phone";
 import { OTPInput } from "../utility/otp-input";
-import { ProfileCompletionData, ProfileCompletionProps } from "../../types/profile";
+import { ProfileCompletionData, ProfileCompletionProps } from "@snipextt/wacht-types";
 import { AuthFormImage } from "./auth-image";
 import { NavigationLink } from "../utility/navigation";
 import { DefaultStylesProvider } from "../utility/root";

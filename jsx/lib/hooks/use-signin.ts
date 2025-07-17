@@ -1,8 +1,8 @@
 import { useState } from "react";
 import { responseMapper } from "../utils/response-mapper";
 import { useClient } from "./use-client";
-import type { ApiResult, Client, ErrorInterface } from "@/types/client";
-import type { Session, SigninAttempt } from "@/types/session";
+import type { ApiResult, Client, ErrorInterface } from "@/types";
+import type { Session, SigninAttempt } from "@/types";
 
 type UsernameSignInParams = {
 	username: string;

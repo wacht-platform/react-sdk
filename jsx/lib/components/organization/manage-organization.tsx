@@ -27,7 +27,7 @@ import {
   OrganizationUpdate,
   OrganizationMembership,
   OrganizationInvitation,
-} from "@/types/organization";
+} from "@/types";
 import { AddRolePopover } from "./add-role-popover";
 import {
   Button,

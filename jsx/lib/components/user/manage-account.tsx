@@ -16,7 +16,7 @@ import {
   Shield,
   Activity,
 } from "lucide-react";
-import * as TFA2 from "./2fa-redesign";
+import * as TFA2 from "./2fa";
 import { EmailAddPopover } from "@/components/user/add-email-popover";
 import { PhoneAddPopover } from "@/components/user/add-phone-popover";
 import {
@@ -37,7 +37,7 @@ import { Spinner, Button } from "../utility";
 import { EmptyState } from "@/components/utility/empty-state";
 import { QRCodeSVG } from "qrcode.react";
 import React from "react";
-import { UserAuthenticator } from "@/types/user";
+import { UserAuthenticator } from "@/types";
 import { ScreenContext, useScreenContext } from "./context";
 
 const TypographyProvider = styled.div`
@@ -89,7 +89,7 @@ const TabsList = styled.div`
   display: flex;
   gap: 24px;
   overflow-x: auto;
-  
+
   &::-webkit-scrollbar {
     display: none;
   }
@@ -141,9 +141,6 @@ const TabContent = styled.div`
   }
 `;
 
-
-
-
 const SectionTitle = styled.h2`
   font-size: 16px;
   color: var(--color-foreground);
@@ -152,10 +149,6 @@ const SectionTitle = styled.h2`
   justify-content: space-between;
   align-items: center;
 `;
-
-
-
-
 
 const EditButton = styled.button`
   padding: 8px 16px;
@@ -176,9 +169,6 @@ const EditButton = styled.button`
   }
 `;
 
-
-
-
 const LastLogin = styled.div`
   font-size: 13px;
   color: var(--color-secondary-text);
@@ -187,7 +177,6 @@ const LastLogin = styled.div`
   align-items: center;
   gap: 4px;
 `;
-
 
 const IconButton = styled.button`
   background: none;
@@ -206,7 +195,6 @@ const IconButton = styled.button`
     color: var(--color-foreground);
   }
 `;
-
 
 const MemberListItem = styled.div`
   background: var(--color-background);
@@ -254,7 +242,6 @@ const ProfileSection = styled.div`
   padding: 24px;
 `;
 
-
 const SessionDropdown = ({
   isOpen,
   onClose,
@@ -294,7 +281,6 @@ const SectionHeader = ({
   onAction?: () => void;
   buttonIcon?: React.ReactNode;
 }) => {
-
   return (
     <div
       style={{
@@ -323,150 +309,6 @@ const SectionHeader = ({
     </div>
   );
 };
-
-// Removed ProfileManagementSection - using tabs instead
-/*
-const ProfileManagementSection = () => {
-  const { setScreen } = useScreenContext();
-  const { user } = useUser();
-  const { deployment } = useDeployment();
-
-  return (
-    <>
-      <SectionTitle style={{ marginBottom: "20px" }}>
-        Manage your account
-      </SectionTitle>
-      <ProfileSection>
-        <ProfileHeader onClick={() => setScreen("profile-details")}>
-          <Avatar
-            src={
-              user?.profile_picture_url ||
-              "https://images.unsplash.com/photo-1472099645785-5658abf4ff4e?ixlib=rb-1.2.1&auto=format&fit=facearea&facepad=2&w=256&h=256&q=80"
-            }
-            alt="Profile"
-          />
-          <ProfileName>
-            <Name>
-              {user?.first_name} {user?.last_name}
-            </Name>
-          </ProfileName>
-
-          <ArrowRight size={14} style={{ color: "var(--color-muted)" }} />
-        </ProfileHeader>
-
-        {deployment?.auth_settings?.email_address?.enabled && (
-          <InfoItem onClick={() => setScreen("email")}>
-            <InfoLabel>Email addresses</InfoLabel>
-            <InfoContent>
-              <div
-                style={{
-                  flex: 1,
-                  overflow: "hidden",
-                  textOverflow: "ellipsis",
-                  whiteSpace: "nowrap",
-                }}
-              >
-                {user?.user_email_addresses?.length
-                  ? user.user_email_addresses
-                      .map((email) => email.email)
-                      .join(", ")
-                  : "No email addresses added"}
-              </div>
-              <ArrowRight size={14} style={{ color: "var(--color-muted)" }} />
-            </InfoContent>
-          </InfoItem>
-        )}
-
-        {deployment?.auth_settings?.phone_number?.enabled && (
-          <InfoItem onClick={() => setScreen("phone")}>
-            <InfoLabel>Phone number</InfoLabel>
-            <InfoContent>
-              <div
-                style={{
-                  flex: 1,
-                  overflow: "hidden",
-                  textOverflow: "ellipsis",
-                  whiteSpace: "nowrap",
-                }}
-              >
-                {user?.user_phone_numbers?.length
-                  ? user.user_phone_numbers
-                      .map((phone) => phone.phone_number)
-                      .join(", ")
-                  : "No phone numbers added"}
-              </div>
-              <ArrowRight size={14} style={{ color: "var(--color-muted)" }} />
-            </InfoContent>
-          </InfoItem>
-        )}
-
-        <InfoItem onClick={() => setScreen("social")}>
-          <InfoLabel>Connected accounts</InfoLabel>
-          <InfoContent>
-            <div
-              style={{
-                flex: 1,
-                overflow: "hidden",
-                textOverflow: "ellipsis",
-                whiteSpace: "nowrap",
-              }}
-            >
-              {user?.social_connections?.length
-                ? user.social_connections
-                    .map((conn) => `${conn.provider} • ${conn.email_address}`)
-                    .join(", ")
-                : "No accounts connected"}
-            </div>
-            <ArrowRight size={14} style={{ color: "var(--color-muted)" }} />
-          </InfoContent>
-        </InfoItem>
-
-        <SectionTitle style={{ marginTop: "32px", marginBottom: "16px" }}>
-          Security settings
-        </SectionTitle>
-
-        {(deployment?.auth_settings?.password?.enabled ||
-          deployment?.auth_settings?.auth_factors_enabled?.authenticator ||
-          deployment?.auth_settings?.auth_factors_enabled?.phone_otp ||
-          deployment?.auth_settings?.auth_factors_enabled?.backup_code) && (
-          <InfoItem onClick={() => setScreen("security")}>
-            <InfoLabel>Security</InfoLabel>
-            <InfoContent>
-              <div
-                style={{
-                  flex: 1,
-                  overflow: "hidden",
-                  textOverflow: "ellipsis",
-                  whiteSpace: "nowrap",
-                }}
-              >
-                Manage password and two-factor authentication
-              </div>
-              <ArrowRight size={14} style={{ color: "var(--color-muted)" }} />
-            </InfoContent>
-          </InfoItem>
-        )}
-        <InfoItem onClick={() => setScreen("active-sessions")}>
-          <InfoLabel>Active sessions</InfoLabel>
-          <InfoContent>
-            <div
-              style={{
-                flex: 1,
-                overflow: "hidden",
-                textOverflow: "ellipsis",
-                whiteSpace: "nowrap",
-              }}
-            >
-              Manage your active sessions
-            </div>
-            <ArrowRight size={14} style={{ color: "var(--color-muted)" }} />
-          </InfoContent>
-        </InfoItem>
-      </ProfileSection>
-    </>
-  );
-};
-*/
 
 const ActiveSessionsSection = () => {
   const [activeSession, setActiveSession] = useState<string | null>(null);
@@ -1134,8 +976,13 @@ const SocialManagementSection = () => {
   );
 };
 
-
-type TabType = "profile" | "email" | "phone" | "social" | "security" | "sessions";
+type TabType =
+  | "profile"
+  | "email"
+  | "phone"
+  | "social"
+  | "security"
+  | "sessions";
 
 export const ManageAccount = () => {
   const { loading } = useUser();
@@ -1169,14 +1016,17 @@ export const ManageAccount = () => {
   const authSettings = deployment?.auth_settings;
   const showEmailTab = authSettings?.email_address?.enabled;
   const showPhoneTab = authSettings?.phone_number?.enabled;
-  const showSecurityTab = authSettings?.password?.enabled || 
+  const showSecurityTab =
+    authSettings?.password?.enabled ||
     authSettings?.auth_factors_enabled?.authenticator ||
     authSettings?.auth_factors_enabled?.phone_otp ||
     authSettings?.auth_factors_enabled?.backup_code;
 
   return (
     <TypographyProvider>
-      <ScreenContext.Provider value={{ screen: null, setScreen: () => {}, toast }}>
+      <ScreenContext.Provider
+        value={{ screen: null, setScreen: () => {}, toast }}
+      >
         <Container>
           <TabsContainer>
             <TabsList>
@@ -1245,10 +1095,16 @@ export const ManageAccount = () => {
 
           <TabContent>
             {activeTab === "profile" && <ProfileDetailsManagementSection />}
-            {activeTab === "email" && showEmailTab && <EmailManagementSection />}
-            {activeTab === "phone" && showPhoneTab && <PhoneManagementSection />}
+            {activeTab === "email" && showEmailTab && (
+              <EmailManagementSection />
+            )}
+            {activeTab === "phone" && showPhoneTab && (
+              <PhoneManagementSection />
+            )}
             {activeTab === "social" && <SocialManagementSection />}
-            {activeTab === "security" && showSecurityTab && <SecurityManagementSection />}
+            {activeTab === "security" && showSecurityTab && (
+              <SecurityManagementSection />
+            )}
             {activeTab === "sessions" && <ActiveSessionsSection />}
           </TabContent>
 
@@ -1266,13 +1122,17 @@ export const ManageAccount = () => {
                 animation: "slideUp 0.3s ease-out",
               }}
             >
-              <div style={{ display: "flex", alignItems: "center", gap: "8px" }}>
+              <div
+                style={{ display: "flex", alignItems: "center", gap: "8px" }}
+              >
                 {toastLevel === "error" ? (
                   <AlertTriangle size={16} color="var(--color-error)" />
                 ) : (
                   <Check size={16} color="var(--color-success)" />
                 )}
-                <span style={{ fontSize: "14px", color: "var(--color-foreground)" }}>
+                <span
+                  style={{ fontSize: "14px", color: "var(--color-foreground)" }}
+                >
                   {toastMessage}
                 </span>
               </div>
@@ -1308,716 +1168,6 @@ const PasswordInput = styled.div`
   }
 `;
 
-// const PasswordManagementSection = () => {
-//   const { updatePassword, removePassword, user } = useUser();
-//   const { deployment } = useDeployment();
-//   const { toast } = useScreenContext();
-//   const [currentPassword, setCurrentPassword] = useState("");
-//   const [newPassword, setNewPassword] = useState("");
-//   const [confirmPassword, setConfirmPassword] = useState("");
-//   const [showCurrentPassword, setShowCurrentPassword] = useState(false);
-//   const [showNewPassword, setShowNewPassword] = useState(false);
-//   const [showConfirmPassword, setShowConfirmPassword] = useState(false);
-//   const [isSubmitting, setIsSubmitting] = useState(false);
-//   const [isRemoving, setIsRemoving] = useState(false);
-//   const [removePasswordInput, setRemovePasswordInput] = useState("");
-//   const [showRemovePassword, setShowRemovePassword] = useState(false);
-//   const [errors, setErrors] = useState<Record<string, string>>({});
-
-//   // Don't render if password is disabled
-//   if (!deployment?.auth_settings?.password?.enabled) {
-//     return null;
-//   }
-
-//   const handleSubmit = async (e: React.FormEvent) => {
-//     e.preventDefault();
-//     if (isSubmitting) return;
-
-//     const newErrors: Record<string, string> = {};
-
-//     if (!currentPassword) {
-//       newErrors.currentPassword = "Current password is required";
-//     }
-
-//     if (!newPassword) {
-//       newErrors.newPassword = "New password is required";
-//     } else if (newPassword.length < 8) {
-//       newErrors.newPassword = "Password must be at least 8 characters";
-//     }
-
-//     if (newPassword !== confirmPassword) {
-//       newErrors.confirmPassword = "Passwords do not match";
-//     }
-
-//     if (Object.keys(newErrors).length > 0) {
-//       setErrors(newErrors);
-//       return;
-//     }
-
-//     setIsSubmitting(true);
-
-//     try {
-//       await updatePassword(currentPassword, newPassword);
-//       setCurrentPassword("");
-//       setNewPassword("");
-//       setConfirmPassword("");
-//       setErrors({});
-//       toast("Password updated successfully", "info");
-//     } catch (error: any) {
-//       const errorMessage =
-//         error.message || "Failed to update password. Please try again.";
-//       setErrors({ form: errorMessage });
-//       toast(errorMessage, "error");
-//     } finally {
-//       setIsSubmitting(false);
-//     }
-//   };
-
-//   const handleRemovePassword = async () => {
-//     if (!removePasswordInput) {
-//       setErrors({ removePassword: "Current password is required" });
-//       return;
-//     }
-
-//     setIsRemoving(true);
-//     setErrors({});
-
-//     try {
-//       await removePassword(removePasswordInput);
-//       setRemovePasswordInput("");
-//       toast(
-//         "Password removed successfully. You can now sign in using alternative methods.",
-//         "info",
-//       );
-//     } catch (error: any) {
-//       const errorMessage =
-//         error?.message ||
-//         "Failed to remove password. Please check your password and ensure you have alternative authentication methods configured.";
-//       setErrors({
-//         removePassword: errorMessage,
-//       });
-//       toast(errorMessage, "error");
-//     } finally {
-//       setIsRemoving(false);
-//     }
-//   };
-
-//   const hasAlternativeAuthMethods = () => {
-//     const hasVerifiedEmail = user?.user_email_addresses?.some(
-//       (email) => email.verified,
-//     );
-//     const hasSocialConnections = (user?.social_connections?.length || 0) > 0;
-//     const hasAuthenticator = !!user?.user_authenticator;
-//     const emailOtpEnabled =
-//       deployment?.auth_settings?.first_factor === "email_otp";
-//     return (
-//       (hasVerifiedEmail && emailOtpEnabled) ||
-//       hasSocialConnections ||
-//       hasAuthenticator
-//     );
-//   };
-
-//   return (
-//     <div>
-//       <SectionHeader title="Password" />
-
-//       {/* Change Password Section */}
-//       <div
-//         style={{
-//           display: "flex",
-//           gap: "24px",
-//           padding: "32px 0",
-//           alignItems: "flex-start",
-//         }}
-//       >
-//         {/* Left side - Text content */}
-//         <div
-//           style={{
-//             flex: 1,
-//           }}
-//         >
-//           <h3
-//             style={{
-//               margin: 0,
-//               fontSize: "16px",
-//               fontWeight: "400",
-//               color: "var(--color-foreground)",
-//               marginBottom: "8px",
-//             }}
-//           >
-//             Change Password
-//           </h3>
-//           <p
-//             style={{
-//               margin: 0,
-//               fontSize: "14px",
-//               color: "var(--color-muted)",
-//               lineHeight: "1.5",
-//             }}
-//           >
-//             Update your current password with a new one. Make sure to use a
-//             strong password with at least 8 characters.
-//           </p>
-//         </div>
-
-//         {/* Right side - Form */}
-//         <div
-//           style={{
-//             flex: "0 0 450px",
-//             backgroundColor: "var(--color-background)",
-//             border: "1px solid var(--color-border)",
-//             borderRadius: "12px",
-//             padding: "24px",
-//           }}
-//         >
-//           <Form onSubmit={handleSubmit}>
-//             <FormGroup>
-//               <Label htmlFor="currentPassword">Current Password</Label>
-//               <PasswordInput>
-//                 <Input
-//                   id="currentPassword"
-//                   type={showCurrentPassword ? "text" : "password"}
-//                   value={currentPassword}
-//                   onChange={(e) => setCurrentPassword(e.target.value)}
-//                   placeholder="Enter your current password"
-//                 />
-//                 <button
-//                   type="button"
-//                   onClick={() => setShowCurrentPassword(!showCurrentPassword)}
-//                 >
-//                   {showCurrentPassword ? (
-//                     <EyeOff size={16} />
-//                   ) : (
-//                     <Eye size={16} />
-//                   )}
-//                 </button>
-//               </PasswordInput>
-//               {errors.currentPassword && (
-//                 <div
-//                   style={{
-//                     color: "var(--color-error)",
-//                     fontSize: "12px",
-//                     marginTop: "4px",
-//                   }}
-//                 >
-//                   {errors.currentPassword}
-//                 </div>
-//               )}
-//             </FormGroup>
-
-//             <FormGroup>
-//               <Label htmlFor="newPassword">New Password</Label>
-//               <PasswordInput>
-//                 <Input
-//                   id="newPassword"
-//                   type={showNewPassword ? "text" : "password"}
-//                   value={newPassword}
-//                   onChange={(e) => setNewPassword(e.target.value)}
-//                   placeholder="Enter your new password"
-//                 />
-//                 <button
-//                   type="button"
-//                   onClick={() => setShowNewPassword(!showNewPassword)}
-//                 >
-//                   {showNewPassword ? <EyeOff size={16} /> : <Eye size={16} />}
-//                 </button>
-//               </PasswordInput>
-//               {errors.newPassword && (
-//                 <div
-//                   style={{
-//                     color: "var(--color-error)",
-//                     fontSize: "12px",
-//                     marginTop: "4px",
-//                   }}
-//                 >
-//                   {errors.newPassword}
-//                 </div>
-//               )}
-//             </FormGroup>
-
-//             <FormGroup>
-//               <Label htmlFor="confirmPassword">Confirm New Password</Label>
-//               <PasswordInput>
-//                 <Input
-//                   id="confirmPassword"
-//                   type={showConfirmPassword ? "text" : "password"}
-//                   value={confirmPassword}
-//                   onChange={(e) => setConfirmPassword(e.target.value)}
-//                   placeholder="Confirm your new password"
-//                 />
-//                 <button
-//                   type="button"
-//                   onClick={() => setShowConfirmPassword(!showConfirmPassword)}
-//                 >
-//                   {showConfirmPassword ? (
-//                     <EyeOff size={16} />
-//                   ) : (
-//                     <Eye size={16} />
-//                   )}
-//                 </button>
-//               </PasswordInput>
-//               {errors.confirmPassword && (
-//                 <div
-//                   style={{
-//                     color: "var(--color-error)",
-//                     fontSize: "12px",
-//                     marginTop: "4px",
-//                   }}
-//                 >
-//                   {errors.confirmPassword}
-//                 </div>
-//               )}
-//             </FormGroup>
-
-//             <div style={{ marginTop: "12px" }}>
-//               <button
-//                 type="submit"
-//                 disabled={isSubmitting}
-//                 style={{
-//                   width: "100%",
-//                   padding: "9px 16px",
-//                   background: "var(--color-primary)",
-//                   color: "var(--color-background)",
-//                   border: "none",
-//                   borderRadius: "8px",
-//                   fontWeight: 500,
-//                   fontSize: "14px",
-//                   cursor: "pointer",
-//                   transition: "background-color 0.2s",
-//                   opacity: isSubmitting ? 0.7 : 1,
-//                 }}
-//               >
-//                 {isSubmitting ? "Updating..." : "Update Password"}
-//               </button>
-//             </div>
-//           </Form>
-//         </div>
-//       </div>
-
-//       {/* Divider */}
-//       <div
-//         style={{
-//           height: "1px",
-//           backgroundColor: "var(--color-border)",
-//           margin: "0 0",
-//         }}
-//       />
-
-//       {/* Remove Password Section */}
-//       <div
-//         style={{
-//           display: "flex",
-//           gap: "24px",
-//           padding: "32px 0",
-//           alignItems: "flex-start",
-//         }}
-//       >
-//         {/* Left side - Text content */}
-//         <div
-//           style={{
-//             flex: 1,
-//           }}
-//         >
-//           <h3
-//             style={{
-//               margin: 0,
-//               fontSize: "16px",
-//               fontWeight: "400",
-//               color: "var(--color-foreground)",
-//               marginBottom: "8px",
-//             }}
-//           >
-//             Remove Password
-//           </h3>
-//           <p
-//             style={{
-//               margin: 0,
-//               fontSize: "14px",
-//               color: "var(--color-muted)",
-//               lineHeight: "1.5",
-//             }}
-//           >
-//             {hasAlternativeAuthMethods()
-//               ? "Disable password authentication for your account. You'll still be able to sign in using your connected social accounts or other authentication methods."
-//               : "You must set up alternative sign-in methods (like social connections or phone authentication) before removing your password."}
-//           </p>
-//         </div>
-
-//         {/* Right side - Form */}
-//         <div
-//           style={{
-//             flex: "0 0 450px",
-//             backgroundColor: "var(--color-background)",
-//             border: "1px solid var(--color-border)",
-//             borderRadius: "12px",
-//             padding: "24px",
-//           }}
-//         >
-//           {!hasAlternativeAuthMethods() && (
-//             <div
-//               style={{
-//                 padding: "12px",
-//                 background: "var(--color-warning-background)",
-//                 color: "var(--color-warning-text)",
-//                 borderRadius: "8px",
-//                 marginBottom: "12px",
-//                 fontSize: "14px",
-//               }}
-//             >
-//               You must set up an alternative sign-in method (like Social
-//               connection, phone otp) before you can remove your password.
-//             </div>
-//           )}
-//           <div style={{ marginBottom: "12px" }}>
-//             <p
-//               style={{
-//                 fontSize: "14px",
-//                 color: "var(--color-muted)",
-//                 margin: 0,
-//                 lineHeight: "1.5",
-//               }}
-//             >
-//               Remove password authentication and use only alternative methods
-//               like email OTP, social sign-in, or authenticator apps.
-//             </p>
-//           </div>
-
-//           <FormGroup>
-//             <Label htmlFor="removePasswordInput">Current Password</Label>
-//             <PasswordInput>
-//               <Input
-//                 id="removePasswordInput"
-//                 type={showRemovePassword ? "text" : "password"}
-//                 value={removePasswordInput}
-//                 onChange={(e) => setRemovePasswordInput(e.target.value)}
-//                 placeholder="Enter your current password"
-//               />
-//               <button
-//                 type="button"
-//                 onClick={() => setShowRemovePassword(!showRemovePassword)}
-//               >
-//                 {showRemovePassword ? <EyeOff size={16} /> : <Eye size={16} />}
-//               </button>
-//             </PasswordInput>
-//             {errors.removePassword && (
-//               <div
-//                 style={{
-//                   color: "var(--color-error)",
-//                   fontSize: "12px",
-//                   marginTop: "4px",
-//                 }}
-//               >
-//                 {errors.removePassword}
-//               </div>
-//             )}
-//           </FormGroup>
-
-//           <div style={{ marginTop: "12px" }}>
-//             <button
-//               type="button"
-//               onClick={handleRemovePassword}
-//               disabled={
-//                 isRemoving ||
-//                 !removePasswordInput ||
-//                 !hasAlternativeAuthMethods()
-//               }
-//               style={{
-//                 width: "100%",
-//                 padding: "9px 16px",
-//                 background: "var(--color-error)",
-//                 color: "var(--color-background)",
-//                 border: "none",
-//                 borderRadius: "8px",
-//                 fontWeight: 500,
-//                 fontSize: "14px",
-//                 cursor:
-//                   isRemoving ||
-//                   !removePasswordInput ||
-//                   !hasAlternativeAuthMethods()
-//                     ? "not-allowed"
-//                     : "pointer",
-//                 transition: "background-color 0.2s",
-//                 opacity:
-//                   isRemoving ||
-//                   !removePasswordInput ||
-//                   !hasAlternativeAuthMethods()
-//                     ? 0.6
-//                     : 1,
-//               }}
-//             >
-//               {isRemoving ? "Removing..." : "Remove Password"}
-//             </button>
-//           </div>
-//         </div>
-//       </div>
-//     </div>
-//   );
-// };
-
-// const TwoFactorManagementSection = () => {
-//   const { deployment } = useDeployment();
-//   const { user, setupAuthenticator, verifyAuthenticator, deleteAuthenticator, generateBackupCodes, regenerateBackupCodes } = useUser();
-//   const [isSettingUp, setIsSettingUp] = useState(false);
-//   const [verificationCode, setVerificationCode] = useState("");
-//   const [backupCodes, setBackupCodes] = useState<string[]>([]);
-//   const [copiedCode, setCopiedCode] = useState<string | null>(null);
-//   const [newAuthenticator, setNewAuthenticator] = useState<UserAuthenticator>();
-//   const [error, setError] = useState<string | null>(null);
-//   const [isVerifying, setIsVerifying] = useState(false);
-//   const [isGenerating, setIsGenerating] = useState(false);
-
-//   const authFactorsEnabled = deployment?.auth_settings?.auth_factors_enabled;
-//   const passwordEnabled = deployment?.auth_settings?.password?.enabled;
-
-//   // Don't render if no 2FA methods are enabled and password is disabled
-//   if (!authFactorsEnabled?.authenticator && !authFactorsEnabled?.backup_code && !passwordEnabled) {
-//     return null;
-//   }
-
-//   const handleSetupAuthenticator = async () => {
-//     setIsSettingUp(true);
-//     setError(null);
-//     const response = await setupAuthenticator();
-//     setNewAuthenticator(response);
-//   };
-
-//   const handleVerifyAuthenticator = async () => {
-//     if (verificationCode.length !== 6 || !newAuthenticator?.id) return;
-//
-//     setIsVerifying(true);
-//     setError(null);
-//
-//     const result = await verifyAuthenticator(newAuthenticator.id, [verificationCode]);
-//
-//     if (result.errors?.length) {
-//       setError(result.errors[0].message);
-//       setIsVerifying(false);
-//     } else {
-//       setIsSettingUp(false);
-//       setVerificationCode("");
-//       setNewAuthenticator(undefined);
-//       user.refetch();
-//       setIsVerifying(false);
-//     }
-//   };
-
-//   const handleRemoveAuthenticator = async (id: string) => {
-//     if (confirm("Are you sure you want to remove your authenticator app?")) {
-//       await deleteAuthenticator(id);
-//       user.refetch();
-//     }
-//   };
-
-//   const handleGenerateBackupCodes = async () => {
-//     setIsGenerating(true);
-//     try {
-//       const codes = await generateBackupCodes();
-//       setBackupCodes(codes);
-//       user.refetch();
-//     } catch (error) {
-//       console.error("Failed to generate backup codes:", error);
-//     } finally {
-//       setIsGenerating(false);
-//     }
-//   };
-
-//   const handleRegenerateBackupCodes = async () => {
-//     if (!confirm("Are you sure? Your old backup codes will stop working immediately.")) {
-//       return;
-//     }
-//
-//     setIsGenerating(true);
-//     try {
-//       const codes = await regenerateBackupCodes();
-//       setBackupCodes(codes);
-//       user.refetch();
-//     } catch (error) {
-//       console.error("Failed to regenerate backup codes:", error);
-//     } finally {
-//       setIsGenerating(false);
-//     }
-//   };
-
-//   const handleCopyCode = (code: string) => {
-//     navigator.clipboard.writeText(code);
-//     setCopiedCode(code);
-//     setTimeout(() => setCopiedCode(null), 2000);
-//   };
-
-//   const handleDownloadCodes = () => {
-//     const timestamp = new Date().toISOString().split('T')[0];
-//     const codesText = `Backup Codes\nGenerated: ${new Date().toLocaleString()}\n\n${backupCodes.join('\n')}`;
-//     const blob = new Blob([codesText], { type: "text/plain" });
-//     const url = URL.createObjectURL(blob);
-//     const a = document.createElement("a");
-//     a.href = url;
-//     a.download = `backup-codes-${timestamp}.txt`;
-//     document.body.appendChild(a);
-//     a.click();
-//     document.body.removeChild(a);
-//     URL.revokeObjectURL(url);
-//   };
-
-//   return (
-//     <div>
-//       <SectionHeader title="Two-Factor Authentication" />
-//
-//       <TFA2.TwoFactorContainer>
-//         {/* Authenticator App Section */}
-//         {authFactorsEnabled?.authenticator && (
-//           <TFA2.TwoFactorSection>
-//             <TFA2.SectionHeader>
-//               <TFA2.SectionTitle>Authenticator App</TFA2.SectionTitle>
-//               <TFA2.StatusBadge $active={!!user?.user_authenticator?.id}>
-//                 {user?.user_authenticator?.id ? "Active" : "Not Set Up"}
-//               </TFA2.StatusBadge>
-//             </TFA2.SectionHeader>
-
-//             {!user?.user_authenticator && !isSettingUp && (
-//               <TFA2.EmptyState>
-//                 <TFA2.EmptyStateText>
-//                   Use an authenticator app like Google Authenticator or Authy
-//                 </TFA2.EmptyStateText>
-//                 <TFA2.ActionButton $variant="primary" onClick={handleSetupAuthenticator}>
-//                   Set Up Authenticator
-//                 </TFA2.ActionButton>
-//               </TFA2.EmptyState>
-//             )}
-
-//             {isSettingUp && newAuthenticator && (
-//               <div>
-//                 <TFA2.QRCodeWrapper>
-//                   <QRCodeSVG
-//                     width={160}
-//                     height={160}
-//                     value={newAuthenticator.otp_url || ""}
-//                     level="H"
-//                     includeMargin={false}
-//                   />
-//                 </TFA2.QRCodeWrapper>
-//
-//                 <TFA2.InfoText>Scan with your authenticator app, then enter the code:</TFA2.InfoText>
-//
-//                 <TFA2.CodeInput
-//                   type="text"
-//                   value={verificationCode}
-//                   onChange={(e) => setVerificationCode(e.target.value.replace(/[^0-9]/g, "").slice(0, 6))}
-//                   placeholder="000000"
-//                   maxLength={6}
-//                 />
-//
-//                 {error && (
-//                   <TFA2.InfoText style={{ color: "var(--color-error)" }}>
-//                     {error}
-//                   </TFA2.InfoText>
-//                 )}
-//
-//                 <TFA2.ButtonGroup>
-//                   <TFA2.ActionButton onClick={() => setIsSettingUp(false)}>Cancel</TFA2.ActionButton>
-//                   <TFA2.ActionButton
-//                     $variant="primary"
-//                     onClick={handleVerifyAuthenticator}
-//                     disabled={verificationCode.length !== 6 || isVerifying}
-//                   >
-//                     {isVerifying ? "Verifying..." : "Verify"}
-//                   </TFA2.ActionButton>
-//                 </TFA2.ButtonGroup>
-//               </div>
-//             )}
-
-//             {user?.user_authenticator?.id && (
-//               <div>
-//                 <TFA2.InfoText>
-//                   Added on {new Date(user.user_authenticator?.created_at || '').toLocaleDateString()}
-//                 </TFA2.InfoText>
-//                 <TFA2.ActionButton
-//                   $variant="danger"
-//                   onClick={() => user.user_authenticator?.id && handleRemoveAuthenticator(user.user_authenticator.id)}
-//                 >
-//                   Remove Authenticator
-//                 </TFA2.ActionButton>
-//               </div>
-//             )}
-//           </TFA2.TwoFactorSection>
-//         )}
-
-//         {/* Backup Codes Section */}
-//         {authFactorsEnabled?.backup_code && (
-//           <TFA2.TwoFactorSection>
-//             <TFA2.SectionHeader>
-//               <TFA2.SectionTitle>Backup Codes</TFA2.SectionTitle>
-//               <TFA2.StatusBadge $active={user?.backup_codes_generated || backupCodes.length > 0}>
-//                 {user?.backup_codes_generated || backupCodes.length > 0 ? "Generated" : "Not Generated"}
-//               </TFA2.StatusBadge>
-//             </TFA2.SectionHeader>
-
-//             {!backupCodes.length && !user?.backup_codes_generated && (
-//               <TFA2.EmptyState>
-//                 <TFA2.EmptyStateText>
-//                   Generate single-use codes for emergency access
-//                 </TFA2.EmptyStateText>
-//                 <TFA2.ActionButton
-//                   $variant="primary"
-//                   onClick={handleGenerateBackupCodes}
-//                   disabled={isGenerating}
-//                 >
-//                   {isGenerating ? "Generating..." : "Generate Codes"}
-//                 </TFA2.ActionButton>
-//               </TFA2.EmptyState>
-//             )}
-
-//             {!backupCodes.length && user?.backup_codes_generated && (
-//               <div>
-//                 <TFA2.InfoText>
-//                   Your backup codes have been generated. You can regenerate new ones if needed.
-//                 </TFA2.InfoText>
-//                 <TFA2.ActionButton
-//                   onClick={handleRegenerateBackupCodes}
-//                   disabled={isGenerating}
-//                 >
-//                   {isGenerating ? "Regenerating..." : "Regenerate Codes"}
-//                 </TFA2.ActionButton>
-//               </div>
-//             )}
-
-//             {backupCodes.length > 0 && (
-//               <div>
-//                 <TFA2.BackupCodesGrid>
-//                   {backupCodes.map((code, i) => (
-//                     <TFA2.BackupCode
-//                       key={i}
-//                       onClick={() => handleCopyCode(code)}
-//                       title="Click to copy"
-//                     >
-//                       {copiedCode === code && <Check size={12} style={{ marginRight: "4px" }} />}
-//                       {code}
-//                     </TFA2.BackupCode>
-//                   ))}
-//                 </TFA2.BackupCodesGrid>
-//
-//                 <TFA2.ButtonGroup>
-//                   <TFA2.ActionButton onClick={handleDownloadCodes}>
-//                     <Download size={14} style={{ marginRight: "4px" }} />
-//                     Download
-//                   </TFA2.ActionButton>
-//                   <TFA2.ActionButton
-//                     $variant="danger"
-//                     onClick={handleRegenerateBackupCodes}
-//                     disabled={isGenerating}
-//                   >
-//                     Regenerate
-//                   </TFA2.ActionButton>
-//                 </TFA2.ButtonGroup>
-//               </div>
-//             )}
-//           </TFA2.TwoFactorSection>
-//         )}
-//       </TFA2.TwoFactorContainer>
-//     </div>
-//   );
-// };
-
-// Styled components for expandable sections
 const SecurityManagementSection = () => {
   const { deployment } = useDeployment();
   const {
@@ -2162,12 +1312,12 @@ const SecurityManagementSection = () => {
     // Second code submitted
     setIsVerifying(true);
     setError(null);
-    
+
     const result = await verifyAuthenticator(newAuthenticator.id, [
       verificationCode,
       secondVerificationCode,
     ]);
-    
+
     if (result.errors?.length) {
       setError(result.errors[0].message);
       setIsVerifying(false);
@@ -2665,7 +1815,6 @@ const SecurityManagementSection = () => {
                             height={200}
                             value={newAuthenticator.otp_url || ""}
                             level="H"
-                            includeMargin={false}
                             style={{
                               filter: qrCodeRevealed ? "none" : "blur(8px)",
                               transition: "filter 0.3s ease",
@@ -2738,9 +1887,18 @@ const SecurityManagementSection = () => {
                           : "Scan the QR code with your authenticator app, then enter two consecutive codes:"}
                       </TFA2.InfoText>
 
-                      <div style={{ display: "flex", flexDirection: "column", gap: "8px", marginBottom: "12px" }}>
+                      <div
+                        style={{
+                          display: "flex",
+                          flexDirection: "column",
+                          gap: "8px",
+                          marginBottom: "12px",
+                        }}
+                      >
                         <div>
-                          <TFA2.InfoText style={{ fontSize: "12px", marginBottom: "4px" }}>
+                          <TFA2.InfoText
+                            style={{ fontSize: "12px", marginBottom: "4px" }}
+                          >
                             First code (current):
                           </TFA2.InfoText>
                           <TFA2.CodeInput
@@ -2748,37 +1906,45 @@ const SecurityManagementSection = () => {
                             value={verificationCode}
                             onChange={(e) =>
                               setVerificationCode(
-                                e.target.value.replace(/[^0-9]/g, "").slice(0, 6),
+                                e.target.value
+                                  .replace(/[^0-9]/g, "")
+                                  .slice(0, 6),
                               )
                             }
                             placeholder="000000"
                             maxLength={6}
-                            style={{ 
+                            style={{
                               padding: "6px 8px",
                               fontSize: "14px",
-                              marginBottom: 0
+                              marginBottom: 0,
                             }}
                             disabled={!qrCodeRevealed}
                           />
                         </div>
                         <div>
-                          <TFA2.InfoText style={{ fontSize: "12px", marginBottom: "4px" }}>
-                            Second code (wait {isWaitingForSecondCode ? remainingTime : '30'}s after first):
+                          <TFA2.InfoText
+                            style={{ fontSize: "12px", marginBottom: "4px" }}
+                          >
+                            Second code (wait{" "}
+                            {isWaitingForSecondCode ? remainingTime : "30"}s
+                            after first):
                           </TFA2.InfoText>
                           <TFA2.CodeInput
                             type="text"
                             value={secondVerificationCode}
                             onChange={(e) =>
                               setSecondVerificationCode(
-                                e.target.value.replace(/[^0-9]/g, "").slice(0, 6),
+                                e.target.value
+                                  .replace(/[^0-9]/g, "")
+                                  .slice(0, 6),
                               )
                             }
                             placeholder="000000"
                             maxLength={6}
-                            style={{ 
+                            style={{
                               padding: "6px 8px",
                               fontSize: "14px",
-                              marginBottom: 0
+                              marginBottom: 0,
                             }}
                             disabled={!qrCodeRevealed}
                           />
@@ -2807,16 +1973,18 @@ const SecurityManagementSection = () => {
                           onClick={handleVerifyAuthenticator}
                           disabled={
                             !qrCodeRevealed ||
-                            (!isWaitingForSecondCode && verificationCode.length !== 6) ||
-                            (isWaitingForSecondCode && secondVerificationCode.length !== 6) ||
+                            (!isWaitingForSecondCode &&
+                              verificationCode.length !== 6) ||
+                            (isWaitingForSecondCode &&
+                              secondVerificationCode.length !== 6) ||
                             isVerifying
                           }
                         >
-                          {isVerifying 
-                            ? "Verifying..." 
-                            : isWaitingForSecondCode 
-                            ? "Submit Both Codes" 
-                            : "Continue"}
+                          {isVerifying
+                            ? "Verifying..."
+                            : isWaitingForSecondCode
+                              ? "Submit Both Codes"
+                              : "Continue"}
                         </TFA2.ActionButton>
                       </TFA2.ButtonGroup>
                     </div>
@@ -3260,25 +2428,6 @@ const ProfileDetailsManagementSection = () => {
     }
   };
 
-  // Delete account functionality moved to Danger tab
-  /*
-  const handleDeleteAccount = async (password: string) => {
-    try {
-      await deleteAccount(password);
-      toast("Account deleted successfully", "info");
-      // Redirect to sign-in page or home page
-      setTimeout(() => {
-        window.location.href = "/";
-      }, 1000);
-    } catch (error) {
-      toast(
-        "Failed to delete account. Please check your password and try again.",
-        "error",
-      );
-    }
-  };
-  */
-
   const handleUpdateProfile = async (e: React.FormEvent) => {
     e.preventDefault();
     setIsUpdating(true);
@@ -3319,7 +2468,9 @@ const ProfileDetailsManagementSection = () => {
       return;
     }
 
-    if (window.confirm("Are you absolutely sure? This action cannot be undone.")) {
+    if (
+      window.confirm("Are you absolutely sure? This action cannot be undone.")
+    ) {
       setIsDeleting(true);
       try {
         await deleteAccount(password);
@@ -3436,8 +2587,17 @@ const ProfileDetailsManagementSection = () => {
             />
           </div>
 
-          <div style={{ textAlign: "center", marginTop: "20px", width: "240px" }}>
-            <div style={{ display: "flex", flexDirection: "column", gap: "8px", marginBottom: "12px" }}>
+          <div
+            style={{ textAlign: "center", marginTop: "20px", width: "240px" }}
+          >
+            <div
+              style={{
+                display: "flex",
+                flexDirection: "column",
+                gap: "8px",
+                marginBottom: "12px",
+              }}
+            >
               <Button
                 onClick={() => fileInputRef.current?.click()}
                 style={{
@@ -3477,7 +2637,6 @@ const ProfileDetailsManagementSection = () => {
               <div>JPG, PNG, GIF • Max 2MB</div>
             </div>
           </div>
-
         </div>
 
         {/* Right Panel - Form Fields */}
@@ -3492,7 +2651,11 @@ const ProfileDetailsManagementSection = () => {
                   {deployment?.auth_settings?.first_name?.enabled && (
                     <FormGroup style={{ flex: 1 }}>
                       <Label
-                        style={{ fontSize: "13px", fontWeight: 500, color: "#374151" }}
+                        style={{
+                          fontSize: "13px",
+                          fontWeight: 500,
+                          color: "#374151",
+                        }}
                       >
                         First Name
                       </Label>
@@ -3528,7 +2691,11 @@ const ProfileDetailsManagementSection = () => {
                   {deployment?.auth_settings?.last_name?.enabled && (
                     <FormGroup style={{ flex: 1 }}>
                       <Label
-                        style={{ fontSize: "13px", fontWeight: 500, color: "#374151" }}
+                        style={{
+                          fontSize: "13px",
+                          fontWeight: 500,
+                          color: "#374151",
+                        }}
                       >
                         Last Name
                       </Label>
@@ -3565,7 +2732,11 @@ const ProfileDetailsManagementSection = () => {
               {deployment?.auth_settings?.username?.enabled && (
                 <FormGroup>
                   <Label
-                    style={{ fontSize: "13px", fontWeight: 500, color: "#374151" }}
+                    style={{
+                      fontSize: "13px",
+                      fontWeight: 500,
+                      color: "#374151",
+                    }}
                   >
                     Username
                   </Label>
@@ -3597,7 +2768,6 @@ const ProfileDetailsManagementSection = () => {
                 </FormGroup>
               )}
 
-
               {/* Button Group */}
               {(deployment?.auth_settings?.first_name?.enabled ||
                 deployment?.auth_settings?.last_name?.enabled ||
@@ -3628,7 +2798,13 @@ const ProfileDetailsManagementSection = () => {
               )}
 
               {/* Delete Section */}
-              <div style={{ marginTop: "40px", paddingTop: "24px", borderTop: "1px solid #f3f4f6" }}>
+              <div
+                style={{
+                  marginTop: "40px",
+                  paddingTop: "24px",
+                  borderTop: "1px solid #f3f4f6",
+                }}
+              >
                 <button
                   onClick={() => {
                     if (!showDeleteConfirm) {
@@ -3650,10 +2826,16 @@ const ProfileDetailsManagementSection = () => {
                 >
                   {showDeleteConfirm ? "Cancel" : "Delete account"}
                 </button>
-                
+
                 {showDeleteConfirm && (
                   <div style={{ marginTop: "16px", maxWidth: "300px" }}>
-                    <p style={{ fontSize: "12px", color: "#6b7280", margin: "0 0 12px 0" }}>
+                    <p
+                      style={{
+                        fontSize: "12px",
+                        color: "#6b7280",
+                        margin: "0 0 12px 0",
+                      }}
+                    >
                       This action cannot be undone.
                     </p>
                     <div style={{ position: "relative", marginBottom: "12px" }}>
@@ -3685,7 +2867,11 @@ const ProfileDetailsManagementSection = () => {
                           color: "#6b7280",
                         }}
                       >
-                        {showPassword ? <EyeOff size={14} /> : <Eye size={14} />}
+                        {showPassword ? (
+                          <EyeOff size={14} />
+                        ) : (
+                          <Eye size={14} />
+                        )}
                       </button>
                     </div>
                     <Button
@@ -3714,157 +2900,5 @@ const ProfileDetailsManagementSection = () => {
     </>
   );
 };
-
-// Removed DeleteAccountAccordion - functionality moved to Danger tab
-/*
-const DeleteAccountAccordion = ({
-  handleDeleteAccount,
-}: {
-  handleDeleteAccount: (password: string) => void;
-}) => {
-  const [isOpen, setIsOpen] = useState(false);
-  const [password, setPassword] = useState("");
-  const [showPassword, setShowPassword] = useState(false);
-  const [isDeleting, setIsDeleting] = useState(false);
-
-  const onDeleteClick = async () => {
-    if (!password) {
-      alert("Please enter your password to confirm account deletion.");
-      return;
-    }
-
-    if (
-      window.confirm("Are you absolutely sure? This action cannot be undone.")
-    ) {
-      setIsDeleting(true);
-      try {
-        await handleDeleteAccount(password);
-      } finally {
-        setIsDeleting(false);
-        setPassword("");
-      }
-    }
-  };
-
-  return (
-    <div
-      style={{
-        paddingTop: "16px",
-      }}
-    >
-      <button
-        type="button"
-        onClick={() => setIsOpen(!isOpen)}
-        style={{
-          display: "flex",
-          alignItems: "center",
-          justifyContent: "space-between",
-          width: "100%",
-          padding: "8px 0",
-          background: "transparent",
-          border: "none",
-          cursor: "pointer",
-          textAlign: "left",
-          color: "var(--color-error)",
-          fontWeight: 500,
-          fontSize: "14px",
-        }}
-      >
-        <div style={{ display: "flex", alignItems: "center", gap: "8px" }}>
-          <AlertTriangle size={16} />
-          Delete your account
-        </div>
-        <div style={{ transition: "transform 0.2s ease" }}>
-          {isOpen ? <ChevronUp size={16} /> : <ChevronDown size={16} />}
-        </div>
-      </button>
-
-      {isOpen && (
-        <div
-          style={{
-            padding: "16px",
-            background: "var(--color-error-background)",
-            borderRadius: "8px",
-            marginTop: "8px",
-          }}
-        >
-          <p
-            style={{
-              fontSize: "14px",
-              color: "var(--color-secondary-text)",
-              margin: "0 0 16px 0",
-              lineHeight: "1.5",
-            }}
-          >
-            Permanently remove your account from the platform. This action is
-            not reversible, so please continue with caution.
-          </p>
-
-          <div style={{ marginBottom: "12px" }}>
-            <Label
-              htmlFor="deletePassword"
-              style={{
-                fontSize: "14px",
-                marginBottom: "8px",
-                display: "block",
-              }}
-            >
-              Enter your password to confirm
-            </Label>
-            <div style={{ position: "relative" }}>
-              <Input
-                id="deletePassword"
-                type={showPassword ? "text" : "password"}
-                value={password}
-                onChange={(e) => setPassword(e.target.value)}
-                placeholder="Enter your password"
-                style={{
-                  width: "100%",
-                  paddingRight: "40px",
-                }}
-              />
-              <button
-                type="button"
-                onClick={() => setShowPassword(!showPassword)}
-                style={{
-                  position: "absolute",
-                  right: "8px",
-                  top: "50%",
-                  transform: "translateY(-50%)",
-                  background: "none",
-                  border: "none",
-                  cursor: "pointer",
-                  color: "var(--color-muted)",
-                }}
-              >
-                {showPassword ? <EyeOff size={16} /> : <Eye size={16} />}
-              </button>
-            </div>
-          </div>
-
-          <button
-            type="button"
-            onClick={onDeleteClick}
-            disabled={isDeleting || !password}
-            style={{
-              padding: "8px 16px",
-              backgroundColor: "var(--color-error)",
-              border: "none",
-              borderRadius: "6px",
-              fontSize: "14px",
-              fontWeight: 500,
-              color: "var(--color-background)",
-              cursor: isDeleting || !password ? "not-allowed" : "pointer",
-              opacity: isDeleting || !password ? 0.6 : 1,
-            }}
-          >
-            {isDeleting ? "Deleting..." : "Delete Account"}
-          </button>
-        </div>
-      )}
-    </div>
-  );
-};
-*/
 
 export default ManageAccount;

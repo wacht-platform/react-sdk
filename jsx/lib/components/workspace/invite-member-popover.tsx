@@ -4,7 +4,7 @@ import { Input } from "@/components/utility/input";
 import { FormGroup, Label } from "../utility/form";
 import { Button, Spinner } from "../utility";
 import { ComboBox, ComboBoxOption } from "../utility/combo-box";
-import { WorkspaceRole } from "@/types/organization";
+import { WorkspaceRole } from "@/types";
 
 const PopoverContainer = styled.div`
   position: absolute;

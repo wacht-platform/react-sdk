@@ -14,8 +14,8 @@ import { SocialAuthButtons } from "./social-buttons";
 import { NavigationLink } from "../utility/navigation";
 import { Input } from "../utility/input";
 import { PhoneNumberInput } from "../utility/phone";
-import type { SignUpParams } from "@/types/auth";
-import type { DeploymentSocialConnection } from "@/types/deployment";
+import type { SignUpParams } from "@/types";
+import type { DeploymentSocialConnection } from "@/types";
 import { AuthFormImage } from "./auth-image";
 
 const breakpoints = {

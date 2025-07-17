@@ -2,9 +2,9 @@ import { responseMapper } from "../utils/response-mapper";
 import { useClient } from "./use-client";
 import useSWR from "swr";
 import { useCallback } from "react";
-import { ApiResult } from "@/types/client";
-import { Session, SessionToken } from "@/types/session";
-import { Client } from "@/types/client";
+import { ApiResult } from "@/types";
+import { Session, SessionToken } from "@/types";
+import { Client } from "@/types";
 import { useDeployment } from "./use-deployment";
 
 type UseSessionReturnType =

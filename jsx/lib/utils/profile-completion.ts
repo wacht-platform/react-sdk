@@ -1,4 +1,4 @@
-import { Session } from "@/types/session";
+import { Session } from "@/types";
 
 // Utility functions for checking and redirecting
 export function hasIncompleteProfile(session: Session): boolean {

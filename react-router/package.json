@@ -1,6 +1,6 @@
 {
   "name": "@snipextt/wacht-react-router",
-  "version": "0.0.1-alpha.1",
+  "version": "0.0.1-alpha.2",
   "description": "React Router adapter for Wacht authentication library",
   "type": "module",
   "main": "dist/index.cjs.js",
@@ -12,7 +12,12 @@
   "scripts": {
     "build": "tsc && vite build"
   },
-  "keywords": ["wacht", "react-router", "authentication", "platform-adapter"],
+  "keywords": [
+    "wacht",
+    "react-router",
+    "authentication",
+    "platform-adapter"
+  ],
   "author": "Saurav Singh",
   "license": "MIT",
   "devDependencies": {

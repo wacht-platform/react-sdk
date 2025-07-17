@@ -1,11 +1,11 @@
-import { Client } from "@/types/client";
+import { Client } from "@/types";
 import { useClient } from "./use-client";
 import useSWR from "swr";
 import { responseMapper } from "@/utils/response-mapper";
 import {
   WorkspaceMembership,
   WorkspaceWithOrganization,
-} from "@/types/organization";
+} from "@/types";
 import { useCallback, useMemo } from "react";
 import { useSession } from "./use-session";
 

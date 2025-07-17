@@ -1,8 +1,7 @@
 "use client";
 
-import type { ClinetReponse } from "@/types/client";
-import type { Deployment, DeploymentContextType } from "@/types/deployment";
-import type { PlatformAdapter } from "@/types/platform-adapter";
+import type { ClinetReponse, Deployment } from "@/types";
+import type { DeploymentContextType, PlatformAdapter } from "@/types";
 import { useState, useEffect, useMemo, createContext, useRef } from "react";
 import type { ReactNode } from "react";
 

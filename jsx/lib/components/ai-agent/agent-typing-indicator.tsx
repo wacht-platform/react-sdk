@@ -4,24 +4,24 @@ import { Bot } from "lucide-react";
 const bounce = keyframes`
   0%, 80%, 100% {
     transform: scale(1);
-    opacity: 0.5;
+    opacity: 0.4;
   }
   40% {
-    transform: scale(1.3);
+    transform: scale(1.2);
     opacity: 1;
   }
 `;
 
 const TypingContainer = styled.div`
   display: flex;
-  gap: 12px;
+  gap: 8px;
   align-items: flex-start;
-  animation: fadeIn 0.3s ease-in;
+  animation: fadeIn 0.2s ease-out;
 
   @keyframes fadeIn {
     from {
       opacity: 0;
-      transform: translateY(10px);
+      transform: translateY(4px);
     }
     to {
       opacity: 1;
@@ -31,40 +31,41 @@ const TypingContainer = styled.div`
 `;
 
 const AvatarContainer = styled.div`
-  width: 36px;
-  height: 36px;
+  width: 24px;
+  height: 24px;
   border-radius: 50%;
   display: flex;
   align-items: center;
   justify-content: center;
   flex-shrink: 0;
-  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+  background: linear-gradient(135deg, var(--color-primary, #6366f1) 0%, #8b5cf6 100%);
   color: white;
 `;
 
 const TypingBubble = styled.div`
   display: flex;
   align-items: center;
-  gap: 4px;
-  padding: 12px 16px;
-  border-radius: 12px;
-  background: #f3f4f6;
-  border: 1px solid #e5e7eb;
+  gap: 3px;
+  padding: 6px 10px;
+  border-radius: 8px;
+  background: var(--color-background-hover, #f8fafb);
+  border: 1px solid var(--color-border, #e5e7eb);
+  display: inline-flex;
 `;
 
 const Dot = styled.div<{ delay: number }>`
-  width: 8px;
-  height: 8px;
+  width: 4px;
+  height: 4px;
   border-radius: 50%;
-  background: #6b7280;
+  background: var(--color-muted, #64748b);
   animation: ${bounce} 1.4s infinite ease-in-out;
   animation-delay: ${(props) => props.delay}s;
 `;
 
 const TypingLabel = styled.span`
-  font-size: 13px;
-  color: #6b7280;
-  margin-right: 8px;
+  font-size: 10px;
+  color: var(--color-secondary-text, #6b7280);
+  margin-right: 6px;
 `;
 
 export interface AgentTypingIndicatorProps {
@@ -79,7 +80,7 @@ export function AgentTypingIndicator({
   return (
     <TypingContainer>
       <AvatarContainer>
-        <Bot size={20} />
+        <Bot size={12} strokeWidth={2} />
       </AvatarContainer>
       <TypingBubble theme={theme}>
         {showLabel && (

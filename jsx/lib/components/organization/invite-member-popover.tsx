@@ -5,7 +5,7 @@ import { FormGroup, Label } from "../utility/form";
 import { useActiveOrganization } from "@/hooks/use-organization";
 import { Button, Spinner } from "../utility";
 import { ComboBox, ComboBoxOption } from "../utility/combo-box";
-import { OrganizationRole } from "@/types/organization";
+import { OrganizationRole } from "@/types";
 
 const PopoverContainer = styled.div`
   position: absolute;

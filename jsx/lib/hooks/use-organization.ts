@@ -1,6 +1,6 @@
 import useSWR from "swr";
 import { useClient } from "./use-client";
-import type { Client } from "@/types/client";
+import type { Client } from "@/types";
 import type {
   NewDomain,
   NewOrgnization,
@@ -13,7 +13,7 @@ import type {
   OrganizationRole,
   OrganizationUpdate,
   RoleCreate,
-} from "@/types/organization";
+} from "@/types";
 import { responseMapper } from "@/utils/response-mapper";
 import { useSession } from "./use-session";
 import { useCallback, useMemo } from "react";

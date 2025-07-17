@@ -8,7 +8,7 @@ import {
 } from "@/hooks/use-signin";
 import { SocialAuthButtons } from "@/components/auth/social-buttons";
 import { useSignInContext } from "@/context/signin-provider";
-import { DeploymentSocialConnection } from "@/types/deployment";
+import { DeploymentSocialConnection } from "@/types";
 
 const EmailButton = styled.button`
   width: 100%;

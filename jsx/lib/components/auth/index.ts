@@ -19,5 +19,5 @@ export {
 export type {
   ProfileCompletionData,
   ProfileCompletionProps,
-} from "../../types/profile";
+} from "@snipextt/wacht-types";
 export { useProfileCompletion } from "../../hooks/use-profile-completion";

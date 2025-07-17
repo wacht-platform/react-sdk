@@ -8,7 +8,7 @@ import { LinkedInIcon } from "../icons/linkedin";
 import { GitLabIcon } from "../icons/gitlab";
 import { AppleIcon } from "../icons/apple";
 import { DiscordIcon } from "../icons/discord";
-import { DeploymentSocialConnection } from "@/types/deployment";
+import { DeploymentSocialConnection } from "@/types";
 
 const socialAuthProviders = {
   google_oauth: {

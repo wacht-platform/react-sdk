@@ -3,7 +3,7 @@ import styled from "styled-components";
 import { Input } from "@/components/utility/input";
 import { FormGroup, Label } from "../utility/form";
 import { Spinner } from "../utility";
-import { OrganizationRole } from "@/types/organization";
+import { OrganizationRole } from "@/types";
 import { useDeployment } from "@/hooks/use-deployment";
 import { ComboBoxMulti } from "../utility/combo-box";
 import { useActiveOrganization } from "@/hooks/use-organization";

@@ -2,7 +2,7 @@ import React, { useState, useCallback, useEffect } from "react";
 import styled from "styled-components";
 import { Building, Settings, Users, Mail, Trash2, Send, Check, Shield } from "lucide-react";
 import { useActiveWorkspace } from "@/hooks/use-workspace";
-import type { WorkspaceMembership, WorkspaceRole } from "@/types/organization";
+import type { WorkspaceMembership, WorkspaceRole } from "@/types";
 import { InviteMemberPopover } from "./invite-member-popover";
 import {
   Button,

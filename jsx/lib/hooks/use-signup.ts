@@ -1,10 +1,10 @@
-import { ApiResult, Client } from "@/types/client";
-import { ErrorInterface } from "@/types/client";
+import { ApiResult, Client } from "@/types";
+import { ErrorInterface } from "@/types";
 import { responseMapper } from "../utils/response-mapper";
 import { useClient } from "./use-client";
 import { useState } from "react";
-import { Session, SignupAttempt } from "@/types/session";
-import { SignUpParams } from "@/types/auth";
+import { Session, SignupAttempt } from "@/types";
+import { SignUpParams } from "@/types";
 
 export type SignUpFunction = {
   create: (params: SignUpParams) => Promise<ApiResult<unknown, ErrorInterface>>;

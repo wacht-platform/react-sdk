@@ -1,41 +1,44 @@
 import React, { useState, useRef, useEffect } from "react";
 import styled from "styled-components";
-import { Send, Bot, Loader2, WifiOff, Wifi } from "lucide-react";
+import { Send, Bot, Loader2 } from "lucide-react";
 import { useAIAgent } from "../../hooks/use-ai-agent";
 import { AgentMessage } from "./agent-message";
 import { AgentTypingIndicator } from "./agent-typing-indicator";
 import { CONNECTION_STATES } from "../../constants/ai-agent";
+import { DefaultStylesProvider } from "../utility/root";
 
 const ChatContainer = styled.div`
   display: flex;
   flex-direction: column;
   height: 100%;
-  background: #ffffff;
-  border-radius: 12px;
-  box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1), 0 2px 4px -1px rgba(0, 0, 0, 0.06);
+  max-height: 600px;
+  background: var(--color-background, #ffffff);
+  border-radius: var(--radius-lg, 12px);
+  box-shadow: 0 4px 12px var(--color-shadow, rgba(0, 0, 0, 0.08));
   overflow: hidden;
+  border: 1px solid var(--color-border, #e5e7eb);
 `;
 
 const ChatHeader = styled.div`
   display: flex;
   align-items: center;
   justify-content: space-between;
-  padding: 16px 20px;
-  background: #f9fafb;
-  border-bottom: 1px solid #e5e7eb;
+  padding: 12px 16px;
+  background: var(--color-background, #ffffff);
+  border-bottom: 1px solid var(--color-border, #e5e7eb);
 `;
 
 const AgentInfo = styled.div`
   display: flex;
   align-items: center;
-  gap: 12px;
+  gap: 10px;
 `;
 
 const AgentAvatar = styled.div`
-  width: 40px;
-  height: 40px;
+  width: 32px;
+  height: 32px;
   border-radius: 50%;
-  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+  background: linear-gradient(135deg, var(--color-primary, #6366f1) 0%, #8b5cf6 100%);
   display: flex;
   align-items: center;
   justify-content: center;
@@ -49,27 +52,69 @@ const AgentDetails = styled.div`
 
 const AgentName = styled.h3`
   margin: 0;
-  font-size: 16px;
+  font-size: var(--font-md, 16px);
   font-weight: 600;
-  color: #111827;
+  color: var(--color-foreground, #111827);
+  letter-spacing: -0.01em;
 `;
 
-const ConnectionStatus = styled.div<{ $connected: boolean }>`
+const ConnectionIndicator = styled.div<{ $status: string }>`
+  width: 6px;
+  height: 6px;
+  border-radius: 50%;
+  background-color: ${props => {
+    switch(props.$status) {
+      case 'connected': return '#10b981';
+      case 'connecting': return '#f59e0b';
+      case 'error': return '#ef4444';
+      default: return '#6b7280';
+    }
+  }};
+  animation: ${props => props.$status === 'connecting' ? 'pulse 1.5s ease-in-out infinite' : 'none'};
+  
+  @keyframes pulse {
+    0%, 100% { 
+      opacity: 1;
+      transform: scale(1);
+    }
+    50% { 
+      opacity: 0.5;
+      transform: scale(0.8);
+    }
+  }
+`;
+
+const ConnectionStatus = styled.div`
   display: flex;
   align-items: center;
-  gap: 6px;
-  font-size: 12px;
-  color: ${props => props.$connected ? "#10b981" : "#ef4444"};
+  gap: 4px;
+  font-size: 10px;
+  color: #6b7280;
+  cursor: help;
 `;
 
 const MessagesContainer = styled.div`
   flex: 1;
   overflow-y: auto;
-  padding: 20px;
+  padding: 12px 16px;
   display: flex;
   flex-direction: column;
-  gap: 16px;
+  gap: 12px;
   scroll-behavior: smooth;
+  background: var(--color-background, #ffffff);
+  
+  &::-webkit-scrollbar {
+    width: 4px;
+  }
+  
+  &::-webkit-scrollbar-track {
+    background: transparent;
+  }
+  
+  &::-webkit-scrollbar-thumb {
+    background: var(--color-scrollbar-thumb, #d1d5db);
+    border-radius: 2px;
+  }
 `;
 
 const EmptyState = styled.div`
@@ -79,60 +124,76 @@ const EmptyState = styled.div`
   align-items: center;
   justify-content: center;
   text-align: center;
-  color: #6b7280;
-  gap: 12px;
+  color: var(--color-secondary-text, #6b7280);
+  gap: 8px;
+  
+  p {
+    margin: 0;
+    font-size: 13px;
+    line-height: 1.4;
+  }
 `;
 
 const InputForm = styled.form`
   display: flex;
-  gap: 12px;
-  padding: 16px 20px;
-  background: #f9fafb;
-  border-top: 1px solid #e5e7eb;
+  gap: 8px;
+  padding: 12px 16px;
+  background: var(--color-background, #ffffff);
+  border-top: 1px solid var(--color-border, #e5e7eb);
 `;
 
 const MessageInput = styled.input`
   flex: 1;
-  padding: 12px 16px;
-  border: 1px solid #e5e7eb;
-  border-radius: 8px;
-  font-size: 14px;
-  background: #ffffff;
-  color: #111827;
+  padding: 8px 12px;
+  border: 1px solid var(--color-input-border, #e2e8f0);
+  border-radius: 6px;
+  font-size: 13px;
+  background: var(--color-input-background, #ffffff);
+  color: var(--color-foreground, #111827);
   outline: none;
   transition: border-color 0.2s;
+  height: 36px;
 
   &:focus {
-    border-color: #667eea;
+    border-color: var(--color-input-focus-border, #a5b4fc);
   }
 
   &::placeholder {
-    color: #9ca3af;
+    color: var(--color-muted, #64748b);
+  }
+  
+  &:disabled {
+    background: var(--color-background-hover, #f8fafb);
+    cursor: not-allowed;
+    opacity: 0.6;
   }
 `;
 
 const SendButton = styled.button<{ $disabled: boolean }>`
-  padding: 12px 16px;
+  padding: 0 16px;
   border: none;
-  border-radius: 8px;
+  border-radius: 6px;
   background: ${props => props.$disabled 
-    ? "#e5e7eb"
-    : "#667eea"};
+    ? "var(--color-border, #e5e7eb)"
+    : "var(--color-primary, #6366f1)"};
   color: white;
   font-weight: 500;
+  font-size: 13px;
   cursor: ${props => props.$disabled ? "not-allowed" : "pointer"};
   display: flex;
   align-items: center;
-  gap: 8px;
+  gap: 6px;
   transition: all 0.2s;
+  height: 36px;
+  min-width: 72px;
+  justify-content: center;
 
   &:hover:not(:disabled) {
-    background: #5a67d8;
-    transform: translateY(-1px);
+    background: var(--color-primary-hover, #4f46e5);
   }
 
   &:active:not(:disabled) {
-    transform: translateY(0);
+    transform: scale(0.98);
   }
 `;
 
@@ -187,33 +248,35 @@ export function AIAgentChat({
   const isConnected = connectionState.status === CONNECTION_STATES.CONNECTED;
   const isConnecting = connectionState.status === CONNECTION_STATES.CONNECTING;
   const canSend = isConnected && inputValue.trim().length > 0;
-
-  // Connection status text
-  const getConnectionStatusText = () => {
-    switch (connectionState.status) {
-      case CONNECTION_STATES.CONNECTING:
-        return "Connecting...";
-      case CONNECTION_STATES.CONNECTED:
-        return "Connected";
-      default:
-        return "Disconnected";
-    }
-  };
+  
+  // Show status indicator only when not connected
+  const showStatusIndicator = connectionState.status !== CONNECTION_STATES.CONNECTED;
 
   return (
-    <ChatContainer className={className} theme={theme}>
-      {/* Header */}
-      <ChatHeader>
+    <DefaultStylesProvider>
+      <ChatContainer className={className} theme={theme}>
+        {/* Header */}
+        <ChatHeader>
         <AgentInfo>
           <AgentAvatar>
-            <Bot size={24} />
+            <Bot size={18} />
           </AgentAvatar>
           <AgentDetails>
             <AgentName>{agentName}</AgentName>
-            <ConnectionStatus $connected={isConnected}>
-              {isConnected ? <Wifi size={12} /> : <WifiOff size={12} />}
-              {getConnectionStatusText()}
-            </ConnectionStatus>
+            {showStatusIndicator && (
+              <ConnectionStatus 
+                title={
+                  connectionState.status === CONNECTION_STATES.CONNECTING ? "Establishing connection to agent..." :
+                  connectionState.status === CONNECTION_STATES.ERROR ? `Connection error: ${connectionState.error || 'Unknown error'}` :
+                  "Agent is offline"
+                }
+              >
+                <ConnectionIndicator $status={connectionState.status} />
+                {connectionState.status === CONNECTION_STATES.CONNECTING && "Connecting"}
+                {connectionState.status === CONNECTION_STATES.ERROR && "Error"}
+                {connectionState.status === CONNECTION_STATES.DISCONNECTED && "Offline"}
+              </ConnectionStatus>
+            )}
           </AgentDetails>
         </AgentInfo>
       </ChatHeader>
@@ -222,7 +285,7 @@ export function AIAgentChat({
       <MessagesContainer>
         {messages.length === 0 ? (
           <EmptyState>
-            <Bot size={48} strokeWidth={1.5} />
+            <Bot size={32} strokeWidth={1.5} />
             <p>{emptyStateMessage}</p>
           </EmptyState>
         ) : (
@@ -258,11 +321,12 @@ export function AIAgentChat({
           {isConnecting ? (
             <Loader2 size={18} className="animate-spin" />
           ) : (
-            <Send size={18} />
+            <Send size={16} />
           )}
           Send
         </SendButton>
       </InputForm>
     </ChatContainer>
+    </DefaultStylesProvider>
   );
 }

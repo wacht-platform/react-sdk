@@ -1,6 +1,6 @@
 {
   "name": "@snipextt/wacht-nextjs",
-  "version": "0.0.1-alpha.34",
+  "version": "0.0.1-alpha.35",
   "description": "Next.js adapter for Wacht authentication library",
   "type": "module",
   "main": "dist/index.cjs.js",
@@ -24,7 +24,12 @@
   "scripts": {
     "build": "tsc && vite build"
   },
-  "keywords": ["wacht", "nextjs", "authentication", "platform-adapter"],
+  "keywords": [
+    "wacht",
+    "nextjs",
+    "authentication",
+    "platform-adapter"
+  ],
   "author": "Saurav Singh",
   "license": "MIT",
   "devDependencies": {
@@ -35,8 +40,8 @@
     "vite-plugin-dts": "^4.4.0"
   },
   "peerDependencies": {
-		"react": "catalog:",
-   	"react-dom": "catalog:",
+    "react": "catalog:",
+    "react-dom": "catalog:",
     "next": "catalog:",
     "@snipextt/wacht": "workspace:*"
   },

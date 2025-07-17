@@ -1,7 +1,7 @@
 import { useState } from "react";
 import { useClient } from "./use-client";
 import { responseMapper } from "../utils/response-mapper";
-import { type ApiResult, type ErrorInterface, ErrorCode } from "@/types/client";
+import { type ApiResult, type ErrorInterface, ErrorCode } from "@/types";
 
 export interface WaitlistParams {
 	first_name: string;

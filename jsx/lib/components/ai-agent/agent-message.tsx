@@ -12,16 +12,18 @@ import {
 import type { AIAgentMessage as AgentMessageType } from "../../hooks/use-ai-agent";
 import { MESSAGE_TYPES } from "../../constants/ai-agent";
 
-const MessageContainer = styled.div`
+const MessageContainer = styled.div<{ $hasError?: boolean }>`
   display: flex;
-  gap: 12px;
+  gap: 8px;
   align-items: flex-start;
-  animation: fadeIn 0.3s ease-in;
+  animation: fadeIn 0.2s ease-out;
+  opacity: ${props => props.$hasError ? 0.7 : 1};
+  transition: opacity 0.3s ease;
 
   @keyframes fadeIn {
     from {
       opacity: 0;
-      transform: translateY(10px);
+      transform: translateY(4px);
     }
     to {
       opacity: 1;
@@ -31,8 +33,8 @@ const MessageContainer = styled.div`
 `;
 
 const Avatar = styled.div<{ $type: string }>`
-  width: 36px;
-  height: 36px;
+  width: 24px;
+  height: 24px;
   border-radius: 50%;
   display: flex;
   align-items: center;
@@ -46,27 +48,29 @@ const Content = styled.div`
   flex: 1;
   display: flex;
   flex-direction: column;
-  gap: 8px;
+  gap: 2px;
 `;
 
 const Header = styled.div`
   display: flex;
   align-items: center;
-  gap: 8px;
-  font-size: 13px;
-  color: "#6b7280";
+  gap: 6px;
+  font-size: 10px;
+  color: #6b7280;
+  opacity: 0.7;
 `;
 
 const MessageBubble = styled.div<{ $type: string }>`
-  padding: 12px 16px;
-  border-radius: 12px;
-  font-size: 14px;
-  line-height: 1.5;
+  padding: 6px 10px;
+  border-radius: 8px;
+  font-size: 13px;
+  line-height: 1.4;
   white-space: pre-wrap;
   word-break: break-word;
   background: ${(props) => getMessageBackground(props.$type, props.theme)};
   color: ${(props) => getMessageColor(props.$type, props.theme)};
   border: 1px solid ${(props) => getMessageBorder(props.$type, props.theme)};
+  display: inline-block;
 `;
 
 const MetadataContainer = styled.div`
@@ -88,7 +92,7 @@ const MetadataBadge = styled.div<{ $type: string }>`
 `;
 
 const Timestamp = styled.time`
-  font-size: 11px;
+  font-size: 10px;
   color: #9ca3af;
 `;
 
@@ -99,6 +103,12 @@ function getAvatarBackground(type: string, theme: any) {
     [MESSAGE_TYPES.AGENT]: "linear-gradient(135deg, #667eea 0%, #764ba2 100%)",
     [MESSAGE_TYPES.SYSTEM]: theme?.systemAvatarBg || "#f3f4f6",
     [MESSAGE_TYPES.ERROR]: "#fee",
+    [MESSAGE_TYPES.PLANNING]: "#e0f2fe",
+    [MESSAGE_TYPES.EXECUTING]: "#fef3c7",
+    [MESSAGE_TYPES.COMPLETED]: "#d1fae5",
+    [MESSAGE_TYPES.REASONING]: "#f3e8ff",
+    [MESSAGE_TYPES.VALIDATING]: "#e9d5ff",
+    [MESSAGE_TYPES.CONTEXT]: "#dbeafe",
   };
   return styles[type as keyof typeof styles] || "#f3f4f6";
 }
@@ -109,6 +119,12 @@ function getAvatarColor(type: string, theme: any) {
     [MESSAGE_TYPES.AGENT]: "white",
     [MESSAGE_TYPES.SYSTEM]: theme?.systemAvatarColor || "#6b7280",
     [MESSAGE_TYPES.ERROR]: "#c33",
+    [MESSAGE_TYPES.PLANNING]: "#0369a1",
+    [MESSAGE_TYPES.EXECUTING]: "#92400e",
+    [MESSAGE_TYPES.COMPLETED]: "#065f46",
+    [MESSAGE_TYPES.REASONING]: "#7c3aed",
+    [MESSAGE_TYPES.VALIDATING]: "#6b21a8",
+    [MESSAGE_TYPES.CONTEXT]: "#1e40af",
   };
   return styles[type as keyof typeof styles] || "#6b7280";
 }
@@ -117,8 +133,14 @@ function getMessageBackground(type: string, theme: any) {
   const styles = {
     [MESSAGE_TYPES.USER]: theme?.userMessageBg || "#e0e7ff",
     [MESSAGE_TYPES.AGENT]: theme?.agentMessageBg || "#f3f4f6",
-    [MESSAGE_TYPES.SYSTEM]: theme?.systemMessageBg || "#fef3c7",
+    [MESSAGE_TYPES.SYSTEM]: theme?.systemMessageBg || "#f0f9ff",
     [MESSAGE_TYPES.ERROR]: "#fee",
+    [MESSAGE_TYPES.PLANNING]: "#e0f2fe",
+    [MESSAGE_TYPES.EXECUTING]: "#fef3c7",
+    [MESSAGE_TYPES.COMPLETED]: "#d1fae5",
+    [MESSAGE_TYPES.REASONING]: "#f3e8ff",
+    [MESSAGE_TYPES.VALIDATING]: "#e9d5ff",
+    [MESSAGE_TYPES.CONTEXT]: "#dbeafe",
   };
   return styles[type as keyof typeof styles] || "#f3f4f6";
 }
@@ -127,8 +149,14 @@ function getMessageColor(type: string, theme: any) {
   const styles = {
     [MESSAGE_TYPES.USER]: theme?.userMessageColor || "#1e1b4b",
     [MESSAGE_TYPES.AGENT]: theme?.agentMessageColor || "#111827",
-    [MESSAGE_TYPES.SYSTEM]: theme?.systemMessageColor || "#78350f",
+    [MESSAGE_TYPES.SYSTEM]: theme?.systemMessageColor || "#0369a1",
     [MESSAGE_TYPES.ERROR]: "#c33",
+    [MESSAGE_TYPES.PLANNING]: "#0369a1",
+    [MESSAGE_TYPES.EXECUTING]: "#92400e",
+    [MESSAGE_TYPES.COMPLETED]: "#065f46",
+    [MESSAGE_TYPES.REASONING]: "#7c3aed",
+    [MESSAGE_TYPES.VALIDATING]: "#6b21a8",
+    [MESSAGE_TYPES.CONTEXT]: "#1e40af",
   };
   return styles[type as keyof typeof styles] || "#111827";
 }
@@ -137,8 +165,14 @@ function getMessageBorder(type: string, theme: any) {
   const styles = {
     [MESSAGE_TYPES.USER]: theme?.userMessageBorder || "#c7d2fe",
     [MESSAGE_TYPES.AGENT]: theme?.agentMessageBorder || "#e5e7eb",
-    [MESSAGE_TYPES.SYSTEM]: theme?.systemMessageBorder || "#fde68a",
+    [MESSAGE_TYPES.SYSTEM]: theme?.systemMessageBorder || "#bae6fd",
     [MESSAGE_TYPES.ERROR]: "#fcc",
+    [MESSAGE_TYPES.PLANNING]: "#bae6fd",
+    [MESSAGE_TYPES.EXECUTING]: "#fde68a",
+    [MESSAGE_TYPES.COMPLETED]: "#a7f3d0",
+    [MESSAGE_TYPES.REASONING]: "#ede9fe",
+    [MESSAGE_TYPES.VALIDATING]: "#ddd6fe",
+    [MESSAGE_TYPES.CONTEXT]: "#bfdbfe",
   };
   return styles[type as keyof typeof styles] || "#e5e7eb";
 }
@@ -171,6 +205,12 @@ const MESSAGE_ICONS = {
   [MESSAGE_TYPES.AGENT]: Bot,
   [MESSAGE_TYPES.SYSTEM]: Info,
   [MESSAGE_TYPES.ERROR]: AlertCircle,
+  [MESSAGE_TYPES.PLANNING]: Info,
+  [MESSAGE_TYPES.EXECUTING]: Wrench,
+  [MESSAGE_TYPES.COMPLETED]: Info,
+  [MESSAGE_TYPES.REASONING]: Info,
+  [MESSAGE_TYPES.VALIDATING]: Info,
+  [MESSAGE_TYPES.CONTEXT]: Info,
 };
 
 // Label mapping
@@ -179,6 +219,12 @@ const MESSAGE_LABELS = {
   [MESSAGE_TYPES.AGENT]: "AI Agent",
   [MESSAGE_TYPES.SYSTEM]: "System",
   [MESSAGE_TYPES.ERROR]: "Error",
+  [MESSAGE_TYPES.PLANNING]: "Planning",
+  [MESSAGE_TYPES.EXECUTING]: "Executing",
+  [MESSAGE_TYPES.COMPLETED]: "Completed",
+  [MESSAGE_TYPES.REASONING]: "Reasoning",
+  [MESSAGE_TYPES.VALIDATING]: "Validating",
+  [MESSAGE_TYPES.CONTEXT]: "Context",
 };
 
 export interface AgentMessageProps {
@@ -199,15 +245,20 @@ export function AgentMessage({ message, theme }: AgentMessageProps) {
   };
 
   return (
-    <MessageContainer>
+    <MessageContainer 
+      $hasError={message.metadata?.hasError}
+    >
       <Avatar $type={message.type} theme={theme}>
-        <Icon size={20} />
+        <Icon size={12} strokeWidth={2} />
       </Avatar>
 
       <Content>
         <Header>
           <span>{label}</span>
           <Timestamp>{formatTime(message.timestamp)}</Timestamp>
+          {message.metadata?.hasError && (
+            <span style={{ fontSize: '10px', color: '#ef4444' }}>(Failed)</span>
+          )}
         </Header>
 
         <MessageBubble $type={message.type} theme={theme}>
@@ -256,3 +307,4 @@ export function AgentMessage({ message, theme }: AgentMessageProps) {
     </MessageContainer>
   );
 }
+

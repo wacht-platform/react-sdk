@@ -26,6 +26,7 @@
     "react-dom": "catalog:"
   },
   "dependencies": {
+    "@snipextt/wacht-types": "catalog:",
     "lucide-react": "^0.474.0",
     "qrcode.react": "^4.2.0",
     "rollup-plugin-preserve-use-client": "^3.0.1",

@@ -2,7 +2,7 @@ import { useEffect, useState } from "react";
 import { useSession } from "./use-session";
 import { useClient } from "./use-client";
 import { responseMapper } from "../utils/response-mapper";
-import { ProfileCompletionData } from "../types/profile";
+import { ProfileCompletionData } from "@snipextt/wacht-types";
 
 export function useProfileCompletion() {
   const { session, loading: sessionLoading } = useSession();

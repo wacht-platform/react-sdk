@@ -6,9 +6,9 @@ import {
   UserAuthenticator,
   UserEmailAddress,
   UserPhoneNumber,
-} from "@/types/user";
-import { Client } from "@/types/client";
-import { SignIn } from "@/types/session";
+} from "@/types";
+import { Client } from "@/types";
+import { SignIn } from "@/types";
 
 type SecondFactorPolicy = "none" | "optional" | "enforced";
 

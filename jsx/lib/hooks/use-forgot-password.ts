@@ -1,7 +1,7 @@
 import { useClient } from "./use-client";
 import { responseMapper } from "../utils/response-mapper";
 import { useState } from "react";
-import { ApiResult, ErrorInterface } from "@/types/client";
+import { ApiResult, ErrorInterface } from "@/types";
 
 export function useForgotPassword() {
   const { client, loading } = useClient();
