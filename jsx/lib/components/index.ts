@@ -4,7 +4,14 @@ export * from "./organization";
 export * from "./workspace";
 export * from "./user";
 export * from "./control";
-export * from "./ai-agent";
+export { 
+  AIAgentChat as AIAgent,
+  AIAgentUserInputRequest
+} from "./ai-agent";
+export {
+  AgentConversation,
+  UserInputRequestComponent
+} from "./agent-conversation";
 export * from "./utility/dialog";
 export * from "./utility/dropdown";
 export * from "./utility/form";

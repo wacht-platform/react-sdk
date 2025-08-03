@@ -1,8 +1,8 @@
 import React, { useState, useCallback, useEffect } from "react";
 import styled from "styled-components";
 import { Building, Settings, Users, Mail, Trash2, Send, Check, Shield } from "lucide-react";
-import { useActiveWorkspace } from "@/hooks/use-workspace";
-import type { WorkspaceMembership, WorkspaceRole } from "@/types";
+import { useActiveWorkspace, useWorkspaceList } from "@/hooks/use-workspace";
+import type { WorkspaceMembership, WorkspaceRole, WorkspaceWithOrganization } from "@/types";
 import { InviteMemberPopover } from "./invite-member-popover";
 import {
   Button,
@@ -209,6 +209,10 @@ const IconButton = styled.button`
 const useWorkspaceOperations = () => {
   const { client } = useClient();
   const { activeWorkspace } = useActiveWorkspace();
+  const { workspaces } = useWorkspaceList();
+  
+  // Get the full workspace with organization
+  const workspaceWithOrg = workspaces?.find(w => w.id === activeWorkspace?.id) as WorkspaceWithOrganization | undefined;
 
   const updateWorkspace = useCallback(
     async (data: WorkspaceUpdate) => {
@@ -298,48 +302,65 @@ const useWorkspaceOperations = () => {
     return response.data;
   }, [client, activeWorkspace]);
 
-  // Invitation operations
+  // Invitation operations - using organization invitations with workspace assignment
   const getInvitations = useCallback(async () => {
-    if (!activeWorkspace) return [];
+    if (!activeWorkspace || !workspaceWithOrg) return [];
     try {
+      // Get organization invitations and filter for this workspace
       const response = await responseMapper(
-        await client(`/workspaces/${activeWorkspace.id}/invitations`, {
+        await client(`/organizations/${workspaceWithOrg.organization.id}/invitations`, {
           method: "GET",
         }),
       );
-      return response.data as any[];
+      // Filter invitations that are assigned to this workspace
+      const allInvitations = response.data as any[];
+      return allInvitations.filter(inv => inv.workspace_id === activeWorkspace.id);
     } catch (error) {
       console.error("Failed to fetch invitations:", error);
       return [];
     }
-  }, [client, activeWorkspace]);
+  }, [client, activeWorkspace, workspaceWithOrg]);
 
   const createInvitation = useCallback(
     async (email: string, roleId: string) => {
-      if (!activeWorkspace) return;
+      if (!activeWorkspace || !workspaceWithOrg) return;
+      // Get organization roles to find a default org role
+      const orgRolesResponse = await responseMapper(
+        await client(`/organizations/${workspaceWithOrg.organization.id}/roles`, {
+          method: "GET",
+        }),
+      );
+      const orgRoles = orgRolesResponse.data as any[];
+      const defaultOrgRole = orgRoles.find(r => !r.organization_id) || orgRoles[0];
+      
       const response = await responseMapper(
-        await client(`/workspaces/${activeWorkspace.id}/invitations`, {
+        await client(`/organizations/${workspaceWithOrg.organization.id}/invitations`, {
           method: "POST",
           headers: { "Content-Type": "application/json" },
-          body: JSON.stringify({ email, role_id: roleId }),
+          body: JSON.stringify({ 
+            email, 
+            role_id: defaultOrgRole?.id, // Organization role (required)
+            workspace_id: activeWorkspace.id, // Assign to this workspace
+            workspace_role_id: roleId // Workspace role
+          }),
         }),
       );
       return response.data;
     },
-    [client, activeWorkspace],
+    [client, activeWorkspace, workspaceWithOrg],
   );
 
   const discardInvitation = useCallback(
     async (invitationId: string) => {
-      if (!activeWorkspace) return;
+      if (!activeWorkspace || !workspaceWithOrg) return;
       const response = await responseMapper(
-        await client(`/workspaces/${activeWorkspace.id}/invitations/${invitationId}`, {
+        await client(`/organizations/${workspaceWithOrg.organization.id}/invitations/${invitationId}`, {
           method: "DELETE",
         }),
       );
       return response.data;
     },
-    [client, activeWorkspace],
+    [client, activeWorkspace, workspaceWithOrg],
   );
 
   // Role management operations
@@ -436,7 +457,7 @@ const InvitationsSection = () => {
     try {
       // Resend is typically done by canceling and creating a new invitation
       await discardInvitation(invitation.id);
-      await createInvitation(invitation.email, invitation.role_id);
+      await createInvitation(invitation.email, invitation.workspace_role_id || invitation.initial_workspace_role?.id || invitation.role_id);
       // Refresh invitations
       const updatedInvitations = await getInvitations();
       setInvitations(updatedInvitations);
@@ -537,7 +558,7 @@ const InvitationsSection = () => {
                 <MemberListItemContent>
                   <MemberInfo>
                     <MemberName>{invitation.email}</MemberName>
-                    <MemberEmail>{invitation.role?.name}</MemberEmail>
+                    <MemberEmail>{invitation.initial_workspace_role?.name || invitation.initial_organization_role?.name || invitation.role?.name}</MemberEmail>
                   </MemberInfo>
                 </MemberListItemContent>
                 <MemberListItemActions>

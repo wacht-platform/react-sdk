@@ -21,4 +21,6 @@ export const WebsocketMessageType = {
   PLATFORM_FUNCTION_RESULT: "platform_function_result",
   AGENT_MESSAGE: "agent_message",
   CONVERSATION_MESSAGE: "conversation_message",
+  USER_INPUT_REQUEST: "user_input_request",
+  USER_INPUT_RESPONSE: "user_input_response",
 } as const;

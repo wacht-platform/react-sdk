@@ -41,9 +41,16 @@ class WebSocketManager {
     this.url = url;
     this.isIntentionalDisconnect = false;
     
-    if (this.ws?.readyState === WebSocket.OPEN || 
-        this.ws?.readyState === WebSocket.CONNECTING) {
-      console.log("WebSocket already connected or connecting, skipping...");
+    // If already connected to the same URL, just notify handlers
+    if (this.ws?.readyState === WebSocket.OPEN && this.url === url) {
+      console.log("WebSocket already connected to", url);
+      this.notifyConnectionState({ isConnected: true });
+      return;
+    }
+    
+    // If connecting, wait for it to complete
+    if (this.ws?.readyState === WebSocket.CONNECTING) {
+      console.log("WebSocket already connecting, skipping...");
       return;
     }
 
@@ -65,7 +72,9 @@ class WebSocketManager {
 
       this.ws.onmessage = (event) => {
         try {
+          console.log('[WebSocket] Received raw:', event.data);
           const message = JSON.parse(event.data);
+          console.log('[WebSocket] Parsed message:', message);
           this.notifyMessageHandlers(message);
         } catch (error) {
           console.error("Failed to parse WebSocket message:", error);
@@ -121,10 +130,13 @@ class WebSocketManager {
   }
 
   send(message: any) {
+    console.log('[WebSocket] Attempting to send:', message);
     if (this.ws?.readyState === WebSocket.OPEN) {
-      this.ws.send(JSON.stringify(message));
+      const jsonMessage = JSON.stringify(message);
+      console.log('[WebSocket] Sending JSON:', jsonMessage);
+      this.ws.send(jsonMessage);
     } else {
-      console.warn("WebSocket not connected, cannot send message");
+      console.warn("WebSocket not connected, cannot send message. ReadyState:", this.ws?.readyState);
     }
   }
 

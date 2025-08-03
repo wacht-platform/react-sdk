@@ -25,6 +25,12 @@ export interface AIAgentMessage {
     };
     hasError?: boolean;
     agentMessageType?: string;
+    userInputRequest?: {
+      question: string;
+      context: string;
+      suggestions?: string[];
+      validation_hints?: string | null;
+    };
   };
 }
 
@@ -424,6 +430,9 @@ class AIAgentManager extends EventEmitter {
         case WS_MESSAGE_TYPES.AGENT_MESSAGE:
           this.handleAgentMessage(sessionKey, message.data);
           break;
+        case WS_MESSAGE_TYPES.USER_INPUT_REQUEST:
+          this.handleUserInputRequest(sessionKey, message.data);
+          break;
       }
     } catch (error) {
       console.error("Failed to handle WebSocket message:", error);
@@ -743,6 +752,41 @@ class AIAgentManager extends EventEmitter {
         });
         break;
 
+      case "user_input_request":
+        // Handle the new user input request type
+        const inputRequest = {
+          question: content.question || "Please provide additional information",
+          context: content.context || "",
+          suggestions: content.suggestions || [],
+          validation_hints: content.validation_hints || null
+        };
+        
+        // Create a comprehensive message that includes all the information
+        let inputMessage = `❓ ${inputRequest.question}`;
+        
+        if (inputRequest.context) {
+          inputMessage += `\n\n📌 ${inputRequest.context}`;
+        }
+        
+        if (inputRequest.suggestions && inputRequest.suggestions.length > 0) {
+          inputMessage += `\n\n💡 Suggestions: ${inputRequest.suggestions.join(", ")}`;
+        }
+        
+        if (inputRequest.validation_hints) {
+          inputMessage += `\n\nℹ️ ${inputRequest.validation_hints}`;
+        }
+        
+        this.addMessage(sessionKey, {
+          id,
+          type: MESSAGE_TYPES.SYSTEM,
+          content: inputMessage,
+          metadata: {
+            agentMessageType: 'user_input_request',
+            userInputRequest: inputRequest
+          }
+        });
+        break;
+
       case "system_decision":
         // Internal system decision - don't show to user
         console.log("System decision:", content);
@@ -831,6 +875,15 @@ class AIAgentManager extends EventEmitter {
     session.currentStreamingMessageId = undefined;
     session.currentStreamingContent = undefined;
     this.emit(`session:${sessionKey}:update`, session);
+  }
+
+  private handleUserInputRequest(sessionKey: string, data: any) {
+    const session = this.sessions.get(sessionKey);
+    if (!session) return;
+
+    // The user input request is already handled in handleConversationMessage
+    // This handler is for the new websocket message type
+    this.emit(`session:${sessionKey}:userInputRequest`, data);
   }
 
   private handleExecutionError(sessionKey: string, error: string) {
@@ -972,6 +1025,7 @@ class AIAgentManager extends EventEmitter {
 
       const errorResult = {
         error: errorMessage,
+        stack: error instanceof Error ? error.stack : undefined,
         functionName: function_name,
       };
 

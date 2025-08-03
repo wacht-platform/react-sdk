@@ -13,3 +13,5 @@ export * from "./use-navigation";
 export * from "./use-forgot-password";
 export * from "./use-profile-completion";
 export * from "./use-ai-agent";
+export { useAgentConversation } from "./use-agent-conversation";
+export type { UserInputRequest, ConversationMessage } from "./use-agent-conversation";

@@ -11,6 +11,7 @@ import {
 } from "lucide-react";
 import type { AIAgentMessage as AgentMessageType } from "../../hooks/use-ai-agent";
 import { MESSAGE_TYPES } from "../../constants/ai-agent";
+import { AIAgentUserInputRequest, UserInputRequestData } from "./user-input-request";
 
 const MessageContainer = styled.div<{ $hasError?: boolean }>`
   display: flex;
@@ -230,9 +231,10 @@ const MESSAGE_LABELS = {
 export interface AgentMessageProps {
   message: AgentMessageType;
   theme?: any;
+  onSendMessage?: (message: string) => void;
 }
 
-export function AgentMessage({ message, theme }: AgentMessageProps) {
+export function AgentMessage({ message, theme, onSendMessage }: AgentMessageProps) {
   const Icon = MESSAGE_ICONS[message.type] || Info;
   const label = MESSAGE_LABELS[message.type] || "";
 
@@ -244,6 +246,28 @@ export function AgentMessage({ message, theme }: AgentMessageProps) {
     }).format(date);
   };
 
+  // Check if this is a user input request message
+  const isUserInputRequest = message.metadata?.agentMessageType === 'user_input_request' && 
+                            message.metadata?.userInputRequest;
+
+  const handleUserInputSubmit = (value: string) => {
+    if (onSendMessage) {
+      onSendMessage(value);
+    }
+  };
+
+  // If it's a user input request, render the special component
+  if (isUserInputRequest && message.metadata?.userInputRequest) {
+    return (
+      <AIAgentUserInputRequest 
+        data={message.metadata.userInputRequest as UserInputRequestData}
+        onSubmit={handleUserInputSubmit}
+        theme={theme}
+      />
+    );
+  }
+
+  // Otherwise render normal message
   return (
     <MessageContainer 
       $hasError={message.metadata?.hasError}

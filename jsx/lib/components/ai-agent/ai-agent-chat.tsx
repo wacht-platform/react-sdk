@@ -294,7 +294,8 @@ export function AIAgentChat({
               <AgentMessage 
                 key={message.id} 
                 message={message} 
-                theme={theme} 
+                theme={theme}
+                onSendMessage={sendMessage}
               />
             ))}
             {isAgentTyping && <AgentTypingIndicator theme={theme} />}
