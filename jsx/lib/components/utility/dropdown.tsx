@@ -11,15 +11,13 @@ import {
 import styled from "styled-components";
 
 const DropdownItemsContainer = styled.div`
-  position: absolute;
-  margin-top: 4px;
-  right: 0;
+  position: fixed;
   background: var(--color-background);
   border-radius: 8px;
   box-shadow: 0 4px 12px var(--color-shadow);
   border: 1px solid var(--color-border);
   overflow: hidden;
-  z-index: 10;
+  z-index: 1000;
   min-width: 140px;
   display: grid;
 `;
@@ -112,11 +110,71 @@ export const DropdownItems = ({
   style?: React.CSSProperties;
 }) => {
   const { open } = useDropdownContext();
+  const [position, setPosition] = useState({ top: 0, left: 0 });
+  const [isPositioned, setIsPositioned] = useState(false);
+  const containerRef = useRef<HTMLDivElement>(null);
+
+  useEffect(() => {
+    if (open && containerRef.current) {
+      setIsPositioned(false);
+      
+      // Use requestAnimationFrame to ensure DOM is ready
+      requestAnimationFrame(() => {
+        const parent = containerRef.current?.parentElement;
+        if (!parent) return;
+        
+        // Find the trigger element (should be the first child of the dropdown container)
+        const triggerEl = parent.querySelector('[data-dropdown-trigger]') || parent.firstElementChild;
+        
+        if (triggerEl && triggerEl !== containerRef.current) {
+          const triggerRect = triggerEl.getBoundingClientRect();
+          const dropdownRect = containerRef.current?.getBoundingClientRect();
+          const viewportWidth = window.innerWidth;
+          const viewportHeight = window.innerHeight;
+          
+          let top = triggerRect.bottom + 4;
+          let left = triggerRect.right - 200; // Default to right-aligned
+          
+          // Adjust if dropdown would go off the right edge
+          if (left < 8) {
+            left = triggerRect.left; // Align to left edge of trigger
+          }
+          
+          // Adjust if dropdown would go off the left edge
+          if (left + 200 > viewportWidth - 8) {
+            left = viewportWidth - 208; // 200px width + 8px margin
+          }
+          
+          // Adjust if dropdown would go off the bottom edge
+          if (dropdownRect && top + dropdownRect.height > viewportHeight - 8) {
+            top = triggerRect.top - (dropdownRect.height + 4); // Show above trigger
+          }
+          
+          setPosition({ top, left });
+          setIsPositioned(true);
+        }
+      });
+    } else {
+      setIsPositioned(false);
+    }
+  }, [open]);
 
   if (!open) return null;
 
   return (
-    <DropdownItemsContainer style={style}>{children}</DropdownItemsContainer>
+    <DropdownItemsContainer 
+      ref={containerRef}
+      style={{ 
+        ...style,
+        top: `${position.top}px`,
+        left: `${position.left}px`,
+        visibility: isPositioned ? 'visible' : 'hidden',
+        opacity: isPositioned ? 1 : 0,
+        transition: isPositioned ? 'opacity 0.15s ease-in-out' : 'none'
+      }}
+    >
+      {children}
+    </DropdownItemsContainer>
   );
 };
 
@@ -128,7 +186,11 @@ export const DropdownTrigger = ({ children }: { children: ReactNode }) => {
   }, [open, openChange]);
 
   return (
-    <div style={{ position: "relative" }} onClick={toggleDropdown}>
+    <div 
+      style={{ position: "relative" }} 
+      onClick={toggleDropdown}
+      data-dropdown-trigger
+    >
       {children}
     </div>
   );

@@ -15,6 +15,6 @@ export const FormGroup = styled.div`
 export const Label = styled.label`
   font-size: var(--font-xs);
   text-align: left;
-  font-weight: 500;
+  font-weight: 400;
   color: var(--color-foreground);
 `;

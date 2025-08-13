@@ -12,19 +12,21 @@ import {
   Globe,
   Users,
   Shield,
+  ChevronDown,
 } from "lucide-react";
 import {
   useActiveOrganization,
   useOrganizationList,
 } from "@/hooks/use-organization";
 import { useDeployment } from "@/hooks/use-deployment";
+import { useSession } from "@/hooks/use-session";
 import { AddDomainPopover } from "./add-domain-popover";
 import useSWR from "swr";
 import { InviteMemberPopover } from "./invite-member-popover";
 import {
   OrganizationRole,
   OrganizationDomain,
-  OrganizationUpdate,
+
   OrganizationMembership,
   OrganizationInvitation,
 } from "@/types";
@@ -76,25 +78,46 @@ const Container = styled.div`
   overflow: hidden;
   display: flex;
   flex-direction: column;
+  padding-bottom: 24px;
+  position: relative;
 
   @media (max-width: 768px) {
     border-radius: 16px;
+    padding-bottom: 20px;
+  }
+
+  /* Blur effect at the bottom */
+  &::after {
+    content: '';
+    position: absolute;
+    bottom: 0;
+    left: 0;
+    right: 0;
+    height: 40px;
+    background: linear-gradient(
+      to bottom,
+      transparent 0%,
+      var(--color-background) 70%
+    );
+    pointer-events: none;
+    z-index: 1;
   }
 `;
 
 const TabsContainer = styled.div`
-  padding: 8px 24px 0;
+  padding: 0 24px;
   border-bottom: 1px solid var(--color-border);
 
   @media (max-width: 768px) {
-    padding: 20px 20px 0;
+    padding: 0 20px;
   }
 `;
 
 const TabsList = styled.div`
   display: flex;
-  gap: 24px;
+  gap: 20px;
   overflow-x: auto;
+  overflow-y: hidden;
 
   &::-webkit-scrollbar {
     display: none;
@@ -102,7 +125,7 @@ const TabsList = styled.div`
 `;
 
 const Tab = styled.button<{ $isActive: boolean }>`
-  padding: 12px 0;
+  padding: 12px 12px;
   border: none;
   background: none;
   font-size: 14px;
@@ -113,6 +136,7 @@ const Tab = styled.button<{ $isActive: boolean }>`
   position: relative;
   transition: color 0.15s ease;
   white-space: nowrap;
+  min-width: fit-content;
 
   &:hover {
     color: var(--color-foreground);
@@ -139,11 +163,12 @@ const TabIcon = styled.span`
 
 const TabContent = styled.div`
   flex: 1;
-  padding: 24px;
+  padding: 24px 24px 0 24px;
   overflow-y: auto;
+  position: relative;
 
   @media (max-width: 768px) {
-    padding: 20px;
+    padding: 20px 20px 0 20px;
   }
 `;
 
@@ -151,30 +176,33 @@ const HeaderCTAContainer = styled.div`
   display: flex;
   align-items: center;
   flex-wrap: wrap;
-  gap: 8px;
+  gap: 12px;
+  margin-bottom: 24px;
 `;
 
 const GeneralSettingsSection = () => {
   const {
     activeOrganization: selectedOrganization,
     loading,
-    updateOrganization,
+
   } = useActiveOrganization();
   const { workspaces: workspaceList } = useWorkspaceList();
   const { deployment } = useDeployment();
-  const { deleteOrganization: deleteOrgFromList } = useOrganizationList();
+  const { deleteOrganization: deleteOrgFromList, updateOrganization } = useOrganizationList();
   const { toast } = useScreenContext();
   const [name, setName] = useState(selectedOrganization?.name || "");
   const [description, setDescription] = useState(
     selectedOrganization?.description || "",
   );
-  const [image, setImage] = useState<File | null>(null);
+
+
   const [previewUrl, setPreviewUrl] = useState<string | null>(
     selectedOrganization?.image_url || null,
   );
-  const [successMessage, setSuccessMessage] = useState("");
-  const [_, setIsSubmitting] = useState(false);
+
   const fileInputRef = React.useRef<HTMLInputElement>(null);
+
+  const [isSaving, setIsSaving] = useState(false);
   const [security, setSecurity] = useState({
     mfa_required: false,
     ip_restrictions: false,
@@ -184,6 +212,33 @@ const GeneralSettingsSection = () => {
   const [confirmName, setConfirmName] = useState("");
   const [isDeleting, setIsDeleting] = useState(false);
   const [showDeleteConfirm, setShowDeleteConfirm] = useState(false);
+
+  // Auto-save functionality - triggers on blur
+  const autoSave = React.useCallback(async () => {
+    if (!selectedOrganization) return;
+    
+    try {
+      setIsSaving(true);
+      await updateOrganization(selectedOrganization, {
+        name,
+        description,
+      });
+      toast("Changes saved", "info");
+    } catch (error) {
+      console.error("Failed to auto-save organization", error);
+      toast("Failed to save changes", "error");
+    } finally {
+      setIsSaving(false);
+    }
+  }, [
+    selectedOrganization,
+    name,
+    description,
+    previewUrl,
+    security,
+    updateOrganization,
+    toast,
+  ]);
 
   React.useEffect(() => {
     if (selectedOrganization) {
@@ -240,8 +295,9 @@ const GeneralSettingsSection = () => {
   const handleImageChange = (event: React.ChangeEvent<HTMLInputElement>) => {
     if (event.target.files?.[0]) {
       const file = event.target.files[0];
-      setImage(file);
       setPreviewUrl(URL.createObjectURL(file));
+      // Auto-save image immediately after selection
+      setTimeout(() => autoSave(), 100);
     }
   };
 
@@ -251,258 +307,224 @@ const GeneralSettingsSection = () => {
     }
   };
 
-  const handleSubmit = async (e?: React.FormEvent) => {
-    e?.preventDefault();
-    if (!selectedOrganization) return;
 
-    try {
-      setIsSubmitting(true);
-      const data: OrganizationUpdate = {};
-
-      if (image) {
-        data.image = image;
-      }
-      if (name) {
-        data.name = name;
-      }
-      if (description) {
-        data.description = description;
-      }
-
-      // Add security settings
-      data.enable_ip_restriction = security.ip_restrictions;
-      data.enforce_mfa_setup = security.mfa_required;
-      data.whitelisted_ips = security.allowed_ips
-        ?.split("\n")
-        .filter((ip) => ip.trim());
-      data.auto_assigned_workspace_id = security.default_workspace_id;
-
-      await updateOrganization?.(data);
-      setSuccessMessage("Settings updated successfully");
-      setTimeout(() => setSuccessMessage(""), 3000);
-    } catch (error) {
-      console.error("Failed to update organization", error);
-    } finally {
-      setIsSubmitting(false);
-    }
-  };
 
   return (
     <>
-      {successMessage && (
+      {/* Auto-save indicator */}
+      {isSaving && (
         <div
           style={{
-            marginBottom: "20px",
-            padding: "8px",
-            background: "var(--color-success-background)",
-            color: "var(--color-success)",
-            borderRadius: "4px",
+            position: "fixed",
+            top: 20,
+            right: 20,
+            background: "var(--color-surface)",
+            border: "1px solid var(--color-border)",
+            borderRadius: "var(--radius-md)",
+            padding: "var(--space-xs) var(--space-sm)",
             display: "flex",
             alignItems: "center",
-            gap: "8px",
+            gap: "var(--space-xs)",
+            zIndex: 1000,
+            boxShadow: "0 2px 8px var(--color-shadow)",
           }}
         >
-          ✓{successMessage}
+          <Spinner size={16} />
+          <span style={{ fontSize: "var(--font-xs)", color: "var(--color-muted)" }}>
+            Saving changes...
+          </span>
         </div>
       )}
 
-      <div
-        style={{
-          display: "flex",
-          width: "100%",
-          gap: "1px",
-        }}
-      >
-        {/* Left Panel - Logo Upload */}
-        <div
-          style={{
-            width: "280px",
-            paddingRight: "24px",
-            display: "flex",
-            flexDirection: "column",
-            alignItems: "center",
-            justifyContent: "center",
-            gap: "12px",
-            borderRight: "1px solid var(--color-border)",
-          }}
-        >
-          <div
-            style={{
-              width: "240px",
-              height: "240px",
-              borderRadius: "16px",
-              border: "2px solid #e5e7eb",
-              background: previewUrl ? "transparent" : "#ffffff",
-              cursor: "pointer",
-              display: "flex",
-              alignItems: "center",
-              justifyContent: "center",
-              overflow: "hidden",
-              transition: "all 0.2s ease",
-              position: "relative",
-            }}
-            onClick={triggerFileInput}
-            onMouseEnter={(e) => {
-              e.currentTarget.style.borderColor = "#d1d5db";
-              e.currentTarget.style.transform = "scale(1.02)";
-            }}
-            onMouseLeave={(e) => {
-              e.currentTarget.style.borderColor = "#e5e7eb";
-              e.currentTarget.style.transform = "scale(1)";
-            }}
-          >
-            {previewUrl ? (
-              <img
-                src={previewUrl}
-                alt="Organization Logo"
-                style={{
-                  width: "100%",
-                  height: "100%",
-                  objectFit: "cover",
-                }}
-              />
-            ) : (
-              <div
-                style={{
-                  width: "100%",
-                  height: "100%",
-                  background: "#e5e7eb",
-                  display: "flex",
-                  alignItems: "center",
-                  justifyContent: "center",
-                  color: "#9ca3af",
-                  fontSize: "32px",
-                  fontWeight: 500,
-                }}
-              >
-                {selectedOrganization?.name?.charAt(0)?.toUpperCase() || (
-                  <Building size={48} />
-                )}
-              </div>
-            )}
-            <input
-              type="file"
-              ref={fileInputRef}
-              style={{ display: "none" }}
-              accept="image/*"
-              onChange={handleImageChange}
-            />
-          </div>
-
-          <div
-            style={{ textAlign: "center", marginTop: "20px", width: "240px" }}
-          >
+      <div style={{ display: "flex", flexDirection: "column", gap: "var(--space-2xl)" }}>
+        {/* Logo Section - Two Column Layout */}
+        <div style={{ display: "flex", gap: "var(--space-2xl)", alignItems: "center" }}>
+          {/* Left Column - Logo Preview */}
+          <div style={{ flexShrink: 0 }}>
             <div
               style={{
+                width: "120px",
+                height: "120px",
+                borderRadius: "50%",
+                border: "2px dashed var(--color-border)",
+                background: previewUrl ? "transparent" : "var(--color-input-background)",
+                cursor: "pointer",
                 display: "flex",
-                flexDirection: "column",
-                gap: "8px",
-                marginBottom: "12px",
+                alignItems: "center",
+                justifyContent: "center",
+                overflow: "hidden",
+                transition: "all 0.2s ease",
+              }}
+              onClick={triggerFileInput}
+              onMouseEnter={(e) => {
+                e.currentTarget.style.borderColor = "var(--color-primary)";
+                e.currentTarget.style.transform = "scale(1.02)";
+              }}
+              onMouseLeave={(e) => {
+                e.currentTarget.style.borderColor = "var(--color-border)";
+                e.currentTarget.style.transform = "scale(1)";
               }}
             >
+              {previewUrl ? (
+                <img
+                  src={previewUrl}
+                  alt="Organization Logo"
+                  style={{
+                    width: "100%",
+                    height: "100%",
+                    objectFit: "cover",
+                    borderRadius: "50%",
+                  }}
+                />
+              ) : (
+                <Building size={32} color="var(--color-muted)" />
+              )}
+              <input
+                type="file"
+                ref={fileInputRef}
+                style={{ display: "none" }}
+                accept="image/*"
+                onChange={handleImageChange}
+              />
+            </div>
+          </div>
+
+          {/* Right Column - Content and Controls */}
+          <div style={{ flex: 1 }}>
+            <div style={{ marginBottom: "var(--space-lg)" }}>
+              <h3 style={{
+                fontSize: "var(--font-sm)",
+                color: "var(--color-foreground)",
+                margin: "0 0 var(--space-2xs) 0"
+              }}>
+                Organization Logo
+              </h3>
+              <p style={{
+                fontSize: "var(--font-xs)",
+                color: "var(--color-secondary-text)",
+                margin: 0
+              }}>
+                Upload an image to represent your organization
+              </p>
+            </div>
+
+            <div style={{ display: "flex", gap: "var(--space-sm)", marginBottom: "var(--space-sm)" }}>
               <Button
                 onClick={() => fileInputRef.current?.click()}
                 style={{
-                  background: "#6366f1",
-                  color: "white",
-                  border: "none",
-                  padding: "8px 16px",
-                  borderRadius: "6px",
-                  fontSize: "14px",
-                  fontWeight: 500,
-                  width: "100%",
+                  padding: "var(--space-xs) var(--space-md)",
+                  fontSize: "var(--font-xs)",
+                  height: "32px",
+                  width: "100px",
+                  display: "flex",
+                  alignItems: "center",
+                  gap: "6px",
                 }}
               >
-                Change Logo
+                <Building size={14} />
+                {previewUrl ? "Change" : "Upload"}
               </Button>
               <Button
                 onClick={() => {
                   setPreviewUrl(null);
-                  setImage(null);
                   if (fileInputRef.current) {
                     fileInputRef.current.value = "";
                   }
                 }}
-                disabled={!previewUrl}
                 style={{
-                  background: previewUrl ? "#ef4444" : "#e5e7eb",
-                  color: previewUrl ? "white" : "#9ca3af",
-                  border: "none",
-                  padding: "8px 16px",
-                  borderRadius: "6px",
-                  fontSize: "14px",
-                  fontWeight: 500,
-                  cursor: previewUrl ? "pointer" : "not-allowed",
-                  width: "100%",
+                  background: "transparent",
+                  color: "var(--color-muted)",
+                  border: "1px solid var(--color-border)",
+                  padding: "var(--space-xs) var(--space-md)",
+                  fontSize: "var(--font-xs)",
+                  height: "32px",
+                  width: "100px",
+                  display: "flex",
+                  alignItems: "center",
+                  gap: "6px",
                 }}
               >
-                Remove Logo
+                <Trash size={14} />
+                Remove
               </Button>
             </div>
-            <div
-              style={{ fontSize: "11px", color: "#9ca3af", lineHeight: "1.4" }}
-            >
-              <div>JPG, PNG, GIF • Max 2MB</div>
-            </div>
-          </div>
 
+            {/* <p style={{
+              fontSize: "var(--font-2xs)",
+              color: "var(--color-muted)",
+              margin: 0,
+              lineHeight: 1.4,
+            }}>
+              Recommended: Square image, at least 200x200px. Supported formats: JPG, PNG, GIF • Max 2MB
+            </p> */}
+          </div>
         </div>
 
-        {/* Right Panel - Form Fields */}
-        <div style={{ flex: 1, paddingLeft: "24px" }}>
-          <div
-            style={{ display: "flex", flexDirection: "column", gap: "16px" }}
-          >
+        {/* Divider */}
+        <div
+          style={{
+            position: "relative",
+            height: "1px",
+            background: "var(--color-divider)",
+            margin: "0",
+          }}
+        />
+
+        {/* Organization Details */}
+        <div>
+          <div style={{ marginBottom: "var(--space-md)" }}>
+            <h3 style={{
+              fontSize: "var(--font-sm)",
+              color: "var(--color-foreground)",
+              margin: "0 0 var(--space-2xs) 0"
+            }}>
+              Organization Details
+            </h3>
+            <p style={{
+              fontSize: "var(--font-xs)",
+              color: "var(--color-secondary-text)",
+              margin: 0
+            }}>
+              Basic information about your organization
+            </p>
+          </div>
+
+          <div style={{ display: "flex", flexDirection: "column", gap: "var(--space-lg)" }}>
             <FormGroup>
-              <Label
-                style={{ fontSize: "13px", fontWeight: 500, color: "#374151" }}
-              >
-                Organization Name
-              </Label>
+              <Label htmlFor="name">Organization Name</Label>
               <Input
                 id="name"
                 type="text"
                 value={name}
                 onChange={(e) => setName(e.target.value)}
+                onBlur={autoSave}
                 placeholder="Enter organization name"
-                style={{
-                  width: "100%",
-                  padding: "8px 12px",
-                  borderRadius: "6px",
-                  fontSize: "14px",
-                  border: "1px solid #e5e7eb",
-                }}
                 required
               />
             </FormGroup>
 
             <FormGroup>
-              <Label
-                style={{ fontSize: "13px", fontWeight: 500, color: "#374151" }}
-              >
-                Description
-              </Label>
+              <Label htmlFor="description">Description</Label>
               <Input
                 id="description"
                 as="textarea"
                 value={description}
                 onChange={(e) => setDescription(e.target.value)}
+                onBlur={autoSave}
                 placeholder="Enter organization description"
                 style={{
-                  width: "100%",
-                  padding: "8px 12px",
-                  borderRadius: "6px",
-                  fontSize: "14px",
-                  border: "1px solid #e5e7eb",
                   minHeight: "80px",
                   resize: "vertical",
+                  fontFamily: "inherit",
                 }}
               />
-              <div
-                style={{ fontSize: "12px", color: "#6b7280", marginTop: "4px" }}
-              >
+              <p style={{
+                fontSize: "var(--font-2xs)",
+                color: "var(--color-muted)",
+                margin: "var(--space-2xs) 0 0 0"
+              }}>
                 Brief description of your organization
-              </div>
+              </p>
             </FormGroup>
 
             <div
@@ -515,16 +537,15 @@ const GeneralSettingsSection = () => {
               <div>
                 <Label
                   style={{
-                    fontSize: "13px",
-                    fontWeight: 500,
-                    color: "#374151",
+                    fontSize: "var(--font-xs)",
+                    color: "var(--color-foreground)",
                     display: "block",
-                    marginBottom: "2px",
+                    marginBottom: "var(--space-2xs)",
                   }}
                 >
                   Multi-Factor Authentication
                 </Label>
-                <div style={{ fontSize: "12px", color: "#6b7280" }}>
+                <div style={{ fontSize: "var(--font-2xs)", color: "var(--color-muted)" }}>
                   Require all members to set up MFA for added security
                 </div>
               </div>
@@ -532,12 +553,13 @@ const GeneralSettingsSection = () => {
                 <input
                   type="checkbox"
                   checked={security.mfa_required}
-                  onChange={() =>
+                  onChange={() => {
                     setSecurity((prev) => ({
                       ...prev,
                       mfa_required: !prev.mfa_required,
-                    }))
-                  }
+                    }));
+                    setTimeout(() => autoSave(), 100);
+                  }}
                 />
                 <span></span>
               </Switch>
@@ -555,16 +577,15 @@ const GeneralSettingsSection = () => {
                   <div>
                     <Label
                       style={{
-                        fontSize: "13px",
-                        fontWeight: 500,
-                        color: "#374151",
+                        fontSize: "var(--font-xs)",
+                        color: "var(--color-foreground)",
                         display: "block",
-                        marginBottom: "2px",
+                        marginBottom: "var(--space-2xs)",
                       }}
                     >
                       IP Restrictions
                     </Label>
-                    <div style={{ fontSize: "12px", color: "#6b7280" }}>
+                    <div style={{ fontSize: "var(--font-2xs)", color: "var(--color-muted)" }}>
                       Only allow access from specific IP addresses
                     </div>
                   </div>
@@ -572,12 +593,13 @@ const GeneralSettingsSection = () => {
                     <input
                       type="checkbox"
                       checked={security.ip_restrictions}
-                      onChange={() =>
+                      onChange={() => {
                         setSecurity((prev) => ({
                           ...prev,
                           ip_restrictions: !prev.ip_restrictions,
-                        }))
-                      }
+                        }));
+                        setTimeout(() => autoSave(), 100);
+                      }}
                     />
                     <span></span>
                   </Switch>
@@ -585,16 +607,9 @@ const GeneralSettingsSection = () => {
 
                 {security.ip_restrictions && (
                   <FormGroup>
-                    <Label
-                      style={{
-                        fontSize: "13px",
-                        fontWeight: 500,
-                        color: "#374151",
-                      }}
-                    >
-                      Allowed IP Addresses
-                    </Label>
+                    <Label htmlFor="allowed_ips">Allowed IP Addresses</Label>
                     <Input
+                      id="allowed_ips"
                       as="textarea"
                       value={security.allowed_ips}
                       onChange={(e) =>
@@ -603,27 +618,21 @@ const GeneralSettingsSection = () => {
                           allowed_ips: e.target.value,
                         }))
                       }
+                      onBlur={autoSave}
                       placeholder="192.168.1.1&#10;10.0.0.0/24"
                       style={{
-                        width: "100%",
-                        padding: "8px 12px",
-                        borderRadius: "6px",
-                        fontSize: "14px",
-                        border: "1px solid #e5e7eb",
                         minHeight: "80px",
                         resize: "vertical",
                         fontFamily: "monospace",
                       }}
                     />
-                    <div
-                      style={{
-                        fontSize: "12px",
-                        color: "#6b7280",
-                        marginTop: "4px",
-                      }}
-                    >
+                    <p style={{
+                      fontSize: "var(--font-2xs)",
+                      color: "var(--color-muted)",
+                      margin: "var(--space-2xs) 0 0 0"
+                    }}>
                       Enter one IP address or CIDR block per line
-                    </div>
+                    </p>
                   </FormGroup>
                 )}
               </>
@@ -632,132 +641,149 @@ const GeneralSettingsSection = () => {
             {deployment?.b2b_settings?.workspaces_enabled &&
               workspaces.length > 0 && (
                 <FormGroup>
-                  <Label
-                    style={{
-                      fontSize: "13px",
-                      fontWeight: 500,
-                      color: "#374151",
-                    }}
-                  >
-                    Default Workspace
-                  </Label>
+                  <Label htmlFor="default_workspace">Default Workspace</Label>
                   <ComboBox
                     options={workspaces.map((workspace) => ({
                       value: workspace.id,
                       label: workspace.name,
                     }))}
                     value={security.default_workspace_id}
-                    onChange={(value) =>
+                    onChange={(value) => {
                       setSecurity((prev) => ({
                         ...prev,
                         default_workspace_id: value,
-                      }))
-                    }
+                      }));
+                      setTimeout(() => autoSave(), 100);
+                    }}
                     placeholder="Select default workspace"
                   />
-                  <div
-                    style={{
-                      fontSize: "12px",
-                      color: "#6b7280",
-                      marginTop: "4px",
-                    }}
-                  >
+                  <p style={{
+                    fontSize: "var(--font-2xs)",
+                    color: "var(--color-muted)",
+                    margin: "var(--space-2xs) 0 0 0"
+                  }}>
                     Workspace that new members will be added to automatically
-                  </div>
+                  </p>
                 </FormGroup>
               )}
+          </div>
+        </div>
 
-
-            {/* Button Group */}
+        {/* Delete Section */}
+        {deployment?.b2b_settings?.allow_org_deletion && (
+          <>
             <div
               style={{
-                display: "flex",
-                justifyContent: "flex-end",
-                marginTop: "20px",
+                position: "relative",
+                height: "1px",
+                background: "var(--color-divider)",
+                margin: "0",
               }}
-            >
-              <Button
-                onClick={handleSubmit}
-                style={{
-                  background: "#6366f1",
-                  color: "white",
-                  border: "none",
-                  padding: "8px 16px",
-                  borderRadius: "6px",
-                  fontSize: "14px",
-                  fontWeight: 500,
-                }}
-              >
-                Save Changes
-              </Button>
-            </div>
+            />
 
-            {/* Delete Section */}
-            {deployment?.b2b_settings?.allow_org_deletion && (
-              <div style={{ marginTop: "40px", paddingTop: "24px", borderTop: "1px solid #f3f4f6" }}>
-                <button
-                  onClick={() => {
-                    if (!showDeleteConfirm) {
-                      setShowDeleteConfirm(true);
-                    } else {
-                      setShowDeleteConfirm(false);
-                      setConfirmName("");
-                    }
-                  }}
-                  style={{
-                    background: "none",
-                    border: "none",
-                    color: "#6b7280",
-                    fontSize: "13px",
-                    cursor: "pointer",
-                    textDecoration: "underline",
-                    padding: "0",
-                  }}
-                >
-                  {showDeleteConfirm ? "Cancel" : "Delete organization"}
-                </button>
-                
+            <div>
+              <div style={{ marginBottom: "16px" }}>
+                <h3 style={{
+                  fontSize: "16px",
+                  color: "var(--color-foreground)",
+                  margin: "0 0 4px 0"
+                }}>
+                  Danger Zone
+                </h3>
+                <p style={{
+                  fontSize: "14px",
+                  color: "var(--color-muted)",
+                  margin: 0
+                }}>
+                  Irreversible and destructive actions
+                </p>
+              </div>
+
+              <div style={{ 
+                padding: "20px", 
+                border: "1px solid var(--color-error)",
+                borderRadius: "8px"
+              }}>
+                <div style={{ 
+                  display: "flex", 
+                  alignItems: "center", 
+                  justifyContent: "space-between", 
+                  marginBottom: showDeleteConfirm ? "20px" : "0"
+                }}>
+                  <div>
+                    <div style={{ 
+                      fontSize: "14px", 
+                      color: "var(--color-foreground)", 
+                      marginBottom: "4px", 
+                      fontWeight: "500" 
+                    }}>
+                      Delete Organization
+                    </div>
+                    <div style={{ 
+                      fontSize: "13px", 
+                      color: "var(--color-muted)" 
+                    }}>
+                      Once you delete this organization, there is no going back. Please be certain.
+                    </div>
+                  </div>
+                  <Button
+                    onClick={() => {
+                      if (!showDeleteConfirm) {
+                        setShowDeleteConfirm(true);
+                      } else {
+                        setShowDeleteConfirm(false);
+                        setConfirmName("");
+                      }
+                    }}
+                    style={{
+                      background: "var(--color-error)",
+                      color: "white",
+                      border: "none",
+                      padding: "6px 12px",
+                      fontSize: "13px",
+                      height: "32px",
+                      width: "auto"
+                    }}
+                  >
+                    {showDeleteConfirm ? "Cancel" : "Delete"}
+                  </Button>
+                </div>
+
                 {showDeleteConfirm && (
-                  <div style={{ marginTop: "16px", maxWidth: "300px" }}>
-                    <p style={{ fontSize: "12px", color: "#6b7280", margin: "0 0 12px 0" }}>
-                      This action cannot be undone.
-                    </p>
-                    <Input
-                      type="text"
-                      value={confirmName}
-                      onChange={(e) => setConfirmName(e.target.value)}
-                      placeholder={`Type "${selectedOrganization?.name}" to confirm`}
-                      style={{
-                        width: "100%",
-                        padding: "8px 12px",
-                        borderRadius: "4px",
-                        fontSize: "13px",
-                        border: "1px solid #e5e7eb",
-                        marginBottom: "12px",
-                      }}
-                    />
+                  <div style={{ maxWidth: "400px" }}>
+                    <FormGroup>
+                      <Label htmlFor="confirm_name">Confirm by typing the organization name</Label>
+                      <Input
+                        id="confirm_name"
+                        type="text"
+                        value={confirmName}
+                        onChange={(e) => setConfirmName(e.target.value)}
+                        placeholder={`Type "${selectedOrganization?.name}" to confirm`}
+                      />
+                    </FormGroup>
                     <Button
                       onClick={handleDeleteOrganization}
                       disabled={confirmName !== selectedOrganization?.name || isDeleting}
                       style={{
-                        background: confirmName === selectedOrganization?.name ? "#dc2626" : "#e5e7eb",
-                        color: confirmName === selectedOrganization?.name ? "white" : "#9ca3af",
-                        border: "none",
-                        padding: "6px 12px",
-                        borderRadius: "4px",
-                        fontSize: "12px",
-                        fontWeight: 500,
+                        background: confirmName === selectedOrganization?.name ? "var(--color-error)" : "transparent",
+                        color: confirmName === selectedOrganization?.name ? "white" : "var(--color-muted)",
+                        border: "1px solid var(--color-border)",
+                        padding: "8px 16px",
+                        fontSize: "14px",
+                        height: "36px",
                         cursor: confirmName === selectedOrganization?.name ? "pointer" : "not-allowed",
+                        opacity: confirmName === selectedOrganization?.name ? 1 : 0.6,
+                        marginTop: "12px",
                       }}
                     >
-                      {isDeleting ? <Spinner size={12} /> : "Delete"}
+                      {isDeleting ? <Spinner size={12} /> : "Delete Forever"}
                     </Button>
                   </div>
                 )}
               </div>
-            )}
-          </div>
-        </div>
+            </div>
+          </>
+        )}
       </div>
     </>
   );
@@ -766,14 +792,14 @@ const GeneralSettingsSection = () => {
 const Badge = styled.span`
   background: var(--color-primary-background);
   color: var(--color-primary);
-  padding: 0px 4px;
+  padding: 4px 8px;
   border-radius: 4px;
   font-size: 12px;
   font-weight: 400;
   display: flex;
   align-items: center;
   max-width: max-content;
-  gap: 2px;
+  gap: 4px;
   border: 1px solid var(--color-border);
   white-space: nowrap;
 `;
@@ -781,15 +807,17 @@ const Badge = styled.span`
 const IconButton = styled.button`
   background: none;
   border: 1px solid var(--color-border);
-  padding: 3px;
+  padding: 6px;
   cursor: pointer;
   color: var(--color-muted);
-  border-radius: 3px;
+  border-radius: 4px;
   display: flex;
   align-items: center;
   justify-content: center;
   transition: all 0.2s ease;
-  font-size: 11px;
+  font-size: 14px;
+  min-width: 32px;
+  height: 32px;
 
   &:hover {
     background: var(--color-input-background);
@@ -846,6 +874,7 @@ const DomainsSection = () => {
   const [selectedDomainInAction, setSelectedDomainAction] = useState<
     string | null
   >(null);
+  const addDomainButtonRef = useRef<HTMLButtonElement>(null);
 
   const filteredDomains = React.useMemo(() => {
     let tempDomains = domains;
@@ -887,8 +916,15 @@ const DomainsSection = () => {
         />
         <div>
           <Button
-            onClick={() => setIsAddingDomain(true)}
-            style={{ width: "120px" }}
+            ref={addDomainButtonRef}
+            onClick={() => setIsAddingDomain(!isAddingDomain)}
+            style={{
+              padding: "8px 16px",
+              borderRadius: "6px",
+              fontSize: "14px",
+              fontWeight: 500,
+              height: "36px"
+            }}
           >
             New Domain
           </Button>
@@ -898,6 +934,7 @@ const DomainsSection = () => {
                 setIsAddingDomain(false);
                 mutate();
               }}
+              triggerRef={addDomainButtonRef}
             />
           )}
         </div>
@@ -925,7 +962,7 @@ const DomainsSection = () => {
           <TableBody>
             {filteredDomains.map((domain) => (
               <TableRow key={domain.id}>
-                <TableCellFlex>{domain.fqdn}</TableCellFlex>
+                <TableCell>{domain.fqdn}</TableCell>
                 <TableCell>
                   {domain.verified ? (
                     <Badge
@@ -952,35 +989,57 @@ const DomainsSection = () => {
                   {new Date(domain.created_at).toLocaleDateString()}
                 </TableCell>
                 <ActionsCell>
-                  {domainForDeletion === domain.id && (
-                    <ConfirmationPopover
-                      title="Are you sure you want to delete this domain?"
-                      onConfirm={() => handleDeleteDomain(domain)}
-                      onCancel={() => setDomainForDeletion(null)}
-                    />
-                  )}
-                  <Dropdown
-                    style={{ marginLeft: "auto" }}
-                    open={selectedDomainInAction === domain.id}
-                    openChange={(v) =>
-                      setSelectedDomainAction(v ? domain.id : null)
-                    }
-                  >
-                    <DropdownTrigger>
-                      <IconButton>•••</IconButton>
-                    </DropdownTrigger>
-                    {domainInVerification === domain.id && (
-                      <AddDomainPopover
-                        domain={domain}
-                        onClose={() => setDomainInVerification(null)}
-                      />
-                    )}
+                  <div style={{ position: "relative" }}>
+                    <Dropdown
+                      style={{ marginLeft: "auto" }}
+                      open={selectedDomainInAction === domain.id}
+                      openChange={(v) =>
+                        setSelectedDomainAction(v ? domain.id : null)
+                      }
+                    >
+                      <DropdownTrigger>
+                        <IconButton>•••</IconButton>
+                      </DropdownTrigger>
 
-                    <DropdownItems>
-                      {!domain.verified && (
+                      <DropdownItems>
+                        {!domain.verified && (
+                          <DropdownItem
+                            onClick={() => {
+                              handleVerifyDomain(domain.id);
+                              setSelectedDomainAction(null);
+                            }}
+                          >
+                            <div
+                              style={{
+                                display: "flex",
+                                alignItems: "center",
+                                gap: "8px",
+                              }}
+                            >
+                              ✓ Verify Domain
+                            </div>
+                          </DropdownItem>
+                        )}
                         <DropdownItem
                           onClick={() => {
-                            handleVerifyDomain(domain.id);
+                            setSelectedDomainAction(null);
+                            navigator.clipboard.writeText(domain.fqdn);
+                          }}
+                        >
+                          <div
+                            style={{
+                              display: "flex",
+                              alignItems: "center",
+                              gap: "8px",
+                            }}
+                          >
+                            <Copy size={16} color="var(--color-muted)" /> Copy
+                            Domain
+                          </div>
+                        </DropdownItem>
+                        <DropdownItem
+                          onClick={() => {
+                            window.open(`https://${domain.fqdn}`, "_blank");
                             setSelectedDomainAction(null);
                           }}
                         >
@@ -991,65 +1050,45 @@ const DomainsSection = () => {
                               gap: "8px",
                             }}
                           >
-                            ✓ Verify Domain
+                            <ExternalLink size={16} color="var(--color-muted)" />{" "}
+                            Visit Domain
                           </div>
                         </DropdownItem>
-                      )}
-                      <DropdownItem
-                        onClick={() => {
-                          setSelectedDomainAction(null);
-                          navigator.clipboard.writeText(domain.fqdn);
-                        }}
-                      >
-                        <div
-                          style={{
-                            display: "flex",
-                            alignItems: "center",
-                            gap: "8px",
+                        <DropdownDivider />
+                        <DropdownItem
+                          $destructive
+                          onClick={() => {
+                            setSelectedDomainAction(null);
+                            setDomainForDeletion(domain.id);
                           }}
                         >
-                          <Copy size={16} color="var(--color-muted)" /> Copy
-                          Domain
-                        </div>
-                      </DropdownItem>
-                      <DropdownItem
-                        onClick={() => {
-                          window.open(`https://${domain.fqdn}`, "_blank");
-                          setSelectedDomainAction(null);
-                        }}
-                      >
-                        <div
-                          style={{
-                            display: "flex",
-                            alignItems: "center",
-                            gap: "8px",
-                          }}
-                        >
-                          <ExternalLink size={16} color="var(--color-muted)" />{" "}
-                          Visit Domain
-                        </div>
-                      </DropdownItem>
-                      <DropdownDivider />
-                      <DropdownItem
-                        $destructive
-                        onClick={() => {
-                          setSelectedDomainAction(null);
-                          setDomainForDeletion(domain.id);
-                        }}
-                      >
-                        <div
-                          style={{
-                            display: "flex",
-                            alignItems: "center",
-                            gap: "8px",
-                          }}
-                        >
-                          <Trash size={16} color="var(--color-error)" /> Remove
-                          Domain
-                        </div>
-                      </DropdownItem>
-                    </DropdownItems>
-                  </Dropdown>
+                          <div
+                            style={{
+                              display: "flex",
+                              alignItems: "center",
+                              gap: "8px",
+                            }}
+                          >
+                            <Trash size={16} color="var(--color-error)" /> Remove
+                            Domain
+                          </div>
+                        </DropdownItem>
+                      </DropdownItems>
+                    </Dropdown>
+                    {domainForDeletion === domain.id && (
+                      <ConfirmationPopover
+                        title="Are you sure you want to delete this domain?"
+                        onConfirm={() => handleDeleteDomain(domain)}
+                        onCancel={() => setDomainForDeletion(null)}
+                      />
+                    )}
+                    {domainInVerification === domain.id && (
+                      <AddDomainPopover
+                        domain={domain}
+                        onClose={() => setDomainInVerification(null)}
+                      />
+                    )}
+                  </div>
                 </ActionsCell>
               </TableRow>
             ))}
@@ -1059,27 +1098,6 @@ const DomainsSection = () => {
     </>
   );
 };
-
-const MemberListItem = styled.div`
-  background: var(--color-background);
-  padding: 16px 4px;
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-  gap: 12px;
-  border-bottom: 1px solid var(--color-border);
-  transition: all 0.2s ease;
-
-  &:hover {
-    background: var(--color-input-background);
-  }
-`;
-
-const MemberListItemContent = styled.div`
-  display: flex;
-  align-items: center;
-  gap: 12px;
-`;
 
 const AvatarPlaceholder = styled.div`
   width: 40px;
@@ -1095,27 +1113,6 @@ const AvatarPlaceholder = styled.div`
   overflow: hidden;
 `;
 
-const MemberInfo = styled.div`
-  display: flex;
-  flex-direction: column;
-`;
-
-const MemberName = styled.div`
-  font-size: 14px;
-  color: var(--color-foreground);
-`;
-
-const MemberEmail = styled.div`
-  font-size: 12px;
-  color: var(--color-muted);
-`;
-
-const MemberListItemActions = styled.div`
-  display: flex;
-  align-items: center;
-  gap: 8px;
-`;
-
 const MembersSection = () => {
   const {
     activeOrganization,
@@ -1124,10 +1121,13 @@ const MembersSection = () => {
     getRoles,
     addMemberRole,
     removeMemberRole,
+    removeMember,
   } = useActiveOrganization();
+  const { session } = useSession();
   const { toast } = useScreenContext();
   const [searchQuery, setSearchQuery] = useState("");
   const [isInviting, setIsInviting] = useState(false);
+  const inviteMemberButtonRef = useRef<HTMLButtonElement>(null);
 
   const {
     data: members = [],
@@ -1151,10 +1151,11 @@ const MembersSection = () => {
   const filteredMembers = React.useMemo(() => {
     if (!searchQuery) return members;
     return members.filter((member: any) => {
-      if (!member.user) return false;
-      const firstName = member.user.first_name || "";
-      const lastName = member.user.last_name || "";
-      const email = member.user.primary_email_address?.email || "";
+      const userData = member.user;
+      if (!userData) return false;
+      const firstName = userData.first_name || "";
+      const lastName = userData.last_name || "";
+      const email = userData.primary_email_address?.email || "";
       const fullName = `${firstName} ${lastName}`.trim();
       return (
         fullName.toLowerCase().includes(searchQuery.toLowerCase()) ||
@@ -1207,7 +1208,7 @@ const MembersSection = () => {
     <>
       <div
         style={{
-          marginBottom: "16px",
+          marginBottom: "24px",
           display: "flex",
           justifyContent: "space-between",
           alignItems: "center",
@@ -1222,17 +1223,18 @@ const MembersSection = () => {
           />
         </div>
         <Button
-          onClick={() => setIsInviting(true)}
+          ref={inviteMemberButtonRef}
+          onClick={() => setIsInviting(!isInviting)}
           style={{
             background: "#6366f1",
             color: "white",
             border: "none",
-            padding: "6px 12px",
-            borderRadius: "4px",
-            fontSize: "13px",
+            padding: "8px 16px",
+            borderRadius: "6px",
+            fontSize: "14px",
             fontWeight: 500,
             whiteSpace: "nowrap",
-            height: "32px",
+            height: "36px",
             width: "auto",
           }}
         >
@@ -1245,6 +1247,7 @@ const MembersSection = () => {
           onClose={() => setIsInviting(false)}
           onSuccess={handleInvitationSuccess}
           roles={roles}
+          triggerRef={inviteMemberButtonRef}
         />
       )}
 
@@ -1256,105 +1259,154 @@ const MembersSection = () => {
           description="Invite members to your organization to get started."
         />
       ) : (
-        <div>
-          <div
-            style={{
-              fontSize: "14px",
-              fontWeight: 400,
-              marginBottom: "8px",
-              color: "var(--color-muted)",
-            }}
-          >
-            {filteredMembers.length} member
-            {filteredMembers.length !== 1 ? "s" : ""}
-          </div>
-          <div style={{ borderTop: "1px solid var(--color-border)" }}>
-            {filteredMembers.map((member) => (
-              <MemberListItem key={member.id}>
-                <MemberListItemContent>
-                  <AvatarPlaceholder>
-                    {member.user && member.user.profile_picture_url ? (
-                      <img
-                        src={member.user.profile_picture_url}
-                        alt={`${member.user.first_name || ""} ${
-                          member.user.last_name || ""
-                        }`}
-                        style={{
-                          width: "100%",
-                          height: "100%",
-                          objectFit: "cover",
-                        }}
-                      />
-                    ) : (
-                      getInitials(
-                        member.user?.first_name,
-                        member.user?.last_name,
-                      )
-                    )}
-                  </AvatarPlaceholder>
-                  <MemberInfo>
-                    <MemberName>
-                      {member.user
-                        ? `${member.user.first_name || ""} ${
-                            member.user.last_name || ""
-                          }`.trim() ||
-                          member.user.primary_email_address?.email ||
-                          "User"
-                        : "User"}
-                    </MemberName>
-                    <MemberEmail>
-                      {member.user?.primary_email_address?.email}
-                    </MemberEmail>
-                  </MemberInfo>
-                </MemberListItemContent>
-                <MemberListItemActions>
-                  <Dropdown>
-                    <DropdownTrigger>
-                      <IconButton>•••</IconButton>
-                    </DropdownTrigger>
-                    <DropdownItems>
-                      {roles.map((role) => {
-                        const hasRole = memberHasRole(member, role.id);
-                        return (
+        <Table>
+          <TableHead>
+            <TableRow>
+              <TableHeader>Member</TableHeader>
+              <TableHeader>Joined</TableHeader>
+              <TableHeader>Roles</TableHeader>
+            </TableRow>
+          </TableHead>
+          <TableBody>
+            {filteredMembers.map((member) => {
+              const memberRoles = member.roles || [];
+              const userData = member.user;
+              const isCurrentUser = userData?.id === session?.active_signin?.user_id;
+
+              return (
+                <TableRow key={member.id}>
+                  <TableCellFlex>
+                    <div>
+                      <AvatarPlaceholder>
+                        {userData?.profile_picture_url ? (
+                          <img
+                            src={userData.profile_picture_url}
+                            alt={`${userData.first_name || ""} ${userData.last_name || ""
+                              }`}
+                            style={{
+                              width: "100%",
+                              height: "100%",
+                              objectFit: "cover",
+                            }}
+                          />
+                        ) : (
+                          getInitials(
+                            userData?.first_name,
+                            userData?.last_name,
+                          ) || "?"
+                        )}
+                      </AvatarPlaceholder>
+                      <div>
+                        <div style={{ display: "flex", alignItems: "center", gap: "8px" }}>
+                          <span style={{ fontSize: "14px", fontWeight: 500, color: "var(--color-foreground)" }}>
+                            {(() => {
+                              if (!userData) return "Unknown User";
+
+                              const fullName = `${userData.first_name || ""} ${userData.last_name || ""}`.trim();
+                              if (fullName) return fullName;
+
+                              return userData.primary_email_address?.email ||
+                                "Unknown User";
+                            })()}
+                          </span>
+                          {isCurrentUser && (
+                            <span
+                              style={{
+                                fontSize: "12px",
+                                padding: "2px 8px",
+                                background: "var(--color-background-alt)",
+                                borderRadius: "4px",
+                                color: "var(--color-secondary-text)",
+                              }}
+                            >
+                              You
+                            </span>
+                          )}
+                        </div>
+                        <div style={{ fontSize: "13px", color: "var(--color-secondary-text)" }}>
+                          {userData?.primary_email_address?.email}
+                        </div>
+                      </div>
+                    </div>
+                  </TableCellFlex>
+                  <TableCell>
+                    {new Date(member.created_at).toLocaleDateString("en-US", {
+                      month: "short",
+                      day: "numeric",
+                      year: "numeric",
+                    })}
+                  </TableCell>
+                  <ActionsCell>
+                    <div style={{ position: "relative" }}>
+                      <Dropdown>
+                        <DropdownTrigger>
+                          <Button
+                            style={{
+                              background: "var(--color-background)",
+                              border: "1px solid var(--color-border)",
+                              borderRadius: "6px",
+                              padding: "6px 12px",
+                              fontSize: "14px",
+                              color: "var(--color-foreground)",
+                              display: "flex",
+                              alignItems: "center",
+                              gap: "4px",
+                              minWidth: "120px",
+                              justifyContent: "space-between",
+                            }}
+                          >
+                            <span>{memberRoles.length > 0 ? memberRoles[0].name : "No role"}</span>
+                            <ChevronDown size={14} />
+                          </Button>
+                        </DropdownTrigger>
+                        <DropdownItems>
+                          {roles.map((role) => {
+                            const hasRole = memberHasRole(member, role.id);
+                            return (
+                              <DropdownItem
+                                key={role.id}
+                                onClick={() => toggleRole(member, role, hasRole)}
+                              >
+                                <div
+                                  style={{
+                                    display: "flex",
+                                    justifyContent: "space-between",
+                                    width: "100%",
+                                  }}
+                                >
+                                  <span>{role.name}</span>
+                                  {hasRole && (
+                                    <Check size={16} color="var(--color-success)" />
+                                  )}
+                                </div>
+                              </DropdownItem>
+                            );
+                          })}
+                          <DropdownDivider />
                           <DropdownItem
-                            key={role.id}
-                            onClick={() => toggleRole(member, role, hasRole)}
+                            $destructive
+                            onClick={() => removeMember(member)}
                           >
                             <div
                               style={{
                                 display: "flex",
-                                justifyContent: "space-between",
-                                width: "100%",
+                                alignItems: "center",
+                                gap: "8px",
                               }}
                             >
-                              <span>{role.name}</span>
-                              {hasRole && (
-                                <Check size={16} color="var(--color-success)" />
-                              )}
+                              <Trash size={16} color="var(--color-error)" />
+                              <span>Remove Member</span>
                             </div>
                           </DropdownItem>
-                        );
-                      })}
-                      <DropdownDivider />
-                      <DropdownItem $destructive>
-                        <div
-                          style={{
-                            display: "flex",
-                            alignItems: "center",
-                            gap: "8px",
-                          }}
-                        >
-                          <Trash size={16} color="var(--color-error)" />
-                          <span>Remove Member</span>
-                        </div>
-                      </DropdownItem>
-                    </DropdownItems>
-                  </Dropdown>
-                </MemberListItemActions>
-              </MemberListItem>
-            ))}
-          </div>
-        </div>
+                        </DropdownItems>
+                      </Dropdown>
+                    </div>
+                  </ActionsCell>
+                </TableRow>
+              );
+            })}
+          </TableBody>
+        </Table>
       )}
     </>
   );
@@ -1372,6 +1424,7 @@ const InvitationsSection = () => {
   const { toast } = useScreenContext();
   const [isInviting, setIsInviting] = useState(false);
   const [searchQuery, setSearchQuery] = useState("");
+  const inviteMemberButtonRef = useRef<HTMLButtonElement>(null);
 
   const {
     data: invitations = [],
@@ -1439,7 +1492,7 @@ const InvitationsSection = () => {
     <>
       <div
         style={{
-          marginBottom: "16px",
+          marginBottom: "24px",
           display: "flex",
           justifyContent: "space-between",
           alignItems: "center",
@@ -1454,17 +1507,18 @@ const InvitationsSection = () => {
           />
         </div>
         <Button
-          onClick={() => setIsInviting(true)}
+          ref={inviteMemberButtonRef}
+          onClick={() => setIsInviting(!isInviting)}
           style={{
             background: "#6366f1",
             color: "white",
             border: "none",
-            padding: "6px 12px",
-            borderRadius: "4px",
-            fontSize: "13px",
+            padding: "8px 16px",
+            borderRadius: "6px",
+            fontSize: "14px",
             fontWeight: 500,
             whiteSpace: "nowrap",
-            height: "32px",
+            height: "36px",
             width: "auto",
           }}
         >
@@ -1477,6 +1531,7 @@ const InvitationsSection = () => {
           onClose={() => setIsInviting(false)}
           onSuccess={handleInvitationSuccess}
           roles={roles}
+          triggerRef={inviteMemberButtonRef}
         />
       )}
 
@@ -1490,71 +1545,71 @@ const InvitationsSection = () => {
           description="Invite new members to your organization."
         />
       ) : (
-        <div>
-          <div
-            style={{
-              fontSize: "14px",
-              fontWeight: 400,
-              marginBottom: "8px",
-              color: "var(--color-muted)",
-            }}
-          >
-            {filteredInvitations.length} pending invitation
-            {filteredInvitations.length !== 1 ? "s" : ""}
-          </div>
-          <div style={{ borderTop: "1px solid var(--color-border)" }}>
+        <Table>
+          <TableHead>
+            <TableRow>
+              <TableHeader>Email</TableHeader>
+              <TableHeader>Role</TableHeader>
+              <TableHeader>Invited</TableHeader>
+              <TableHeader></TableHeader>
+            </TableRow>
+          </TableHead>
+          <TableBody>
             {filteredInvitations.map((invitation) => (
-              <MemberListItem key={invitation.id}>
-                <MemberListItemContent>
-                  <MemberInfo>
-                    <MemberName>{invitation.email}</MemberName>
-                    <MemberEmail>
-                      {invitation.initial_organization_role?.name}
-                    </MemberEmail>
-                  </MemberInfo>
-                </MemberListItemContent>
-                <MemberListItemActions>
-                  <Dropdown>
-                    <DropdownTrigger>
-                      <IconButton>•••</IconButton>
-                    </DropdownTrigger>
-                    <DropdownItems>
-                      <DropdownItem
-                        onClick={() => handleResendInvitation(invitation)}
-                      >
-                        <div
-                          style={{
-                            display: "flex",
-                            alignItems: "center",
-                            gap: "8px",
-                          }}
+              <TableRow key={invitation.id}>
+                <TableCell>{invitation.email}</TableCell>
+                <TableCell>{invitation.initial_organization_role?.name || "No role"}</TableCell>
+                <TableCell>
+                  {new Date(invitation.created_at).toLocaleDateString("en-US", {
+                    month: "short",
+                    day: "numeric",
+                    year: "numeric",
+                  })}
+                </TableCell>
+                <ActionsCell>
+                  <div style={{ position: "relative" }}>
+                    <Dropdown>
+                      <DropdownTrigger>
+                        <IconButton>•••</IconButton>
+                      </DropdownTrigger>
+                      <DropdownItems>
+                        <DropdownItem
+                          onClick={() => handleResendInvitation(invitation)}
                         >
-                          <Mail size={16} color="var(--color-muted)" />
-                          <span>Resend Invitation</span>
-                        </div>
-                      </DropdownItem>
-                      <DropdownItem
-                        $destructive
-                        onClick={() => handleCancelInvitation(invitation)}
-                      >
-                        <div
-                          style={{
-                            display: "flex",
-                            alignItems: "center",
-                            gap: "8px",
-                          }}
+                          <div
+                            style={{
+                              display: "flex",
+                              alignItems: "center",
+                              gap: "8px",
+                            }}
+                          >
+                            <Mail size={16} color="var(--color-muted)" />
+                            <span>Resend Invitation</span>
+                          </div>
+                        </DropdownItem>
+                        <DropdownItem
+                          $destructive
+                          onClick={() => handleCancelInvitation(invitation)}
                         >
-                          <Trash size={16} color="var(--color-error)" />
-                          <span>Cancel Invitation</span>
-                        </div>
-                      </DropdownItem>
-                    </DropdownItems>
-                  </Dropdown>
-                </MemberListItemActions>
-              </MemberListItem>
+                          <div
+                            style={{
+                              display: "flex",
+                              alignItems: "center",
+                              gap: "8px",
+                            }}
+                          >
+                            <Trash size={16} color="var(--color-error)" />
+                            <span>Cancel Invitation</span>
+                          </div>
+                        </DropdownItem>
+                      </DropdownItems>
+                    </Dropdown>
+                  </div>
+                </ActionsCell>
+              </TableRow>
             ))}
-          </div>
-        </div>
+          </TableBody>
+        </Table>
       )}
     </>
   );
@@ -1577,6 +1632,7 @@ const RolesSection = () => {
   >(null);
   const [searchQuery, setSearchQuery] = useState("");
   const [roleForDeletion, setRoleForDeletion] = useState<string | null>(null);
+  const addRoleButtonRef = useRef<HTMLButtonElement>(null);
 
   const {
     data: roles = [],
@@ -1700,16 +1756,24 @@ const RolesSection = () => {
 
         <div>
           <Button
-            onClick={() => setRolePopover({ isOpen: true })}
-            style={{ width: "100px" }}
+            ref={addRoleButtonRef}
+            onClick={() => setRolePopover({ isOpen: !rolePopover.isOpen })}
+            style={{
+              padding: "8px 16px",
+              borderRadius: "6px",
+              fontSize: "14px",
+              fontWeight: 500,
+              height: "36px"
+            }}
           >
             Add role
           </Button>
-          {rolePopover.isOpen && (
+          {rolePopover.isOpen && !rolePopover.role && (
             <AddRolePopover
               role={rolePopover.role}
               onClose={() => setRolePopover({ isOpen: false })}
               onSuccess={handleRoleSaved}
+              triggerRef={addRoleButtonRef}
             />
           )}
         </div>
@@ -1736,7 +1800,7 @@ const RolesSection = () => {
           <TableBody>
             {filteredRoles.map((role) => (
               <TableRow key={role.id}>
-                <TableCellFlex>
+                <TableCell>
                   <div
                     style={{
                       fontSize: "14px",
@@ -1745,16 +1809,9 @@ const RolesSection = () => {
                   >
                     {role.name}
                   </div>
-                </TableCellFlex>
-                <TableCell>
-                  <div
-                    style={{
-                      fontSize: "14px",
-                      color: "var(--color-muted)",
-                    }}
-                  >
-                    {role.permissions.join(", ")}
-                  </div>
+                </TableCell>
+                <TableCell style={{ color: "var(--color-secondary-text)" }}>
+                  {role.permissions.join(", ")}
                 </TableCell>
                 <ActionsCell>
                   <div
@@ -1763,15 +1820,9 @@ const RolesSection = () => {
                       gap: "10px",
                       alignItems: "center",
                       justifyContent: "flex-end",
+                      position: "relative",
                     }}
                   >
-                    {roleForDeletion === role.id && (
-                      <ConfirmationPopover
-                        title="Are you sure you want to delete this domain?"
-                        onConfirm={() => handleDeleteRole(role)}
-                        onCancel={() => setRoleForDeletion(null)}
-                      />
-                    )}
                     <Dropdown
                       open={roleForOptionPopover === role.id}
                       openChange={(open) =>
@@ -1779,7 +1830,10 @@ const RolesSection = () => {
                       }
                     >
                       <DropdownTrigger>
-                        <IconButton disabled={!role.organization_id}>
+                        <IconButton
+                          disabled={!role.organization_id}
+                          data-role-dropdown-trigger={role.id}
+                        >
                           •••
                         </IconButton>
                       </DropdownTrigger>
@@ -1804,6 +1858,23 @@ const RolesSection = () => {
                         </DropdownItem>
                       </DropdownItems>
                     </Dropdown>
+                    {roleForDeletion === role.id && (
+                      <ConfirmationPopover
+                        title="Are you sure you want to delete this role?"
+                        onConfirm={() => handleDeleteRole(role)}
+                        onCancel={() => setRoleForDeletion(null)}
+                      />
+                    )}
+                    {rolePopover.isOpen && rolePopover.role?.id === role.id && (
+                      <AddRolePopover
+                        role={rolePopover.role}
+                        onClose={() => {
+                          setRolePopover({ isOpen: false });
+                          setRoleForOptionPopover(null);
+                        }}
+                        onSuccess={handleRoleSaved}
+                      />
+                    )}
                   </div>
                 </ActionsCell>
               </TableRow>
@@ -1848,7 +1919,7 @@ export const ManageOrganization = () => {
   return (
     <TypographyProvider>
       <ScreenContext.Provider
-        value={{ screen: null, setScreen: () => {}, toast }}
+        value={{ screen: null, setScreen: () => { }, toast }}
       >
         <Container>
           <TabsContainer>

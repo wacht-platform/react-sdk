@@ -1,4 +1,4 @@
-import { useCallback, useState, useEffect } from "react";
+import { useCallback, useState } from "react";
 import styled from "styled-components";
 import {
   User,
@@ -7,8 +7,7 @@ import {
   EyeOff,
   Download,
   AlertTriangle,
-  ChevronUp,
-  ChevronDown,
+
   Check,
   Mail,
   Phone,
@@ -16,6 +15,25 @@ import {
   Shield,
   Activity,
 } from "lucide-react";
+
+// Local interface to match the actual API response
+interface UserSignIn {
+  id: string;
+  session_id: string;
+  user_id: string;
+  active_organization_membership_id?: string;
+  active_workspace_membership_id?: string;
+  expires_at: string;
+  last_active_at: string;
+  ip_address: string;
+  browser: string;
+  device: string;
+  city: string;
+  region: string;
+  region_code: string;
+  country: string;
+  country_code: string;
+}
 import * as TFA2 from "./2fa";
 import { EmailAddPopover } from "@/components/user/add-email-popover";
 import { PhoneAddPopover } from "@/components/user/add-phone-popover";
@@ -30,15 +48,30 @@ import { GoogleIcon } from "../icons/google";
 import { MicrosoftIcon } from "../icons/microsoft";
 import { GithubIcon } from "../icons/github";
 import { XIcon } from "../icons/x";
+import { ChromeIcon } from "../icons/chrome";
+import { FirefoxIcon } from "../icons/firefox";
+import { SafariIcon } from "../icons/safari";
+import { EdgeIcon } from "../icons/edge";
+import { OperaIcon } from "../icons/opera";
+import { BraveIcon } from "../icons/brave";
 import { useDeployment } from "@/hooks/use-deployment";
 import { Form, FormGroup, Label } from "../utility/form";
 import { Input } from "../utility/input";
-import { Spinner, Button } from "../utility";
+import { Spinner, Button, SearchInput } from "../utility";
+import {
+  Table,
+  TableBody,
+  TableCell,
+  TableHead,
+  TableHeader,
+  TableRow,
+  ActionsCell,
+} from "@/components/utility/table";
 import { EmptyState } from "@/components/utility/empty-state";
-import { QRCodeSVG } from "qrcode.react";
+
 import React from "react";
-import { UserAuthenticator } from "@/types";
 import { ScreenContext, useScreenContext } from "./context";
+
 
 const TypographyProvider = styled.div`
   * {
@@ -70,33 +103,57 @@ const Container = styled.div`
   overflow: hidden;
   display: flex;
   flex-direction: column;
+  padding-bottom: 24px;
+  position: relative;
 
   @media (max-width: 768px) {
     border-radius: 16px;
+    padding-bottom: 20px;
+  }
+
+  /* Blur effect at the bottom */
+  &::after {
+    content: '';
+    position: absolute;
+    bottom: 0;
+    left: 0;
+    right: 0;
+    height: 40px;
+    background: linear-gradient(
+      to bottom,
+      transparent 0%,
+      var(--color-background) 70%
+    );
+    pointer-events: none;
+    z-index: 1;
   }
 `;
 
 const TabsContainer = styled.div`
-  padding: 8px 24px 0;
+  padding: 0 24px;
   border-bottom: 1px solid var(--color-border);
 
   @media (max-width: 768px) {
-    padding: 20px 20px 0;
+    padding: 0 20px;
   }
 `;
 
 const TabsList = styled.div`
   display: flex;
-  gap: 24px;
+  align-items: center;
+  gap: 20px;
   overflow-x: auto;
+  overflow-y: hidden;
 
   &::-webkit-scrollbar {
     display: none;
   }
 `;
 
+
+
 const Tab = styled.button<{ $isActive: boolean }>`
-  padding: 12px 0;
+  padding: 12px 12px;
   border: none;
   background: none;
   font-size: 14px;
@@ -107,6 +164,7 @@ const Tab = styled.button<{ $isActive: boolean }>`
   position: relative;
   transition: color 0.15s ease;
   white-space: nowrap;
+  min-width: fit-content;
 
   &:hover {
     color: var(--color-foreground);
@@ -133,22 +191,16 @@ const TabIcon = styled.span`
 
 const TabContent = styled.div`
   flex: 1;
-  padding: 24px;
+  padding: 24px 24px 0 24px;
   overflow-y: auto;
+  position: relative;
 
   @media (max-width: 768px) {
-    padding: 20px;
+    padding: 20px 20px 0 20px;
   }
 `;
 
-const SectionTitle = styled.h2`
-  font-size: 16px;
-  color: var(--color-foreground);
-  margin-bottom: 0;
-  display: flex;
-  justify-content: space-between;
-  align-items: center;
-`;
+
 
 const EditButton = styled.button`
   padding: 8px 16px;
@@ -169,14 +221,7 @@ const EditButton = styled.button`
   }
 `;
 
-const LastLogin = styled.div`
-  font-size: 13px;
-  color: var(--color-secondary-text);
-  margin-top: 8px;
-  display: flex;
-  align-items: center;
-  gap: 4px;
-`;
+
 
 const IconButton = styled.button`
   background: none;
@@ -196,131 +241,97 @@ const IconButton = styled.button`
   }
 `;
 
-const MemberListItem = styled.div`
-  background: var(--color-background);
-  padding: 16px 4px;
+const HeaderCTAContainer = styled.div`
   display: flex;
   align-items: center;
-  justify-content: space-between;
+  flex-wrap: wrap;
   gap: 12px;
-  border-bottom: 1px solid var(--color-border);
-  transition: all 0.2s ease;
+  margin-bottom: 24px;
+`;
 
-  &:hover {
-    background: var(--color-input-background);
+
+
+
+
+
+
+
+
+
+
+const UnknownBrowserIcon = () => (
+  <svg width="20" height="20" viewBox="0 0 24 24" fill="none">
+    <circle cx="12" cy="12" r="11" fill="#6B7280" stroke="#9CA3AF" strokeWidth="0.5" />
+    <circle cx="12" cy="12" r="8" fill="none" stroke="#D1D5DB" strokeWidth="0.5" />
+    <path d="M12 8c-2.2 0-4 1.8-4 4s1.8 4 4 4 4-1.8 4-4-1.8-4-4-4zm0 6c-1.1 0-2-.9-2-2s.9-2 2-2 2 .9 2 2-.9 2-2 2z" fill="#9CA3AF" />
+    <circle cx="12" cy="12" r="1" fill="#6B7280" />
+    <text x="12" y="16.5" textAnchor="middle" fill="#9CA3AF" fontSize="6">?</text>
+  </svg>
+);
+
+const BrowserIcon = ({ browser }: { browser: string }) => {
+  const browserName = browser?.toLowerCase() || "";
+  const iconProps = { width: 20, height: 20 };
+
+  if (browserName.includes("chrome")) {
+    return <ChromeIcon {...iconProps} />;
   }
-`;
 
-const MemberListItemContent = styled.div`
-  display: flex;
-  align-items: center;
-  gap: 12px;
-`;
+  if (browserName.includes("firefox")) {
+    return <FirefoxIcon {...iconProps} />;
+  }
 
-const MemberInfo = styled.div`
-  display: flex;
-  flex-direction: column;
-`;
+  if (browserName.includes("safari")) {
+    return <SafariIcon {...iconProps} />;
+  }
 
-const MemberName = styled.div`
-  font-size: 14px;
-  color: var(--color-foreground);
-`;
+  if (browserName.includes("edge")) {
+    return <EdgeIcon {...iconProps} />;
+  }
 
-const MemberEmail = styled.div`
-  font-size: 12px;
-  color: var(--color-muted);
-`;
+  if (browserName.includes("opera")) {
+    return <OperaIcon {...iconProps} />;
+  }
 
-const MemberListItemActions = styled.div`
-  display: flex;
-  align-items: center;
-  gap: 8px;
-`;
+  if (browserName.includes("brave")) {
+    return <BraveIcon {...iconProps} />;
+  }
 
-const ProfileSection = styled.div`
-  padding: 24px;
-`;
-
-const SessionDropdown = ({
-  isOpen,
-  onClose,
-  sessionId,
-  onLogout,
-}: {
-  isOpen: boolean;
-  onClose: () => void;
-  sessionId: string;
-  onLogout: (id: string) => void;
-}) => {
-  return (
-    <Dropdown open={isOpen} openChange={onClose}>
-      <DropdownTrigger>
-        <IconButton>•••</IconButton>
-      </DropdownTrigger>
-      <DropdownItems>
-        <DropdownItem onClick={() => onLogout(sessionId)}>
-          <div style={{ display: "flex", alignItems: "center", gap: "8px" }}>
-            <LogOut size={14} />
-            Logout Session
-          </div>
-        </DropdownItem>
-      </DropdownItems>
-    </Dropdown>
-  );
-};
-
-const SectionHeader = ({
-  title,
-  actionLabel,
-  onAction,
-  buttonIcon,
-}: {
-  title: string;
-  actionLabel?: string;
-  onAction?: () => void;
-  buttonIcon?: React.ReactNode;
-}) => {
-  return (
-    <div
-      style={{
-        display: "flex",
-        alignItems: "center",
-        justifyContent: "space-between",
-        width: "100%",
-      }}
-    >
-      <SectionTitle style={{ fontSize: 14 }}>{title}</SectionTitle>
-
-      {actionLabel && onAction && (
-        <Button
-          onClick={onAction}
-          style={{
-            width: "auto",
-            display: "flex",
-            alignItems: "center",
-            gap: "8px",
-          }}
-        >
-          {buttonIcon}
-          <span>{actionLabel}</span>
-        </Button>
-      )}
-    </div>
-  );
+  return <UnknownBrowserIcon />;
 };
 
 const ActiveSessionsSection = () => {
   const [activeSession, setActiveSession] = useState<string | null>(null);
-  const { signins, removeSignin, loading } = useUserSignins();
-
-  const handleCloseDropdown = () => {
-    setActiveSession(null);
-  };
+  const { signins, removeSignin, refetch, loading } = useUserSignins();
+  const { toast } = useScreenContext();
+  
+  // Type the signins data properly
+  const typedSignins = signins as UserSignIn[] | undefined;
 
   const logoutSession = async (sessionId: string) => {
-    await removeSignin(sessionId);
-    setActiveSession(null);
+    try {
+      await removeSignin(sessionId);
+      await refetch();
+      setActiveSession(null);
+      toast("Session ended successfully", "info");
+    } catch (error: any) {
+      toast(error.message || "Failed to end session. Please try again.", "error");
+    }
+  };
+
+  const formatLastActive = (lastActiveAt: string) => {
+    if (!lastActiveAt || lastActiveAt.trim() === "") return "Unknown";
+
+    const date = new Date(lastActiveAt);
+    if (isNaN(date.getTime())) return "Unknown";
+
+    const now = new Date();
+    const diffInMinutes = Math.floor((now.getTime() - date.getTime()) / (1000 * 60));
+
+    if (diffInMinutes < 1) return "Just now";
+    if (diffInMinutes < 60) return `${diffInMinutes}m ago`;
+    if (diffInMinutes < 1440) return `${Math.floor(diffInMinutes / 60)}h ago`;
+    return date.toLocaleDateString();
   };
 
   if (loading) {
@@ -334,77 +345,100 @@ const ActiveSessionsSection = () => {
   }
 
   return (
-    <ProfileSection>
-      <SectionHeader title="Active Sessions" />
-      {signins && signins.length > 0 ? (
-        signins.map((signin) => (
-          <div
-            key={signin.id}
-            style={{
-              display: "flex",
-              alignItems: "center",
-              padding: "16px",
-              background:
-                activeSession === signin.id
-                  ? "var(--color-background-hover)"
-                  : "transparent",
-              borderRadius: "8px",
-              marginTop: "12px",
-              position: "relative",
-            }}
-          >
-            <div style={{ marginRight: "16px" }}></div>
-            <div style={{ flex: 1 }}>
-              <div
-                style={{
-                  fontSize: "14px",
-                  color: "var(--color-foreground)",
-                  fontWeight: 500,
-                }}
-              >
-                {signin.browser || "Unknown Browser"}
-                {signin.device ? ` • ${signin.device}` : ""}
-              </div>
-              <LastLogin>
-                <div>
-                  {signin.city && signin.country
-                    ? `${signin.city}, ${signin.country}`
-                    : signin.ipAddress || "Unknown location"}
-                </div>
-                <div>{new Date(signin.lastActiveAt).toLocaleString()}</div>
-              </LastLogin>
-            </div>
-            <div style={{ position: "relative" }}>
-              <IconButton
-                onClick={() =>
-                  setActiveSession(
-                    activeSession === signin.id ? null : signin.id,
-                  )
-                }
-              >
-                •••
-              </IconButton>
-              <SessionDropdown
-                isOpen={activeSession === signin.id}
-                onClose={handleCloseDropdown}
-                sessionId={signin.id}
-                onLogout={logoutSession}
-              />
-            </div>
-          </div>
-        ))
-      ) : (
-        <div
-          style={{
-            textAlign: "center",
-            padding: "20px",
-            color: "var(--color-muted)",
-          }}
-        >
-          No active sign-ins found
-        </div>
-      )}
-    </ProfileSection>
+    <>
+      <div style={{ marginBottom: "16px" }}>
+        <h3 style={{
+          fontSize: "16px",
+          color: "var(--color-foreground)",
+          margin: 0
+        }}>
+          Active Sessions
+        </h3>
+        <p style={{
+          fontSize: "14px",
+          color: "var(--color-muted)",
+          margin: 0
+        }}>
+          Manage your active browser sessions and sign-ins
+        </p>
+      </div>
+      <div>
+        {typedSignins && typedSignins.length > 0 ? (
+          <Table>
+            <TableHead>
+              <TableRow>
+                <TableHeader>Browser & Device</TableHeader>
+                <TableHeader>Location</TableHeader>
+                <TableHeader>Last Active</TableHeader>
+                <TableHeader></TableHeader>
+              </TableRow>
+            </TableHead>
+            <TableBody>
+              {typedSignins.map((signin) => (
+                <TableRow key={signin.id}>
+                  <TableCell>
+                    <div style={{ display: "flex", alignItems: "center", gap: "8px" }}>
+                      <IconWrapper>
+                        <BrowserIcon browser={signin.browser || "Unknown"} />
+                      </IconWrapper>
+                      <div>
+                        <div>{signin.browser || "Unknown Browser"}</div>
+                        {signin.device && (
+                          <div style={{ fontSize: "12px", color: "var(--color-muted)" }}>
+                            {signin.device}
+                          </div>
+                        )}
+                      </div>
+                    </div>
+                  </TableCell>
+                  <TableCell>
+                    <div>
+                      <div>
+                        {signin.city && signin.country
+                          ? `${signin.city}, ${signin.country}`
+                          : "Unknown location"
+                        }
+                      </div>
+                      {signin.ip_address && (
+                        <div style={{ fontSize: "12px", color: "var(--color-muted)" }}>
+                          {signin.ip_address}
+                        </div>
+                      )}
+                    </div>
+                  </TableCell>
+                  <TableCell>
+                    {formatLastActive(signin.last_active_at)}
+                  </TableCell>
+                  <ActionsCell>
+                    <Dropdown
+                      open={activeSession === signin.id}
+                      openChange={(isOpen) => setActiveSession(isOpen ? signin.id : null)}
+                    >
+                      <DropdownTrigger>
+                        <IconButton>•••</IconButton>
+                      </DropdownTrigger>
+                      <DropdownItems>
+                        <DropdownItem onClick={() => logoutSession(signin.id)}>
+                          <div style={{ display: "flex", alignItems: "center", gap: "8px" }}>
+                            <LogOut size={14} />
+                            End Session
+                          </div>
+                        </DropdownItem>
+                      </DropdownItems>
+                    </Dropdown>
+                  </ActionsCell>
+                </TableRow>
+              ))}
+            </TableBody>
+          </Table>
+        ) : (
+          <EmptyState
+            title="No active sessions"
+            description="You don't have any active sessions at the moment."
+          />
+        )}
+      </div>
+    </>
   );
 };
 
@@ -414,6 +448,7 @@ const EmailManagementSection = () => {
   const [activeDropdown, setActiveDropdown] = useState<string | null>(null);
   const [newEmail, setNewEmail] = useState("");
   const [isAddingEmail, setIsAddingEmail] = useState(false);
+  const [searchQuery, setSearchQuery] = useState("");
   const {
     user,
     createEmailAddress,
@@ -453,184 +488,135 @@ const EmailManagementSection = () => {
     }
   };
 
+  // Filter emails based on search query
+  const filteredEmails = React.useMemo(() => {
+    if (!user?.user_email_addresses) return [];
+    if (!searchQuery.trim()) return user.user_email_addresses;
+
+    return user.user_email_addresses.filter((email) =>
+      email.email.toLowerCase().includes(searchQuery.toLowerCase())
+    );
+  }, [user?.user_email_addresses, searchQuery]);
+
   return (
     <>
-      <div style={{ position: "relative" }}>
-        <SectionHeader
-          title="Email addresses"
-          actionLabel="Add Email"
-          onAction={() => setIsAddingEmail(true)}
+      <HeaderCTAContainer>
+        <SearchInput
+          value={searchQuery}
+          onChange={setSearchQuery}
+          placeholder="Search Email"
         />
-        {isAddingEmail && (
-          <EmailAddPopover
-            onClose={() => setIsAddingEmail(false)}
-            onAddEmail={async (email) => {
-              const newEmailData = await createEmailAddress(email);
-              setNewEmail(newEmailData.data.id);
-              await prepareEmailVerification(newEmailData.data.id);
-              user.refetch();
-              setIsAddingEmail(false);
+        <div>
+          <Button
+            onClick={() => setIsAddingEmail(true)}
+            style={{
+              padding: "8px 16px",
+              borderRadius: "6px",
+              fontSize: "14px",
+              fontWeight: 500,
+              height: "36px"
             }}
-            onPrepareVerification={async () => {
-              await prepareEmailVerification(newEmail);
-              user.refetch();
-            }}
-            onAttemptVerification={async (otp) => {
-              await attemptEmailVerification(newEmail, otp);
-              user.refetch();
-              setIsAddingEmail(false);
-            }}
-          />
-        )}
-      </div>
-      <div>
-        {!user?.user_email_addresses?.length ? (
-          <EmptyState
-            title="No email addresses"
-            description="Add an email address to get started."
-          />
-        ) : (
-          <>
-            <div>
-              <h3
-                style={{
-                  fontSize: "14px",
-                  fontWeight: 400,
-                  marginBottom: "8px",
-                  color: "var(--color-muted)",
-                }}
-              >
-                Verified
-              </h3>
-              <div style={{ borderTop: "1px solid var(--color-border)" }}>
-                {user.user_email_addresses.filter((email) => email.verified)
-                  .length === 0 ? (
-                  <EmptyState
-                    title="No verified emails"
-                    description="Verify an email to see it here."
-                  />
-                ) : (
-                  user.user_email_addresses
-                    .filter((email) => email.verified)
-                    .map((email) => (
-                      <MemberListItem key={email.id}>
-                        <MemberListItemContent>
-                          <MemberInfo>
-                            <MemberName>{email.email}</MemberName>
-                            <MemberEmail>
-                              {email.id === user?.primary_email_address_id
-                                ? "Primary"
-                                : "Verified"}
-                            </MemberEmail>
-                          </MemberInfo>
-                        </MemberListItemContent>
-                        <MemberListItemActions>
-                          <Dropdown
-                            open={activeDropdown === email.id}
-                            openChange={(isOpen) =>
-                              setActiveDropdown(isOpen ? email.id : null)
-                            }
-                          >
-                            <DropdownTrigger>
-                              <IconButton>•••</IconButton>
-                            </DropdownTrigger>
-                            <DropdownItems>
-                              {email.id !== user?.primary_email_address_id && (
-                                <DropdownItem
-                                  onClick={async () => {
-                                    await makeEmailPrimary(email.id);
-                                    user.refetch();
-                                    setActiveDropdown(null);
-                                  }}
-                                >
-                                  Make primary
-                                </DropdownItem>
-                              )}
-                              <DropdownItem
-                                $destructive
-                                onClick={() => {
-                                  handleDeleteEmail(email.id);
-                                  setActiveDropdown(null);
-                                }}
-                              >
-                                Remove
-                              </DropdownItem>
-                            </DropdownItems>
-                          </Dropdown>
-                        </MemberListItemActions>
-                      </MemberListItem>
-                    ))
-                )}
-              </div>
-            </div>
-            <div style={{ marginTop: "24px" }}>
-              <h3
-                style={{
-                  fontSize: "14px",
-                  fontWeight: 400,
-                  marginBottom: "8px",
-                  color: "var(--color-muted)",
-                }}
-              >
-                Unverified
-              </h3>
-              <div style={{ borderTop: "1px solid var(--color-border)" }}>
-                {user.user_email_addresses.filter((email) => !email.verified)
-                  .length === 0 ? (
-                  <EmptyState
-                    title="No unverified emails"
-                    description="You are all set!"
-                  />
-                ) : (
-                  user.user_email_addresses
-                    .filter((email) => !email.verified)
-                    .map((email) => (
-                      <MemberListItem key={email.id}>
-                        <MemberListItemContent>
-                          <MemberInfo>
-                            <MemberName>{email.email}</MemberName>
-                            <MemberEmail>Not Verified</MemberEmail>
-                          </MemberInfo>
-                        </MemberListItemContent>
-                        <MemberListItemActions>
-                          <Dropdown
-                            open={activeDropdown === email.id}
-                            openChange={(isOpen) =>
-                              setActiveDropdown(isOpen ? email.id : null)
-                            }
-                          >
-                            <DropdownTrigger>
-                              <IconButton>•••</IconButton>
-                            </DropdownTrigger>
-                            <DropdownItems>
-                              <DropdownItem
-                                onClick={() => {
-                                  prepareEmailVerification(email.id);
-                                  setActiveDropdown(null);
-                                }}
-                              >
-                                Verify email
-                              </DropdownItem>
-                              <DropdownItem
-                                $destructive
-                                onClick={() => {
-                                  handleDeleteEmail(email.id);
-                                  setActiveDropdown(null);
-                                }}
-                              >
-                                Remove
-                              </DropdownItem>
-                            </DropdownItems>
-                          </Dropdown>
-                        </MemberListItemActions>
-                      </MemberListItem>
-                    ))
-                )}
-              </div>
-            </div>
-          </>
-        )}
-      </div>
+          >
+            Add Email
+          </Button>
+          {isAddingEmail && (
+            <EmailAddPopover
+              onClose={() => setIsAddingEmail(false)}
+              onAddEmail={async (email) => {
+                const newEmailData = await createEmailAddress(email);
+                setNewEmail(newEmailData.data.id);
+                await prepareEmailVerification(newEmailData.data.id);
+                user.refetch();
+                setIsAddingEmail(false);
+              }}
+              onPrepareVerification={async () => {
+                await prepareEmailVerification(newEmail);
+                user.refetch();
+              }}
+              onAttemptVerification={async (otp) => {
+                await attemptEmailVerification(newEmail, otp);
+                user.refetch();
+                setIsAddingEmail(false);
+              }}
+            />
+          )}
+        </div>
+      </HeaderCTAContainer>
+
+      {!filteredEmails?.length ? (
+        <EmptyState
+          title={searchQuery ? "No emails match your search" : "No email addresses"}
+          description="Add an email address to get started."
+        />
+      ) : (
+        <Table>
+          <TableHead>
+            <TableRow>
+              <TableHeader>Email Address</TableHeader>
+              <TableHeader>Status</TableHeader>
+              <TableHeader></TableHeader>
+            </TableRow>
+          </TableHead>
+          <TableBody>
+            {filteredEmails.map((email) => (
+              <TableRow key={email.id}>
+                <TableCell>{email.email}</TableCell>
+                <TableCell>
+                  {email.id === user?.primary_email_address_id
+                    ? "Primary"
+                    : email.verified
+                      ? "Verified"
+                      : "Not Verified"}
+                </TableCell>
+                <ActionsCell>
+                  <Dropdown
+                    open={activeDropdown === email.id}
+                    openChange={(isOpen) =>
+                      setActiveDropdown(isOpen ? email.id : null)
+                    }
+                  >
+                    <DropdownTrigger>
+                      <IconButton>•••</IconButton>
+                    </DropdownTrigger>
+                    <DropdownItems>
+                      {email.id !== user?.primary_email_address_id && email.verified && (
+                        <DropdownItem
+                          onClick={async () => {
+                            await makeEmailPrimary(email.id);
+                            user.refetch();
+                            setActiveDropdown(null);
+                          }}
+                        >
+                          Make primary
+                        </DropdownItem>
+                      )}
+                      {!email.verified && (
+                        <DropdownItem
+                          onClick={() => {
+                            prepareEmailVerification(email.id);
+                            setActiveDropdown(null);
+                          }}
+                        >
+                          Verify email
+                        </DropdownItem>
+                      )}
+                      <DropdownItem
+                        $destructive
+                        onClick={() => {
+                          handleDeleteEmail(email.id);
+                          setActiveDropdown(null);
+                        }}
+                      >
+                        Remove
+                      </DropdownItem>
+                    </DropdownItems>
+                  </Dropdown>
+                </ActionsCell>
+              </TableRow>
+            ))}
+          </TableBody>
+        </Table>
+      )}
     </>
   );
 };
@@ -640,6 +626,7 @@ const PhoneManagementSection = () => {
   const [activeDropdown, setActiveDropdown] = useState<string | null>(null);
   const [newPhone, setNewPhone] = useState("");
   const [isAddingPhone, setIsAddingPhone] = useState(false);
+  const [searchQuery, setSearchQuery] = useState("");
   const {
     user,
     createPhoneNumber,
@@ -654,186 +641,136 @@ const PhoneManagementSection = () => {
     return null;
   }
 
+  // Filter phones based on search query
+  const filteredPhones = React.useMemo(() => {
+    if (!user?.user_phone_numbers) return [];
+    if (!searchQuery.trim()) return user.user_phone_numbers;
+
+    return user.user_phone_numbers.filter((phone) =>
+      phone.phone_number.toLowerCase().includes(searchQuery.toLowerCase())
+    );
+  }, [user?.user_phone_numbers, searchQuery]);
+
   return (
     <>
-      <div style={{ position: "relative" }}>
-        <SectionHeader
-          title="Phone number"
-          actionLabel="Add Phone"
-          onAction={() => setIsAddingPhone(true)}
+      <HeaderCTAContainer>
+        <SearchInput
+          value={searchQuery}
+          onChange={setSearchQuery}
+          placeholder="Search Phone"
         />
-        {isAddingPhone && (
-          <PhoneAddPopover
-            onClose={() => setIsAddingPhone(false)}
-            onAddPhone={async (phone) => {
-              const newPhoneData = await createPhoneNumber(phone);
-              setNewPhone(newPhoneData.data.id);
-              await preparePhoneVerification(newPhoneData.data.id);
-              user.refetch();
-              setIsAddingPhone(false);
+        <div>
+          <Button
+            onClick={() => setIsAddingPhone(true)}
+            style={{
+              padding: "8px 16px",
+              borderRadius: "6px",
+              fontSize: "14px",
+              fontWeight: 500,
+              height: "36px"
             }}
-            onPrepareVerification={async () => {
-              await preparePhoneVerification(newPhone);
-              user.refetch();
-            }}
-            onAttemptVerification={async (otp) => {
-              await attemptPhoneVerification(newPhone, otp);
-              user.refetch();
-              setIsAddingPhone(false);
-            }}
-          />
-        )}
-      </div>
-      <div>
-        {!user?.user_phone_numbers?.length ? (
-          <EmptyState
-            title="No phone numbers"
-            description="Add a phone number to get started."
-          />
-        ) : (
-          <>
-            <div>
-              <h3
-                style={{
-                  fontSize: "14px",
-                  fontWeight: 400,
-                  marginBottom: "8px",
-                  color: "var(--color-muted)",
-                }}
-              >
-                Verified
-              </h3>
-              <div style={{ borderTop: "1px solid var(--color-border)" }}>
-                {user.user_phone_numbers.filter((phone) => phone.verified)
-                  .length === 0 ? (
-                  <EmptyState
-                    title="No verified phone numbers"
-                    description="Verify a phone number to see it here."
-                  />
-                ) : (
-                  user.user_phone_numbers
-                    .filter((phone) => phone.verified)
-                    .map((phone) => (
-                      <MemberListItem key={phone.id}>
-                        <MemberListItemContent>
-                          <MemberInfo>
-                            <MemberName>{phone.phone_number}</MemberName>
-                            <MemberEmail>
-                              {phone.id === user?.primary_phone_number_id
-                                ? "Primary"
-                                : "Verified"}
-                            </MemberEmail>
-                          </MemberInfo>
-                        </MemberListItemContent>
-                        <MemberListItemActions>
-                          <Dropdown
-                            open={activeDropdown === phone.id}
-                            openChange={(isOpen) =>
-                              setActiveDropdown(isOpen ? phone.id : null)
-                            }
-                          >
-                            <DropdownTrigger>
-                              <IconButton>•••</IconButton>
-                            </DropdownTrigger>
-                            <DropdownItems>
-                              {phone.id !== user?.primary_phone_number_id && (
-                                <DropdownItem
-                                  onClick={async () => {
-                                    await makePhonePrimary(phone.id);
-                                    setActiveDropdown(null);
-                                    user.refetch();
-                                  }}
-                                >
-                                  Make primary
-                                </DropdownItem>
-                              )}
-                              <DropdownItem
-                                $destructive
-                                onClick={async () => {
-                                  await deletePhoneNumber(phone.id);
-                                  setActiveDropdown(null);
-                                  user.refetch();
-                                }}
-                              >
-                                Remove
-                              </DropdownItem>
-                            </DropdownItems>
-                          </Dropdown>
-                        </MemberListItemActions>
-                      </MemberListItem>
-                    ))
-                )}
-              </div>
-            </div>
-            <div style={{ marginTop: "24px" }}>
-              <h3
-                style={{
-                  fontSize: "14px",
-                  fontWeight: 400,
-                  marginBottom: "8px",
-                  color: "var(--color-muted)",
-                }}
-              >
-                Unverified
-              </h3>
-              <div style={{ borderTop: "1px solid var(--color-border)" }}>
-                {user.user_phone_numbers.filter((phone) => !phone.verified)
-                  .length === 0 ? (
-                  <EmptyState
-                    title="No unverified phone numbers"
-                    description="Add a new phone number to see it here."
-                  />
-                ) : (
-                  user.user_phone_numbers
-                    .filter((phone) => !phone.verified)
-                    .map((phone) => (
-                      <MemberListItem key={phone.id}>
-                        <MemberListItemContent>
-                          <MemberInfo>
-                            <MemberName>{phone.phone_number}</MemberName>
-                            <MemberEmail>Not Verified</MemberEmail>
-                          </MemberInfo>
-                        </MemberListItemContent>
-                        <MemberListItemActions>
-                          <Dropdown
-                            open={activeDropdown === phone.id}
-                            openChange={(isOpen) =>
-                              setActiveDropdown(isOpen ? phone.id : null)
-                            }
-                          >
-                            <DropdownTrigger>
-                              <IconButton>•••</IconButton>
-                            </DropdownTrigger>
-                            <DropdownItems>
-                              <DropdownItem
-                                onClick={() => {
-                                  preparePhoneVerification(phone.id);
-                                  setActiveDropdown(null);
-                                }}
-                              >
-                                Verify phone
-                              </DropdownItem>
-                              <DropdownItem
-                                $destructive
-                                onClick={async () => {
-                                  await deletePhoneNumber(phone.id);
-                                  setActiveDropdown(null);
-                                  user.refetch();
-                                }}
-                              >
-                                Remove
-                              </DropdownItem>
-                            </DropdownItems>
-                          </Dropdown>
-                        </MemberListItemActions>
-                      </MemberListItem>
-                    ))
-                )}
-              </div>
-            </div>
-          </>
-        )}
-      </div>
+          >
+            Add Phone
+          </Button>
+          {isAddingPhone && (
+            <PhoneAddPopover
+              onClose={() => setIsAddingPhone(false)}
+              onAddPhone={async (phone) => {
+                const newPhoneData = await createPhoneNumber(phone);
+                setNewPhone(newPhoneData.data.id);
+                await preparePhoneVerification(newPhoneData.data.id);
+                user.refetch();
+                setIsAddingPhone(false);
+              }}
+              onPrepareVerification={async () => {
+                await preparePhoneVerification(newPhone);
+                user.refetch();
+              }}
+              onAttemptVerification={async (otp) => {
+                await attemptPhoneVerification(newPhone, otp);
+                user.refetch();
+                setIsAddingPhone(false);
+              }}
+            />
+          )}
+        </div>
+      </HeaderCTAContainer>
+
+      {!filteredPhones?.length ? (
+        <EmptyState
+          title={searchQuery ? "No phones match your search" : "No phone numbers"}
+          description="Add a phone number to get started."
+        />
+      ) : (
+        <Table>
+          <TableHead>
+            <TableRow>
+              <TableHeader>Phone Number</TableHeader>
+              <TableHeader>Status</TableHeader>
+              <TableHeader></TableHeader>
+            </TableRow>
+          </TableHead>
+          <TableBody>
+            {filteredPhones.map((phone) => (
+              <TableRow key={phone.id}>
+                <TableCell>{phone.phone_number}</TableCell>
+                <TableCell>
+                  {phone.id === user?.primary_phone_number_id
+                    ? "Primary"
+                    : phone.verified
+                      ? "Verified"
+                      : "Not Verified"}
+                </TableCell>
+                <ActionsCell>
+                  <Dropdown
+                    open={activeDropdown === phone.id}
+                    openChange={(isOpen) =>
+                      setActiveDropdown(isOpen ? phone.id : null)
+                    }
+                  >
+                    <DropdownTrigger>
+                      <IconButton>•••</IconButton>
+                    </DropdownTrigger>
+                    <DropdownItems>
+                      {phone.id !== user?.primary_phone_number_id && phone.verified && (
+                        <DropdownItem
+                          onClick={async () => {
+                            await makePhonePrimary(phone.id);
+                            setActiveDropdown(null);
+                            user.refetch();
+                          }}
+                        >
+                          Make primary
+                        </DropdownItem>
+                      )}
+                      {!phone.verified && (
+                        <DropdownItem
+                          onClick={() => {
+                            preparePhoneVerification(phone.id);
+                            setActiveDropdown(null);
+                          }}
+                        >
+                          Verify phone
+                        </DropdownItem>
+                      )}
+                      <DropdownItem
+                        $destructive
+                        onClick={async () => {
+                          await deletePhoneNumber(phone.id);
+                          setActiveDropdown(null);
+                          user.refetch();
+                        }}
+                      >
+                        Remove
+                      </DropdownItem>
+                    </DropdownItems>
+                  </Dropdown>
+                </ActionsCell>
+              </TableRow>
+            ))}
+          </TableBody>
+        </Table>
+      )}
     </>
   );
 };
@@ -843,6 +780,7 @@ const IconWrapper = styled.div`
     width: 20px;
     height: 20px;
     flex-shrink: 0;
+    display: block;
   }
 `;
 
@@ -875,7 +813,22 @@ const SocialManagementSection = () => {
 
   return (
     <>
-      <SectionHeader title="Connected Accounts" />
+      <div style={{ marginBottom: "16px" }}>
+        <h3 style={{
+          fontSize: "16px",
+          color: "var(--color-foreground)",
+          margin: 0
+        }}>
+          Connected Accounts
+        </h3>
+        <p style={{
+          fontSize: "14px",
+          color: "var(--color-muted)",
+          margin: 0
+        }}>
+          Connect social accounts for easy sign-in and profile sync
+        </p>
+      </div>
       <div
         style={{
           display: "flex",
@@ -889,7 +842,7 @@ const SocialManagementSection = () => {
           );
           const providerInfo =
             socialAuthProviders[
-              provider.provider as keyof typeof socialAuthProviders
+            provider.provider as keyof typeof socialAuthProviders
             ];
 
           if (!providerInfo) return null;
@@ -953,9 +906,8 @@ const SocialManagementSection = () => {
                   onClick={() => {
                     // Redirect to OAuth flow for this provider
                     const baseUrl = deployment?.backend_host || "";
-                    const redirectUrl = `${baseUrl}/auth/oauth2/init?provider=${
-                      provider.provider
-                    }&redirect_url=${encodeURIComponent(window.location.href)}`;
+                    const redirectUrl = `${baseUrl}/auth/oauth2/init?provider=${provider.provider
+                      }&redirect_url=${encodeURIComponent(window.location.href)}`;
                     window.location.href = redirectUrl;
                   }}
                   style={{
@@ -1025,7 +977,7 @@ export const ManageAccount = () => {
   return (
     <TypographyProvider>
       <ScreenContext.Provider
-        value={{ screen: null, setScreen: () => {}, toast }}
+        value={{ screen: null, setScreen: () => { }, toast }}
       >
         <Container>
           <TabsContainer>
@@ -1039,6 +991,7 @@ export const ManageAccount = () => {
                   Profile
                 </TabIcon>
               </Tab>
+
               {showEmailTab && (
                 <Tab
                   $isActive={activeTab === "email"}
@@ -1050,6 +1003,7 @@ export const ManageAccount = () => {
                   </TabIcon>
                 </Tab>
               )}
+
               {showPhoneTab && (
                 <Tab
                   $isActive={activeTab === "phone"}
@@ -1061,15 +1015,17 @@ export const ManageAccount = () => {
                   </TabIcon>
                 </Tab>
               )}
+
               <Tab
                 $isActive={activeTab === "social"}
                 onClick={() => setActiveTab("social")}
               >
                 <TabIcon>
                   <Link2 size={16} />
-                  Connected
+                  Connections
                 </TabIcon>
               </Tab>
+
               {showSecurityTab && (
                 <Tab
                   $isActive={activeTab === "security"}
@@ -1081,6 +1037,7 @@ export const ManageAccount = () => {
                   </TabIcon>
                 </Tab>
               )}
+
               <Tab
                 $isActive={activeTab === "sessions"}
                 onClick={() => setActiveTab("sessions")}
@@ -1168,17 +1125,67 @@ const PasswordInput = styled.div`
   }
 `;
 
+// Security Card Component for better organization
+const SecurityCard = styled.div`
+  background: var(--color-background);
+  border: 1px solid var(--color-border);
+  border-radius: 12px;
+  padding: 20px;
+  margin-bottom: 16px;
+  transition: all 0.2s ease;
+
+  &:hover {
+    border-color: var(--color-primary);
+    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+  }
+`;
+
+const SecurityCardHeader = styled.div`
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-bottom: 12px;
+`;
+
+const SecurityCardTitle = styled.h4`
+  margin: 0;
+  font-size: 16px;
+  font-weight: 600;
+  color: var(--color-foreground);
+  display: flex;
+  align-items: center;
+  gap: 8px;
+`;
+
+const SecurityCardDescription = styled.p`
+  margin: 0 0 16px 0;
+  font-size: 14px;
+  color: var(--color-muted);
+  line-height: 1.5;
+`;
+
+const SecurityStatus = styled.span<{ $status: 'enabled' | 'disabled' | 'warning' }>`
+  padding: 4px 12px;
+  border-radius: 20px;
+  font-size: 12px;
+  font-weight: 500;
+  background: ${props =>
+    props.$status === 'enabled' ? 'var(--color-success-background)' :
+      props.$status === 'warning' ? 'var(--color-warning-background)' :
+        'var(--color-muted-background)'
+  };
+  color: ${props =>
+    props.$status === 'enabled' ? 'var(--color-success)' :
+      props.$status === 'warning' ? 'var(--color-warning)' :
+        'var(--color-muted)'
+  };
+`;
+
 const SecurityManagementSection = () => {
   const { deployment } = useDeployment();
   const {
     user,
-    setupAuthenticator,
-    verifyAuthenticator,
-    deleteAuthenticator,
-    generateBackupCodes,
-    regenerateBackupCodes,
     updatePassword,
-    removePassword,
   } = useUser();
   const { toast } = useScreenContext();
 
@@ -1192,19 +1199,7 @@ const SecurityManagementSection = () => {
     removePassword: false,
   });
 
-  // 2FA state
-  const [qrCodeRevealed, setQrCodeRevealed] = useState(false);
-  const [verificationCode, setVerificationCode] = useState("");
-  const [secondVerificationCode, setSecondVerificationCode] = useState("");
-  const [isWaitingForSecondCode, setIsWaitingForSecondCode] = useState(false);
-  const [remainingTime, setRemainingTime] = useState(30);
-  const [backupCodes, setBackupCodes] = useState<string[]>([]);
-  const [copiedCode, setCopiedCode] = useState<string | null>(null);
-  const [newAuthenticator, setNewAuthenticator] = useState<UserAuthenticator>();
-  const [error, setError] = useState<string | null>(null);
-  const [isVerifying, setIsVerifying] = useState(false);
-  const [isGenerating, setIsGenerating] = useState(false);
-  const [isLoadingQR, setIsLoadingQR] = useState(false);
+  // 2FA state - keeping minimal state for future use
 
   // Password state
   const [currentPassword, setCurrentPassword] = useState("");
@@ -1214,9 +1209,7 @@ const SecurityManagementSection = () => {
   const [showNewPassword, setShowNewPassword] = useState(false);
   const [showConfirmPassword, setShowConfirmPassword] = useState(false);
   const [isSubmitting, setIsSubmitting] = useState(false);
-  const [isRemoving, setIsRemoving] = useState(false);
-  const [removePasswordInput, setRemovePasswordInput] = useState("");
-  const [showRemovePassword, setShowRemovePassword] = useState(false);
+
   const [passwordErrors, setPasswordErrors] = useState<Record<string, string>>(
     {},
   );
@@ -1226,29 +1219,9 @@ const SecurityManagementSection = () => {
       ...prev,
       [section]: !prev[section],
     }));
-
-    // Reset state when opening authenticator section
-    if (section === "authenticator" && !visibleSections.authenticator) {
-      setQrCodeRevealed(false);
-      setVerificationCode("");
-      setSecondVerificationCode("");
-      setIsWaitingForSecondCode(false);
-      setRemainingTime(30);
-      setNewAuthenticator(undefined);
-      setError(null);
-    }
   };
 
-  // Timer for second code countdown
-  useEffect(() => {
-    let timer: NodeJS.Timeout;
-    if (isWaitingForSecondCode && remainingTime > 0) {
-      timer = setTimeout(() => {
-        setRemainingTime(remainingTime - 1);
-      }, 1000);
-    }
-    return () => clearTimeout(timer);
-  }, [isWaitingForSecondCode, remainingTime]);
+  // Timer for second code countdown - removed for now
 
   const authFactorsEnabled = deployment?.auth_settings?.auth_factors_enabled;
   const passwordEnabled = deployment?.auth_settings?.password?.enabled;
@@ -1262,143 +1235,7 @@ const SecurityManagementSection = () => {
     return null;
   }
 
-  // 2FA handlers
-  const handleRevealQRCode = async () => {
-    if (!newAuthenticator) {
-      setIsLoadingQR(true);
-      try {
-        // Make the backend call to setup authenticator
-        const response = await setupAuthenticator();
-        setNewAuthenticator(response);
-      } catch (error) {
-        setError("Failed to generate QR code. Please try again.");
-        setIsLoadingQR(false);
-        return;
-      }
-      setIsLoadingQR(false);
-    }
-    setQrCodeRevealed(true);
-  };
-
-  const handleCancelAuthenticatorSetup = () => {
-    setQrCodeRevealed(false);
-    setVerificationCode("");
-    setSecondVerificationCode("");
-    setIsWaitingForSecondCode(false);
-    setRemainingTime(30);
-    setNewAuthenticator(undefined);
-    setError(null);
-    setIsLoadingQR(false);
-    // Close the authenticator section when canceling
-    setVisibleSections((prev) => ({
-      ...prev,
-      authenticator: false,
-    }));
-  };
-
-  const handleVerifyAuthenticator = async () => {
-    if (!isWaitingForSecondCode && verificationCode.length !== 6) return;
-    if (isWaitingForSecondCode && secondVerificationCode.length !== 6) return;
-    if (!newAuthenticator?.id) return;
-
-    // First code submitted
-    if (!isWaitingForSecondCode) {
-      setIsWaitingForSecondCode(true);
-      setRemainingTime(30);
-      setError(null);
-      return;
-    }
-
-    // Second code submitted
-    setIsVerifying(true);
-    setError(null);
-
-    const result = await verifyAuthenticator(newAuthenticator.id, [
-      verificationCode,
-      secondVerificationCode,
-    ]);
-
-    if (result.errors?.length) {
-      setError(result.errors[0].message);
-      setIsVerifying(false);
-      setIsWaitingForSecondCode(false);
-      setSecondVerificationCode("");
-    } else {
-      setQrCodeRevealed(false);
-      setVerificationCode("");
-      setSecondVerificationCode("");
-      setIsWaitingForSecondCode(false);
-      setNewAuthenticator(undefined);
-      user.refetch();
-      setIsVerifying(false);
-      // Close the section after successful verification
-      setVisibleSections((prev) => ({
-        ...prev,
-        authenticator: false,
-      }));
-    }
-  };
-
-  const handleRemoveAuthenticator = async (id: string) => {
-    if (confirm("Are you sure you want to remove your authenticator app?")) {
-      await deleteAuthenticator(id);
-      user.refetch();
-    }
-  };
-
-  const handleGenerateBackupCodes = async () => {
-    setIsGenerating(true);
-    try {
-      const codes = await generateBackupCodes();
-      setBackupCodes(codes);
-      user.refetch();
-    } catch (error) {
-      console.error("Failed to generate backup codes:", error);
-    } finally {
-      setIsGenerating(false);
-    }
-  };
-
-  const handleRegenerateBackupCodes = async () => {
-    if (
-      !confirm(
-        "Are you sure? Your old backup codes will stop working immediately.",
-      )
-    ) {
-      return;
-    }
-
-    setIsGenerating(true);
-    try {
-      const codes = await regenerateBackupCodes();
-      setBackupCodes(codes);
-      user.refetch();
-    } catch (error) {
-      console.error("Failed to regenerate backup codes:", error);
-    } finally {
-      setIsGenerating(false);
-    }
-  };
-
-  const handleCopyCode = (code: string) => {
-    navigator.clipboard.writeText(code);
-    setCopiedCode(code);
-    setTimeout(() => setCopiedCode(null), 2000);
-  };
-
-  const handleDownloadCodes = () => {
-    const timestamp = new Date().toISOString().split("T")[0];
-    const codesText = `Backup Codes\nGenerated: ${new Date().toLocaleString()}\n\n${backupCodes.join("\n")}`;
-    const blob = new Blob([codesText], { type: "text/plain" });
-    const url = URL.createObjectURL(blob);
-    const a = document.createElement("a");
-    a.href = url;
-    a.download = `backup-codes-${timestamp}.txt`;
-    document.body.appendChild(a);
-    a.click();
-    document.body.removeChild(a);
-    URL.revokeObjectURL(url);
-  };
+  // 2FA handlers - keeping only the ones that are used
 
   // Password handlers
   const handlePasswordSubmit = async (e: React.FormEvent) => {
@@ -1445,930 +1282,278 @@ const SecurityManagementSection = () => {
     }
   };
 
-  const handleRemovePassword = async () => {
-    if (!removePasswordInput) {
-      setPasswordErrors({ removePassword: "Current password is required" });
-      return;
-    }
 
-    setIsRemoving(true);
-    setPasswordErrors({});
-
-    try {
-      await removePassword(removePasswordInput);
-      setRemovePasswordInput("");
-      toast(
-        "Password removed successfully. You can now sign in using alternative methods.",
-        "info",
-      );
-    } catch (error: any) {
-      const errorMessage =
-        error?.message ||
-        "Failed to remove password. Please check your password and ensure you have alternative authentication methods configured.";
-      setPasswordErrors({
-        removePassword: errorMessage,
-      });
-      toast(errorMessage, "error");
-    } finally {
-      setIsRemoving(false);
-    }
-  };
-
-  const hasAlternativeAuthMethods = () => {
-    const hasVerifiedEmail = user?.user_email_addresses?.some(
-      (email) => email.verified,
-    );
-    const hasSocialConnections = (user?.social_connections?.length || 0) > 0;
-    const hasAuthenticator = !!user?.user_authenticator;
-    const emailOtpEnabled =
-      deployment?.auth_settings?.first_factor === "email_otp";
-    return (
-      (hasVerifiedEmail && emailOtpEnabled) ||
-      hasSocialConnections ||
-      hasAuthenticator
-    );
-  };
 
   return (
-    <div>
-      <SectionHeader title="Security" />
-
-      {/* Password Section */}
+    <div style={{ display: "flex", flexDirection: "column", gap: "20px" }}>
+      {/* Password Management Card */}
       {passwordEnabled && (
-        <>
-          {/* Change Password */}
-          <div
-            style={{
-              display: "flex",
-              gap: "16px",
-              padding: "16px 0",
-              alignItems: "flex-start",
-            }}
-          >
-            {/* Left side - Text content */}
-            <div
+        <SecurityCard>
+          <SecurityCardHeader>
+            <SecurityCardTitle>
+              <Shield size={20} />
+              Password
+            </SecurityCardTitle>
+            <SecurityStatus $status={'enabled'}>
+              {'Enabled'}
+            </SecurityStatus>
+          </SecurityCardHeader>
+          <SecurityCardDescription>
+            Update your password or manage your authentication settings.
+          </SecurityCardDescription>
+
+          <div style={{ display: "flex", gap: "12px", flexWrap: "wrap" }}>
+            <Button
+              onClick={() => toggleSection("changePassword")}
               style={{
-                flex: 1,
+                padding: "8px 16px",
+                fontSize: "14px",
+                height: "36px",
+                background: visibleSections.changePassword ? "var(--color-primary)" : "var(--color-background)",
+                color: visibleSections.changePassword ? "white" : "var(--color-foreground)",
+                border: "1px solid var(--color-border)"
               }}
             >
-              <h3
-                style={{
-                  margin: 0,
-                  fontSize: "14px",
-                  fontWeight: "400",
-                  color: "var(--color-foreground)",
-                  marginBottom: "8px",
-                }}
-              >
-                Change Password
-              </h3>
-              <p
-                style={{
-                  margin: 0,
-                  fontSize: "12px",
-                  color: "var(--color-muted)",
-                  lineHeight: "1.5",
-                }}
-              >
-                Update your current password with a new one. Make sure to use a
-                strong password with at least 8 characters.
-              </p>
-            </div>
+              Change Password
+            </Button>
 
-            {/* Right side - Toggle button */}
-            <div>
-              <button
-                type="button"
-                onClick={() => toggleSection("changePassword")}
-                style={{
-                  padding: "8px 16px",
-                  borderRadius: "var(--radius-sm)",
-                  border: "1px solid var(--color-border)",
-                  background: "var(--color-input-background)",
-                  color: "var(--color-foreground)",
-                  fontSize: "14px",
-                  fontWeight: 500,
-                  cursor: "pointer",
-                  transition: "all 0.2s ease",
-                  display: "flex",
-                  alignItems: "center",
-                  gap: "8px",
-                }}
-              >
-                {visibleSections.changePassword ? "Hide" : "Show"}
-                {visibleSections.changePassword ? (
-                  <ChevronUp size={16} />
-                ) : (
-                  <ChevronDown size={16} />
-                )}
-              </button>
-            </div>
-          </div>
-
-          {/* Change Password Card - Below the row */}
-          {visibleSections.changePassword && (
-            <div
-              style={{
-                padding: "16px 0",
-                marginBottom: "12px",
-              }}
-            >
-              <Form onSubmit={handlePasswordSubmit}>
-                <FormGroup>
-                  <Label htmlFor="currentPassword">Current Password</Label>
-                  <PasswordInput>
-                    <Input
-                      id="currentPassword"
-                      type={showCurrentPassword ? "text" : "password"}
-                      value={currentPassword}
-                      onChange={(e) => setCurrentPassword(e.target.value)}
-                      placeholder="Enter your current password"
-                    />
-                    <button
-                      type="button"
-                      onClick={() =>
-                        setShowCurrentPassword(!showCurrentPassword)
-                      }
-                    >
-                      {showCurrentPassword ? (
-                        <EyeOff size={16} />
-                      ) : (
-                        <Eye size={16} />
-                      )}
-                    </button>
-                  </PasswordInput>
-                  {passwordErrors.currentPassword && (
-                    <div
-                      style={{
-                        color: "var(--color-error)",
-                        fontSize: "12px",
-                        marginTop: "4px",
-                      }}
-                    >
-                      {passwordErrors.currentPassword}
-                    </div>
-                  )}
-                </FormGroup>
-
-                <FormGroup>
-                  <Label htmlFor="newPassword">New Password</Label>
-                  <PasswordInput>
-                    <Input
-                      id="newPassword"
-                      type={showNewPassword ? "text" : "password"}
-                      value={newPassword}
-                      onChange={(e) => setNewPassword(e.target.value)}
-                      placeholder="Enter your new password"
-                    />
-                    <button
-                      type="button"
-                      onClick={() => setShowNewPassword(!showNewPassword)}
-                    >
-                      {showNewPassword ? (
-                        <EyeOff size={16} />
-                      ) : (
-                        <Eye size={16} />
-                      )}
-                    </button>
-                  </PasswordInput>
-                  {passwordErrors.newPassword && (
-                    <div
-                      style={{
-                        color: "var(--color-error)",
-                        fontSize: "12px",
-                        marginTop: "4px",
-                      }}
-                    >
-                      {passwordErrors.newPassword}
-                    </div>
-                  )}
-                </FormGroup>
-
-                <FormGroup>
-                  <Label htmlFor="confirmPassword">Confirm New Password</Label>
-                  <PasswordInput>
-                    <Input
-                      id="confirmPassword"
-                      type={showConfirmPassword ? "text" : "password"}
-                      value={confirmPassword}
-                      onChange={(e) => setConfirmPassword(e.target.value)}
-                      placeholder="Confirm your new password"
-                    />
-                    <button
-                      type="button"
-                      onClick={() =>
-                        setShowConfirmPassword(!showConfirmPassword)
-                      }
-                    >
-                      {showConfirmPassword ? (
-                        <EyeOff size={16} />
-                      ) : (
-                        <Eye size={16} />
-                      )}
-                    </button>
-                  </PasswordInput>
-                  {passwordErrors.confirmPassword && (
-                    <div
-                      style={{
-                        color: "var(--color-error)",
-                        fontSize: "12px",
-                        marginTop: "4px",
-                      }}
-                    >
-                      {passwordErrors.confirmPassword}
-                    </div>
-                  )}
-                </FormGroup>
-
-                <TFA2.ButtonGroup>
-                  <TFA2.ActionButton
-                    type="button"
-                    onClick={() => {
-                      setCurrentPassword("");
-                      setNewPassword("");
-                      setConfirmPassword("");
-                      setPasswordErrors({});
-                      toggleSection("changePassword");
-                    }}
-                  >
-                    Cancel
-                  </TFA2.ActionButton>
-                  <TFA2.ActionButton
-                    type="submit"
-                    $variant="primary"
-                    disabled={isSubmitting}
-                  >
-                    {isSubmitting ? "Updating..." : "Update Password"}
-                  </TFA2.ActionButton>
-                </TFA2.ButtonGroup>
-              </Form>
-            </div>
-          )}
-
-          {/* Divider */}
-          <div
-            style={{
-              height: "1px",
-              backgroundColor: "var(--color-border)",
-              margin: "0 0",
-            }}
-          />
-        </>
-      )}
-
-      {/* Authenticator App Section */}
-      {authFactorsEnabled?.authenticator && (
-        <>
-          <div
-            style={{
-              display: "flex",
-              gap: "14px",
-              padding: "16px 0",
-              alignItems: "flex-start",
-            }}
-          >
-            {/* Left side - Text content */}
-            <div
-              style={{
-                flex: 1,
-              }}
-            >
-              <h3
-                style={{
-                  margin: 0,
-                  fontSize: "14px",
-                  fontWeight: "400",
-                  color: "var(--color-foreground)",
-                  marginBottom: "8px",
-                }}
-              >
-                Authenticator App
-              </h3>
-              <p
-                style={{
-                  margin: 0,
-                  fontSize: "12px",
-                  color: "var(--color-muted)",
-                  lineHeight: "1.5",
-                }}
-              >
-                Use an authenticator app like Google Authenticator or Authy for
-                secure two-factor authentication.
-              </p>
-            </div>
-
-            {/* Right side - Toggle button */}
-            <div>
-              <button
-                type="button"
-                onClick={() => toggleSection("authenticator")}
-                style={{
-                  padding: "8px 16px",
-                  borderRadius: "var(--radius-sm)",
-                  border: "1px solid var(--color-border)",
-                  background: "var(--color-input-background)",
-                  color: "var(--color-foreground)",
-                  fontSize: "14px",
-                  fontWeight: 500,
-                  cursor: "pointer",
-                  transition: "all 0.2s ease",
-                  display: "flex",
-                  alignItems: "center",
-                  gap: "8px",
-                }}
-              >
-                {visibleSections.authenticator ? "Hide" : "Show"}
-                {visibleSections.authenticator ? (
-                  <ChevronUp size={16} />
-                ) : (
-                  <ChevronDown size={16} />
-                )}
-              </button>
-            </div>
-          </div>
-
-          {/* Authenticator App Card - Below the row */}
-          {visibleSections.authenticator && (
-            <div
-              style={{
-                padding: "16px 0",
-                marginBottom: "12px",
-              }}
-            >
-              <TFA2.TwoFactorSection>
-                {!user?.user_authenticator && (
-                  <div
-                    style={{
-                      display: "flex",
-                      gap: "40px",
-                      alignItems: "flex-start",
-                    }}
-                  >
-                    {/* Left side - QR Code */}
-                    <div style={{ flex: "0 0 auto", position: "relative" }}>
-                      <TFA2.QRCodeWrapper
-                        style={{ position: "relative", overflow: "hidden" }}
-                      >
-                        {newAuthenticator ? (
-                          <QRCodeSVG
-                            width={200}
-                            height={200}
-                            value={newAuthenticator.otp_url || ""}
-                            level="H"
-                            style={{
-                              filter: qrCodeRevealed ? "none" : "blur(8px)",
-                              transition: "filter 0.3s ease",
-                            }}
-                          />
-                        ) : (
-                          <div
-                            style={{
-                              width: 200,
-                              height: 200,
-                              background: "var(--color-background-hover)",
-                              display: "flex",
-                              alignItems: "center",
-                              justifyContent: "center",
-                            }}
-                          >
-                            <div
-                              style={{
-                                width: "80%",
-                                height: "80%",
-                                background: "var(--color-border)",
-                                opacity: 0.3,
-                                borderRadius: "8px",
-                              }}
-                            />
-                          </div>
-                        )}
-                        {!qrCodeRevealed && (
-                          <div
-                            style={{
-                              position: "absolute",
-                              top: 0,
-                              left: 0,
-                              right: 0,
-                              bottom: 0,
-                              display: "flex",
-                              alignItems: "center",
-                              justifyContent: "center",
-                              background: "rgba(255, 255, 255, 0.1)",
-                            }}
-                          >
-                            <button
-                              onClick={handleRevealQRCode}
-                              disabled={isLoadingQR}
-                              style={{
-                                padding: "8px 16px",
-                                background: "var(--color-primary)",
-                                color: "white",
-                                border: "none",
-                                borderRadius: "6px",
-                                fontSize: "13px",
-                                fontWeight: 500,
-                                cursor: isLoadingQR ? "not-allowed" : "pointer",
-                                boxShadow: "0 2px 4px rgba(0, 0, 0, 0.1)",
-                                opacity: isLoadingQR ? 0.7 : 1,
-                              }}
-                            >
-                              {isLoadingQR ? "Loading..." : "Reveal QR Code"}
-                            </button>
-                          </div>
-                        )}
-                      </TFA2.QRCodeWrapper>
-                    </div>
-
-                    {/* Right side - Form */}
-                    <div style={{ flex: 1 }}>
-                      <TFA2.InfoText style={{ marginBottom: "12px" }}>
-                        {!qrCodeRevealed
-                          ? "Click 'Reveal QR Code' to display the code, then scan it with your authenticator app."
-                          : "Scan the QR code with your authenticator app, then enter two consecutive codes:"}
-                      </TFA2.InfoText>
-
-                      <div
-                        style={{
-                          display: "flex",
-                          flexDirection: "column",
-                          gap: "8px",
-                          marginBottom: "12px",
-                        }}
-                      >
-                        <div>
-                          <TFA2.InfoText
-                            style={{ fontSize: "12px", marginBottom: "4px" }}
-                          >
-                            First code (current):
-                          </TFA2.InfoText>
-                          <TFA2.CodeInput
-                            type="text"
-                            value={verificationCode}
-                            onChange={(e) =>
-                              setVerificationCode(
-                                e.target.value
-                                  .replace(/[^0-9]/g, "")
-                                  .slice(0, 6),
-                              )
-                            }
-                            placeholder="000000"
-                            maxLength={6}
-                            style={{
-                              padding: "6px 8px",
-                              fontSize: "14px",
-                              marginBottom: 0,
-                            }}
-                            disabled={!qrCodeRevealed}
-                          />
-                        </div>
-                        <div>
-                          <TFA2.InfoText
-                            style={{ fontSize: "12px", marginBottom: "4px" }}
-                          >
-                            Second code (wait{" "}
-                            {isWaitingForSecondCode ? remainingTime : "30"}s
-                            after first):
-                          </TFA2.InfoText>
-                          <TFA2.CodeInput
-                            type="text"
-                            value={secondVerificationCode}
-                            onChange={(e) =>
-                              setSecondVerificationCode(
-                                e.target.value
-                                  .replace(/[^0-9]/g, "")
-                                  .slice(0, 6),
-                              )
-                            }
-                            placeholder="000000"
-                            maxLength={6}
-                            style={{
-                              padding: "6px 8px",
-                              fontSize: "14px",
-                              marginBottom: 0,
-                            }}
-                            disabled={!qrCodeRevealed}
-                          />
-                        </div>
-                      </div>
-
-                      {error && (
-                        <TFA2.InfoText
-                          style={{
-                            color: "var(--color-error)",
-                            marginBottom: "12px",
-                          }}
-                        >
-                          {error}
-                        </TFA2.InfoText>
-                      )}
-
-                      <TFA2.ButtonGroup>
-                        <TFA2.ActionButton
-                          onClick={handleCancelAuthenticatorSetup}
-                        >
-                          Cancel
-                        </TFA2.ActionButton>
-                        <TFA2.ActionButton
-                          $variant="primary"
-                          onClick={handleVerifyAuthenticator}
-                          disabled={
-                            !qrCodeRevealed ||
-                            (!isWaitingForSecondCode &&
-                              verificationCode.length !== 6) ||
-                            (isWaitingForSecondCode &&
-                              secondVerificationCode.length !== 6) ||
-                            isVerifying
-                          }
-                        >
-                          {isVerifying
-                            ? "Verifying..."
-                            : isWaitingForSecondCode
-                              ? "Submit Both Codes"
-                              : "Continue"}
-                        </TFA2.ActionButton>
-                      </TFA2.ButtonGroup>
-                    </div>
-                  </div>
-                )}
-
-                {user?.user_authenticator?.id && (
-                  <div>
-                    <TFA2.InfoText>
-                      Added on{" "}
-                      {new Date(
-                        user.user_authenticator?.created_at || "",
-                      ).toLocaleDateString()}
-                    </TFA2.InfoText>
-                    <TFA2.ActionButton
-                      $variant="danger"
-                      onClick={() =>
-                        user.user_authenticator?.id &&
-                        handleRemoveAuthenticator(user.user_authenticator.id)
-                      }
-                    >
-                      Remove Authenticator
-                    </TFA2.ActionButton>
-                  </div>
-                )}
-              </TFA2.TwoFactorSection>
-            </div>
-          )}
-
-          {/* Divider */}
-          <div
-            style={{
-              height: "1px",
-              backgroundColor: "var(--color-border)",
-              margin: "0 0",
-            }}
-          />
-        </>
-      )}
-
-      {/* Backup Codes Section */}
-      {authFactorsEnabled?.backup_code && (
-        <>
-          <div
-            style={{
-              display: "flex",
-              gap: "14px",
-              padding: "16px 0",
-              alignItems: "flex-start",
-            }}
-          >
-            {/* Left side - Text content */}
-            <div
-              style={{
-                flex: 1,
-              }}
-            >
-              <h3
-                style={{
-                  margin: 0,
-                  fontSize: "14px",
-                  fontWeight: "400",
-                  color: "var(--color-foreground)",
-                  marginBottom: "8px",
-                }}
-              >
-                Backup Codes
-              </h3>
-              <p
-                style={{
-                  margin: 0,
-                  fontSize: "12px",
-                  color: "var(--color-muted)",
-                  lineHeight: "1.5",
-                }}
-              >
-                Generate single-use backup codes for emergency access when you
-                can't use your authenticator app.
-              </p>
-            </div>
-
-            {/* Right side - Toggle button */}
-            <div>
-              <button
-                type="button"
-                onClick={() => toggleSection("backupCodes")}
-                style={{
-                  padding: "8px 16px",
-                  borderRadius: "var(--radius-sm)",
-                  border: "1px solid var(--color-border)",
-                  background: "var(--color-input-background)",
-                  color: "var(--color-foreground)",
-                  fontSize: "14px",
-                  fontWeight: 500,
-                  cursor: "pointer",
-                  transition: "all 0.2s ease",
-                  display: "flex",
-                  alignItems: "center",
-                  gap: "8px",
-                }}
-              >
-                {visibleSections.backupCodes ? "Hide" : "Show"}
-                {visibleSections.backupCodes ? (
-                  <ChevronUp size={16} />
-                ) : (
-                  <ChevronDown size={16} />
-                )}
-              </button>
-            </div>
-          </div>
-
-          {/* Backup Codes Card - Below the row */}
-          {visibleSections.backupCodes && (
-            <div
-              style={{
-                backgroundColor: "var(--color-background)",
-                border: "1px solid var(--color-border)",
-                borderRadius: "12px",
-                padding: "24px",
-                marginBottom: "32px",
-              }}
-            >
-              <TFA2.TwoFactorSection>
-                <TFA2.SectionHeader>
-                  <TFA2.SectionTitle>Backup Codes</TFA2.SectionTitle>
-                  <TFA2.StatusBadge
-                    $active={
-                      user?.backup_codes_generated || backupCodes.length > 0
-                    }
-                  >
-                    {user?.backup_codes_generated || backupCodes.length > 0
-                      ? "Generated"
-                      : "Not Generated"}
-                  </TFA2.StatusBadge>
-                </TFA2.SectionHeader>
-
-                {!backupCodes.length && !user?.backup_codes_generated && (
-                  <TFA2.EmptyState>
-                    <TFA2.EmptyStateText>
-                      Keep these codes in a safe place. Each code can only be
-                      used once.
-                    </TFA2.EmptyStateText>
-                    <TFA2.ActionButton
-                      $variant="primary"
-                      onClick={handleGenerateBackupCodes}
-                      disabled={isGenerating}
-                    >
-                      {isGenerating ? "Generating..." : "Generate Codes"}
-                    </TFA2.ActionButton>
-                  </TFA2.EmptyState>
-                )}
-
-                {!backupCodes.length && user?.backup_codes_generated && (
-                  <div>
-                    <TFA2.InfoText>
-                      Your backup codes have been generated. You can regenerate
-                      new ones if needed.
-                    </TFA2.InfoText>
-                    <TFA2.ActionButton
-                      onClick={handleRegenerateBackupCodes}
-                      disabled={isGenerating}
-                    >
-                      {isGenerating ? "Regenerating..." : "Regenerate Codes"}
-                    </TFA2.ActionButton>
-                  </div>
-                )}
-
-                {backupCodes.length > 0 && (
-                  <div>
-                    <TFA2.BackupCodesGrid>
-                      {backupCodes.map((code, i) => (
-                        <TFA2.BackupCode
-                          key={i}
-                          onClick={() => handleCopyCode(code)}
-                          title="Click to copy"
-                        >
-                          {copiedCode === code && (
-                            <Check size={12} style={{ marginRight: "4px" }} />
-                          )}
-                          {code}
-                        </TFA2.BackupCode>
-                      ))}
-                    </TFA2.BackupCodesGrid>
-
-                    <TFA2.ButtonGroup>
-                      <TFA2.ActionButton onClick={handleDownloadCodes}>
-                        <Download size={14} style={{ marginRight: "4px" }} />
-                        Download
-                      </TFA2.ActionButton>
-                      <TFA2.ActionButton
-                        $variant="danger"
-                        onClick={handleRegenerateBackupCodes}
-                        disabled={isGenerating}
-                      >
-                        Regenerate
-                      </TFA2.ActionButton>
-                    </TFA2.ButtonGroup>
-                  </div>
-                )}
-              </TFA2.TwoFactorSection>
-            </div>
-          )}
-
-          {/* Divider */}
-          <div
-            style={{
-              height: "1px",
-              backgroundColor: "var(--color-border)",
-              margin: "0 0",
-            }}
-          />
-        </>
-      )}
-
-      {/* Remove Password Section - only show if password is enabled */}
-      {passwordEnabled && hasAlternativeAuthMethods() && (
-        <>
-          <div
-            style={{
-              display: "flex",
-              gap: "14px",
-              padding: "16px 0",
-              alignItems: "flex-start",
-            }}
-          >
-            {/* Left side - Text content */}
-            <div
-              style={{
-                flex: 1,
-              }}
-            >
-              <h3
-                style={{
-                  margin: 0,
-                  fontSize: "14px",
-                  fontWeight: "400",
-                  color: "var(--color-foreground)",
-                  marginBottom: "8px",
-                }}
-              >
-                Remove Password
-              </h3>
-              <p
-                style={{
-                  margin: 0,
-                  fontSize: "12px",
-                  color: "var(--color-muted)",
-                  lineHeight: "1.5",
-                }}
-              >
-                Disable password authentication for your account. You'll still
-                be able to sign in using your connected social accounts or other
-                authentication methods.
-              </p>
-            </div>
-
-            {/* Right side - Toggle button */}
-            <div>
-              <button
-                type="button"
+            {false && (
+              <Button
                 onClick={() => toggleSection("removePassword")}
                 style={{
                   padding: "8px 16px",
-                  borderRadius: "var(--radius-sm)",
-                  border: "1px solid var(--color-border)",
-                  background: "var(--color-input-background)",
-                  color: "var(--color-foreground)",
                   fontSize: "14px",
-                  fontWeight: 500,
-                  cursor: "pointer",
-                  transition: "all 0.2s ease",
-                  display: "flex",
-                  alignItems: "center",
-                  gap: "8px",
+                  height: "36px",
+                  background: visibleSections.removePassword ? "var(--color-error)" : "transparent",
+                  color: visibleSections.removePassword ? "white" : "var(--color-error)",
+                  border: "1px solid var(--color-error)"
                 }}
               >
-                {visibleSections.removePassword ? "Hide" : "Show"}
-                {visibleSections.removePassword ? (
-                  <ChevronUp size={16} />
-                ) : (
-                  <ChevronDown size={16} />
-                )}
-              </button>
-            </div>
+                Remove Password
+              </Button>
+            )}
           </div>
+        </SecurityCard>
+      )}
 
-          {/* Remove Password Card - Below the row */}
-          {visibleSections.removePassword && (
-            <div
+      {/* Two-Factor Authentication Card */}
+      {authFactorsEnabled?.authenticator && (
+        <SecurityCard>
+          <SecurityCardHeader>
+            <SecurityCardTitle>
+              <Shield size={20} />
+              Authenticator App
+            </SecurityCardTitle>
+            <SecurityStatus $status={user?.user_authenticator ? 'enabled' : 'disabled'}>
+              {user?.user_authenticator ? 'Enabled' : 'Disabled'}
+            </SecurityStatus>
+          </SecurityCardHeader>
+          <SecurityCardDescription>
+            Use an authenticator app like Google Authenticator or Authy for secure two-factor authentication.
+          </SecurityCardDescription>
+
+          <div style={{ display: "flex", gap: "12px", flexWrap: "wrap" }}>
+            {!user?.user_authenticator ? (
+              <Button
+                onClick={() => toggleSection("authenticator")}
+                style={{
+                  padding: "8px 16px",
+                  fontSize: "14px",
+                  height: "36px",
+                  background: visibleSections.authenticator ? "var(--color-primary)" : "var(--color-background)",
+                  color: visibleSections.authenticator ? "white" : "var(--color-foreground)",
+                  border: "1px solid var(--color-border)"
+                }}
+              >
+                Set Up Authenticator
+              </Button>
+            ) : (
+              <Button
+                onClick={() => console.log('Remove authenticator')}
+                style={{
+                  padding: "8px 16px",
+                  fontSize: "14px",
+                  height: "36px",
+                  background: "transparent",
+                  color: "var(--color-error)",
+                  border: "1px solid var(--color-error)"
+                }}
+              >
+                Remove Authenticator
+              </Button>
+            )}
+          </div>
+        </SecurityCard>
+      )}
+
+      {/* Backup Codes Card */}
+      {authFactorsEnabled?.backup_code && user?.user_authenticator && (
+        <SecurityCard>
+          <SecurityCardHeader>
+            <SecurityCardTitle>
+              <Download size={20} />
+              Backup Codes
+            </SecurityCardTitle>
+            <SecurityStatus $status={user?.backup_codes_generated ? 'enabled' : 'warning'}>
+              {user?.backup_codes_generated ? 'Generated' : 'Not Generated'}
+            </SecurityStatus>
+          </SecurityCardHeader>
+          <SecurityCardDescription>
+            Generate backup codes to access your account if you lose your authenticator device.
+          </SecurityCardDescription>
+
+          <div style={{ display: "flex", gap: "12px", flexWrap: "wrap" }}>
+            <Button
+              onClick={() => toggleSection("backupCodes")}
               style={{
-                padding: "16px 0",
-                marginBottom: "12px",
+                padding: "8px 16px",
+                fontSize: "14px",
+                height: "36px",
+                background: visibleSections.backupCodes ? "var(--color-primary)" : "var(--color-background)",
+                color: visibleSections.backupCodes ? "white" : "var(--color-foreground)",
+                border: "1px solid var(--color-border)"
               }}
             >
-              {!hasAlternativeAuthMethods() && (
-                <div
-                  style={{
-                    padding: "12px",
-                    background: "var(--color-warning-background)",
-                    color: "var(--color-warning-text)",
-                    borderRadius: "8px",
-                    marginBottom: "12px",
-                    fontSize: "14px",
-                  }}
-                >
-                  You must set up an alternative sign-in method (like Social
-                  connection, phone otp) before you can remove your password.
-                </div>
-              )}
-              <div style={{ marginBottom: "12px" }}>
-                <p
-                  style={{
-                    fontSize: "14px",
-                    color: "var(--color-muted)",
-                    margin: 0,
-                    lineHeight: "1.5",
-                  }}
-                >
-                  Remove password authentication and use only alternative
-                  methods like email OTP, social sign-in, or authenticator apps.
-                </p>
-              </div>
+              {user?.backup_codes_generated ? 'Regenerate Codes' : 'Generate Codes'}
+            </Button>
+          </div>
+        </SecurityCard>
+      )}
 
-              <FormGroup>
-                <Label htmlFor="removePasswordInput">Current Password</Label>
-                <PasswordInput>
-                  <Input
-                    id="removePasswordInput"
-                    type={showRemovePassword ? "text" : "password"}
-                    value={removePasswordInput}
-                    onChange={(e) => setRemovePasswordInput(e.target.value)}
-                    placeholder="Enter your current password"
-                  />
-                  <button
-                    type="button"
-                    onClick={() => setShowRemovePassword(!showRemovePassword)}
-                  >
-                    {showRemovePassword ? (
-                      <EyeOff size={16} />
-                    ) : (
-                      <Eye size={16} />
-                    )}
-                  </button>
-                </PasswordInput>
-                {passwordErrors.removePassword && (
-                  <div
-                    style={{
-                      color: "var(--color-error)",
-                      fontSize: "12px",
-                      marginTop: "4px",
-                    }}
-                  >
-                    {passwordErrors.removePassword}
-                  </div>
-                )}
-              </FormGroup>
-
-              <TFA2.ButtonGroup>
-                <TFA2.ActionButton
+      {/* Expandable Forms */}
+      {visibleSections.changePassword && passwordEnabled && (
+        <SecurityCard>
+          <SecurityCardTitle>Change Password</SecurityCardTitle>
+          <Form onSubmit={handlePasswordSubmit} style={{ marginTop: "16px" }}>
+            <FormGroup>
+              <Label htmlFor="currentPassword">Current Password</Label>
+              <PasswordInput>
+                <Input
+                  id="currentPassword"
+                  type={showCurrentPassword ? "text" : "password"}
+                  value={currentPassword}
+                  onChange={(e) => setCurrentPassword(e.target.value)}
+                  placeholder="Enter your current password"
+                />
+                <button
                   type="button"
-                  onClick={() => {
-                    setRemovePasswordInput("");
-                    setPasswordErrors({});
-                    toggleSection("removePassword");
-                  }}
-                >
-                  Cancel
-                </TFA2.ActionButton>
-                <TFA2.ActionButton
-                  type="button"
-                  $variant="danger"
-                  onClick={handleRemovePassword}
-                  disabled={
-                    isRemoving ||
-                    !removePasswordInput ||
-                    !hasAlternativeAuthMethods()
+                  onClick={() =>
+                    setShowCurrentPassword(!showCurrentPassword)
                   }
                 >
-                  {isRemoving ? "Removing..." : "Remove Password"}
-                </TFA2.ActionButton>
-              </TFA2.ButtonGroup>
-            </div>
-          )}
-        </>
+                  {showCurrentPassword ? (
+                    <EyeOff size={16} />
+                  ) : (
+                    <Eye size={16} />
+                  )}
+                </button>
+              </PasswordInput>
+              {passwordErrors.currentPassword && (
+                <div
+                  style={{
+                    color: "var(--color-error)",
+                    fontSize: "12px",
+                    marginTop: "4px",
+                  }}
+                >
+                  {passwordErrors.currentPassword}
+                </div>
+              )}
+            </FormGroup>
+
+            <FormGroup>
+              <Label htmlFor="newPassword">New Password</Label>
+              <PasswordInput>
+                <Input
+                  id="newPassword"
+                  type={showNewPassword ? "text" : "password"}
+                  value={newPassword}
+                  onChange={(e) => setNewPassword(e.target.value)}
+                  placeholder="Enter your new password"
+                />
+                <button
+                  type="button"
+                  onClick={() => setShowNewPassword(!showNewPassword)}
+                >
+                  {showNewPassword ? (
+                    <EyeOff size={16} />
+                  ) : (
+                    <Eye size={16} />
+                  )}
+                </button>
+              </PasswordInput>
+              {passwordErrors.newPassword && (
+                <div
+                  style={{
+                    color: "var(--color-error)",
+                    fontSize: "12px",
+                    marginTop: "4px",
+                  }}
+                >
+                  {passwordErrors.newPassword}
+                </div>
+              )}
+            </FormGroup>
+
+            <FormGroup>
+              <Label htmlFor="confirmPassword">Confirm New Password</Label>
+              <PasswordInput>
+                <Input
+                  id="confirmPassword"
+                  type={showConfirmPassword ? "text" : "password"}
+                  value={confirmPassword}
+                  onChange={(e) => setConfirmPassword(e.target.value)}
+                  placeholder="Confirm your new password"
+                />
+                <button
+                  type="button"
+                  onClick={() =>
+                    setShowConfirmPassword(!showConfirmPassword)
+                  }
+                >
+                  {showConfirmPassword ? (
+                    <EyeOff size={16} />
+                  ) : (
+                    <Eye size={16} />
+                  )}
+                </button>
+              </PasswordInput>
+              {passwordErrors.confirmPassword && (
+                <div
+                  style={{
+                    color: "var(--color-error)",
+                    fontSize: "12px",
+                    marginTop: "4px",
+                  }}
+                >
+                  {passwordErrors.confirmPassword}
+                </div>
+              )}
+            </FormGroup>
+
+            <TFA2.ButtonGroup>
+              <TFA2.ActionButton
+                type="button"
+                onClick={() => {
+                  setCurrentPassword("");
+                  setNewPassword("");
+                  setConfirmPassword("");
+                  setPasswordErrors({});
+                  toggleSection("changePassword");
+                }}
+              >
+                Cancel
+              </TFA2.ActionButton>
+              <TFA2.ActionButton
+                type="submit"
+                $variant="primary"
+                disabled={isSubmitting}
+              >
+                {isSubmitting ? "Updating..." : "Update Password"}
+              </TFA2.ActionButton>
+            </TFA2.ButtonGroup>
+          </Form>
+        </SecurityCard>
       )}
     </div>
   );
@@ -2376,525 +1561,491 @@ const SecurityManagementSection = () => {
 
 const ProfileDetailsManagementSection = () => {
   const { deployment } = useDeployment();
-  const { user, updateProfile, updateProfilePicture, deleteAccount } =
-    useUser();
+  const { user, updateProfile, updateProfilePicture, deleteAccount } = useUser();
   const { toast } = useScreenContext();
+
+  // State for profile management
   const [firstName, setFirstName] = useState(user?.first_name || "");
   const [lastName, setLastName] = useState(user?.last_name || "");
   const [username, setUsername] = useState(user?.username || "");
-  const [errors, setErrors] = useState<Record<string, string>>({});
-  const [isUpdating, setIsUpdating] = useState(false);
-  const [successMessage, setSuccessMessage] = useState("");
-  const [password, setPassword] = useState("");
-  const [showPassword, setShowPassword] = useState(false);
-  const [isDeleting, setIsDeleting] = useState(false);
+  const [isAutoSaving, setIsAutoSaving] = useState(false);
+  const [showSaveNotification, setShowSaveNotification] = useState(false);
   const [showDeleteConfirm, setShowDeleteConfirm] = useState(false);
+  const [isDeleting, setIsDeleting] = useState(false);
+  const [confirmName, setConfirmName] = useState("");
+  const [previewUrl, setPreviewUrl] = useState<string | null>(
+    user?.profile_picture_url || null,
+  );
+
   const fileInputRef = React.useRef<HTMLInputElement>(null);
+  const autoSaveTimeoutRef = React.useRef<NodeJS.Timeout | null>(null);
 
   React.useEffect(() => {
     if (user) {
       setFirstName(user.first_name || "");
       setLastName(user.last_name || "");
       setUsername(user.username || "");
+      setPreviewUrl(user.profile_picture_url || null);
     }
-  }, [user?.first_name, user?.last_name, user?.username]);
+  }, [user]);
 
-  const handleProfilePictureChange = async (
-    e: React.ChangeEvent<HTMLInputElement>,
-  ) => {
-    const file = e.target.files?.[0];
-    if (!file) return;
+  const autoSave = React.useCallback(async () => {
+    if (!user || isAutoSaving) return;
 
     try {
-      await updateProfilePicture(file);
-      setSuccessMessage("Profile picture updated successfully");
-      setTimeout(() => setSuccessMessage(""), 3000);
-    } catch (error) {
-      toast("Failed to update profile picture. Please try again.", "error");
+      setIsAutoSaving(true);
+      const data: any = {};
+
+      if (firstName !== user.first_name) {
+        data.first_name = firstName;
+      }
+      if (lastName !== user.last_name) {
+        data.last_name = lastName;
+      }
+      if (username !== user.username) {
+        data.username = username;
+      }
+
+      // Only save if there are actual changes
+      if (Object.keys(data).length > 0) {
+        await updateProfile(data);
+        setShowSaveNotification(true);
+        setTimeout(() => setShowSaveNotification(false), 3000);
+      }
+    } catch (error: any) {
+      toast(error.message || "Failed to save profile changes", "error");
+    } finally {
+      setIsAutoSaving(false);
+    }
+  }, [user, updateProfile, firstName, lastName, username, isAutoSaving, toast]);
+
+  const scheduleAutoSave = React.useCallback(() => {
+    if (autoSaveTimeoutRef.current) {
+      clearTimeout(autoSaveTimeoutRef.current);
+    }
+    autoSaveTimeoutRef.current = setTimeout(() => {
+      autoSave();
+    }, 1000); // Auto-save after 1 second of inactivity
+  }, [autoSave]);
+
+  const handleFirstNameChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    setFirstName(e.target.value);
+    scheduleAutoSave();
+  };
+
+  const handleLastNameChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    setLastName(e.target.value);
+    scheduleAutoSave();
+  };
+
+  const handleUsernameChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    setUsername(e.target.value);
+    scheduleAutoSave();
+  };
+
+  const handleFirstNameBlur = () => {
+    if (autoSaveTimeoutRef.current) {
+      clearTimeout(autoSaveTimeoutRef.current);
+    }
+    autoSave();
+  };
+
+  const handleLastNameBlur = () => {
+    if (autoSaveTimeoutRef.current) {
+      clearTimeout(autoSaveTimeoutRef.current);
+    }
+    autoSave();
+  };
+
+  const handleUsernameBlur = () => {
+    if (autoSaveTimeoutRef.current) {
+      clearTimeout(autoSaveTimeoutRef.current);
+    }
+    autoSave();
+  };
+
+  const handleImageChange = (event: React.ChangeEvent<HTMLInputElement>) => {
+    if (event.target.files?.[0]) {
+      const file = event.target.files[0];
+      setPreviewUrl(URL.createObjectURL(file));
+      // Auto-save image immediately
+      setTimeout(async () => {
+        try {
+          await updateProfilePicture(file);
+          user.refetch();
+          toast("Profile picture updated successfully", "info");
+        } catch (error: any) {
+          toast(error.message || "Failed to update profile picture", "error");
+          // Reset preview on error
+          setPreviewUrl(user?.profile_picture_url || null);
+        }
+      }, 100);
     }
   };
 
   const triggerFileInput = () => {
-    fileInputRef.current?.click();
-  };
-
-  const removeProfilePicture = async () => {
-    try {
-      await updateProfile({});
-      setSuccessMessage("Profile picture removed successfully");
-      setTimeout(() => setSuccessMessage(""), 3000);
-    } catch (error) {
-      toast("Failed to remove profile picture. Please try again.", "error");
+    if (fileInputRef.current) {
+      fileInputRef.current.click();
     }
   };
 
-  const handleUpdateProfile = async (e: React.FormEvent) => {
-    e.preventDefault();
-    setIsUpdating(true);
-    setErrors({});
-
-    try {
-      const updateData: any = {};
-
-      if (deployment?.auth_settings?.first_name?.enabled) {
-        updateData.first_name = firstName;
-      }
-
-      if (deployment?.auth_settings?.last_name?.enabled) {
-        updateData.last_name = lastName;
-      }
-
-      if (deployment?.auth_settings?.username?.enabled) {
-        updateData.username = username;
-      }
-
-      await updateProfile(updateData);
-      setSuccessMessage("Settings updated successfully");
-      setTimeout(() => setSuccessMessage(""), 3000);
-    } catch (error: any) {
-      toast(
-        error.message || "Failed to update profile. Please try again.",
-        "error",
-      );
-    } finally {
-      setIsUpdating(false);
-    }
-  };
+  if (!user) {
+    return (
+      <div
+        style={{
+          display: "flex",
+          justifyContent: "center",
+          padding: "40px 0",
+        }}
+      >
+        <Spinner />
+      </div>
+    );
+  }
 
   const handleDeleteAccount = async () => {
-    if (!password) {
-      setSuccessMessage("");
-      // We'll show error in the form validation instead
-      return;
-    }
+    if (!user || confirmName !== user.username) return;
 
-    if (
-      window.confirm("Are you absolutely sure? This action cannot be undone.")
-    ) {
-      setIsDeleting(true);
-      try {
-        await deleteAccount(password);
-        setSuccessMessage("Account deleted successfully");
-      } catch (error) {
-        setSuccessMessage("");
-        // Handle error appropriately
-      } finally {
-        setIsDeleting(false);
-        setPassword("");
-      }
+    setIsDeleting(true);
+    try {
+      await deleteAccount("");
+      toast("Account deleted successfully", "info");
+    } catch (error: any) {
+      toast(error.message || "Failed to delete account", "error");
+    } finally {
+      setIsDeleting(false);
+      setConfirmName("");
+      setShowDeleteConfirm(false);
     }
   };
 
   return (
     <>
-      {successMessage && (
-        <div
-          style={{
-            marginBottom: "20px",
-            padding: "8px",
-            background: "var(--color-success-background)",
-            color: "var(--color-success)",
-            borderRadius: "4px",
-            display: "flex",
-            alignItems: "center",
-            gap: "8px",
-          }}
-        >
-          ✓{successMessage}
-        </div>
-      )}
-
-      <div
-        style={{
-          display: "flex",
-          width: "100%",
-          gap: "1px",
-        }}
-      >
-        {/* Left Panel - Profile Picture */}
-        <div
-          style={{
-            width: "280px",
-            paddingRight: "24px",
-            display: "flex",
-            flexDirection: "column",
-            alignItems: "center",
-            justifyContent: "center",
-            gap: "12px",
-            borderRight: "1px solid var(--color-border)",
-          }}
-        >
-          <div
-            style={{
-              width: "240px",
-              height: "240px",
-              borderRadius: "50%",
-              border: "2px solid #e5e7eb",
-              background: "transparent",
-              cursor: "pointer",
-              display: "flex",
-              alignItems: "center",
-              justifyContent: "center",
-              overflow: "hidden",
-              transition: "all 0.2s ease",
-              position: "relative",
-            }}
-            onClick={triggerFileInput}
-            onMouseEnter={(e) => {
-              e.currentTarget.style.borderColor = "#d1d5db";
-              e.currentTarget.style.transform = "scale(1.02)";
-            }}
-            onMouseLeave={(e) => {
-              e.currentTarget.style.borderColor = "#e5e7eb";
-              e.currentTarget.style.transform = "scale(1)";
-            }}
-          >
-            {user?.profile_picture_url ? (
-              <img
-                src={user?.profile_picture_url}
-                alt="Profile Picture"
-                style={{
-                  width: "100%",
-                  height: "100%",
-                  objectFit: "cover",
-                }}
-              />
-            ) : (
-              <div
-                style={{
-                  width: "100%",
-                  height: "100%",
-                  background: "#e5e7eb",
-                  display: "flex",
-                  alignItems: "center",
-                  justifyContent: "center",
-                  color: "#9ca3af",
-                  fontSize: "32px",
-                  fontWeight: 500,
-                }}
-              >
-                {user?.first_name?.charAt(0)?.toUpperCase() || (
-                  <User size={48} />
-                )}
-              </div>
-            )}
-            <input
-              type="file"
-              ref={fileInputRef}
-              style={{ display: "none" }}
-              accept="image/*"
-              onChange={handleProfilePictureChange}
-            />
-          </div>
-
-          <div
-            style={{ textAlign: "center", marginTop: "20px", width: "240px" }}
-          >
+      <div style={{ display: "flex", flexDirection: "column", gap: "var(--space-2xl)" }}>
+        {/* Profile Picture Section - Two Column Layout */}
+        <div style={{ display: "flex", gap: "var(--space-2xl)", alignItems: "center" }}>
+          {/* Left Column - Profile Picture Preview */}
+          <div style={{ flexShrink: 0 }}>
             <div
               style={{
+                width: "120px",
+                height: "120px",
+                borderRadius: "50%",
+                border: "2px dashed var(--color-border)",
+                background: previewUrl ? "transparent" : "var(--color-input-background)",
+                cursor: "pointer",
                 display: "flex",
-                flexDirection: "column",
-                gap: "8px",
-                marginBottom: "12px",
+                alignItems: "center",
+                justifyContent: "center",
+                overflow: "hidden",
+                transition: "all 0.2s ease",
+              }}
+              onClick={triggerFileInput}
+              onMouseEnter={(e) => {
+                e.currentTarget.style.borderColor = "var(--color-primary)";
+                e.currentTarget.style.transform = "scale(1.02)";
+              }}
+              onMouseLeave={(e) => {
+                e.currentTarget.style.borderColor = "var(--color-border)";
+                e.currentTarget.style.transform = "scale(1)";
               }}
             >
+              {previewUrl ? (
+                <img
+                  src={previewUrl}
+                  alt="Profile Picture"
+                  style={{
+                    width: "100%",
+                    height: "100%",
+                    objectFit: "cover",
+                    borderRadius: "50%",
+                  }}
+                />
+              ) : (
+                <User size={32} color="var(--color-muted)" />
+              )}
+              <input
+                type="file"
+                ref={fileInputRef}
+                style={{ display: "none" }}
+                accept="image/*"
+                onChange={handleImageChange}
+              />
+            </div>
+          </div>
+
+          {/* Right Column - Content and Controls */}
+          <div style={{ flex: 1 }}>
+            <div style={{ marginBottom: "var(--space-lg)" }}>
+              <h3 style={{
+                fontSize: "var(--font-sm)",
+                color: "var(--color-foreground)",
+                margin: "0 0 var(--space-2xs) 0"
+              }}>
+                Profile Picture
+              </h3>
+              <p style={{
+                fontSize: "var(--font-xs)",
+                color: "var(--color-secondary-text)",
+                margin: 0
+              }}>
+                Upload an image to represent your profile
+              </p>
+            </div>
+
+            <div style={{ display: "flex", gap: "var(--space-sm)", marginBottom: "var(--space-sm)" }}>
               <Button
                 onClick={() => fileInputRef.current?.click()}
                 style={{
-                  background: "#6366f1",
-                  color: "white",
-                  border: "none",
-                  padding: "8px 16px",
-                  borderRadius: "6px",
-                  fontSize: "14px",
-                  fontWeight: 500,
-                  width: "100%",
+                  padding: "var(--space-xs) var(--space-md)",
+                  fontSize: "var(--font-xs)",
+                  height: "32px",
+                  width: "100px",
+                  display: "flex",
+                  alignItems: "center",
+                  gap: "6px",
                 }}
               >
-                Change Picture
+                <Download size={14} />
+                {previewUrl ? "Change" : "Upload"}
               </Button>
               <Button
-                onClick={removeProfilePicture}
-                disabled={!user?.profile_picture_url}
+                onClick={() => {
+                  setPreviewUrl(null);
+                  if (fileInputRef.current) {
+                    fileInputRef.current.value = "";
+                  }
+                }}
                 style={{
-                  background: user?.profile_picture_url ? "#ef4444" : "#e5e7eb",
-                  color: user?.profile_picture_url ? "white" : "#9ca3af",
-                  border: "none",
-                  padding: "8px 16px",
-                  borderRadius: "6px",
-                  fontSize: "14px",
-                  fontWeight: 500,
-                  cursor: user?.profile_picture_url ? "pointer" : "not-allowed",
-                  width: "100%",
+                  background: "transparent",
+                  color: "var(--color-muted)",
+                  border: "1px solid var(--color-border)",
+                  padding: "var(--space-xs) var(--space-md)",
+                  fontSize: "var(--font-xs)",
+                  height: "32px",
+                  width: "100px",
+                  display: "flex",
+                  alignItems: "center",
+                  gap: "6px",
                 }}
               >
-                Remove Picture
+                <AlertTriangle size={14} />
+                Remove
               </Button>
-            </div>
-            <div
-              style={{ fontSize: "11px", color: "#9ca3af", lineHeight: "1.4" }}
-            >
-              <div>JPG, PNG, GIF • Max 2MB</div>
             </div>
           </div>
         </div>
 
-        {/* Right Panel - Form Fields */}
-        <div style={{ flex: 1, paddingLeft: "24px" }}>
-          <form onSubmit={handleUpdateProfile}>
-            <div
-              style={{ display: "flex", flexDirection: "column", gap: "16px" }}
-            >
-              {(deployment?.auth_settings?.first_name?.enabled ||
-                deployment?.auth_settings?.last_name?.enabled) && (
-                <div style={{ display: "flex", gap: "12px" }}>
-                  {deployment?.auth_settings?.first_name?.enabled && (
-                    <FormGroup style={{ flex: 1 }}>
-                      <Label
-                        style={{
-                          fontSize: "13px",
-                          fontWeight: 500,
-                          color: "#374151",
-                        }}
-                      >
-                        First Name
-                      </Label>
-                      <Input
-                        id="firstName"
-                        type="text"
-                        value={firstName}
-                        onChange={(e) => setFirstName(e.target.value)}
-                        placeholder="Enter first name"
-                        style={{
-                          width: "100%",
-                          padding: "8px 12px",
-                          borderRadius: "6px",
-                          fontSize: "14px",
-                          border: "1px solid #e5e7eb",
-                        }}
-                        required
-                      />
-                      {errors.firstName && (
-                        <div
-                          style={{
-                            color: "var(--color-error)",
-                            fontSize: "12px",
-                            marginTop: "4px",
-                          }}
-                        >
-                          {errors.firstName}
-                        </div>
-                      )}
-                    </FormGroup>
-                  )}
+        {/* Divider */}
+        <div
+          style={{
+            position: "relative",
+            height: "1px",
+            background: "var(--color-divider)",
+            margin: "0",
+          }}
+        />
 
-                  {deployment?.auth_settings?.last_name?.enabled && (
-                    <FormGroup style={{ flex: 1 }}>
-                      <Label
-                        style={{
-                          fontSize: "13px",
-                          fontWeight: 500,
-                          color: "#374151",
-                        }}
-                      >
-                        Last Name
-                      </Label>
-                      <Input
-                        id="lastName"
-                        type="text"
-                        value={lastName}
-                        onChange={(e) => setLastName(e.target.value)}
-                        placeholder="Enter last name"
-                        style={{
-                          width: "100%",
-                          padding: "8px 12px",
-                          borderRadius: "6px",
-                          fontSize: "14px",
-                          border: "1px solid #e5e7eb",
-                        }}
-                      />
-                      {errors.lastName && (
-                        <div
-                          style={{
-                            color: "var(--color-error)",
-                            fontSize: "12px",
-                            marginTop: "4px",
-                          }}
-                        >
-                          {errors.lastName}
-                        </div>
-                      )}
-                    </FormGroup>
-                  )}
+        {/* Profile Details */}
+        <div>
+          <div style={{ marginBottom: "var(--space-md)" }}>
+            <h3 style={{
+              fontSize: "var(--font-sm)",
+              color: "var(--color-foreground)",
+              margin: "0 0 var(--space-2xs) 0"
+            }}>
+              Profile Details
+            </h3>
+            <p style={{
+              fontSize: "var(--font-xs)",
+              color: "var(--color-secondary-text)",
+              margin: 0
+            }}>
+              Basic information about your profile
+            </p>
+          </div>
+
+          <div style={{ display: "flex", flexDirection: "column", gap: "var(--space-lg)" }}>
+            {/* First Name and Last Name in same row */}
+            <div style={{ display: "flex", gap: "var(--space-md)" }}>
+              <FormGroup style={{ flex: 1 }}>
+                <Label htmlFor="firstName">First Name</Label>
+                <Input
+                  id="firstName"
+                  type="text"
+                  value={firstName}
+                  onChange={handleFirstNameChange}
+                  onBlur={handleFirstNameBlur}
+                  placeholder="Enter your first name"
+                  required
+                />
+              </FormGroup>
+
+              <FormGroup style={{ flex: 1 }}>
+                <Label htmlFor="lastName">Last Name</Label>
+                <Input
+                  id="lastName"
+                  type="text"
+                  value={lastName}
+                  onChange={handleLastNameChange}
+                  onBlur={handleLastNameBlur}
+                  placeholder="Enter your last name"
+                  required
+                />
+              </FormGroup>
+            </div>
+
+            {deployment?.auth_settings?.username?.enabled && (
+              <FormGroup>
+                <Label htmlFor="username">Username</Label>
+                <Input
+                  id="username"
+                  type="text"
+                  value={username}
+                  onChange={handleUsernameChange}
+                  onBlur={handleUsernameBlur}
+                  placeholder="Enter your username"
+                  required
+                />
+              </FormGroup>
+            )}
+          </div>
+
+          {/* Auto-save indicator */}
+          <div style={{
+            display: "flex",
+            alignItems: "center",
+            gap: "var(--space-xs)",
+            marginTop: "var(--space-md)",
+            fontSize: "var(--font-xs)",
+            color: "var(--color-muted)"
+          }}>
+            {isAutoSaving && (
+              <>
+                <Spinner size={14} />
+                <span>Saving changes...</span>
+              </>
+            )}
+            {showSaveNotification && (
+              <>
+                <Check size={14} color="var(--color-success)" />
+                <span style={{ color: "var(--color-success)" }}>Changes saved</span>
+              </>
+            )}
+          </div>
+        </div>
+
+        {/* Divider */}
+        <div
+          style={{
+            position: "relative",
+            height: "1px",
+            background: "var(--color-divider)",
+            margin: "0",
+          }}
+        />
+
+        {/* Danger Zone */}
+        <div>
+          <div style={{ marginBottom: "16px" }}>
+            <h3 style={{
+              fontSize: "16px",
+              color: "var(--color-foreground)",
+              margin: "0 0 4px 0"
+            }}>
+              Danger Zone
+            </h3>
+            <p style={{
+              fontSize: "14px",
+              color: "var(--color-muted)",
+              margin: 0
+            }}>
+              Irreversible and destructive actions
+            </p>
+          </div>
+
+          <div style={{
+            padding: "20px",
+            border: "1px solid var(--color-error)",
+            borderRadius: "8px"
+          }}>
+            <div style={{
+              display: "flex",
+              alignItems: "center",
+              justifyContent: "space-between",
+              marginBottom: showDeleteConfirm ? "20px" : "0"
+            }}>
+              <div>
+                <div style={{
+                  fontSize: "14px",
+                  color: "var(--color-foreground)",
+                  marginBottom: "4px",
+                  fontWeight: "500"
+                }}>
+                  Delete Account
                 </div>
-              )}
-
-              {deployment?.auth_settings?.username?.enabled && (
-                <FormGroup>
-                  <Label
-                    style={{
-                      fontSize: "13px",
-                      fontWeight: 500,
-                      color: "#374151",
-                    }}
-                  >
-                    Username
-                  </Label>
-                  <Input
-                    id="username"
-                    type="text"
-                    value={username}
-                    onChange={(e) => setUsername(e.target.value)}
-                    placeholder="Enter username"
-                    style={{
-                      width: "100%",
-                      padding: "8px 12px",
-                      borderRadius: "6px",
-                      fontSize: "14px",
-                      border: "1px solid #e5e7eb",
-                    }}
-                  />
-                  {errors.username && (
-                    <div
-                      style={{
-                        color: "var(--color-error)",
-                        fontSize: "12px",
-                        marginTop: "4px",
-                      }}
-                    >
-                      {errors.username}
-                    </div>
-                  )}
-                </FormGroup>
-              )}
-
-              {/* Button Group */}
-              {(deployment?.auth_settings?.first_name?.enabled ||
-                deployment?.auth_settings?.last_name?.enabled ||
-                deployment?.auth_settings?.username?.enabled) && (
-                <div
-                  style={{
-                    display: "flex",
-                    justifyContent: "flex-end",
-                    marginTop: "20px",
-                  }}
-                >
-                  <Button
-                    type="submit"
-                    disabled={isUpdating}
-                    style={{
-                      background: "#6366f1",
-                      color: "white",
-                      border: "none",
-                      padding: "8px 16px",
-                      borderRadius: "6px",
-                      fontSize: "14px",
-                      fontWeight: 500,
-                    }}
-                  >
-                    {isUpdating ? <Spinner size={16} /> : "Save Changes"}
-                  </Button>
+                <div style={{
+                  fontSize: "13px",
+                  color: "var(--color-muted)"
+                }}>
+                  Once you delete your account, there is no going back. Please be certain.
                 </div>
-              )}
-
-              {/* Delete Section */}
-              <div
+              </div>
+              <Button
+                onClick={() => {
+                  if (!showDeleteConfirm) {
+                    setShowDeleteConfirm(true);
+                  } else {
+                    setShowDeleteConfirm(false);
+                    setConfirmName("");
+                  }
+                }}
                 style={{
-                  marginTop: "40px",
-                  paddingTop: "24px",
-                  borderTop: "1px solid #f3f4f6",
+                  background: "var(--color-error)",
+                  color: "white",
+                  border: "none",
+                  padding: "6px 12px",
+                  fontSize: "13px",
+                  height: "32px",
+                  width: "auto"
                 }}
               >
-                <button
-                  onClick={() => {
-                    if (!showDeleteConfirm) {
-                      setShowDeleteConfirm(true);
-                    } else {
-                      setShowDeleteConfirm(false);
-                      setPassword("");
-                    }
-                  }}
+                {showDeleteConfirm ? "Cancel" : "Delete"}
+              </Button>
+            </div>
+
+            {showDeleteConfirm && (
+              <div style={{ maxWidth: "400px" }}>
+                <FormGroup>
+                  <Label htmlFor="confirm_username">Confirm by typing your username</Label>
+                  <Input
+                    id="confirm_username"
+                    type="text"
+                    value={confirmName}
+                    onChange={(e) => setConfirmName(e.target.value)}
+                    placeholder={`Type "${user?.username}" to confirm`}
+                  />
+                </FormGroup>
+                <Button
+                  onClick={handleDeleteAccount}
+                  disabled={confirmName !== user?.username || isDeleting}
                   style={{
-                    background: "none",
-                    border: "none",
-                    color: "#6b7280",
-                    fontSize: "13px",
-                    cursor: "pointer",
-                    textDecoration: "underline",
-                    padding: "0",
+                    background: confirmName === user?.username ? "var(--color-error)" : "transparent",
+                    color: confirmName === user?.username ? "white" : "var(--color-muted)",
+                    border: "1px solid var(--color-border)",
+                    padding: "8px 16px",
+                    fontSize: "14px",
+                    height: "36px",
+                    cursor: confirmName === user?.username ? "pointer" : "not-allowed",
+                    opacity: confirmName === user?.username ? 1 : 0.6,
+                    marginTop: "12px",
                   }}
                 >
-                  {showDeleteConfirm ? "Cancel" : "Delete account"}
-                </button>
-
-                {showDeleteConfirm && (
-                  <div style={{ marginTop: "16px", maxWidth: "300px" }}>
-                    <p
-                      style={{
-                        fontSize: "12px",
-                        color: "#6b7280",
-                        margin: "0 0 12px 0",
-                      }}
-                    >
-                      This action cannot be undone.
-                    </p>
-                    <div style={{ position: "relative", marginBottom: "12px" }}>
-                      <Input
-                        type={showPassword ? "text" : "password"}
-                        value={password}
-                        onChange={(e) => setPassword(e.target.value)}
-                        placeholder="Enter password"
-                        style={{
-                          width: "100%",
-                          padding: "8px 12px",
-                          borderRadius: "4px",
-                          fontSize: "13px",
-                          border: "1px solid #e5e7eb",
-                          paddingRight: "40px",
-                        }}
-                      />
-                      <button
-                        type="button"
-                        onClick={() => setShowPassword(!showPassword)}
-                        style={{
-                          position: "absolute",
-                          right: "12px",
-                          top: "50%",
-                          transform: "translateY(-50%)",
-                          background: "none",
-                          border: "none",
-                          cursor: "pointer",
-                          color: "#6b7280",
-                        }}
-                      >
-                        {showPassword ? (
-                          <EyeOff size={14} />
-                        ) : (
-                          <Eye size={14} />
-                        )}
-                      </button>
-                    </div>
-                    <Button
-                      onClick={handleDeleteAccount}
-                      disabled={isDeleting || !password}
-                      style={{
-                        background: password ? "#dc2626" : "#e5e7eb",
-                        color: password ? "white" : "#9ca3af",
-                        border: "none",
-                        padding: "6px 12px",
-                        borderRadius: "4px",
-                        fontSize: "12px",
-                        fontWeight: 500,
-                        cursor: password ? "pointer" : "not-allowed",
-                      }}
-                    >
-                      {isDeleting ? <Spinner size={12} /> : "Delete"}
-                    </Button>
-                  </div>
-                )}
+                  {isDeleting ? <Spinner size={12} /> : "Delete Forever"}
+                </Button>
               </div>
-            </div>
-          </form>
+            )}
+          </div>
         </div>
       </div>
     </>

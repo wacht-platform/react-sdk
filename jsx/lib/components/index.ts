@@ -4,10 +4,7 @@ export * from "./organization";
 export * from "./workspace";
 export * from "./user";
 export * from "./control";
-export { 
-  AIAgentChat as AIAgent,
-  AIAgentUserInputRequest
-} from "./ai-agent";
+export * from "./notifications";
 export {
   AgentConversation,
   UserInputRequestComponent

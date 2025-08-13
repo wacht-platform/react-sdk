@@ -1,9 +1,14 @@
-import React, { useState, useCallback, useEffect } from "react";
+import React, { useState, useCallback, useEffect, useContext, useRef } from "react";
 import styled from "styled-components";
-import { Building, Settings, Users, Mail, Trash2, Send, Check, Shield } from "lucide-react";
+import { Building, Settings, Users, Mail, Trash2, Send, Check, Shield, AlertTriangle, ChevronDown } from "lucide-react";
 import { useActiveWorkspace, useWorkspaceList } from "@/hooks/use-workspace";
-import type { WorkspaceMembership, WorkspaceRole, WorkspaceWithOrganization } from "@/types";
+import { useSession } from "@/hooks/use-session";
+import type { WorkspaceRole, WorkspaceWithOrganization } from "@/types";
 import { InviteMemberPopover } from "./invite-member-popover";
+import { AddWorkspaceRolePopover } from "./add-role-popover";
+import { ConfirmationPopover } from "../utility/confirmation-popover";
+import useSWR from "swr";
+import { ScreenContext } from "../user/context";
 import {
   Button,
   Input,
@@ -17,6 +22,16 @@ import {
   DropdownTrigger,
   DropdownDivider,
 } from "@/components/utility";
+import {
+  Table,
+  TableBody,
+  TableCell,
+  TableCellFlex,
+  TableHead,
+  TableHeader,
+  TableRow,
+  ActionsCell,
+} from "@/components/utility/table";
 import { useClient } from "@/hooks/use-client";
 import { responseMapper } from "@/utils/response-mapper";
 import { EmptyState } from "@/components/utility/empty-state";
@@ -38,25 +53,46 @@ const Container = styled.div`
   overflow: hidden;
   display: flex;
   flex-direction: column;
+  padding-bottom: 24px;
+  position: relative;
 
   @media (max-width: 768px) {
     border-radius: 16px;
+    padding-bottom: 20px;
+  }
+
+  /* Blur effect at the bottom */
+  &::after {
+    content: '';
+    position: absolute;
+    bottom: 0;
+    left: 0;
+    right: 0;
+    height: 40px;
+    background: linear-gradient(
+      to bottom,
+      transparent 0%,
+      var(--color-background) 70%
+    );
+    pointer-events: none;
+    z-index: 1;
   }
 `;
 
 const TabsContainer = styled.div`
-  padding: 8px 24px 0;
+  padding: 0 24px;
   border-bottom: 1px solid var(--color-border);
 
   @media (max-width: 768px) {
-    padding: 20px 20px 0;
+    padding: 0 20px;
   }
 `;
 
 const TabsList = styled.div`
   display: flex;
-  gap: 24px;
+  gap: 20px;
   overflow-x: auto;
+  overflow-y: hidden;
 
   &::-webkit-scrollbar {
     display: none;
@@ -64,7 +100,7 @@ const TabsList = styled.div`
 `;
 
 const Tab = styled.button<{ $isActive: boolean }>`
-  padding: 12px 0;
+  padding: 12px 12px;
   border: none;
   background: none;
   font-size: 14px;
@@ -75,6 +111,7 @@ const Tab = styled.button<{ $isActive: boolean }>`
   position: relative;
   transition: color 0.15s ease;
   white-space: nowrap;
+  min-width: fit-content;
 
   &:hover {
     color: var(--color-foreground);
@@ -101,11 +138,12 @@ const TabIcon = styled.span`
 
 const TabContent = styled.div`
   flex: 1;
-  padding: 24px;
+  padding: 24px 24px 0 24px;
   overflow-y: auto;
+  position: relative;
 
   @media (max-width: 768px) {
-    padding: 20px;
+    padding: 20px 20px 0 20px;
   }
 `;
 
@@ -114,6 +152,7 @@ const HeaderCTAContainer = styled.div`
   align-items: center;
   flex-wrap: wrap;
   gap: 8px;
+  margin-bottom: 20px;
 `;
 
 interface WorkspaceUpdate {
@@ -205,114 +244,31 @@ const IconButton = styled.button`
 
 
 
-// Helper hooks for workspace operations
-const useWorkspaceOperations = () => {
-  const { client } = useClient();
-  const { activeWorkspace } = useActiveWorkspace();
+
+const InvitationsSection = () => {
+  const { activeWorkspace, loading, getRoles } = useActiveWorkspace();
   const { workspaces } = useWorkspaceList();
-  
-  // Get the full workspace with organization
+  const { client } = useClient();
+
   const workspaceWithOrg = workspaces?.find(w => w.id === activeWorkspace?.id) as WorkspaceWithOrganization | undefined;
-
-  const updateWorkspace = useCallback(
-    async (data: WorkspaceUpdate) => {
-      if (!activeWorkspace) return;
-
-      const formData = new FormData();
-      if (data.name) formData.append("name", data.name);
-      if (data.description) formData.append("description", data.description);
-      if (data.image) formData.append("image", data.image);
-
-      const response = await responseMapper(
-        await client(`/workspaces/${activeWorkspace.id}`, {
-          method: "PUT",
-          body: formData,
-        }),
-      );
-      return response.data;
-    },
-    [client, activeWorkspace],
-  );
-
-  const getMembers = useCallback(async () => {
-    if (!activeWorkspace) return [];
-    try {
-      const response = await responseMapper(
-        await client(`/workspaces/${activeWorkspace.id}/members`, {
-          method: "GET",
-        }),
-      );
-      return response.data as WorkspaceMembership[];
-    } catch (error) {
-      console.error("Failed to fetch members:", error);
-      return [];
-    }
-  }, [client, activeWorkspace]);
-
-  const getRoles = useCallback(async () => {
-    if (!activeWorkspace) return [];
-    try {
-      const response = await responseMapper(
-        await client(`/workspaces/${activeWorkspace.id}/roles`, {
-          method: "GET",
-        }),
-      );
-      return response.data as WorkspaceRole[];
-    } catch (error) {
-      console.error("Failed to fetch roles:", error);
-      return [];
-    }
-  }, [client, activeWorkspace]);
-
-  const inviteMember = useCallback(
-    async (email: string, roleId?: string) => {
-      if (!activeWorkspace) return;
-      const response = await responseMapper(
-        await client(`/workspaces/${activeWorkspace.id}/members`, {
-          method: "POST",
-          headers: { "Content-Type": "application/json" },
-          body: JSON.stringify({ email, role_id: roleId }),
-        }),
-      );
-      return response.data;
-    },
-    [client, activeWorkspace],
-  );
-
-  const removeMember = useCallback(
-    async (memberId: string) => {
-      if (!activeWorkspace) return;
-      const response = await responseMapper(
-        await client(`/workspaces/${activeWorkspace.id}/members/${memberId}`, {
-          method: "DELETE",
-        }),
-      );
-      return response.data;
-    },
-    [client, activeWorkspace],
-  );
-
-  const deleteWorkspace = useCallback(async () => {
-    if (!activeWorkspace) return;
-    const response = await responseMapper(
-      await client(`/workspaces/${activeWorkspace.id}`, {
-        method: "DELETE",
-      }),
-    );
-    return response.data;
-  }, [client, activeWorkspace]);
+  const [rolesLoading, setRolesLoading] = useState(true);
+  const [invitationsLoading, setInvitationsLoading] = useState(true);
+  const [searchQuery, setSearchQuery] = useState("");
+  const [inviteSuccess, setInviteSuccess] = useState("");
+  const [invitations, setInvitations] = useState<any[]>([]);
+  const [roles, setRoles] = useState<WorkspaceRole[]>([]);
+  const [showInvitePopover, setShowInvitePopover] = useState(false);
+  const inviteButtonRef = useRef<HTMLButtonElement>(null);
 
   // Invitation operations - using organization invitations with workspace assignment
   const getInvitations = useCallback(async () => {
     if (!activeWorkspace || !workspaceWithOrg) return [];
     try {
-      // Get organization invitations and filter for this workspace
       const response = await responseMapper(
         await client(`/organizations/${workspaceWithOrg.organization.id}/invitations`, {
           method: "GET",
         }),
       );
-      // Filter invitations that are assigned to this workspace
       const allInvitations = response.data as any[];
       return allInvitations.filter(inv => inv.workspace_id === activeWorkspace.id);
     } catch (error) {
@@ -324,7 +280,6 @@ const useWorkspaceOperations = () => {
   const createInvitation = useCallback(
     async (email: string, roleId: string) => {
       if (!activeWorkspace || !workspaceWithOrg) return;
-      // Get organization roles to find a default org role
       const orgRolesResponse = await responseMapper(
         await client(`/organizations/${workspaceWithOrg.organization.id}/roles`, {
           method: "GET",
@@ -332,16 +287,16 @@ const useWorkspaceOperations = () => {
       );
       const orgRoles = orgRolesResponse.data as any[];
       const defaultOrgRole = orgRoles.find(r => !r.organization_id) || orgRoles[0];
-      
+
       const response = await responseMapper(
         await client(`/organizations/${workspaceWithOrg.organization.id}/invitations`, {
           method: "POST",
           headers: { "Content-Type": "application/json" },
-          body: JSON.stringify({ 
-            email, 
-            role_id: defaultOrgRole?.id, // Organization role (required)
-            workspace_id: activeWorkspace.id, // Assign to this workspace
-            workspace_role_id: roleId // Workspace role
+          body: JSON.stringify({
+            email,
+            role_id: defaultOrgRole?.id,
+            workspace_id: activeWorkspace.id,
+            workspace_role_id: roleId
           }),
         }),
       );
@@ -363,63 +318,10 @@ const useWorkspaceOperations = () => {
     [client, activeWorkspace, workspaceWithOrg],
   );
 
-  // Role management operations
-  const addMemberRole = useCallback(
-    async (membershipId: string, roleId: string) => {
-      if (!activeWorkspace) return;
-      const response = await responseMapper(
-        await client(`/workspaces/${activeWorkspace.id}/members/${membershipId}/roles/${roleId}`, {
-          method: "POST",
-        }),
-      );
-      return response.data;
-    },
-    [client, activeWorkspace],
-  );
-
-  const removeMemberRole = useCallback(
-    async (membershipId: string, roleId: string) => {
-      if (!activeWorkspace) return;
-      const response = await responseMapper(
-        await client(`/workspaces/${activeWorkspace.id}/members/${membershipId}/roles/${roleId}`, {
-          method: "DELETE",
-        }),
-      );
-      return response.data;
-    },
-    [client, activeWorkspace],
-  );
-
-  return {
-    updateWorkspace,
-    getMembers,
-    getRoles,
-    inviteMember,
-    removeMember,
-    deleteWorkspace,
-    getInvitations,
-    createInvitation,
-    discardInvitation,
-    addMemberRole,
-    removeMemberRole,
-  };
-};
-
-const InvitationsSection = () => {
-  const { activeWorkspace, loading } = useActiveWorkspace();
-  const { getRoles, getInvitations, discardInvitation, createInvitation } = useWorkspaceOperations();
-  const [rolesLoading, setRolesLoading] = useState(true);
-  const [invitationsLoading, setInvitationsLoading] = useState(true);
-  const [searchQuery, setSearchQuery] = useState("");
-  const [inviteSuccess, setInviteSuccess] = useState("");
-  const [invitations, setInvitations] = useState<any[]>([]);
-  const [roles, setRoles] = useState<WorkspaceRole[]>([]);
-  const [showInvitePopover, setShowInvitePopover] = useState(false);
-
   // Fetch roles and invitations on mount
   useEffect(() => {
     if (!activeWorkspace) return;
-    
+
     const fetchData = async () => {
       setRolesLoading(true);
       setInvitationsLoading(true);
@@ -519,8 +421,15 @@ const InvitationsSection = () => {
         />
         <div>
           <Button
+            ref={inviteButtonRef}
             onClick={() => setShowInvitePopover(!showInvitePopover)}
-            style={{ width: "120px" }}
+            style={{
+              padding: "8px 16px",
+              borderRadius: "6px",
+              fontSize: "14px",
+              fontWeight: 500,
+              height: "36px"
+            }}
           >
             Invite Members
           </Button>
@@ -530,22 +439,13 @@ const InvitationsSection = () => {
               onSuccess={handleInviteSuccess}
               roles={roles}
               createInvitation={createInvitation}
+              triggerRef={inviteButtonRef}
             />
           )}
         </div>
       </HeaderCTAContainer>
 
       <div>
-        <div
-          style={{
-            fontSize: "14px",
-            fontWeight: 400,
-            marginBottom: "8px",
-            color: "var(--color-muted)",
-          }}
-        >
-          {filteredInvitations.length} pending invitation{filteredInvitations.length !== 1 ? "s" : ""}
-        </div>
         {filteredInvitations.length === 0 ? (
           <EmptyState
             title={searchQuery ? "No invitations match your search" : "No pending invitations"}
@@ -595,36 +495,22 @@ const InvitationsSection = () => {
 };
 
 const MembersSection = () => {
-  const { activeWorkspace, loading } = useActiveWorkspace();
-  const { getMembers, getRoles, removeMember, addMemberRole, removeMemberRole } = useWorkspaceOperations();
-  const [members, setMembers] = useState<WorkspaceMembership[]>([]);
-  const [roles, setRoles] = useState<WorkspaceRole[]>([]);
-  const [membersLoading, setMembersLoading] = useState(true);
+  const { activeWorkspace, loading, getMembers, getRoles, removeMember, addMemberRole, removeMemberRole } = useActiveWorkspace();
+  const { session } = useSession();
+  const { toast } = useContext(ScreenContext) || {};
   const [searchQuery, setSearchQuery] = useState("");
 
-  // Fetch members and roles on mount
-  useEffect(() => {
-    if (!activeWorkspace) return;
-    
-    const fetchData = async () => {
-      setMembersLoading(true);
-      try {
-        const [membersData, rolesData] = await Promise.all([
-          getMembers(),
-          getRoles()
-        ]);
-        setMembers(membersData);
-        setRoles(rolesData);
-      } catch (error) {
-        console.error("Failed to fetch workspace data:", error);
-      } finally {
-        setMembersLoading(false);
-      }
-    };
+  const { data: members = [], isLoading: membersLoading, mutate: reloadMembers } = useSWR(
+    activeWorkspace ? `/api/workspaces/${activeWorkspace.id}/members` : null,
+    () => getMembers() || [],
+  );
 
-    fetchData();
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [activeWorkspace?.id]);
+  const { data: rolesData = [], isLoading: rolesLoading } = useSWR(
+    activeWorkspace ? `/api/workspaces/${activeWorkspace.id}/roles` : null,
+    () => getRoles() || [],
+  );
+
+  const roles = rolesData as WorkspaceRole[];
 
   const filteredMembers = React.useMemo(() => {
     if (!searchQuery) return members;
@@ -633,7 +519,7 @@ const MembersSection = () => {
       if (!user) return false;
       const firstName = user.first_name || "";
       const lastName = user.last_name || "";
-      const email = user.email || "";
+      const email = user.primary_email_address?.email || user.email || "";
       const fullName = `${firstName} ${lastName}`.trim();
       return (
         fullName.toLowerCase().includes(searchQuery.toLowerCase()) ||
@@ -645,11 +531,11 @@ const MembersSection = () => {
   const handleRemoveMember = async (memberId: string) => {
     try {
       await removeMember(memberId);
-      // Refresh members list
-      const updatedMembers = await getMembers();
-      setMembers(updatedMembers);
+      toast?.("Member removed successfully", "info");
+      reloadMembers();
     } catch (error) {
       console.error("Failed to remove member:", error);
+      toast?.("Failed to remove member", "error");
     }
   };
 
@@ -657,14 +543,15 @@ const MembersSection = () => {
     try {
       if (hasRole) {
         await removeMemberRole(membershipId, roleId);
+        toast?.("Role removed successfully", "info");
       } else {
         await addMemberRole(membershipId, roleId);
+        toast?.("Role added successfully", "info");
       }
-      // Refresh members list
-      const updatedMembers = await getMembers();
-      setMembers(updatedMembers);
+      reloadMembers();
     } catch (error) {
       console.error("Failed to toggle role:", error);
+      toast?.("Failed to update role", "error");
     }
   };
 
@@ -674,7 +561,7 @@ const MembersSection = () => {
   const memberHasRole = (member: any, roleId: string) =>
     member.roles?.some((r: any) => r.id === roleId) || false;
 
-  if (loading || membersLoading) {
+  if (loading || membersLoading || rolesLoading) {
     return (
       <div style={{ display: "flex", justifyContent: "center", padding: "40px 0" }}>
         <Spinner />
@@ -692,60 +579,106 @@ const MembersSection = () => {
         />
       </HeaderCTAContainer>
 
-      <div>
-        <div
-          style={{
-            fontSize: "14px",
-            fontWeight: 400,
-            marginBottom: "8px",
-            color: "var(--color-muted)",
-          }}
-        >
-          {members.length} member{members.length !== 1 ? "s" : ""}
-        </div>
-        {filteredMembers.length === 0 ? (
-          <EmptyState
-            title={searchQuery ? "No members match your search" : "No members yet"}
-            description="Invite members to your workspace to get started."
-          />
-        ) : (
-          <div style={{ borderTop: "1px solid var(--color-border)" }}>
+      {filteredMembers.length === 0 ? (
+        <EmptyState
+          title={searchQuery ? "No members match your search" : "No members yet"}
+          description="Invite members to your workspace to get started."
+        />
+      ) : (
+        <Table>
+          <TableHead>
+            <TableRow>
+              <TableHeader>Member</TableHeader>
+              <TableHeader>Joined</TableHeader>
+              <TableHeader>Role</TableHeader>
+            </TableRow>
+          </TableHead>
+          <TableBody>
             {filteredMembers.map((member: any) => {
               const user = member.public_user_data || member.user;
-              
+              const memberRoles = member.roles || [];
+              const isCurrentUser = user?.id === session?.active_signin?.user_id;
+
               return (
-                <MemberListItem key={member.id}>
-                  <MemberListItemContent>
-                    <AvatarPlaceholder>
-                      {user && user.profile_picture_url ? (
-                        <img
-                          src={user.profile_picture_url}
-                          alt={`${user.first_name || ""} ${user.last_name || ""}`}
-                          style={{
-                            width: "100%",
-                            height: "100%",
-                            objectFit: "cover",
-                          }}
-                        />
-                      ) : (
-                        getInitials(user?.first_name, user?.last_name) || "?"
-                      )}
-                    </AvatarPlaceholder>
-                    <MemberInfo>
-                      <MemberName>
-                        {user
-                          ? `${user.first_name || ""} ${user.last_name || ""}`.trim() ||
-                            user.email ||
-                            "User"
-                          : "User"}
-                      </MemberName>
-                      <MemberEmail>{user?.email}</MemberEmail>
-                    </MemberInfo>
-                  </MemberListItemContent>
-                  <MemberListItemActions>
+                <TableRow key={member.id}>
+                  <TableCellFlex>
+                    <div>
+                      <AvatarPlaceholder>
+                        {user && user.profile_picture_url ? (
+                          <img
+                            src={user.profile_picture_url}
+                            alt={`${user.first_name || ""} ${user.last_name || ""}`}
+                            style={{
+                              width: "100%",
+                              height: "100%",
+                              objectFit: "cover",
+                            }}
+                          />
+                        ) : (
+                          getInitials(user?.first_name, user?.last_name) || "?"
+                        )}
+                      </AvatarPlaceholder>
+                      <div>
+                        <div style={{ display: "flex", alignItems: "center", gap: "8px" }}>
+                          <span style={{ fontSize: "14px", fontWeight: 500, color: "var(--color-foreground)" }}>
+                            {(() => {
+                              if (!user) return "Unknown User";
+
+                              const fullName = `${user.first_name || ""} ${user.last_name || ""}`.trim();
+                              if (fullName) return fullName;
+
+                              return user.primary_email_address?.email ||
+                                "Unknown User";
+                            })()}
+                          </span>
+                          {isCurrentUser && (
+                            <span
+                              style={{
+                                fontSize: "12px",
+                                padding: "2px 8px",
+                                background: "var(--color-background-alt)",
+                                borderRadius: "4px",
+                                color: "var(--color-secondary-text)",
+                              }}
+                            >
+                              You
+                            </span>
+                          )}
+                        </div>
+                        <div style={{ fontSize: "13px", color: "var(--color-secondary-text)" }}>
+                          {user?.primary_email_address?.email}
+                        </div>
+                      </div>
+                    </div>
+                  </TableCellFlex>
+                  <TableCell>
+                    {new Date(member.created_at).toLocaleDateString("en-US", {
+                      month: "short",
+                      day: "numeric",
+                      year: "numeric",
+                    })}
+                  </TableCell>
+                  <ActionsCell>
                     <Dropdown>
                       <DropdownTrigger>
-                        <IconButton>•••</IconButton>
+                        <Button
+                          style={{
+                            background: "var(--color-background)",
+                            border: "1px solid #e5e7eb",
+                            borderRadius: "6px",
+                            padding: "8px 12px",
+                            fontSize: "14px",
+                            color: "var(--color-foreground)",
+                            display: "flex",
+                            alignItems: "center",
+                            gap: "4px",
+                            minWidth: "120px",
+                            justifyContent: "space-between",
+                          }}
+                        >
+                          <span>{memberRoles.length > 0 ? memberRoles[0].name : "No role"}</span>
+                          <ChevronDown size={14} />
+                        </Button>
                       </DropdownTrigger>
                       <DropdownItems>
                         {roles.map((role) => {
@@ -782,21 +715,22 @@ const MembersSection = () => {
                         </DropdownItem>
                       </DropdownItems>
                     </Dropdown>
-                  </MemberListItemActions>
-                </MemberListItem>
+                  </ActionsCell>
+                </TableRow>
               );
             })}
-          </div>
-        )}
-      </div>
+          </TableBody>
+        </Table>
+      )}
     </>
   );
 };
 
 
 const GeneralSettingsSection = () => {
-  const { activeWorkspace, loading } = useActiveWorkspace();
-  const { updateWorkspace, deleteWorkspace } = useWorkspaceOperations();
+  const { activeWorkspace, loading, updateWorkspace } = useActiveWorkspace();
+  const { deleteWorkspace } = useWorkspaceList();
+  const { toast } = useContext(ScreenContext) || {};
   const [name, setName] = useState(activeWorkspace?.name || "");
   const [description, setDescription] = useState(
     activeWorkspace?.description || "",
@@ -805,12 +739,14 @@ const GeneralSettingsSection = () => {
   const [previewUrl, setPreviewUrl] = useState<string | null>(
     activeWorkspace?.image_url || null,
   );
-  const [successMessage, setSuccessMessage] = useState("");
-  const [_, setIsSubmitting] = useState(false);
-  const [showDeleteConfirm, setShowDeleteConfirm] = useState(false);
-  const [deleteConfirmName, setDeleteConfirmName] = useState("");
+  const [showSaveNotification, setShowSaveNotification] = useState(false);
+  const [isAutoSaving, setIsAutoSaving] = useState(false);
+  const [confirmName, setConfirmName] = useState("");
   const [isDeleting, setIsDeleting] = useState(false);
+  const [showDeleteConfirm, setShowDeleteConfirm] = useState(false);
+
   const fileInputRef = React.useRef<HTMLInputElement>(null);
+  const autoSaveTimeoutRef = React.useRef<NodeJS.Timeout | null>(null);
 
   React.useEffect(() => {
     if (activeWorkspace) {
@@ -839,6 +775,8 @@ const GeneralSettingsSection = () => {
       const file = event.target.files[0];
       setImage(file);
       setPreviewUrl(URL.createObjectURL(file));
+      // Auto-save image immediately
+      setTimeout(() => autoSave(), 100);
     }
   };
 
@@ -848,168 +786,176 @@ const GeneralSettingsSection = () => {
     }
   };
 
-  const handleSubmit = async (e?: React.FormEvent) => {
-    e?.preventDefault();
-    if (!activeWorkspace) return;
+  const autoSave = React.useCallback(async () => {
+    if (!activeWorkspace || isAutoSaving) return;
 
     try {
-      setIsSubmitting(true);
+      setIsAutoSaving(true);
       const data: WorkspaceUpdate = {};
 
       if (image) {
         data.image = image;
+        setImage(null); // Reset after saving
       }
-      if (name) {
+      if (name !== activeWorkspace.name) {
         data.name = name;
       }
-      if (description) {
+      if (description !== activeWorkspace.description) {
         data.description = description;
       }
 
-      await updateWorkspace(data);
-      setSuccessMessage("Settings updated successfully");
-      setTimeout(() => setSuccessMessage(""), 3000);
+      // Only save if there are actual changes
+      if (Object.keys(data).length > 0) {
+        await updateWorkspace(data);
+        setShowSaveNotification(true);
+        setTimeout(() => setShowSaveNotification(false), 3000);
+      }
     } catch (error) {
-      console.error("Failed to update workspace", error);
+      console.error("Failed to auto-save workspace", error);
     } finally {
-      setIsSubmitting(false);
+      setIsAutoSaving(false);
     }
+  }, [activeWorkspace, updateWorkspace, name, description, image, isAutoSaving]);
+
+  const scheduleAutoSave = React.useCallback(() => {
+    if (autoSaveTimeoutRef.current) {
+      clearTimeout(autoSaveTimeoutRef.current);
+    }
+    autoSaveTimeoutRef.current = setTimeout(() => {
+      autoSave();
+    }, 1000); // Auto-save after 1 second of inactivity
+  }, [autoSave]);
+
+  const handleNameChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    setName(e.target.value);
+    scheduleAutoSave();
+  };
+
+  const handleDescriptionChange = (e: React.ChangeEvent<HTMLTextAreaElement>) => {
+    setDescription(e.target.value);
+    scheduleAutoSave();
+  };
+
+  const handleNameBlur = () => {
+    if (autoSaveTimeoutRef.current) {
+      clearTimeout(autoSaveTimeoutRef.current);
+    }
+    autoSave();
+  };
+
+  const handleDescriptionBlur = () => {
+    if (autoSaveTimeoutRef.current) {
+      clearTimeout(autoSaveTimeoutRef.current);
+    }
+    autoSave();
   };
 
   const handleDeleteWorkspace = async () => {
-    if (deleteConfirmName !== activeWorkspace?.name || !activeWorkspace) return;
-    
+    if (!activeWorkspace || confirmName !== activeWorkspace.name) return;
+
     try {
       setIsDeleting(true);
-      await deleteWorkspace();
-      // Workspace deleted successfully - the UI should handle navigation
-    } catch (error) {
-      console.error("Failed to delete workspace:", error);
+      await deleteWorkspace(activeWorkspace);
+      toast?.("Workspace deleted successfully", "info");
+    } catch (error: any) {
+      toast?.(error.message || "Failed to delete workspace", "error");
     } finally {
       setIsDeleting(false);
+      setConfirmName("");
       setShowDeleteConfirm(false);
-      setDeleteConfirmName("");
     }
   };
 
   return (
     <>
-      {successMessage && (
-        <div
-          style={{
-            marginBottom: "20px",
-            padding: "8px",
-            background: "var(--color-success-background)",
-            color: "var(--color-success)",
-            borderRadius: "4px",
-            display: "flex",
-            alignItems: "center",
-            gap: "8px",
-          }}
-        >
-          ✓{successMessage}
-        </div>
-      )}
 
-      <div
-        style={{
-          display: "flex",
-          width: "100%",
-          gap: "1px",
-        }}
-      >
-        {/* Left Panel - Logo Upload */}
-        <div
-          style={{
-            width: "280px",
-            paddingRight: "24px",
-            display: "flex",
-            flexDirection: "column",
-            alignItems: "center",
-            justifyContent: "center",
-            gap: "12px",
-            borderRight: "1px solid var(--color-border)",
-          }}
-        >
-          <div
-            style={{
-              width: "240px",
-              height: "240px",
-              borderRadius: "16px",
-              border: "2px solid #e5e7eb",
-              background: previewUrl ? "transparent" : "#ffffff",
-              cursor: "pointer",
-              display: "flex",
-              alignItems: "center",
-              justifyContent: "center",
-              overflow: "hidden",
-              transition: "all 0.2s ease",
-              position: "relative",
-            }}
-            onClick={triggerFileInput}
-            onMouseEnter={(e) => {
-              e.currentTarget.style.borderColor = "#d1d5db";
-              e.currentTarget.style.transform = "scale(1.02)";
-            }}
-            onMouseLeave={(e) => {
-              e.currentTarget.style.borderColor = "#e5e7eb";
-              e.currentTarget.style.transform = "scale(1)";
-            }}
-          >
-            {previewUrl ? (
-              <img
-                src={previewUrl}
-                alt="Workspace Logo"
-                style={{
-                  width: "100%",
-                  height: "100%",
-                  objectFit: "cover",
-                }}
+      <div style={{ display: "flex", flexDirection: "column", gap: "var(--space-2xl)" }}>
+        {/* Logo Section - Two Column Layout */}
+        <div style={{ display: "flex", gap: "var(--space-2xl)", alignItems: "center" }}>
+          {/* Left Column - Logo Preview */}
+          <div style={{ flexShrink: 0 }}>
+            <div
+              style={{
+                width: "120px",
+                height: "120px",
+                borderRadius: "50%",
+                border: "2px dashed var(--color-border)",
+                background: previewUrl ? "transparent" : "var(--color-input-background)",
+                cursor: "pointer",
+                display: "flex",
+                alignItems: "center",
+                justifyContent: "center",
+                overflow: "hidden",
+                transition: "all 0.2s ease",
+              }}
+              onClick={triggerFileInput}
+              onMouseEnter={(e) => {
+                e.currentTarget.style.borderColor = "var(--color-primary)";
+                e.currentTarget.style.transform = "scale(1.02)";
+              }}
+              onMouseLeave={(e) => {
+                e.currentTarget.style.borderColor = "var(--color-border)";
+                e.currentTarget.style.transform = "scale(1)";
+              }}
+            >
+              {previewUrl ? (
+                <img
+                  src={previewUrl}
+                  alt="Workspace Logo"
+                  style={{
+                    width: "100%",
+                    height: "100%",
+                    objectFit: "cover",
+                    borderRadius: "50%",
+                  }}
+                />
+              ) : (
+                <Building size={32} color="var(--color-muted)" />
+              )}
+              <input
+                type="file"
+                ref={fileInputRef}
+                style={{ display: "none" }}
+                accept="image/*"
+                onChange={handleImageChange}
               />
-            ) : (
-              <div
-                style={{
-                  width: "100%",
-                  height: "100%",
-                  background: "#e5e7eb",
-                  display: "flex",
-                  alignItems: "center",
-                  justifyContent: "center",
-                  color: "#9ca3af",
-                  fontSize: "32px",
-                  fontWeight: 500,
-                }}
-              >
-                {activeWorkspace?.name?.charAt(0)?.toUpperCase() || (
-                  <Building size={48} />
-                )}
-              </div>
-            )}
-            <input
-              type="file"
-              ref={fileInputRef}
-              style={{ display: "none" }}
-              accept="image/*"
-              onChange={handleImageChange}
-            />
+            </div>
           </div>
 
-          <div style={{ textAlign: "center", marginTop: "20px", width: "240px" }}>
-            <div style={{ display: "flex", flexDirection: "column", gap: "8px", marginBottom: "12px" }}>
+          {/* Right Column - Content and Controls */}
+          <div style={{ flex: 1 }}>
+            <div style={{ marginBottom: "var(--space-lg)" }}>
+              <h3 style={{ 
+                fontSize: "var(--font-sm)", 
+                color: "var(--color-foreground)", 
+                margin: "0 0 var(--space-2xs) 0" 
+              }}>
+                Workspace Logo
+              </h3>
+              <p style={{ 
+                fontSize: "var(--font-xs)", 
+                color: "var(--color-secondary-text)", 
+                margin: 0 
+              }}>
+                Upload an image to represent your workspace
+              </p>
+            </div>
+
+            <div style={{ display: "flex", gap: "var(--space-sm)", marginBottom: "var(--space-sm)" }}>
               <Button
                 onClick={() => fileInputRef.current?.click()}
                 style={{
-                  background: "#6366f1",
-                  color: "white",
-                  border: "none",
-                  padding: "8px 16px",
-                  borderRadius: "6px",
-                  fontSize: "14px",
-                  fontWeight: 500,
-                  width: "100%",
+                  padding: "var(--space-xs) var(--space-md)",
+                  fontSize: "var(--font-xs)",
+                  height: "32px",
+                  width: "100px",
+                  display: "flex",
+                  alignItems: "center",
+                  gap: "6px",
                 }}
               >
-                Change Logo
+                <Building size={14} />
+                {previewUrl ? "Change" : "Upload"}
               </Button>
               <Button
                 onClick={() => {
@@ -1018,268 +964,319 @@ const GeneralSettingsSection = () => {
                   if (fileInputRef.current) {
                     fileInputRef.current.value = "";
                   }
+                  // Auto-save the removal
+                  setTimeout(() => autoSave(), 100);
                 }}
-                disabled={!previewUrl}
                 style={{
-                  background: previewUrl ? "#ef4444" : "#e5e7eb",
-                  color: previewUrl ? "white" : "#9ca3af",
-                  border: "none",
-                  padding: "8px 16px",
-                  borderRadius: "6px",
-                  fontSize: "14px",
-                  fontWeight: 500,
-                  cursor: previewUrl ? "pointer" : "not-allowed",
-                  width: "100%",
+                  background: "transparent",
+                  color: "var(--color-muted)",
+                  border: "1px solid var(--color-border)",
+                  padding: "var(--space-xs) var(--space-md)",
+                  fontSize: "var(--font-xs)",
+                  height: "32px",
+                  width: "100px",
+                  display: "flex",
+                  alignItems: "center",
+                  gap: "6px",
                 }}
               >
-                Remove Logo
+                <Trash2 size={14} />
+                Remove
               </Button>
             </div>
-            <div
-              style={{ fontSize: "11px", color: "#9ca3af", lineHeight: "1.4" }}
-            >
-              <div>JPG, PNG, GIF • Max 2MB</div>
-            </div>
-          </div>
 
+            {/* <p style={{ 
+              fontSize: "var(--font-2xs)", 
+              color: "var(--color-muted)", 
+              margin: 0,
+              lineHeight: 1.4,
+            }}>
+              Recommended: Square image, at least 200x200px. Supported formats: JPG, PNG, GIF • Max 2MB
+            </p> */}
+          </div>
         </div>
 
-        {/* Right Panel - Form Fields */}
-        <div style={{ flex: 1, paddingLeft: "24px" }}>
-          <div
-            style={{ display: "flex", flexDirection: "column", gap: "16px" }}
-          >
+        {/* Divider */}
+        <div
+          style={{
+            position: "relative",
+            height: "1px",
+            background: "var(--color-divider)",
+            margin: "0",
+          }}
+        />
+
+        {/* Workspace Details */}
+        <div>
+          <div style={{ marginBottom: "var(--space-md)" }}>
+            <h3 style={{ 
+              fontSize: "var(--font-sm)", 
+              color: "var(--color-foreground)", 
+              margin: "0 0 var(--space-2xs) 0" 
+            }}>
+              Workspace Details
+            </h3>
+            <p style={{ 
+              fontSize: "var(--font-xs)", 
+              color: "var(--color-secondary-text)", 
+              margin: 0 
+            }}>
+              Basic information about your workspace
+            </p>
+          </div>
+
+          <div style={{ display: "flex", flexDirection: "column", gap: "var(--space-lg)" }}>
             <FormGroup>
-              <Label
-                style={{ fontSize: "13px", fontWeight: 500, color: "#374151" }}
-              >
-                Workspace Name
-              </Label>
+              <Label htmlFor="name">Workspace Name</Label>
               <Input
                 id="name"
                 type="text"
                 value={name}
-                onChange={(e) => setName(e.target.value)}
+                onChange={handleNameChange}
+                onBlur={handleNameBlur}
                 placeholder="Enter workspace name"
-                style={{
-                  width: "100%",
-                  padding: "8px 12px",
-                  borderRadius: "6px",
-                  fontSize: "14px",
-                  border: "1px solid #e5e7eb",
-                }}
                 required
               />
             </FormGroup>
 
             <FormGroup>
-              <Label
-                style={{ fontSize: "13px", fontWeight: 500, color: "#374151" }}
-              >
-                Description
-              </Label>
+              <Label htmlFor="description">Description</Label>
               <Input
                 id="description"
                 as="textarea"
                 value={description}
-                onChange={(e) => setDescription(e.target.value)}
-                placeholder="Enter workspace description"
+                onChange={handleDescriptionChange}
+                onBlur={handleDescriptionBlur}
+                placeholder="Tell us about your workspace"
                 style={{
-                  width: "100%",
-                  padding: "8px 12px",
-                  borderRadius: "6px",
-                  fontSize: "14px",
-                  border: "1px solid #e5e7eb",
                   minHeight: "80px",
                   resize: "vertical",
+                  fontFamily: "inherit",
                 }}
               />
-              <div
-                style={{ fontSize: "12px", color: "#6b7280", marginTop: "4px" }}
-              >
-                Brief description of your workspace
-              </div>
+              <p style={{ 
+                fontSize: "var(--font-2xs)", 
+                color: "var(--color-muted)", 
+                margin: "var(--space-2xs) 0 0 0" 
+              }}>
+                Brief description of your workspace and its purpose
+              </p>
             </FormGroup>
+          </div>
+        </div>
 
+        {/* Divider */}
+        <div
+          style={{
+            position: "relative",
+            height: "1px",
+            background: "var(--color-divider)",
+            margin: "0",
+          }}
+        />
 
-            {/* Button Group */}
-            <div
-              style={{
-                display: "flex",
-                justifyContent: "flex-end",
-                marginTop: "20px",
-              }}
-            >
+        {/* Danger Zone */}
+        <div>
+          <div style={{ marginBottom: "16px" }}>
+            <h3 style={{
+              fontSize: "16px",
+              color: "var(--color-foreground)",
+              margin: "0 0 4px 0"
+            }}>
+              Danger Zone
+            </h3>
+            <p style={{
+              fontSize: "14px",
+              color: "var(--color-muted)",
+              margin: 0
+            }}>
+              Irreversible and destructive actions
+            </p>
+          </div>
+
+          <div style={{ 
+            padding: "20px", 
+            border: "1px solid var(--color-error)",
+            borderRadius: "8px"
+          }}>
+            <div style={{ 
+              display: "flex", 
+              alignItems: "center", 
+              justifyContent: "space-between", 
+              marginBottom: showDeleteConfirm ? "20px" : "0"
+            }}>
+              <div>
+                <div style={{ 
+                  fontSize: "14px", 
+                  color: "var(--color-foreground)", 
+                  marginBottom: "4px", 
+                  fontWeight: "500" 
+                }}>
+                  Delete Workspace
+                </div>
+                <div style={{ 
+                  fontSize: "13px", 
+                  color: "var(--color-muted)" 
+                }}>
+                  Once you delete this workspace, there is no going back. Please be certain.
+                </div>
+              </div>
               <Button
-                onClick={handleSubmit}
-                style={{
-                  background: "#6366f1",
-                  color: "white",
-                  border: "none",
-                  padding: "8px 16px",
-                  borderRadius: "6px",
-                  fontSize: "14px",
-                  fontWeight: 500,
-                }}
-              >
-                Save Changes
-              </Button>
-            </div>
-
-            {/* Delete Section */}
-            <div style={{ marginTop: "40px", paddingTop: "24px", borderTop: "1px solid #f3f4f6" }}>
-              <button
                 onClick={() => {
                   if (!showDeleteConfirm) {
                     setShowDeleteConfirm(true);
                   } else {
                     setShowDeleteConfirm(false);
-                    setDeleteConfirmName("");
+                    setConfirmName("");
                   }
                 }}
                 style={{
-                  background: "none",
+                  background: "var(--color-error)",
+                  color: "white",
                   border: "none",
-                  color: "#6b7280",
+                  padding: "6px 12px",
                   fontSize: "13px",
-                  cursor: "pointer",
-                  textDecoration: "underline",
-                  padding: "0",
+                  height: "32px",
+                  width: "auto"
                 }}
               >
-                {showDeleteConfirm ? "Cancel" : "Delete workspace"}
-              </button>
-              
-              {showDeleteConfirm && (
-                <div style={{ marginTop: "16px", maxWidth: "300px" }}>
-                  <p style={{ fontSize: "12px", color: "#6b7280", margin: "0 0 12px 0" }}>
-                    This action cannot be undone.
-                  </p>
-                  <Input
-                    type="text"
-                    value={deleteConfirmName}
-                    onChange={(e) => setDeleteConfirmName(e.target.value)}
-                    placeholder={`Type "${activeWorkspace?.name}" to confirm`}
-                    style={{
-                      width: "100%",
-                      padding: "8px 12px",
-                      borderRadius: "4px",
-                      fontSize: "13px",
-                      border: "1px solid #e5e7eb",
-                      marginBottom: "12px",
-                    }}
-                  />
-                  <Button
-                    onClick={handleDeleteWorkspace}
-                    disabled={deleteConfirmName !== activeWorkspace?.name || isDeleting}
-                    style={{
-                      background: deleteConfirmName === activeWorkspace?.name ? "#dc2626" : "#e5e7eb",
-                      color: deleteConfirmName === activeWorkspace?.name ? "white" : "#9ca3af",
-                      border: "none",
-                      padding: "6px 12px",
-                      borderRadius: "4px",
-                      fontSize: "12px",
-                      fontWeight: 500,
-                      cursor: deleteConfirmName === activeWorkspace?.name ? "pointer" : "not-allowed",
-                    }}
-                  >
-                    {isDeleting ? <Spinner size={12} /> : "Delete"}
-                  </Button>
-                </div>
-              )}
+                {showDeleteConfirm ? "Cancel" : "Delete"}
+              </Button>
             </div>
+
+            {showDeleteConfirm && (
+              <div style={{ maxWidth: "400px" }}>
+                <FormGroup>
+                  <Label htmlFor="confirm_workspace_name">Confirm by typing the workspace name</Label>
+                  <Input
+                    id="confirm_workspace_name"
+                    type="text"
+                    value={confirmName}
+                    onChange={(e) => setConfirmName(e.target.value)}
+                    placeholder={`Type "${activeWorkspace?.name}" to confirm`}
+                  />
+                </FormGroup>
+                <Button
+                  onClick={handleDeleteWorkspace}
+                  disabled={confirmName !== activeWorkspace?.name || isDeleting}
+                  style={{
+                    background: confirmName === activeWorkspace?.name ? "var(--color-error)" : "transparent",
+                    color: confirmName === activeWorkspace?.name ? "white" : "var(--color-muted)",
+                    border: "1px solid var(--color-border)",
+                    padding: "8px 16px",
+                    fontSize: "14px",
+                    height: "36px",
+                    cursor: confirmName === activeWorkspace?.name ? "pointer" : "not-allowed",
+                    opacity: confirmName === activeWorkspace?.name ? 1 : 0.6,
+                    marginTop: "12px",
+                  }}
+                >
+                  {isDeleting ? <Spinner size={12} /> : "Delete Forever"}
+                </Button>
+              </div>
+            )}
           </div>
         </div>
       </div>
+
+      {/* Bottom Save Notification */}
+      {showSaveNotification && (
+        <div
+          style={{
+            position: "fixed",
+            bottom: "24px",
+            left: "50%",
+            transform: "translateX(-50%)",
+            background: "var(--color-success-background)",
+            color: "var(--color-success)",
+            padding: "var(--space-sm) var(--space-lg)",
+            borderRadius: "var(--radius-lg)",
+            boxShadow: "0 4px 12px var(--color-shadow)",
+            display: "flex",
+            alignItems: "center",
+            gap: "var(--space-xs)",
+            fontSize: "var(--font-xs)",
+            fontWeight: 500,
+            zIndex: 1000,
+            animation: "slideUp 0.3s ease-out",
+          }}
+        >
+          ✓ Changes saved automatically
+        </div>
+      )}
+
+      <style>
+        {`
+          @keyframes slideUp {
+            from {
+              opacity: 0;
+              transform: translateX(-50%) translateY(20px);
+            }
+            to {
+              opacity: 1;
+              transform: translateX(-50%) translateY(0);
+            }
+          }
+        `}
+      </style>
     </>
   );
 };
 
-const RoleCard = styled.div`
-  background: var(--color-background);
-  padding: 20px;
-  border: 1px solid var(--color-border);
-  border-radius: 8px;
-  margin-bottom: 12px;
-  transition: all 0.2s ease;
-
-  &:hover {
-    background: var(--color-input-background);
-  }
-`;
-
-const RoleHeader = styled.div`
-  display: flex;
-  justify-content: space-between;
-  align-items: flex-start;
-  margin-bottom: 12px;
-`;
-
-const RoleName = styled.h4`
-  font-size: 16px;
-  font-weight: 500;
-  color: var(--color-foreground);
-  margin: 0;
-`;
-
-const PermissionsList = styled.div`
-  display: flex;
-  flex-wrap: wrap;
-  gap: 8px;
-  margin-bottom: 12px;
-`;
-
-const PermissionBadge = styled.span`
-  font-size: 12px;
-  padding: 4px 8px;
-  background: var(--color-primary-background);
-  color: var(--color-primary);
-  border-radius: 4px;
-  font-family: monospace;
-`;
-
-const RoleMemberCount = styled.div`
-  font-size: 13px;
-  color: var(--color-muted);
-  display: flex;
-  align-items: center;
-  gap: 4px;
-`;
-
 const RolesSection = () => {
-  const { activeWorkspace, loading } = useActiveWorkspace();
-  const { getRoles, getMembers } = useWorkspaceOperations();
-  const [roles, setRoles] = useState<WorkspaceRole[]>([]);
-  const [members, setMembers] = useState<WorkspaceMembership[]>([]);
-  const [rolesLoading, setRolesLoading] = useState(true);
+  const { activeWorkspace, loading, getRoles, createRole, deleteRole } = useActiveWorkspace();
+  const { toast } = useContext(ScreenContext) || {};
+  const [searchQuery, setSearchQuery] = useState("");
+  const [rolePopover, setRolePopover] = useState<{
+    isOpen: boolean;
+    role?: WorkspaceRole;
+    triggerElement?: HTMLElement | null;
+  }>({ isOpen: false });
+  const [roleForOptionPopover, setRoleForOptionPopover] = useState<string | null>(null);
+  const [roleForDeletion, setRoleForDeletion] = useState<string | null>(null);
+  const addRoleButtonRef = useRef<HTMLButtonElement>(null);
+  const dropdownButtonRefs = useRef<Map<string, HTMLButtonElement>>(new Map());
 
-  useEffect(() => {
-    if (!activeWorkspace) return;
-    
-    const fetchData = async () => {
-      setRolesLoading(true);
-      try {
-        const [rolesData, membersData] = await Promise.all([
-          getRoles(),
-          getMembers()
-        ]);
-        setRoles(rolesData);
-        setMembers(membersData);
-      } catch (error) {
-        console.error("Failed to fetch roles data:", error);
-      } finally {
-        setRolesLoading(false);
-      }
-    };
+  const { data: roles = [], isLoading: rolesLoading, mutate: reloadRoles } = useSWR(
+    activeWorkspace ? `/api/workspaces/${activeWorkspace.id}/roles` : null,
+    () => getRoles() || [],
+  );
 
-    fetchData();
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [activeWorkspace?.id]);
+  const filteredRoles = React.useMemo(() => {
+    if (!searchQuery) return roles;
+    return roles.filter((role: WorkspaceRole) =>
+      role.name.toLowerCase().includes(searchQuery.toLowerCase()),
+    );
+  }, [roles, searchQuery]);
 
-  const getMemberCountForRole = (roleId: string) => {
-    return members.filter((member: any) => 
-      member.roles?.some((r: any) => r.id === roleId)
-    ).length;
+  const handleRoleSaved = async (role: {
+    id?: string;
+    name: string;
+    permissions?: string[];
+  }) => {
+    try {
+      await createRole(role.name, role.permissions || []);
+
+      toast?.("Role created successfully", "info");
+      setRolePopover({ isOpen: false });
+      reloadRoles();
+    } catch (error) {
+      console.error("Failed to save role", error);
+      toast?.("Failed to create role", "error");
+    }
+  };
+
+  const handleDeleteRole = async (role: WorkspaceRole) => {
+    try {
+      await deleteRole(role);
+
+      toast?.("Role deleted successfully", "info");
+      setRoleForDeletion(null);
+      reloadRoles();
+    } catch (error) {
+      console.error("Failed to delete role", error);
+      toast?.("Failed to delete role", "error");
+    }
   };
 
   if (loading || rolesLoading) {
@@ -1293,73 +1290,147 @@ const RolesSection = () => {
   return (
     <>
       <HeaderCTAContainer>
-        <div style={{ flex: 1 }}>
-          <h3
+        <SearchInput
+          placeholder="Search roles"
+          onChange={setSearchQuery}
+          value={searchQuery}
+        />
+        <div style={{ position: "relative" }}>
+          <Button
+            ref={addRoleButtonRef}
+            onClick={() => setRolePopover({ isOpen: true, triggerElement: addRoleButtonRef.current })}
             style={{
-              fontSize: "16px",
-              fontWeight: 500,
-              margin: "0 0 4px 0",
-              color: "var(--color-foreground)",
-            }}
-          >
-            Workspace Roles
-          </h3>
-          <p
-            style={{
+              padding: "8px 16px",
+              borderRadius: "6px",
               fontSize: "14px",
-              color: "var(--color-muted)",
-              margin: "0 0 16px 0",
+              fontWeight: 500,
+              height: "36px"
             }}
           >
-            Roles define what members can do in your workspace. Roles are managed at the deployment or organization level.
-          </p>
+            Add role
+          </Button>
+          {rolePopover.isOpen && !rolePopover.role && (
+            <AddWorkspaceRolePopover
+              role={rolePopover.role}
+              triggerRef={{ current: rolePopover.triggerElement || null }}
+              onClose={() => setRolePopover({ isOpen: false })}
+              onSuccess={handleRoleSaved}
+            />
+          )}
         </div>
       </HeaderCTAContainer>
 
-      {roles.length === 0 ? (
+      {filteredRoles.length === 0 ? (
         <EmptyState
-          title="No roles available"
-          description="Contact your administrator to set up workspace roles."
+          title={
+            searchQuery
+              ? "No roles match your search"
+              : "No roles available"
+          }
+          description={
+            searchQuery
+              ? "Try adjusting your search query"
+              : "Contact your administrator to set up workspace roles."
+          }
         />
       ) : (
-        <div>
-          <div
-            style={{
-              fontSize: "14px",
-              fontWeight: 400,
-              marginBottom: "8px",
-              color: "var(--color-muted)",
-            }}
-          >
-            {roles.length} role{roles.length !== 1 ? "s" : ""}
-          </div>
-          <div>
-            {roles.map((role) => {
-              const memberCount = getMemberCountForRole(role.id);
-              return (
-                <RoleCard key={role.id}>
-                  <RoleHeader>
-                    <div>
-                      <RoleName>{role.name}</RoleName>
+        <div style={{ position: "relative", overflowX: "auto", overflowY: "visible" }}>
+          <Table>
+            <TableHead>
+              <TableRow>
+                <TableHeader>Role</TableHeader>
+                <TableHeader>Permissions</TableHeader>
+                <TableHeader></TableHeader>
+              </TableRow>
+            </TableHead>
+            <TableBody>
+              {filteredRoles.map((role: WorkspaceRole) => (
+                <TableRow key={role.id}>
+                  <TableCell>
+                    <div
+                      style={{
+                        fontSize: "14px",
+                        fontWeight: 500,
+                      }}
+                    >
+                      {role.name}
                     </div>
-                    <RoleMemberCount>
-                      <Users size={14} />
-                      {memberCount} {memberCount === 1 ? "member" : "members"}
-                    </RoleMemberCount>
-                  </RoleHeader>
-                  {role.permissions && role.permissions.length > 0 && (
-                    <PermissionsList>
-                      {role.permissions.map((permission: string) => (
-                        <PermissionBadge key={permission}>
-                          {permission}
-                        </PermissionBadge>
-                      ))}
-                    </PermissionsList>
-                  )}
-                </RoleCard>
-              );
-            })}
-          </div>
+                  </TableCell>
+                  <TableCell style={{ color: "var(--color-secondary-text)" }}>
+                    {role.permissions && role.permissions.length > 0 ? role.permissions.join(", ") : ""}
+                  </TableCell>
+                  <ActionsCell>
+                    <div
+                      style={{
+                        display: "flex",
+                        gap: "10px",
+                        alignItems: "center",
+                        justifyContent: "flex-end",
+                        position: "relative",
+                      }}
+                    >
+                      <Dropdown
+                        open={roleForOptionPopover === role.id}
+                        openChange={(open) =>
+                          setRoleForOptionPopover(open ? role.id : null)
+                        }
+                      >
+                        <DropdownTrigger>
+                          <IconButton
+                            ref={(el) => {
+                              if (el) dropdownButtonRefs.current.set(role.id, el);
+                            }}
+                            disabled={!(role as any).workspace_id}
+                            data-role-dropdown-trigger={role.id}
+                          >
+                            •••
+                          </IconButton>
+                        </DropdownTrigger>
+                        <DropdownItems>
+                          <DropdownItem
+                            onClick={() => {
+                              setRoleForOptionPopover(null);
+                              const triggerBtn = dropdownButtonRefs.current.get(role.id);
+                              setRolePopover({ isOpen: true, role, triggerElement: triggerBtn || null });
+                            }}
+                          >
+                            Edit Role
+                          </DropdownItem>
+                          <DropdownItem
+                            $destructive
+                            onClick={() => {
+                              setRoleForOptionPopover(null);
+                              setRoleForDeletion(role.id);
+                            }}
+                          >
+                            Remove Role
+                          </DropdownItem>
+                        </DropdownItems>
+                      </Dropdown>
+                      {roleForDeletion === role.id && (
+                        <ConfirmationPopover
+                          title="Are you sure you want to delete this role?"
+                          onConfirm={() => handleDeleteRole(role)}
+                          onCancel={() => setRoleForDeletion(null)}
+                        />
+                      )}
+                      {rolePopover.isOpen && rolePopover.role?.id === role.id && (
+                        <AddWorkspaceRolePopover
+                          role={rolePopover.role}
+                          triggerRef={{ current: rolePopover.triggerElement || null }}
+                          onClose={() => {
+                            setRolePopover({ isOpen: false });
+                            setRoleForOptionPopover(null);
+                          }}
+                          onSuccess={handleRoleSaved}
+                        />
+                      )}
+                    </div>
+                  </ActionsCell>
+                </TableRow>
+              ))}
+            </TableBody>
+          </Table>
         </div>
       )}
     </>
@@ -1370,6 +1441,17 @@ const RolesSection = () => {
 export const ManageWorkspace = () => {
   const { activeWorkspace, loading } = useActiveWorkspace();
   const [activeTab, setActiveTab] = useState<"general" | "members" | "invitations" | "roles">("general");
+  const [toastMessage, setToastMessage] = useState<string | null>(null);
+  const [toastLevel, setToastLevel] = useState<"info" | "error">("info");
+
+  const toast = useCallback(
+    (message: string, level: "info" | "error" = "info") => {
+      setToastMessage(message);
+      setToastLevel(level);
+      setTimeout(() => setToastMessage(null), 3000);
+    },
+    [],
+  );
 
   if (loading)
     return (
@@ -1387,56 +1469,89 @@ export const ManageWorkspace = () => {
   if (!activeWorkspace) return null;
 
   return (
-    <TypographyProvider>
-      <Container>
-        <TabsContainer>
-          <TabsList>
-            <Tab
-              $isActive={activeTab === "general"}
-              onClick={() => setActiveTab("general")}
-            >
-              <TabIcon>
-                <Settings size={16} />
-                General
-              </TabIcon>
-            </Tab>
-            <Tab
-              $isActive={activeTab === "members"}
-              onClick={() => setActiveTab("members")}
-            >
-              <TabIcon>
-                <Users size={16} />
-                Members
-              </TabIcon>
-            </Tab>
-            <Tab
-              $isActive={activeTab === "invitations"}
-              onClick={() => setActiveTab("invitations")}
-            >
-              <TabIcon>
-                <Send size={16} />
-                Invitations
-              </TabIcon>
-            </Tab>
-            <Tab
-              $isActive={activeTab === "roles"}
-              onClick={() => setActiveTab("roles")}
-            >
-              <TabIcon>
-                <Shield size={16} />
-                Roles
-              </TabIcon>
-            </Tab>
-          </TabsList>
-        </TabsContainer>
+    <ScreenContext.Provider value={{ screen: null, setScreen: () => { }, toast }}>
+      <TypographyProvider>
+        <Container>
+          <TabsContainer>
+            <TabsList>
+              <Tab
+                $isActive={activeTab === "general"}
+                onClick={() => setActiveTab("general")}
+              >
+                <TabIcon>
+                  <Settings size={16} />
+                  General
+                </TabIcon>
+              </Tab>
+              <Tab
+                $isActive={activeTab === "members"}
+                onClick={() => setActiveTab("members")}
+              >
+                <TabIcon>
+                  <Users size={16} />
+                  Members
+                </TabIcon>
+              </Tab>
+              <Tab
+                $isActive={activeTab === "invitations"}
+                onClick={() => setActiveTab("invitations")}
+              >
+                <TabIcon>
+                  <Send size={16} />
+                  Invitations
+                </TabIcon>
+              </Tab>
+              <Tab
+                $isActive={activeTab === "roles"}
+                onClick={() => setActiveTab("roles")}
+              >
+                <TabIcon>
+                  <Shield size={16} />
+                  Roles
+                </TabIcon>
+              </Tab>
+            </TabsList>
+          </TabsContainer>
 
-        <TabContent>
-          {activeTab === "general" && <GeneralSettingsSection />}
-          {activeTab === "members" && <MembersSection />}
-          {activeTab === "invitations" && <InvitationsSection />}
-          {activeTab === "roles" && <RolesSection />}
-        </TabContent>
-      </Container>
-    </TypographyProvider>
+          <TabContent>
+            {activeTab === "general" && <GeneralSettingsSection />}
+            {activeTab === "members" && <MembersSection />}
+            {activeTab === "invitations" && <InvitationsSection />}
+            {activeTab === "roles" && <RolesSection />}
+          </TabContent>
+          {toastMessage && (
+            <div
+              style={{
+                position: "absolute",
+                bottom: "20px",
+                right: "20px",
+                background: "var(--color-input-background)",
+                border: "1px solid var(--color-border)",
+                padding: "12px 16px",
+                borderRadius: "8px",
+                boxShadow: "0 4px 12px var(--color-shadow)",
+                zIndex: 50,
+                animation: "slideUp 0.3s ease-out",
+              }}
+            >
+              <div
+                style={{ display: "flex", alignItems: "center", gap: "8px" }}
+              >
+                {toastLevel === "error" ? (
+                  <AlertTriangle size={16} color="var(--color-error)" />
+                ) : (
+                  <Check size={16} color="var(--color-success)" />
+                )}
+                <span
+                  style={{ fontSize: "14px", color: "var(--color-foreground)" }}
+                >
+                  {toastMessage}
+                </span>
+              </div>
+            </div>
+          )}
+        </Container>
+      </TypographyProvider>
+    </ScreenContext.Provider>
   );
 };

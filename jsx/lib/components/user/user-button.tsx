@@ -50,33 +50,15 @@ const Avatar = styled.div`
   }
 `;
 
+
+
 const UserName = styled.div`
   font-size: 14px;
   font-weight: 500;
   color: var(--color-foreground);
 `;
 
-const StatusIndicator = styled.span<{ $status: "available" | "busy" | "away" }>`
-	position: absolute;
-	bottom: 0;
-	right: 0;
-	height: 8px;
-	width: 8px;
-	border-radius: 50%;
-	background: ${(props) => {
-    switch (props.$status) {
-      case "available":
-        return "var(--color-success)";
-      case "busy":
-        return "var(--color-warning)";
-      case "away":
-        return "var(--color-error)";
-      default:
-        return "var(--color-success)";
-    }
-  }}
-	border: 1px solid var(--color-background);
-`;
+
 
 const AccountName = styled.span`
   font-size: 14px;
@@ -236,6 +218,8 @@ const FooterButton = styled.button`
     height: 16px;
   }
 `;
+
+
 
 interface UserButtonProps {
   showName?: boolean;
@@ -398,9 +382,6 @@ export const UserButton: React.FC<UserButtonProps> = ({ showName = true }) => {
                 )
               )}
             </Avatar>
-            <StatusIndicator
-              $status={selectedAccount?.availability || "away"}
-            />
           </AvatarContainer>
           {showName && (
             <UserName>
@@ -455,11 +436,7 @@ export const UserButton: React.FC<UserButtonProps> = ({ showName = true }) => {
                                 )
                               )}
                             </LargerAvatar>
-                            {isActive ? (
-                              <StatusIndicator $status={account.availability} />
-                            ) : (
-                              <StatusIndicator $status="away" />
-                            )}
+
                           </AvatarContainer>
                           <AccountDetails>
                             <NameRow>
@@ -512,9 +489,7 @@ export const UserButton: React.FC<UserButtonProps> = ({ showName = true }) => {
                               )
                             )}
                           </LargerAvatar>
-                          <StatusIndicator
-                            $status={selectedAccount.availability}
-                          />
+
                         </AvatarContainer>
                         <AccountDetails>
                           <NameRow>

@@ -22,7 +22,6 @@ class WebSocketManager {
   private connectionStateHandlers: Set<ConnectionStateHandler> = new Set();
   private reconnectTimer: NodeJS.Timeout | null = null;
   private reconnectAttempts = 0;
-  private maxReconnectAttempts = 5;
   private url: string | null = null;
   private isIntentionalDisconnect = false;
   private sessionMessages: SessionMessages = {};
@@ -91,7 +90,8 @@ class WebSocketManager {
         this.ws = null;
         this.notifyConnectionState({ isConnected: false });
         
-        if (!this.isIntentionalDisconnect && this.reconnectAttempts < this.maxReconnectAttempts) {
+        // Always reconnect unless intentionally disconnected
+        if (!this.isIntentionalDisconnect) {
           this.scheduleReconnect();
         }
       };
@@ -106,11 +106,16 @@ class WebSocketManager {
 
   private scheduleReconnect() {
     this.reconnectAttempts++;
-    const delay = Math.min(3000 * Math.pow(2, this.reconnectAttempts), 60000);
+    
+    // Exponential backoff with jitter to prevent thundering herd
+    const baseDelay = Math.min(1000 * Math.pow(2, this.reconnectAttempts - 1), 30000);
+    const jitter = Math.random() * 0.3 * baseDelay; // 0-30% jitter
+    const delay = Math.floor(baseDelay + jitter);
     
     console.log(`Scheduling reconnect attempt ${this.reconnectAttempts} in ${delay}ms`);
     
     this.reconnectTimer = setTimeout(() => {
+      console.log(`Reconnect attempt ${this.reconnectAttempts}...`);
       this.createConnection();
     }, delay);
   }

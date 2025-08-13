@@ -1,6 +1,13 @@
 import { useState, useRef, useCallback, useEffect } from 'react';
 import { wsManager } from '../services/websocket-manager';
 import { CONNECTION_STATES } from '../constants/ai-agent';
+import { 
+  FrontendStatus, 
+  mapBackendToFrontendStatus, 
+  isExecutionActive,
+  FRONTEND_STATUS 
+} from '../constants/execution-status';
+import { useDeployment } from './use-deployment';
 
 export interface UserInputRequest {
   question: string;
@@ -41,11 +48,12 @@ export function useAgentConversation({
   platformAdapter,
   autoConnect = true,
 }: UseAgentConversationProps) {
+  const { deployment } = useDeployment();
   const [messages, setMessages] = useState<ConversationMessage[]>([]);
   const [pendingMessage, setPendingMessage] = useState<string | null>(null);
   const [isConnected, setIsConnected] = useState(false);
   const [isExecuting, setIsExecuting] = useState(false);
-  const [executionStatus, setExecutionStatus] = useState<'idle' | 'starting' | 'running' | 'waiting_for_input' | 'completed' | 'failed'>('idle');
+  const [executionStatus, setExecutionStatus] = useState<FrontendStatus>(FRONTEND_STATUS.IDLE);
   const [connectionState, setConnectionState] = useState<{ status: typeof CONNECTION_STATES[keyof typeof CONNECTION_STATES] }>({ status: CONNECTION_STATES.DISCONNECTED });
   const [hasMoreMessages, setHasMoreMessages] = useState(true);
   const [isLoadingMore, setIsLoadingMore] = useState(false);
@@ -63,17 +71,9 @@ export function useAgentConversation({
         // Update execution state from backend if provided
         if (message.data?.execution_status) {
           const backendStatus = message.data.execution_status;
-          // Handle the status mapping
-          if (backendStatus === 'WaitingForInput') {
-            setExecutionStatus('waiting_for_input');
-            setIsExecuting(true);
-          } else if (backendStatus === 'Running' || backendStatus === 'Starting') {
-            setExecutionStatus(backendStatus.toLowerCase() as any);
-            setIsExecuting(true);
-          } else if (backendStatus === 'Idle' || backendStatus === 'Completed' || backendStatus === 'Failed') {
-            setExecutionStatus(backendStatus.toLowerCase() as any);
-            setIsExecuting(false);
-          }
+          const frontendStatus = mapBackendToFrontendStatus(backendStatus);
+          setExecutionStatus(frontendStatus);
+          setIsExecuting(isExecutionActive(frontendStatus));
         }
         
         // Request conversation history
@@ -102,40 +102,29 @@ export function useAgentConversation({
 
       case 'execution_complete':
         setIsExecuting(false);
-        setExecutionStatus('idle');
+        setExecutionStatus(FRONTEND_STATUS.IDLE);
         streamingMessageRef.current = null;
         break;
 
       case 'execution_error':
         setIsExecuting(false);
-        setExecutionStatus('failed');
+        setExecutionStatus(FRONTEND_STATUS.FAILED);
         streamingMessageRef.current = null;
         break;
         
       case 'execution_cancelled':
         setIsExecuting(false);
-        setExecutionStatus('idle');
+        setExecutionStatus(FRONTEND_STATUS.IDLE);
         streamingMessageRef.current = null;
         break;
         
       case 'execution_status':
         // Handle execution status updates from backend
         const status = message.data?.status;
-        if (status === 'WaitingForInput') {
-          setExecutionStatus('waiting_for_input');
-          setIsExecuting(true);
-        } else if (status === 'Running' || status === 'Starting') {
-          setExecutionStatus(status.toLowerCase() as any);
-          setIsExecuting(true);
-        } else if (status === 'Completed') {
-          setExecutionStatus('completed');
-          setIsExecuting(false);
-        } else if (status === 'Failed' || status === 'Cancelled') {
-          setExecutionStatus('failed');
-          setIsExecuting(false);
-        } else if (status === 'Idle') {
-          setExecutionStatus('idle');
-          setIsExecuting(false);
+        if (status) {
+          const frontendStatus = mapBackendToFrontendStatus(status);
+          setExecutionStatus(frontendStatus);
+          setIsExecuting(isExecutionActive(frontendStatus));
         }
         break;
         
@@ -257,7 +246,7 @@ export function useAgentConversation({
             if (pastMessages.length > 0) {
               const lastMessage = pastMessages[pastMessages.length - 1];
               if (lastMessage.metadata?.type === 'user_input_request') {
-                setExecutionStatus('waiting_for_input');
+                setExecutionStatus(FRONTEND_STATUS.WAITING_FOR_INPUT);
               }
             }
           }
@@ -343,7 +332,7 @@ export function useAgentConversation({
       // Agent response indicates execution is complete
       setPendingMessage(null); // Clear any pending message
       setIsExecuting(false);
-      setExecutionStatus('idle');
+      setExecutionStatus(FRONTEND_STATUS.IDLE);
       streamingMessageRef.current = null;
       
       // Add the final response message
@@ -500,7 +489,10 @@ export function useAgentConversation({
 
   // Connection management
   const connect = useCallback(() => {
-    const wsUrl = `ws://localhost:3002/agent`; // TODO: Make this configurable
+    // Parse the backend host URL and construct WebSocket URL
+    if (!deployment) throw new Error("deployment nor loaded");
+    const backendUrl = new URL(deployment.backend_host);
+    const wsUrl = `wss://${backendUrl.host}/realtime/agent`;
     
     setConnectionState({ status: CONNECTION_STATES.CONNECTING });
     
@@ -534,7 +526,7 @@ export function useAgentConversation({
       // Don't disconnect the shared WebSocket connection
       // wsManager.disconnect();
     };
-  }, [contextId, agentName, isConnected, handleWebSocketMessage]);
+  }, [contextId, agentName, isConnected, handleWebSocketMessage, deployment]);
 
   // Auto-connect
   useEffect(() => {
@@ -551,7 +543,7 @@ export function useAgentConversation({
     // Set pending message to show immediately
     setPendingMessage(content);
     setIsExecuting(true);
-    setExecutionStatus('starting');
+    setExecutionStatus(FRONTEND_STATUS.STARTING);
     
     wsManager.send({
       message_type: { message_input: content },
@@ -567,7 +559,7 @@ export function useAgentConversation({
 
   // Submit user input response
   const submitUserInput = useCallback((value: string) => {
-    if (!isConnected || executionStatus !== 'waiting_for_input') return;
+    if (!isConnected || executionStatus !== FRONTEND_STATUS.WAITING_FOR_INPUT) return;
     
     // Send the response using the dedicated user input response type
     wsManager.send({
@@ -576,7 +568,7 @@ export function useAgentConversation({
     });
     
     // Update status back to running
-    setExecutionStatus('running');
+    setExecutionStatus(FRONTEND_STATUS.RUNNING);
   }, [isConnected, executionStatus]);
   
   // Load more messages (pagination)

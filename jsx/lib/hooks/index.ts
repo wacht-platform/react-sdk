@@ -12,6 +12,7 @@ export * from "./use-magic-link";
 export * from "./use-navigation";
 export * from "./use-forgot-password";
 export * from "./use-profile-completion";
-export * from "./use-ai-agent";
+export * from "./use-notifications";
+export * from "./use-notification-stream";
 export { useAgentConversation } from "./use-agent-conversation";
 export type { UserInputRequest, ConversationMessage } from "./use-agent-conversation";

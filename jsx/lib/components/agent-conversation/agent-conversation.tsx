@@ -4,6 +4,7 @@ import { Send, Bot, Loader2, Paperclip, Mic, X } from "lucide-react";
 import { useAgentConversation } from "../../hooks/use-agent-conversation";
 import { UserInputRequest } from "../../hooks/use-agent-conversation";
 import { CONNECTION_STATES } from "../../constants/ai-agent";
+import { FRONTEND_STATUS } from "../../constants/execution-status";
 import { DefaultStylesProvider } from "../utility/root";
 
 const ChatContainer = styled.div`
@@ -682,7 +683,7 @@ export function AgentConversation({
               </div>
             </AgentDetails>
           </AgentInfo>
-          {executionStatus !== "idle" && (
+          {executionStatus !== FRONTEND_STATUS.IDLE && (
             <StatusBadge $status={executionStatus}>
               {executionStatus.replace("_", " ")}
             </StatusBadge>

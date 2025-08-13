@@ -42,14 +42,14 @@ export function useUser() {
   const updateProfile = async (data: ProfileUpdateData) => {
     const form = new FormData();
     for (const [key, value] of Object.entries(data)) {
-      if (value !== undefined && value !== null) {
+      if (value !== undefined && value !== null && value !== "") {
         form.append(key, String(value));
       }
     }
 
     const response = await responseMapper(
       await client("/me", {
-        method: "PATCH",
+        method: "POST",
         body: form,
       })
     );
@@ -329,7 +329,7 @@ export function useUser() {
 
 export function useUserSignins() {
   const { client, loading } = useClient();
-  const { data: signins, isLoading } = useSWR(
+  const { data: signins, isLoading, mutate } = useSWR(
     loading ? null : "/me/signins",
     () => fetchUserSignins(client)
   );
@@ -346,6 +346,7 @@ export function useUserSignins() {
   return {
     signins,
     removeSignin,
+    refetch: mutate,
     loading: isLoading || loading,
   };
 }

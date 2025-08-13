@@ -1,12 +1,10 @@
-import { useState, useRef, useEffect } from "react";
+import { useEffect, useRef, useState } from "react";
 import styled from "styled-components";
 import { X } from "lucide-react";
-import { Input } from "@/components/utility/input";
-import { FormGroup, Label } from "../utility/form";
-import { useActiveOrganization } from "@/hooks/use-organization";
-import { Button, Spinner } from "../utility";
-import { ComboBox, ComboBoxOption } from "../utility/combo-box";
-import { OrganizationRole } from "@/types";
+import type { WorkspaceRole } from "@/types";
+import { Button, Input, Label, FormGroup } from "@/components/utility";
+import { useDeployment } from "@/hooks/use-deployment";
+import { ComboBoxMulti } from "@/components/utility/combo-box";
 
 const PopoverContainer = styled.div`
   position: fixed;
@@ -69,48 +67,34 @@ const CloseButton = styled.button`
   }
 `;
 
-interface InviteMemberPopoverProps {
+interface AddWorkspaceRolePopoverProps {
   onClose?: () => void;
-  onSuccess?: () => void;
-  roles: OrganizationRole[];
+  onSuccess?: (role: { id?: string; name: string; permissions?: string[] }) => void;
+  role?: WorkspaceRole;
   triggerRef?: React.RefObject<HTMLElement | null>;
 }
 
-export const InviteMemberPopover = ({
+export const AddWorkspaceRolePopover = ({
   onClose,
   onSuccess,
-  roles,
+  role,
   triggerRef,
-}: InviteMemberPopoverProps) => {
+}: AddWorkspaceRolePopoverProps) => {
   const popoverRef = useRef<HTMLDivElement>(null);
-  const [email, setEmail] = useState("");
-  const [selectedRole, setSelectedRole] = useState<OrganizationRole | null>(
-    null
+  const [name, setName] = useState(role?.name || "");
+  const [permissions, setPermissions] = useState<string[]>(
+    role?.permissions || []
   );
   const [loading, setLoading] = useState(false);
+  const { deployment } = useDeployment();
   const [mounted, setMounted] = useState(false);
   const [position, setPosition] = useState({ top: 0, left: 0 });
-  const { inviteMember } = useActiveOrganization();
+  const isEditing = !!role;
 
-  const roleOptions: ComboBoxOption[] = roles.map((role) => ({
-    value: role.id,
-    label: role.name,
+  const permissionOptions = (deployment?.b2b_settings?.workspace_permissions || []).map((perm) => ({
+    value: perm,
+    label: perm,
   }));
-
-  const handleInvite = async () => {
-    if (!email.trim() || !selectedRole) return;
-
-    setLoading(true);
-    try {
-      await inviteMember({ email, organizationRole: selectedRole });
-
-      onSuccess?.();
-    } catch (error) {
-      console.error("Failed to send invitation", error);
-    } finally {
-      setLoading(false);
-    }
-  };
 
   useEffect(() => {
     setMounted(true);
@@ -195,15 +179,38 @@ export const InviteMemberPopover = ({
       }
     };
     
-    document.addEventListener("mousedown", handleClickOutside);
-    document.addEventListener("keydown", handleEscape);
+    // Delay adding the listener to prevent immediate closure
+    const listenerTimer = setTimeout(() => {
+      document.addEventListener('mousedown', handleClickOutside);
+      document.addEventListener('keydown', handleEscape);
+    }, 100);
     
     return () => {
       clearTimeout(timer);
-      document.removeEventListener("mousedown", handleClickOutside);
-      document.removeEventListener("keydown", handleEscape);
+      clearTimeout(listenerTimer);
+      document.removeEventListener('mousedown', handleClickOutside);
+      document.removeEventListener('keydown', handleEscape);
     };
   }, [onClose, triggerRef]);
+
+  const handleSave = async () => {
+    if (!name.trim()) return;
+
+    setLoading(true);
+    try {
+      const roleData = {
+        id: role?.id,
+        name: name.trim(),
+        permissions: permissions,
+      };
+
+      onSuccess?.(roleData);
+    } catch (error) {
+      console.error("Failed to save role", error);
+    } finally {
+      setLoading(false);
+    }
+  };
 
   if (!mounted) {
     return null;
@@ -220,7 +227,7 @@ export const InviteMemberPopover = ({
       onClick={(e) => e.stopPropagation()}
     >
       <Header>
-        <Title>Invite Member</Title>
+        <Title>{isEditing ? "Edit Role" : "Add Role"}</Title>
         <CloseButton onClick={onClose}>
           <X size={16} />
         </CloseButton>
@@ -229,25 +236,23 @@ export const InviteMemberPopover = ({
       <Content>
         <div style={{ display: "flex", flexDirection: "column", gap: "var(--space-sm)" }}>
           <FormGroup>
-            <Label>Email Address</Label>
+            <Label>Role Name</Label>
             <Input
-              type="email"
-              placeholder="colleague@company.com"
-              value={email}
-              onChange={(e) => setEmail(e.target.value)}
+              type="text"
+              value={name}
+              onChange={(e) => setName(e.target.value)}
+              placeholder="Enter role name"
               autoFocus
             />
           </FormGroup>
 
           <FormGroup>
-            <Label>Role</Label>
-            <ComboBox
-              options={roleOptions}
-              value={selectedRole?.id}
-              onChange={(id) =>
-                setSelectedRole(roles.find((role) => role.id === id)!)
-              }
-              placeholder="Select a role"
+            <Label>Permissions</Label>
+            <ComboBoxMulti
+              options={permissionOptions}
+              value={permissions}
+              onChange={setPermissions}
+              placeholder="Select permissions"
             />
           </FormGroup>
         </div>
@@ -264,19 +269,13 @@ export const InviteMemberPopover = ({
           Cancel
         </Button>
         <Button
-          onClick={handleInvite}
-          disabled={!email || !selectedRole || loading}
+          onClick={handleSave}
+          disabled={!name.trim() || loading}
           style={{
             width: "auto",
           }}
         >
-          {loading ? (
-            <>
-              <Spinner size={14} /> Sending...
-            </>
-          ) : (
-            "Send Invitation"
-          )}
+          {loading ? "Saving..." : isEditing ? "Update" : "Create"}
         </Button>
       </ButtonGroup>
     </PopoverContainer>
