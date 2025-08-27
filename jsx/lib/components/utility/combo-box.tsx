@@ -50,7 +50,7 @@ const DropdownMenu = styled.div<{ isOpen: boolean }>`
   border-radius: 6px;
   border: 1px solid var(--color-border);
   box-shadow: 0 4px 12px var(--color-shadow);
-  z-index: 50;
+  z-index: 1000;
   opacity: ${(props) => (props.isOpen ? 1 : 0)};
   transform: ${(props) => (props.isOpen ? "scale(1)" : "scale(0.95)")};
   transform-origin: top;

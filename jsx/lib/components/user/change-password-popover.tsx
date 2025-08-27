@@ -2,8 +2,7 @@ import { useState, useRef, useEffect } from "react";
 import styled from "styled-components";
 import { Input } from "@/components/utility/input";
 import { FormGroup, Label } from "../utility/form";
-import { OTPInput } from "../utility/otp-input";
-import { useScreenContext } from "./context";
+import { Eye, EyeOff } from "lucide-react";
 
 const PopoverContainer = styled.div`
   position: fixed;
@@ -62,28 +61,54 @@ const Title = styled.div`
   margin-bottom: 8px;
 `;
 
+const PasswordInput = styled.div`
+  position: relative;
+  
+  button {
+    position: absolute;
+    right: 12px;
+    top: 50%;
+    transform: translateY(-50%);
+    background: none;
+    border: none;
+    cursor: pointer;
+    padding: 0;
+    color: var(--color-secondary-text);
+    
+    &:hover {
+      color: var(--color-foreground);
+    }
+  }
+`;
 
-interface EmailAddPopoverProps {
-  existingEmail?: string;
+const ErrorMessage = styled.div`
+  color: var(--color-error);
+  font-size: 12px;
+  margin-top: 4px;
+`;
+
+interface ChangePasswordPopoverProps {
   triggerRef?: React.RefObject<HTMLElement | null>;
   onClose: () => void;
-  onAddEmail: (email: string) => Promise<void>;
-  onPrepareVerification: () => Promise<void>;
-  onAttemptVerification: (otp: string) => Promise<void>;
+  onChangePassword: (currentPassword: string, newPassword: string) => Promise<void>;
 }
 
-export const EmailAddPopover = ({
+export const ChangePasswordPopover = ({
   onClose,
-  onAddEmail,
-  onAttemptVerification,
-  onPrepareVerification,
-  existingEmail,
+  onChangePassword,
   triggerRef,
-}: EmailAddPopoverProps) => {
+}: ChangePasswordPopoverProps) => {
   const popoverRef = useRef<HTMLDivElement>(null);
   const [mounted, setMounted] = useState(false);
   const [position, setPosition] = useState({ top: 0, left: 0 });
-  const { toast } = useScreenContext();
+  const [currentPassword, setCurrentPassword] = useState("");
+  const [newPassword, setNewPassword] = useState("");
+  const [confirmPassword, setConfirmPassword] = useState("");
+  const [showCurrentPassword, setShowCurrentPassword] = useState(false);
+  const [showNewPassword, setShowNewPassword] = useState(false);
+  const [showConfirmPassword, setShowConfirmPassword] = useState(false);
+  const [loading, setLoading] = useState(false);
+  const [errors, setErrors] = useState<Record<string, string>>({});
 
   useEffect(() => {
     setMounted(true);
@@ -97,7 +122,7 @@ export const EmailAddPopover = ({
       if (triggerButton) {
         const rect = triggerButton.getBoundingClientRect();
         const popoverWidth = 380;
-        const popoverHeight = 300; // Approximate height
+        const popoverHeight = 350; // Approximate height for password popover
         const spacing = 8;
         
         let top = 0;
@@ -177,35 +202,37 @@ export const EmailAddPopover = ({
       document.removeEventListener("keydown", handleEscape);
     };
   }, [onClose, triggerRef]);
-  const [step, setStep] = useState<"email" | "otp">(
-    existingEmail ? "otp" : "email"
-  );
-  const [email, setEmail] = useState(existingEmail || "");
-  const [otp, setOtp] = useState("");
-  const [loading, setLoading] = useState(false);
 
-  const handleEmailSubmit = async () => {
-    if (!email || loading) return;
-    setLoading(true);
-    try {
-      await onAddEmail(email);
-      setStep("otp");
-    } catch (error: any) {
-      const errorMessage = error.message || "Failed to add email address. Please try again.";
-      toast(errorMessage, "error");
-    } finally {
-      setLoading(false);
+  const handleSubmit = async () => {
+    if (loading) return;
+
+    const newErrors: Record<string, string> = {};
+
+    if (!currentPassword) {
+      newErrors.currentPassword = "Current password is required";
     }
-  };
 
-  const handleOTPSubmit = async () => {
+    if (!newPassword) {
+      newErrors.newPassword = "New password is required";
+    } else if (newPassword.length < 8) {
+      newErrors.newPassword = "Password must be at least 8 characters";
+    }
+
+    if (newPassword !== confirmPassword) {
+      newErrors.confirmPassword = "Passwords do not match";
+    }
+
+    if (Object.keys(newErrors).length > 0) {
+      setErrors(newErrors);
+      return;
+    }
+
     setLoading(true);
     try {
-      await onAttemptVerification(otp);
+      await onChangePassword(currentPassword, newPassword);
       onClose();
     } catch (error: any) {
-      const errorMessage = error.message || "Failed to verify email. Please check the code and try again.";
-      toast(errorMessage, "error");
+      setErrors({ form: error.message || "Failed to update password" });
     } finally {
       setLoading(false);
     }
@@ -225,71 +252,98 @@ export const EmailAddPopover = ({
       }}
       onClick={(e) => e.stopPropagation()}
     >
-      {step === "email" ? (
-        <>
-          <Title>Add email address</Title>
-          <div
-            style={{
-              fontSize: "14px",
-              color: "var(--color-muted)",
-              marginBottom: "10px",
-            }}
-          >
-            You will have to verify this email address before you can start
-            using it.
-          </div>
+      <Title>Change Password</Title>
+      <div
+        style={{
+          fontSize: "14px",
+          color: "var(--color-muted)",
+          marginBottom: "16px",
+        }}
+      >
+        Update your account password to keep it secure.
+      </div>
 
-          <FormGroup>
-            <Label htmlFor="email-input">Email address</Label>
-            <Input
-              id="email-input"
-              type="email"
-              placeholder="Enter your email"
-              value={email}
-              onChange={(e) => setEmail(e.target.value)}
-            />
-          </FormGroup>
-          <ButtonGroup>
-            <Button
-              $primary
-              onClick={handleEmailSubmit}
-              disabled={!email || loading}
-              style={{ width: "100%" }}
-            >
-              {loading ? "Adding..." : "Continue"}
-            </Button>
-          </ButtonGroup>
-        </>
-      ) : (
-        <>
-          <Title>Verify your email</Title>
-          <div
-            style={{
-              fontSize: "14px",
-              color: "var(--color-muted)",
-              marginBottom: "16px",
-            }}
-          >
-            Enter the 6-digit code sent to {email}
-          </div>
-          <OTPInput
-            onComplete={async (code) => setOtp(code)}
-            onResend={onPrepareVerification}
-            isSubmitting={loading}
+      <FormGroup>
+        <Label>Current Password</Label>
+        <PasswordInput>
+          <Input
+            type={showCurrentPassword ? "text" : "password"}
+            placeholder="Enter your current password"
+            value={currentPassword}
+            onChange={(e) => setCurrentPassword(e.target.value)}
+            style={{ paddingRight: "40px" }}
           />
+          <button
+            type="button"
+            onClick={() => setShowCurrentPassword(!showCurrentPassword)}
+            aria-label={showCurrentPassword ? "Hide current password" : "Show current password"}
+          >
+            {showCurrentPassword ? <EyeOff size={16} /> : <Eye size={16} />}
+          </button>
+        </PasswordInput>
+        {errors.currentPassword && (
+          <ErrorMessage>{errors.currentPassword}</ErrorMessage>
+        )}
+      </FormGroup>
 
-          <ButtonGroup>
-            <Button
-              $primary
-              onClick={handleOTPSubmit}
-              disabled={otp.length < 6 || loading}
-              style={{ width: "100%" }}
-            >
-              {loading ? "Verifying..." : "Verify"}
-            </Button>
-          </ButtonGroup>
-        </>
-      )}
+      <FormGroup>
+        <Label>New Password</Label>
+        <PasswordInput>
+          <Input
+            type={showNewPassword ? "text" : "password"}
+            placeholder="Enter your new password"
+            value={newPassword}
+            onChange={(e) => setNewPassword(e.target.value)}
+            style={{ paddingRight: "40px" }}
+          />
+          <button
+            type="button"
+            onClick={() => setShowNewPassword(!showNewPassword)}
+            aria-label={showNewPassword ? "Hide new password" : "Show new password"}
+          >
+            {showNewPassword ? <EyeOff size={16} /> : <Eye size={16} />}
+          </button>
+        </PasswordInput>
+        {errors.newPassword && (
+          <ErrorMessage>{errors.newPassword}</ErrorMessage>
+        )}
+      </FormGroup>
+
+      <FormGroup>
+        <Label>Confirm New Password</Label>
+        <PasswordInput>
+          <Input
+            type={showConfirmPassword ? "text" : "password"}
+            placeholder="Confirm your new password"
+            value={confirmPassword}
+            onChange={(e) => setConfirmPassword(e.target.value)}
+            style={{ paddingRight: "40px" }}
+          />
+          <button
+            type="button"
+            onClick={() => setShowConfirmPassword(!showConfirmPassword)}
+            aria-label={showConfirmPassword ? "Hide confirm password" : "Show confirm password"}
+          >
+            {showConfirmPassword ? <EyeOff size={16} /> : <Eye size={16} />}
+          </button>
+        </PasswordInput>
+        {errors.confirmPassword && (
+          <ErrorMessage>{errors.confirmPassword}</ErrorMessage>
+        )}
+      </FormGroup>
+
+      {errors.form && <ErrorMessage>{errors.form}</ErrorMessage>}
+
+      <ButtonGroup>
+        <Button onClick={onClose}>Cancel</Button>
+        <Button
+          $primary
+          onClick={handleSubmit}
+          disabled={loading}
+        >
+          {loading ? "Updating..." : "Update Password"}
+        </Button>
+      </ButtonGroup>
     </PopoverContainer>
   );
 };

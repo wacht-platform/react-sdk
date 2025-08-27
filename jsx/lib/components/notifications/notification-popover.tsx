@@ -1,13 +1,18 @@
+import { forwardRef } from "react";
 import styled from "styled-components";
 import { BellOff } from "lucide-react";
 import { NotificationItem } from "./notification-item";
 import { Spinner } from "../utility/spinner";
 import type { Notification } from "@/types/notification";
 
-const Popover = styled.div`
-  position: absolute;
-  top: calc(100% + 8px);
-  right: 0;
+const Popover = styled.div<{ 
+  $position?: { top?: number; bottom?: number; left?: number; right?: number } 
+}>`
+  position: fixed;
+  ${(props) => props.$position?.top !== undefined ? `top: ${props.$position.top}px;` : ''}
+  ${(props) => props.$position?.bottom !== undefined ? `bottom: ${props.$position.bottom}px;` : ''}
+  ${(props) => props.$position?.left !== undefined ? `left: ${props.$position.left}px;` : ''}
+  ${(props) => props.$position?.right !== undefined ? `right: ${props.$position.right}px;` : ''}
   width: 400px;
   max-height: 600px;
   background: var(--color-background);
@@ -15,7 +20,7 @@ const Popover = styled.div`
   border-radius: 12px;
   box-shadow: 0 4px 12px var(--color-shadow);
   overflow: hidden;
-  z-index: 1000;
+  z-index: 99999;
   display: flex;
   flex-direction: column;
 
@@ -138,6 +143,7 @@ const ViewAllLink = styled.a`
 `;
 
 interface NotificationPopoverProps {
+  position?: { top?: number; bottom?: number; left?: number; right?: number };
   notifications: Notification[];
   loading: boolean;
   onMarkAsRead: (id: string) => void;
@@ -145,17 +151,18 @@ interface NotificationPopoverProps {
   onDelete: (id: string) => void;
 }
 
-export function NotificationPopover({
+export const NotificationPopover = forwardRef<HTMLDivElement, NotificationPopoverProps>(({
+  position,
   notifications,
   loading,
   onMarkAsRead,
   onMarkAllAsRead,
   onDelete,
-}: NotificationPopoverProps) {
+}, ref) => {
   const hasUnread = notifications.some(n => !n.is_read);
 
   return (
-    <Popover>
+    <Popover ref={ref} $position={position}>
       <Header>
         <Title>Notifications</Title>
         {hasUnread && (
@@ -164,6 +171,7 @@ export function NotificationPopover({
           </MarkAllButton>
         )}
       </Header>
+
 
       <Content>
         {loading ? (
@@ -199,4 +207,4 @@ export function NotificationPopover({
       )}
     </Popover>
   );
-}
+});

@@ -1,8 +1,10 @@
 "use client";
 
 import React, { useState, useRef, useEffect, useMemo } from "react";
+import ReactDOM from "react-dom";
 import styled from "styled-components";
 import {
+  ChevronsUpDown,
   ChevronDown,
   ChevronRight,
   Plus,
@@ -23,6 +25,7 @@ import CreateWorkspaceDialog from "../workspace/create-workspace-dialog";
 import { ManageWorkspaceDialog } from "../workspace/manage-workspace-dialog";
 import { useDialog } from "../utility/use-dialog";
 import type { WorkspaceWithOrganization } from "@/types";
+import { useScreenContext } from "./context";
 
 const Container = styled.div`
   position: relative;
@@ -36,22 +39,19 @@ const SwitcherButton = styled.button`
   align-items: center;
   justify-content: space-between;
   gap: 8px;
-  padding: 9px 12px;
-  border-radius: 6px;
+  padding: 8px 10px;
   font-size: 14px;
-  font-weight: 500;
+  font-weight: 400;
   cursor: pointer;
-  border: 1px solid #e5e5e5;
-  background: #ffffff;
-  color: #000000;
-  transition: all 0.15s ease;
+  border: 1px solid var(--color-border);
+  border-radius: 6px;
+  background: var(--color-background);
+  color: var(--color-foreground);
+  transition: background 0.1s ease;
   min-width: 200px;
+  min-height: 42px;
   width: 100%;
 
-  &:hover {
-    background: #fafafa;
-    border-color: #d4d4d4;
-  }
 
   &:disabled {
     cursor: not-allowed;
@@ -67,9 +67,9 @@ const Avatar = styled.div`
   display: flex;
   align-items: center;
   justify-content: center;
-  background: #6366f1;
+  background: var(--color-primary);
   color: white;
-  font-size: 10px;
+  font-size: 11px;
   font-weight: 600;
   flex-shrink: 0;
 `;
@@ -87,51 +87,52 @@ const ButtonContent = styled.div`
 `;
 
 const OrgName = styled.span`
-  font-weight: 500;
+  font-weight: 400;
   font-size: 14px;
   overflow: hidden;
   text-overflow: ellipsis;
   white-space: nowrap;
-  color: #000000;
+  color: var(--color-foreground);
 `;
 
-const Dropdown = styled.div<{ $isOpen: boolean }>`
-  position: absolute;
-  top: calc(100% + 8px);
-  left: 0;
-  width: 320px;
-  background: #ffffff;
+const Dropdown = styled.div<{ $isOpen: boolean; $position?: { top: number; left: number } }>`
+  position: fixed;
+  top: ${(props) => props.$position?.top ?? -9999}px;
+  left: ${(props) => props.$position?.left ?? -9999}px;
+  width: 300px;
+  background: var(--color-background);
   border-radius: 8px;
-  border: 1px solid #e5e5e5;
+  border: 1px solid var(--color-border);
   box-shadow:
-    0 2px 8px rgba(0, 0, 0, 0.08),
+    0 2px 8px var(--color-shadow),
     0 0 0 1px rgba(0, 0, 0, 0.02);
-  z-index: 50;
+  z-index: 99999;
   overflow: hidden;
-  opacity: ${(props) => (props.$isOpen ? 1 : 0)};
+  visibility: ${(props) => (props.$position && props.$isOpen ? "visible" : "hidden")};
+  opacity: ${(props) => (props.$isOpen && props.$position ? 1 : 0)};
   transform: ${(props) =>
-    props.$isOpen ? "translateY(0)" : "translateY(-4px)"};
+    props.$isOpen ? "translateY(0)" : "translateY(-8px)"};
   pointer-events: ${(props) => (props.$isOpen ? "auto" : "none")};
-  transition: all 0.2s cubic-bezier(0.16, 1, 0.3, 1);
+  transition: opacity 0.15s ease, transform 0.15s ease, visibility 0s linear ${(props) => props.$isOpen ? "0s" : "0.15s"};
 `;
 
-const MenuItem = styled.div<{ $isActive?: boolean; as?: any }>`
+const MenuItem = styled.div<{ $isActive?: boolean; as?: React.ElementType }>`
   display: flex;
   align-items: center;
   justify-content: space-between;
   width: 100%;
-  padding: 9px 12px 9px 24px;
+  padding: 10px 12px 10px 22px;
   text-align: left;
-  font-size: 14px;
+  font-size: 13px;
   border: none;
   background: transparent;
   cursor: pointer;
-  color: #000000;
+  color: var(--color-foreground);
   transition: background 0.1s ease;
   position: relative;
 
   &:hover {
-    background: #f5f5f5;
+    background: var(--color-background-hover);
 
     .hover-arrow {
       opacity: 1;
@@ -147,13 +148,12 @@ const MenuItem = styled.div<{ $isActive?: boolean; as?: any }>`
 const HoverArrow = styled(ChevronRight)`
   opacity: 0;
   transition: opacity 0.1s ease;
-  color: #666666;
+  color: var(--color-secondary-text);
 `;
 
 const Separator = styled.div`
   height: 1px;
-  background: #e5e5e5;
-  margin: 0;
+  background: var(--color-border);
 `;
 
 const MenuItemContent = styled.div`
@@ -171,7 +171,7 @@ const MenuItemAvatar = styled.div`
   display: flex;
   align-items: center;
   justify-content: center;
-  background: #6366f1;
+  background: var(--color-primary);
   color: white;
   font-size: 10px;
   font-weight: 600;
@@ -189,48 +189,49 @@ const MenuItemInfo = styled.div`
   flex-direction: column;
   gap: 2px;
   overflow: hidden;
+  flex: 1;
 `;
 
 const MenuItemName = styled.span`
   font-weight: 500;
-  font-size: 14px;
+  font-size: 13px;
   overflow: hidden;
   text-overflow: ellipsis;
   white-space: nowrap;
-  color: #000000;
+  color: var(--color-foreground);
 `;
 
 const MenuItemRole = styled.span`
-  font-size: 13px;
-  color: #666666;
+  font-size: 10px;
+  color: var(--color-secondary-text);
   font-weight: 400;
 `;
 
 const ManageButton = styled.button`
-  padding: 4px;
+  padding: 3px;
   border-radius: 4px;
-  border: 1px solid #d4d4d4;
+  border: 1px solid var(--color-border);
   background: transparent;
-  color: #666666;
+  color: var(--color-secondary-text);
   cursor: pointer;
   transition: all 0.1s ease;
   display: flex;
   align-items: center;
   justify-content: center;
-  width: 24px;
-  height: 24px;
+  width: 20px;
+  height: 20px;
 
   &:hover {
-    background: #f5f5f5;
-    color: #000000;
+    background: var(--color-background-hover);
+    color: var(--color-foreground);
   }
 `;
 
 const LogoutButton = styled(ManageButton)`
   &:hover:not(:disabled) {
-    background: #fee;
-    color: #d73a49;
-    border-color: #fcc;
+    background: var(--color-error-background);
+    color: var(--color-error);
+    border-color: var(--color-error);
   }
 
   &:disabled {
@@ -244,18 +245,18 @@ const CreateOrgButton = styled.button`
   align-items: center;
   justify-content: space-between;
   width: 100%;
-  padding: 9px 12px;
+  padding: 10px 12px;
   text-align: left;
-  font-size: 14px;
+  font-size: 13px;
   border: none;
   background: transparent;
   cursor: pointer;
-  color: #000000;
+  color: var(--color-foreground);
   transition: background 0.1s ease;
   position: relative;
 
   &:hover {
-    background: #f5f5f5;
+    background: var(--color-background-hover);
   }
 
   &:disabled {
@@ -268,19 +269,19 @@ const PlusIcon = styled.div`
   width: 20px;
   height: 20px;
   border-radius: 50%;
-  border: 1px dashed #d4d4d4;
+  border: 1px dashed var(--color-border);
   display: flex;
   align-items: center;
   justify-content: center;
-  color: #666666;
-  background: #fafafa;
+  color: var(--color-secondary-text);
+  background: var(--color-background-hover);
 `;
 
 const ActiveIndicator = styled.div`
   width: 8px;
   height: 8px;
   border-radius: 50%;
-  background: #6366f1;
+  background: var(--color-primary);
   position: absolute;
   left: 8px;
   top: 50%;
@@ -291,11 +292,11 @@ const PersonalIcon = styled.div`
   width: 20px;
   height: 20px;
   border-radius: 50%;
-  background: #f5f5f5;
+  background: var(--color-background-hover);
   display: flex;
   align-items: center;
   justify-content: center;
-  color: #666666;
+  color: var(--color-secondary-text);
   overflow: hidden;
 `;
 
@@ -306,8 +307,8 @@ const PersonalAvatar = styled.img`
 `;
 
 const WorkspaceItem = styled(MenuItem)`
-  padding-left: 48px;
-  font-size: 13px;
+  padding-left: 40px;
+  font-size: 11px;
 `;
 
 const WorkspaceAvatar = styled.div`
@@ -318,29 +319,28 @@ const WorkspaceAvatar = styled.div`
   display: flex;
   align-items: center;
   justify-content: center;
-  background: #e5e5e5;
-  color: #666666;
+  background: var(--color-border);
+  color: var(--color-secondary-text);
   font-size: 9px;
   font-weight: 600;
   flex-shrink: 0;
 `;
 
 const StatusMessage = styled.div<{ $isError?: boolean }>`
-  padding: 9px 12px;
-  margin: 4px 8px;
+  padding: 8px 10px;
   border-radius: 4px;
-  font-size: 13px;
-  background: ${(props) => (props.$isError ? "#fee" : "#e3f2fd")};
-  color: ${(props) => (props.$isError ? "#d73a49" : "#1976d2")};
-  border: 1px solid ${(props) => (props.$isError ? "#fcc" : "#bbdefb")};
+  font-size: 10px;
+  background: ${(props) => (props.$isError ? "var(--color-error-background)" : "var(--color-primary-background)")};
+  color: ${(props) => (props.$isError ? "var(--color-error)" : "var(--color-primary)")};
+  border: 1px solid ${(props) => (props.$isError ? "var(--color-error)" : "var(--color-primary)")};
   display: flex;
   align-items: center;
-  gap: 8px;
+  gap: 6px;
 `;
 
 const Spinner = styled.div`
-  width: 14px;
-  height: 14px;
+  width: 12px;
+  height: 12px;
   border: 2px solid transparent;
   border-top-color: currentColor;
   border-radius: 50%;
@@ -354,14 +354,14 @@ const Spinner = styled.div`
 `;
 
 const ShimmerWrapper = styled.div`
-  padding: 8px;
+  padding: 8px 0;
 `;
 
 const ShimmerItem = styled.div`
   display: flex;
   align-items: center;
-  gap: 8px;
-  padding: 9px 12px;
+  gap: 6px;
+  padding: 4px 10px 4px 8px;
   animation: shimmer 1.5s ease-in-out infinite;
 
   @keyframes shimmer {
@@ -378,10 +378,10 @@ const ShimmerItem = styled.div`
 `;
 
 const ShimmerAvatar = styled.div`
-  width: 20px;
-  height: 20px;
+  width: 18px;
+  height: 18px;
   border-radius: 50%;
-  background: #e5e5e5;
+  background: var(--color-border);
 `;
 
 const ShimmerContent = styled.div`
@@ -393,14 +393,14 @@ const ShimmerContent = styled.div`
 
 const ShimmerLine = styled.div<{ width?: string }>`
   height: 12px;
-  background: #e5e5e5;
+  background: var(--color-border);
   border-radius: 4px;
   width: ${(props) => props.width || "100%"};
 `;
 
 const ShimmerSmallLine = styled.div<{ width?: string }>`
   height: 10px;
-  background: #e5e5e5;
+  background: var(--color-border);
   border-radius: 4px;
   width: ${(props) => props.width || "60%"};
 `;
@@ -409,7 +409,9 @@ export const OrganizationSwitcher = () => {
   const [open, setOpen] = useState(false);
   const [isSwitching, setIsSwitching] = useState(false);
   const [expandedOrgs, setExpandedOrgs] = useState<Set<string>>(new Set());
+  const [dropdownPosition, setDropdownPosition] = useState<{ top: number; left: number } | undefined>();
   const dropdownRef = useRef<HTMLDivElement>(null);
+  const buttonRef = useRef<HTMLButtonElement>(null);
 
   const createOrgDialog = useDialog(false);
   const manageOrgDialog = useDialog(false);
@@ -438,6 +440,7 @@ export const OrganizationSwitcher = () => {
     switchWorkspace,
   } = useSession();
   const { deployment } = useDeployment();
+  const { toast } = useScreenContext();
 
   const organizationsEnabled = deployment?.b2b_settings.organizations_enabled;
   const workspacesEnabled = deployment?.b2b_settings.workspaces_enabled;
@@ -475,21 +478,61 @@ export const OrganizationSwitcher = () => {
   ]);
 
   useEffect(() => {
-    const handleClickOutside = (event: MouseEvent) => {
-      if (
-        dropdownRef.current &&
-        !dropdownRef.current.contains(event.target as Node)
-      ) {
+    if (!open) return;
+    
+    let cleanupFn: (() => void) | null = null;
+    
+    // Small delay to ensure Portal is mounted and refs are attached
+    const timer = setTimeout(() => {
+      const handleClickOutside = (event: MouseEvent) => {
+        const target = event.target as Node;
+        
+        // Check if target is the button or inside the button
+        if (buttonRef.current?.contains(target)) {
+          return;
+        }
+        
+        // Check if target is the dropdown or inside the dropdown  
+        if (dropdownRef.current?.contains(target)) {
+          return;
+        }
+        
+        // If we get here, click was outside both elements
         setOpen(false);
-        setLeaveError(null); // Clear error when closing
-      }
-    };
+        setLeaveError(null);
+      };
 
-    document.addEventListener("mousedown", handleClickOutside);
+      document.addEventListener("mousedown", handleClickOutside);
+      
+      cleanupFn = () => {
+        document.removeEventListener("mousedown", handleClickOutside);
+      };
+    }, 50);
+    
     return () => {
-      document.removeEventListener("mousedown", handleClickOutside);
+      clearTimeout(timer);
+      cleanupFn?.();
     };
-  }, []);
+  }, [open]);
+
+  // Update dropdown position when open
+  useEffect(() => {
+    if (open && buttonRef.current) {
+      // Small delay to ensure button ref is properly measured
+      requestAnimationFrame(() => {
+        if (buttonRef.current) {
+          const rect = buttonRef.current.getBoundingClientRect();
+          setDropdownPosition({
+            top: rect.bottom + 8,
+            left: rect.left
+          });
+        }
+      });
+    } else {
+      // Clear position when closing to prevent stale positions
+      setDropdownPosition(undefined);
+    }
+  }, [open]);
 
   // Clear error after 5 seconds
   useEffect(() => {
@@ -517,7 +560,7 @@ export const OrganizationSwitcher = () => {
     setIsSwitching(true);
     switchOrganization(orgId).finally(() => {
       setIsSwitching(false);
-      setOpen(false);
+      // Don't close dropdown - let user continue exploring or click outside to close
     });
   };
 
@@ -525,7 +568,7 @@ export const OrganizationSwitcher = () => {
     setIsSwitching(true);
     switchWorkspace(workspaceId).finally(() => {
       setIsSwitching(false);
-      setOpen(false);
+      // Don't close dropdown - let user continue exploring or click outside to close
     });
   };
 
@@ -550,8 +593,9 @@ export const OrganizationSwitcher = () => {
 
   return (
     <DefaultStylesProvider>
-      <Container ref={dropdownRef}>
+      <Container>
         <SwitcherButton
+          ref={buttonRef}
           onClick={() => {
             setOpen(!open);
             if (!open) {
@@ -575,10 +619,12 @@ export const OrganizationSwitcher = () => {
             </Avatar>
             <OrgName>{currentDisplay.name}</OrgName>
           </ButtonContent>
-          <ChevronDown size={16} style={{ color: "#666666" }} />
+          <ChevronsUpDown size={16} />
         </SwitcherButton>
 
-        <Dropdown $isOpen={open}>
+        {typeof window !== 'undefined' && ReactDOM.createPortal(
+          <DefaultStylesProvider>
+            <Dropdown ref={dropdownRef} $isOpen={open} $position={dropdownPosition}>
           {organizationLoading || workspacesLoading ? (
             <ShimmerWrapper>
               {/* Show current active item shimmer */}
@@ -618,15 +664,19 @@ export const OrganizationSwitcher = () => {
             </ShimmerWrapper>
           ) : (
             <div>
-              {/* Show active item first */}
-              {isPersonalActive ? (
-                <MenuItem
+              {/* Always show personal account first */}
+              <MenuItem
                   as="button"
-                  $isActive={true}
-                  onClick={() => handleSwitchOrganization()}
-                  disabled={isSwitching}
+                  $isActive={isPersonalActive}
+                  onClick={(e) => {
+                    e.stopPropagation();
+                    if (!isPersonalActive) {
+                      handleSwitchOrganization();
+                    }
+                  }}
+                  disabled={isSwitching || isPersonalActive}
                 >
-                  <ActiveIndicator />
+                  {isPersonalActive && <ActiveIndicator />}
                   <MenuItemContent>
                     <PersonalIcon>
                       {session?.active_signin?.user?.profile_picture_url ? (
@@ -642,9 +692,14 @@ export const OrganizationSwitcher = () => {
                       <MenuItemName>Personal account</MenuItemName>
                     </MenuItemInfo>
                   </MenuItemContent>
+                  {!isPersonalActive && <HoverArrow className="hover-arrow" size={14} />}
                 </MenuItem>
-              ) : (
-                activeOrganization && (
+
+              {/* Only show separator if we're going to show an active organization */}
+              {!isPersonalActive && activeOrganization && <Separator />}
+
+              {/* Show active organization if not personal */}
+              {!isPersonalActive && activeOrganization && (
                   <MenuItem
                     $isActive={true}
                     onClick={() => {
@@ -662,14 +717,14 @@ export const OrganizationSwitcher = () => {
                     <MenuItemContent>
                       {workspacesEnabled && (
                         <ChevronDown
-                          size={14}
+                          size={12}
                           style={{
                             marginRight: "4px",
                             transform: expandedOrgs.has(activeOrganization.id)
                               ? "rotate(0deg)"
                               : "rotate(-90deg)",
                             transition: "transform 0.2s ease",
-                            color: "#666666",
+                            color: "var(--color-secondary-text)",
                           }}
                         />
                       )}
@@ -715,11 +770,11 @@ export const OrganizationSwitcher = () => {
                         onClick={(e) => {
                           e.stopPropagation();
                           manageOrgDialog.open();
-                          setOpen(false);
+                          // Keep dropdown open
                         }}
                         title="Manage organization"
                       >
-                        <Settings size={14} />
+                        <Settings size={12} />
                       </ManageButton>
                       <LogoutButton
                         onClick={async (e) => {
@@ -730,7 +785,7 @@ export const OrganizationSwitcher = () => {
                             await leaveOrganization();
                             await refetchOrganizations();
                             setTimeout(() => {
-                              setOpen(false);
+                              // Keep dropdown open after leaving org
                               setLeavingOrg(false);
                             }, 500);
                           } catch (error) {
@@ -745,11 +800,10 @@ export const OrganizationSwitcher = () => {
                         disabled={leavingOrg}
                         title="Leave organization"
                       >
-                        <LogOut size={14} />
+                        <LogOut size={12} />
                       </LogoutButton>
                     </div>
                   </MenuItem>
-                )
               )}
 
               {/* Show workspaces if active org is expanded */}
@@ -816,11 +870,11 @@ export const OrganizationSwitcher = () => {
                                   onClick={(e) => {
                                     e.stopPropagation();
                                     manageWorkspaceDialog.open();
-                                    setOpen(false);
+                                    // Keep dropdown open
                                   }}
                                   title="Manage workspace"
                                 >
-                                  <Settings size={14} />
+                                  <Settings size={12} />
                                 </ManageButton>
                                 <LogoutButton
                                   onClick={async (e) => {
@@ -828,22 +882,20 @@ export const OrganizationSwitcher = () => {
                                     try {
                                       if (leaveWorkspace) {
                                         await leaveWorkspace();
-                                        setOpen(false);
+                                        // Keep dropdown open
                                       }
-                                    } catch (error) {
-                                      console.error(
-                                        "Failed to leave workspace",
-                                        error,
-                                      );
+                                    } catch (error: any) {
+                                      const errorMessage = error.message || "Failed to leave workspace. Please try again.";
+                                      toast(errorMessage, "error");
                                     }
                                   }}
                                   title="Leave workspace"
                                 >
-                                  <LogOut size={14} />
+                                  <LogOut size={12} />
                                 </LogoutButton>
                               </div>
                             ) : (
-                              <HoverArrow className="hover-arrow" size={16} />
+                              <HoverArrow className="hover-arrow" size={14} />
                             )}
                           </WorkspaceItem>
                         );
@@ -853,12 +905,12 @@ export const OrganizationSwitcher = () => {
                       onClick={() => {
                         setSelectedOrgForWorkspace(activeOrganization.id);
                         createWorkspaceDialog.open();
-                        setOpen(false);
+                        // Keep dropdown open
                       }}
                       disabled={isSwitching}
                     >
                       <MenuItemContent>
-                        <PlusIcon style={{ width: "16px", height: "16px" }}>
+                        <PlusIcon style={{ width: "14px", height: "14px" }}>
                           <Plus size={12} />
                         </PlusIcon>
                         <MenuItemInfo>
@@ -889,35 +941,7 @@ export const OrganizationSwitcher = () => {
 
               <Separator />
 
-              {/* Show personal account if not active */}
-              {!isPersonalActive && (
-                <>
-                  <MenuItem
-                    as="button"
-                    $isActive={false}
-                    onClick={() => handleSwitchOrganization()}
-                    disabled={isSwitching}
-                  >
-                    <MenuItemContent>
-                      <PersonalIcon>
-                        {session?.active_signin?.user?.profile_picture_url ? (
-                          <PersonalAvatar
-                            src={session.active_signin.user.profile_picture_url}
-                            alt="Personal account"
-                          />
-                        ) : (
-                          <User size={12} />
-                        )}
-                      </PersonalIcon>
-                      <MenuItemInfo>
-                        <MenuItemName>Personal account</MenuItemName>
-                      </MenuItemInfo>
-                    </MenuItemContent>
-                    <HoverArrow className="hover-arrow" size={16} />
-                  </MenuItem>
-                  <Separator />
-                </>
-              )}
+              {/* Separator before other organizations */}
 
               {/* Show other organizations */}
               {organizationMemberships &&
@@ -953,14 +977,14 @@ export const OrganizationSwitcher = () => {
                               <MenuItemContent>
                                 {workspacesEnabled && (
                                   <ChevronDown
-                                    size={14}
+                                    size={12}
                                     style={{
                                       marginRight: "4px",
                                       transform: isExpanded
                                         ? "rotate(0deg)"
                                         : "rotate(-90deg)",
                                       transition: "transform 0.2s ease",
-                                      color: "#666666",
+                                      color: "var(--color-secondary-text)",
                                     }}
                                   />
                                 )}
@@ -988,7 +1012,7 @@ export const OrganizationSwitcher = () => {
                                     )}
                                 </MenuItemInfo>
                               </MenuItemContent>
-                              <HoverArrow className="hover-arrow" size={16} />
+                              <HoverArrow className="hover-arrow" size={14} />
                             </MenuItem>
 
                             {workspacesEnabled && isExpanded && (
@@ -1064,11 +1088,11 @@ export const OrganizationSwitcher = () => {
                                               onClick={(e) => {
                                                 e.stopPropagation();
                                                 manageWorkspaceDialog.open();
-                                                setOpen(false);
+                                                // Keep dropdown open
                                               }}
                                               title="Manage workspace"
                                             >
-                                              <Settings size={14} />
+                                              <Settings size={12} />
                                             </ManageButton>
                                             <LogoutButton
                                               onClick={async (e) => {
@@ -1076,18 +1100,16 @@ export const OrganizationSwitcher = () => {
                                                 try {
                                                   if (leaveWorkspace) {
                                                     await leaveWorkspace();
-                                                    setOpen(false);
+                                                    // Keep dropdown open
                                                   }
-                                                } catch (error) {
-                                                  console.error(
-                                                    "Failed to leave workspace",
-                                                    error,
-                                                  );
+                                                } catch (error: any) {
+                                                  const errorMessage = error.message || "Failed to leave workspace. Please try again.";
+                                                  toast(errorMessage, "error");
                                                 }
                                               }}
                                               title="Leave workspace"
                                             >
-                                              <LogOut size={14} />
+                                              <LogOut size={12} />
                                             </LogoutButton>
                                           </div>
                                         ) : (
@@ -1105,15 +1127,15 @@ export const OrganizationSwitcher = () => {
                                   onClick={() => {
                                     setSelectedOrgForWorkspace(org.id);
                                     createWorkspaceDialog.open();
-                                    setOpen(false);
+                                    // Keep dropdown open
                                   }}
                                   disabled={isSwitching}
                                 >
                                   <MenuItemContent>
                                     <PlusIcon
-                                      style={{ width: "16px", height: "16px" }}
+                                      style={{ width: "14px", height: "14px" }}
                                     >
-                                      <Plus size={12} />
+                                      <Plus size={10} />
                                     </PlusIcon>
                                     <MenuItemInfo>
                                       <MenuItemName>
@@ -1138,13 +1160,13 @@ export const OrganizationSwitcher = () => {
                   <CreateOrgButton
                     onClick={() => {
                       createOrgDialog.open();
-                      setOpen(false);
+                      // Keep dropdown open
                     }}
                     disabled={isSwitching}
                   >
                     <MenuItemContent>
                       <PlusIcon>
-                        <Plus size={14} />
+                        <Plus size={12} />
                       </PlusIcon>
                       <MenuItemInfo>
                         <MenuItemName>Create organization</MenuItemName>
@@ -1156,6 +1178,9 @@ export const OrganizationSwitcher = () => {
             </div>
           )}
         </Dropdown>
+          </DefaultStylesProvider>,
+          document.body
+        )}
 
         {organizationsEnabled && allowUsersToCreateOrgs && (
           <CreateOrganizationDialog

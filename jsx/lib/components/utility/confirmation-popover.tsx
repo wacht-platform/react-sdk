@@ -98,8 +98,8 @@ export const ConfirmationPopover = ({
           style={{ 
             fontSize: "14px", 
             padding: "6px 16px",
-            background: "#dc2626",
-            border: "1px solid #dc2626",
+            background: "var(--color-error)",
+            border: "1px solid var(--color-error)",
             color: "white",
           }}
         >

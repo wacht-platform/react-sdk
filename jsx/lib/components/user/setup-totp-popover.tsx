@@ -1,8 +1,7 @@
 import { useState, useRef, useEffect } from "react";
 import styled from "styled-components";
+import { QRCodeSVG } from "qrcode.react";
 import { Input } from "@/components/utility/input";
-import { FormGroup, Label } from "../utility/form";
-import { OTPInput } from "../utility/otp-input";
 import { useScreenContext } from "./context";
 
 const PopoverContainer = styled.div`
@@ -62,25 +61,25 @@ const Title = styled.div`
   margin-bottom: 8px;
 `;
 
-
-interface EmailAddPopoverProps {
-  existingEmail?: string;
+interface SetupTOTPPopoverProps {
   triggerRef?: React.RefObject<HTMLElement | null>;
   onClose: () => void;
-  onAddEmail: (email: string) => Promise<void>;
-  onPrepareVerification: () => Promise<void>;
-  onAttemptVerification: (otp: string) => Promise<void>;
+  onSetupTOTP: () => Promise<{ otp_url?: string; totp_secret?: string; id: string }>;
+  onVerifyTOTP: (codes: string[]) => Promise<void>;
 }
 
-export const EmailAddPopover = ({
+export const SetupTOTPPopover = ({
   onClose,
-  onAddEmail,
-  onAttemptVerification,
-  onPrepareVerification,
-  existingEmail,
+  onSetupTOTP,
+  onVerifyTOTP,
   triggerRef,
-}: EmailAddPopoverProps) => {
+}: SetupTOTPPopoverProps) => {
   const popoverRef = useRef<HTMLDivElement>(null);
+  const [step, setStep] = useState<"qr" | "verify">("qr");
+  const [qrUrl, setQrUrl] = useState("");
+  const [secret, setSecret] = useState("");
+  const [codes, setCodes] = useState(["", ""]);
+  const [loading, setLoading] = useState(false);
   const [mounted, setMounted] = useState(false);
   const [position, setPosition] = useState({ top: 0, left: 0 });
   const { toast } = useScreenContext();
@@ -97,7 +96,7 @@ export const EmailAddPopover = ({
       if (triggerButton) {
         const rect = triggerButton.getBoundingClientRect();
         const popoverWidth = 380;
-        const popoverHeight = 300; // Approximate height
+        const popoverHeight = 400; // Approximate height for TOTP popover
         const spacing = 8;
         
         let top = 0;
@@ -177,34 +176,33 @@ export const EmailAddPopover = ({
       document.removeEventListener("keydown", handleEscape);
     };
   }, [onClose, triggerRef]);
-  const [step, setStep] = useState<"email" | "otp">(
-    existingEmail ? "otp" : "email"
-  );
-  const [email, setEmail] = useState(existingEmail || "");
-  const [otp, setOtp] = useState("");
-  const [loading, setLoading] = useState(false);
 
-  const handleEmailSubmit = async () => {
-    if (!email || loading) return;
+  useEffect(() => {
+    const setupTOTP = async () => {
+      setLoading(true);
+      try {
+        const result = await onSetupTOTP();
+        setQrUrl(result.otp_url || "");
+        setSecret(result.totp_secret || "");
+      } catch (error: any) {
+        const errorMessage = error.message || "Failed to setup two-factor authentication. Please try again.";
+        toast(errorMessage, "error");
+      } finally {
+        setLoading(false);
+      }
+    };
+    setupTOTP();
+  }, []);
+
+  const handleVerify = async () => {
+    if (codes.some(code => code.length !== 6)) return;
+    
     setLoading(true);
     try {
-      await onAddEmail(email);
-      setStep("otp");
-    } catch (error: any) {
-      const errorMessage = error.message || "Failed to add email address. Please try again.";
-      toast(errorMessage, "error");
-    } finally {
-      setLoading(false);
-    }
-  };
-
-  const handleOTPSubmit = async () => {
-    setLoading(true);
-    try {
-      await onAttemptVerification(otp);
+      await onVerifyTOTP(codes);
       onClose();
     } catch (error: any) {
-      const errorMessage = error.message || "Failed to verify email. Please check the code and try again.";
+      const errorMessage = error.message || "Failed to verify codes. Please check your authenticator app and try again.";
       toast(errorMessage, "error");
     } finally {
       setLoading(false);
@@ -225,44 +223,9 @@ export const EmailAddPopover = ({
       }}
       onClick={(e) => e.stopPropagation()}
     >
-      {step === "email" ? (
+      {step === "qr" ? (
         <>
-          <Title>Add email address</Title>
-          <div
-            style={{
-              fontSize: "14px",
-              color: "var(--color-muted)",
-              marginBottom: "10px",
-            }}
-          >
-            You will have to verify this email address before you can start
-            using it.
-          </div>
-
-          <FormGroup>
-            <Label htmlFor="email-input">Email address</Label>
-            <Input
-              id="email-input"
-              type="email"
-              placeholder="Enter your email"
-              value={email}
-              onChange={(e) => setEmail(e.target.value)}
-            />
-          </FormGroup>
-          <ButtonGroup>
-            <Button
-              $primary
-              onClick={handleEmailSubmit}
-              disabled={!email || loading}
-              style={{ width: "100%" }}
-            >
-              {loading ? "Adding..." : "Continue"}
-            </Button>
-          </ButtonGroup>
-        </>
-      ) : (
-        <>
-          <Title>Verify your email</Title>
+          <Title>Setup Two-Factor Authentication</Title>
           <div
             style={{
               fontSize: "14px",
@@ -270,20 +233,132 @@ export const EmailAddPopover = ({
               marginBottom: "16px",
             }}
           >
-            Enter the 6-digit code sent to {email}
+            Scan this QR code with your authenticator app (Google Authenticator, Authy, etc.)
           </div>
-          <OTPInput
-            onComplete={async (code) => setOtp(code)}
-            onResend={onPrepareVerification}
-            isSubmitting={loading}
-          />
+
+          <div style={{ display: "flex", justifyContent: "center", marginBottom: "16px" }}>
+            {loading ? (
+              <div style={{ 
+                width: "150px", 
+                height: "150px",
+                display: "flex",
+                alignItems: "center",
+                justifyContent: "center",
+                border: "1px solid var(--color-border)",
+                borderRadius: "var(--radius-md)",
+                background: "var(--color-input-background)"
+              }}>
+                Loading...
+              </div>
+            ) : qrUrl ? (
+              <div style={{ 
+                border: "1px solid var(--color-border)",
+                borderRadius: "var(--radius-md)",
+                padding: "8px",
+                background: "white"
+              }}>
+                <QRCodeSVG 
+                  value={qrUrl} 
+                  size={150}
+                  title="QR Code for Two-Factor Authentication Setup"
+                  aria-label="Scan this QR code with your authenticator app to set up two-factor authentication"
+                />
+              </div>
+            ) : (
+              <div style={{ 
+                width: "150px", 
+                height: "150px",
+                display: "flex",
+                alignItems: "center",
+                justifyContent: "center",
+                border: "1px solid var(--color-border)",
+                borderRadius: "var(--radius-md)",
+                background: "var(--color-input-background)",
+                color: "var(--color-error)"
+              }}>
+                QR Code Not Available
+              </div>
+            )}
+          </div>
+
+          {secret && (
+            <div style={{ 
+              background: "var(--color-input-background)",
+              border: "1px solid var(--color-border)",
+              borderRadius: "var(--radius-md)",
+              padding: "8px",
+              marginBottom: "16px",
+              fontSize: "12px"
+            }}>
+              <div style={{ color: "var(--color-secondary-text)", marginBottom: "4px" }}>
+                Or enter manually:
+              </div>
+              <code style={{ fontFamily: "monospace", wordBreak: "break-all" }}>
+                {secret}
+              </code>
+            </div>
+          )}
 
           <ButtonGroup>
             <Button
               $primary
-              onClick={handleOTPSubmit}
-              disabled={otp.length < 6 || loading}
-              style={{ width: "100%" }}
+              onClick={() => setStep("verify")}
+              disabled={loading || !qrUrl}
+            >
+              I've Scanned the Code
+            </Button>
+          </ButtonGroup>
+        </>
+      ) : (
+        <>
+          <Title>Verify Your Authenticator</Title>
+          <div
+            style={{
+              fontSize: "14px",
+              color: "var(--color-muted)",
+              marginBottom: "16px",
+            }}
+          >
+            Enter two consecutive codes from your authenticator app
+          </div>
+
+          <div style={{ display: "flex", gap: "8px", marginBottom: "16px" }}>
+            <Input
+              id="totp-code-1"
+              type="text"
+              placeholder="000000"
+              value={codes[0]}
+              onChange={(e) => {
+                const value = e.target.value.replace(/[^0-9]/g, "").substring(0, 6);
+                setCodes([value, codes[1]]);
+              }}
+              maxLength={6}
+              style={{ textAlign: "center", fontFamily: "monospace" }}
+              aria-label="First verification code from authenticator app"
+            />
+            <Input
+              id="totp-code-2"
+              type="text"
+              placeholder="000000"
+              value={codes[1]}
+              onChange={(e) => {
+                const value = e.target.value.replace(/[^0-9]/g, "").substring(0, 6);
+                setCodes([codes[0], value]);
+              }}
+              maxLength={6}
+              style={{ textAlign: "center", fontFamily: "monospace" }}
+              aria-label="Second verification code from authenticator app"
+            />
+          </div>
+
+          <ButtonGroup>
+            <Button onClick={() => setStep("qr")}>
+              Back
+            </Button>
+            <Button
+              $primary
+              onClick={handleVerify}
+              disabled={loading || codes.some(code => code.length !== 6)}
             >
               {loading ? "Verifying..." : "Verify"}
             </Button>

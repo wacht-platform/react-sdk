@@ -42,18 +42,18 @@ class WebSocketManager {
     
     // If already connected to the same URL, just notify handlers
     if (this.ws?.readyState === WebSocket.OPEN && this.url === url) {
-      console.log("WebSocket already connected to", url);
+      // WebSocket already connected
       this.notifyConnectionState({ isConnected: true });
       return;
     }
     
     // If connecting, wait for it to complete
     if (this.ws?.readyState === WebSocket.CONNECTING) {
-      console.log("WebSocket already connecting, skipping...");
+      // WebSocket already connecting, skipping
       return;
     }
 
-    console.log("Creating singleton WebSocket connection...");
+    // Creating singleton WebSocket connection
     this.createConnection();
   }
 
@@ -64,29 +64,29 @@ class WebSocketManager {
       this.ws = new WebSocket(this.url);
       
       this.ws.onopen = () => {
-        console.log("WebSocket connected");
+        // WebSocket connected
         this.reconnectAttempts = 0;
         this.notifyConnectionState({ isConnected: true });
       };
 
       this.ws.onmessage = (event) => {
         try {
-          console.log('[WebSocket] Received raw:', event.data);
+          // WebSocket message received
           const message = JSON.parse(event.data);
-          console.log('[WebSocket] Parsed message:', message);
+          // WebSocket message parsed
           this.notifyMessageHandlers(message);
         } catch (error) {
-          console.error("Failed to parse WebSocket message:", error);
+          // Failed to parse WebSocket message
         }
       };
 
-      this.ws.onerror = (error) => {
-        console.error("WebSocket error:", error);
+      this.ws.onerror = () => {
+        // WebSocket error occurred
         this.notifyConnectionState({ isConnected: false, error: "Connection error" });
       };
 
       this.ws.onclose = () => {
-        console.log("WebSocket closed");
+        // WebSocket closed
         this.ws = null;
         this.notifyConnectionState({ isConnected: false });
         
@@ -96,7 +96,7 @@ class WebSocketManager {
         }
       };
     } catch (error) {
-      console.error("Failed to create WebSocket:", error);
+      // Failed to create WebSocket
       this.notifyConnectionState({ 
         isConnected: false, 
         error: error instanceof Error ? error.message : "Failed to connect" 
@@ -112,10 +112,10 @@ class WebSocketManager {
     const jitter = Math.random() * 0.3 * baseDelay; // 0-30% jitter
     const delay = Math.floor(baseDelay + jitter);
     
-    console.log(`Scheduling reconnect attempt ${this.reconnectAttempts} in ${delay}ms`);
+    // Scheduling reconnect attempt
     
     this.reconnectTimer = setTimeout(() => {
-      console.log(`Reconnect attempt ${this.reconnectAttempts}...`);
+      // Reconnect attempt in progress
       this.createConnection();
     }, delay);
   }
@@ -135,13 +135,13 @@ class WebSocketManager {
   }
 
   send(message: any) {
-    console.log('[WebSocket] Attempting to send:', message);
+    // Attempting to send WebSocket message
     if (this.ws?.readyState === WebSocket.OPEN) {
       const jsonMessage = JSON.stringify(message);
-      console.log('[WebSocket] Sending JSON:', jsonMessage);
+      // Sending WebSocket message
       this.ws.send(jsonMessage);
     } else {
-      console.warn("WebSocket not connected, cannot send message. ReadyState:", this.ws?.readyState);
+      // WebSocket not connected, cannot send message
     }
   }
 
@@ -166,7 +166,7 @@ class WebSocketManager {
       try {
         handler(message);
       } catch (error) {
-        console.error("Error in message handler:", error);
+        // Error in message handler
       }
     });
   }
@@ -176,7 +176,7 @@ class WebSocketManager {
       try {
         handler(state);
       } catch (error) {
-        console.error("Error in connection state handler:", error);
+        // Error in connection state handler
       }
     });
   }

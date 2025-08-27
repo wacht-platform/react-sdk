@@ -5,7 +5,7 @@ export const isExternalUrl = (url: string): boolean => {
   // Check for dangerous protocols first
   const dangerousProtocols = ['javascript:', 'data:', 'vbscript:'];
   if (dangerousProtocols.some(protocol => normalizedUrl.startsWith(protocol))) {
-    console.warn(`Blocked navigation to dangerous URL: ${url}`);
+    // Blocked navigation to dangerous URL
     return true; // Treat as external to prevent router handling
   }
   

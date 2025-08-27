@@ -4,6 +4,40 @@ import { Building, Settings, Users, Mail, Trash2, Send, Check, Shield, AlertTria
 import { useActiveWorkspace, useWorkspaceList } from "@/hooks/use-workspace";
 import { useSession } from "@/hooks/use-session";
 import type { WorkspaceRole, WorkspaceWithOrganization } from "@/types";
+
+interface WorkspaceInvitation {
+  id: string;
+  email: string;
+  role_id: string;
+  workspace_role_id: string;
+  initial_workspace_role: WorkspaceRole;
+  status: string;
+}
+
+// Based on frontend API model/workspace_membership.go
+interface WorkspaceMembershipResponse {
+  id: string;
+  workspace_id: string;
+  organization_id: string;
+  user_id: string;
+  created_at: string;
+  updated_at: string;
+  public_user_data: {
+    id: string;
+    first_name?: string;
+    last_name?: string;
+    username?: string;
+    profile_picture_url?: string;
+    has_profile_picture?: boolean;
+    primary_email_address?: {
+      id: string;
+      email: string;
+      is_primary: boolean;
+      verified: boolean;
+    };
+  };
+  roles: WorkspaceRole[];
+}
 import { InviteMemberPopover } from "./invite-member-popover";
 import { AddWorkspaceRolePopover } from "./add-role-popover";
 import { ConfirmationPopover } from "../utility/confirmation-popover";
@@ -272,7 +306,7 @@ const InvitationsSection = () => {
       const allInvitations = response.data as any[];
       return allInvitations.filter(inv => inv.workspace_id === activeWorkspace.id);
     } catch (error) {
-      console.error("Failed to fetch invitations:", error);
+      // Failed to fetch invitations
       return [];
     }
   }, [client, activeWorkspace, workspaceWithOrg]);
@@ -333,7 +367,7 @@ const InvitationsSection = () => {
         setRoles(rolesData);
         setInvitations(invitationsData);
       } catch (error) {
-        console.error("Failed to fetch data:", error);
+        // Failed to fetch data
       } finally {
         setRolesLoading(false);
         setInvitationsLoading(false);
@@ -344,18 +378,18 @@ const InvitationsSection = () => {
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [activeWorkspace?.id]);
 
-  const handleCancelInvitation = async (invitation: any) => {
+  const handleCancelInvitation = async (invitation: WorkspaceInvitation) => {
     try {
       await discardInvitation(invitation.id);
       // Refresh invitations
       const updatedInvitations = await getInvitations();
       setInvitations(updatedInvitations);
     } catch (error) {
-      console.error("Failed to cancel invitation:", error);
+      // Failed to cancel invitation
     }
   };
 
-  const handleResendInvitation = async (invitation: any) => {
+  const handleResendInvitation = async (invitation: WorkspaceInvitation) => {
     try {
       // Resend is typically done by canceling and creating a new invitation
       await discardInvitation(invitation.id);
@@ -366,7 +400,7 @@ const InvitationsSection = () => {
       setInviteSuccess("Invitation resent successfully");
       setTimeout(() => setInviteSuccess(""), 3000);
     } catch (error) {
-      console.error("Failed to resend invitation:", error);
+      // Failed to resend invitation
     }
   };
 
@@ -381,7 +415,7 @@ const InvitationsSection = () => {
 
   const filteredInvitations = React.useMemo(() => {
     if (!searchQuery) return invitations;
-    return invitations.filter((invitation: any) => {
+    return invitations.filter((invitation: WorkspaceInvitation) => {
       const email = invitation.email || "";
       return email.toLowerCase().includes(searchQuery.toLowerCase());
     });
@@ -513,13 +547,13 @@ const MembersSection = () => {
   const roles = rolesData as WorkspaceRole[];
 
   const filteredMembers = React.useMemo(() => {
-    if (!searchQuery) return members;
-    return members.filter((member: any) => {
-      const user = member.public_user_data || member.user;
-      if (!user) return false;
-      const firstName = user.first_name || "";
-      const lastName = user.last_name || "";
-      const email = user.primary_email_address?.email || user.email || "";
+    if (!searchQuery) return members as unknown as WorkspaceMembershipResponse[];
+    return (members as unknown as WorkspaceMembershipResponse[]).filter((member: WorkspaceMembershipResponse) => {
+      const userData = member.public_user_data;
+      if (!userData) return false;
+      const firstName = userData.first_name || "";
+      const lastName = userData.last_name || "";
+      const email = userData.primary_email_address?.email || "";
       const fullName = `${firstName} ${lastName}`.trim();
       return (
         fullName.toLowerCase().includes(searchQuery.toLowerCase()) ||
@@ -534,7 +568,6 @@ const MembersSection = () => {
       toast?.("Member removed successfully", "info");
       reloadMembers();
     } catch (error) {
-      console.error("Failed to remove member:", error);
       toast?.("Failed to remove member", "error");
     }
   };
@@ -550,7 +583,7 @@ const MembersSection = () => {
       }
       reloadMembers();
     } catch (error) {
-      console.error("Failed to toggle role:", error);
+      toast?.("Failed to toggle role", "error");
       toast?.("Failed to update role", "error");
     }
   };
@@ -558,8 +591,8 @@ const MembersSection = () => {
   const getInitials = (firstName = "", lastName = "") =>
     `${firstName[0] || ""}${lastName[0] || ""}`.toUpperCase();
 
-  const memberHasRole = (member: any, roleId: string) =>
-    member.roles?.some((r: any) => r.id === roleId) || false;
+  const memberHasRole = (member: WorkspaceMembershipResponse, roleId: string) =>
+    member.roles?.some((r: WorkspaceRole) => r.id === roleId) || false;
 
   if (loading || membersLoading || rolesLoading) {
     return (
@@ -594,20 +627,20 @@ const MembersSection = () => {
             </TableRow>
           </TableHead>
           <TableBody>
-            {filteredMembers.map((member: any) => {
-              const user = member.public_user_data || member.user;
+            {filteredMembers.map((member: WorkspaceMembershipResponse) => {
+              const userData = member.public_user_data;
               const memberRoles = member.roles || [];
-              const isCurrentUser = user?.id === session?.active_signin?.user_id;
+              const isCurrentUser = userData?.id === session?.active_signin?.user_id;
 
               return (
                 <TableRow key={member.id}>
                   <TableCellFlex>
                     <div>
                       <AvatarPlaceholder>
-                        {user && user.profile_picture_url ? (
+                        {userData && userData.profile_picture_url ? (
                           <img
-                            src={user.profile_picture_url}
-                            alt={`${user.first_name || ""} ${user.last_name || ""}`}
+                            src={userData.profile_picture_url}
+                            alt={`${userData.first_name || ""} ${userData.last_name || ""}`}
                             style={{
                               width: "100%",
                               height: "100%",
@@ -615,19 +648,19 @@ const MembersSection = () => {
                             }}
                           />
                         ) : (
-                          getInitials(user?.first_name, user?.last_name) || "?"
+                          getInitials(userData?.first_name, userData?.last_name) || "?"
                         )}
                       </AvatarPlaceholder>
                       <div>
                         <div style={{ display: "flex", alignItems: "center", gap: "8px" }}>
                           <span style={{ fontSize: "14px", fontWeight: 500, color: "var(--color-foreground)" }}>
                             {(() => {
-                              if (!user) return "Unknown User";
+                              if (!userData) return "Unknown User";
 
-                              const fullName = `${user.first_name || ""} ${user.last_name || ""}`.trim();
+                              const fullName = `${userData.first_name || ""} ${userData.last_name || ""}`.trim();
                               if (fullName) return fullName;
 
-                              return user.primary_email_address?.email ||
+                              return userData.primary_email_address?.email ||
                                 "Unknown User";
                             })()}
                           </span>
@@ -646,7 +679,7 @@ const MembersSection = () => {
                           )}
                         </div>
                         <div style={{ fontSize: "13px", color: "var(--color-secondary-text)" }}>
-                          {user?.primary_email_address?.email}
+                          {userData?.primary_email_address?.email}
                         </div>
                       </div>
                     </div>
@@ -664,7 +697,7 @@ const MembersSection = () => {
                         <Button
                           style={{
                             background: "var(--color-background)",
-                            border: "1px solid #e5e7eb",
+                            border: "1px solid var(--color-border)",
                             borderRadius: "6px",
                             padding: "8px 12px",
                             fontSize: "14px",
@@ -811,7 +844,7 @@ const GeneralSettingsSection = () => {
         setTimeout(() => setShowSaveNotification(false), 3000);
       }
     } catch (error) {
-      console.error("Failed to auto-save workspace", error);
+      toast?.("Failed to auto-save workspace", "error");
     } finally {
       setIsAutoSaving(false);
     }
@@ -1261,7 +1294,7 @@ const RolesSection = () => {
       setRolePopover({ isOpen: false });
       reloadRoles();
     } catch (error) {
-      console.error("Failed to save role", error);
+      toast?.("Failed to save role", "error");
       toast?.("Failed to create role", "error");
     }
   };
@@ -1274,7 +1307,7 @@ const RolesSection = () => {
       setRoleForDeletion(null);
       reloadRoles();
     } catch (error) {
-      console.error("Failed to delete role", error);
+      toast?.("Failed to delete role", "error");
       toast?.("Failed to delete role", "error");
     }
   };

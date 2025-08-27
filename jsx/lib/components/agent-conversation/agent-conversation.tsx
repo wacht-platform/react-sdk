@@ -12,7 +12,7 @@ const ChatContainer = styled.div`
   flex-direction: column;
   width: 100%;
   height: 100%;
-  background: #ffffff;
+  background: var(--color-background);
   overflow: hidden;
 `;
 
@@ -21,8 +21,8 @@ const ChatHeader = styled.div`
   align-items: center;
   justify-content: space-between;
   padding: 16px 20px;
-  background: #ffffff;
-  border-bottom: 1px solid #f3f4f6;
+  background: var(--color-background);
+  border-bottom: 1px solid var(--color-border-subtle);
   flex-shrink: 0;
 `;
 
@@ -36,7 +36,7 @@ const AgentAvatar = styled.div`
   width: 36px;
   height: 36px;
   border-radius: 50%;
-  background: linear-gradient(135deg, #5b47e0 0%, #8b5cf6 100%);
+  background: var(--color-primary-gradient);
   display: flex;
   align-items: center;
   justify-content: center;
@@ -55,16 +55,16 @@ const StatusIndicator = styled.div<{ $status: string }>`
   margin-right: 6px;
   flex-shrink: 0;
   background-color: ${(props) => {
-    if (props.$status === "Connecting...") return "#f59e0b";
+    if (props.$status === "Connecting...") return "var(--color-warning)";
     if (
       props.$status === "Connection error" ||
       props.$status === "Disconnected"
     )
-      return "#ef4444";
-    if (props.$status === "Waiting for your input...") return "#3b82f6";
-    if (props.$status === "Working...") return "#8b5cf6";
-    if (props.$status === "Ready") return "#10b981";
-    return "#6b7280";
+      return "var(--color-error)";
+    if (props.$status === "Waiting for your input...") return "var(--color-info)";
+    if (props.$status === "Working...") return "var(--color-primary)";
+    if (props.$status === "Ready") return "var(--color-success)";
+    return "var(--color-secondary-text)";
   }};
   ${(props) =>
     props.$status === "Working..." &&
@@ -81,7 +81,7 @@ const AgentName = styled.h3`
   margin: 0;
   font-size: 14px;
   font-weight: 600;
-  color: #111827;
+  color: var(--color-foreground);
   letter-spacing: -0.01em;
 `;
 
@@ -89,16 +89,16 @@ const StatusText = styled.p<{ $status?: string }>`
   margin: 0;
   font-size: 11px;
   color: ${(props) => {
-    if (props.$status === "Connecting...") return "#f59e0b";
+    if (props.$status === "Connecting...") return "var(--color-warning)";
     if (
       props.$status === "Connection error" ||
       props.$status === "Disconnected"
     )
-      return "#ef4444";
-    if (props.$status === "Waiting for your input...") return "#3b82f6";
-    if (props.$status === "Working...") return "#8b5cf6";
-    if (props.$status === "Ready") return "#10b981";
-    return "#6b7280";
+      return "var(--color-error)";
+    if (props.$status === "Waiting for your input...") return "var(--color-info)";
+    if (props.$status === "Working...") return "var(--color-primary)";
+    if (props.$status === "Ready") return "var(--color-success)";
+    return "var(--color-secondary-text)";
   }};
   font-weight: 400;
 `;
@@ -113,23 +113,23 @@ const StatusBadge = styled.div<{ $status: string }>`
     switch (props.$status) {
       case "waiting_for_input":
         return `
-          background-color: #fef3c7;
-          color: #92400e;
+          background-color: var(--color-warning-background);
+          color: var(--color-warning-text);
         `;
       case "running":
         return `
-          background-color: #dbeafe;
-          color: #1e40af;
+          background-color: var(--color-info-background);
+          color: var(--color-info-text);
         `;
       case "completed":
         return `
-          background-color: #d1fae5;
-          color: #065f46;
+          background-color: var(--color-success-background);
+          color: var(--color-success-text);
         `;
       case "failed":
         return `
-          background-color: #fee2e2;
-          color: #991b1b;
+          background-color: var(--color-error-background);
+          color: var(--color-error-text);
         `;
       default:
         return "display: none;";
@@ -155,11 +155,11 @@ const MessagesContainer = styled.div`
   }
 
   &::-webkit-scrollbar-thumb {
-    background: #e5e7eb;
+    background: var(--color-border);
     border-radius: 3px;
 
     &:hover {
-      background: #d1d5db;
+      background: var(--color-border-hover);
     }
   }
 `;
@@ -184,14 +184,14 @@ const Message = styled.div<{ $isUser: boolean }>`
   ${(props) =>
     props.$isUser
       ? `
-    background: #5b47e0;
+    background: var(--color-primary);
     color: white;
     margin-left: auto;
     font-weight: 400;
   `
       : `
-    background: #f3f4f6;
-    color: #1e293b;
+    background: var(--color-background-subtle);
+    color: var(--color-foreground);
     margin-right: auto;
     font-weight: 400;
   `}
@@ -239,8 +239,8 @@ const PendingMessage = styled(Message)`
     transform: translateY(50%);
     width: 16px;
     height: 16px;
-    border: 2px solid rgba(255, 255, 255, 0.3);
-    border-top-color: white;
+    border: 2px solid var(--color-primary-muted);
+    border-top-color: var(--color-primary);
     border-radius: 50%;
     animation: spin 1s linear infinite;
   }
@@ -271,7 +271,7 @@ const LogMessage = styled.div<{
     top: 50%;
     width: 6px;
     height: 6px;
-    background: #e5e7eb;
+    background: var(--color-border);
     border-radius: 50%;
     transform: translateY(-50%);
   }
@@ -287,13 +287,13 @@ const LogMessage = styled.div<{
       top: -14px;
       width: 1px;
       height: 18px;
-      background: #e5e7eb;
+      background: var(--color-border);
     }
   `}
 
   .log-content {
     font-size: 11px;
-    color: #6b7280;
+    color: var(--color-secondary-text);
     background: transparent;
     padding: 2px 0 2px 24px;
     line-height: 1.4;
@@ -312,7 +312,7 @@ const EmptyState = styled.div`
   align-items: center;
   justify-content: center;
   text-align: center;
-  color: #6b7280;
+  color: var(--color-secondary-text);
   gap: 12px;
 
   p {
@@ -322,8 +322,8 @@ const EmptyState = styled.div`
 `;
 
 const UserInputRequestContainer = styled.div`
-  background: linear-gradient(to right, #f8f9ff 0%, #f3f4ff 100%);
-  border: 1px solid #e5e7ff;
+  background: var(--color-primary-background);
+  border: 1px solid var(--color-primary-border);
   border-radius: 8px;
   padding: 16px 20px;
   margin: 8px 0;
@@ -335,21 +335,21 @@ const UserInputRequestContainer = styled.div`
   .question {
     font-size: 13px;
     font-weight: 500;
-    color: #1f2937;
+    color: var(--color-foreground);
     margin-bottom: 6px;
     line-height: 1.4;
   }
 
   .context {
     font-size: 12px;
-    color: #6b7280;
+    color: var(--color-secondary-text);
     margin-bottom: 10px;
     line-height: 1.4;
   }
 
   .instruction {
     font-size: 11px;
-    color: #6366f1;
+    color: var(--color-primary);
     margin-top: 10px;
   }
 
@@ -362,20 +362,20 @@ const UserInputRequestContainer = styled.div`
     width: 100%;
     padding: 6px 10px;
     border-radius: 6px;
-    border: 1px solid #e2e8f0;
-    background: white;
+    border: 1px solid var(--color-border);
+    background: var(--color-background);
     font-size: 12px;
     font-family: inherit;
     transition: border-color 0.15s;
 
     &:focus:not(:disabled) {
       outline: none;
-      border-color: #6366f1;
+      border-color: var(--color-primary);
     }
 
     &:disabled {
-      background: #f9fafb;
-      color: #9ca3af;
+      background: var(--color-background-disabled);
+      color: var(--color-text-disabled);
       cursor: not-allowed;
     }
   }
@@ -393,7 +393,7 @@ const UserInputRequestContainer = styled.div`
     align-items: center;
     cursor: pointer;
     font-size: 12px;
-    color: #374151;
+    color: var(--color-foreground);
 
     input {
       margin-right: 8px;
@@ -406,12 +406,12 @@ const UserInputRequestContainer = styled.div`
     }
 
     &:hover:not(:has(input:disabled)) {
-      color: #1f2937;
+      color: var(--color-foreground);
     }
 
     &:has(input:disabled) {
       cursor: not-allowed;
-      color: #9ca3af;
+      color: var(--color-text-disabled);
     }
   }
 
@@ -423,8 +423,8 @@ const UserInputRequestContainer = styled.div`
 
 const InputForm = styled.form`
   padding: 20px;
-  background: #ffffff;
-  border-top: 1px solid #e5e7eb;
+  background: var(--color-background);
+  border-top: 1px solid var(--color-border);
   flex-shrink: 0;
 `;
 
@@ -432,8 +432,8 @@ const InputContainer = styled.div`
   position: relative;
   display: flex;
   align-items: flex-end;
-  background: #f3f4f6;
-  border: 1px solid #e5e7eb;
+  background: var(--color-background-subtle);
+  border: 1px solid var(--color-border);
   border-radius: 12px;
   padding: 8px 8px 8px 20px;
   min-height: 56px;
@@ -454,7 +454,7 @@ const MessageInput = styled.textarea`
   background: transparent;
   font-size: 13px;
   line-height: 1.5;
-  color: #111827;
+  color: var(--color-foreground);
   outline: none;
   resize: none;
   font-family: inherit;
@@ -462,11 +462,11 @@ const MessageInput = styled.textarea`
   max-height: 200px;
 
   &::placeholder {
-    color: #6b7280;
+    color: var(--color-placeholder);
   }
 
   &:disabled {
-    color: #9ca3af;
+    color: var(--color-text-disabled);
     cursor: not-allowed;
   }
 `;
@@ -479,10 +479,10 @@ const ActionButtons = styled.div`
 
 const ActionButton = styled.button`
   padding: 4px 10px;
-  border: 1px solid #d1d5db;
+  border: 1px solid var(--color-border);
   border-radius: 8px;
   background: transparent;
-  color: #374151;
+  color: var(--color-foreground);
   font-size: 12px;
   font-weight: 400;
   cursor: pointer;
@@ -493,13 +493,13 @@ const ActionButton = styled.button`
   white-space: nowrap;
 
   &:hover {
-    background: rgba(229, 231, 235, 0.5);
-    border-color: #9ca3af;
+    background: var(--color-background-hover);
+    border-color: var(--color-border-hover);
   }
 
   &:disabled {
-    color: #9ca3af;
-    border-color: #e5e7eb;
+    color: var(--color-text-disabled);
+    border-color: var(--color-border);
     cursor: not-allowed;
   }
 `;
@@ -509,7 +509,7 @@ const SendButton = styled.button`
   padding: 6px;
   border: none;
   border-radius: 6px;
-  background: #6b7280;
+  background: var(--color-secondary);
   color: white;
   cursor: pointer;
   display: flex;
@@ -521,12 +521,12 @@ const SendButton = styled.button`
   flex-shrink: 0;
 
   &:hover:not(:disabled) {
-    background: #4b5563;
+    background: var(--color-secondary-hover);
   }
 
   &:disabled {
-    background: #e5e7eb;
-    color: #9ca3af;
+    background: var(--color-background-disabled);
+    color: var(--color-text-disabled);
     cursor: not-allowed;
   }
 `;
@@ -534,6 +534,7 @@ const SendButton = styled.button`
 export interface AgentConversationProps {
   contextId: string;
   agentName: string;
+  onTokenNeeded: () => Promise<string>;
   platformAdapter?: {
     onPlatformEvent?: (eventName: string, eventData: unknown) => void;
     onPlatformFunction?: (
@@ -551,6 +552,7 @@ export interface AgentConversationProps {
 export function AgentConversation({
   contextId,
   agentName,
+  onTokenNeeded,
   platformAdapter,
   autoConnect = true,
   showEmptyState = true,
@@ -578,6 +580,7 @@ export function AgentConversation({
   } = useAgentConversation({
     contextId,
     agentName,
+    onTokenNeeded,
     platformAdapter,
     autoConnect,
   });
@@ -937,7 +940,7 @@ export function AgentConversation({
               style={{
                 background:
                   isExecuting && isHoveringCancel
-                    ? "#ef4444"
+                    ? "var(--color-error)"
                     : undefined,
               }}
             >

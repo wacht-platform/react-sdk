@@ -9,6 +9,15 @@ export {
   AgentConversation,
   UserInputRequestComponent
 } from "./agent-conversation";
+export { 
+  ContextManager,
+  type ContextManagerAPI,
+  type ExecutionContext,
+  type CreateContextRequest,
+  type ListContextsOptions,
+  type ListContextsResponse
+} from "./context-manager";
+export { AgentConversationManager } from "./agent-conversation-manager";
 export * from "./utility/dialog";
 export * from "./utility/dropdown";
 export * from "./utility/form";

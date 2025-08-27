@@ -32,7 +32,7 @@ export const TwoFactorCard = styled.button`
     background: var(--color-background-hover);
     border-color: var(--color-primary);
     transform: translateY(-2px);
-    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.08);
+    box-shadow: 0 4px 12px var(--color-shadow);
     
     &::before {
       transform: translateX(0);
@@ -56,8 +56,8 @@ export const TwoFactorIcon = styled.div<{ $active?: boolean }>`
   justify-content: center;
   margin-right: 16px;
   box-shadow: ${props => props.$active 
-    ? '0 2px 8px rgba(34, 197, 94, 0.2)' 
-    : '0 2px 4px rgba(0, 0, 0, 0.05)'};
+    ? '0 2px 8px var(--color-success-shadow)' 
+    : '0 2px 4px var(--color-shadow-light)'};
   
   svg {
     width: 24px;
@@ -110,10 +110,10 @@ export const QRCodeContainer = styled.div`
 `;
 
 export const QRCodeWrapper = styled.div`
-  background: white;
+  background: var(--color-background);
   padding: 24px;
   border-radius: 16px;
-  box-shadow: 0 4px 16px rgba(0, 0, 0, 0.1);
+  box-shadow: 0 4px 16px var(--color-shadow);
   position: relative;
   
   &::before {
@@ -177,6 +177,9 @@ export const BackupCodeGrid = styled.div`
   gap: 8px;
 `;
 
+// Alias for compatibility
+export const BackupCodesGrid = BackupCodeGrid;
+
 export const BackupCodeItem = styled.button<{ $used?: boolean }>`
   background: ${props => props.$used 
     ? 'var(--color-background-hover)' 
@@ -203,7 +206,7 @@ export const BackupCodeItem = styled.button<{ $used?: boolean }>`
       border-color: var(--color-primary);
       background: var(--color-primary-background);
       transform: translateY(-1px);
-      box-shadow: 0 2px 4px rgba(0, 0, 0, 0.05);
+      box-shadow: 0 2px 4px var(--color-shadow-light);
     `}
   }
   
@@ -371,7 +374,7 @@ export const ButtonGroup = styled.div`
 
 // Active authenticator display
 export const ActiveAuthenticator = styled.div`
-  background: linear-gradient(135deg, var(--color-success-background), rgba(34, 197, 94, 0.05));
+  background: linear-gradient(135deg, var(--color-success-background), var(--color-success-background-light));
   border: 1px solid var(--color-success-border);
   border-radius: 12px;
   padding: 20px;
@@ -504,14 +507,14 @@ export const PrimaryButton = styled.button`
     width: 0;
     height: 0;
     border-radius: 50%;
-    background: rgba(255, 255, 255, 0.2);
+    background: var(--color-button-ripple);
     transform: translate(-50%, -50%);
     transition: width 0.6s, height 0.6s;
   }
   
   &:hover:not(:disabled) {
     transform: translateY(-1px);
-    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
+    box-shadow: 0 4px 12px var(--color-shadow-medium);
   }
   
   &:active:not(:disabled) {
@@ -575,6 +578,51 @@ export const DangerButton = styled.button`
   &:active:not(:disabled) {
     transform: translateY(0);
   }
+  
+  &:disabled {
+    opacity: 0.6;
+    cursor: not-allowed;
+  }
+`;
+
+export const ActionButton = styled.button<{ $variant?: 'primary' | 'secondary' | 'danger' }>`
+  padding: 8px 16px;
+  border-radius: 6px;
+  font-size: 14px;
+  font-weight: 500;
+  cursor: pointer;
+  transition: all 0.2s ease;
+  border: none;
+  
+  ${props => {
+    switch (props.$variant) {
+      case 'primary':
+        return `
+          background: var(--color-primary);
+          color: white;
+          &:hover:not(:disabled) {
+            background: var(--color-primary-hover);
+          }
+        `;
+      case 'danger':
+        return `
+          background: var(--color-error);
+          color: white;
+          &:hover:not(:disabled) {
+            background: var(--color-error-hover);
+          }
+        `;
+      default:
+        return `
+          background: var(--color-background);
+          color: var(--color-foreground);
+          border: 1px solid var(--color-border);
+          &:hover:not(:disabled) {
+            background: var(--color-background-hover);
+          }
+        `;
+    }
+  }}
   
   &:disabled {
     opacity: 0.6;

@@ -6,7 +6,9 @@ import { ApiResult } from "@/types";
 import { 
   Notification, 
   NotificationListResponse, 
-  BulkUpdateResponse 
+  BulkUpdateResponse,
+  NotificationListParams,
+  ChannelCounts
 } from "@/types/notification";
 import { Client } from "@/types";
 import { useNotificationStream, type NotificationMessage } from "./use-notification-stream";
@@ -16,6 +18,8 @@ type UseNotificationsReturnType =
       loading: true;
       notifications: never;
       unreadCount: never;
+      unreadCounts: never;
+      channels: never;
       hasMore: never;
       markAsRead: never;
       markAllAsRead: never;
@@ -28,6 +32,8 @@ type UseNotificationsReturnType =
       error: Error | null;
       notifications: Notification[];
       unreadCount: number;
+      unreadCounts: ChannelCounts;
+      channels: string[];
       hasMore: boolean;
       markAsRead: (notificationId: string) => Promise<void>;
       markAllAsRead: () => Promise<void>;
@@ -35,11 +41,40 @@ type UseNotificationsReturnType =
       refetch: () => Promise<void>;
     };
 
-async function fetchNotifications(client: Client): Promise<NotificationListResponse> {
-  const response = await client("/notifications", {
+async function fetchNotifications(client: Client, params?: NotificationListParams): Promise<NotificationListResponse> {
+  const queryString = new URLSearchParams();
+  
+  if (params) {
+    if (params.limit) queryString.append('limit', params.limit.toString());
+    if (params.offset) queryString.append('offset', params.offset.toString());
+    if (params.channels) {
+      params.channels.forEach(channel => queryString.append('channels', channel));
+    }
+    if (params.organization_ids) {
+      params.organization_ids.forEach(id => queryString.append('organization_ids', id.toString()));
+    }
+    if (params.workspace_ids) {
+      params.workspace_ids.forEach(id => queryString.append('workspace_ids', id.toString()));
+    }
+    if (params.is_read !== undefined) queryString.append('is_read', params.is_read.toString());
+    if (params.is_archived !== undefined) queryString.append('is_archived', params.is_archived.toString());
+    if (params.severity) queryString.append('severity', params.severity);
+  }
+  
+  const url = `/notifications${queryString.toString() ? '?' + queryString.toString() : ''}`;
+  
+  const response = await client(url, {
     method: "GET",
   });
   const responseParsed = await responseMapper<NotificationListResponse>(response);
+  return responseParsed.data;
+}
+
+export async function fetchChannelCounts(client: Client): Promise<ChannelCounts> {
+  const response = await client("/notifications/channel-counts", {
+    method: "GET",
+  });
+  const responseParsed = await responseMapper<ChannelCounts>(response);
   return responseParsed.data;
 }
 
@@ -72,7 +107,7 @@ async function deleteNotification(
   return responseMapper(response);
 }
 
-export function useNotifications(): UseNotificationsReturnType {
+export function useNotifications(params?: NotificationListParams): UseNotificationsReturnType {
   const { client, loading: clientLoading } = useClient();
 
   const {
@@ -80,8 +115,8 @@ export function useNotifications(): UseNotificationsReturnType {
     error,
     mutate: refetch,
   } = useSWR(
-    !clientLoading ? ["notifications"] : null,
-    () => fetchNotifications(client),
+    !clientLoading ? ["notifications", JSON.stringify(params)] : null,
+    () => fetchNotifications(client, params),
     {
       refreshInterval: 60000, // Poll every 60 seconds as fallback
       revalidateOnFocus: true,
@@ -132,8 +167,8 @@ export function useNotifications(): UseNotificationsReturnType {
       [refetch]
     ),
     onError: useCallback(
-      (error: string) => {
-        console.error('Notification stream error:', error);
+      () => {
+        // Notification stream error
       },
       []
     ),
@@ -141,7 +176,7 @@ export function useNotifications(): UseNotificationsReturnType {
 
   useEffect(() => {
     if (isConnected) {
-      console.log('Real-time notifications connected');
+      // Real-time notifications connected
     }
   }, [isConnected]);
 
@@ -235,6 +270,8 @@ export function useNotifications(): UseNotificationsReturnType {
       loading: true,
       notifications: undefined as never,
       unreadCount: undefined as never,
+      unreadCounts: undefined as never,
+      channels: undefined as never,
       hasMore: undefined as never,
       markAsRead: undefined as never,
       markAllAsRead: undefined as never,
@@ -249,6 +286,8 @@ export function useNotifications(): UseNotificationsReturnType {
     error,
     notifications: data.notifications,
     unreadCount: data.unread_count,
+    unreadCounts: data.unread_counts,
+    channels: data.channels,
     hasMore: data.has_more,
     markAsRead,
     markAllAsRead,

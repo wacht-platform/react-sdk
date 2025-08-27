@@ -64,7 +64,7 @@ export function OtherAuthOptions() {
         window.location.href = data.oauth_url as string;
       }
     } catch (err) {
-      console.error(err);
+      // OAuth sign-in error
     } finally {
       setIsSubmitting(false);
     }

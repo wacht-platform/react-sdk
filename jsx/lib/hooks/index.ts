@@ -14,5 +14,6 @@ export * from "./use-forgot-password";
 export * from "./use-profile-completion";
 export * from "./use-notifications";
 export * from "./use-notification-stream";
+export * from "./use-channel-counts";
 export { useAgentConversation } from "./use-agent-conversation";
 export type { UserInputRequest, ConversationMessage } from "./use-agent-conversation";

@@ -46,7 +46,7 @@ const StyledTabList = styled.div<{ $orientation?: "horizontal" | "vertical" }>`
   background: ${(props) =>
     props.$orientation === "vertical"
       ? "var(--color-background)"
-      : "linear-gradient(to bottom, var(--color-background), rgba(var(--color-border-rgb), 0.1))"};
+      : "linear-gradient(to bottom, var(--color-background), var(--color-background-subtle))"};
   gap: ${(props) => (props.$orientation === "vertical" ? "6px" : "0")};
   padding: ${(props) => (props.$orientation === "vertical" ? "12px" : "0 8px")};
   min-width: ${(props) => (props.$orientation === "vertical" ? "220px" : "auto")};
@@ -104,7 +104,7 @@ const StyledTab = styled.button<{
           : "var(--color-background-hover)"
         : props.$active
         ? "var(--color-background)"
-        : "rgba(var(--color-primary-rgb), 0.05)"};
+        : "var(--color-primary-background)"};
     transform: ${(props) =>
       props.$orientation === "vertical" ? "none" : "translateY(-1px)"};
   }

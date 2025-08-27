@@ -48,7 +48,7 @@ export const QRCodeWrapper = styled.div`
   justify-content: center;
   margin: 16px 0;
   padding: 16px;
-  background: white;
+  background: var(--color-background);
   border-radius: 8px;
   border: 1px solid var(--color-border);
 `;

@@ -5,9 +5,16 @@ import { Input } from "@/components/utility/input";
 import { FormGroup, Label } from "../utility/form";
 import { Button, Spinner } from "../utility";
 import { OrganizationRole } from "@/types";
+
+interface CreateRoleData {
+  id?: string;
+  name: string;
+  permissions: string[];
+}
 import { useDeployment } from "@/hooks/use-deployment";
 import { ComboBoxMulti } from "../utility/combo-box";
 import { useActiveOrganization } from "@/hooks/use-organization";
+import { useScreenContext } from "./context";
 
 const PopoverContainer = styled.div<{ $isInTable?: boolean }>`
   position: fixed;
@@ -74,7 +81,7 @@ const CloseButton = styled.button`
 
 interface AddRolePopoverProps {
   onClose?: () => void;
-  onSuccess?: (role: OrganizationRole) => void;
+  onSuccess?: (role: CreateRoleData) => void;
   role?: OrganizationRole;
   triggerRef?: React.RefObject<HTMLElement | null>;
 }
@@ -95,6 +102,7 @@ export const AddRolePopover = ({
   const [mounted, setMounted] = useState(false);
   const [position, setPosition] = useState({ top: 0, left: 0 });
   const { deployment } = useDeployment();
+  const { toast } = useScreenContext();
 
   const isEditing = !!role;
 
@@ -170,30 +178,64 @@ export const AddRolePopover = ({
       }
     };
     
-    // Delay adding the listener to prevent immediate closure
+    // Add escape key listener
+    const handleEscape = (e: KeyboardEvent) => {
+      if (e.key === "Escape") {
+        onClose?.();
+      }
+    };
+    
+    // Delay adding the listeners to prevent immediate closure
     const listenerTimer = setTimeout(() => {
       document.addEventListener('mousedown', handleClickOutside);
+      document.addEventListener('keydown', handleEscape);
     }, 100);
     
     return () => {
       clearTimeout(timer);
       clearTimeout(listenerTimer);
       document.removeEventListener('mousedown', handleClickOutside);
+      document.removeEventListener('keydown', handleEscape);
     };
   }, [onClose, isEditing, triggerRef]);
 
+  const sanitizeRoleName = (name: string): string => {
+    return name.trim().replace(/[<>\"'&]/g, ''); // Remove potentially dangerous characters
+  };
+
+  const validateRoleName = (name: string): boolean => {
+    return name.length >= 2 && name.length <= 50 && /^[a-zA-Z0-9\s_-]+$/.test(name);
+  };
+
   const handleSave = async () => {
-    if (!name.trim()) return;
+    const sanitizedName = sanitizeRoleName(name);
+    
+    if (!sanitizedName) {
+      toast("Please enter a role name", "error");
+      return;
+    }
+
+    if (!validateRoleName(sanitizedName)) {
+      toast("Role name must be 2-50 characters and contain only letters, numbers, spaces, underscores, and hyphens", "error");
+      return;
+    }
+
+    if (permissions.length === 0) {
+      toast("Please select at least one permission", "error");
+      return;
+    }
+
     setLoading(true);
     try {
-      const roleData: any = {
+      const roleData: CreateRoleData = {
         id: role?.id,
-        name: name || "",
+        name: sanitizedName,
         permissions: permissions || [],
       };
       onSuccess?.(roleData);
-    } catch (error) {
-      console.error("Failed to save role", error);
+    } catch (error: any) {
+      const errorMessage = error.message || `Failed to ${isEditing ? 'update' : 'create'} role. Please try again.`;
+      toast(errorMessage, "error");
     } finally {
       setLoading(false);
     }
@@ -213,10 +255,13 @@ export const AddRolePopover = ({
           visibility: position.top > 0 ? 'visible' : 'hidden'
         }}
         onClick={(e) => e.stopPropagation()}
+        role="dialog"
+        aria-labelledby="role-dialog-title"
+        aria-modal="true"
       >
       <Header>
-        <Title>{isEditing ? "Edit Role" : "Create New Role"}</Title>
-        <CloseButton onClick={onClose}>
+        <Title id="role-dialog-title">{isEditing ? "Edit Role" : "Create New Role"}</Title>
+        <CloseButton onClick={onClose} aria-label={`Close ${isEditing ? 'edit' : 'create'} role dialog`}>
           <X size={16} />
         </CloseButton>
       </Header>
@@ -231,6 +276,8 @@ export const AddRolePopover = ({
               value={name}
               onChange={(e) => setName(e.target.value)}
               autoFocus
+              aria-label="Role name"
+              aria-describedby="role-name-help"
             />
           </FormGroup>
 
@@ -241,6 +288,7 @@ export const AddRolePopover = ({
               value={permissions}
               onChange={setPermissions}
               placeholder="Select permissions"
+              aria-label="Select permissions for role"
             />
           </FormGroup>
         </div>

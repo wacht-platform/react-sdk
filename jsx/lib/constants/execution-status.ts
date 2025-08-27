@@ -45,7 +45,7 @@ export function mapBackendToFrontendStatus(backendStatus: string): FrontendStatu
     case BACKEND_STATUS.CANCELLED:
       return FRONTEND_STATUS.FAILED;
     default:
-      console.warn(`Unknown backend status: ${backendStatus}`);
+      // Unknown backend status
       return FRONTEND_STATUS.IDLE;
   }
 }
@@ -68,7 +68,7 @@ export function mapFrontendToBackendStatus(frontendStatus: FrontendStatus): Back
     case FRONTEND_STATUS.FAILED:
       return BACKEND_STATUS.FAILED;
     default:
-      console.warn(`Unknown frontend status: ${frontendStatus}`);
+      // Unknown frontend status
       return BACKEND_STATUS.IDLE;
   }
 }

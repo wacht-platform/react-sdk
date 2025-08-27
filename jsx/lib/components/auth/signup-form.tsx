@@ -462,7 +462,7 @@ export function SignUpForm() {
 
   useEffect(() => {
     const newErrors: Record<string, string> = {};
-    console.log("signUpErrors", signUpErrors);
+    // SignUp errors logged
     if (signUpErrors?.errors) {
       if (Array.isArray(signUpErrors?.errors)) {
         for (const err of signUpErrors.errors) {
@@ -497,7 +497,7 @@ export function SignUpForm() {
       }
     }
 
-    console.log("newErrors", newErrors);
+    // New validation errors
     setErrors(newErrors);
   }, [signUpErrors]);
 

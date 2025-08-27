@@ -13,15 +13,18 @@ export interface Notification {
   read_at?: string;
   is_archived: boolean;
   archived_at?: string;
-  group_id?: string;
-  group_count: number;
-  dedupe_key?: string;
-  source?: string;
-  source_id?: string;
   metadata?: Record<string, any>;
   created_at: string;
   updated_at: string;
   expires_at?: string;
+}
+
+export interface ChannelCounts {
+  user: number;
+  organization: number;
+  workspace: number;
+  current: number;
+  total: number;
 }
 
 export interface NotificationListResponse {
@@ -29,10 +32,23 @@ export interface NotificationListResponse {
   total: number;
   unread_count: number;
   has_more: boolean;
+  channels: string[];
+  unread_counts: ChannelCounts;
 }
 
 export interface UnreadCountResponse {
   count: number;
+}
+
+export interface NotificationListParams {
+  limit?: number;
+  offset?: number;
+  channels?: string[];
+  organization_ids?: number[];
+  workspace_ids?: number[];
+  is_read?: boolean;
+  is_archived?: boolean;
+  severity?: "info" | "success" | "warning" | "error";
 }
 
 export interface BulkUpdateResponse {

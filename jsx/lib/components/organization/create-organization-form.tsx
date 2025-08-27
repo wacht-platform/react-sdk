@@ -1,7 +1,8 @@
-import { useState, useRef } from "react";
+import { useState, useRef, useEffect } from "react";
 import styled from "styled-components";
 import { useOrganizationList } from "@/hooks/use-organization";
 import { ChevronLeft } from "lucide-react";
+import { useScreenContext } from "./context";
 
 const Container = styled.div`
   display: flex;
@@ -11,14 +12,14 @@ const Container = styled.div`
 
 const LeftPanel = styled.div`
   width: 35%;
-  background: #f8f9fa;
+  background: var(--color-background-hover);
   padding: 32px;
   display: flex;
   flex-direction: column;
   align-items: center;
   justify-content: center;
   text-align: center;
-  border-right: 1px solid #e5e7eb;
+  border-right: 1px solid var(--color-border);
 `;
 
 const RightPanel = styled.div`
@@ -33,8 +34,8 @@ const AvatarContainer = styled.div<{ hasImage: boolean }>`
   height: 80px;
   border-radius: 16px;
   overflow: hidden;
-  background: ${(props) => (props.hasImage ? "transparent" : "#ffffff")};
-  border: 2px solid #e5e7eb;
+  background: ${(props) => (props.hasImage ? "transparent" : "var(--color-background)")};
+  border: 2px solid var(--color-border);
   display: flex;
   align-items: center;
   justify-content: center;
@@ -44,7 +45,7 @@ const AvatarContainer = styled.div<{ hasImage: boolean }>`
   position: relative;
 
   &:hover {
-    border-color: #d1d5db;
+    border-color: var(--color-border-hover);
     transform: scale(1.02);
   }
 `;
@@ -58,8 +59,8 @@ const AvatarImage = styled.img`
 const AvatarPlaceholder = styled.div`
   font-size: 32px;
   font-weight: 600;
-  color: #9ca3af;
-  background: #e5e7eb;
+  color: var(--color-muted);
+  background: var(--color-border);
   width: 100%;
   height: 100%;
   display: flex;
@@ -70,13 +71,13 @@ const AvatarPlaceholder = styled.div`
 const Title = styled.h2`
   font-size: 16px;
   font-weight: 400;
-  color: #111827;
+  color: var(--color-foreground);
   margin-bottom: 8px;
 `;
 
 const Description = styled.p`
   font-size: 13px;
-  color: #6b7280;
+  color: var(--color-secondary-text);
   line-height: 1.4;
   max-width: 200px;
 `;
@@ -88,13 +89,13 @@ const FormHeader = styled.div`
 const FormTitle = styled.h3`
   font-size: 16px;
   font-weight: 500;
-  color: #111827;
+  color: var(--color-foreground);
   margin-bottom: 6px;
 `;
 
 const FormDescription = styled.p`
   font-size: 13px;
-  color: #6b7280;
+  color: var(--color-secondary-text);
   line-height: 1.4;
 `;
 
@@ -111,59 +112,59 @@ const Label = styled.label`
   margin-bottom: 6px;
   font-size: 13px;
   font-weight: 500;
-  color: #374151;
+  color: var(--color-foreground);
 `;
 
 const Input = styled.input`
   width: 100%;
   padding: 8px 12px;
-  border: 1px solid #e5e7eb;
+  border: 1px solid var(--color-border);
   border-radius: 6px;
   font-size: 14px;
   outline: none;
-  background: #ffffff;
-  color: #111827;
+  background: var(--color-background);
+  color: var(--color-foreground);
   transition: all 0.2s ease;
   box-sizing: border-box;
 
   &:focus {
-    border-color: #6366f1;
-    box-shadow: 0 0 0 3px rgba(99, 102, 241, 0.1);
+    border-color: var(--color-primary);
+    box-shadow: 0 0 0 3px var(--color-primary-background);
   }
 
   &::placeholder {
-    color: #9ca3af;
+    color: var(--color-muted);
   }
 `;
 
 const TextArea = styled.textarea`
   width: 100%;
   padding: 8px 12px;
-  border: 1px solid #e5e7eb;
+  border: 1px solid var(--color-border);
   border-radius: 6px;
   font-size: 14px;
   outline: none;
   resize: vertical;
   min-height: 80px;
-  background: #ffffff;
-  color: #111827;
+  background: var(--color-background);
+  color: var(--color-foreground);
   transition: all 0.2s ease;
   font-family: inherit;
   box-sizing: border-box;
 
   &:focus {
-    border-color: #6366f1;
-    box-shadow: 0 0 0 3px rgba(99, 102, 241, 0.1);
+    border-color: var(--color-primary);
+    box-shadow: 0 0 0 3px var(--color-primary-background);
   }
 
   &::placeholder {
-    color: #9ca3af;
+    color: var(--color-muted);
   }
 `;
 
 const HelperText = styled.div`
   font-size: 12px;
-  color: #6b7280;
+  color: var(--color-secondary-text);
   margin-top: 4px;
 `;
 
@@ -184,12 +185,12 @@ const BackButton = styled.button`
   border: none;
   font-size: 13px;
   font-weight: 500;
-  color: #6b7280;
+  color: var(--color-secondary-text);
   cursor: pointer;
   transition: all 0.2s ease;
 
   &:hover {
-    color: #111827;
+    color: var(--color-foreground);
   }
 `;
 
@@ -200,14 +201,14 @@ const SubmitButton = styled.button`
   font-weight: 500;
   cursor: pointer;
   transition: all 0.2s ease;
-  background: #6366f1;
+  background: var(--color-primary);
   color: white;
   border: none;
 
   &:hover:not(:disabled) {
-    background: #4f46e5;
+    background: var(--color-primary-hover);
     transform: translateY(-1px);
-    box-shadow: 0 4px 12px rgba(99, 102, 241, 0.25);
+    box-shadow: 0 4px 12px var(--color-primary-shadow);
   }
 
   &:disabled {
@@ -223,7 +224,7 @@ const HiddenInput = styled.input`
 const UploadOverlay = styled.div`
   position: absolute;
   inset: 0;
-  background: rgba(0, 0, 0, 0.5);
+  background: var(--color-dialog-backdrop);
   display: flex;
   align-items: center;
   justify-content: center;
@@ -259,6 +260,7 @@ export const CreateOrganizationForm: React.FC<CreateOrganizationFormProps> = ({
   const [isSubmitting, setIsSubmitting] = useState(false);
   const fileInputRef = useRef<HTMLInputElement>(null);
   const { createOrganization } = useOrganizationList();
+  const { toast } = useScreenContext();
 
   // Auto-generate slug from name
   const handleNameChange = (value: string) => {
@@ -274,9 +276,21 @@ export const CreateOrganizationForm: React.FC<CreateOrganizationFormProps> = ({
     if (event.target.files && event.target.files[0]) {
       const file = event.target.files[0];
 
+      // Validate file size
       if (file.size > 2 * 1024 * 1024) {
-        alert("File size cannot exceed 2MB");
+        toast("File size cannot exceed 2MB", "error");
         return;
+      }
+
+      // Validate file type
+      if (!file.type.startsWith('image/')) {
+        toast("Please select a valid image file", "error");
+        return;
+      }
+
+      // Revoke previous object URL to prevent memory leaks
+      if (previewUrl) {
+        URL.revokeObjectURL(previewUrl);
       }
 
       setImage(file);
@@ -299,19 +313,53 @@ export const CreateOrganizationForm: React.FC<CreateOrganizationFormProps> = ({
     );
   };
 
+  // Cleanup object URL on unmount to prevent memory leaks
+  useEffect(() => {
+    return () => {
+      if (previewUrl) {
+        URL.revokeObjectURL(previewUrl);
+      }
+    };
+  }, [previewUrl]);
+
+  const sanitizeText = (text: string): string => {
+    return text.trim().replace(/[<>\"'&]/g, '');
+  };
+
+  const validateOrganizationName = (name: string): boolean => {
+    return name.length >= 2 && name.length <= 100 && /^[a-zA-Z0-9\s_.-]+$/.test(name);
+  };
+
   const handleSubmit = async () => {
-    if (!name.trim()) return;
+    const sanitizedName = sanitizeText(name);
+    const sanitizedDescription = sanitizeText(description);
+
+    if (!sanitizedName) {
+      toast("Please enter an organization name", "error");
+      return;
+    }
+
+    if (!validateOrganizationName(sanitizedName)) {
+      toast("Organization name must be 2-100 characters and contain only letters, numbers, spaces, dots, underscores, and hyphens", "error");
+      return;
+    }
+
+    if (sanitizedDescription.length > 500) {
+      toast("Description must be less than 500 characters", "error");
+      return;
+    }
 
     setIsSubmitting(true);
     try {
       await createOrganization({
-        name,
-        description,
+        name: sanitizedName,
+        description: sanitizedDescription,
         image,
       });
       onSuccess?.();
-    } catch (error) {
-      console.error("Failed to create organization:", error);
+    } catch (error: any) {
+      const errorMessage = error.message || "Failed to create organization. Please try again.";
+      toast(errorMessage, "error");
     } finally {
       setIsSubmitting(false);
     }

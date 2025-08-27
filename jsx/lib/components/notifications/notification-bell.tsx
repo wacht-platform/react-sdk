@@ -1,4 +1,5 @@
 import { useState, useRef, useEffect } from "react";
+import ReactDOM from "react-dom";
 import styled from "styled-components";
 import { BellRing } from "lucide-react";
 import { DefaultStylesProvider } from "../utility/root";
@@ -73,29 +74,113 @@ const Badge = styled.span`
   align-items: center;
   justify-content: center;
   border: 2px solid var(--color-background);
-  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
+  box-shadow: 0 1px 3px var(--color-shadow);
 `;
 
 interface NotificationBellProps {
   className?: string;
   showBadge?: boolean;
+  channels?: string[];
+  organizationIds?: number[];
+  workspaceIds?: number[];
 }
 
-export function NotificationBell({ className, showBadge = true }: NotificationBellProps) {
+export function NotificationBell({ 
+  className, 
+  showBadge = true, 
+  channels = ["user"], 
+  organizationIds, 
+  workspaceIds 
+}: NotificationBellProps) {
   const [isOpen, setIsOpen] = useState(false);
+  const [popoverPosition, setPopoverPosition] = useState<{ top?: number; bottom?: number; left?: number; right?: number } | undefined>();
   const containerRef = useRef<HTMLDivElement>(null);
-  const { unreadCount, notifications, loading, markAsRead, markAllAsRead, deleteNotification } = useNotifications();
+  const popoverRef = useRef<HTMLDivElement>(null);
+  
+  const notificationParams = {
+    channels,
+    organization_ids: organizationIds,
+    workspace_ids: workspaceIds,
+    limit: 20,
+  };
+  
+  const { unreadCount, notifications, loading, markAsRead, markAllAsRead, deleteNotification } = useNotifications(notificationParams);
 
   useEffect(() => {
-    function handleClickOutside(event: MouseEvent) {
-      if (containerRef.current && !containerRef.current.contains(event.target as Node)) {
+    if (!isOpen) return;
+    
+    const timer = setTimeout(() => {
+      const handleClickOutside = (event: MouseEvent) => {
+        const target = event.target as Node;
+        
+        if (containerRef.current?.contains(target)) {
+          return;
+        }
+        
+        if (popoverRef.current?.contains(target)) {
+          return;
+        }
+        
         setIsOpen(false);
-      }
-    }
+      };
 
-    if (isOpen) {
       document.addEventListener("mousedown", handleClickOutside);
-      return () => document.removeEventListener("mousedown", handleClickOutside);
+      
+      return () => {
+        document.removeEventListener("mousedown", handleClickOutside);
+      };
+    }, 50);
+    
+    return () => {
+      clearTimeout(timer);
+    };
+  }, [isOpen]);
+
+  // Update popover position when open
+  useEffect(() => {
+    if (isOpen && containerRef.current) {
+      const rect = containerRef.current.getBoundingClientRect();
+      const popoverWidth = 400;
+      const popoverHeight = 600;
+      
+      const windowWidth = window.innerWidth;
+      const windowHeight = window.innerHeight;
+      
+      // Calculate available space
+      const spaceRight = windowWidth - rect.left;
+      const spaceBelow = windowHeight - rect.bottom;
+      const spaceAbove = rect.top;
+      
+      // Determine horizontal position
+      let left: number | undefined;
+      let right: number | undefined;
+      
+      if (spaceRight >= popoverWidth) {
+        // Align left edge with button
+        left = rect.left;
+      } else {
+        // Not enough space on right, align right edge with button right
+        right = windowWidth - rect.right;
+      }
+      
+      // Determine vertical position
+      let top: number | undefined;
+      let bottom: number | undefined;
+      
+      if (spaceBelow >= popoverHeight + 8) {
+        // Position below
+        top = rect.bottom + 8;
+      } else if (spaceAbove >= popoverHeight + 8) {
+        // Position above
+        bottom = windowHeight - rect.top + 8;
+      } else {
+        // Not enough space, position below with limited height
+        top = rect.bottom + 8;
+      }
+      
+      setPopoverPosition({ top, bottom, left, right });
+    } else {
+      setPopoverPosition(undefined);
     }
   }, [isOpen]);
 
@@ -111,14 +196,19 @@ export function NotificationBell({ className, showBadge = true }: NotificationBe
           </NotificationButton>
         </CircularContainer>
         
-        {isOpen && (
-          <NotificationPopover
-            notifications={notifications}
-            loading={loading}
-            onMarkAsRead={markAsRead}
-            onMarkAllAsRead={markAllAsRead}
-            onDelete={deleteNotification}
-          />
+        {typeof window !== 'undefined' && isOpen && ReactDOM.createPortal(
+          <DefaultStylesProvider>
+            <NotificationPopover
+              ref={popoverRef}
+              position={popoverPosition}
+              notifications={notifications}
+              loading={loading}
+              onMarkAsRead={markAsRead}
+              onMarkAllAsRead={markAllAsRead}
+              onDelete={deleteNotification}
+            />
+          </DefaultStylesProvider>,
+          document.body
         )}
       </Container>
     </DefaultStylesProvider>

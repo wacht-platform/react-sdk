@@ -1,4 +1,4 @@
-import React, { useCallback, useMemo, useRef, useState } from "react";
+import React, { useCallback, useMemo, useRef, useState, useEffect } from "react";
 import styled from "styled-components";
 import {
   Building,
@@ -224,9 +224,9 @@ const GeneralSettingsSection = () => {
         description,
       });
       toast("Changes saved", "info");
-    } catch (error) {
-      console.error("Failed to auto-save organization", error);
-      toast("Failed to save changes", "error");
+    } catch (error: any) {
+      const errorMessage = error.message || "Failed to save changes. Please try again.";
+      toast(errorMessage, "error");
     } finally {
       setIsSaving(false);
     }
@@ -295,6 +295,24 @@ const GeneralSettingsSection = () => {
   const handleImageChange = (event: React.ChangeEvent<HTMLInputElement>) => {
     if (event.target.files?.[0]) {
       const file = event.target.files[0];
+
+      // Validate file size
+      if (file.size > 2 * 1024 * 1024) {
+        toast("File size cannot exceed 2MB", "error");
+        return;
+      }
+
+      // Validate file type
+      if (!file.type.startsWith('image/')) {
+        toast("Please select a valid image file", "error");
+        return;
+      }
+
+      // Revoke previous object URL to prevent memory leaks
+      if (previewUrl) {
+        URL.revokeObjectURL(previewUrl);
+      }
+
       setPreviewUrl(URL.createObjectURL(file));
       // Auto-save image immediately after selection
       setTimeout(() => autoSave(), 100);
@@ -307,7 +325,14 @@ const GeneralSettingsSection = () => {
     }
   };
 
-
+  // Cleanup object URL on unmount to prevent memory leaks
+  useEffect(() => {
+    return () => {
+      if (previewUrl) {
+        URL.revokeObjectURL(previewUrl);
+      }
+    };
+  }, [previewUrl]);
 
   return (
     <>
@@ -385,6 +410,7 @@ const GeneralSettingsSection = () => {
                 style={{ display: "none" }}
                 accept="image/*"
                 onChange={handleImageChange}
+                aria-label="Upload organization logo"
               />
             </div>
           </div>
@@ -545,7 +571,7 @@ const GeneralSettingsSection = () => {
                 >
                   Multi-Factor Authentication
                 </Label>
-                <div style={{ fontSize: "var(--font-2xs)", color: "var(--color-muted)" }}>
+                <div style={{ fontSize: "var(--font-2xs)", color: "var(--color-muted)" }} id="mfa-description">
                   Require all members to set up MFA for added security
                 </div>
               </div>
@@ -560,6 +586,8 @@ const GeneralSettingsSection = () => {
                     }));
                     setTimeout(() => autoSave(), 100);
                   }}
+                  aria-label="Require multi-factor authentication for all members"
+                  aria-describedby="mfa-description"
                 />
                 <span></span>
               </Switch>
@@ -585,7 +613,7 @@ const GeneralSettingsSection = () => {
                     >
                       IP Restrictions
                     </Label>
-                    <div style={{ fontSize: "var(--font-2xs)", color: "var(--color-muted)" }}>
+                    <div style={{ fontSize: "var(--font-2xs)", color: "var(--color-muted)" }} id="ip-restrictions-description">
                       Only allow access from specific IP addresses
                     </div>
                   </div>
@@ -600,6 +628,8 @@ const GeneralSettingsSection = () => {
                         }));
                         setTimeout(() => autoSave(), 100);
                       }}
+                      aria-label="Enable IP address restrictions"
+                      aria-describedby="ip-restrictions-description"
                     />
                     <span></span>
                   </Switch>
@@ -1150,7 +1180,7 @@ const MembersSection = () => {
 
   const filteredMembers = React.useMemo(() => {
     if (!searchQuery) return members;
-    return members.filter((member: any) => {
+    return members.filter((member: OrganizationMembership) => {
       const userData = member.user;
       if (!userData) return false;
       const firstName = userData.first_name || "";
@@ -1178,16 +1208,16 @@ const MembersSection = () => {
         toast("Role added successfully", "info");
       }
       reloadMembers();
-    } catch (error) {
-      console.error("Failed to update role", error);
-      toast("Failed to update role", "error");
+    } catch (error: any) {
+      const errorMessage = error.message || "Failed to update role. Please try again.";
+      toast(errorMessage, "error");
     }
   };
 
   const getInitials = (firstName = "", lastName = "") =>
     `${firstName[0] || ""}${lastName[0] || ""}`.toUpperCase();
-  const memberHasRole = (member: any, roleId: string) =>
-    member.roles?.some((r: any) => r.id === roleId) || false;
+  const memberHasRole = (member: OrganizationMembership, roleId: string) =>
+    member.roles?.some((r: OrganizationRole) => r.id === roleId) || false;
 
   const handleInvitationSuccess = () => {
     setIsInviting(false);
@@ -1226,7 +1256,7 @@ const MembersSection = () => {
           ref={inviteMemberButtonRef}
           onClick={() => setIsInviting(!isInviting)}
           style={{
-            background: "#6366f1",
+            background: "var(--color-primary)",
             color: "white",
             border: "none",
             padding: "8px 16px",
@@ -1463,9 +1493,9 @@ const InvitationsSection = () => {
       await discardInvitation(invitation);
       reloadInvitations();
       toast("Invitation cancelled successfully", "info");
-    } catch (error) {
-      console.error("Failed to cancel invitation", error);
-      toast("Failed to cancel invitation", "error");
+    } catch (error: any) {
+      const errorMessage = error.message || "Failed to cancel invitation. Please try again.";
+      toast(errorMessage, "error");
     }
   };
 
@@ -1473,9 +1503,9 @@ const InvitationsSection = () => {
     try {
       await resendInvitation(invitation);
       toast("Invitation resent successfully", "info");
-    } catch (error) {
-      console.error("Failed to resend invitation", error);
-      toast("Failed to resend invitation", "error");
+    } catch (error: any) {
+      const errorMessage = error.message || "Failed to resend invitation. Please try again.";
+      toast(errorMessage, "error");
     }
   };
 
@@ -1510,7 +1540,7 @@ const InvitationsSection = () => {
           ref={inviteMemberButtonRef}
           onClick={() => setIsInviting(!isInviting)}
           style={{
-            background: "#6366f1",
+            background: "var(--color-primary)",
             color: "white",
             border: "none",
             padding: "8px 16px",
@@ -1659,7 +1689,6 @@ const RolesSection = () => {
   }) => {
     try {
       if (role.id) {
-        console.log("Updating role:", role);
         await new Promise((resolve) => setTimeout(resolve, 1000));
         setMessage({
           text: "Role updated successfully",
@@ -1667,7 +1696,6 @@ const RolesSection = () => {
         });
       } else {
         // Creating new role
-        console.log("Creating new role:", role);
         await new Promise((resolve) => setTimeout(resolve, 1000));
         setMessage({
           text: "Role created successfully",
@@ -1679,16 +1707,15 @@ const RolesSection = () => {
       reloadRoles();
     } catch (error) {
       // Handle error based on whether we were editing or creating
+      const errorMessage = (error as any)?.message || (role.id ? "Failed to update role. Please try again." : "Failed to create role. Please try again.");
       if (role.id) {
-        console.error("Failed to update role", error);
         setMessage({
-          text: "Failed to update role",
+          text: errorMessage,
           type: "error",
         });
       } else {
-        console.error("Failed to create role", error);
         setMessage({
-          text: "Failed to create role",
+          text: errorMessage,
           type: "error",
         });
       }

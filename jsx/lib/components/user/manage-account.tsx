@@ -1,13 +1,17 @@
-import { useCallback, useState } from "react";
-import styled from "styled-components";
+import { useCallback, useState, useRef } from "react";
+import styled, { keyframes } from "styled-components";
+import { QRCodeSVG } from "qrcode.react";
+
+const spin = keyframes`
+  0% { transform: rotate(0deg); }
+  100% { transform: rotate(360deg); }
+`;
+
 import {
   User,
   LogOut,
-  Eye,
-  EyeOff,
   Download,
   AlertTriangle,
-
   Check,
   Mail,
   Phone,
@@ -34,9 +38,11 @@ interface UserSignIn {
   country: string;
   country_code: string;
 }
-import * as TFA2 from "./2fa";
 import { EmailAddPopover } from "@/components/user/add-email-popover";
 import { PhoneAddPopover } from "@/components/user/add-phone-popover";
+import { SetupTOTPPopover } from "@/components/user/setup-totp-popover";
+import { ChangePasswordPopover } from "@/components/user/change-password-popover";
+import { BackupCodesPopover } from "@/components/user/backup-codes-popover";
 import {
   Dropdown,
   DropdownItem,
@@ -55,7 +61,7 @@ import { EdgeIcon } from "../icons/edge";
 import { OperaIcon } from "../icons/opera";
 import { BraveIcon } from "../icons/brave";
 import { useDeployment } from "@/hooks/use-deployment";
-import { Form, FormGroup, Label } from "../utility/form";
+import { FormGroup, Label } from "../utility/form";
 import { Input } from "../utility/input";
 import { Spinner, Button, SearchInput } from "../utility";
 import {
@@ -246,7 +252,7 @@ const HeaderCTAContainer = styled.div`
   align-items: center;
   flex-wrap: wrap;
   gap: 12px;
-  margin-bottom: 24px;
+  margin-bottom: 0;
 `;
 
 
@@ -260,12 +266,12 @@ const HeaderCTAContainer = styled.div`
 
 
 const UnknownBrowserIcon = () => (
-  <svg width="20" height="20" viewBox="0 0 24 24" fill="none">
-    <circle cx="12" cy="12" r="11" fill="#6B7280" stroke="#9CA3AF" strokeWidth="0.5" />
-    <circle cx="12" cy="12" r="8" fill="none" stroke="#D1D5DB" strokeWidth="0.5" />
-    <path d="M12 8c-2.2 0-4 1.8-4 4s1.8 4 4 4 4-1.8 4-4-1.8-4-4-4zm0 6c-1.1 0-2-.9-2-2s.9-2 2-2 2 .9 2 2-.9 2-2 2z" fill="#9CA3AF" />
-    <circle cx="12" cy="12" r="1" fill="#6B7280" />
-    <text x="12" y="16.5" textAnchor="middle" fill="#9CA3AF" fontSize="6">?</text>
+  <svg width="20" height="20" viewBox="0 0 24 24" fill="none" style={{ color: 'var(--color-secondary-text)' }}>
+    <circle cx="12" cy="12" r="11" fill="currentColor" stroke="currentColor" strokeWidth="0.5" opacity="0.6" />
+    <circle cx="12" cy="12" r="8" fill="none" stroke="currentColor" strokeWidth="0.5" opacity="0.3" />
+    <path d="M12 8c-2.2 0-4 1.8-4 4s1.8 4 4 4 4-1.8 4-4-1.8-4-4-4zm0 6c-1.1 0-2-.9-2-2s.9-2 2-2 2 .9 2 2-.9 2-2 2z" fill="currentColor" opacity="0.5" />
+    <circle cx="12" cy="12" r="1" fill="currentColor" />
+    <text x="12" y="16.5" textAnchor="middle" fill="currentColor" fontSize="6" opacity="0.7">?</text>
   </svg>
 );
 
@@ -449,6 +455,7 @@ const EmailManagementSection = () => {
   const [newEmail, setNewEmail] = useState("");
   const [isAddingEmail, setIsAddingEmail] = useState(false);
   const [searchQuery, setSearchQuery] = useState("");
+  const emailButtonRef = useRef<HTMLButtonElement>(null);
   const {
     user,
     createEmailAddress,
@@ -500,14 +507,15 @@ const EmailManagementSection = () => {
 
   return (
     <>
-      <HeaderCTAContainer>
+      <HeaderCTAContainer style={{ marginBottom: '20px' }}>
         <SearchInput
           value={searchQuery}
           onChange={setSearchQuery}
           placeholder="Search Email"
         />
-        <div>
+        <div style={{ position: 'relative' }}>
           <Button
+            ref={emailButtonRef}
             onClick={() => setIsAddingEmail(true)}
             style={{
               padding: "8px 16px",
@@ -521,6 +529,7 @@ const EmailManagementSection = () => {
           </Button>
           {isAddingEmail && (
             <EmailAddPopover
+              triggerRef={emailButtonRef}
               onClose={() => setIsAddingEmail(false)}
               onAddEmail={async (email) => {
                 const newEmailData = await createEmailAddress(email);
@@ -627,6 +636,7 @@ const PhoneManagementSection = () => {
   const [newPhone, setNewPhone] = useState("");
   const [isAddingPhone, setIsAddingPhone] = useState(false);
   const [searchQuery, setSearchQuery] = useState("");
+  const phoneButtonRef = useRef<HTMLButtonElement>(null);
   const {
     user,
     createPhoneNumber,
@@ -653,14 +663,15 @@ const PhoneManagementSection = () => {
 
   return (
     <>
-      <HeaderCTAContainer>
+      <HeaderCTAContainer style={{ marginBottom: '20px' }}>
         <SearchInput
           value={searchQuery}
           onChange={setSearchQuery}
           placeholder="Search Phone"
         />
-        <div>
+        <div style={{ position: 'relative' }}>
           <Button
+            ref={phoneButtonRef}
             onClick={() => setIsAddingPhone(true)}
             style={{
               padding: "8px 16px",
@@ -674,6 +685,7 @@ const PhoneManagementSection = () => {
           </Button>
           {isAddingPhone && (
             <PhoneAddPopover
+              triggerRef={phoneButtonRef}
               onClose={() => setIsAddingPhone(false)}
               onAddPhone={async (phone) => {
                 const newPhoneData = await createPhoneNumber(phone);
@@ -1101,461 +1113,677 @@ export const ManageAccount = () => {
   );
 };
 
-const PasswordInput = styled.div`
-  position: relative;
-  width: 100%;
 
-  input {
-    padding-right: 40px;
-  }
-
-  button {
-    position: absolute;
-    right: 8px;
-    top: 50%;
-    transform: translateY(-50%);
-    background: none;
-    border: none;
-    cursor: pointer;
-    color: var(--color-muted);
-
-    &:hover {
-      color: var(--color-text);
-    }
-  }
-`;
-
-// Security Card Component for better organization
-const SecurityCard = styled.div`
-  background: var(--color-background);
-  border: 1px solid var(--color-border);
-  border-radius: 12px;
-  padding: 20px;
-  margin-bottom: 16px;
-  transition: all 0.2s ease;
-
-  &:hover {
-    border-color: var(--color-primary);
-    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
-  }
-`;
-
-const SecurityCardHeader = styled.div`
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-  margin-bottom: 12px;
-`;
-
-const SecurityCardTitle = styled.h4`
-  margin: 0;
-  font-size: 16px;
-  font-weight: 600;
-  color: var(--color-foreground);
-  display: flex;
-  align-items: center;
-  gap: 8px;
-`;
-
-const SecurityCardDescription = styled.p`
-  margin: 0 0 16px 0;
-  font-size: 14px;
-  color: var(--color-muted);
-  line-height: 1.5;
-`;
-
-const SecurityStatus = styled.span<{ $status: 'enabled' | 'disabled' | 'warning' }>`
-  padding: 4px 12px;
-  border-radius: 20px;
-  font-size: 12px;
-  font-weight: 500;
-  background: ${props =>
-    props.$status === 'enabled' ? 'var(--color-success-background)' :
-      props.$status === 'warning' ? 'var(--color-warning-background)' :
-        'var(--color-muted-background)'
-  };
-  color: ${props =>
-    props.$status === 'enabled' ? 'var(--color-success)' :
-      props.$status === 'warning' ? 'var(--color-warning)' :
-        'var(--color-muted)'
-  };
-`;
 
 const SecurityManagementSection = () => {
   const { deployment } = useDeployment();
   const {
     user,
     updatePassword,
+    setupAuthenticator,
+    verifyAuthenticator,
+    deleteAuthenticator,
+    generateBackupCodes,
+    regenerateBackupCodes,
   } = useUser();
   const { toast } = useScreenContext();
 
-  // Visibility state for sections
-  const [visibleSections, setVisibleSections] = useState<
-    Record<string, boolean>
-  >({
-    changePassword: false,
-    authenticator: false,
-    backupCodes: false,
-    removePassword: false,
-  });
-
-  // 2FA state - keeping minimal state for future use
-
-  // Password state
-  const [currentPassword, setCurrentPassword] = useState("");
-  const [newPassword, setNewPassword] = useState("");
-  const [confirmPassword, setConfirmPassword] = useState("");
-  const [showCurrentPassword, setShowCurrentPassword] = useState(false);
-  const [showNewPassword, setShowNewPassword] = useState(false);
-  const [showConfirmPassword, setShowConfirmPassword] = useState(false);
-  const [isSubmitting, setIsSubmitting] = useState(false);
-
-  const [passwordErrors, setPasswordErrors] = useState<Record<string, string>>(
-    {},
-  );
-
-  const toggleSection = (section: string) => {
-    setVisibleSections((prev) => ({
-      ...prev,
-      [section]: !prev[section],
-    }));
-  };
-
-  // Timer for second code countdown - removed for now
+  const [showTOTPPopover, setShowTOTPPopover] = useState(false);
+  const [showPasswordPopover, setShowPasswordPopover] = useState(false);
+  const [showBackupCodesPopover, setShowBackupCodesPopover] = useState(false);
+  const totpButtonRef = useRef<HTMLButtonElement>(null);
+  const passwordButtonRef = useRef<HTMLButtonElement>(null);
+  const backupCodesButtonRef = useRef<HTMLButtonElement>(null);
+  const [setupStep, setSetupStep] = useState<'table' | 'qr' | 'verify' | 'backup' | 'success'>('table');
+  const [qrCodeUrl, setQrCodeUrl] = useState<string>("");
+  const [secretKey, setSecretKey] = useState<string>("");
+  const [authenticatorId, setAuthenticatorId] = useState<string>("");
+  const [verificationCodes, setVerificationCodes] = useState<string[]>(["", ""]);
+  const [backupCodes, setBackupCodes] = useState<string[]>([]);
+  const [isGeneratingCodes, setIsGeneratingCodes] = useState(false);
+  const [isVerifying, setIsVerifying] = useState(false);
+  const [isLoadingQR] = useState(false);
+  const [isRemovingAuth, setIsRemovingAuth] = useState(false);
 
   const authFactorsEnabled = deployment?.auth_settings?.auth_factors_enabled;
   const passwordEnabled = deployment?.auth_settings?.password?.enabled;
 
   // Don't render if nothing is enabled
-  if (
-    !authFactorsEnabled?.authenticator &&
-    !authFactorsEnabled?.backup_code &&
-    !passwordEnabled
-  ) {
+  if (!authFactorsEnabled?.authenticator && !authFactorsEnabled?.backup_code && !passwordEnabled) {
     return null;
   }
 
-  // 2FA handlers - keeping only the ones that are used
-
-  // Password handlers
-  const handlePasswordSubmit = async (e: React.FormEvent) => {
-    e.preventDefault();
-    if (isSubmitting) return;
-
-    const newErrors: Record<string, string> = {};
-
-    if (!currentPassword) {
-      newErrors.currentPassword = "Current password is required";
-    }
-
-    if (!newPassword) {
-      newErrors.newPassword = "New password is required";
-    } else if (newPassword.length < 8) {
-      newErrors.newPassword = "Password must be at least 8 characters";
-    }
-
-    if (newPassword !== confirmPassword) {
-      newErrors.confirmPassword = "Passwords do not match";
-    }
-
-    if (Object.keys(newErrors).length > 0) {
-      setPasswordErrors(newErrors);
-      return;
-    }
-
-    setIsSubmitting(true);
-
-    try {
-      await updatePassword(currentPassword, newPassword);
-      setCurrentPassword("");
-      setNewPassword("");
-      setConfirmPassword("");
-      setPasswordErrors({});
-      toast("Password updated successfully", "info");
-    } catch (error: any) {
-      const errorMessage =
-        error.message || "Failed to update password. Please try again.";
-      setPasswordErrors({ form: errorMessage });
-      toast(errorMessage, "error");
-    } finally {
-      setIsSubmitting(false);
-    }
+  const handleChangePassword = async (currentPassword: string, newPassword: string) => {
+    await updatePassword(currentPassword, newPassword);
+    await user.refetch();
+    toast("Password updated successfully", "info");
   };
 
 
+  const handleVerifyAuthenticator = async () => {
+    if (verificationCodes.some(code => code.length !== 6)) {
+      toast("Please enter both 6-digit verification codes", "error");
+      return;
+    }
+
+    try {
+      setIsVerifying(true);
+      await verifyAuthenticator(authenticatorId, verificationCodes);
+      await user.refetch();
+      
+      // Generate backup codes automatically
+      if (authFactorsEnabled?.backup_code) {
+        const codes = await generateBackupCodes();
+        setBackupCodes(codes);
+        await user.refetch();
+        setSetupStep('backup');
+      } else {
+        setSetupStep('success');
+      }
+    } catch (error: any) {
+      toast(error.message || "Invalid verification codes", "error");
+    } finally {
+      setIsVerifying(false);
+    }
+  };
+
+  const handleCompleteSetup = () => {
+    setSetupStep('table');
+    setQrCodeUrl("");
+    setSecretKey("");
+    setAuthenticatorId("");
+    setVerificationCodes(["", ""]);
+    setBackupCodes([]);
+    toast("Two-factor authentication setup completed successfully!", "info");
+  };
+
+  const handleRemoveAuthenticator = async () => {
+    if (!user?.user_authenticator?.id) return;
+    
+    try {
+      setIsRemovingAuth(true);
+      await deleteAuthenticator(user.user_authenticator.id);
+      await user.refetch();
+      toast("Authenticator removed successfully", "info");
+    } catch (error: any) {
+      toast(error.message || "Failed to remove authenticator", "error");
+    } finally {
+      setIsRemovingAuth(false);
+    }
+  };
+
+  const handleGenerateNewBackupCodes = async () => {
+    if (isGeneratingCodes) return;
+    
+    try {
+      setIsGeneratingCodes(true);
+      const codes = await regenerateBackupCodes();
+      setBackupCodes(codes);
+      await user.refetch();
+      setShowBackupCodesPopover(true);
+      toast("New backup codes generated", "info");
+    } catch (error: any) {
+      toast(error.message || "Failed to generate backup codes", "error");
+    } finally {
+      setIsGeneratingCodes(false);
+    }
+  };
+
+  const copyBackupCodes = () => {
+    const codesText = backupCodes.join('\n');
+    navigator.clipboard.writeText(codesText).then(() => {
+      toast("Backup codes copied to clipboard", "info");
+    }).catch(() => {
+      toast("Failed to copy backup codes", "error");
+    });
+  };
+
+  const downloadBackupCodes = () => {
+    const codesText = backupCodes.join('\n');
+    const blob = new Blob([codesText], { type: 'text/plain' });
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement('a');
+    a.href = url;
+    a.download = 'wacht-backup-codes.txt';
+    a.click();
+    URL.revokeObjectURL(url);
+    toast("Backup codes downloaded", "info");
+  };
+
+  // Create security items for table display
+  const securityItems = [];
+
+  if (passwordEnabled) {
+    securityItems.push({
+      id: 'password',
+      name: 'Password',
+      description: 'Secure your account with a strong password',
+      status: user ? 'Enabled' : 'Not Set',
+      actions: ['change'],
+    });
+  }
+
+  if (authFactorsEnabled?.authenticator) {
+    securityItems.push({
+      id: 'authenticator',
+      name: 'Two-Factor Authentication',
+      description: 'Use an authenticator app for extra security',
+      status: user?.user_authenticator ? 'Enabled' : 'Disabled',
+      actions: user?.user_authenticator ? ['remove'] : ['setup'],
+    });
+  }
+
+  if (authFactorsEnabled?.backup_code && user?.user_authenticator) {
+    securityItems.push({
+      id: 'backup_codes',
+      name: 'Backup Codes',
+      description: 'Recovery codes if you lose your authenticator',
+      status: user?.backup_codes_generated ? 'Generated' : 'Not Generated',
+      actions: ['generate'],
+    });
+  }
+
+  // Show 2FA setup flow instead of table when in setup mode
+  if (setupStep !== 'table') {
+    return (
+      <>
+        <HeaderCTAContainer>
+          <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
+            <Shield size={16} />
+            <span style={{ fontSize: '14px', fontWeight: 500, color: 'var(--color-foreground)' }}>
+              {setupStep === 'qr' && 'Setup Two-Factor Authentication'}
+              {setupStep === 'verify' && 'Verify Your Authenticator'}
+              {setupStep === 'backup' && 'Save Your Backup Codes'}
+              {setupStep === 'success' && 'Setup Complete!'}
+            </span>
+          </div>
+          <Button
+            onClick={() => setSetupStep('table')}
+            style={{
+              padding: "8px 16px",
+              fontSize: "14px",
+              background: "var(--color-background)",
+              border: "1px solid var(--color-border)",
+              borderRadius: "var(--radius-md)",
+              color: "var(--color-foreground)",
+              fontWeight: "500",
+              cursor: "pointer",
+              transition: "all 0.2s ease",
+            }}
+          >
+            ← Back
+          </Button>
+        </HeaderCTAContainer>
+
+        <div style={{ maxWidth: '500px', margin: '0 auto', textAlign: 'center', padding: '24px' }}>
+          {setupStep === 'qr' && (
+            <>
+              <p style={{ color: 'var(--color-secondary-text)', marginBottom: '24px' }}>
+                Scan this QR code with your authenticator app (Google Authenticator, Authy, etc.)
+              </p>
+              
+              <div style={{ display: 'flex', justifyContent: 'center', marginBottom: '24px' }}>
+                {isLoadingQR ? (
+                  <div style={{ 
+                    width: '200px', 
+                    height: '200px',
+                    border: '1px solid var(--color-border)',
+                    borderRadius: 'var(--radius-md)',
+                    display: 'flex',
+                    alignItems: 'center',
+                    justifyContent: 'center',
+                    background: 'var(--color-input-background)'
+                  }}>
+                    <div style={{ textAlign: 'center' }}>
+                      <div style={{ 
+                        width: '24px', 
+                        height: '24px', 
+                        border: '2px solid var(--color-border)',
+                        borderTop: '2px solid var(--color-primary)',
+                        borderRadius: '50%',
+                        animation: `${spin} 1s linear infinite`,
+                        margin: '0 auto 8px'
+                      }}></div>
+                      <div style={{ fontSize: '12px', color: 'var(--color-secondary-text)' }}>
+                        Loading QR Code...
+                      </div>
+                    </div>
+                  </div>
+                ) : qrCodeUrl ? (
+                  <div style={{ 
+                    border: '1px solid var(--color-border)',
+                    borderRadius: 'var(--radius-md)',
+                    padding: '16px',
+                    background: 'white'
+                  }}>
+                    <QRCodeSVG 
+                      value={qrCodeUrl}
+                      size={200}
+                      level="M"
+                      includeMargin={false}
+                    />
+                  </div>
+                ) : (
+                  <div style={{ 
+                    width: '200px', 
+                    height: '200px',
+                    border: '1px solid var(--color-border)',
+                    borderRadius: 'var(--radius-md)',
+                    display: 'flex',
+                    alignItems: 'center',
+                    justifyContent: 'center',
+                    background: 'var(--color-input-background)',
+                    color: 'var(--color-error)',
+                    fontSize: '14px',
+                    textAlign: 'center'
+                  }}>
+                    QR Code Not Available
+                  </div>
+                )}
+              </div>
+
+              <div style={{ 
+                background: 'var(--color-input-background)',
+                border: '1px solid var(--color-border)',
+                borderRadius: 'var(--radius-md)',
+                padding: '12px',
+                marginBottom: '24px'
+              }}>
+                <p style={{ fontSize: '14px', color: 'var(--color-secondary-text)', margin: '0 0 8px 0' }}>
+                  Or enter this code manually:
+                </p>
+                <code style={{ fontFamily: 'monospace', fontSize: '14px', wordBreak: 'break-all' }}>
+                  {secretKey || 'Loading...'}
+                </code>
+              </div>
+
+              <Button
+                onClick={() => setSetupStep('verify')}
+                disabled={!qrCodeUrl || !secretKey}
+                style={{
+                  padding: "10px 20px",
+                  background: (!qrCodeUrl || !secretKey) ? "var(--color-border)" : "var(--color-primary)",
+                  color: (!qrCodeUrl || !secretKey) ? "var(--color-secondary-text)" : "white",
+                  border: `1px solid ${(!qrCodeUrl || !secretKey) ? "var(--color-border)" : "var(--color-primary)"}`,
+                  cursor: (!qrCodeUrl || !secretKey) ? "not-allowed" : "pointer"
+                }}
+              >
+                I've Scanned the Code
+              </Button>
+            </>
+          )}
+
+          {setupStep === 'verify' && (
+            <>
+              <p style={{ color: 'var(--color-secondary-text)', marginBottom: '24px' }}>
+                Enter two consecutive codes from your authenticator app to verify setup
+              </p>
+
+              <div style={{ display: 'flex', gap: '12px', justifyContent: 'center', marginBottom: '24px' }}>
+                <Input
+                  type="text"
+                  placeholder="000000"
+                  value={verificationCodes[0]}
+                  onChange={(e) => {
+                    const value = e.target.value.replace(/[^0-9]/g, '').substring(0, 6);
+                    setVerificationCodes([value, verificationCodes[1]]);
+                  }}
+                  maxLength={6}
+                  style={{ width: '100px', textAlign: 'center', fontFamily: 'monospace' }}
+                />
+                <Input
+                  type="text"
+                  placeholder="000000"
+                  value={verificationCodes[1]}
+                  onChange={(e) => {
+                    const value = e.target.value.replace(/[^0-9]/g, '').substring(0, 6);
+                    setVerificationCodes([verificationCodes[0], value]);
+                  }}
+                  maxLength={6}
+                  style={{ width: '100px', textAlign: 'center', fontFamily: 'monospace' }}
+                />
+              </div>
+
+              <div style={{ display: 'flex', gap: '12px', justifyContent: 'center' }}>
+                <Button
+                  onClick={() => setSetupStep('qr')}
+                  style={{
+                    padding: "8px 16px",
+                    background: "var(--color-background)",
+                    border: "1px solid var(--color-border)",
+                  }}
+                >
+                  Back
+                </Button>
+                <Button
+                  onClick={handleVerifyAuthenticator}
+                  disabled={isVerifying || verificationCodes.some(code => code.length !== 6)}
+                  style={{
+                    padding: "8px 16px",
+                    background: "var(--color-primary)",
+                    color: "white",
+                    border: "1px solid var(--color-primary)",
+                  }}
+                >
+                  {isVerifying ? "Verifying..." : "Verify & Continue"}
+                </Button>
+              </div>
+            </>
+          )}
+
+          {setupStep === 'backup' && (
+            <>
+              <div style={{
+                background: "var(--color-warning-background)",
+                border: "1px solid var(--color-warning-border)",
+                borderRadius: "var(--radius-md)",
+                padding: "16px",
+                marginBottom: "24px",
+                display: "flex",
+                alignItems: "flex-start",
+                gap: "12px",
+                textAlign: "left"
+              }}>
+                <AlertTriangle size={16} style={{ color: "var(--color-warning)", marginTop: "2px" }} />
+                <div>
+                  <div style={{ fontWeight: 500, marginBottom: "4px" }}>Important!</div>
+                  <div style={{ fontSize: "14px", color: "var(--color-secondary-text)" }}>
+                    Store these codes safely. Each code can only be used once if you lose access to your authenticator device.
+                  </div>
+                </div>
+              </div>
+
+              <div style={{
+                display: "grid",
+                gridTemplateColumns: "repeat(2, 1fr)",
+                gap: "8px",
+                marginBottom: "24px",
+                maxWidth: "300px",
+                margin: "0 auto 24px auto"
+              }}>
+                {backupCodes.map((code, index) => (
+                  <div
+                    key={index}
+                    style={{
+                      background: "var(--color-input-background)",
+                      border: "1px solid var(--color-border)",
+                      borderRadius: "var(--radius-md)",
+                      padding: "8px",
+                      fontFamily: "monospace",
+                      fontSize: "12px",
+                      textAlign: "center",
+                      cursor: "pointer",
+                    }}
+                    onClick={() => navigator.clipboard.writeText(code)}
+                  >
+                    {code}
+                  </div>
+                ))}
+              </div>
+
+              <div style={{ display: "flex", gap: "12px", justifyContent: "center", marginBottom: "24px" }}>
+                <Button
+                  onClick={copyBackupCodes}
+                  style={{
+                    padding: "8px 16px",
+                    fontSize: "14px",
+                    background: "var(--color-background)",
+                    border: "1px solid var(--color-border)",
+                  }}
+                >
+                  Copy All
+                </Button>
+                <Button
+                  onClick={downloadBackupCodes}
+                  style={{
+                    padding: "8px 16px",
+                    fontSize: "14px",
+                    background: "var(--color-background)",
+                    border: "1px solid var(--color-border)",
+                  }}
+                >
+                  <Download size={16} style={{ marginRight: "4px" }} />
+                  Download
+                </Button>
+              </div>
+
+              <Button
+                onClick={handleCompleteSetup}
+                style={{
+                  padding: "10px 20px",
+                  background: "var(--color-primary)",
+                  color: "white",
+                  border: "1px solid var(--color-primary)",
+                }}
+              >
+                Complete Setup
+              </Button>
+            </>
+          )}
+
+          {setupStep === 'success' && (
+            <>
+              <div style={{ marginBottom: '24px' }}>
+                <Check size={48} style={{ color: 'var(--color-success)', marginBottom: '16px' }} />
+                <h3 style={{ fontSize: '18px', fontWeight: 600, margin: '0 0 8px 0' }}>All Set!</h3>
+                <p style={{ fontSize: '14px', color: 'var(--color-secondary-text)', margin: 0 }}>
+                  Your account is now protected with two-factor authentication.
+                </p>
+              </div>
+
+              <Button
+                onClick={handleCompleteSetup}
+                style={{
+                  padding: "10px 20px",
+                  background: "var(--color-primary)",
+                  color: "white",
+                  border: "1px solid var(--color-primary)",
+                }}
+              >
+                Continue to Security
+              </Button>
+            </>
+          )}
+        </div>
+      </>
+    );
+  }
 
   return (
-    <div style={{ display: "flex", flexDirection: "column", gap: "20px" }}>
-      {/* Password Management Card */}
-      {passwordEnabled && (
-        <SecurityCard>
-          <SecurityCardHeader>
-            <SecurityCardTitle>
-              <Shield size={20} />
-              Password
-            </SecurityCardTitle>
-            <SecurityStatus $status={'enabled'}>
-              {'Enabled'}
-            </SecurityStatus>
-          </SecurityCardHeader>
-          <SecurityCardDescription>
-            Update your password or manage your authentication settings.
-          </SecurityCardDescription>
+    <>
+      <HeaderCTAContainer>
+        <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
+          <span style={{ fontSize: '14px', fontWeight: 400, color: 'var(--color-foreground)' }}>
+            Security Settings
+          </span>
+        </div>
+      </HeaderCTAContainer>
 
-          <div style={{ display: "flex", gap: "12px", flexWrap: "wrap" }}>
-            <Button
-              onClick={() => toggleSection("changePassword")}
-              style={{
-                padding: "8px 16px",
-                fontSize: "14px",
-                height: "36px",
-                background: visibleSections.changePassword ? "var(--color-primary)" : "var(--color-background)",
-                color: visibleSections.changePassword ? "white" : "var(--color-foreground)",
-                border: "1px solid var(--color-border)"
-              }}
-            >
-              Change Password
-            </Button>
-
-            {false && (
-              <Button
-                onClick={() => toggleSection("removePassword")}
+      {!securityItems.length ? (
+        <EmptyState
+          title="No security features available"
+          description="Contact your administrator to enable security features."
+        />
+      ) : (
+        <div>
+          {securityItems.map((item, index) => (
+            <div key={item.id}>
+              <div 
                 style={{
-                  padding: "8px 16px",
-                  fontSize: "14px",
-                  height: "36px",
-                  background: visibleSections.removePassword ? "var(--color-error)" : "transparent",
-                  color: visibleSections.removePassword ? "white" : "var(--color-error)",
-                  border: "1px solid var(--color-error)"
+                  display: 'flex',
+                  alignItems: 'center',
+                  justifyContent: 'space-between',
+                  padding: '16px 0',
                 }}
               >
-                Remove Password
-              </Button>
-            )}
-          </div>
-        </SecurityCard>
-      )}
-
-      {/* Two-Factor Authentication Card */}
-      {authFactorsEnabled?.authenticator && (
-        <SecurityCard>
-          <SecurityCardHeader>
-            <SecurityCardTitle>
-              <Shield size={20} />
-              Authenticator App
-            </SecurityCardTitle>
-            <SecurityStatus $status={user?.user_authenticator ? 'enabled' : 'disabled'}>
-              {user?.user_authenticator ? 'Enabled' : 'Disabled'}
-            </SecurityStatus>
-          </SecurityCardHeader>
-          <SecurityCardDescription>
-            Use an authenticator app like Google Authenticator or Authy for secure two-factor authentication.
-          </SecurityCardDescription>
-
-          <div style={{ display: "flex", gap: "12px", flexWrap: "wrap" }}>
-            {!user?.user_authenticator ? (
-              <Button
-                onClick={() => toggleSection("authenticator")}
-                style={{
-                  padding: "8px 16px",
-                  fontSize: "14px",
-                  height: "36px",
-                  background: visibleSections.authenticator ? "var(--color-primary)" : "var(--color-background)",
-                  color: visibleSections.authenticator ? "white" : "var(--color-foreground)",
-                  border: "1px solid var(--color-border)"
-                }}
-              >
-                Set Up Authenticator
-              </Button>
-            ) : (
-              <Button
-                onClick={() => console.log('Remove authenticator')}
-                style={{
-                  padding: "8px 16px",
-                  fontSize: "14px",
-                  height: "36px",
-                  background: "transparent",
-                  color: "var(--color-error)",
-                  border: "1px solid var(--color-error)"
-                }}
-              >
-                Remove Authenticator
-              </Button>
-            )}
-          </div>
-        </SecurityCard>
-      )}
-
-      {/* Backup Codes Card */}
-      {authFactorsEnabled?.backup_code && user?.user_authenticator && (
-        <SecurityCard>
-          <SecurityCardHeader>
-            <SecurityCardTitle>
-              <Download size={20} />
-              Backup Codes
-            </SecurityCardTitle>
-            <SecurityStatus $status={user?.backup_codes_generated ? 'enabled' : 'warning'}>
-              {user?.backup_codes_generated ? 'Generated' : 'Not Generated'}
-            </SecurityStatus>
-          </SecurityCardHeader>
-          <SecurityCardDescription>
-            Generate backup codes to access your account if you lose your authenticator device.
-          </SecurityCardDescription>
-
-          <div style={{ display: "flex", gap: "12px", flexWrap: "wrap" }}>
-            <Button
-              onClick={() => toggleSection("backupCodes")}
-              style={{
-                padding: "8px 16px",
-                fontSize: "14px",
-                height: "36px",
-                background: visibleSections.backupCodes ? "var(--color-primary)" : "var(--color-background)",
-                color: visibleSections.backupCodes ? "white" : "var(--color-foreground)",
-                border: "1px solid var(--color-border)"
-              }}
-            >
-              {user?.backup_codes_generated ? 'Regenerate Codes' : 'Generate Codes'}
-            </Button>
-          </div>
-        </SecurityCard>
-      )}
-
-      {/* Expandable Forms */}
-      {visibleSections.changePassword && passwordEnabled && (
-        <SecurityCard>
-          <SecurityCardTitle>Change Password</SecurityCardTitle>
-          <Form onSubmit={handlePasswordSubmit} style={{ marginTop: "16px" }}>
-            <FormGroup>
-              <Label htmlFor="currentPassword">Current Password</Label>
-              <PasswordInput>
-                <Input
-                  id="currentPassword"
-                  type={showCurrentPassword ? "text" : "password"}
-                  value={currentPassword}
-                  onChange={(e) => setCurrentPassword(e.target.value)}
-                  placeholder="Enter your current password"
-                />
-                <button
-                  type="button"
-                  onClick={() =>
-                    setShowCurrentPassword(!showCurrentPassword)
-                  }
-                >
-                  {showCurrentPassword ? (
-                    <EyeOff size={16} />
-                  ) : (
-                    <Eye size={16} />
-                  )}
-                </button>
-              </PasswordInput>
-              {passwordErrors.currentPassword && (
-                <div
-                  style={{
-                    color: "var(--color-error)",
-                    fontSize: "12px",
-                    marginTop: "4px",
-                  }}
-                >
-                  {passwordErrors.currentPassword}
+                <div style={{ flex: 1 }}>
+                  <div style={{ fontWeight: 400, color: 'var(--color-foreground)' }}>
+                    {item.name}
+                  </div>
+                  <div style={{ fontSize: '13px', color: 'var(--color-secondary-text)' }}>
+                    {item.description}
+                  </div>
                 </div>
-              )}
-            </FormGroup>
-
-            <FormGroup>
-              <Label htmlFor="newPassword">New Password</Label>
-              <PasswordInput>
-                <Input
-                  id="newPassword"
-                  type={showNewPassword ? "text" : "password"}
-                  value={newPassword}
-                  onChange={(e) => setNewPassword(e.target.value)}
-                  placeholder="Enter your new password"
-                />
-                <button
-                  type="button"
-                  onClick={() => setShowNewPassword(!showNewPassword)}
-                >
-                  {showNewPassword ? (
-                    <EyeOff size={16} />
-                  ) : (
-                    <Eye size={16} />
-                  )}
-                </button>
-              </PasswordInput>
-              {passwordErrors.newPassword && (
-                <div
-                  style={{
-                    color: "var(--color-error)",
-                    fontSize: "12px",
-                    marginTop: "4px",
-                  }}
-                >
-                  {passwordErrors.newPassword}
+                
+                <div style={{ display: 'flex', alignItems: 'center', gap: '12px' }}>
+                  <span
+                    style={{
+                      padding: '4px 12px',
+                      borderRadius: '16px',
+                      fontSize: '12px',
+                      fontWeight: 400,
+                      background: 
+                        item.status === 'Enabled' || item.status === 'Generated' 
+                          ? 'var(--color-success-background)' 
+                          : 'var(--color-background-hover)',
+                      color: 
+                        item.status === 'Enabled' || item.status === 'Generated'
+                          ? 'var(--color-success)' 
+                          : 'var(--color-secondary-text)',
+                    }}
+                  >
+                    {item.status}
+                  </span>
+                  
+                  <div style={{ position: 'relative' }}>
+                    {item.id === 'password' && (
+                      <>
+                        <div style={{ position: 'relative' }}>
+                          <Button
+                            ref={passwordButtonRef}
+                            onClick={() => setShowPasswordPopover(true)}
+                            style={{
+                              padding: "6px 12px",
+                              fontSize: "12px",
+                              background: "var(--color-primary)",
+                              color: "white",
+                              border: "1px solid var(--color-primary)",
+                              borderRadius: "var(--radius-md)",
+                              fontWeight: "400",
+                            }}
+                          >
+                            Change Password
+                          </Button>
+                          
+                          {showPasswordPopover && (
+                            <ChangePasswordPopover
+                              triggerRef={passwordButtonRef}
+                              onClose={() => setShowPasswordPopover(false)}
+                              onChangePassword={handleChangePassword}
+                            />
+                          )}
+                        </div>
+                      </>
+                    )}
+                    
+                    {item.id === 'authenticator' && !user?.user_authenticator && (
+                      <>
+                        <div style={{ position: 'relative' }}>
+                          <Button
+                            ref={totpButtonRef}
+                            onClick={() => setShowTOTPPopover(true)}
+                            disabled={isLoadingQR}
+                            style={{
+                              padding: "6px 12px",
+                              fontSize: "12px",
+                              background: "var(--color-primary)",
+                              color: "white",
+                              border: "1px solid var(--color-primary)",
+                              borderRadius: "var(--radius-md)",
+                              fontWeight: "400",
+                            }}
+                          >
+                            {isLoadingQR ? 'Setting up...' : 'Setup'}
+                          </Button>
+                          
+                          {showTOTPPopover && (
+                            <SetupTOTPPopover
+                              triggerRef={totpButtonRef}
+                              onClose={() => setShowTOTPPopover(false)}
+                            onSetupTOTP={async () => {
+                              const result = await setupAuthenticator();
+                              setAuthenticatorId(result.id);
+                              return result;
+                            }}
+                            onVerifyTOTP={async (codes) => {
+                              await verifyAuthenticator(authenticatorId, codes);
+                              await user.refetch();
+                              toast("Two-factor authentication enabled successfully!", "info");
+                            }}
+                          />
+                        )}
+                        </div>
+                      </>
+                    )}
+                    
+                    {item.id === 'authenticator' && user?.user_authenticator && (
+                      <Button
+                        onClick={handleRemoveAuthenticator}
+                        disabled={isRemovingAuth}
+                        style={{
+                          padding: "6px 12px",
+                          fontSize: "12px",
+                          background: "var(--color-error)",
+                          color: "white",
+                          border: "1px solid var(--color-error)",
+                          borderRadius: "var(--radius-md)",
+                          fontWeight: "400",
+                        }}
+                      >
+                        {isRemovingAuth ? 'Removing...' : 'Remove'}
+                      </Button>
+                    )}
+                    
+                    {item.id === 'backup_codes' && (
+                      <>
+                        <div style={{ position: 'relative' }}>
+                          <Button
+                            ref={backupCodesButtonRef}
+                            onClick={handleGenerateNewBackupCodes}
+                            disabled={isGeneratingCodes}
+                            style={{
+                              padding: "6px 12px",
+                              fontSize: "12px",
+                              background: "var(--color-primary)",
+                              color: "white",
+                              border: "1px solid var(--color-primary)",
+                              borderRadius: "var(--radius-md)",
+                              fontWeight: "400",
+                            }}
+                          >
+                            {isGeneratingCodes ? 'Generating...' : (user?.backup_codes_generated ? 'Regenerate' : 'Generate')}
+                          </Button>
+                          
+                          {showBackupCodesPopover && (
+                            <BackupCodesPopover
+                              triggerRef={backupCodesButtonRef}
+                              codes={backupCodes}
+                              onClose={() => setShowBackupCodesPopover(false)}
+                              onCopy={copyBackupCodes}
+                              onDownload={downloadBackupCodes}
+                            />
+                        )}
+                        </div>
+                      </>
+                    )}
+                  </div>
                 </div>
-              )}
-            </FormGroup>
-
-            <FormGroup>
-              <Label htmlFor="confirmPassword">Confirm New Password</Label>
-              <PasswordInput>
-                <Input
-                  id="confirmPassword"
-                  type={showConfirmPassword ? "text" : "password"}
-                  value={confirmPassword}
-                  onChange={(e) => setConfirmPassword(e.target.value)}
-                  placeholder="Confirm your new password"
-                />
-                <button
-                  type="button"
-                  onClick={() =>
-                    setShowConfirmPassword(!showConfirmPassword)
-                  }
-                >
-                  {showConfirmPassword ? (
-                    <EyeOff size={16} />
-                  ) : (
-                    <Eye size={16} />
-                  )}
-                </button>
-              </PasswordInput>
-              {passwordErrors.confirmPassword && (
-                <div
+              </div>
+              
+              {index < securityItems.length - 1 && (
+                <div 
                   style={{
-                    color: "var(--color-error)",
-                    fontSize: "12px",
-                    marginTop: "4px",
+                    height: '1px',
+                    background: 'var(--color-border)',
+                    margin: '0',
                   }}
-                >
-                  {passwordErrors.confirmPassword}
-                </div>
+                />
               )}
-            </FormGroup>
-
-            <TFA2.ButtonGroup>
-              <TFA2.ActionButton
-                type="button"
-                onClick={() => {
-                  setCurrentPassword("");
-                  setNewPassword("");
-                  setConfirmPassword("");
-                  setPasswordErrors({});
-                  toggleSection("changePassword");
-                }}
-              >
-                Cancel
-              </TFA2.ActionButton>
-              <TFA2.ActionButton
-                type="submit"
-                $variant="primary"
-                disabled={isSubmitting}
-              >
-                {isSubmitting ? "Updating..." : "Update Password"}
-              </TFA2.ActionButton>
-            </TFA2.ButtonGroup>
-          </Form>
-        </SecurityCard>
+            </div>
+          ))}
+        </div>
       )}
-    </div>
+    </>
   );
 };
 

@@ -29,7 +29,7 @@ export class EventEmitter {
         try {
           callback(...args);
         } catch (error) {
-          console.error(`Error in event handler for ${event}:`, error);
+          // Error in event handler
         }
       });
     }

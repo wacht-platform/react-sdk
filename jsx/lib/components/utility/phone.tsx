@@ -68,7 +68,7 @@ const CountryCodeDropdown = styled.div<{ $isOpen: boolean }>`
   box-shadow:
     0 0.25rem 0.375rem -0.0625rem var(--color-shadow),
     0 0.125rem 0.25rem -0.0625rem var(--color-shadow);
-  z-index: 50;
+  z-index: 1000;
   display: ${(props) => (props.$isOpen ? "block" : "none")};
 
   @media (max-width: ${breakpoints.sm}) {

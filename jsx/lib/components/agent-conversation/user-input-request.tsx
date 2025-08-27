@@ -4,8 +4,8 @@ import { Send, Calendar } from 'lucide-react';
 import { UserInputRequest } from '../../hooks/use-agent-conversation';
 
 const RequestContainer = styled.div`
-  background: #f0f4ff;
-  border: 1px solid #d4d4ff;
+  background: var(--color-primary-background);
+  border: 1px solid var(--color-primary-border);
   border-radius: 12px;
   padding: 16px;
   margin: 8px 0;
@@ -28,7 +28,7 @@ const QuestionText = styled.h4`
   margin: 0 0 8px 0;
   font-size: 16px;
   font-weight: 600;
-  color: #111827;
+  color: var(--color-foreground);
   display: flex;
   align-items: center;
   gap: 8px;
@@ -42,7 +42,7 @@ const QuestionText = styled.h4`
 const ContextText = styled.p`
   margin: 0 0 12px 0;
   font-size: 14px;
-  color: #6b7280;
+  color: var(--color-secondary-text);
   line-height: 1.5;
 `;
 
@@ -168,7 +168,7 @@ const SubmitButton = styled.button`
   padding: 10px 16px;
   border: none;
   border-radius: 8px;
-  background: #5b47e0;
+  background: var(--color-primary);
   color: white;
   font-size: 14px;
   font-weight: 500;
@@ -180,7 +180,7 @@ const SubmitButton = styled.button`
   transition: all 0.2s;
   
   &:hover {
-    background: #4c3bc8;
+    background: var(--color-primary-hover);
     transform: translateY(-1px);
   }
   

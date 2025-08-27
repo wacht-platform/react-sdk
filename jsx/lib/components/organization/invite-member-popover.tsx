@@ -7,6 +7,7 @@ import { useActiveOrganization } from "@/hooks/use-organization";
 import { Button, Spinner } from "../utility";
 import { ComboBox, ComboBoxOption } from "../utility/combo-box";
 import { OrganizationRole } from "@/types";
+import { useScreenContext } from "./context";
 
 const PopoverContainer = styled.div`
   position: fixed;
@@ -91,22 +92,43 @@ export const InviteMemberPopover = ({
   const [mounted, setMounted] = useState(false);
   const [position, setPosition] = useState({ top: 0, left: 0 });
   const { inviteMember } = useActiveOrganization();
+  const { toast } = useScreenContext();
 
   const roleOptions: ComboBoxOption[] = roles.map((role) => ({
     value: role.id,
     label: role.name,
   }));
 
+  const validateEmail = (email: string): boolean => {
+    const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+    return emailRegex.test(email);
+  };
+
   const handleInvite = async () => {
-    if (!email.trim() || !selectedRole) return;
+    const trimmedEmail = email.trim().toLowerCase();
+    
+    if (!trimmedEmail || !selectedRole) return;
+
+    // Validate email format
+    if (!validateEmail(trimmedEmail)) {
+      toast("Please enter a valid email address", "error");
+      return;
+    }
+
+    // Sanitize and validate email length
+    if (trimmedEmail.length > 320) { // RFC 5321 limit
+      toast("Email address is too long", "error");
+      return;
+    }
 
     setLoading(true);
     try {
-      await inviteMember({ email, organizationRole: selectedRole });
+      await inviteMember({ email: trimmedEmail, organizationRole: selectedRole });
 
       onSuccess?.();
-    } catch (error) {
-      console.error("Failed to send invitation", error);
+    } catch (error: any) {
+      const errorMessage = error.message || "Failed to send invitation. Please try again.";
+      toast(errorMessage, "error");
     } finally {
       setLoading(false);
     }
@@ -218,10 +240,13 @@ export const InviteMemberPopover = ({
         visibility: position.top > 0 ? 'visible' : 'hidden'
       }}
       onClick={(e) => e.stopPropagation()}
+      role="dialog"
+      aria-labelledby="invite-member-title"
+      aria-modal="true"
     >
       <Header>
-        <Title>Invite Member</Title>
-        <CloseButton onClick={onClose}>
+        <Title id="invite-member-title">Invite Member</Title>
+        <CloseButton onClick={onClose} aria-label="Close invite member dialog">
           <X size={16} />
         </CloseButton>
       </Header>
@@ -236,6 +261,8 @@ export const InviteMemberPopover = ({
               value={email}
               onChange={(e) => setEmail(e.target.value)}
               autoFocus
+              aria-label="Email address for invitation"
+              aria-describedby="email-help"
             />
           </FormGroup>
 
@@ -248,6 +275,7 @@ export const InviteMemberPopover = ({
                 setSelectedRole(roles.find((role) => role.id === id)!)
               }
               placeholder="Select a role"
+              aria-label="Select role for invited member"
             />
           </FormGroup>
         </div>

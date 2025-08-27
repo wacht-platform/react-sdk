@@ -2,6 +2,7 @@ import { useEffect, useRef, useState } from "react";
 import styled from "styled-components";
 import { X } from "lucide-react";
 import type { WorkspaceRole } from "@/types";
+import { useScreenContext } from "../organization/context";
 import { Button, Input, Label, FormGroup } from "@/components/utility";
 import { useDeployment } from "@/hooks/use-deployment";
 import { ComboBoxMulti } from "@/components/utility/combo-box";
@@ -89,6 +90,7 @@ export const AddWorkspaceRolePopover = ({
   const { deployment } = useDeployment();
   const [mounted, setMounted] = useState(false);
   const [position, setPosition] = useState({ top: 0, left: 0 });
+  const { toast } = useScreenContext();
   const isEditing = !!role;
 
   const permissionOptions = (deployment?.b2b_settings?.workspace_permissions || []).map((perm) => ({
@@ -205,8 +207,9 @@ export const AddWorkspaceRolePopover = ({
       };
 
       onSuccess?.(roleData);
-    } catch (error) {
-      console.error("Failed to save role", error);
+    } catch (error: any) {
+      const errorMessage = error.message || "Failed to save role. Please try again.";
+      toast(errorMessage, "error");
     } finally {
       setLoading(false);
     }

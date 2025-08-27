@@ -1,9 +1,6 @@
-import { useState, useRef, useEffect } from "react";
+import { useRef, useEffect, useState } from "react";
 import styled from "styled-components";
-import { Input } from "@/components/utility/input";
-import { FormGroup, Label } from "../utility/form";
-import { OTPInput } from "../utility/otp-input";
-import { useScreenContext } from "./context";
+import { Copy, Download } from "lucide-react";
 
 const PopoverContainer = styled.div`
   position: fixed;
@@ -57,33 +54,40 @@ const ButtonGroup = styled.div`
 
 const Title = styled.div`
   font-size: 14px;
-  font-weight: 500;
+  font-weight: 400;
   color: var(--color-foreground);
   margin-bottom: 8px;
 `;
 
+const CodesContainer = styled.div`
+  background: var(--color-input-background);
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-md);
+  padding: 12px;
+  margin: 16px 0;
+  font-family: monospace;
+  font-size: 12px;
+  line-height: 1.5;
+`;
 
-interface EmailAddPopoverProps {
-  existingEmail?: string;
+interface BackupCodesPopoverProps {
+  codes: string[];
   triggerRef?: React.RefObject<HTMLElement | null>;
   onClose: () => void;
-  onAddEmail: (email: string) => Promise<void>;
-  onPrepareVerification: () => Promise<void>;
-  onAttemptVerification: (otp: string) => Promise<void>;
+  onCopy: () => void;
+  onDownload: () => void;
 }
 
-export const EmailAddPopover = ({
+export const BackupCodesPopover = ({
+  codes,
   onClose,
-  onAddEmail,
-  onAttemptVerification,
-  onPrepareVerification,
-  existingEmail,
+  onCopy,
+  onDownload,
   triggerRef,
-}: EmailAddPopoverProps) => {
+}: BackupCodesPopoverProps) => {
   const popoverRef = useRef<HTMLDivElement>(null);
   const [mounted, setMounted] = useState(false);
   const [position, setPosition] = useState({ top: 0, left: 0 });
-  const { toast } = useScreenContext();
 
   useEffect(() => {
     setMounted(true);
@@ -97,7 +101,7 @@ export const EmailAddPopover = ({
       if (triggerButton) {
         const rect = triggerButton.getBoundingClientRect();
         const popoverWidth = 380;
-        const popoverHeight = 300; // Approximate height
+        const popoverHeight = 300; // Approximate height for backup codes popover
         const spacing = 8;
         
         let top = 0;
@@ -177,39 +181,6 @@ export const EmailAddPopover = ({
       document.removeEventListener("keydown", handleEscape);
     };
   }, [onClose, triggerRef]);
-  const [step, setStep] = useState<"email" | "otp">(
-    existingEmail ? "otp" : "email"
-  );
-  const [email, setEmail] = useState(existingEmail || "");
-  const [otp, setOtp] = useState("");
-  const [loading, setLoading] = useState(false);
-
-  const handleEmailSubmit = async () => {
-    if (!email || loading) return;
-    setLoading(true);
-    try {
-      await onAddEmail(email);
-      setStep("otp");
-    } catch (error: any) {
-      const errorMessage = error.message || "Failed to add email address. Please try again.";
-      toast(errorMessage, "error");
-    } finally {
-      setLoading(false);
-    }
-  };
-
-  const handleOTPSubmit = async () => {
-    setLoading(true);
-    try {
-      await onAttemptVerification(otp);
-      onClose();
-    } catch (error: any) {
-      const errorMessage = error.message || "Failed to verify email. Please check the code and try again.";
-      toast(errorMessage, "error");
-    } finally {
-      setLoading(false);
-    }
-  };
 
   if (!mounted) {
     return null;
@@ -225,71 +196,49 @@ export const EmailAddPopover = ({
       }}
       onClick={(e) => e.stopPropagation()}
     >
-      {step === "email" ? (
-        <>
-          <Title>Add email address</Title>
-          <div
-            style={{
-              fontSize: "14px",
-              color: "var(--color-muted)",
-              marginBottom: "10px",
-            }}
-          >
-            You will have to verify this email address before you can start
-            using it.
-          </div>
+      <Title>Backup Codes</Title>
+      <div
+        style={{
+          fontSize: "14px",
+          color: "var(--color-muted)",
+          marginBottom: "16px",
+        }}
+      >
+        Save these backup codes in a secure location. Each code can only be used once.
+      </div>
 
-          <FormGroup>
-            <Label htmlFor="email-input">Email address</Label>
-            <Input
-              id="email-input"
-              type="email"
-              placeholder="Enter your email"
-              value={email}
-              onChange={(e) => setEmail(e.target.value)}
-            />
-          </FormGroup>
-          <ButtonGroup>
-            <Button
-              $primary
-              onClick={handleEmailSubmit}
-              disabled={!email || loading}
-              style={{ width: "100%" }}
-            >
-              {loading ? "Adding..." : "Continue"}
-            </Button>
-          </ButtonGroup>
-        </>
-      ) : (
-        <>
-          <Title>Verify your email</Title>
-          <div
-            style={{
-              fontSize: "14px",
-              color: "var(--color-muted)",
-              marginBottom: "16px",
-            }}
-          >
-            Enter the 6-digit code sent to {email}
+      <CodesContainer>
+        {codes.map((code, index) => (
+          <div key={index} style={{ marginBottom: '4px' }}>
+            {code}
           </div>
-          <OTPInput
-            onComplete={async (code) => setOtp(code)}
-            onResend={onPrepareVerification}
-            isSubmitting={loading}
-          />
+        ))}
+      </CodesContainer>
 
-          <ButtonGroup>
-            <Button
-              $primary
-              onClick={handleOTPSubmit}
-              disabled={otp.length < 6 || loading}
-              style={{ width: "100%" }}
-            >
-              {loading ? "Verifying..." : "Verify"}
-            </Button>
-          </ButtonGroup>
-        </>
-      )}
+      <div style={{ 
+        fontSize: "12px", 
+        color: "var(--color-warning)", 
+        marginBottom: "16px",
+        padding: "8px",
+        background: "var(--color-warning-background)",
+        borderRadius: "var(--radius-sm)"
+      }}>
+        ⚠️ Keep these codes safe! They won't be shown again.
+      </div>
+
+      <ButtonGroup>
+        <Button onClick={onCopy} style={{ display: 'flex', alignItems: 'center', gap: '4px' }}>
+          <Copy size={14} />
+          Copy
+        </Button>
+        <Button onClick={onDownload} style={{ display: 'flex', alignItems: 'center', gap: '4px' }}>
+          <Download size={14} />
+          Download
+        </Button>
+        <Button $primary onClick={onClose}>
+          Done
+        </Button>
+      </ButtonGroup>
     </PopoverContainer>
   );
 };

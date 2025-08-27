@@ -89,14 +89,50 @@ export const AddDomainPopover = ({
   const { addDomain, verifyDomain } = useActiveOrganization();
   const { toast } = useScreenContext();
 
-  const handleDoaminCreation = async () => {
-    if (!newFqdn.trim()) return;
+  const validateDomain = (domain: string): boolean => {
+    // Basic domain validation - allows subdomains
+    const domainRegex = /^[a-zA-Z0-9]([a-zA-Z0-9-]{0,61}[a-zA-Z0-9])?(\.[a-zA-Z0-9]([a-zA-Z0-9-]{0,61}[a-zA-Z0-9])?)*\.[a-zA-Z]{2,}$/;
+    return domainRegex.test(domain);
+  };
 
-    const res = await addDomain!({ fqdn: newFqdn });
-    if (res?.errors?.length) return;
+  const sanitizeDomain = (domain: string): string => {
+    return domain.trim().toLowerCase().replace(/^https?:\/\//, '');
+  };
 
-    toast("Domain added successfully", "info");
-    setCurrentDomain(res!.data);
+  const handleDomainCreation = async () => {
+    const sanitizedDomain = sanitizeDomain(newFqdn);
+    
+    if (!sanitizedDomain) {
+      toast("Please enter a domain name", "error");
+      return;
+    }
+
+    // Validate domain format
+    if (!validateDomain(sanitizedDomain)) {
+      toast("Please enter a valid domain name (e.g., example.com)", "error");
+      return;
+    }
+
+    // Validate domain length
+    if (sanitizedDomain.length > 253) { // RFC 1035 limit
+      toast("Domain name is too long", "error");
+      return;
+    }
+
+    try {
+      const res = await addDomain!({ fqdn: sanitizedDomain });
+      if (res?.errors?.length) {
+        const errorMessage = res.errors[0]?.message || res.errors[0] || "Failed to add domain";
+        toast(typeof errorMessage === 'string' ? errorMessage : "Failed to add domain", "error");
+        return;
+      }
+
+      toast("Domain added successfully", "info");
+      setCurrentDomain(res!.data);
+    } catch (error: any) {
+      const errorMessage = error.message || "Failed to add domain. Please try again.";
+      toast(errorMessage, "error");
+    }
   };
 
   const handleDomainVerification = async () => {
@@ -106,7 +142,9 @@ export const AddDomainPopover = ({
       await verifyDomain!(currentDomain);
       onClose?.();
       toast("Domain verified successfully", "info");
-    } catch (error) {
+    } catch (error: any) {
+      const errorMessage = error.message || "Failed to verify domain. Please check DNS records and try again.";
+      toast(errorMessage, "error");
     } finally {
       setLoading(false);
     }
@@ -223,12 +261,15 @@ export const AddDomainPopover = ({
         visibility: position.top > 0 ? 'visible' : 'hidden'
       }}
       onClick={(e) => e.stopPropagation()}
+      role="dialog"
+      aria-labelledby="add-domain-title"
+      aria-modal="true"
     >
       {!currentDomain ? (
         <>
           <Header>
-            <Title>Add Domain</Title>
-            <CloseButton onClick={onClose}>
+            <Title id="add-domain-title">Add Domain</Title>
+            <CloseButton onClick={onClose} aria-label="Close add domain dialog">
               <X size={16} />
             </CloseButton>
           </Header>
@@ -243,6 +284,8 @@ export const AddDomainPopover = ({
                   value={newFqdn}
                   onChange={(e) => setNewFqdn(e.target.value)}
                   autoFocus
+                  aria-label="Domain name (FQDN)"
+                  aria-describedby="domain-help"
                 />
               </FormGroup>
             </div>
@@ -259,7 +302,7 @@ export const AddDomainPopover = ({
               Cancel
             </Button>
             <Button
-              onClick={handleDoaminCreation}
+              onClick={handleDomainCreation}
               disabled={!newFqdn || loading}
               style={{
                 width: "auto",
@@ -278,8 +321,8 @@ export const AddDomainPopover = ({
       ) : (
         <>
           <Header>
-            <Title>Verify Domain</Title>
-            <CloseButton onClick={onClose}>
+            <Title id="verify-domain-title">Verify Domain</Title>
+            <CloseButton onClick={onClose} aria-label="Close domain verification dialog">
               <X size={16} />
             </CloseButton>
           </Header>

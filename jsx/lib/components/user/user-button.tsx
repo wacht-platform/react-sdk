@@ -1,4 +1,5 @@
 import { useState, useRef, useEffect } from "react";
+import ReactDOM from "react-dom";
 import styled from "styled-components";
 import { LogOut, Settings, Plus } from "lucide-react";
 import { DefaultStylesProvider } from "../utility/root";
@@ -31,11 +32,11 @@ const AvatarContainer = styled.div`
 `;
 
 const Avatar = styled.div`
-  width: 32px;
-  height: 32px;
+  width: 24px;
+  height: 24px;
   border-radius: 50%;
   overflow: hidden;
-  background: var(--color-input-background);
+  background: var(--color-background-hover);
   display: flex;
   align-items: center;
   justify-content: center;
@@ -50,15 +51,11 @@ const Avatar = styled.div`
   }
 `;
 
-
-
 const UserName = styled.div`
   font-size: 14px;
   font-weight: 500;
   color: var(--color-foreground);
 `;
-
-
 
 const AccountName = styled.span`
   font-size: 14px;
@@ -73,47 +70,41 @@ const AccountEmail = styled.span`
 
 // Dropdown styled components
 const DropdownContainer = styled.div<{
-  $position: "bottom-right" | "bottom-left" | "top-right" | "top-left";
+  $position?: { top?: number; bottom?: number; left?: number; right?: number };
+  $isOpen: boolean;
+  $maxHeight?: number;
 }>`
-  position: absolute;
-  ${(props) => {
-    switch (props.$position) {
-      case "bottom-right":
-        return `
-					top: calc(100% + 8px);
-					left: 8px;
-				`;
-      case "bottom-left":
-        return `
-					top: calc(100% + 8px);
-					right: 8px;
-				`;
-      case "top-right":
-        return `
-					bottom: calc(100% + 8px);
-					left: 8px;
-				`;
-      case "top-left":
-        return `
-					bottom: calc(100% + 8px);
-					right: 8px;
-				`;
-      default:
-        return `
-					top: calc(100% + 8px);
-					left: 8px;
-				`;
-    }
-  }}
+  position: fixed;
+  ${(props) =>
+    props.$position?.top !== undefined ? `top: ${props.$position.top}px;` : ""}
+  ${(props) =>
+    props.$position?.bottom !== undefined
+      ? `bottom: ${props.$position.bottom}px;`
+      : ""}
+  ${(props) =>
+    props.$position?.left !== undefined
+      ? `left: ${props.$position.left}px;`
+      : ""}
+  ${(props) =>
+    props.$position?.right !== undefined
+      ? `right: ${props.$position.right}px;`
+      : ""}
+  visibility: ${(props) =>
+    props.$position && props.$isOpen ? "visible" : "hidden"};
+  opacity: ${(props) => (props.$isOpen && props.$position ? 1 : 0)};
+  transition:
+    opacity 0.15s ease,
+    visibility 0s linear ${(props) => (props.$isOpen ? "0s" : "0.15s")};
   border-radius: var(--radius-md);
   border: 1px solid var(--color-border);
   background: var(--color-background);
   box-shadow: 0 4px 12px var(--color-shadow);
-  z-index: 50;
+  z-index: 99999;
   overflow: hidden;
   min-width: 380px;
   max-width: calc(100vw - 24px);
-  max-height: calc(100vh - 48px);
+  max-height: ${(props) =>
+    props.$maxHeight ? `${props.$maxHeight}px` : "calc(100vh - 48px)"};
   overflow-y: auto;
 `;
 
@@ -121,13 +112,12 @@ const AccountSection = styled.div<{
   $isClickable?: boolean;
 }>`
   padding: 12px;
-  border-bottom: 1px solid var(--color-border);
   cursor: ${(props) => (props.$isClickable ? "pointer" : "default")};
   transition: background-color 0.2s ease;
 
   &:hover {
     background: ${(props) =>
-      props.$isClickable ? "var(--color-input-background)" : "transparent"};
+      props.$isClickable ? "var(--color-background-hover)" : "transparent"};
   }
 `;
 
@@ -165,7 +155,7 @@ const ActionLink = styled.button<{ $destructive?: boolean }>`
   align-items: center;
   justify-content: center;
   gap: 6px;
-  background: var(--color-input-background);
+  background: var(--color-background-hover);
   border: none;
   border-radius: var(--radius-sm);
   padding: 6px;
@@ -192,7 +182,7 @@ const ActionLink = styled.button<{ $destructive?: boolean }>`
 `;
 
 const FooterSection = styled.div`
-  background: var(--color-input-background);
+  background: var(--color-background-hover);
   padding: 12px;
 `;
 
@@ -219,8 +209,6 @@ const FooterButton = styled.button`
   }
 `;
 
-
-
 interface UserButtonProps {
   showName?: boolean;
 }
@@ -228,10 +216,17 @@ interface UserButtonProps {
 export const UserButton: React.FC<UserButtonProps> = ({ showName = true }) => {
   const [isOpen, setIsOpen] = useState(false);
   const [dropdownPosition, setDropdownPosition] = useState<
-    "bottom-right" | "bottom-left" | "top-right" | "top-left"
-  >("bottom-right");
+    | {
+        top?: number;
+        bottom?: number;
+        left?: number;
+        right?: number;
+        maxHeight?: number;
+      }
+    | undefined
+  >();
   const manageAccountDialog = useDialog(false);
-  const containerRef = useRef<HTMLDivElement>(null);
+  const buttonRef = useRef<HTMLButtonElement>(null);
   const dropdownRef = useRef<HTMLDivElement>(null);
   const { session, signOut, switchSignIn, addNewAccount, refetch } =
     useSession();
@@ -243,73 +238,107 @@ export const UserButton: React.FC<UserButtonProps> = ({ showName = true }) => {
   const hasMultipleAccounts = (session?.signins?.length ?? 0) > 1;
 
   useEffect(() => {
-    const handleClickOutside = (event: MouseEvent) => {
-      if (
-        containerRef.current &&
-        !containerRef.current.contains(event.target as Node)
-      ) {
-        setIsOpen(false);
-      }
-    };
+    if (!isOpen) return;
 
-    document.addEventListener("mousedown", handleClickOutside);
-    return () => {
-      document.removeEventListener("mousedown", handleClickOutside);
-    };
-  }, []);
+    const timer = setTimeout(() => {
+      const handleClickOutside = (event: MouseEvent) => {
+        const target = event.target as Node;
 
-  useEffect(() => {
-    if (isOpen && containerRef.current) {
-      setTimeout(() => {
-        if (!containerRef.current || !dropdownRef.current) return;
-
-        const buttonRect = containerRef.current.getBoundingClientRect();
-        const dropdownWidth = dropdownRef.current.offsetWidth || 300;
-        const dropdownHeight = dropdownRef.current.offsetHeight || 300;
-        const windowWidth = window.innerWidth;
-        const windowHeight = window.innerHeight;
-
-        const spaceRight = windowWidth - buttonRect.right;
-        const spaceLeft = buttonRect.left;
-        const spaceBottom = windowHeight - buttonRect.bottom;
-        const spaceTop = buttonRect.top;
-
-        if (spaceBottom >= dropdownHeight && spaceRight >= dropdownWidth) {
-          setDropdownPosition("bottom-right");
-        } else if (
-          spaceBottom >= dropdownHeight &&
-          spaceLeft >= dropdownWidth
-        ) {
-          setDropdownPosition("bottom-left");
-        } else if (spaceTop >= dropdownHeight && spaceRight >= dropdownWidth) {
-          setDropdownPosition("top-right");
-        } else if (spaceTop >= dropdownHeight && spaceLeft >= dropdownWidth) {
-          setDropdownPosition("top-left");
-        } else {
-          const positions = [
-            {
-              position: "bottom-right",
-              space: Math.min(spaceBottom, spaceRight),
-            },
-            {
-              position: "bottom-left",
-              space: Math.min(spaceBottom, spaceLeft),
-            },
-            { position: "top-right", space: Math.min(spaceTop, spaceRight) },
-            { position: "top-left", space: Math.min(spaceTop, spaceLeft) },
-          ];
-
-          positions.sort((a, b) => b.space - a.space);
-
-          setDropdownPosition(
-            positions[0].position as
-              | "bottom-right"
-              | "bottom-left"
-              | "top-right"
-              | "top-left",
-          );
+        if (buttonRef.current?.contains(target)) {
+          return;
         }
-      }, 0);
+
+        if (dropdownRef.current?.contains(target)) {
+          return;
+        }
+
+        setIsOpen(false);
+      };
+
+      document.addEventListener("mousedown", handleClickOutside);
+
+      return () => {
+        document.removeEventListener("mousedown", handleClickOutside);
+      };
+    }, 50);
+
+    return () => {
+      clearTimeout(timer);
+    };
+  }, [isOpen]);
+
+  // Update dropdown position when open
+  useEffect(() => {
+    if (isOpen && buttonRef.current) {
+      const rect = buttonRef.current.getBoundingClientRect();
+      const dropdownWidth = 380; // min-width of dropdown
+      // const dropdownHeight = 250; // More reasonable estimated height for user dropdown
+
+      const windowWidth = window.innerWidth;
+      const windowHeight = window.innerHeight;
+
+      // Calculate available space in all directions
+      const spaceRight = windowWidth - rect.left;
+      const spaceLeft = rect.right;
+      const spaceBelow = windowHeight - rect.bottom;
+      const spaceAbove = rect.top;
+
+      // UserButton positioning debug
+
+      // Determine best horizontal position
+      let left: number | undefined;
+      let right: number | undefined;
+
+      // Check if button is closer to right edge or left edge
+      const distanceFromLeft = rect.left;
+      const distanceFromRight = windowWidth - rect.right;
+
+      if (distanceFromRight < distanceFromLeft && spaceLeft >= dropdownWidth) {
+        // Button is on the right side and there's space on the left
+        // Use RIGHT positioning to keep dropdown anchored to button
+        right = windowWidth - rect.right; // Align right edges
+      } else if (spaceRight >= dropdownWidth) {
+        // Normal case - enough space on right
+        left = rect.left; // Align left edges
+      } else if (spaceLeft >= dropdownWidth) {
+        // Not enough space on right, but enough on left
+        left = rect.right - dropdownWidth; // Align dropdown's right edge with button's right edge
+      } else {
+        // Not enough space on either side - use left and center as best as possible
+        left = Math.max(
+          8,
+          Math.min(
+            windowWidth - dropdownWidth - 8,
+            rect.left - (dropdownWidth - rect.width) / 2,
+          ),
+        );
+      }
+
+      // Determine best vertical position and max height
+      let top: number | undefined;
+      let bottom: number | undefined;
+      let maxHeight: number | undefined;
+
+      if (spaceBelow >= 100) {
+        // Position below if there's at least 100px of space
+        top = rect.bottom + 8;
+        maxHeight = spaceBelow - 16; // Leave some padding from bottom
+      } else if (spaceAbove >= 100) {
+        // Position above - use BOTTOM positioning to keep it anchored above button
+        const spaceFromBottom = windowHeight - rect.top;
+        bottom = spaceFromBottom + 8; // Position 8px above the button
+        maxHeight = Math.min(400, spaceAbove - 16); // Cap at 400px or available space
+      } else {
+        // Very little space - just position below and let it scroll
+        top = rect.bottom + 8;
+        maxHeight = Math.max(100, spaceBelow - 16);
+      }
+
+      // Calculated position debug
+
+      setDropdownPosition({ top, bottom, left, right, maxHeight });
+    } else {
+      setDropdownPosition(undefined);
     }
   }, [isOpen]);
 
@@ -331,7 +360,7 @@ export const UserButton: React.FC<UserButtonProps> = ({ showName = true }) => {
       await refetch();
       setIsOpen(false);
     } catch (error) {
-      console.error("Failed to sign out:", error);
+      // Failed to sign out
       // You could add a toast notification here for better UX
     }
   };
@@ -342,7 +371,7 @@ export const UserButton: React.FC<UserButtonProps> = ({ showName = true }) => {
       await refetch();
       setIsOpen(false);
     } catch (error) {
-      console.error("Failed to sign out all accounts:", error);
+      // Failed to sign out all accounts
       // You could add a toast notification here for better UX
     }
   };
@@ -353,7 +382,7 @@ export const UserButton: React.FC<UserButtonProps> = ({ showName = true }) => {
       await refetch();
       setIsOpen(false);
     } catch (error) {
-      console.error("Failed to switch user:", error);
+      // Failed to switch user
       // You could add a toast notification here for better UX
     }
   };
@@ -365,8 +394,8 @@ export const UserButton: React.FC<UserButtonProps> = ({ showName = true }) => {
 
   return (
     <DefaultStylesProvider>
-      <Container ref={containerRef}>
-        <AccountButton onClick={toggleDropdown}>
+      <Container>
+        <AccountButton ref={buttonRef} onClick={toggleDropdown}>
           <AvatarContainer>
             <Avatar>
               {selectedAccount?.has_profile_picture ? (
@@ -392,67 +421,131 @@ export const UserButton: React.FC<UserButtonProps> = ({ showName = true }) => {
           )}
         </AccountButton>
 
-        {isOpen && (
-          <DropdownContainer ref={dropdownRef} $position={dropdownPosition}>
-            <div>
-              {isMultiSessionEnabled
-                ? (() => {
-                    // Sort signins to put active account first
-                    const sortedSignins = [...(session?.signins || [])].sort((a, b) => {
-                      const aIsActive = a.user.id === selectedAccount?.id;
-                      const bIsActive = b.user.id === selectedAccount?.id;
-                      if (aIsActive && !bIsActive) return -1;
-                      if (!aIsActive && bIsActive) return 1;
-                      return 0;
-                    });
+        {typeof window !== "undefined" &&
+          isOpen &&
+          ReactDOM.createPortal(
+            <DefaultStylesProvider>
+              <DropdownContainer
+                ref={dropdownRef}
+                $position={dropdownPosition}
+                $isOpen={isOpen}
+                $maxHeight={dropdownPosition?.maxHeight}
+              >
+                <div>
+                  {isMultiSessionEnabled
+                    ? (() => {
+                        // Sort signins to put active account first
+                        const sortedSignins = [
+                          ...(session?.signins || []),
+                        ].sort((a, b) => {
+                          const aIsActive = a.user.id === selectedAccount?.id;
+                          const bIsActive = b.user.id === selectedAccount?.id;
+                          if (aIsActive && !bIsActive) return -1;
+                          if (!aIsActive && bIsActive) return 1;
+                          return 0;
+                        });
 
-                    return sortedSignins.map(({ user: account, id: signInId }) => {
-                      const isActive = account.id === selectedAccount?.id;
-                      const isClickable = !isActive;
+                        return sortedSignins.map(
+                          ({ user: account, id: signInId }) => {
+                            const isActive = account.id === selectedAccount?.id;
+                            const isClickable = !isActive;
 
-                      return (
-                      <AccountSection
-                        key={account.id}
-                        $isClickable={isClickable}
-                        onClick={
-                          isClickable
-                            ? () => handleSwitchUser(signInId)
-                            : undefined
-                        }
-                      >
-                        <AccountHeader>
-                          <AvatarContainer>
-                            <LargerAvatar>
-                              {account.has_profile_picture ? (
-                                <img
-                                  src={account.profile_picture_url}
-                                  alt={account.first_name}
-                                />
-                              ) : (
-                                getInitials(
-                                  `${account?.first_name || ""} ${
-                                    account?.last_name || ""
-                                  }`,
-                                )
-                              )}
-                            </LargerAvatar>
+                            return (
+                              <AccountSection
+                                key={account.id}
+                                $isClickable={isClickable}
+                                onClick={
+                                  isClickable
+                                    ? () => handleSwitchUser(signInId)
+                                    : undefined
+                                }
+                              >
+                                <AccountHeader>
+                                  <AvatarContainer>
+                                    <LargerAvatar>
+                                      {account.has_profile_picture ? (
+                                        <img
+                                          src={account.profile_picture_url}
+                                          alt={account.first_name}
+                                        />
+                                      ) : (
+                                        getInitials(
+                                          `${account?.first_name || ""} ${
+                                            account?.last_name || ""
+                                          }`,
+                                        )
+                                      )}
+                                    </LargerAvatar>
+                                  </AvatarContainer>
+                                  <AccountDetails>
+                                    <NameRow>
+                                      <AccountName>
+                                        {`${account?.first_name || ""} ${
+                                          account?.last_name || ""
+                                        }`}
+                                      </AccountName>
+                                    </NameRow>
+                                    <AccountEmail>
+                                      {account.primary_email_address.email}
+                                    </AccountEmail>
+                                  </AccountDetails>
+                                </AccountHeader>
 
-                          </AvatarContainer>
-                          <AccountDetails>
-                            <NameRow>
-                              <AccountName>
-                                {`${account?.first_name || ""} ${
-                                  account?.last_name || ""
-                                }`}
-                              </AccountName>
-                            </NameRow>
-                            <AccountEmail>
-                              {account.primary_email_address.email}
-                            </AccountEmail>
-                          </AccountDetails>
-                        </AccountHeader>
+                                {isActive && (
+                                  <ActionRow>
+                                    <ActionLink
+                                      onClick={handleOpenManageAccount}
+                                    >
+                                      <Settings />
+                                      Manage account
+                                    </ActionLink>
+                                    <ActionLink
+                                      $destructive
+                                      onClick={() => handleSignOut(signInId)}
+                                    >
+                                      <LogOut />
+                                      Sign out
+                                    </ActionLink>
+                                  </ActionRow>
+                                )}
+                              </AccountSection>
+                            );
+                          },
+                        );
+                      })()
+                    : selectedAccount && (
+                        <AccountSection $isClickable={false}>
+                          <AccountHeader>
+                            <AvatarContainer>
+                              <LargerAvatar>
+                                {selectedAccount.has_profile_picture ? (
+                                  <img
+                                    src={selectedAccount.profile_picture_url}
+                                    alt={selectedAccount.first_name}
+                                  />
+                                ) : (
+                                  getInitials(
+                                    `${selectedAccount?.first_name || ""} ${
+                                      selectedAccount?.last_name || ""
+                                    }`,
+                                  )
+                                )}
+                              </LargerAvatar>
+                            </AvatarContainer>
+                            <AccountDetails>
+                              <NameRow>
+                                <AccountName>
+                                  {`${selectedAccount?.first_name || ""} ${
+                                    selectedAccount?.last_name || ""
+                                  }`}
+                                </AccountName>
+                              </NameRow>
+                              <AccountEmail>
+                                {selectedAccount.primary_email_address.email}
+                              </AccountEmail>
+                            </AccountDetails>
+                          </AccountHeader>
 
-                        {isActive && (
                           <ActionRow>
                             <ActionLink onClick={handleOpenManageAccount}>
                               <Settings />
@@ -460,93 +553,45 @@ export const UserButton: React.FC<UserButtonProps> = ({ showName = true }) => {
                             </ActionLink>
                             <ActionLink
                               $destructive
-                              onClick={() => handleSignOut(signInId)}
+                              onClick={() =>
+                                handleSignOut(session?.active_signin?.id || "")
+                              }
                             >
                               <LogOut />
                               Sign out
                             </ActionLink>
                           </ActionRow>
-                        )}
-                      </AccountSection>
-                    );
-                  });
-                })()
-                : selectedAccount && (
-                    <AccountSection $isClickable={false}>
-                      <AccountHeader>
-                        <AvatarContainer>
-                          <LargerAvatar>
-                            {selectedAccount.has_profile_picture ? (
-                              <img
-                                src={selectedAccount.profile_picture_url}
-                                alt={selectedAccount.first_name}
-                              />
-                            ) : (
-                              getInitials(
-                                `${selectedAccount?.first_name || ""} ${
-                                  selectedAccount?.last_name || ""
-                                }`,
-                              )
-                            )}
-                          </LargerAvatar>
+                        </AccountSection>
+                      )}
 
-                        </AvatarContainer>
-                        <AccountDetails>
-                          <NameRow>
-                            <AccountName>
-                              {`${selectedAccount?.first_name || ""} ${
-                                selectedAccount?.last_name || ""
-                              }`}
-                            </AccountName>
-                          </NameRow>
-                          <AccountEmail>
-                            {selectedAccount.primary_email_address.email}
-                          </AccountEmail>
-                        </AccountDetails>
-                      </AccountHeader>
+                  {isMultiSessionEnabled && (
+                    <>
+                      <FooterSection
+                        style={{
+                          borderBottom: "1px solid var(--color-border)",
+                        }}
+                      >
+                        <FooterButton onClick={addNewAccount}>
+                          <Plus />
+                          Add new account
+                        </FooterButton>
+                      </FooterSection>
 
-                      <ActionRow>
-                        <ActionLink onClick={handleOpenManageAccount}>
-                          <Settings />
-                          Manage account
-                        </ActionLink>
-                        <ActionLink
-                          $destructive
-                          onClick={() =>
-                            handleSignOut(session?.active_signin?.id || "")
-                          }
-                        >
-                          <LogOut />
-                          Sign out
-                        </ActionLink>
-                      </ActionRow>
-                    </AccountSection>
+                      {hasMultipleAccounts && (
+                        <FooterSection>
+                          <FooterButton onClick={handleSignOutAll}>
+                            <LogOut />
+                            Sign out of all accounts
+                          </FooterButton>
+                        </FooterSection>
+                      )}
+                    </>
                   )}
-
-              {isMultiSessionEnabled && (
-                <>
-                  <FooterSection
-                    style={{ borderBottom: "1px solid var(--color-border)" }}
-                  >
-                    <FooterButton onClick={addNewAccount}>
-                      <Plus />
-                      Add new account
-                    </FooterButton>
-                  </FooterSection>
-
-                  {hasMultipleAccounts && (
-                    <FooterSection>
-                      <FooterButton onClick={handleSignOutAll}>
-                        <LogOut />
-                        Sign out of all accounts
-                      </FooterButton>
-                    </FooterSection>
-                  )}
-                </>
-              )}
-            </div>
-          </DropdownContainer>
-        )}
+                </div>
+              </DropdownContainer>
+            </DefaultStylesProvider>,
+            document.body,
+          )}
 
         <ManageAccountDialog
           isOpen={manageAccountDialog.isOpen}

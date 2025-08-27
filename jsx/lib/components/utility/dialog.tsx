@@ -9,8 +9,10 @@ import {
   type FC,
   type ReactNode,
 } from "react";
+import ReactDOM from "react-dom";
 import styled from "styled-components";
 import { X } from "lucide-react";
+import { DefaultStylesProvider } from "./root";
 
 // Context for Dialog state
 interface DialogContextValue {
@@ -32,11 +34,11 @@ const useDialogContext = () => {
 const StyledOverlay = styled.div`
   position: fixed;
   inset: 0;
-  background-color: var(--color-dialog-backdrop);
+  background-color: var(--color-dialog-backdrop, rgba(0, 0, 0, 0.5));
   display: flex;
   justify-content: center;
   align-items: center;
-  z-index: 100;
+  z-index: 99999;
 `;
 
 const StyledContent = styled.div`
@@ -47,19 +49,20 @@ const StyledContent = styled.div`
   max-height: 90vh;
   overflow-y: auto;
   position: relative;
+  z-index: 100000;
 `;
 
 const StyledHeader = styled.div`
   display: flex;
   align-items: center;
   justify-content: space-between;
-  padding: var(--space-sm) var(--space-md);
+  padding: var(--space-sm, 12px) var(--space-md, 16px);
   border-bottom: 1px solid var(--color-border);
 `;
 
 const StyledTitle = styled.h2`
   font-size: 16px;
-  color: var(--color-text);
+  color: var(--color-foreground);
   margin: 0;
 `;
 
@@ -72,11 +75,11 @@ const StyledCloseButton = styled.button`
   justify-content: center;
   padding: 4px;
   border-radius: 4px;
-  color: var(--color-muted);
+  color: var(--color-secondary-text);
 
   &:hover {
     background-color: var(--color-background-hover);
-    color: var(--color-text);
+    color: var(--color-foreground);
   }
 `;
 
@@ -120,10 +123,15 @@ const DialogRoot: FC<DialogProps> = ({ isOpen, onClose, children }) => {
 
   if (!isOpen || !isMounted) return null;
 
-  return (
-    <DialogContext.Provider value={{ isOpen, onClose }}>
-      {children}
-    </DialogContext.Provider>
+  // Use portal to render outside of parent DOM hierarchy
+  // Wrap with DefaultStylesProvider to ensure CSS variables are available
+  return ReactDOM.createPortal(
+    <DefaultStylesProvider>
+      <DialogContext.Provider value={{ isOpen, onClose }}>
+        {children}
+      </DialogContext.Provider>
+    </DefaultStylesProvider>,
+    document.body
   );
 };
 
