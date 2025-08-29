@@ -50,6 +50,7 @@ import {
   DropdownTrigger,
 } from "@/components/utility/dropdown";
 import { useUser, useUserSignins } from "@/hooks/use-user";
+import { useSession } from "@/hooks/use-session";
 import { GoogleIcon } from "../icons/google";
 import { MicrosoftIcon } from "../icons/microsoft";
 import { GithubIcon } from "../icons/github";
@@ -309,6 +310,7 @@ const BrowserIcon = ({ browser }: { browser: string }) => {
 const ActiveSessionsSection = () => {
   const [activeSession, setActiveSession] = useState<string | null>(null);
   const { signins, removeSignin, refetch, loading } = useUserSignins();
+  const { refetch: refetchSession } = useSession();
   const { toast } = useScreenContext();
   
   // Type the signins data properly
@@ -317,7 +319,11 @@ const ActiveSessionsSection = () => {
   const logoutSession = async (sessionId: string) => {
     try {
       await removeSignin(sessionId);
-      await refetch();
+      // Refetch both the signins list and the current session
+      await Promise.all([
+        refetch(),
+        refetchSession()
+      ]);
       setActiveSession(null);
       toast("Session ended successfully", "info");
     } catch (error: any) {
