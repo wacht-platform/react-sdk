@@ -1,8 +1,8 @@
 import React, { useState, useRef, useEffect } from "react";
 import styled from "styled-components";
-import { Send, Bot, Loader2, Paperclip, Mic, X } from "lucide-react";
+import { Send, Bot, Loader2, Paperclip, X } from "lucide-react";
 import { useAgentConversation } from "../../hooks/use-agent-conversation";
-import { UserInputRequest } from "../../hooks/use-agent-conversation";
+import { UserInputRequest, ImageData } from "../../hooks/use-agent-conversation";
 import { CONNECTION_STATES } from "../../constants/ai-agent";
 import { FRONTEND_STATUS } from "../../constants/execution-status";
 import { DefaultStylesProvider } from "../utility/root";
@@ -226,9 +226,7 @@ const StreamingIndicator = styled.span`
 const PendingMessage = styled(Message)`
   opacity: 0.7;
   position: relative;
-  display: inline-flex;
-  align-items: center;
-  gap: 8px;
+  display: inline-block;
   padding-right: 36px; /* Make room for spinner */
   
   &::after {
@@ -477,6 +475,56 @@ const ActionButtons = styled.div`
   margin-top: 4px;
 `;
 
+const ImagePreviewContainer = styled.div`
+  display: flex;
+  gap: 8px;
+  padding: 8px 20px;
+  border-top: 1px solid var(--color-border-subtle);
+  background: var(--color-background);
+  overflow-x: auto;
+  max-height: 120px;
+`;
+
+const ImagePreview = styled.div`
+  position: relative;
+  width: 80px;
+  height: 80px;
+  border-radius: 8px;
+  overflow: hidden;
+  border: 1px solid var(--color-border);
+  flex-shrink: 0;
+  
+  img {
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+  }
+`;
+
+const RemoveImageButton = styled.button`
+  position: absolute;
+  top: 4px;
+  right: 4px;
+  width: 20px;
+  height: 20px;
+  border-radius: 50%;
+  background: rgba(0, 0, 0, 0.7);
+  color: white;
+  border: none;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  
+  &:hover {
+    background: rgba(0, 0, 0, 0.9);
+  }
+`;
+
+const HiddenFileInput = styled.input`
+  display: none;
+`;
+
 const ActionButton = styled.button`
   padding: 4px 10px;
   border: 1px solid var(--color-border);
@@ -564,11 +612,14 @@ export function AgentConversation({
   const [activeInputRequest, setActiveInputRequest] =
     useState<UserInputRequest | null>(null);
   const [selectedOptions, setSelectedOptions] = useState<string[]>([]);
+  const [uploadedImages, setUploadedImages] = useState<ImageData[]>([]);
   const messagesEndRef = useRef<HTMLDivElement>(null);
+  const fileInputRef = useRef<HTMLInputElement>(null);
 
   const {
     messages,
     pendingMessage,
+    pendingImages,
     connectionState,
     isConnected,
     isExecuting,
@@ -628,9 +679,41 @@ export function AgentConversation({
         setSelectedOptions([]);
       }
     } else if (!isExecuting && input.trim()) {
-      sendMessage(input);
+      sendMessage(input, uploadedImages.length > 0 ? uploadedImages : undefined);
       setInput("");
+      setUploadedImages([]); // Clear immediately after sending
     }
+  };
+
+  const handleFileSelect = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const files = e.target.files;
+    if (!files) return;
+
+    Array.from(files).forEach(file => {
+      if (file.type.startsWith('image/')) {
+        const reader = new FileReader();
+        reader.onload = (event) => {
+          if (event.target?.result) {
+            const base64 = event.target.result as string;
+            const base64Data = base64.split(',')[1]; // Remove data:image/jpeg;base64, prefix
+            setUploadedImages(prev => [...prev, {
+              mime_type: file.type,
+              data: base64Data
+            }]);
+          }
+        };
+        reader.readAsDataURL(file);
+      }
+    });
+    
+    // Reset file input
+    if (fileInputRef.current) {
+      fileInputRef.current.value = '';
+    }
+  };
+
+  const removeImage = (index: number) => {
+    setUploadedImages(prev => prev.filter((_, i) => i !== index));
   };
 
   const getStatusText = () => {
@@ -868,7 +951,24 @@ export function AgentConversation({
                     $isUser={message.role === "user"}
                   >
                     <Message $isUser={message.role === "user"}>
-                      {message.content}
+                      <div>{message.content}</div>
+                      {message.images && message.images.length > 0 && (
+                        <div style={{ display: 'flex', gap: '8px', marginTop: '8px', flexWrap: 'wrap' }}>
+                          {message.images.map((img, imgIndex) => (
+                            <img
+                              key={imgIndex}
+                              src={img.url || `data:${img.mime_type};base64,${img.data}`}
+                              alt={`Image ${imgIndex + 1}`}
+                              style={{
+                                maxWidth: '200px',
+                                maxHeight: '200px',
+                                borderRadius: '8px',
+                                border: '1px solid var(--color-border)'
+                              }}
+                            />
+                          ))}
+                        </div>
+                      )}
                       {message.isStreaming && <StreamingIndicator />}
                     </Message>
                   </MessageWrapper>
@@ -879,7 +979,24 @@ export function AgentConversation({
               {pendingMessage && (
                 <MessageWrapper $isUser={true}>
                   <PendingMessage $isUser={true}>
-                    {pendingMessage}
+                    <div>{pendingMessage}</div>
+                    {pendingImages && pendingImages.length > 0 && (
+                      <div style={{ display: 'flex', gap: '8px', marginTop: '8px', flexWrap: 'wrap' }}>
+                        {pendingImages.map((img, imgIndex) => (
+                          <img
+                            key={imgIndex}
+                            src={img.data ? `data:${img.mime_type};base64,${img.data}` : '#'}
+                            alt={`Image ${imgIndex + 1}`}
+                            style={{
+                              maxWidth: '200px',
+                              maxHeight: '200px',
+                              borderRadius: '8px',
+                              border: '1px solid var(--color-border)'
+                            }}
+                          />
+                        ))}
+                      </div>
+                    )}
                   </PendingMessage>
                 </MessageWrapper>
               )}
@@ -888,6 +1005,25 @@ export function AgentConversation({
             </>
           )}
         </MessagesContainer>
+
+        {uploadedImages.length > 0 && (
+          <ImagePreviewContainer>
+            {uploadedImages.map((img, index) => (
+              <ImagePreview key={index}>
+                <img 
+                  src={img.data ? `data:${img.mime_type};base64,${img.data}` : '#'} 
+                  alt={`Upload ${index + 1}`}
+                />
+                <RemoveImageButton 
+                  type="button"
+                  onClick={() => removeImage(index)}
+                >
+                  <X size={12} />
+                </RemoveImageButton>
+              </ImagePreview>
+            ))}
+          </ImagePreviewContainer>
+        )}
 
         <InputForm onSubmit={handleSend}>
           <InputContainer>
@@ -913,10 +1049,12 @@ export function AgentConversation({
                 <ActionButton
                   type="button"
                   disabled={!isConnected || isExecuting}
+                  onClick={() => fileInputRef.current?.click()}
                 >
                   <Paperclip size={16} />
                   Attach
                 </ActionButton>
+                {/* Audio recording - commented out for now
                 <ActionButton
                   type="button"
                   disabled={!isConnected || isExecuting}
@@ -924,7 +1062,15 @@ export function AgentConversation({
                   <Mic size={16} />
                   Record
                 </ActionButton>
+                */}
               </ActionButtons>
+              <HiddenFileInput
+                ref={fileInputRef}
+                type="file"
+                accept="image/*"
+                multiple
+                onChange={handleFileSelect}
+              />
             </InputWrapper>
             <SendButton
               type={isExecuting ? "button" : "submit"}

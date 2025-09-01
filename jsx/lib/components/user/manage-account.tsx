@@ -1799,11 +1799,10 @@ const ProfileDetailsManagementSection = () => {
   const { toast } = useScreenContext();
 
   // State for profile management
-  const [firstName, setFirstName] = useState(user?.first_name || "");
-  const [lastName, setLastName] = useState(user?.last_name || "");
-  const [username, setUsername] = useState(user?.username || "");
-  const [isAutoSaving, setIsAutoSaving] = useState(false);
-  const [showSaveNotification, setShowSaveNotification] = useState(false);
+  const [firstName, setFirstName] = useState("");
+  const [lastName, setLastName] = useState("");
+  const [username, setUsername] = useState("");
+  const [hasInitialized, setHasInitialized] = useState(false);
   const [showDeleteConfirm, setShowDeleteConfirm] = useState(false);
   const [isDeleting, setIsDeleting] = useState(false);
   const [confirmName, setConfirmName] = useState("");
@@ -1812,22 +1811,22 @@ const ProfileDetailsManagementSection = () => {
   );
 
   const fileInputRef = React.useRef<HTMLInputElement>(null);
-  const autoSaveTimeoutRef = React.useRef<NodeJS.Timeout | null>(null);
 
+  // Initialize form values only once when user data is available
   React.useEffect(() => {
-    if (user) {
+    if (user && !hasInitialized) {
       setFirstName(user.first_name || "");
       setLastName(user.last_name || "");
       setUsername(user.username || "");
       setPreviewUrl(user.profile_picture_url || null);
+      setHasInitialized(true);
     }
-  }, [user]);
+  }, [user, hasInitialized]);
 
   const autoSave = React.useCallback(async () => {
-    if (!user || isAutoSaving) return;
+    if (!user) return;
 
     try {
-      setIsAutoSaving(true);
       const data: any = {};
 
       if (firstName !== user.first_name) {
@@ -1843,58 +1842,33 @@ const ProfileDetailsManagementSection = () => {
       // Only save if there are actual changes
       if (Object.keys(data).length > 0) {
         await updateProfile(data);
-        setShowSaveNotification(true);
-        setTimeout(() => setShowSaveNotification(false), 3000);
       }
     } catch (error: any) {
       toast(error.message || "Failed to save profile changes", "error");
-    } finally {
-      setIsAutoSaving(false);
     }
-  }, [user, updateProfile, firstName, lastName, username, isAutoSaving, toast]);
-
-  const scheduleAutoSave = React.useCallback(() => {
-    if (autoSaveTimeoutRef.current) {
-      clearTimeout(autoSaveTimeoutRef.current);
-    }
-    autoSaveTimeoutRef.current = setTimeout(() => {
-      autoSave();
-    }, 1000); // Auto-save after 1 second of inactivity
-  }, [autoSave]);
+  }, [user, updateProfile, firstName, lastName, username, toast]);
 
   const handleFirstNameChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     setFirstName(e.target.value);
-    scheduleAutoSave();
   };
 
   const handleLastNameChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     setLastName(e.target.value);
-    scheduleAutoSave();
   };
 
   const handleUsernameChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     setUsername(e.target.value);
-    scheduleAutoSave();
   };
 
   const handleFirstNameBlur = () => {
-    if (autoSaveTimeoutRef.current) {
-      clearTimeout(autoSaveTimeoutRef.current);
-    }
     autoSave();
   };
 
   const handleLastNameBlur = () => {
-    if (autoSaveTimeoutRef.current) {
-      clearTimeout(autoSaveTimeoutRef.current);
-    }
     autoSave();
   };
 
   const handleUsernameBlur = () => {
-    if (autoSaveTimeoutRef.current) {
-      clearTimeout(autoSaveTimeoutRef.current);
-    }
     autoSave();
   };
 
@@ -2146,27 +2120,6 @@ const ProfileDetailsManagementSection = () => {
           </div>
 
           {/* Auto-save indicator */}
-          <div style={{
-            display: "flex",
-            alignItems: "center",
-            gap: "var(--space-xs)",
-            marginTop: "var(--space-md)",
-            fontSize: "var(--font-xs)",
-            color: "var(--color-muted)"
-          }}>
-            {isAutoSaving && (
-              <>
-                <Spinner size={14} />
-                <span>Saving changes...</span>
-              </>
-            )}
-            {showSaveNotification && (
-              <>
-                <Check size={14} color="var(--color-success)" />
-                <span style={{ color: "var(--color-success)" }}>Changes saved</span>
-              </>
-            )}
-          </div>
         </div>
 
         {/* Divider */}

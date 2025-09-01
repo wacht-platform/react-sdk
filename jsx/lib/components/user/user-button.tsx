@@ -183,7 +183,7 @@ const ActionLink = styled.button<{ $destructive?: boolean }>`
 
 const FooterSection = styled.div`
   background: var(--color-background-hover);
-  padding: 12px;
+  padding: 8px 12px;
 `;
 
 const FooterButton = styled.button`
@@ -193,8 +193,8 @@ const FooterButton = styled.button`
   gap: 8px;
   background: transparent;
   border: none;
-  padding: 8px;
-  font-size: 14px;
+  padding: 6px 8px;
+  font-size: 13px;
   color: var(--color-secondary-text);
   cursor: pointer;
   text-align: left;
@@ -204,8 +204,8 @@ const FooterButton = styled.button`
   }
 
   svg {
-    width: 16px;
-    height: 16px;
+    width: 14px;
+    height: 14px;
   }
 `;
 

@@ -18,12 +18,19 @@ export interface UserInputRequest {
   placeholder?: string;
 }
 
+export interface ImageData {
+  mime_type: string;
+  data?: string;
+  url?: string;
+}
+
 export interface ConversationMessage {
   id: string | number;
   role: "user" | "assistant" | "system";
   content: string;
   timestamp: Date;
   isStreaming?: boolean;
+  images?: ImageData[];
   metadata?: {
     type?: "user_input_request" | "log";
     userInputRequest?: UserInputRequest;
@@ -57,6 +64,7 @@ export function useAgentConversation({
   const { deployment } = useDeployment();
   const [messages, setMessages] = useState<ConversationMessage[]>([]);
   const [pendingMessage, setPendingMessage] = useState<string | null>(null);
+  const [pendingImages, setPendingImages] = useState<ImageData[] | null>(null);
   const [isConnected, setIsConnected] = useState(false);
   const [isExecuting, setIsExecuting] = useState(false);
   const [executionStatus, setExecutionStatus] = useState<FrontendStatus>(
@@ -162,10 +170,12 @@ export function useAgentConversation({
               })
               .map((msg: any) => {
                 let content = "";
+                let images = undefined;
                 let metadata = undefined;
 
                 if (msg.message_type === "user_message") {
                   content = msg.content?.message || "";
+                  images = msg.content?.images || undefined;
                 } else if (msg.message_type === "agent_response") {
                   content = msg.content?.response || "";
                 } else if (msg.message_type === "assistant_acknowledgment") {
@@ -201,14 +211,15 @@ export function useAgentConversation({
                     // Check if this is a gather_context step and add more context
                     const step = msg.content?.step;
                     const reasoning = msg.content?.reasoning;
-                    
+
                     if (step === "gathercontext") {
                       // Show the actual reasoning, clipped to a reasonable length
                       if (reasoning && reasoning.length > 0) {
                         const maxLength = 60;
-                        logContent = reasoning.length > maxLength 
-                          ? `${reasoning.substring(0, maxLength)}...`
-                          : reasoning;
+                        logContent =
+                          reasoning.length > maxLength
+                            ? `${reasoning.substring(0, maxLength)}...`
+                            : reasoning;
                       } else {
                         logContent = "Gathering context...";
                       }
@@ -292,6 +303,7 @@ export function useAgentConversation({
                         ? "system"
                         : "assistant",
                   content,
+                  images,
                   timestamp: new Date(msg.created_at || Date.now()),
                   metadata,
                 };
@@ -351,8 +363,8 @@ export function useAgentConversation({
       message_type === "assistant_action_planning" ||
       message_type === "context_results"
     ) {
-      // Clear pending message when system starts processing
       setPendingMessage(null);
+      setPendingImages(null);
 
       let logContent = "";
 
@@ -360,14 +372,15 @@ export function useAgentConversation({
         // Check if this is a gather_context step and add more context
         const step = content?.step;
         const reasoning = content?.reasoning;
-        
+
         if (step === "gathercontext") {
           // Show the actual reasoning, clipped to a reasonable length
           if (reasoning && reasoning.length > 0) {
             const maxLength = 60;
-            logContent = reasoning.length > maxLength 
-              ? `${reasoning.substring(0, maxLength)}...`
-              : reasoning;
+            logContent =
+              reasoning.length > maxLength
+                ? `${reasoning.substring(0, maxLength)}...`
+                : reasoning;
           } else {
             logContent = "Gathering context...";
           }
@@ -458,14 +471,15 @@ export function useAgentConversation({
 
     if (message_type === "user_message") {
       if (!messageExists(id)) {
-        // Clear pending message when we receive user message from backend
         setPendingMessage(null);
+        setPendingImages(null);
         setMessages((prev) => [
           ...prev,
           {
             id,
             role: "user",
             content: content.message,
+            images: content.images, // Include images from backend
             timestamp: new Date(),
           },
         ]);
@@ -473,7 +487,8 @@ export function useAgentConversation({
     } else if (message_type === "agent_response") {
       if (!messageExists(id)) {
         // Agent response indicates execution is complete
-        setPendingMessage(null); // Clear any pending message
+        setPendingMessage(null);
+        setPendingImages(null);
         setIsExecuting(false);
         setExecutionStatus(FRONTEND_STATUS.IDLE);
         streamingMessageRef.current = null;
@@ -492,9 +507,8 @@ export function useAgentConversation({
       }
     } else if (message_type === "assistant_acknowledgment") {
       if (!messageExists(id)) {
-        // Clear pending message when agent acknowledges
         setPendingMessage(null);
-        // Handle acknowledgment messages
+        setPendingImages(null);
         setMessages((prev) => [
           ...prev,
           {
@@ -676,7 +690,7 @@ export function useAgentConversation({
     const connectWebSocket = async () => {
       try {
         const token = await onTokenNeeded();
-        const backendHost = deployment?.backend_host?.replace(/^https?:\/\//, '') || 'api.wacht.io';
+        const backendHost = deployment?.backend_host;
         const wsUrl = `wss://${backendHost}/agent?token=${encodeURIComponent(token)}`;
 
         setConnectionState({ status: CONNECTION_STATES.CONNECTING });
@@ -737,17 +751,17 @@ export function useAgentConversation({
 
   // Send user message
   const sendMessage = useCallback(
-    (content: string) => {
+    (content: string, images?: ImageData[]) => {
       if (!isConnected) return;
 
-      // Set pending message to show immediately
       setPendingMessage(content);
+      setPendingImages(images || null);
       setIsExecuting(true);
       setExecutionStatus(FRONTEND_STATUS.STARTING);
 
       wsManager.send({
         message_type: { message_input: content },
-        data: {},
+        data: images ? { images } : {},
       });
     },
     [isConnected],
@@ -818,6 +832,7 @@ export function useAgentConversation({
   return {
     messages,
     pendingMessage,
+    pendingImages,
     connectionState,
     isConnected,
     isExecuting,
