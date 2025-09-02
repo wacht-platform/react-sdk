@@ -690,8 +690,8 @@ export function useAgentConversation({
     const connectWebSocket = async () => {
       try {
         const token = await onTokenNeeded();
-        const backendHost = deployment?.backend_host;
-        const wsUrl = `wss://${backendHost}/agent?token=${encodeURIComponent(token)}`;
+        const backendHost = deployment?.backend_host.replace(/https?:\/\//, "");
+        const wsUrl = `wss://${backendHost}/realtime/agent?token=${encodeURIComponent(token)}`;
 
         setConnectionState({ status: CONNECTION_STATES.CONNECTING });
         wsManager.connect(wsUrl);
