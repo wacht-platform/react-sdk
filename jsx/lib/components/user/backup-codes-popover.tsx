@@ -45,29 +45,47 @@ const Button = styled.button<{ $primary?: boolean }>`
   }
 `;
 
-const ButtonGroup = styled.div`
+const Header = styled.div`
   display: flex;
-  gap: 8px;
-  justify-content: flex-end;
-  margin-top: 16px;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 8px;
 `;
 
 const Title = styled.div`
   font-size: 14px;
   font-weight: 400;
   color: var(--color-foreground);
-  margin-bottom: 8px;
 `;
 
-const CodesContainer = styled.div`
+const TopButtons = styled.div`
+  display: flex;
+  gap: 8px;
+`;
+
+const CodesGrid = styled.div`
+  display: grid;
+  grid-template-columns: repeat(2, 1fr);
+  gap: 6px;
+  margin: 12px 0;
+`;
+
+const CodeItem = styled.div`
   background: var(--color-input-background);
   border: 1px solid var(--color-border);
-  border-radius: var(--radius-md);
-  padding: 12px;
-  margin: 16px 0;
-  font-family: monospace;
+  border-radius: var(--radius-sm);
+  padding: 6px 10px;
+  font-family: 'SF Mono', Monaco, 'Cascadia Code', 'Roboto Mono', monospace;
   font-size: 12px;
-  line-height: 1.5;
+  text-align: center;
+  color: var(--color-foreground);
+  cursor: pointer;
+  transition: all 0.2s ease;
+  
+  &:hover {
+    background: var(--color-input-background-hover);
+    border-color: var(--color-primary);
+  }
 `;
 
 interface BackupCodesPopoverProps {
@@ -196,49 +214,58 @@ export const BackupCodesPopover = ({
       }}
       onClick={(e) => e.stopPropagation()}
     >
-      <Title>Backup Codes</Title>
+      <Header>
+        <Title>Backup Codes</Title>
+        <TopButtons>
+          <Button onClick={onCopy} style={{ padding: '6px 10px', display: 'flex', alignItems: 'center', gap: '4px' }}>
+            <Copy size={14} />
+            Copy
+          </Button>
+          <Button onClick={onDownload} style={{ padding: '6px 10px', display: 'flex', alignItems: 'center', gap: '4px' }}>
+            <Download size={14} />
+            Download
+          </Button>
+        </TopButtons>
+      </Header>
       <div
         style={{
-          fontSize: "14px",
+          fontSize: "13px",
           color: "var(--color-muted)",
-          marginBottom: "16px",
+          marginBottom: "8px",
         }}
       >
         Save these backup codes in a secure location. Each code can only be used once.
       </div>
 
-      <CodesContainer>
+      <CodesGrid>
         {codes.map((code, index) => (
-          <div key={index} style={{ marginBottom: '4px' }}>
+          <CodeItem 
+            key={index}
+            onClick={() => {
+              navigator.clipboard.writeText(code);
+              // Optional: Add a toast notification here
+            }}
+            title="Click to copy"
+          >
             {code}
-          </div>
+          </CodeItem>
         ))}
-      </CodesContainer>
+      </CodesGrid>
 
       <div style={{ 
         fontSize: "12px", 
         color: "var(--color-warning)", 
-        marginBottom: "16px",
-        padding: "8px",
+        padding: "6px 10px",
         background: "var(--color-warning-background)",
-        borderRadius: "var(--radius-sm)"
+        border: "1px solid var(--color-warning-border)",
+        borderRadius: "var(--radius-sm)",
+        display: "flex",
+        alignItems: "center",
+        gap: "6px"
       }}>
-        ⚠️ Keep these codes safe! They won't be shown again.
+        <span style={{ fontSize: "14px" }}>⚠️</span>
+        <span>Keep these codes safe! They won't be shown again.</span>
       </div>
-
-      <ButtonGroup>
-        <Button onClick={onCopy} style={{ display: 'flex', alignItems: 'center', gap: '4px' }}>
-          <Copy size={14} />
-          Copy
-        </Button>
-        <Button onClick={onDownload} style={{ display: 'flex', alignItems: 'center', gap: '4px' }}>
-          <Download size={14} />
-          Download
-        </Button>
-        <Button $primary onClick={onClose}>
-          Done
-        </Button>
-      </ButtonGroup>
     </PopoverContainer>
   );
 };

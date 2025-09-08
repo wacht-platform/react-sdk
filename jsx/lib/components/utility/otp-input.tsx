@@ -155,6 +155,54 @@ export function OTPInput({
 		}
 	};
 
+	const handlePaste = (
+		e: React.ClipboardEvent<HTMLInputElement>,
+		index: number,
+	) => {
+		if (isSubmitting) return;
+
+		e.preventDefault();
+		const pastedData = e.clipboardData.getData("text/plain");
+		const pastedDigits = pastedData.replace(/[^0-9]/g, "").slice(0, length);
+
+		if (pastedDigits.length === 0) return;
+
+		const newOtp = [...otp];
+		
+		// Fill in the digits starting from the current index
+		for (let i = 0; i < pastedDigits.length && index + i < length; i++) {
+			newOtp[index + i] = pastedDigits[i];
+		}
+
+		// If pasting from the first input and we have a complete code, fill from start
+		if (index === 0 && pastedDigits.length === length) {
+			for (let i = 0; i < length; i++) {
+				newOtp[i] = pastedDigits[i];
+			}
+		}
+
+		setOtp(newOtp);
+
+		// Check if we have a complete OTP
+		const combinedOtp = newOtp.join("");
+		if (combinedOtp.length === length) {
+			onComplete(combinedOtp);
+			// Focus the last input
+			inputRefs.current[length - 1]?.focus();
+		} else {
+			// Focus the next empty input or the last filled input
+			const nextEmptyIndex = newOtp.findIndex((val, idx) => idx >= index && !val);
+			if (nextEmptyIndex !== -1) {
+				inputRefs.current[nextEmptyIndex]?.focus();
+			} else {
+				const lastFilledIndex = newOtp.map((val, idx) => val ? idx : -1).filter(idx => idx !== -1).pop();
+				if (lastFilledIndex !== undefined && lastFilledIndex < length - 1) {
+					inputRefs.current[lastFilledIndex + 1]?.focus();
+				}
+			}
+		}
+	};
+
 	return (
 		<Container>
 			<InputGroup>
@@ -167,6 +215,7 @@ export function OTPInput({
 						value={digit}
 						onChange={(e) => handleChange(e.target, index)}
 						onKeyDown={(e) => handleKeyDown(e, index)}
+						onPaste={(e) => handlePaste(e, index)}
 						ref={(ref: HTMLInputElement | null) => {
 							inputRefs.current[index] = ref;
 							return undefined;

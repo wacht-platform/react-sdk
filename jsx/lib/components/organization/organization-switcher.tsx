@@ -405,6 +405,51 @@ const ShimmerSmallLine = styled.div<{ width?: string }>`
   width: ${(props) => props.width || "60%"};
 `;
 
+const SkeletonButton = styled.div`
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 8px;
+  padding: 8px 10px;
+  border: 1px solid var(--color-border);
+  border-radius: 6px;
+  background: var(--color-background);
+  min-width: 200px;
+  min-height: 42px;
+  width: 100%;
+  animation: pulse 1.5s ease-in-out infinite;
+  
+  @keyframes pulse {
+    0%, 100% {
+      opacity: 1;
+    }
+    50% {
+      opacity: 0.5;
+    }
+  }
+`;
+
+const SkeletonAvatar = styled.div`
+  width: 20px;
+  height: 20px;
+  border-radius: 50%;
+  background: var(--color-border);
+`;
+
+const SkeletonText = styled.div`
+  height: 14px;
+  width: 120px;
+  background: var(--color-border);
+  border-radius: 4px;
+`;
+
+const SkeletonIcon = styled.div`
+  width: 16px;
+  height: 16px;
+  background: var(--color-border);
+  border-radius: 2px;
+`;
+
 export const OrganizationSwitcher = () => {
   const [open, setOpen] = useState(false);
   const [isSwitching, setIsSwitching] = useState(false);
@@ -548,10 +593,6 @@ export const OrganizationSwitcher = () => {
     refetchOrganizations();
   };
 
-  if (organizationLoading || sessionLoading) {
-    return null;
-  }
-
   if (!organizationsEnabled) {
     return null;
   }
@@ -590,6 +631,23 @@ export const OrganizationSwitcher = () => {
       .toUpperCase()
       .slice(0, 2);
   };
+
+  // Show skeleton loader while initial data is loading
+  if (organizationLoading || sessionLoading) {
+    return (
+      <DefaultStylesProvider>
+        <Container>
+          <SkeletonButton>
+            <ButtonContent>
+              <SkeletonAvatar />
+              <SkeletonText />
+            </ButtonContent>
+            <SkeletonIcon />
+          </SkeletonButton>
+        </Container>
+      </DefaultStylesProvider>
+    );
+  }
 
   return (
     <DefaultStylesProvider>

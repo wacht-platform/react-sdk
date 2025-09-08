@@ -582,7 +582,7 @@ const SendButton = styled.button`
 export interface AgentConversationProps {
   contextId: string;
   agentName: string;
-  onTokenNeeded: () => Promise<string>;
+  token: string;
   platformAdapter?: {
     onPlatformEvent?: (eventName: string, eventData: unknown) => void;
     onPlatformFunction?: (
@@ -600,7 +600,7 @@ export interface AgentConversationProps {
 export function AgentConversation({
   contextId,
   agentName,
-  onTokenNeeded,
+  token,
   platformAdapter,
   autoConnect = true,
   showEmptyState = true,
@@ -631,7 +631,7 @@ export function AgentConversation({
   } = useAgentConversation({
     contextId,
     agentName,
-    onTokenNeeded,
+    token,
     platformAdapter,
     autoConnect,
   });

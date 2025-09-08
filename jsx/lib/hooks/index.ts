@@ -17,3 +17,5 @@ export * from "./use-notification-stream";
 export * from "./use-channel-counts";
 export { useAgentConversation } from "./use-agent-conversation";
 export type { UserInputRequest, ConversationMessage } from "./use-agent-conversation";
+export { useContextManager } from "./use-context-manager";
+export type { ExecutionContext, CreateContextRequest, ListContextsOptions, ListContextsResponse } from "./use-context-manager";

@@ -1,10 +1,9 @@
 import { useState, useRef, useEffect } from "react";
 import styled from "styled-components";
-import { Mail } from "lucide-react";
+import { AlertTriangle } from "lucide-react";
 import { Input } from "@/components/utility/input";
 import { Button } from "@/components/utility/button";
-import { FormGroup } from "../utility/form";
-import { OTPInput } from "../utility/otp-input";
+import { FormGroup, Label } from "../utility/form";
 import { useScreenContext } from "./context";
 
 const PopoverContainer = styled.div`
@@ -14,7 +13,7 @@ const PopoverContainer = styled.div`
   box-shadow: 0 4px 12px var(--color-shadow);
   border: 1px solid var(--color-border);
   padding: 16px;
-  width: 380px;
+  width: 400px;
   max-width: calc(100vw - 48px);
   z-index: 1001;
 
@@ -31,51 +30,46 @@ const ButtonGroup = styled.div`
 `;
 
 const Title = styled.div`
-  font-size: 14px;
+  font-size: 16px;
   font-weight: 500;
   color: var(--color-foreground);
-  margin-bottom: 12px;
-`;
-
-const InputWrapper = styled.div`
+  margin-bottom: 8px;
   display: flex;
   align-items: center;
   gap: 8px;
 `;
 
-const IconWrapper = styled.div`
-  width: 40px;
-  height: 38px;
+const WarningBox = styled.div`
+  background: var(--color-warning-bg, rgba(251, 191, 36, 0.1));
+  border: 1px solid var(--color-warning-border, rgba(251, 191, 36, 0.3));
   border-radius: var(--radius-sm);
-  background: var(--color-surface, var(--color-background));
-  border: 1px solid var(--color-border);
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  color: var(--color-muted);
-  flex-shrink: 0;
+  padding: 12px;
+  margin-bottom: 16px;
 `;
 
-interface EmailAddPopoverProps {
-  existingEmail?: string;
+const WarningText = styled.p`
+  font-size: 13px;
+  color: var(--color-warning-text, var(--color-foreground));
+  margin: 0;
+  line-height: 1.5;
+`;
+
+interface RemovePasswordPopoverProps {
   triggerRef?: React.RefObject<HTMLElement | null>;
   onClose: () => void;
-  onAddEmail: (email: string) => Promise<void>;
-  onPrepareVerification: () => Promise<void>;
-  onAttemptVerification: (otp: string) => Promise<void>;
+  onRemovePassword: (currentPassword: string) => Promise<void>;
 }
 
-export const EmailAddPopover = ({
+export const RemovePasswordPopover = ({
   onClose,
-  onAddEmail,
-  onAttemptVerification,
-  onPrepareVerification,
-  existingEmail,
+  onRemovePassword,
   triggerRef,
-}: EmailAddPopoverProps) => {
+}: RemovePasswordPopoverProps) => {
   const popoverRef = useRef<HTMLDivElement>(null);
   const [mounted, setMounted] = useState(false);
   const [position, setPosition] = useState({ top: 0, left: 0 });
+  const [currentPassword, setCurrentPassword] = useState("");
+  const [loading, setLoading] = useState(false);
   const { toast } = useScreenContext();
 
   useEffect(() => {
@@ -89,7 +83,7 @@ export const EmailAddPopover = ({
 
       if (triggerButton) {
         const rect = triggerButton.getBoundingClientRect();
-        const popoverWidth = 380;
+        const popoverWidth = 400;
         const popoverHeight = 300; // Approximate height
         const spacing = 8;
 
@@ -173,37 +167,16 @@ export const EmailAddPopover = ({
       document.removeEventListener("keydown", handleEscape);
     };
   }, [onClose, triggerRef]);
-  const [step, setStep] = useState<"email" | "otp">(
-    existingEmail ? "otp" : "email",
-  );
-  const [email, setEmail] = useState(existingEmail || "");
-  const [otp, setOtp] = useState("");
-  const [loading, setLoading] = useState(false);
 
-  const handleEmailSubmit = async () => {
-    if (!email || loading) return;
+  const handleSubmit = async () => {
+    if (!currentPassword || loading) return;
+    
     setLoading(true);
     try {
-      await onAddEmail(email);
-      setStep("otp");
-    } catch (error: any) {
-      const errorMessage =
-        error.message || "Failed to add email address. Please try again.";
-      toast(errorMessage, "error");
-    } finally {
-      setLoading(false);
-    }
-  };
-
-  const handleOTPSubmit = async () => {
-    setLoading(true);
-    try {
-      await onAttemptVerification(otp);
+      await onRemovePassword(currentPassword);
       onClose();
     } catch (error: any) {
-      const errorMessage =
-        error.message ||
-        "Failed to verify email. Please check the code and try again.";
+      const errorMessage = error.message || "Failed to remove password. Please try again.";
       toast(errorMessage, "error");
     } finally {
       setLoading(false);
@@ -224,77 +197,52 @@ export const EmailAddPopover = ({
       }}
       onClick={(e) => e.stopPropagation()}
     >
-      {step === "email" ? (
-        <>
-          <Title>Add email address</Title>
-          <FormGroup>
-            <InputWrapper>
-              <IconWrapper>
-                <Mail size={16} />
-              </IconWrapper>
-              <Input
-                id="email-input"
-                type="email"
-                placeholder="Email address"
-                value={email}
-                onChange={(e) => setEmail(e.target.value)}
-                style={{ flex: 1 }}
-              />
-            </InputWrapper>
-          </FormGroup>
-          <ButtonGroup>
-            <Button
-              $outline
-              onClick={onClose}
-              style={{ width: 'auto', padding: '0 var(--space-md)' }}
-            >
-              Cancel
-            </Button>
-            <Button
-              onClick={handleEmailSubmit}
-              disabled={!email || loading}
-              style={{ width: 'auto', padding: '0 var(--space-md)' }}
-            >
-              {loading ? "Adding..." : "Continue"}
-            </Button>
-          </ButtonGroup>
-        </>
-      ) : (
-        <>
-          <Title>Verify your email</Title>
-          <div
-            style={{
-              fontSize: "14px",
-              color: "var(--color-muted)",
-              marginBottom: "16px",
-            }}
-          >
-            Enter the 6-digit code sent to {email}
-          </div>
-          <OTPInput
-            onComplete={async (code) => setOtp(code)}
-            onResend={onPrepareVerification}
-            isSubmitting={loading}
-          />
+      <Title>
+        <AlertTriangle size={18} color="var(--color-warning, #fbbf24)" />
+        Remove Password
+      </Title>
+      
+      <WarningBox>
+        <WarningText>
+          You're about to remove password authentication from your account. 
+          Make sure you have another way to sign in (email, phone, social login, or passkey) 
+          before continuing.
+        </WarningText>
+      </WarningBox>
 
-          <ButtonGroup>
-            <Button
-              $outline
-              onClick={() => setStep("email")}
-              style={{ width: 'auto', padding: '0 var(--space-md)' }}
-            >
-              Back
-            </Button>
-            <Button
-              onClick={handleOTPSubmit}
-              disabled={otp.length < 6 || loading}
-              style={{ width: 'auto', padding: '0 var(--space-md)' }}
-            >
-              {loading ? "Verifying..." : "Verify"}
-            </Button>
-          </ButtonGroup>
-        </>
-      )}
+      <FormGroup>
+        <Label htmlFor="current-password">Confirm your current password</Label>
+        <Input
+          id="current-password"
+          type="password"
+          placeholder="Enter current password"
+          value={currentPassword}
+          onChange={(e) => setCurrentPassword(e.target.value)}
+          autoFocus
+        />
+      </FormGroup>
+
+      <ButtonGroup>
+        <Button
+          $outline
+          onClick={onClose}
+          style={{ width: 'auto', padding: '0 var(--space-md)' }}
+        >
+          Cancel
+        </Button>
+        <Button
+          onClick={handleSubmit}
+          disabled={!currentPassword || loading}
+          style={{ 
+            width: 'auto', 
+            padding: '0 var(--space-md)',
+            background: 'var(--color-error)',
+            borderColor: 'var(--color-error)'
+          }}
+        >
+          {loading ? "Removing..." : "Remove Password"}
+        </Button>
+      </ButtonGroup>
     </PopoverContainer>
   );
 };

@@ -42,6 +42,7 @@ import { EmailAddPopover } from "@/components/user/add-email-popover";
 import { PhoneAddPopover } from "@/components/user/add-phone-popover";
 import { SetupTOTPPopover } from "@/components/user/setup-totp-popover";
 import { ChangePasswordPopover } from "@/components/user/change-password-popover";
+import { RemovePasswordPopover } from "@/components/user/remove-password-popover";
 import { BackupCodesPopover } from "@/components/user/backup-codes-popover";
 import {
   Dropdown,
@@ -460,8 +461,10 @@ const EmailManagementSection = () => {
   const [activeDropdown, setActiveDropdown] = useState<string | null>(null);
   const [newEmail, setNewEmail] = useState("");
   const [isAddingEmail, setIsAddingEmail] = useState(false);
+  const [verifyingEmailId, setVerifyingEmailId] = useState<string | null>(null);
   const [searchQuery, setSearchQuery] = useState("");
   const emailButtonRef = useRef<HTMLButtonElement>(null);
+  const verifyButtonRefs = useRef<{ [key: string]: HTMLButtonElement | null }>({});
   const {
     user,
     createEmailAddress,
@@ -542,7 +545,7 @@ const EmailManagementSection = () => {
                 setNewEmail(newEmailData.data.id);
                 await prepareEmailVerification(newEmailData.data.id);
                 user.refetch();
-                setIsAddingEmail(false);
+                // Don't close the popover - let it transition to OTP step
               }}
               onPrepareVerification={async () => {
                 await prepareEmailVerification(newEmail);
@@ -552,6 +555,8 @@ const EmailManagementSection = () => {
                 await attemptEmailVerification(newEmail, otp);
                 user.refetch();
                 setIsAddingEmail(false);
+                setNewEmail("");
+                toast("Email added and verified successfully!", "info");
               }}
             />
           )}
@@ -591,7 +596,11 @@ const EmailManagementSection = () => {
                     }
                   >
                     <DropdownTrigger>
-                      <IconButton>•••</IconButton>
+                      <IconButton 
+                        ref={(ref: HTMLButtonElement | null) => {
+                          if (ref) verifyButtonRefs.current[email.id] = ref;
+                        }}
+                      >•••</IconButton>
                     </DropdownTrigger>
                     <DropdownItems>
                       {email.id !== user?.primary_email_address_id && email.verified && (
@@ -607,9 +616,10 @@ const EmailManagementSection = () => {
                       )}
                       {!email.verified && (
                         <DropdownItem
-                          onClick={() => {
-                            prepareEmailVerification(email.id);
+                          onClick={async () => {
                             setActiveDropdown(null);
+                            await prepareEmailVerification(email.id);
+                            setVerifyingEmailId(email.id);
                           }}
                         >
                           Verify email
@@ -631,6 +641,26 @@ const EmailManagementSection = () => {
             ))}
           </TableBody>
         </Table>
+      )}
+      {verifyingEmailId && (
+        <EmailAddPopover
+          existingEmail={user?.user_email_addresses?.find(e => e.id === verifyingEmailId)?.email}
+          triggerRef={{ current: verifyButtonRefs.current[verifyingEmailId] }}
+          onClose={() => setVerifyingEmailId(null)}
+          onAddEmail={async () => {
+            // This won't be called since we're starting at OTP step
+          }}
+          onPrepareVerification={async () => {
+            await prepareEmailVerification(verifyingEmailId);
+            user.refetch();
+          }}
+          onAttemptVerification={async (otp) => {
+            await attemptEmailVerification(verifyingEmailId, otp);
+            user.refetch();
+            setVerifyingEmailId(null);
+            toast("Email verified successfully!", "info");
+          }}
+        />
       )}
     </>
   );
@@ -803,7 +833,7 @@ const IconWrapper = styled.div`
 `;
 
 const SocialManagementSection = () => {
-  const { user, disconnectSocialConnection } = useUser();
+  const { user, disconnectSocialConnection, connectSocialAccount } = useUser();
   const { deployment } = useDeployment();
 
   const socialAuthProviders = {
@@ -922,12 +952,11 @@ const SocialManagementSection = () => {
               ) : (
                 <EditButton
                   onClick={() => {
-                    // Redirect to OAuth flow for this provider
-                    const baseUrl = deployment?.backend_host || "";
-                    const redirectUrl = `${baseUrl}/auth/oauth2/init?provider=${provider.provider
-                      }&redirect_url=${encodeURIComponent(window.location.href)}`;
-                    window.location.href = redirectUrl;
-                  }}
+                    connectSocialAccount({
+                      provider: provider.provider,
+                      redirectUri: window.location.href
+                    });
+                  }
                   style={{
                     background: "var(--color-primary)",
                     color: "var(--color-background)",
@@ -1126,6 +1155,7 @@ const SecurityManagementSection = () => {
   const {
     user,
     updatePassword,
+    removePassword,
     setupAuthenticator,
     verifyAuthenticator,
     deleteAuthenticator,
@@ -1136,9 +1166,11 @@ const SecurityManagementSection = () => {
 
   const [showTOTPPopover, setShowTOTPPopover] = useState(false);
   const [showPasswordPopover, setShowPasswordPopover] = useState(false);
+  const [showRemovePasswordPopover, setShowRemovePasswordPopover] = useState(false);
   const [showBackupCodesPopover, setShowBackupCodesPopover] = useState(false);
   const totpButtonRef = useRef<HTMLButtonElement>(null);
   const passwordButtonRef = useRef<HTMLButtonElement>(null);
+  const removePasswordButtonRef = useRef<HTMLButtonElement>(null);
   const backupCodesButtonRef = useRef<HTMLButtonElement>(null);
   const [setupStep, setSetupStep] = useState<'table' | 'qr' | 'verify' | 'backup' | 'success'>('table');
   const [qrCodeUrl, setQrCodeUrl] = useState<string>("");
@@ -1165,6 +1197,41 @@ const SecurityManagementSection = () => {
     toast("Password updated successfully", "info");
   };
 
+  const handleRemovePassword = async (currentPassword: string) => {
+    await removePassword(currentPassword);
+    await user.refetch();
+    toast("Password removed successfully", "info");
+  };
+
+  // Check if user can remove password (has alternative auth methods)
+  const canRemovePassword = () => {
+    if (!user) return false;
+    
+    // Check for verified email (for email OTP or magic link)
+    const hasVerifiedEmail = user.user_email_addresses?.some(email => email.verified);
+    
+    // Check for verified phone (for phone OTP)
+    const hasVerifiedPhone = user.user_phone_numbers?.some(phone => phone.verified);
+    
+    // Check for social connections
+    const hasSocialConnection = user.social_connections && user.social_connections.length > 0;
+    
+    // Check for authenticator
+    const hasAuthenticator = !!user.user_authenticator;
+    
+    // Check if any alternative auth methods are enabled and available
+    const authSettings = deployment?.auth_settings;
+    
+    const hasAlternativeAuth = 
+      (authSettings?.first_factor === 'email_otp' && hasVerifiedEmail) ||
+      (authSettings?.magic_link?.enabled && hasVerifiedEmail) ||
+      (authSettings?.passkey?.enabled) ||
+      (authSettings?.auth_factors_enabled?.phone_otp && hasVerifiedPhone) ||
+      (hasSocialConnection && deployment?.social_connections?.some(sc => sc.enabled)) ||
+      hasAuthenticator;
+    
+    return hasAlternativeAuth;
+  };
 
   const handleVerifyAuthenticator = async () => {
     if (verificationCodes.some(code => code.length !== 6)) {
@@ -1264,8 +1331,8 @@ const SecurityManagementSection = () => {
       id: 'password',
       name: 'Password',
       description: 'Secure your account with a strong password',
-      status: user ? 'Enabled' : 'Not Set',
-      actions: ['change'],
+      status: user?.has_password ? 'Enabled' : 'Disabled',
+      actions: user?.has_password ? ['change'] : ['setup'],
     });
   }
 
@@ -1654,31 +1721,90 @@ const SecurityManagementSection = () => {
                   <div style={{ position: 'relative' }}>
                     {item.id === 'password' && (
                       <>
-                        <div style={{ position: 'relative' }}>
-                          <Button
-                            ref={passwordButtonRef}
-                            onClick={() => setShowPasswordPopover(true)}
-                            style={{
-                              padding: "6px 12px",
-                              fontSize: "12px",
-                              background: "var(--color-primary)",
-                              color: "white",
-                              border: "1px solid var(--color-primary)",
-                              borderRadius: "var(--radius-md)",
-                              fontWeight: "400",
-                            }}
-                          >
-                            Change Password
-                          </Button>
-                          
-                          {showPasswordPopover && (
-                            <ChangePasswordPopover
-                              triggerRef={passwordButtonRef}
-                              onClose={() => setShowPasswordPopover(false)}
-                              onChangePassword={handleChangePassword}
-                            />
-                          )}
-                        </div>
+                        {user?.has_password ? (
+                          <div style={{ display: 'flex', gap: '8px' }}>
+                            <div style={{ position: 'relative' }}>
+                              <Button
+                                ref={passwordButtonRef}
+                                onClick={() => setShowPasswordPopover(true)}
+                                style={{
+                                  padding: "6px 12px",
+                                  fontSize: "12px",
+                                  background: "var(--color-primary)",
+                                  color: "white",
+                                  border: "1px solid var(--color-primary)",
+                                  borderRadius: "var(--radius-md)",
+                                  fontWeight: "400",
+                                }}
+                              >
+                                Change
+                              </Button>
+                              
+                              {showPasswordPopover && (
+                                <ChangePasswordPopover
+                                  triggerRef={passwordButtonRef}
+                                  onClose={() => setShowPasswordPopover(false)}
+                                  onChangePassword={handleChangePassword}
+                                />
+                              )}
+                            </div>
+                            
+                            {canRemovePassword() && (
+                              <div style={{ position: 'relative' }}>
+                                <Button
+                                  ref={removePasswordButtonRef}
+                                  onClick={() => setShowRemovePasswordPopover(true)}
+                                  style={{
+                                    padding: "6px 12px",
+                                    fontSize: "12px",
+                                    background: "transparent",
+                                    color: "var(--color-error)",
+                                    border: "1px solid var(--color-error)",
+                                    borderRadius: "var(--radius-md)",
+                                    fontWeight: "400",
+                                  }}
+                                >
+                                  Remove
+                                </Button>
+                                
+                                {showRemovePasswordPopover && (
+                                  <RemovePasswordPopover
+                                    triggerRef={removePasswordButtonRef}
+                                    onClose={() => setShowRemovePasswordPopover(false)}
+                                    onRemovePassword={handleRemovePassword}
+                                  />
+                                )}
+                              </div>
+                            )}
+                          </div>
+                        ) : (
+                          <div style={{ position: 'relative' }}>
+                            <Button
+                              ref={passwordButtonRef}
+                              onClick={() => setShowPasswordPopover(true)}
+                              style={{
+                                padding: "6px 12px",
+                                fontSize: "12px",
+                                background: "var(--color-primary)",
+                                color: "white",
+                                border: "1px solid var(--color-primary)",
+                                borderRadius: "var(--radius-md)",
+                                fontWeight: "400",
+                              }}
+                            >
+                              Setup
+                            </Button>
+                            
+                            {showPasswordPopover && (
+                              <ChangePasswordPopover
+                                triggerRef={passwordButtonRef}
+                                onClose={() => setShowPasswordPopover(false)}
+                                onChangePassword={handleChangePassword}
+                                isSetup={true}
+                              />
+                            )}
+                          </div>
+                        )}
                       </>
                     )}
                     

@@ -91,12 +91,14 @@ interface ChangePasswordPopoverProps {
   triggerRef?: React.RefObject<HTMLElement | null>;
   onClose: () => void;
   onChangePassword: (currentPassword: string, newPassword: string) => Promise<void>;
+  isSetup?: boolean;
 }
 
 export const ChangePasswordPopover = ({
   onClose,
   onChangePassword,
   triggerRef,
+  isSetup = false,
 }: ChangePasswordPopoverProps) => {
   const popoverRef = useRef<HTMLDivElement>(null);
   const [mounted, setMounted] = useState(false);
@@ -208,7 +210,7 @@ export const ChangePasswordPopover = ({
 
     const newErrors: Record<string, string> = {};
 
-    if (!currentPassword) {
+    if (!isSetup && !currentPassword) {
       newErrors.currentPassword = "Current password is required";
     }
 
@@ -229,7 +231,7 @@ export const ChangePasswordPopover = ({
 
     setLoading(true);
     try {
-      await onChangePassword(currentPassword, newPassword);
+      await onChangePassword(isSetup ? "" : currentPassword, newPassword);
       onClose();
     } catch (error: any) {
       setErrors({ form: error.message || "Failed to update password" });
@@ -252,7 +254,7 @@ export const ChangePasswordPopover = ({
       }}
       onClick={(e) => e.stopPropagation()}
     >
-      <Title>Change Password</Title>
+      <Title>{isSetup ? "Set Password" : "Change Password"}</Title>
       <div
         style={{
           fontSize: "14px",
@@ -260,38 +262,40 @@ export const ChangePasswordPopover = ({
           marginBottom: "16px",
         }}
       >
-        Update your account password to keep it secure.
+        {isSetup ? "Set a password for your account to enable password authentication." : "Update your account password to keep it secure."}
       </div>
 
-      <FormGroup>
-        <Label>Current Password</Label>
-        <PasswordInput>
-          <Input
-            type={showCurrentPassword ? "text" : "password"}
-            placeholder="Enter your current password"
-            value={currentPassword}
-            onChange={(e) => setCurrentPassword(e.target.value)}
-            style={{ paddingRight: "40px" }}
-          />
-          <button
-            type="button"
-            onClick={() => setShowCurrentPassword(!showCurrentPassword)}
-            aria-label={showCurrentPassword ? "Hide current password" : "Show current password"}
-          >
-            {showCurrentPassword ? <EyeOff size={16} /> : <Eye size={16} />}
-          </button>
-        </PasswordInput>
-        {errors.currentPassword && (
-          <ErrorMessage>{errors.currentPassword}</ErrorMessage>
-        )}
-      </FormGroup>
+      {!isSetup && (
+        <FormGroup>
+          <Label>Current Password</Label>
+          <PasswordInput>
+            <Input
+              type={showCurrentPassword ? "text" : "password"}
+              placeholder="Enter your current password"
+              value={currentPassword}
+              onChange={(e) => setCurrentPassword(e.target.value)}
+              style={{ paddingRight: "40px" }}
+            />
+            <button
+              type="button"
+              onClick={() => setShowCurrentPassword(!showCurrentPassword)}
+              aria-label={showCurrentPassword ? "Hide current password" : "Show current password"}
+            >
+              {showCurrentPassword ? <EyeOff size={16} /> : <Eye size={16} />}
+            </button>
+          </PasswordInput>
+          {errors.currentPassword && (
+            <ErrorMessage>{errors.currentPassword}</ErrorMessage>
+          )}
+        </FormGroup>
+      )}
 
       <FormGroup>
-        <Label>New Password</Label>
+        <Label>{isSetup ? "Password" : "New Password"}</Label>
         <PasswordInput>
           <Input
             type={showNewPassword ? "text" : "password"}
-            placeholder="Enter your new password"
+            placeholder={isSetup ? "Enter your password" : "Enter your new password"}
             value={newPassword}
             onChange={(e) => setNewPassword(e.target.value)}
             style={{ paddingRight: "40px" }}
@@ -341,7 +345,7 @@ export const ChangePasswordPopover = ({
           onClick={handleSubmit}
           disabled={loading}
         >
-          {loading ? "Updating..." : "Update Password"}
+          {loading ? (isSetup ? "Setting..." : "Updating...") : (isSetup ? "Set Password" : "Update Password")}
         </Button>
       </ButtonGroup>
     </PopoverContainer>

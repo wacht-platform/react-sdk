@@ -189,8 +189,8 @@ export function useUser() {
   const verifyAuthenticator = async (id: string, codes: string[]) => {
     const form = new FormData();
     form.append("authenticator_id", id);
-    codes.forEach((code, index) => {
-      form.append(`codes[${index}]`, code);
+    codes.forEach((code) => {
+      form.append("codes", code);
     });
 
     const response = await responseMapper(
@@ -295,6 +295,25 @@ export function useUser() {
     return response;
   };
 
+  const connectSocialAccount = async ({ provider, redirectUri }: { provider: string; redirectUri?: string }) => {
+    const params = new URLSearchParams({ provider });
+    if (redirectUri) {
+      params.append("redirect_uri", redirectUri);
+    }
+    
+    const response = await responseMapper(
+      await client(`/me/oauth2/connect/init?${params.toString()}`, {
+        method: "POST",
+      })
+    );
+    
+    if ("data" in response && response.data?.oauth_url) {
+      window.location.href = response.data.oauth_url;
+    }
+    
+    return response;
+  };
+
   return {
     user: {
       ...user,
@@ -320,6 +339,7 @@ export function useUser() {
     regenerateBackupCodes,
     updateProfilePicture,
     disconnectSocialConnection,
+    connectSocialAccount,
     updatePassword,
     removePassword,
     deleteAccount,
