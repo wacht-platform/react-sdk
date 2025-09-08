@@ -956,7 +956,7 @@ const SocialManagementSection = () => {
                       provider: provider.provider,
                       redirectUri: window.location.href
                     });
-                  }
+                  }}
                   style={{
                     background: "var(--color-primary)",
                     color: "var(--color-background)",

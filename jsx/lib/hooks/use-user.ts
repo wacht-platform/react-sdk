@@ -301,7 +301,7 @@ export function useUser() {
       params.append("redirect_uri", redirectUri);
     }
     
-    const response = await responseMapper(
+    const response = await responseMapper<{ oauth_url: string }>(
       await client(`/me/oauth2/connect/init?${params.toString()}`, {
         method: "POST",
       })
