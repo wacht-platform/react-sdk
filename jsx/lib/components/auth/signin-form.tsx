@@ -141,7 +141,7 @@ function SignInFormContent() {
     signIn,
     signinAttempt,
     discardSignInAttempt,
-    errors: signInErrors,
+    error: signInErrors,
   } = useSignInWithStrategy(SignInStrategy.Generic);
   const { signIn: oauthSignIn } = useSignInWithStrategy(SignInStrategy.Oauth);
   const [formData, setFormData] = useState<SignInParams>({
@@ -186,7 +186,7 @@ function SignInFormContent() {
   const createSignIn = async (e: React.FormEvent) => {
     e.preventDefault();
     if (loading || isSubmitting) return;
-    
+
     // Debounce check
     const now = Date.now();
     if (now - lastSubmitTime.current < DEBOUNCE_DELAY) {
@@ -428,13 +428,18 @@ function SignInFormContent() {
       <ProfileCompletion
         onComplete={() => {
           // Handle successful completion
-          let redirectUri = new URLSearchParams(window.location.search).get("redirect_uri");
+          let redirectUri = new URLSearchParams(window.location.search).get(
+            "redirect_uri",
+          );
           if (!redirectUri) {
             redirectUri = "https://" + window.location.hostname;
           }
           const uri = new URL(redirectUri);
           if (deployment?.mode === "staging") {
-            uri.searchParams.set("dev_session", localStorage.getItem("__dev_session__") ?? "");
+            uri.searchParams.set(
+              "dev_session",
+              localStorage.getItem("__dev_session__") ?? "",
+            );
           }
           window.location.href = uri.toString();
         }}
@@ -605,7 +610,7 @@ function SignInFormContent() {
             <Footer>
               Don't have an account?{" "}
               <Link>
-                <NavigationLink to={deployment!.ui_settings.sign_up_page_url}>
+                <NavigationLink to={deployment!.ui_settings?.sign_up_page_url}>
                   Sign up
                 </NavigationLink>
               </Link>

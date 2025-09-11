@@ -19,6 +19,7 @@ interface ProfileUpdateData {
   primary_email_address_id?: string;
   primary_phone_number_id?: string;
   second_factor_policy?: SecondFactorPolicy;
+  remove_profile_picture?: boolean;
 }
 
 const fetchUser = async (client: Client) => {
@@ -35,6 +36,7 @@ export function useUser() {
   const { client, loading } = useClient();
   const {
     data: user,
+    error,
     isLoading,
     mutate,
   } = useSWR(loading ? null : "/user", () => fetchUser(client));
@@ -118,9 +120,10 @@ export function useUser() {
     return response;
   };
 
-  const createPhoneNumber = async (phone_number: string) => {
+  const createPhoneNumber = async (phone_number: string, country_code: string) => {
     const form = new FormData();
     form.append("phone_number", phone_number);
+    form.append("country_code", country_code);
 
     const response = await responseMapper<UserPhoneNumber>(
       await client("/me/phone-numbers", {
@@ -150,9 +153,13 @@ export function useUser() {
   };
 
   const attemptPhoneVerification = async (id: string, otp: string) => {
+    const form = new FormData();
+    form.append("code", otp);
+    
     const response = await responseMapper(
-      await client(`/me/phone-numbers/${id}/attempt-verification?code=${otp}`, {
+      await client(`/me/phone-numbers/${id}/attempt-verification`, {
         method: "POST",
+        body: form,
       })
     );
     return response;
@@ -264,8 +271,8 @@ export function useUser() {
     form.append("current_password", currentPassword);
 
     const response = await responseMapper(
-      await client("/me/password", {
-        method: "DELETE",
+      await client("/me/remove-password", {
+        method: "POST",
         body: form,
       })
     );
@@ -302,13 +309,13 @@ export function useUser() {
     }
     
     const response = await responseMapper<{ oauth_url: string }>(
-      await client(`/me/oauth2/connect/init?${params.toString()}`, {
+      await client(`/me/init-sso-connection?${params.toString()}`, {
         method: "POST",
       })
     );
     
     if ("data" in response && response.data?.oauth_url) {
-      window.location.href = response.data.oauth_url;
+      window.open(response.data.oauth_url, "_blank");
     }
     
     return response;
@@ -319,6 +326,8 @@ export function useUser() {
       ...user,
       refetch: mutate,
     },
+    loading: loading || isLoading,
+    error: error || null,
     updateProfile,
     getEmailAddresses,
     getEmailAddress,
@@ -343,13 +352,12 @@ export function useUser() {
     updatePassword,
     removePassword,
     deleteAccount,
-    loading: isLoading || loading,
   };
 }
 
 export function useUserSignins() {
   const { client, loading } = useClient();
-  const { data: signins, isLoading, mutate } = useSWR(
+  const { data: signins, error, isLoading, mutate } = useSWR(
     loading ? null : "/me/signins",
     () => fetchUserSignins(client)
   );
@@ -357,7 +365,7 @@ export function useUserSignins() {
   const removeSignin = async (id: string) => {
     const response = await responseMapper(
       await client(`/me/signins/${id}/signout`, {
-        method: "PATCH",
+        method: "POST",
       })
     );
     return response;
@@ -365,6 +373,7 @@ export function useUserSignins() {
 
   return {
     signins,
+    error: error || null,
     removeSignin,
     refetch: mutate,
     loading: isLoading || loading,

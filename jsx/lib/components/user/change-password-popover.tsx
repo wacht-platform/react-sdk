@@ -1,7 +1,7 @@
 import { useState, useRef, useEffect } from "react";
 import styled from "styled-components";
 import { Input } from "@/components/utility/input";
-import { FormGroup, Label } from "../utility/form";
+import { Label } from "../utility/form";
 import { Eye, EyeOff } from "lucide-react";
 
 const PopoverContainer = styled.div`
@@ -59,6 +59,13 @@ const Title = styled.div`
   font-weight: 500;
   color: var(--color-foreground);
   margin-bottom: 8px;
+`;
+
+const StyledFormGroup = styled.div`
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  margin-bottom: 12px;
 `;
 
 const PasswordInput = styled.div`
@@ -266,7 +273,7 @@ export const ChangePasswordPopover = ({
       </div>
 
       {!isSetup && (
-        <FormGroup>
+        <StyledFormGroup>
           <Label>Current Password</Label>
           <PasswordInput>
             <Input
@@ -287,10 +294,10 @@ export const ChangePasswordPopover = ({
           {errors.currentPassword && (
             <ErrorMessage>{errors.currentPassword}</ErrorMessage>
           )}
-        </FormGroup>
+        </StyledFormGroup>
       )}
 
-      <FormGroup>
+      <StyledFormGroup>
         <Label>{isSetup ? "Password" : "New Password"}</Label>
         <PasswordInput>
           <Input
@@ -311,9 +318,9 @@ export const ChangePasswordPopover = ({
         {errors.newPassword && (
           <ErrorMessage>{errors.newPassword}</ErrorMessage>
         )}
-      </FormGroup>
+      </StyledFormGroup>
 
-      <FormGroup>
+      <StyledFormGroup>
         <Label>Confirm New Password</Label>
         <PasswordInput>
           <Input
@@ -334,7 +341,7 @@ export const ChangePasswordPopover = ({
         {errors.confirmPassword && (
           <ErrorMessage>{errors.confirmPassword}</ErrorMessage>
         )}
-      </FormGroup>
+      </StyledFormGroup>
 
       {errors.form && <ErrorMessage>{errors.form}</ErrorMessage>}
 

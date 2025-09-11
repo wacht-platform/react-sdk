@@ -141,7 +141,7 @@ export function useSession(): UseSessionReturnType {
       const data = await fetchSingleton.get(template)!;
       fetchSingleton.delete(template);
       if (data.errors?.length) {
-        throw new error(data.errors[0]);
+        throw new Error(data.errors[0].message);
       }
       tokenSingletonMap.set(template, data.data);
       return data.data.token;

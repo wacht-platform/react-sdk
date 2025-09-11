@@ -147,13 +147,13 @@ export const SocialAuthButtons = ({
   return (
     <SocialAuthButtonsContainer>
       {buttonRows.map((row, rowIndex) => (
-        <ButtonRow key={row[0].id}>
-          {row.map((connection) => {
+        <ButtonRow key={`row-${rowIndex}`}>
+          {row.map((connection, connectionIndex) => {
             const provider =
               connection.provider as keyof typeof socialAuthProviders;
             return (
               <SocialAuthButton
-                key={connection.id}
+                key={`${connection.provider}-${connectionIndex}`}
                 onClick={() => callback(connection)}
                 type="button"
                 $isWide={

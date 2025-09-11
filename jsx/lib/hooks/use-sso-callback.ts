@@ -124,12 +124,51 @@ export function useSSOCallback(
 
   const handleCallback = async (code: string, state: string) => {
     try {
+      // Decode the state to determine if it's sign-in or connect flow
+      // State format: base64_data.hmac_signature
+      let endpoint: string;
+      let method: string;
+      
+      try {
+        // Extract the base64 data part (before the dot)
+        const stateParts = state.split('.');
+        if (stateParts.length !== 2) {
+          throw new Error("Invalid OAuth state format - missing signature");
+        }
+        
+        // Decode base64 URL-safe encoding
+        const base64Data = stateParts[0].replace(/-/g, '+').replace(/_/g, '/');
+        // Add padding if needed
+        const padding = base64Data.length % 4 ? '='.repeat(4 - base64Data.length % 4) : '';
+        const decodedBytes = atob(base64Data + padding);
+        
+        // Parse the action from decoded state
+        const stateAction = decodedBytes.split('|')[0];
+        
+        if (stateAction === 'sign_in') {
+          endpoint = `/auth/oauth2/callback`;
+          method = "GET";
+        } else if (stateAction === 'connect_social') {
+          endpoint = `/me/sso-connection-callback`;
+          method = "POST";
+        } else {
+          throw new Error(`Unknown OAuth action: ${stateAction}`);
+        }
+      } catch (e) {
+        // State is malformed or invalid
+        const error = e instanceof Error ? e : new Error("Failed to parse OAuth state");
+        setError(new Error(`Invalid OAuth callback: ${error.message}. The authorization link may be expired or malformed. Please try signing in again.`));
+        setLoading(false);
+        if (onError) onError(error);
+        return;
+      }
+
       const response = await client(
-        `/auth/oauth2/callback?code=${encodeURIComponent(
+        `${endpoint}?code=${encodeURIComponent(
           code
         )}&state=${encodeURIComponent(state)}`,
         {
-          method: "GET",
+          method: method,
         }
       );
 

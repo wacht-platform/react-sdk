@@ -799,7 +799,7 @@ export function SignUpForm() {
             <Footer>
               Already have an account?{" "}
               <Link>
-                <NavigationLink to={deployment!.ui_settings.sign_in_page_url}>
+                <NavigationLink to={deployment!.ui_settings?.sign_in_page_url}>
                   Sign in
                 </NavigationLink>
               </Link>

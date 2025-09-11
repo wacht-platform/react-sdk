@@ -1,16 +1,31 @@
-import { useSession } from "@/hooks"
+import { useEffect } from "react";
+import { useSession, useDeployment, useNavigation } from "@/hooks";
 
 interface SignedInProps {
-    children: React.ReactNode;
+  children: React.ReactNode;
 }
 
 export const SignedIn = ({ children }: SignedInProps) => {
-    const { session, loading } = useSession();
+  const { session, loading } = useSession();
+  const { deployment } = useDeployment();
+  const { navigate } = useNavigation();
 
-    if (loading) return null;
-    if (!session.signins?.length) return null;
+  useEffect(() => {
+    if (loading) return;
 
-    return <>
-        {children}
-    </>
-}
+    if (!session.signins?.length) {
+      const signInUrl = deployment?.ui_settings?.sign_in_page_url;
+      if (signInUrl) navigate(signInUrl);
+      return;
+    }
+
+    if (!session.active_signin) {
+      navigate("/");
+    }
+  }, [loading, session, deployment, navigate]);
+
+  if (loading) return null;
+  if (!session.signins?.length || !session.active_signin) return null;
+
+  return <>{children}</>;
+};

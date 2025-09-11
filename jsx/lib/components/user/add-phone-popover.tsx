@@ -1,7 +1,7 @@
 import { useState, useRef, useEffect } from "react";
 import styled from "styled-components";
 import { Button } from "@/components/utility/button";
-import { FormGroup, Label } from "../utility/form";
+import { FormGroup } from "../utility/form";
 import { OTPInput } from "../utility/otp-input";
 import { PhoneNumberInput } from "../utility/phone";
 import { useScreenContext } from "./context";
@@ -40,7 +40,7 @@ interface PhoneAddPopoverProps {
   existingPhone?: string;
   triggerRef?: React.RefObject<HTMLElement | null>;
   onClose: () => void;
-  onAddPhone: (phone: string) => Promise<void>;
+  onAddPhone: (phone: string, countryCode: string) => Promise<void>;
   onPrepareVerification: () => Promise<void>;
   onAttemptVerification: (otp: string) => Promise<void>;
 }
@@ -170,7 +170,7 @@ export const PhoneAddPopover = ({
     if (!phoneNumber || loading) return;
     setLoading(true);
     try {
-      await onAddPhone(`${countryCode}${phoneNumber}`);
+      await onAddPhone(phoneNumber, countryCode || "");
       setStep("otp");
     } catch (error: any) {
       const errorMessage =
@@ -223,17 +223,17 @@ export const PhoneAddPopover = ({
             />
           </FormGroup>
           <ButtonGroup>
-            <Button 
-              $outline 
+            <Button
+              $outline
               onClick={onClose}
-              style={{ width: 'auto', padding: '0 var(--space-md)' }}
+              style={{ width: "auto", padding: "0 var(--space-md)" }}
             >
               Cancel
             </Button>
             <Button
               onClick={handlePhoneSubmit}
               disabled={!phoneNumber || loading}
-              style={{ width: 'auto', padding: '0 var(--space-md)' }}
+              style={{ width: "auto", padding: "0 var(--space-md)" }}
             >
               Continue
             </Button>
@@ -243,24 +243,23 @@ export const PhoneAddPopover = ({
         <>
           <Title>Verify phone number</Title>
           <FormGroup>
-            <Label>Enter verification code</Label>
             <OTPInput
               onComplete={(code) => setOtp(code)}
               onResend={async () => onPrepareVerification()}
             />
           </FormGroup>
           <ButtonGroup>
-            <Button 
+            <Button
               $outline
               onClick={onClose}
-              style={{ width: 'auto', padding: '0 var(--space-md)' }}
+              style={{ width: "auto", padding: "0 var(--space-md)" }}
             >
               Cancel
             </Button>
             <Button
               onClick={handleOTPSubmit}
               disabled={otp.length !== 6 || loading}
-              style={{ width: 'auto', padding: '0 var(--space-md)' }}
+              style={{ width: "auto", padding: "0 var(--space-md)" }}
             >
               Verify
             </Button>

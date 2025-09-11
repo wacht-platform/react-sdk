@@ -56,6 +56,9 @@ import { GoogleIcon } from "../icons/google";
 import { MicrosoftIcon } from "../icons/microsoft";
 import { GithubIcon } from "../icons/github";
 import { XIcon } from "../icons/x";
+import { GitLabIcon } from "../icons/gitlab";
+import { LinkedInIcon } from "../icons/linkedin";
+import { DiscordIcon } from "../icons/discord";
 import { ChromeIcon } from "../icons/chrome";
 import { FirefoxIcon } from "../icons/firefox";
 import { SafariIcon } from "../icons/safari";
@@ -481,11 +484,8 @@ const EmailManagementSection = () => {
 
   const handleDeleteEmail = async (emailId: string) => {
     try {
-      const emailToDelete = user?.user_email_addresses?.find(
-        (email) => email.id === emailId,
-      );
-
-      if (emailToDelete?.is_primary) {
+      // Check if this is the primary email
+      if (emailId === user?.primary_email_address_id) {
         toast(
           "Cannot delete primary email address. Please set another email as primary first.",
           "error",
@@ -589,53 +589,63 @@ const EmailManagementSection = () => {
                       : "Not Verified"}
                 </TableCell>
                 <ActionsCell>
-                  <Dropdown
-                    open={activeDropdown === email.id}
-                    openChange={(isOpen) =>
-                      setActiveDropdown(isOpen ? email.id : null)
-                    }
-                  >
-                    <DropdownTrigger>
-                      <IconButton 
-                        ref={(ref: HTMLButtonElement | null) => {
-                          if (ref) verifyButtonRefs.current[email.id] = ref;
-                        }}
-                      >•••</IconButton>
-                    </DropdownTrigger>
-                    <DropdownItems>
-                      {email.id !== user?.primary_email_address_id && email.verified && (
-                        <DropdownItem
-                          onClick={async () => {
-                            await makeEmailPrimary(email.id);
-                            user.refetch();
-                            setActiveDropdown(null);
+                  {/* Only show dropdown if there are actions available (not primary or not verified) */}
+                  {(email.id !== user?.primary_email_address_id || !email.verified) ? (
+                    <Dropdown
+                      open={activeDropdown === email.id}
+                      openChange={(isOpen) =>
+                        setActiveDropdown(isOpen ? email.id : null)
+                      }
+                    >
+                      <DropdownTrigger>
+                        <IconButton 
+                          ref={(ref: HTMLButtonElement | null) => {
+                            if (ref) verifyButtonRefs.current[email.id] = ref;
                           }}
-                        >
-                          Make primary
-                        </DropdownItem>
-                      )}
-                      {!email.verified && (
-                        <DropdownItem
-                          onClick={async () => {
-                            setActiveDropdown(null);
-                            await prepareEmailVerification(email.id);
-                            setVerifyingEmailId(email.id);
-                          }}
-                        >
-                          Verify email
-                        </DropdownItem>
-                      )}
-                      <DropdownItem
-                        $destructive
-                        onClick={() => {
-                          handleDeleteEmail(email.id);
-                          setActiveDropdown(null);
-                        }}
-                      >
-                        Remove
-                      </DropdownItem>
-                    </DropdownItems>
-                  </Dropdown>
+                        >•••</IconButton>
+                      </DropdownTrigger>
+                      <DropdownItems>
+                        {email.id !== user?.primary_email_address_id && email.verified && (
+                          <DropdownItem
+                            onClick={async () => {
+                              try {
+                                await makeEmailPrimary(email.id);
+                                user.refetch();
+                                setActiveDropdown(null);
+                                toast("Primary email updated successfully", "info");
+                              } catch (error: any) {
+                                toast(error.message || "Failed to update primary email", "error");
+                              }
+                            }}
+                          >
+                            Make primary
+                          </DropdownItem>
+                        )}
+                        {!email.verified && (
+                          <DropdownItem
+                            onClick={async () => {
+                              setActiveDropdown(null);
+                              await prepareEmailVerification(email.id);
+                              setVerifyingEmailId(email.id);
+                            }}
+                          >
+                            Verify email
+                          </DropdownItem>
+                        )}
+                        {email.id !== user?.primary_email_address_id && (
+                          <DropdownItem
+                            $destructive
+                            onClick={() => {
+                              handleDeleteEmail(email.id);
+                              setActiveDropdown(null);
+                            }}
+                          >
+                            Remove
+                          </DropdownItem>
+                        )}
+                      </DropdownItems>
+                    </Dropdown>
+                  ) : null}
                 </ActionsCell>
               </TableRow>
             ))}
@@ -671,8 +681,10 @@ const PhoneManagementSection = () => {
   const [activeDropdown, setActiveDropdown] = useState<string | null>(null);
   const [newPhone, setNewPhone] = useState("");
   const [isAddingPhone, setIsAddingPhone] = useState(false);
+  const [verifyingPhoneId, setVerifyingPhoneId] = useState<string | null>(null);
   const [searchQuery, setSearchQuery] = useState("");
   const phoneButtonRef = useRef<HTMLButtonElement>(null);
+  const phoneVerifyButtonRefs = useRef<Record<string, HTMLButtonElement>>({});
   const {
     user,
     createPhoneNumber,
@@ -723,12 +735,11 @@ const PhoneManagementSection = () => {
             <PhoneAddPopover
               triggerRef={phoneButtonRef}
               onClose={() => setIsAddingPhone(false)}
-              onAddPhone={async (phone) => {
-                const newPhoneData = await createPhoneNumber(phone);
+              onAddPhone={async (phone, countryCode) => {
+                const newPhoneData = await createPhoneNumber(phone, countryCode);
                 setNewPhone(newPhoneData.data.id);
                 await preparePhoneVerification(newPhoneData.data.id);
-                user.refetch();
-                setIsAddingPhone(false);
+                // Don't close the popover - let it transition to OTP step
               }}
               onPrepareVerification={async () => {
                 await preparePhoneVerification(newPhone);
@@ -738,6 +749,25 @@ const PhoneManagementSection = () => {
                 await attemptPhoneVerification(newPhone, otp);
                 user.refetch();
                 setIsAddingPhone(false);
+              }}
+            />
+          )}
+          {verifyingPhoneId && (
+            <PhoneAddPopover
+              existingPhone={user?.user_phone_numbers?.find(p => p.id === verifyingPhoneId)?.phone_number}
+              triggerRef={{ current: phoneVerifyButtonRefs.current[verifyingPhoneId] }}
+              onClose={() => setVerifyingPhoneId(null)}
+              onAddPhone={async () => {
+                // This won't be called since we're starting at OTP step
+              }}
+              onPrepareVerification={async () => {
+                await preparePhoneVerification(verifyingPhoneId);
+                user.refetch();
+              }}
+              onAttemptVerification={async (otp) => {
+                await attemptPhoneVerification(verifyingPhoneId, otp);
+                user.refetch();
+                setVerifyingPhoneId(null);
               }}
             />
           )}
@@ -777,7 +807,11 @@ const PhoneManagementSection = () => {
                     }
                   >
                     <DropdownTrigger>
-                      <IconButton>•••</IconButton>
+                      <IconButton 
+                        ref={(ref: HTMLButtonElement | null) => {
+                          if (ref) phoneVerifyButtonRefs.current[phone.id] = ref;
+                        }}
+                      >•••</IconButton>
                     </DropdownTrigger>
                     <DropdownItems>
                       {phone.id !== user?.primary_phone_number_id && phone.verified && (
@@ -793,8 +827,9 @@ const PhoneManagementSection = () => {
                       )}
                       {!phone.verified && (
                         <DropdownItem
-                          onClick={() => {
-                            preparePhoneVerification(phone.id);
+                          onClick={async () => {
+                            await preparePhoneVerification(phone.id);
+                            setVerifyingPhoneId(phone.id);
                             setActiveDropdown(null);
                           }}
                         >
@@ -849,6 +884,18 @@ const SocialManagementSection = () => {
       icon: <GithubIcon />,
       label: "GitHub",
     },
+    gitlab_oauth: {
+      icon: <GitLabIcon />,
+      label: "GitLab",
+    },
+    linkedin_oauth: {
+      icon: <LinkedInIcon />,
+      label: "LinkedIn",
+    },
+    discord_oauth: {
+      icon: <DiscordIcon />,
+      label: "Discord",
+    },
     x_oauth: {
       icon: <XIcon />,
       label: "X",
@@ -861,18 +908,21 @@ const SocialManagementSection = () => {
 
   return (
     <>
-      <div style={{ marginBottom: "16px" }}>
+      <div style={{ marginBottom: "24px" }}>
         <h3 style={{
           fontSize: "16px",
-          color: "var(--color-foreground)",
-          margin: 0
+          fontWeight: 600,
+          color: "rgba(255, 255, 255, 0.9)",
+          margin: "0 0 6px 0",
+          letterSpacing: "-0.01em"
         }}>
           Connected Accounts
         </h3>
         <p style={{
-          fontSize: "14px",
-          color: "var(--color-muted)",
-          margin: 0
+          fontSize: "13px",
+          color: "rgba(255, 255, 255, 0.5)",
+          margin: 0,
+          lineHeight: "1.5"
         }}>
           Connect social accounts for easy sign-in and profile sync
         </p>
@@ -902,9 +952,11 @@ const SocialManagementSection = () => {
                 display: "flex",
                 alignItems: "center",
                 justifyContent: "space-between",
-                padding: "12px",
-                background: "var(--color-background-hover)",
+                padding: "16px",
+                background: "rgba(255, 255, 255, 0.03)",
+                border: "1px solid rgba(255, 255, 255, 0.08)",
                 borderRadius: "8px",
+                transition: "all 0.2s ease",
               }}
             >
               <div
@@ -942,8 +994,21 @@ const SocialManagementSection = () => {
                       user.refetch();
                     }}
                     style={{
-                      background: "var(--color-error-background)",
-                      color: "var(--color-error)",
+                      background: "transparent",
+                      color: "rgba(255, 255, 255, 0.5)",
+                      border: "1px solid rgba(255, 255, 255, 0.1)",
+                      fontSize: "13px",
+                      padding: "6px 14px",
+                    }}
+                    onMouseEnter={(e) => {
+                      e.currentTarget.style.background = "rgba(239, 68, 68, 0.1)";
+                      e.currentTarget.style.color = "rgb(239, 68, 68)";
+                      e.currentTarget.style.borderColor = "rgba(239, 68, 68, 0.3)";
+                    }}
+                    onMouseLeave={(e) => {
+                      e.currentTarget.style.background = "transparent";
+                      e.currentTarget.style.color = "rgba(255, 255, 255, 0.5)";
+                      e.currentTarget.style.borderColor = "rgba(255, 255, 255, 0.1)";
                     }}
                   >
                     Disconnect
@@ -958,10 +1023,20 @@ const SocialManagementSection = () => {
                     });
                   }}
                   style={{
-                    background: "var(--color-primary)",
-                    color: "var(--color-background)",
-                    fontSize: "12px",
-                    padding: "6px 12px",
+                    background: "rgba(99, 102, 241, 0.1)",
+                    color: "rgb(129, 140, 248)",
+                    border: "1px solid rgba(99, 102, 241, 0.3)",
+                    fontSize: "13px",
+                    padding: "6px 14px",
+                    fontWeight: "500",
+                  }}
+                  onMouseEnter={(e) => {
+                    e.currentTarget.style.background = "rgba(99, 102, 241, 0.2)";
+                    e.currentTarget.style.borderColor = "rgba(99, 102, 241, 0.5)";
+                  }}
+                  onMouseLeave={(e) => {
+                    e.currentTarget.style.background = "rgba(99, 102, 241, 0.1)";
+                    e.currentTarget.style.borderColor = "rgba(99, 102, 241, 0.3)";
                   }}
                 >
                   Connect
@@ -1216,9 +1291,6 @@ const SecurityManagementSection = () => {
     // Check for social connections
     const hasSocialConnection = user.social_connections && user.social_connections.length > 0;
     
-    // Check for authenticator
-    const hasAuthenticator = !!user.user_authenticator;
-    
     // Check if any alternative auth methods are enabled and available
     const authSettings = deployment?.auth_settings;
     
@@ -1227,8 +1299,7 @@ const SecurityManagementSection = () => {
       (authSettings?.magic_link?.enabled && hasVerifiedEmail) ||
       (authSettings?.passkey?.enabled) ||
       (authSettings?.auth_factors_enabled?.phone_otp && hasVerifiedPhone) ||
-      (hasSocialConnection && deployment?.social_connections?.some(sc => sc.enabled)) ||
-      hasAuthenticator;
+      (hasSocialConnection && deployment?.social_connections?.some(sc => sc.enabled));
     
     return hasAlternativeAuth;
   };
@@ -2144,10 +2215,22 @@ const ProfileDetailsManagementSection = () => {
                 {previewUrl ? "Change" : "Upload"}
               </Button>
               <Button
-                onClick={() => {
+                onClick={async () => {
                   setPreviewUrl(null);
                   if (fileInputRef.current) {
                     fileInputRef.current.value = "";
+                  }
+                  // Save the removal to backend
+                  try {
+                    await updateProfile({
+                      remove_profile_picture: true
+                    });
+                    await user.refetch();
+                    toast("Profile picture removed successfully", "info");
+                  } catch (error: any) {
+                    toast(error.message || "Failed to remove profile picture", "error");
+                    // Reset preview on error
+                    setPreviewUrl(user?.profile_picture_url || null);
                   }
                 }}
                 style={{

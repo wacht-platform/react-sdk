@@ -27,7 +27,7 @@ export interface WaitlistResponse {
 export function useWaitlist() {
 	const { client, loading: clientLoading } = useClient();
 	const [loading, setLoading] = useState(false);
-	const [errors, setErrors] = useState<ApiResult<
+	const [error, setError] = useState<ApiResult<
 		unknown,
 		ErrorInterface
 	> | null>(null);
@@ -36,7 +36,7 @@ export function useWaitlist() {
 		params: WaitlistParams,
 	): Promise<ApiResult<WaitlistResponse, ErrorInterface>> => {
 		setLoading(true);
-		setErrors(null);
+		setError(null);
 
 		try {
 			const form = new FormData();
@@ -52,7 +52,7 @@ export function useWaitlist() {
 			});
 
 			const result = await responseMapper<WaitlistResponse>(response);
-			setErrors(result.errors ? result : null);
+			setError(result.errors ? result : null);
 			return result;
 		} catch (error) {
 			const errorResult: ApiResult<WaitlistResponse, ErrorInterface> = {
@@ -67,7 +67,7 @@ export function useWaitlist() {
 					},
 				],
 			};
-			setErrors(errorResult);
+			setError(errorResult);
 			return errorResult;
 		} finally {
 			setLoading(false);
@@ -77,14 +77,14 @@ export function useWaitlist() {
 	if (clientLoading) {
 		return {
 			loading: true,
-			errors: null,
+			error: null,
 			joinWaitlist: null as never,
 		};
 	}
 
 	return {
 		loading,
-		errors,
+		error,
 		joinWaitlist,
 	};
 }

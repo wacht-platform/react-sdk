@@ -89,7 +89,7 @@ interface TwoFactorVerificationProps {
 
 export function TwoFactorVerification({ onBack }: TwoFactorVerificationProps) {
   const { deployment } = useDeployment();
-  const { loading, signIn, signinAttempt, errors: signInErrors } = useSignIn();
+  const { loading, signIn, signinAttempt, error: signInErrors } = useSignIn();
   const [verificationCode, setVerificationCode] = useState("");
   const [errors, setErrors] = useState<Record<string, string>>({});
   const [isSubmitting, setIsSubmitting] = useState(false);
