@@ -23,6 +23,7 @@ import { ErrorCode } from "@/types";
 import type { SignInParams } from "@/types";
 import type { DeploymentSocialConnection } from "@/types";
 import { useDeployment } from "@/hooks/use-deployment";
+import { useNavigation } from "@/hooks/use-navigation";
 import { Button } from "@/components/utility";
 import { AuthFormImage } from "./auth-image";
 
@@ -125,6 +126,7 @@ export function SignInForm() {
 
 function SignInFormContent() {
   const { deployment } = useDeployment();
+  const { navigate } = useNavigation();
   const {
     setEmail,
     otpSent,
@@ -278,14 +280,25 @@ function SignInFormContent() {
   const completeVerification = async (e: React.FormEvent) => {
     e.preventDefault();
     if (loading || isSubmitting) return;
-    setIsSubmitting(true);
+    
     const newErrors: Record<string, string> = {};
     if (!otpCode) {
       newErrors.otp = "OTP code is required";
+      setErrors(newErrors);
+      return;
     }
-    setErrors(newErrors);
-    signIn.completeVerification(otpCode);
-    setIsSubmitting(false);
+    
+    setIsSubmitting(true);
+    setErrors({});
+    
+    try {
+      await signIn.completeVerification(otpCode);
+      // Success - the session hook will handle the redirect
+    } catch (err) {
+      setErrors({ otp: (err as Error).message || "Verification failed" });
+    } finally {
+      setIsSubmitting(false);
+    }
   };
 
   const initSocialAuthSignIn = async (
@@ -339,7 +352,8 @@ function SignInFormContent() {
       );
 
       if (!redirectUri) {
-        redirectUri = "https://" + window.location.hostname;
+        redirectUri = deployment?.ui_settings?.after_signin_redirect_url || 
+                      "https://" + window.location.hostname;
       }
 
       const uri = new URL(redirectUri);
@@ -351,27 +365,34 @@ function SignInFormContent() {
         );
       }
 
-      window.location.href = uri.toString();
+      navigate(uri.toString());
     }
 
-    switch (signinAttempt.current_step) {
-      case "verify_email":
-      case "verify_email_otp":
-      case "verify_email_link":
-        const strategy =
-          firstFactor === "email_magic_link" ? "magic_link" : "email_otp";
-        signIn.prepareVerification({ strategy });
-        break;
-      case "verify_phone":
-      case "verify_phone_otp":
-        signIn.prepareVerification({ strategy: "phone_otp" });
-        break;
-      case "verify_second_factor":
-        // Don't set otpSent for 2FA flow
-        return;
-    }
+    const prepareVerificationAsync = async () => {
+      try {
+        switch (signinAttempt.current_step) {
+          case "verify_email":
+          case "verify_email_otp":
+          case "verify_email_link":
+            const strategy =
+              firstFactor === "email_magic_link" ? "magic_link" : "email_otp";
+            await signIn.prepareVerification({ strategy });
+            break;
+          case "verify_phone":
+          case "verify_phone_otp":
+            await signIn.prepareVerification({ strategy: "phone_otp" });
+            break;
+          case "verify_second_factor":
+            // Don't set otpSent for 2FA flow
+            return;
+        }
+        setOtpSent(true);
+      } catch (err) {
+        console.error("Failed to prepare verification:", err);
+      }
+    };
 
-    setOtpSent(true);
+    prepareVerificationAsync();
   }, [signinAttempt, signIn, otpSent, setOtpSent]);
 
   useEffect(() => {
@@ -427,12 +448,12 @@ function SignInFormContent() {
     return (
       <ProfileCompletion
         onComplete={() => {
-          // Handle successful completion
           let redirectUri = new URLSearchParams(window.location.search).get(
             "redirect_uri",
           );
           if (!redirectUri) {
-            redirectUri = "https://" + window.location.hostname;
+            redirectUri = deployment?.ui_settings?.after_signin_redirect_url || 
+                          "https://" + window.location.hostname;
           }
           const uri = new URL(redirectUri);
           if (deployment?.mode === "staging") {
@@ -441,7 +462,7 @@ function SignInFormContent() {
               localStorage.getItem("__dev_session__") ?? "",
             );
           }
-          window.location.href = uri.toString();
+          navigate(uri.toString());
         }}
         onBack={() => {
           setShowProfileCompletion(false);
@@ -647,6 +668,14 @@ function SignInFormContent() {
               <OTPInput
                 onComplete={async (code) => {
                   setOtpCode(code);
+                  // Auto-submit when OTP is complete
+                  if (code && code.length === 6) {
+                    const form = document.querySelector('form');
+                    if (form) {
+                      const event = new Event('submit', { cancelable: true, bubbles: true });
+                      form.dispatchEvent(event);
+                    }
+                  }
                 }}
                 onResend={async () => {
                   const strategy =

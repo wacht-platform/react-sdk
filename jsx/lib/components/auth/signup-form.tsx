@@ -7,6 +7,7 @@ import {
   type OAuthProvider,
 } from "../../hooks/use-signin";
 import { useDeployment } from "../../hooks/use-deployment";
+import { useNavigation } from "../../hooks/use-navigation";
 import { DefaultStylesProvider } from "../utility/root";
 import { OTPInput } from "@/components/utility/otp-input";
 
@@ -246,6 +247,7 @@ export function SignUpForm() {
   } = useSignUp();
   const { signIn: oauthSignIn } = useSignInWithStrategy(SignInStrategy.Oauth);
   const { deployment } = useDeployment();
+  const { navigate } = useNavigation();
   const [formData, setFormData] = useState<SignUpParams>({
     first_name: "",
     last_name: "",
@@ -272,10 +274,10 @@ export function SignUpForm() {
         deployment.ui_settings?.waitlist_page_url ||
         `${deployment.frontend_host}/waitlist` ||
         "/waitlist";
-      window.location.href = waitlistUrl;
+      navigate(waitlistUrl);
       return;
     }
-  }, [deployment, isWaitlistMode]);
+  }, [deployment, isWaitlistMode, navigate]);
 
   const [otpSent, setOtpSent] = useState(false);
   const [otpCode, setOtpCode] = useState("");
@@ -444,7 +446,26 @@ export function SignUpForm() {
   useEffect(() => {
     if (!signupAttempt) return;
 
-    if (signupAttempt.completed || otpSent) {
+    if (signupAttempt.completed) {
+      let redirectUri = new URLSearchParams(window.location.search).get(
+        "redirect_uri",
+      );
+      if (!redirectUri) {
+        redirectUri = deployment?.ui_settings?.after_signup_redirect_url || 
+                      "https://" + window.location.hostname;
+      }
+      const uri = new URL(redirectUri);
+      if (deployment?.mode === "staging") {
+        uri.searchParams.set(
+          "dev_session",
+          localStorage.getItem("__dev_session__") ?? "",
+        );
+      }
+      navigate(uri.toString());
+      return;
+    }
+    
+    if (otpSent) {
       return;
     }
 
@@ -458,7 +479,7 @@ export function SignUpForm() {
     }
 
     setOtpSent(true);
-  }, [signupAttempt, signUp, otpSent]);
+  }, [signupAttempt, signUp, otpSent, deployment]);
 
   useEffect(() => {
     const newErrors: Record<string, string> = {};

@@ -184,6 +184,7 @@ const ActionLink = styled.button<{ $destructive?: boolean }>`
 const FooterSection = styled.div`
   background: var(--color-background-hover);
   padding: 8px 12px;
+  margin-top: var(--space-sm);
 `;
 
 const FooterButton = styled.button`
@@ -512,7 +513,8 @@ export const UserButton: React.FC<UserButtonProps> = ({ showName = true }) => {
                                 {index === 0 && sortedSignins.length > 1 && (
                                   <div
                                     style={{
-                                      borderBottom: "1px solid var(--color-border)",
+                                      borderBottom:
+                                        "1px solid var(--color-border)",
                                       margin: "0",
                                     }}
                                   />

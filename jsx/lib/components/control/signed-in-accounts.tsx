@@ -30,7 +30,7 @@ const Container = styled.div`
 `;
 
 const AccountsWrapper = styled.div`
-  margin-top: var(--space-lg);
+  margin: var(--space-lg) 0;
   border-top: 1px solid var(--color-border);
   border-bottom: 1px solid var(--color-border);
   overflow: hidden;
@@ -271,7 +271,24 @@ export const SignedInAccounts: React.FC<SignedInAccountsProps> = ({
       if (onAccountSelect) {
         onAccountSelect(signInId);
       } else {
-        window.location.reload();
+        let redirectUri = new URLSearchParams(window.location.search).get(
+          "redirect_uri",
+        );
+
+        if (!redirectUri) {
+          redirectUri = deployment!.ui_settings?.after_signin_redirect_url;
+        }
+
+        if (redirectUri) {
+          const uri = new URL(redirectUri);
+          if (deployment?.mode === "staging") {
+            uri.searchParams.set(
+              "dev_session",
+              localStorage.getItem("__dev_session__") ?? "",
+            );
+          }
+          navigate(uri.toString());
+        }
       }
     } catch (error) {
       console.error("Failed to switch account:", error);

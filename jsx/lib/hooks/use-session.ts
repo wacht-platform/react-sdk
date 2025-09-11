@@ -6,6 +6,7 @@ import { ApiResult } from "@/types";
 import { Session, SessionToken } from "@/types";
 import { Client } from "@/types";
 import { useDeployment } from "./use-deployment";
+import { useNavigation } from "./use-navigation";
 
 type UseSessionReturnType =
   | {
@@ -111,6 +112,7 @@ async function getSessionToken(
 export function useSession(): UseSessionReturnType {
   const { client, loading } = useClient();
   const { deployment } = useDeployment();
+  const { navigate } = useNavigation();
   const {
     data: session,
     error,
@@ -152,14 +154,12 @@ export function useSession(): UseSessionReturnType {
   const addNewAccount = useCallback(() => {
     if (!deployment) return;
 
-    // Use deployment configuration for sign-in URL with proper redirect
     const signinLink = deployment.ui_settings.sign_in_page_url;
 
     const currentHost = window.location.href;
     const url = new URL(signinLink);
     url.searchParams.set("redirect_uri", currentHost);
 
-    // Handle staging mode dev session
     if (deployment.mode === "staging") {
       const devSession = localStorage.getItem("__dev_session__");
       if (devSession) {
@@ -167,8 +167,8 @@ export function useSession(): UseSessionReturnType {
       }
     }
 
-    window.location.href = url.toString();
-  }, [deployment]);
+    navigate(url.toString());
+  }, [deployment, navigate]);
 
   if (loading || !session || isLoading) {
     return {
@@ -196,6 +196,14 @@ export function useSession(): UseSessionReturnType {
     signOut: async (signInId?: string) => {
       await signOut(client, signInId);
       await mutate();
+      
+      if (deployment?.ui_settings) {
+        if (signInId && deployment.ui_settings.after_sign_out_one_page_url) {
+          navigate(deployment.ui_settings.after_sign_out_one_page_url);
+        } else if (!signInId && deployment.ui_settings.after_sign_out_all_page_url) {
+          navigate(deployment.ui_settings.after_sign_out_all_page_url);
+        }
+      }
     },
     switchOrganization: async (organizationId?: string) => {
       await switchOrganization(client, organizationId);
