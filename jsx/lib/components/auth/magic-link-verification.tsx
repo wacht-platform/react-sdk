@@ -1,177 +1,184 @@
-import { useEffect, useState } from "react";
+import { useEffect, useState, useRef } from "react";
 import styled from "styled-components";
-import { useMagicLinkVerification } from "../../hooks/use-magic-link";
+import {
+  useMagicLinkVerification,
+  useMagicLinkParams,
+} from "../../hooks/use-magic-link";
 import { DefaultStylesProvider } from "../utility/root";
+import { Button } from "../utility";
+import { useNavigation } from "../../hooks/use-navigation";
+import { useDeployment } from "../../hooks/use-deployment";
 
 const Container = styled.div`
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  justify-content: center;
-  min-height: 100vh;
-  padding: var(--space-lg);
-  text-align: center;
+  max-width: 380px;
+  width: 380px;
+  padding: var(--space-3xl);
+  background: var(--color-background);
+  border-radius: var(--radius-lg);
+  box-shadow: 0 4px 12px var(--color-shadow);
 `;
 
 const Header = styled.div`
-  margin-bottom: var(--space-xl);
+  text-align: center;
+  position: relative;
 `;
 
 const Title = styled.h1`
-  font-size: var(--font-size-xl);
-  font-weight: var(--font-weight-bold);
-  color: var(--color-text-primary);
-  margin: 0 0 var(--space-sm) 0;
+  font-size: var(--font-lg);
+  font-weight: 500;
+  color: var(--color-foreground);
+  margin-bottom: var(--space-xs);
+  margin-top: 0;
 `;
 
 const Subtitle = styled.p`
-  font-size: var(--font-size-md);
-  color: var(--color-text-secondary);
+  color: var(--color-secondary-text);
+  font-size: var(--font-xs);
   margin: 0;
 `;
 
 const StatusContainer = styled.div`
-  padding: var(--space-lg);
-  border-radius: var(--border-radius-md);
-  border: 1px solid var(--color-border);
-  background: var(--color-background-secondary);
-  max-width: 400px;
-  width: 100%;
+  padding-top: var(--space-xl);
+  text-align: center;
 `;
 
 const SuccessIcon = styled.div`
-  width: 48px;
-  height: 48px;
+  width: calc(var(--space-3xl) * 2);
+  height: calc(var(--space-3xl) * 2);
   border-radius: 50%;
-  background: var(--color-success);
+  background: var(--color-success-background);
   display: flex;
   align-items: center;
   justify-content: center;
-  margin: 0 auto var(--space-md) auto;
-  color: white;
-  font-size: 24px;
+  margin: 0 auto var(--space-lg) auto;
+  color: var(--color-success);
+  font-size: var(--font-xl);
 `;
 
 const ErrorIcon = styled.div`
-  width: 48px;
-  height: 48px;
+  width: calc(var(--space-3xl) * 2);
+  height: calc(var(--space-3xl) * 2);
   border-radius: 50%;
-  background: var(--color-error);
+  background: var(--color-error-background);
   display: flex;
   align-items: center;
   justify-content: center;
-  margin: 0 auto var(--space-md) auto;
-  color: white;
-  font-size: 24px;
+  margin: 0 auto var(--space-lg) auto;
+  color: var(--color-error);
+  font-size: var(--font-xl);
 `;
 
 const LoadingSpinner = styled.div`
-  width: 48px;
-  height: 48px;
-  border: 4px solid var(--color-border);
-  border-top: 4px solid var(--color-primary);
+  width: calc(var(--space-3xl) * 2);
+  height: calc(var(--space-3xl) * 2);
+  border: 3px solid var(--color-border);
+  border-top: 3px solid var(--color-primary);
   border-radius: 50%;
   animation: spin 1s linear infinite;
-  margin: 0 auto var(--space-md) auto;
+  margin: 0 auto var(--space-lg) auto;
 
   @keyframes spin {
-    0% { transform: rotate(0deg); }
-    100% { transform: rotate(360deg); }
+    0% {
+      transform: rotate(0deg);
+    }
+    100% {
+      transform: rotate(360deg);
+    }
   }
-`;
-
-const Message = styled.p`
-  font-size: var(--font-size-md);
-  color: var(--color-text-primary);
-  margin: 0 0 var(--space-md) 0;
 `;
 
 const SubMessage = styled.p`
-  font-size: var(--font-size-sm);
-  color: var(--color-text-secondary);
-  margin: 0;
-`;
-
-const Button = styled.button`
-  background: var(--color-primary);
-  color: white;
-  border: none;
-  padding: var(--space-sm) var(--space-lg);
-  border-radius: var(--border-radius-sm);
-  font-size: var(--font-size-md);
-  font-weight: var(--font-weight-medium);
-  cursor: pointer;
-  margin-top: var(--space-md);
-  
-  &:hover {
-    background: var(--color-primary-hover);
-  }
-  
-  &:disabled {
-    background: var(--color-border);
-    cursor: not-allowed;
-  }
+  font-size: var(--font-xs);
+  color: var(--color-secondary-text);
 `;
 
 interface MagicLinkVerificationProps {
-  token?: string;
-  attempt?: string;
-  redirectUri?: string;
   onSuccess?: () => void;
   onError?: (error: string) => void;
 }
 
 export function MagicLinkVerification({
-  token,
-  attempt,
-  redirectUri,
   onSuccess,
-  onError
-}: MagicLinkVerificationProps) {
-  const [status, setStatus] = useState<'loading' | 'success' | 'error'>('loading');
-  const [message, setMessage] = useState('');
-  const [subMessage, setSubMessage] = useState('');
+  onError,
+}: MagicLinkVerificationProps = {}) {
+  const [status, setStatus] = useState<"loading" | "success" | "error">(
+    "loading",
+  );
+  const [subMessage, setSubMessage] = useState("");
+  const { token, attempt, redirectUri } = useMagicLinkParams();
   const { verifyMagicLink, error, success } = useMagicLinkVerification();
+  const { navigate } = useNavigation();
+  const { deployment } = useDeployment();
+  const hasVerified = useRef(false);
 
   useEffect(() => {
     const performVerification = async () => {
+      if (hasVerified.current) return;
+
       if (!token || !attempt) {
-        setStatus('error');
-        setMessage('Invalid magic link');
-        setSubMessage('The magic link appears to be malformed. Please try signing in again.');
-        onError?.('Invalid magic link parameters');
+        setStatus("error");
+        setSubMessage(
+          "The magic link appears to be malformed. Please try signing in again.",
+        );
+        onError?.("Invalid magic link parameters");
         return;
       }
 
-      setStatus('loading');
-      setMessage('Verifying magic link...');
-      setSubMessage('Please wait while we verify your magic link.');
+      hasVerified.current = true;
+      setStatus("loading");
+      setSubMessage("Please wait while we verify your magic link.");
 
       await verifyMagicLink({ token, attempt, redirectUri });
-
-      if (success) {
-        setStatus('success');
-        setMessage('Magic link verified successfully!');
-        setSubMessage('You will be redirected to your account shortly.');
-        onSuccess?.();
-
-        // Redirect after a short delay
-        setTimeout(() => {
-          window.location.href = '/';
-        }, 2000);
-      } else if (error) {
-        setStatus('error');
-        setMessage('Magic link verification failed');
-        setSubMessage('The magic link may have expired or already been used. Please try signing in again.');
-        onError?.(error.message);
-      }
     };
 
     performVerification();
-  }, [token, attempt, onSuccess, onError, verifyMagicLink, success, error]);
+  }, [token, attempt]);
+
+  useEffect(() => {
+    if (success) {
+      setStatus("success");
+      setSubMessage("You will be redirected to your account shortly.");
+      onSuccess?.();
+
+      // Handle redirect similar to signin-form
+      setTimeout(() => {
+        let finalRedirectUri = redirectUri;
+
+        if (!finalRedirectUri) {
+          finalRedirectUri = deployment?.ui_settings?.after_signin_redirect_url;
+        }
+
+        // Fallback to frontend host if no redirect URL configured
+        if (!finalRedirectUri && deployment?.frontend_host) {
+          finalRedirectUri = `https://${deployment.frontend_host}`;
+        }
+
+        if (finalRedirectUri) {
+          const uri = new URL(finalRedirectUri);
+
+          if (deployment?.mode === "staging") {
+            uri.searchParams.set(
+              "__dev_session__",
+              localStorage.getItem("__dev_session__") || "",
+            );
+          }
+
+          navigate(uri.toString());
+        }
+      }, 2000);
+    } else if (error) {
+      setStatus("error");
+      setSubMessage(
+        "The magic link may have expired or already been used. Please try signing in again.",
+      );
+      onError?.(error.message);
+    }
+  }, [success, error, navigate, deployment, redirectUri, onSuccess, onError]);
 
   const handleRetry = () => {
-    window.location.href = '/auth/signin';
+    if (deployment?.ui_settings?.sign_in_page_url) {
+      navigate(deployment.ui_settings.sign_in_page_url);
+    }
   };
 
   return (
@@ -183,28 +190,28 @@ export function MagicLinkVerification({
         </Header>
 
         <StatusContainer>
-          {status === 'loading' && (
+          {status === "loading" && (
             <>
               <LoadingSpinner />
-              <Message>{message}</Message>
               <SubMessage>{subMessage}</SubMessage>
             </>
           )}
 
-          {status === 'success' && (
+          {status === "success" && (
             <>
               <SuccessIcon>✓</SuccessIcon>
-              <Message>{message}</Message>
               <SubMessage>{subMessage}</SubMessage>
             </>
           )}
 
-          {status === 'error' && (
+          {status === "error" && (
             <>
               <ErrorIcon>✗</ErrorIcon>
-              <Message>{message}</Message>
               <SubMessage>{subMessage}</SubMessage>
-              <Button onClick={handleRetry}>
+              <Button
+                onClick={handleRetry}
+                style={{ marginTop: "var(--space-xl)" }}
+              >
                 Try Again
               </Button>
             </>

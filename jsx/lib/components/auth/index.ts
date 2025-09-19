@@ -20,4 +20,4 @@ export type {
   ProfileCompletionData,
   ProfileCompletionProps,
 } from "@snipextt/wacht-types";
-export { useProfileCompletion } from "../../hooks/use-profile-completion";
+export { AcceptInvite } from "./accept-invite";

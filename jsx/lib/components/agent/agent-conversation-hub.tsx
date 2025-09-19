@@ -1,31 +1,10 @@
-import { useState, useEffect } from "react";
+import { useState } from "react";
 import styled from "styled-components";
 import { DefaultStylesProvider } from "../utility/root";
 import { AgentConversation } from "./agent-conversation";
-import { ContextHistory } from "./context-history";
-import {
-  useContextManager,
-  ExecutionContext,
-} from "../../hooks/use-context-manager";
+import { AgentConversationHistory } from "./agent-conversation-history";
+import { useAgentConversationContext } from "../../context/agent-conversation-provider";
 
-interface ContextManagerProps {
-  agentName: string;
-  token: string;
-  platformAdapter?: {
-    onPlatformEvent?: (eventName: string, eventData: unknown) => void;
-    onPlatformFunction?: (
-      functionName: string,
-      parameters: unknown,
-      executionId: string,
-    ) => Promise<unknown>;
-  };
-  onContextCreated?: (context: ExecutionContext) => void;
-  onError?: (error: string) => void;
-  theme?: any;
-  embedded?: boolean; // Whether component is embedded in a modal/popup
-}
-
-// Styled components
 const Container = styled.div`
   height: 100%;
   display: flex;
@@ -58,7 +37,7 @@ const WelcomeIcon = styled.div`
 
 const WelcomeTitle = styled.h2`
   font-size: var(--font-lg);
-  font-weight: 600;
+  font-weight: 400;
   color: var(--color-foreground);
   margin: 0 0 var(--space-sm) 0;
   text-align: center;
@@ -99,9 +78,10 @@ const StartButton = styled.button`
     cursor: not-allowed;
     animation: pulse 1.5s ease-in-out infinite;
   }
-  
+
   @keyframes pulse {
-    0%, 100% {
+    0%,
+    100% {
       opacity: 0.8;
     }
     50% {
@@ -112,24 +92,26 @@ const StartButton = styled.button`
 
 const LoadingDots = styled.span`
   &::after {
-    content: '.';
+    content: ".";
     animation: dots 1.5s steps(3, end) infinite;
   }
-  
+
   @keyframes dots {
-    0%, 20% {
-      content: '.';
+    0%,
+    20% {
+      content: ".";
     }
     40% {
-      content: '..';
+      content: "..";
     }
-    60%, 100% {
-      content: '...';
+    60%,
+    100% {
+      content: "...";
     }
   }
 `;
 
-const ConversationCard = styled.div`
+const SessionCard = styled.div`
   width: 100%;
   padding: var(--space-md);
   background: var(--color-surface, var(--color-background));
@@ -146,9 +128,9 @@ const ConversationCard = styled.div`
   }
 `;
 
-const ConversationCardTitle = styled.div`
+const SessionCardTitle = styled.div`
   font-size: var(--font-sm);
-  font-weight: 500;
+  font-weight: 400;
   color: var(--color-foreground);
   margin-bottom: var(--space-2xs);
   white-space: nowrap;
@@ -156,7 +138,7 @@ const ConversationCardTitle = styled.div`
   text-overflow: ellipsis;
 `;
 
-const ConversationCardMeta = styled.div`
+const SessionCardMeta = styled.div`
   font-size: var(--font-2xs);
   color: var(--color-secondary-text);
   display: flex;
@@ -164,12 +146,12 @@ const ConversationCardMeta = styled.div`
   gap: var(--space-xs);
 `;
 
-const ConversationCardContent = styled.div`
+const SessionCardContent = styled.div`
   flex: 1;
   min-width: 0;
 `;
 
-const RecentConversations = styled.div`
+const RecentSessions = styled.div`
   width: 100%;
   max-width: 320px;
   margin-top: var(--space-2xl);
@@ -207,50 +189,34 @@ const HistoryLink = styled.button`
   }
 `;
 
-const ConversationList = styled.div`
+const SessionList = styled.div`
   display: flex;
   flex-direction: column;
   gap: var(--space-xs);
 `;
 
-export function ContextManager({
-  agentName,
-  token,
-  platformAdapter,
-  onContextCreated,
-  onError,
-  theme,
-}: ContextManagerProps) {
+export function AgentConversationHub() {
   const [createLoading, setCreateLoading] = useState(false);
-  const [selectedContext, setSelectedContext] =
-    useState<ExecutionContext | null>(null);
-  const [showHistory, setShowHistory] = useState(false);
 
-  const { contexts, error, createContext } = useContextManager(token);
-
-  useEffect(() => {
-    if (error) {
-      onError?.(error.message);
-    }
-  }, [error, onError]);
+  const {
+    sessions,
+    selectedSession,
+    showHistory,
+    selectSession,
+    createSession,
+    setShowHistory,
+  } = useAgentConversationContext();
 
   const handleStartNewConversation = async () => {
     try {
       setCreateLoading(true);
-      const title = `Chat ${new Date().toLocaleDateString()} ${new Date().toLocaleTimeString()}`;
-      const newContext = await createContext({ title });
-      setSelectedContext(newContext);
-      onContextCreated?.(newContext);
-    } catch (err) {
-      onError?.(
-        err instanceof Error ? err.message : "Failed to create conversation",
-      );
+      await createSession();
     } finally {
       setCreateLoading(false);
     }
   };
 
-  const formatTime = (dateString: string) => {
+  const formatTimeAgo = (dateString: string) => {
     try {
       const date = new Date(dateString);
       const now = new Date();
@@ -268,47 +234,16 @@ export function ContextManager({
     }
   };
 
-  // If showing history view
   if (showHistory) {
-    return (
-      <DefaultStylesProvider theme={theme} style={{ height: "100%" }}>
-        <ContextHistory
-          token={token}
-          onSelectContext={(context) => {
-            setSelectedContext(context);
-            setShowHistory(false);
-          }}
-          onClose={() => setShowHistory(false)}
-          theme={theme}
-        />
-      </DefaultStylesProvider>
-    );
+    return <AgentConversationHistory showBackButton={true} />;
   }
 
-  // If a context is selected, show the conversation view
-  if (selectedContext) {
-    return (
-      <DefaultStylesProvider theme={theme} style={{ height: "100%" }}>
-        <div
-          style={{ height: "100%", display: "flex", flexDirection: "column" }}
-        >
-          <AgentConversation
-            contextId={selectedContext.id}
-            agentName={agentName}
-            token={token}
-            platformAdapter={platformAdapter}
-            autoConnect={true}
-            showEmptyState={true}
-            theme={theme}
-          />
-        </div>
-      </DefaultStylesProvider>
-    );
+  if (selectedSession) {
+    return <AgentConversation showBackButton={true} />;
   }
 
-  // Otherwise show the home screen
   return (
-    <DefaultStylesProvider theme={theme} style={{ height: "100%" }}>
+    <DefaultStylesProvider style={{ height: "100%", width: "100%" }}>
       <Container>
         <HomeScreen>
           <WelcomeIcon>
@@ -331,41 +266,40 @@ export function ContextManager({
           >
             {createLoading ? (
               <>
-                Starting<LoadingDots />
+                Starting
+                <LoadingDots />
               </>
             ) : (
               "Start a conversation"
             )}
           </StartButton>
 
-          {contexts.length > 0 && (
-            <RecentConversations>
+          {sessions.length > 0 && (
+            <RecentSessions>
               <RecentHeader>
                 <RecentTitle>Recent Chats</RecentTitle>
                 <HistoryLink onClick={() => setShowHistory(true)}>
-                  History →
+                  View All →
                 </HistoryLink>
               </RecentHeader>
 
-              <ConversationList>
-                {contexts.slice(0, 2).map((context: ExecutionContext) => (
-                  <ConversationCard
-                    key={context.id}
-                    onClick={() => setSelectedContext(context)}
+              <SessionList>
+                {sessions.slice(0, 2).map((session) => (
+                  <SessionCard
+                    key={session.id}
+                    onClick={() => selectSession(session)}
                   >
-                    <ConversationCardContent>
-                      <ConversationCardTitle>
-                        {context.title}
-                      </ConversationCardTitle>
-                      <ConversationCardMeta>
-                        <span>{formatTime(context.last_activity_at)}</span>
-                        {context.status === "running" && <span>• Active</span>}
-                      </ConversationCardMeta>
-                    </ConversationCardContent>
-                  </ConversationCard>
+                    <SessionCardContent>
+                      <SessionCardTitle>{session.title}</SessionCardTitle>
+                      <SessionCardMeta>
+                        <span>{formatTimeAgo(session.last_activity_at)}</span>
+                        {session.status === "running" && <span>• Active</span>}
+                      </SessionCardMeta>
+                    </SessionCardContent>
+                  </SessionCard>
                 ))}
-              </ConversationList>
-            </RecentConversations>
+              </SessionList>
+            </RecentSessions>
           )}
         </HomeScreen>
       </Container>

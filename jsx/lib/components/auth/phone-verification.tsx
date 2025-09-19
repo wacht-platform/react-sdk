@@ -60,7 +60,7 @@ const SubmitButton = styled(Button)`
   width: 100%;
 `;
 
-const Footer = styled.p`
+const Footer = styled.div`
   margin-top: var(--space-lg);
   text-align: center;
   font-size: var(--font-xs);
@@ -101,7 +101,7 @@ export function PhoneVerification({ maskedPhoneNumber, onVerify, onBack, loading
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
-    
+
     if (lastFourDigits.length !== 4) {
       setError("Please enter the last 4 digits of your phone number");
       return;

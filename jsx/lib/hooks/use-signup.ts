@@ -6,12 +6,22 @@ import { useState } from "react";
 import { Session, SignupAttempt } from "@/types";
 import { SignUpParams } from "@/types";
 
+export interface DeploymentInvitationData {
+  valid: boolean;
+  first_name?: string;
+  last_name?: string;
+  email?: string;
+  message?: string;
+  error_code?: string;
+}
+
 export type SignUpFunction = {
   create: (params: SignUpParams) => Promise<ApiResult<unknown, ErrorInterface>>;
   prepareVerification: (
     params: SignupVerificationParams,
   ) => Promise<ApiResult<PrepareVerificationResponse>>;
-  completeVerification: (verificationCode: string) => Promise<unknown>;
+  completeVerification: (verificationCode: string) => Promise<ApiResult<Session>>;
+  validateDeploymentInvitation: (token: string) => Promise<DeploymentInvitationData>;
 };
 
 export type SignupVerificationStrategy = "email_otp" | "phone_otp";
@@ -107,13 +117,48 @@ function builder(
       const form = new FormData();
       form.append("verification_code", verificationCode);
 
-      await client(
+      const response = await client(
         `/auth/attempt-verification?attempt_identifier=${signupAttempt?.id}&identifier_type=signup`,
         {
           method: "POST",
           body: form,
         },
       );
+      
+      const result = await responseMapper<Session>(response);
+      if ("data" in result && result.data?.signup_attempts?.length) {
+        setSignUpAttempt(result.data.signup_attempts.at(-1) || null);
+        setErrors(null);
+      } else if ("errors" in result) {
+        setErrors(result);
+        throw new Error(result.errors?.[0]?.message || "Verification failed");
+      }
+      return result;
+    },
+    validateDeploymentInvitation: async (token: string) => {
+      try {
+        const response = await client(`/deployment/invitations/validate?token=${encodeURIComponent(token)}`, {
+          method: "GET",
+        });
+
+        const result = await responseMapper<DeploymentInvitationData>(response);
+
+        if ("data" in result && result.data) {
+          return result.data;
+        } else {
+          return {
+            valid: false,
+            message: "Failed to validate invitation",
+            error_code: "VALIDATION_ERROR",
+          };
+        }
+      } catch (err: any) {
+        return {
+          valid: false,
+          message: err.message || "Failed to validate invitation",
+          error_code: "NETWORK_ERROR",
+        };
+      }
     },
   };
 }

@@ -8,6 +8,7 @@ import {
 } from "../../hooks/use-signin";
 import { useDeployment } from "../../hooks/use-deployment";
 import { useNavigation } from "../../hooks/use-navigation";
+import { useSession } from "../../hooks/use-session";
 import { DefaultStylesProvider } from "../utility/root";
 import { OTPInput } from "@/components/utility/otp-input";
 
@@ -179,7 +180,7 @@ const SubmitButton = styled.button`
   }
 `;
 
-const Footer = styled.p`
+const Footer = styled.div`
   margin-top: var(--space-lg);
   text-align: center;
   font-size: var(--font-xs);
@@ -248,6 +249,7 @@ export function SignUpForm() {
   const { signIn: oauthSignIn } = useSignInWithStrategy(SignInStrategy.Oauth);
   const { deployment } = useDeployment();
   const { navigate } = useNavigation();
+  const { session, refetch: refetchSession } = useSession();
   const [formData, setFormData] = useState<SignUpParams>({
     first_name: "",
     last_name: "",
@@ -258,9 +260,15 @@ export function SignUpForm() {
   });
   const [errors, setErrors] = useState<Record<string, string>>({});
   const [isSubmitting, setIsSubmitting] = useState(false);
-  const [countryCode, setCountryCode] = useState(
-    Intl.DateTimeFormat().resolvedOptions().locale.split("-")?.pop(),
-  );
+  const [countryCode, setCountryCode] = useState<string | undefined>(undefined);
+  const [inviteData, setInviteData] = useState<{
+    valid: boolean;
+    first_name?: string;
+    last_name?: string;
+    email?: string;
+    message?: string;
+  } | null>(null);
+  const [inviteToken, setInviteToken] = useState<string | null>(null);
 
   const isSignupRestricted =
     deployment?.restrictions?.sign_up_mode === "restricted";
@@ -277,7 +285,29 @@ export function SignUpForm() {
       navigate(waitlistUrl);
       return;
     }
-  }, [deployment, isWaitlistMode, navigate]);
+
+    // Check for deployment invite token
+    const params = new URLSearchParams(window.location.search);
+    const token = params.get("invite_token");
+    if (token && !inviteData && signUp) {
+      setInviteToken(token);
+      // Fetch invitation details using the signup hook
+      signUp.validateDeploymentInvitation(token).then((data) => {
+        setInviteData(data);
+        // Pre-fill form if invitation is valid
+        if (data.valid) {
+          setFormData(prev => ({
+            ...prev,
+            first_name: data.first_name || prev.first_name,
+            last_name: data.last_name || prev.last_name,
+            email: data.email || prev.email,
+          }));
+        }
+      }).catch(err => {
+        console.error("Failed to validate invitation:", err);
+      });
+    }
+  }, [deployment, isWaitlistMode, navigate, inviteData, signUp]);
 
   const [otpSent, setOtpSent] = useState(false);
   const [otpCode, setOtpCode] = useState("");
@@ -310,6 +340,10 @@ export function SignUpForm() {
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
+    console.log("Signup form - handleSubmit called");
+    console.log("Auth settings:", authSettings);
+    console.log("Form data:", formData);
+
     if (loading || isSubmitting) return;
 
     const newErrors: Record<string, string> = {};
@@ -321,81 +355,88 @@ export function SignUpForm() {
     const passwordPattern =
       /^(?=.*[a-z])(?=.*[A-Z])(?=.*\d)(?=.*[@$!%*?&])[A-Za-z\d@$!%*?&]{8,125}$/;
 
-    if (authSettings?.first_name.required && !formData.first_name) {
-      newErrors.first_name = "First name is required";
-    } else if (
-      authSettings?.first_name.enabled &&
-      formData.first_name &&
-      !namePattern.test(formData.first_name)
-    ) {
-      newErrors.first_name = "Invalid name";
+    // Only validate first_name if it's enabled
+    if (authSettings?.first_name.enabled) {
+      if (authSettings?.first_name.required && !formData.first_name) {
+        newErrors.first_name = "First name is required";
+      } else if (
+        formData.first_name &&
+        !namePattern.test(formData.first_name)
+      ) {
+        newErrors.first_name = "Invalid name";
+      }
     }
 
-    if (authSettings?.last_name.required && !formData.last_name) {
-      newErrors.last_name = "Last name is required";
-    } else if (
-      authSettings?.last_name.enabled &&
-      formData.last_name &&
-      !namePattern.test(formData.last_name)
-    ) {
-      newErrors.last_name = "Invalid last name";
+    // Only validate last_name if it's enabled
+    if (authSettings?.last_name.enabled) {
+      if (authSettings?.last_name.required && !formData.last_name) {
+        newErrors.last_name = "Last name is required";
+      } else if (formData.last_name && !namePattern.test(formData.last_name)) {
+        newErrors.last_name = "Invalid last name";
+      }
     }
 
-    if (authSettings?.username.required && !formData.username) {
-      newErrors.username = "Username is required";
-    } else if (
-      authSettings?.username.enabled &&
-      formData.username &&
-      !usernamePattern.test(formData.username)
-    ) {
-      newErrors.username = "Username must be 3-20 characters";
+    if (authSettings?.username.enabled) {
+      if (authSettings?.username.required && !formData.username) {
+        newErrors.username = "Username is required";
+      } else if (
+        formData.username &&
+        !usernamePattern.test(formData.username)
+      ) {
+        newErrors.username = "Username must be 3-20 characters";
+      }
     }
 
-    if (authSettings?.email_address.required && !formData.email) {
-      newErrors.email = "Email address is required";
-    } else if (
-      authSettings?.email_address.enabled &&
-      formData.email &&
-      !emailPattern.test(formData.email)
-    ) {
-      newErrors.email = "Invalid email address";
+    if (authSettings?.email_address.enabled) {
+      if (authSettings?.email_address.required && !formData.email) {
+        newErrors.email = "Email address is required";
+      } else if (formData.email && !emailPattern.test(formData.email)) {
+        newErrors.email = "Invalid email address";
+      }
     }
 
-    if (authSettings?.phone_number.required && !formData.phone_number) {
-      newErrors.phone_number = "Phone number is required";
-    } else if (
-      authSettings?.phone_number.enabled &&
-      formData.phone_number &&
-      !phonePattern.test(formData.phone_number)
-    ) {
-      newErrors.phone_number = "Phone number must contain 7-15 digits";
+    if (authSettings?.phone_number.enabled) {
+      if (authSettings?.phone_number.required && !formData.phone_number) {
+        newErrors.phone_number = "Phone number is required";
+      } else if (
+        formData.phone_number &&
+        !phonePattern.test(formData.phone_number)
+      ) {
+        newErrors.phone_number = "Phone number must contain 7-15 digits";
+      }
     }
 
-    if (authSettings?.password.required && !formData.password) {
-      newErrors.password = "Password is required";
-    } else if (authSettings?.password.enabled && !formData.password) {
-      newErrors.password = "Password is required";
-    } else if (
-      authSettings?.password.enabled &&
-      formData.password &&
-      !passwordPattern.test(formData.password)
-    ) {
-      newErrors.password =
-        "Password must be 8-125 characters and include uppercase, lowercase, number, and special character";
+    if (authSettings?.password.enabled) {
+      if (!formData.password) {
+        newErrors.password = "Password is required";
+      } else if (!passwordPattern.test(formData.password)) {
+        newErrors.password =
+          "Password must be 8-125 characters and include uppercase, lowercase, number, and special character";
+      }
     }
 
     setErrors(newErrors);
 
     if (Object.keys(newErrors).length > 0) {
+      console.log("Signup validation failed. Errors:", newErrors);
       return;
     }
 
+    console.log("Signup validation passed");
+
     setIsSubmitting(true);
     try {
-      if (formData.phone_number) {
-        formData.phone_number = `+${countryCode}${formData.phone_number}`;
+      const submitData: any = { ...formData };
+      if (formData.phone_number && countryCode) {
+        submitData.phone_country_code = countryCode;
       }
-      await signUp.create(formData);
+      if (inviteToken) {
+        submitData.invite_token = inviteToken;
+      }
+      console.log("Submitting signup data:", submitData);
+      console.log("Phone number:", submitData.phone_number);
+      console.log("Phone country code:", submitData.phone_country_code);
+      await signUp.create(submitData);
     } catch (err) {
       setErrors({ submit: (err as Error).message });
     } finally {
@@ -437,34 +478,75 @@ export function SignUpForm() {
     const newErrors: Record<string, string> = {};
     if (!otpCode) {
       newErrors.otp = "OTP code is required";
+      setErrors(newErrors);
+      setIsSubmitting(false);
+      return;
     }
     setErrors(newErrors);
-    signUp.completeVerification(otpCode);
-    setIsSubmitting(false);
+
+    try {
+      const result = await signUp.completeVerification(otpCode);
+      if ("data" in result && result.data?.active_signin) {
+        await refetchSession();
+      }
+    } catch (error) {
+      console.error("Verification failed:", error);
+    } finally {
+      setIsSubmitting(false);
+    }
   };
 
   useEffect(() => {
+    if (session?.active_signin) {
+      let redirectUri: string | null = new URLSearchParams(
+        window.location.search,
+      ).get("redirect_uri");
+      if (!redirectUri) {
+        redirectUri =
+          deployment?.ui_settings?.after_signup_redirect_url || null;
+      }
+      if (!redirectUri && deployment?.frontend_host) {
+        redirectUri = `https://${deployment.frontend_host}`;
+      }
+      if (redirectUri) {
+        const uri = new URL(redirectUri);
+        if (deployment?.mode === "staging") {
+          uri.searchParams.set(
+            "__dev_session__",
+            localStorage.getItem("__dev_session__") || "",
+          );
+        }
+        navigate(uri.toString());
+      }
+      return;
+    }
+
     if (!signupAttempt) return;
 
     if (signupAttempt.completed) {
-      let redirectUri = new URLSearchParams(window.location.search).get(
-        "redirect_uri",
-      );
+      let redirectUri: string | null = new URLSearchParams(
+        window.location.search,
+      ).get("redirect_uri");
       if (!redirectUri) {
-        redirectUri = deployment?.ui_settings?.after_signup_redirect_url || 
-                      "https://" + window.location.hostname;
+        redirectUri =
+          deployment?.ui_settings?.after_signup_redirect_url || null;
       }
-      const uri = new URL(redirectUri);
-      if (deployment?.mode === "staging") {
-        uri.searchParams.set(
-          "dev_session",
-          localStorage.getItem("__dev_session__") ?? "",
-        );
+      if (!redirectUri && deployment?.frontend_host) {
+        redirectUri = `https://${deployment.frontend_host}`;
       }
-      navigate(uri.toString());
+      if (redirectUri) {
+        const uri = new URL(redirectUri);
+        if (deployment?.mode === "staging") {
+          uri.searchParams.set(
+            "__dev_session__",
+            localStorage.getItem("__dev_session__") || "",
+          );
+        }
+        navigate(uri.toString());
+      }
       return;
     }
-    
+
     if (otpSent) {
       return;
     }
@@ -479,7 +561,7 @@ export function SignUpForm() {
     }
 
     setOtpSent(true);
-  }, [signupAttempt, signUp, otpSent, deployment]);
+  }, [signupAttempt, signUp, otpSent, deployment, session, navigate]);
 
   useEffect(() => {
     const newErrors: Record<string, string> = {};
@@ -573,8 +655,8 @@ export function SignUpForm() {
               </Title>
               <Subtitle>
                 {signupAttempt?.current_step === "verify_email"
-                  ? `${formData.email} to continue to Wacht`
-                  : `${formData.phone_number} to continue to Wacht`}
+                  ? `${formData.email} to continue to ${deployment?.ui_settings?.app_name}`
+                  : `${formData.phone_number} to continue to ${deployment?.ui_settings?.app_name}`}
               </Subtitle>
             </Header>
             <Form
@@ -601,7 +683,9 @@ export function SignUpForm() {
                 type="submit"
                 disabled={isSubmitting || loading || !otpCode}
               >
-                {isSubmitting ? "Verifying..." : "Continue to Wacht"}
+                {isSubmitting
+                  ? "Verifying..."
+                  : `Continue to ${deployment?.ui_settings?.app_name}`}
               </SubmitButton>
             </Form>
             <Footer>
@@ -630,7 +714,9 @@ export function SignUpForm() {
             <Header>
               <Title>Create your account</Title>
               <Subtitle>
-                Welcome! Please fill in the details to get started.
+                {inviteData?.valid
+                  ? "You've been invited! Complete your registration below."
+                  : "Welcome! Please fill in the details to get started."}
               </Subtitle>
             </Header>
 
@@ -752,6 +838,7 @@ export function SignUpForm() {
                     placeholder="Enter your email address"
                     aria-invalid={!!errors.email}
                     required
+                    readOnly={inviteData?.valid && !!inviteData?.email}
                     pattern="^[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}$"
                   />
                   {errors.email && <ErrorMessage>{errors.email}</ErrorMessage>}
@@ -820,7 +907,7 @@ export function SignUpForm() {
             <Footer>
               Already have an account?{" "}
               <Link>
-                <NavigationLink to={deployment!.ui_settings?.sign_in_page_url}>
+                <NavigationLink to={`${deployment!.ui_settings?.sign_in_page_url}${window.location.search}`}>
                   Sign in
                 </NavigationLink>
               </Link>

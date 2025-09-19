@@ -1,13 +1,13 @@
 "use client";
 
+import { useEffect } from "react";
 import styled, { keyframes, css } from "styled-components";
 import { Loader2, AlertCircle, CheckCircle } from "lucide-react";
 import { DefaultStylesProvider } from "../utility/root";
 import { useSSOCallback } from "../../hooks/use-sso-callback";
 import { useDeployment } from "../../hooks/use-deployment";
+import { useNavigation } from "../../hooks/use-navigation";
 import { AuthFormImage } from "./auth-image";
-import { TwoFactorVerification } from "./two-factor-verification";
-import { ProfileCompletion } from "./profile-completion";
 
 const Container = styled.div`
   max-width: 360px;
@@ -137,56 +137,75 @@ const ErrorDetails = styled.div`
   }
 `;
 
-interface SSOCallbackProps {
-  onSuccess?: (session: any, redirectUri?: string) => void;
-  onError?: (error: Error) => void;
-  onRequiresCompletion?: (signupAttempt: any, session: any) => void;
-  autoRedirect?: boolean;
-  loadingMessage?: string;
-  successMessage?: string;
-  errorMessage?: string;
-  showCompletionForm?: boolean;
-}
-
-export function SSOCallback({
-  onSuccess,
-  onError,
-  onRequiresCompletion,
-  autoRedirect = true,
-  loadingMessage = "Completing sign in...",
-  successMessage = "Sign in successful! Redirecting...",
-  errorMessage = "Sign in failed",
-  showCompletionForm = true,
-}: SSOCallbackProps = {}) {
+export function SSOCallback() {
+  const loadingMessage = "Completing sign in...";
+  const successMessage = "Sign in successful! Redirecting...";
+  const errorMessage = "Sign in failed";
   const { deployment } = useDeployment();
+  const { navigate } = useNavigation();
   const {
     error,
     session,
     processed,
     requiresCompletion,
-    requiresVerification,
-    signupAttempt,
     signinAttempt,
     requires2FA,
-  } = useSSOCallback({
-    onSuccess,
-    onError,
-    onRequiresCompletion,
-    autoRedirect,
-  });
+    redirectUri,
+    loading,
+  } = useSSOCallback();
 
-  const redirectUri =
-    new URLSearchParams(window.location.search).get("redirect_uri") ||
-    undefined;
+  // Handle navigation based on state
+  useEffect(() => {
+    if (!processed || loading || !session) return;
+
+    // If we have an incomplete signin attempt, redirect to signin page with the attempt ID
+    if (signinAttempt && !signinAttempt.completed) {
+      const signinUrl = deployment?.ui_settings?.sign_in_page_url;
+      if (signinUrl) {
+        const url = new URL(signinUrl, window.location.origin);
+        url.searchParams.set("signin_attempt_id", signinAttempt.id);
+
+        // Preserve the original redirect URI if present
+        if (redirectUri) {
+          url.searchParams.set("redirect_uri", redirectUri);
+        }
+
+        navigate(url.toString());
+      }
+      return;
+    }
+
+    // Redirect to final destination (either signin was fully successful or attempt is completed)
+    let finalRedirectUrl = redirectUri || null;
+
+    if (!finalRedirectUrl) {
+      finalRedirectUrl =
+        deployment?.ui_settings?.after_signin_redirect_url ||
+        deployment?.frontend_host ||
+        null;
+    }
+
+    if (finalRedirectUrl) {
+      navigate(finalRedirectUrl);
+    }
+  }, [session, processed, loading, redirectUri, deployment, signinAttempt, navigate]);
+
+  // Handle error redirect to login
+  useEffect(() => {
+    if (error && error.message.includes("No OAuth callback data found")) {
+      setTimeout(() => {
+        const loginUrl =
+          deployment?.ui_settings?.sign_in_page_url ||
+          deployment?.frontend_host ||
+          "/";
+        navigate(loginUrl);
+      }, 2000);
+    }
+  }, [error, deployment, navigate]);
 
   const getStatus = () => {
     if (requires2FA && signinAttempt) return "requires2fa";
-    if (
-      (requiresCompletion || requiresVerification) &&
-      signupAttempt &&
-      showCompletionForm
-    )
-      return "success";
+    if (requiresCompletion && signinAttempt) return "success";
     if (error && error.message.includes("No OAuth callback data found"))
       return "redirecting";
     if (error) return "error";
@@ -226,50 +245,8 @@ export function SSOCallback({
     }
   };
 
-  // If 2FA is required, show the TwoFactorVerification component
-  if (requires2FA && signinAttempt) {
-    return (
-      <TwoFactorVerification
-        onBack={() => {
-          // Redirect back to login if user cancels
-          const loginUrl =
-            deployment?.ui_settings?.sign_in_page_url ||
-            deployment?.frontend_host ||
-            "/";
-          window.location.href = loginUrl;
-        }}
-      />
-    );
-  }
-
-  // If profile completion is required, show the ProfileCompletion component
-  if (requiresCompletion && (signupAttempt || signinAttempt)) {
-    return (
-      <ProfileCompletion
-        onComplete={(session) => {
-          if (onSuccess) {
-            onSuccess(session, redirectUri || undefined);
-          } else if (autoRedirect) {
-            const finalRedirectUrl =
-              redirectUri ||
-              deployment?.ui_settings?.sign_in_page_url ||
-              deployment?.frontend_host ||
-              "/";
-            window.location.href = finalRedirectUrl;
-          }
-        }}
-        onError={onError}
-        onBack={() => {
-          // Redirect back to login if user cancels
-          const loginUrl =
-            deployment?.ui_settings?.sign_in_page_url ||
-            deployment?.frontend_host ||
-            "/";
-          window.location.href = loginUrl;
-        }}
-      />
-    );
-  }
+  // The actual redirects for 2FA and profile completion happen in the useEffect in useSSOCallback hook
+  // This component just shows loading/success/error states
 
   return (
     <DefaultStylesProvider>

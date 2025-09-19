@@ -3,15 +3,24 @@ export {
   SignUpForm,
   WaitlistForm,
   SSOCallback,
+  MagicLinkVerification,
 } from "@snipextt/wacht";
 export { UserButton, UserControls, ManageAccount } from "@snipextt/wacht";
 export {
   AgentConversation,
-  ContextManager,
-  ContextHistory,
+  AgentConversationHub,
+  AgentConversationHistory,
+  AgentConversationProvider,
+  useAgentConversationContext,
 } from "@snipextt/wacht";
 export { DeploymentInitialized, DeploymentInitializing } from "@snipextt/wacht";
-export { SignedIn, SignedOut, SignedInAccounts, NavigateToSignIn } from "@snipextt/wacht";
+export {
+  SignedIn,
+  SignedOut,
+  SignedInAccounts,
+  NavigateToSignIn,
+  AcceptInvite,
+} from "@snipextt/wacht";
 export { NotificationBell, NotificationPopover } from "@snipextt/wacht";
 export {
   useUser,
@@ -25,12 +34,11 @@ export {
   useOrganizationList,
   useNavigation,
   useForgotPassword,
-  useProfileCompletion,
   useNotifications,
   useNotificationStream,
   useChannelCounts,
   useAgentConversation,
-  useContextManager,
+  useConversationSessions,
 } from "@snipextt/wacht";
 export { DeploymentProvider as BaseDeploymentProvider } from "@snipextt/wacht";
 export { DeploymentProvider } from "./providers";

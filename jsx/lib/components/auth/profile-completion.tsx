@@ -1,15 +1,19 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { useState } from "react";
 import styled from "styled-components";
+import { Loader2 } from "lucide-react";
 import { useDeployment } from "../../hooks/use-deployment";
-import { useProfileCompletion } from "../../hooks/use-profile-completion";
+import { useNavigation } from "../../hooks/use-navigation";
 import { PhoneNumberInput } from "../utility/phone";
 import { OTPInput } from "../utility/otp-input";
 import { ProfileCompletionData, ProfileCompletionProps } from "@snipextt/wacht-types";
 import { AuthFormImage } from "./auth-image";
 import { NavigationLink } from "../utility/navigation";
 import { DefaultStylesProvider } from "../utility/root";
+import { Button } from "../utility/button";
+import { Form, FormGroup, Label } from "../utility/form";
+import { Input } from "../utility/input";
 
 const Container = styled.div`
   max-width: 380px;
@@ -34,86 +38,30 @@ const Title = styled.h1`
   margin-top: 0;
 `;
 
-const Message = styled.p`
+const Subtitle = styled.p`
   color: var(--color-secondary-text);
   font-size: var(--font-xs);
-  margin: 0;
 `;
 
-const Form = styled.form`
-  display: flex;
-  flex-direction: column;
-  gap: var(--space-md);
+const NameFields = styled.div<{ $isBothEnabled: boolean }>`
+  display: grid;
+  grid-template-columns: ${(props) =>
+    props.$isBothEnabled ? "1fr 1fr" : "1fr"};
+  gap: var(--space-sm);
 `;
 
-const FormGroup = styled.div`
-  display: flex;
-  flex-direction: column;
-  gap: var(--space-xs);
-`;
-
-const Label = styled.label`
-  font-size: var(--font-xs);
-  font-weight: 500;
-  color: var(--color-foreground);
-`;
-
-const Input = styled.input`
-  width: 100%;
-  padding: var(--space-sm) var(--space-md);
-  background: var(--color-input-background);
-  border: 1px solid var(--color-input-border);
-  border-radius: var(--radius-md);
-  font-size: var(--font-sm);
-  color: var(--color-foreground);
-  transition: all 0.2s;
-
-  &:focus {
-    outline: none;
-    border-color: var(--color-primary);
-    box-shadow: 0 0 0 3px var(--color-primary-shadow);
-  }
-
-  &:disabled {
-    opacity: 0.5;
-    cursor: not-allowed;
-  }
-
-  &[aria-invalid="true"] {
-    border-color: var(--color-error);
-  }
-`;
-
-const Button = styled.button`
-  width: 100%;
-  padding: var(--space-md);
-  background: var(--color-primary);
-  color: white;
-  border: none;
-  border-radius: var(--radius-md);
-  font-size: var(--font-sm);
-  font-weight: 500;
-  cursor: pointer;
-  transition: all 0.2s;
-
-  &:hover:not(:disabled) {
-    background: var(--color-primary-hover);
-  }
-
-  &:disabled {
-    opacity: 0.5;
-    cursor: not-allowed;
-  }
-`;
-
-const ErrorMessage = styled.div`
+const ErrorMessage = styled.p`
   font-size: var(--font-2xs);
   color: var(--color-error);
   margin: 0;
   margin-top: var(--space-2xs);
 `;
 
-const Footer = styled.p`
+const SubmitButton = styled(Button)`
+  margin-top: var(--space-sm);
+`;
+
+const Footer = styled.div`
   margin-top: var(--space-lg);
   text-align: center;
   font-size: var(--font-xs);
@@ -132,22 +80,36 @@ const Link = styled.span`
   }
 `;
 
+const LoadingContainer = styled.div`
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  min-height: 200px;
+
+  svg {
+    animation: spin 1s linear infinite;
+    color: var(--color-primary);
+  }
+
+  @keyframes spin {
+    from {
+      transform: rotate(0deg);
+    }
+    to {
+      transform: rotate(360deg);
+    }
+  }
+`;
+
 export function ProfileCompletion({
-  redirectUri,
-  onComplete,
-  onError,
+  attempt,
   onBack,
+  completeProfile,
+  completeVerification,
+  prepareVerification,
 }: ProfileCompletionProps) {
   const { deployment } = useDeployment();
-  const {
-    attempt,
-    attemptType,
-    loading: hookLoading,
-    error: hookError,
-    handleComplete: hookHandleComplete,
-    handleCompleteVerification,
-    handlePrepareVerification,
-  } = useProfileCompletion();
+  const { navigate } = useNavigation();
 
   const [formData, setFormData] = useState<ProfileCompletionData>({});
   const [errors, setErrors] = useState<Record<string, string>>({});
@@ -155,125 +117,115 @@ export function ProfileCompletion({
   const [showVerification, setShowVerification] = useState(false);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<Error | null>(null);
+  const [isRedirecting, setIsRedirecting] = useState(false);
 
-  // Use hook's error if no local error
-  const displayError = error || hookError;
-  const isLoading = loading || hookLoading;
+  const displayError = error;
+  const isLoading = loading;
 
-  // Handle completion with success/error callbacks
   const handleComplete = async (data: ProfileCompletionData) => {
     setLoading(true);
     setError(null);
 
     try {
-      const result = await hookHandleComplete(data);
+      const session = await completeProfile(data);
 
-      if (result.success) {
-        if (onComplete) {
-          onComplete(result.data.session || result.data);
-        } else {
-          // Redirect logic
-          let finalRedirectUri = redirectUri || new URLSearchParams(window.location.search).get("redirect_uri");
-          if (!finalRedirectUri) {
-            finalRedirectUri = "https://" + window.location.hostname;
-          }
-          const uri = new URL(finalRedirectUri);
-          if (deployment?.mode === "staging") {
-            uri.searchParams.set("dev_session", localStorage.getItem("__dev_session__") ?? "");
-          }
-          window.location.href = uri.toString();
+      // Check if completed and redirect
+      if (session) {
+        setIsRedirecting(true);
+        let redirectUri: string | null = new URLSearchParams(
+          window.location.search,
+        ).get("redirect_uri");
+        if (!redirectUri) {
+          redirectUri =
+            deployment?.ui_settings?.after_signin_redirect_url || null;
         }
-      } else {
-        // Still has remaining steps, check if verification is needed
-        const attemptData = result.data.signin_attempt || result.data.signup_attempt;
-        if (attemptData?.current_step === "verify_phone" || attemptData?.current_step === "verify_email") {
-          setShowVerification(true);
-          // Prepare verification
-          const strategy = attemptData.current_step === "verify_phone" ? "phone_otp" : "email_otp";
-          await handlePrepareVerification(strategy);
+        if (!redirectUri && deployment?.frontend_host) {
+          redirectUri = `https://${deployment.frontend_host}`;
+        }
+        if (redirectUri) {
+          const uri = new URL(redirectUri);
+          if (deployment?.mode === "staging") {
+            uri.searchParams.set(
+              "__dev_session__",
+              localStorage.getItem("__dev_session__") || "",
+            );
+          }
+          navigate(uri.toString());
         }
       }
-
-      return result.data;
     } catch (err) {
       const error = err as Error;
       setError(error);
-      if (onError) {
-        onError(error);
-      }
       throw error;
     } finally {
       setLoading(false);
     }
   };
 
-  // Handle verification completion
   const handleVerificationComplete = async (code: string) => {
     setLoading(true);
     setError(null);
 
     try {
-      const result = await handleCompleteVerification(code);
+      const session = await completeVerification(code);
 
-      if (result.success) {
-        if (onComplete) {
-          onComplete(result.data.session || result.data);
-        } else {
-          // Redirect logic
-          let finalRedirectUri = redirectUri || new URLSearchParams(window.location.search).get("redirect_uri");
-          if (!finalRedirectUri) {
-            finalRedirectUri = "https://" + window.location.hostname;
-          }
-          const uri = new URL(finalRedirectUri);
+      // Check if completed and redirect
+      if (session) {
+        setIsRedirecting(true);
+        let redirectUri: string | null = new URLSearchParams(
+          window.location.search,
+        ).get("redirect_uri");
+        if (!redirectUri) {
+          redirectUri =
+            deployment?.ui_settings?.after_signin_redirect_url || null;
+        }
+        if (!redirectUri && deployment?.frontend_host) {
+          redirectUri = `https://${deployment.frontend_host}`;
+        }
+        if (redirectUri) {
+          const uri = new URL(redirectUri);
           if (deployment?.mode === "staging") {
-            uri.searchParams.set("dev_session", localStorage.getItem("__dev_session__") ?? "");
+            uri.searchParams.set(
+              "__dev_session__",
+              localStorage.getItem("__dev_session__") || "",
+            );
           }
-          window.location.href = uri.toString();
+          navigate(uri.toString());
         }
       }
-
-      return result.success;
+      return true;
     } catch (err) {
       const error = err as Error;
       setError(error);
-      if (onError) {
-        onError(error);
-      }
       return false;
     } finally {
       setLoading(false);
     }
   };
 
-  // Show loading or no attempt
-  if (isLoading || !attempt) {
-    return null;
+
+  // Show loading state while redirecting
+  if (isRedirecting || !attempt) {
+    return (
+      <DefaultStylesProvider>
+        <Container>
+          <AuthFormImage />
+          <LoadingContainer>
+            <Loader2 size={32} />
+          </LoadingContainer>
+        </Container>
+      </DefaultStylesProvider>
+    );
   }
 
   const missingFields = attempt.missing_fields || [];
-  const title = attemptType === "signin"
-    ? "Complete Your Profile"
-    : "Complete Your Account";
-  const message = attemptType === "signin"
-    ? "Please provide the following information to continue"
-    : "Just a few more details to finish setting up your account";
+  const title = "Complete Your Profile";
+  const message = "Please provide the following information to continue";
 
   const authSettings = deployment?.auth_settings;
   const isVerifying = attempt?.current_step === "verify_phone" ||
                      attempt?.current_step === "verify_email" ||
                      showVerification;
-
-  // Initialize form data from attempt
-  useEffect(() => {
-    if (attempt) {
-      setFormData({
-        first_name: attempt.first_name || "",
-        last_name: attempt.last_name || "",
-        username: attempt.username || "",
-        phone_number: attempt.phone_number || "",
-      });
-    }
-  }, [attempt]);
 
   const handleInputChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const { name, value } = e.target;
@@ -334,12 +286,15 @@ export function ProfileCompletion({
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    
+
     if (!validateForm()) {
       return;
     }
-
-    await handleComplete(formData);
+    const submitData: any = { ...formData };
+    if (formData.phone_number && countryCode) {
+      submitData.phone_country_code = countryCode;
+    }
+    await handleComplete(submitData);
   };
 
   const handlePhoneChange = (e: React.ChangeEvent<HTMLInputElement>) => {
@@ -357,7 +312,7 @@ export function ProfileCompletion({
     const verificationMessage = attempt.current_step === "verify_phone"
       ? "Enter the 6-digit code sent to your phone"
       : "Enter the 6-digit code sent to your email";
-    const resendStrategy = attempt.current_step === "verify_phone" ? "phone_otp" : "email_otp";
+    const resendStrategy: "phone_otp" | "email_otp" = attempt.current_step === "verify_phone" ? "phone_otp" : "email_otp";
 
     return (
       <DefaultStylesProvider>
@@ -366,16 +321,14 @@ export function ProfileCompletion({
           
           <Header>
             <Title>{verificationTitle}</Title>
-            <Message>{verificationMessage}</Message>
+            <Subtitle>{verificationMessage}</Subtitle>
           </Header>
 
           <Form onSubmit={(e) => e.preventDefault()} noValidate>
             <OTPInput
               onComplete={handleVerificationComplete}
               onResend={async () => {
-                if (handlePrepareVerification) {
-                  await handlePrepareVerification(resendStrategy);
-                }
+                await prepareVerification({ strategy: resendStrategy });
               }}
               error={displayError?.message}
               isSubmitting={isLoading}
@@ -415,16 +368,20 @@ export function ProfileCompletion({
         
         <Header>
           <Title>{title}</Title>
-          <Message>{message}</Message>
+          <Subtitle>{message}</Subtitle>
         </Header>
 
         <Form onSubmit={handleSubmit} noValidate>
-          {missingFields.includes("first_name") && authSettings?.first_name?.enabled && (
-            <FormGroup>
-              <Label htmlFor="first_name">
-                First name {authSettings.first_name.required && "*"}
-              </Label>
-              <Input
+          {(missingFields.includes("first_name") || missingFields.includes("last_name")) &&
+           (authSettings?.first_name?.enabled || authSettings?.last_name?.enabled) && (
+            <NameFields $isBothEnabled={!!(authSettings?.first_name?.enabled && authSettings?.last_name?.enabled &&
+                                           missingFields.includes("first_name") && missingFields.includes("last_name"))}>
+              {missingFields.includes("first_name") && authSettings?.first_name?.enabled && (
+                <FormGroup>
+                  <Label htmlFor="first_name">
+                    First name {authSettings.first_name.required && "*"}
+                  </Label>
+                  <Input
                 type="text"
                 id="first_name"
                 name="first_name"
@@ -435,16 +392,16 @@ export function ProfileCompletion({
                 disabled={isLoading}
                 autoComplete="given-name"
               />
-              {errors.first_name && <ErrorMessage>{errors.first_name}</ErrorMessage>}
-            </FormGroup>
-          )}
+                  {errors.first_name && <ErrorMessage>{errors.first_name}</ErrorMessage>}
+                </FormGroup>
+              )}
 
-          {missingFields.includes("last_name") && authSettings?.last_name?.enabled && (
-            <FormGroup>
-              <Label htmlFor="last_name">
-                Last name {authSettings.last_name.required && "*"}
-              </Label>
-              <Input
+              {missingFields.includes("last_name") && authSettings?.last_name?.enabled && (
+                <FormGroup>
+                  <Label htmlFor="last_name">
+                    Last name {authSettings.last_name.required && "*"}
+                  </Label>
+                  <Input
                 type="text"
                 id="last_name"
                 name="last_name"
@@ -455,8 +412,10 @@ export function ProfileCompletion({
                 disabled={isLoading}
                 autoComplete="family-name"
               />
-              {errors.last_name && <ErrorMessage>{errors.last_name}</ErrorMessage>}
-            </FormGroup>
+                  {errors.last_name && <ErrorMessage>{errors.last_name}</ErrorMessage>}
+                </FormGroup>
+              )}
+            </NameFields>
           )}
 
           {missingFields.includes("username") && authSettings?.username?.enabled && (
@@ -501,9 +460,9 @@ export function ProfileCompletion({
             </ErrorMessage>
           )}
 
-          <Button type="submit" disabled={isLoading}>
-            {isLoading ? "Completing..." : "Complete Profile"}
-          </Button>
+          <SubmitButton type="submit" disabled={isLoading}>
+            {isLoading ? "Completing..." : "Continue"}
+          </SubmitButton>
         </Form>
 
         <Footer>

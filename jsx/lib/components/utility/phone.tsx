@@ -231,8 +231,8 @@ export const PhoneNumberInput = ({
 			<PhoneInput
 				style={{ height: "100%" }}
 				type="tel"
-				id="phone_number"
-				name="phone_number"
+				id="phone"
+				name="phone"
 				required
 				minLength={7}
 				maxLength={15}

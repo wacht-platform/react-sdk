@@ -1,6 +1,6 @@
-import { useEffect } from "react";
+import { useEffect, useState } from "react";
 import styled, { keyframes } from "styled-components";
-import { Plus, CheckCircle } from "lucide-react";
+import { Plus, LogOut, Loader2 } from "lucide-react";
 import { useSession, useDeployment, useNavigation } from "@/hooks";
 import { DefaultStylesProvider } from "../utility/root";
 import { AuthFormImage } from "../auth/auth-image";
@@ -12,6 +12,15 @@ const shimmer = keyframes`
   }
   100% {
     background-position: 1000px 0;
+  }
+`;
+
+const spin = keyframes`
+  from {
+    transform: rotate(0deg);
+  }
+  to {
+    transform: rotate(360deg);
   }
 `;
 
@@ -128,13 +137,29 @@ const AccountEmail = styled.div`
   text-overflow: ellipsis;
 `;
 
-const ActiveIndicator = styled.div`
+const SignOutButton = styled.button<{ $isLoading?: boolean }>`
   display: flex;
   align-items: center;
   gap: var(--space-xs);
-  color: var(--color-success);
+  padding: var(--space-xs) var(--space-sm);
+  background: transparent;
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-sm);
+  color: var(--color-secondary-text);
   font-size: var(--font-2xs);
-  font-weight: 500;
+  cursor: ${(props) => (props.$isLoading ? "not-allowed" : "pointer")};
+  transition: all 0.2s ease;
+  opacity: ${(props) => (props.$isLoading ? 0.7 : 1)};
+
+  &:hover:not(:disabled) {
+    background: var(--color-background-hover);
+    border-color: var(--color-border-hover);
+  }
+
+  svg {
+    animation: ${(props) => (props.$isLoading ? spin : "none")} 1s linear
+      infinite;
+  }
 `;
 
 const AddAccountButton = styled.button`
@@ -142,6 +167,7 @@ const AddAccountButton = styled.button`
   align-items: center;
   justify-content: center;
   gap: var(--space-sm);
+  margin-top: var(--space-lg);
   width: 100%;
   padding: var(--space-lg);
   background: transparent;
@@ -238,9 +264,11 @@ export const SignedInAccounts: React.FC<SignedInAccountsProps> = ({
   onAccountSelect,
   showAddAccount = true,
 }) => {
-  const { session, loading, switchSignIn, addNewAccount } = useSession();
+  const { session, loading, switchSignIn, addNewAccount, signOut } =
+    useSession();
   const { deployment } = useDeployment();
   const { navigate } = useNavigation();
+  const [loadingSignOut, setLoadingSignOut] = useState<string | null>(null);
 
   const activeSignIn = session?.active_signin;
   const signins = session?.signins || [];
@@ -250,7 +278,7 @@ export const SignedInAccounts: React.FC<SignedInAccountsProps> = ({
 
     if (!signins.length) {
       const signInUrl = deployment?.ui_settings?.sign_in_page_url;
-      if (signInUrl) navigate(signInUrl);
+      if (signInUrl) navigate(`${signInUrl}${window.location.search}`);
     }
   }, [loading, signins, deployment, navigate]);
 
@@ -295,12 +323,24 @@ export const SignedInAccounts: React.FC<SignedInAccountsProps> = ({
     }
   };
 
+  const handleSignOut = async (e: React.MouseEvent, signInId: string) => {
+    e.stopPropagation(); // Prevent account click
+    setLoadingSignOut(signInId);
+    try {
+      await signOut(signInId);
+    } catch (error) {
+      console.error("Failed to sign out:", error);
+    } finally {
+      setLoadingSignOut(null);
+    }
+  };
+
   const handleAddAccount = () => {
     if (addNewAccount) {
       addNewAccount();
     } else {
       const signInUrl = deployment?.ui_settings?.sign_in_page_url;
-      if (signInUrl) navigate(signInUrl);
+      if (signInUrl) navigate(`${signInUrl}${window.location.search}`);
     }
   };
 
@@ -344,7 +384,7 @@ export const SignedInAccounts: React.FC<SignedInAccountsProps> = ({
         <Header>
           <Title>Choose an account</Title>
           <Subtitle>
-            to continue to {deployment?.ui_settings?.app_name || "Wacht"}
+            to continue to {deployment?.ui_settings?.app_name}
           </Subtitle>
         </Header>
 
@@ -364,23 +404,41 @@ export const SignedInAccounts: React.FC<SignedInAccountsProps> = ({
                   {account.has_profile_picture ? (
                     <img src={account.profile_picture_url} alt={fullName} />
                   ) : (
-                    getInitials(fullName || account.primary_email_address.email)
+                    getInitials(
+                      fullName ||
+                      account.primary_email_address?.email ||
+                      account.primary_phone_number?.phone_number ||
+                      account.username ||
+                      "U"
+                    )
                   )}
                 </Avatar>
 
                 <AccountDetails>
-                  <AccountName>{fullName || "User"}</AccountName>
+                  <AccountName>
+                    {fullName ||
+                     account.primary_email_address?.email ||
+                     account.primary_phone_number?.phone_number ||
+                     account.username ||
+                     "User"}
+                  </AccountName>
                   <AccountEmail>
-                    {account.primary_email_address.email || account.username}
+                    {account.primary_email_address?.email || account.username}
                   </AccountEmail>
                 </AccountDetails>
 
-                {isActive && (
-                  <ActiveIndicator>
-                    <CheckCircle size={16} />
-                    Active
-                  </ActiveIndicator>
-                )}
+                <SignOutButton
+                  onClick={(e) => handleSignOut(e, signInId)}
+                  $isLoading={loadingSignOut === signInId}
+                  disabled={loadingSignOut === signInId}
+                >
+                  {loadingSignOut === signInId ? (
+                    <Loader2 size={12} />
+                  ) : (
+                    <LogOut size={12} />
+                  )}
+                  {loadingSignOut === signInId ? "Signing out..." : "Sign out"}
+                </SignOutButton>
               </AccountItem>
             );
           })}
@@ -396,7 +454,7 @@ export const SignedInAccounts: React.FC<SignedInAccountsProps> = ({
         <Footer>
           Don't have an account?{" "}
           <Link>
-            <NavigationLink to={deployment!.ui_settings?.sign_up_page_url}>
+            <NavigationLink to={`${deployment!.ui_settings?.sign_up_page_url}${window.location.search}`}>
               Sign up
             </NavigationLink>
           </Link>

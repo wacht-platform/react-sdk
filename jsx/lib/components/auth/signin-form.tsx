@@ -1,8 +1,10 @@
-import { useEffect, useState, useRef } from "react";
-import styled from "styled-components";
+import { useEffect, useState } from "react";
+import styled, { keyframes } from "styled-components";
+import { Loader2 } from "lucide-react";
 import { useSignInWithStrategy } from "../../hooks/use-signin";
 import type { OAuthProvider } from "../../hooks/use-signin";
 import { SignInStrategy } from "../../hooks/use-signin";
+import { useSession } from "../../hooks/use-session";
 import { DefaultStylesProvider } from "../utility/root";
 import { OTPInput } from "@/components/utility/otp-input";
 
@@ -27,6 +29,15 @@ import { useNavigation } from "@/hooks/use-navigation";
 import { Button } from "@/components/utility";
 import { AuthFormImage } from "./auth-image";
 
+const spin = keyframes`
+  from {
+    transform: rotate(0deg);
+  }
+  to {
+    transform: rotate(360deg);
+  }
+`;
+
 const Container = styled.div`
   max-width: 380px;
   width: 380px;
@@ -34,6 +45,18 @@ const Container = styled.div`
   background: var(--color-background);
   border-radius: var(--radius-lg);
   box-shadow: 0 4px 12px var(--color-shadow);
+`;
+
+const LoadingContainer = styled.div`
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  min-height: 200px;
+
+  svg {
+    animation: ${spin} 1s linear infinite;
+    color: var(--color-primary);
+  }
 `;
 
 const Header = styled.div`
@@ -97,7 +120,7 @@ const SubmitButton = styled(Button)`
   margin-top: var(--space-sm);
 `;
 
-const Footer = styled.p`
+const Footer = styled.div`
   margin-top: var(--space-lg);
   text-align: center;
   font-size: var(--font-xs);
@@ -127,6 +150,7 @@ export function SignInForm() {
 function SignInFormContent() {
   const { deployment } = useDeployment();
   const { navigate } = useNavigation();
+  const { session, loading: sessionLoading } = useSession();
   const {
     setEmail,
     otpSent,
@@ -144,6 +168,7 @@ function SignInFormContent() {
     signinAttempt,
     discardSignInAttempt,
     error: signInErrors,
+    setSignInAttempt,
   } = useSignInWithStrategy(SignInStrategy.Generic);
   const { signIn: oauthSignIn } = useSignInWithStrategy(SignInStrategy.Oauth);
   const [formData, setFormData] = useState<SignInParams>({
@@ -156,10 +181,7 @@ function SignInFormContent() {
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [otpCode, setOtpCode] = useState("");
   const [countryCode, setCountryCode] = useState<string | undefined>("US");
-  const [showTwoFactor, setShowTwoFactor] = useState(false);
-  const [showProfileCompletion, setShowProfileCompletion] = useState(false);
-  const lastSubmitTime = useRef<number>(0);
-  const DEBOUNCE_DELAY = 1000; // 1 second debounce
+  const [isRedirecting, setIsRedirecting] = useState(false);
 
   const handleInputChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     let { name, value } = e.target;
@@ -189,13 +211,6 @@ function SignInFormContent() {
     e.preventDefault();
     if (loading || isSubmitting) return;
 
-    // Debounce check
-    const now = Date.now();
-    if (now - lastSubmitTime.current < DEBOUNCE_DELAY) {
-      return;
-    }
-    lastSubmitTime.current = now;
-
     const newErrors: Record<string, string> = {};
 
     if (firstFactor === "email_password") {
@@ -216,9 +231,6 @@ function SignInFormContent() {
       if (!formData.email) {
         newErrors.email = "Email address is required";
       }
-      if (otpSent && !otpCode) {
-        newErrors.otp = "OTP code is required";
-      }
     } else if (firstFactor === "email_magic_link") {
       if (!formData.email) {
         newErrors.email = "Email address is required";
@@ -232,9 +244,6 @@ function SignInFormContent() {
         if (!phonePattern.test(formData.phone)) {
           newErrors.phone = "Phone number must contain 7-15 digits";
         }
-      }
-      if (otpSent && !otpCode) {
-        newErrors.otp = "OTP code is required";
       }
     }
 
@@ -266,13 +275,18 @@ function SignInFormContent() {
 
     setIsSubmitting(true);
     try {
-      await signIn.create({
+      const submitData: any = {
         ...formData,
         strategy,
-      });
+      };
+
+      if (firstFactor === "phone_otp" && countryCode) {
+        submitData.phone_country_code = countryCode;
+      }
+
+      await signIn.create(submitData);
     } catch (err) {
       setErrors({ submit: (err as Error).message });
-    } finally {
       setIsSubmitting(false);
     }
   };
@@ -280,20 +294,22 @@ function SignInFormContent() {
   const completeVerification = async (e: React.FormEvent) => {
     e.preventDefault();
     if (loading || isSubmitting) return;
-    
+
     const newErrors: Record<string, string> = {};
     if (!otpCode) {
       newErrors.otp = "OTP code is required";
       setErrors(newErrors);
       return;
     }
-    
+
     setIsSubmitting(true);
     setErrors({});
-    
+
     try {
       await signIn.completeVerification(otpCode);
-      // Success - the session hook will handle the redirect
+      // Reset OTP state after successful verification
+      setOtpSent(false);
+      setOtpCode("");
     } catch (err) {
       setErrors({ otp: (err as Error).message || "Verification failed" });
     } finally {
@@ -321,79 +337,97 @@ function SignInFormContent() {
     }
   };
 
+  // Check for signin_attempt_id in URL params (from SSO callback redirect)
   useEffect(() => {
-    if (!signIn || !signinAttempt) return;
+    if (sessionLoading) return;
 
-    if (otpSent) {
-      return;
+    const urlParams = new URLSearchParams(window.location.search);
+    const attemptId = urlParams.get("signin_attempt_id");
+
+    if (attemptId && session?.signin_attempts && !signinAttempt) {
+      const attempt = session.signin_attempts.find(a => a.id === attemptId);
+      if (attempt) {
+        setSignInAttempt(attempt);
+
+        // Clean up URL - remove signin_attempt_id but keep other params
+        urlParams.delete("signin_attempt_id");
+        const newUrl = urlParams.toString()
+          ? `${window.location.pathname}?${urlParams.toString()}`
+          : window.location.pathname;
+        window.history.replaceState({}, '', newUrl);
+      }
     }
+  }, [session, sessionLoading, signinAttempt, setSignInAttempt]);
 
-    // Check if profile completion is required
-    if (signinAttempt.requires_completion) {
-      setShowProfileCompletion(true);
-      return;
-    }
+  useEffect(() => {
+    if (!signinAttempt) return;
 
-    // Check if first factor is authenticated but second factor is required
-    if (
-      signinAttempt.first_method_authenticated &&
-      signinAttempt.second_method_authentication_required &&
-      !signinAttempt.second_method_authenticated &&
-      signinAttempt.current_step === "verify_second_factor"
-    ) {
-      // User needs to complete 2FA
-      setShowTwoFactor(true);
-      return;
-    }
-
+    // Handle successful signin
     if (signinAttempt.completed) {
-      let redirectUri = new URLSearchParams(window.location.search).get(
-        "redirect_uri",
-      );
+      setIsRedirecting(true);
+      let redirectUri: string | null = new URLSearchParams(
+        window.location.search,
+      ).get("redirect_uri");
 
       if (!redirectUri) {
-        redirectUri = deployment?.ui_settings?.after_signin_redirect_url || 
-                      "https://" + window.location.hostname;
+        redirectUri =
+          deployment?.ui_settings?.after_signin_redirect_url || null;
       }
 
-      const uri = new URL(redirectUri);
-
-      if (deployment?.mode === "staging") {
-        uri.searchParams.set(
-          "dev_session",
-          localStorage.getItem("__dev_session__") ?? "",
-        );
+      if (!redirectUri && deployment?.frontend_host) {
+        redirectUri = `https://${deployment.frontend_host}`;
       }
 
-      navigate(uri.toString());
+      if (redirectUri) {
+        const uri = new URL(redirectUri);
+
+        if (deployment?.mode === "staging") {
+          uri.searchParams.set(
+            "__dev_session__",
+            localStorage.getItem("__dev_session__") || "",
+          );
+        }
+
+        navigate(uri.toString());
+      }
+      return;
     }
+
+    if (!signIn || otpSent) return;
+
+    // Map current_step to strategy
+    const strategyMap: Record<string, "phone_otp" | "email_otp" | "magic_link"> = {
+      "verify_email": "email_otp",
+      "verify_email_otp": "email_otp",
+      "verify_email_link": "magic_link",
+      "verify_phone": "phone_otp",
+      "verify_phone_otp": "phone_otp",
+    };
+
+    const strategy = strategyMap[signinAttempt.current_step];
+    if (!strategy) return; // Not a verification step
 
     const prepareVerificationAsync = async () => {
       try {
-        switch (signinAttempt.current_step) {
-          case "verify_email":
-          case "verify_email_otp":
-          case "verify_email_link":
-            const strategy =
-              firstFactor === "email_magic_link" ? "magic_link" : "email_otp";
-            await signIn.prepareVerification({ strategy });
-            break;
-          case "verify_phone":
-          case "verify_phone_otp":
-            await signIn.prepareVerification({ strategy: "phone_otp" });
-            break;
-          case "verify_second_factor":
-            // Don't set otpSent for 2FA flow
-            return;
-        }
+        await signIn.prepareVerification({ strategy });
         setOtpSent(true);
       } catch (err) {
         console.error("Failed to prepare verification:", err);
+        setErrors({ submit: "Failed to send verification. Please try again." });
+      } finally {
+        setIsSubmitting(false);
       }
     };
 
     prepareVerificationAsync();
-  }, [signinAttempt, signIn, otpSent, setOtpSent]);
+  }, [
+    signinAttempt,
+    signIn,
+    otpSent,
+    setOtpSent,
+    navigate,
+    deployment,
+  ]);
 
   useEffect(() => {
     const newErrors: Record<string, string> = {};
@@ -432,53 +466,82 @@ function SignInFormContent() {
     return <ForgotPassword onBack={() => setShowForgotPassword(false)} />;
   }
 
-  if (showTwoFactor && signinAttempt) {
+  // Handle 2FA step
+  if (signinAttempt?.current_step === "verify_second_factor") {
     return (
       <TwoFactorVerification
         onBack={() => {
-          setShowTwoFactor(false);
           discardSignInAttempt();
           resetFormData();
+          setOtpSent(false);
         }}
       />
     );
   }
 
-  if (signinAttempt?.requires_completion || showProfileCompletion) {
+  // Handle profile completion step
+  if (signinAttempt?.current_step === "complete_profile") {
     return (
       <ProfileCompletion
-        onComplete={() => {
-          let redirectUri = new URLSearchParams(window.location.search).get(
-            "redirect_uri",
-          );
-          if (!redirectUri) {
-            redirectUri = deployment?.ui_settings?.after_signin_redirect_url || 
-                          "https://" + window.location.hostname;
-          }
-          const uri = new URL(redirectUri);
-          if (deployment?.mode === "staging") {
-            uri.searchParams.set(
-              "dev_session",
-              localStorage.getItem("__dev_session__") ?? "",
-            );
-          }
-          navigate(uri.toString());
-        }}
+        attempt={signinAttempt}
+        completeProfile={signIn.completeProfile}
+        completeVerification={signIn.completeVerification}
+        prepareVerification={signIn.prepareVerification}
         onBack={() => {
-          setShowProfileCompletion(false);
           discardSignInAttempt();
           resetFormData();
+          setOtpSent(false);
         }}
       />
     );
   }
+
+  // Show loading state while checking for signin attempt from URL
+  if (sessionLoading) {
+    return (
+      <DefaultStylesProvider>
+        <Container>
+          <AuthFormImage />
+          <LoadingContainer>
+            <Loader2 size={32} />
+          </LoadingContainer>
+        </Container>
+      </DefaultStylesProvider>
+    );
+  }
+
+  // Show loading state while redirecting after successful signin
+  if (isRedirecting) {
+    return (
+      <DefaultStylesProvider>
+        <Container>
+          <AuthFormImage />
+          <LoadingContainer>
+            <Loader2 size={32} />
+          </LoadingContainer>
+        </Container>
+      </DefaultStylesProvider>
+    );
+  }
+
+  // Check if we're in a verification step
+  const isVerificationStep = signinAttempt?.current_step && [
+    "verify_email",
+    "verify_email_otp",
+    "verify_email_link",
+    "verify_phone",
+    "verify_phone_otp"
+  ].includes(signinAttempt.current_step);
+
+  // Show OTP form if we're in verification step AND OTP has been sent
+  const showOtpForm = isVerificationStep && otpSent;
 
   return (
     <DefaultStylesProvider>
       <Container>
         <AuthFormImage />
 
-        {otpSent ? (
+        {showOtpForm ? (
           <>
             <Header>
               <Title>
@@ -505,7 +568,7 @@ function SignInFormContent() {
           </Header>
         )}
 
-        {!otpSent ? (
+        {!showOtpForm ? (
           <>
             {enabledSocialsProviders.length > 0 && (
               <>
@@ -631,7 +694,7 @@ function SignInFormContent() {
             <Footer>
               Don't have an account?{" "}
               <Link>
-                <NavigationLink to={deployment!.ui_settings?.sign_up_page_url}>
+                <NavigationLink to={`${deployment!.ui_settings?.sign_up_page_url}${window.location.search}`}>
                   Sign up
                 </NavigationLink>
               </Link>
@@ -668,12 +731,20 @@ function SignInFormContent() {
               <OTPInput
                 onComplete={async (code) => {
                   setOtpCode(code);
-                  // Auto-submit when OTP is complete
                   if (code && code.length === 6) {
-                    const form = document.querySelector('form');
-                    if (form) {
-                      const event = new Event('submit', { cancelable: true, bubbles: true });
-                      form.dispatchEvent(event);
+                    setIsSubmitting(true);
+                    setErrors({});
+                    try {
+                      await signIn.completeVerification(code);
+                      // Clear OTP state after successful verification
+                      // This allows the component to transition to the next step
+                      setOtpSent(false);
+                    } catch (err) {
+                      setErrors({
+                        otp: (err as Error).message || "Verification failed",
+                      });
+                    } finally {
+                      setIsSubmitting(false);
                     }
                   }
                 }}
@@ -689,8 +760,11 @@ function SignInFormContent() {
               <SubmitButton
                 type="submit"
                 disabled={isSubmitting || loading || !otpCode}
+                style={{ margin: 0 }}
               >
-                {isSubmitting ? "Verifying..." : "Continue to Wacht"}
+                {isSubmitting
+                  ? "Verifying..."
+                  : `Continue to ${deployment?.ui_settings?.app_name}`}
               </SubmitButton>
             </Form>
             <Footer>

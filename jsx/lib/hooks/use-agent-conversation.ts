@@ -794,7 +794,7 @@ export function useAgentConversation({
                 metadata,
               };
             })
-            .filter((msg: any) => msg.content || msg.metadata)
+            .filter((msg: any) => msg.content || msg.metadata || msg.images)
             .sort((a: any, b: any) => {
               // Sort by snowflake ID (ascending order - oldest first)
               const aId = BigInt(a.id);

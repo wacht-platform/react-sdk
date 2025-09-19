@@ -57,7 +57,7 @@ const SubmitButton = styled(Button)`
   margin-top: var(--space-sm);
 `;
 
-const Footer = styled.p`
+const Footer = styled.div`
   margin-top: var(--space-lg);
   text-align: center;
   font-size: var(--font-xs);
@@ -217,24 +217,26 @@ export function TwoFactorVerification({ onBack }: TwoFactorVerificationProps) {
   useEffect(() => {
     // Check if sign-in is completed after verification
     if (signinAttempt?.completed) {
-      let redirectUri = new URLSearchParams(window.location.search).get(
+      let redirectUri: string | null = new URLSearchParams(window.location.search).get(
         "redirect_uri",
       );
 
       if (!redirectUri) {
-        redirectUri = "https://" + window.location.hostname;
+        redirectUri = deployment?.ui_settings?.after_signin_redirect_url || null;
       }
 
-      const uri = new URL(redirectUri);
+      if (redirectUri) {
+        const uri = new URL(redirectUri);
 
-      if (deployment?.mode === "staging") {
-        uri.searchParams.set(
-          "dev_session",
-          localStorage.getItem("__dev_session__") ?? "",
-        );
+        if (deployment?.mode === "staging") {
+          uri.searchParams.set(
+            "__dev_session__",
+            localStorage.getItem("__dev_session__") || "",
+          );
+        }
+
+        window.location.href = uri.toString();
       }
-
-      window.location.href = uri.toString();
     }
   }, [signinAttempt, deployment]);
 

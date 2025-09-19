@@ -102,7 +102,7 @@ const ContinueButton = styled(Button)`
   width: 100%;
 `;
 
-const Footer = styled.p`
+const Footer = styled.div`
   margin-top: var(--space-lg);
   text-align: center;
   font-size: var(--font-xs);

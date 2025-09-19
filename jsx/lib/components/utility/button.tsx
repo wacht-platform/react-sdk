@@ -14,7 +14,10 @@ export const Button = styled.button<ButtonProps>`
   font-weight: 500;
   font-size: var(--font-xs);
   cursor: pointer;
-  transition: background-color 0.2s, color 0.2s, border-color 0.2s;
+  transition:
+    background-color 0.2s,
+    color 0.2s,
+    border-color 0.2s;
   display: flex;
   justify-content: center;
   align-items: center;

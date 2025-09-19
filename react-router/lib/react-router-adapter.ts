@@ -2,34 +2,42 @@
 
 import { useNavigate } from "react-router";
 import type { PlatformAdapter, NavigateOptions } from "@snipextt/wacht";
-import { isExternalUrl, isSafeUrl } from "@snipextt/wacht";
+import { isSafeUrl, isExternalUrl } from "@snipextt/wacht";
 
-const useReactRouterNavigate = () => {
+/**
+ * React Router adapter that uses the useNavigate hook.
+ * This works for React Router v7 applications.
+ */
+const useNavigateAdapter = () => {
   try {
     const navigate = useNavigate();
 
     return (to: string, options?: NavigateOptions) => {
-      try {
-        if (!isSafeUrl(to)) {
-          console.error(`Navigation blocked: Dangerous URL detected - ${to}`);
-          return;
-        }
+      if (!isSafeUrl(to)) {
+        console.error(`Navigation blocked: Dangerous URL detected - ${to}`);
+        return;
+      }
 
-        const isExternal = isExternalUrl(to);
+      const isExternal = isExternalUrl(to);
 
-        if (isExternal) {
-          if (options?.replace) {
-            window.location.replace(to);
-          } else {
-            window.location.href = to;
-          }
+      if (isExternal) {
+        // External URLs always use window.location
+        if (options?.replace) {
+          window.location.replace(to);
         } else {
-          navigate(to, {
-            replace: options?.replace || false,
-            state: options?.state,
-          });
+          window.location.href = to;
         }
+        return;
+      }
+
+      // For internal navigation, use React Router
+      try {
+        navigate(to, {
+          replace: options?.replace || false,
+          state: options?.state,
+        });
       } catch (error) {
+        // Fallback to window.location if React Router fails
         console.warn(
           "React Router navigation failed, falling back to browser navigation:",
           error,
@@ -42,12 +50,12 @@ const useReactRouterNavigate = () => {
       }
     };
   } catch (error) {
+    // If useNavigate is not available, provide a fallback
     console.warn(
       "React Router useNavigate not available, falling back to browser navigation:",
       error,
     );
     return (to: string, options?: NavigateOptions) => {
-      // Security check: block dangerous URLs
       if (!isSafeUrl(to)) {
         console.error(`Navigation blocked: Dangerous URL detected - ${to}`);
         return;
@@ -64,6 +72,6 @@ const useReactRouterNavigate = () => {
 
 export const createReactRouterAdapter = (): PlatformAdapter => {
   return {
-    useNavigate: useReactRouterNavigate,
+    useNavigate: useNavigateAdapter,
   };
 };
