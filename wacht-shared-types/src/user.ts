@@ -31,6 +31,7 @@ export interface UserEmailAddress {
 export interface UserPhoneNumber {
   id: string;
   phone_number: string;
+  country_code: string;
   verified: boolean;
   verified_at: string;
 }

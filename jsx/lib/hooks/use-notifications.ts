@@ -101,8 +101,8 @@ async function deleteNotification(
   client: Client,
   notificationId: string
 ): Promise<ApiResult<{ success: boolean }>> {
-  const response = await client(`/notifications/${notificationId}`, {
-    method: "DELETE",
+  const response = await client(`/notifications/${notificationId}/delete`, {
+    method: "POST",
   });
   return responseMapper(response);
 }

@@ -63,13 +63,13 @@ const Subtitle = styled.p`
   font-size: var(--font-xs);
 `;
 
-const AccountItem = styled.div<{ $isActive?: boolean }>`
+const AccountItem = styled.div<{ $isActive?: boolean; $isSwitching?: boolean }>`
   display: flex;
   align-items: center;
   gap: var(--space-md);
   padding: var(--space-md);
   cursor: pointer;
-  transition: background-color 0.2s ease;
+  transition: all 0.2s ease;
   position: relative;
   border-bottom: 1px solid var(--color-border);
 
@@ -89,6 +89,35 @@ const AccountItem = styled.div<{ $isActive?: boolean }>`
 
     &:hover {
       background: var(--color-background-hover);
+    }
+  `}
+
+  ${(props) =>
+    props.$isSwitching &&
+    `
+    cursor: wait;
+    background: var(--color-background-hover);
+    pointer-events: none;
+    overflow: hidden;
+
+    &:hover {
+      background: var(--color-background-hover);
+    }
+
+    &::before {
+      content: '';
+      position: absolute;
+      left: 0;
+      top: 0;
+      bottom: 0;
+      width: 3px;
+      background: var(--color-primary);
+      animation: pulse 1.5s ease-in-out infinite;
+    }
+
+    @keyframes pulse {
+      0%, 100% { opacity: 1; }
+      50% { opacity: 0.5; }
     }
   `}
 `;
@@ -269,6 +298,7 @@ export const SignedInAccounts: React.FC<SignedInAccountsProps> = ({
   const { deployment } = useDeployment();
   const { navigate } = useNavigation();
   const [loadingSignOut, setLoadingSignOut] = useState<string | null>(null);
+  const [switchingToAccount, setSwitchingToAccount] = useState<string | null>(null);
 
   const activeSignIn = session?.active_signin;
   const signins = session?.signins || [];
@@ -292,13 +322,16 @@ export const SignedInAccounts: React.FC<SignedInAccountsProps> = ({
   };
 
   const handleAccountClick = async (signInId: string) => {
-    if (signInId === activeSignIn?.id) return;
+    if (signInId === activeSignIn?.id || switchingToAccount) return;
 
+    setSwitchingToAccount(signInId);
     try {
       await switchSignIn(signInId);
       if (onAccountSelect) {
         onAccountSelect(signInId);
+        setSwitchingToAccount(null);
       } else {
+        // Keep loading state during redirect
         let redirectUri = new URLSearchParams(window.location.search).get(
           "redirect_uri",
         );
@@ -316,10 +349,13 @@ export const SignedInAccounts: React.FC<SignedInAccountsProps> = ({
             );
           }
           navigate(uri.toString());
+        } else {
+          setSwitchingToAccount(null);
         }
       }
     } catch (error) {
       console.error("Failed to switch account:", error);
+      setSwitchingToAccount(null);
     }
   };
 
@@ -390,7 +426,9 @@ export const SignedInAccounts: React.FC<SignedInAccountsProps> = ({
 
         <AccountsWrapper>
           {signins.map(({ user: account, id: signInId }) => {
-            const isActive = account.id === activeSignIn?.user?.id;
+            if (!account) return null;
+            const isActive = signInId === activeSignIn?.id;
+            const isSwitching = switchingToAccount === signInId;
             const fullName =
               `${account.first_name || ""} ${account.last_name || ""}`.trim();
 
@@ -398,6 +436,7 @@ export const SignedInAccounts: React.FC<SignedInAccountsProps> = ({
               <AccountItem
                 key={signInId}
                 $isActive={isActive}
+                $isSwitching={isSwitching}
                 onClick={() => handleAccountClick(signInId)}
               >
                 <Avatar>
@@ -427,18 +466,20 @@ export const SignedInAccounts: React.FC<SignedInAccountsProps> = ({
                   </AccountEmail>
                 </AccountDetails>
 
-                <SignOutButton
-                  onClick={(e) => handleSignOut(e, signInId)}
-                  $isLoading={loadingSignOut === signInId}
-                  disabled={loadingSignOut === signInId}
-                >
-                  {loadingSignOut === signInId ? (
-                    <Loader2 size={12} />
-                  ) : (
-                    <LogOut size={12} />
-                  )}
-                  {loadingSignOut === signInId ? "Signing out..." : "Sign out"}
-                </SignOutButton>
+                {!isSwitching && (
+                  <SignOutButton
+                    onClick={(e) => handleSignOut(e, signInId)}
+                    $isLoading={loadingSignOut === signInId}
+                    disabled={loadingSignOut === signInId}
+                  >
+                    {loadingSignOut === signInId ? (
+                      <Loader2 size={12} />
+                    ) : (
+                      <LogOut size={12} />
+                    )}
+                    {loadingSignOut === signInId ? "Signing out..." : "Sign out"}
+                  </SignOutButton>
+                )}
               </AccountItem>
             );
           })}

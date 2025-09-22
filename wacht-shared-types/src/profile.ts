@@ -6,6 +6,7 @@ export interface ProfileCompletionData {
   last_name?: string;
   username?: string;
   phone_number?: string;
+  phone_country_code?: string;
   email?: string;
 }
 

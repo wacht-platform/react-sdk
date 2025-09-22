@@ -92,8 +92,8 @@ export function useUser() {
 
   const deleteEmailAddress = async (id: string) => {
     const response = await responseMapper(
-      await client(`/me/email-addresses/${id}`, {
-        method: "DELETE",
+      await client(`/me/email-addresses/${id}/delete`, {
+        method: "POST",
       })
     );
     return response;
@@ -136,8 +136,8 @@ export function useUser() {
 
   const deletePhoneNumber = async (id: string) => {
     const response = await responseMapper(
-      await client(`/me/phone-numbers/${id}`, {
-        method: "DELETE",
+      await client(`/me/phone-numbers/${id}/delete`, {
+        method: "POST",
       })
     );
     return response;
@@ -211,8 +211,8 @@ export function useUser() {
 
   const deleteAuthenticator = async (id: string) => {
     const response = await responseMapper(
-      await client(`/me/authenticator/${id}`, {
-        method: "DELETE",
+      await client(`/me/authenticator/${id}/delete`, {
+        method: "POST",
       })
     );
     return response;
@@ -285,8 +285,8 @@ export function useUser() {
     form.append("password", password);
 
     const response = await responseMapper(
-      await client("/me/account", {
-        method: "DELETE",
+      await client("/me/account/delete", {
+        method: "POST",
         body: form,
       })
     );
@@ -295,8 +295,8 @@ export function useUser() {
 
   const disconnectSocialConnection = async (id: string) => {
     const response = await responseMapper(
-      await client(`/me/social-connections/${id}`, {
-        method: "DELETE",
+      await client(`/me/social-connections/${id}/disconnect`, {
+        method: "POST",
       })
     );
     return response;

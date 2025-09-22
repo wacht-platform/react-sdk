@@ -1,4 +1,5 @@
 import type { CurrentUser } from "./user";
+import type { ProfileCompletionData } from "./profile";
 
 export interface SignIn {
   id: string;
@@ -59,6 +60,7 @@ export interface SigninAttempt {
   requires_completion?: boolean;
   missing_fields?: string[];
   required_fields?: string[];
+  profile_completion_data?: ProfileCompletionData;
 }
 
 export type SignupAttemptStep =

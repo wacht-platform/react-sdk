@@ -57,8 +57,8 @@ importers:
   jsx:
     dependencies:
       '@snipextt/wacht-types':
-        specifier: 0.0.4
-        version: 0.0.4
+        specifier: 0.0.7
+        version: 0.0.7
       lucide-react:
         specifier: ^0.474.0
         version: 0.474.0(react@19.1.0)
@@ -749,8 +749,8 @@ packages:
   '@rushstack/ts-command-line@5.0.1':
     resolution: {integrity: sha512-bsbUucn41UXrQK7wgM8CNM/jagBytEyJqXw/umtI8d68vFm1Jwxh1OtLrlW7uGZgjCWiiPH6ooUNa1aVsuVr3Q==}
 
-  '@snipextt/wacht-types@0.0.4':
-    resolution: {integrity: sha512-ZtJqlTqfjsdUywij2H7fBUXmBturRWwtZc1RA5gqrFAN3k7nSoGjE+DUt9zElDMMpbZ3ZsjB0u2WRJ1DkhPStA==}
+  '@snipextt/wacht-types@0.0.7':
+    resolution: {integrity: sha512-ZP/ZXVR+XVF4CakUzdagyLkUZhe0H+HOkwY/+AdJP8t1P0OpoIIk1zop3ErUa2Ca80OawaFjcKkOKkX/slNzgA==}
 
   '@swc/counter@0.1.3':
     resolution: {integrity: sha512-e2BR4lsJkkRlKZ/qCHPw9ZaSxc0MVUd7gtbtaB7aMvHeJVYe8sOB8DBZkP2DtISHGSku9sCK6T6cnY0CtXrOCQ==}
@@ -1906,7 +1906,7 @@ snapshots:
     transitivePeerDependencies:
       - '@types/node'
 
-  '@snipextt/wacht-types@0.0.4': {}
+  '@snipextt/wacht-types@0.0.7': {}
 
   '@swc/counter@0.1.3': {}
 

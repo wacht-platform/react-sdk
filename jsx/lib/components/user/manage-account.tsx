@@ -66,6 +66,7 @@ import { EdgeIcon } from "../icons/edge";
 import { OperaIcon } from "../icons/opera";
 import { BraveIcon } from "../icons/brave";
 import { useDeployment } from "@/hooks/use-deployment";
+import { countries } from "@/constants/geo";
 import { FormGroup, Label } from "../utility/form";
 import { Input } from "../utility/input";
 import { Spinner, Button, SearchInput } from "../utility";
@@ -699,6 +700,12 @@ const PhoneManagementSection = () => {
     return null;
   }
 
+  // Helper function to get country flag from dial code
+  const getCountryFlag = (countryCode: string) => {
+    const country = countries.find(c => c.dialCode === countryCode);
+    return country?.flag || '🌍';
+  };
+
   // Filter phones based on search query
   const filteredPhones = React.useMemo(() => {
     if (!user?.user_phone_numbers) return [];
@@ -791,7 +798,13 @@ const PhoneManagementSection = () => {
           <TableBody>
             {filteredPhones.map((phone) => (
               <TableRow key={phone.id}>
-                <TableCell>{phone.phone_number}</TableCell>
+                <TableCell>
+                  <div style={{ display: "flex", alignItems: "center", gap: "8px" }}>
+                    <span style={{ fontSize: "18px" }}>{getCountryFlag(phone.country_code)}</span>
+                    <span>{phone.country_code}</span>
+                    <span>{phone.phone_number}</span>
+                  </div>
+                </TableCell>
                 <TableCell>
                   {phone.id === user?.primary_phone_number_id
                     ? "Primary"

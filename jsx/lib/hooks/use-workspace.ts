@@ -22,8 +22,8 @@ async function leaveWorkspace(
   userId: string,
 ) {
   const response = await responseMapper<void>(
-    await client(`/workspaces/${workspaceId}/members/${userId}`, {
-      method: "DELETE",
+    await client(`/workspaces/${workspaceId}/members/${userId}/remove`, {
+      method: "POST",
     }),
   );
   return response.data;
@@ -111,8 +111,8 @@ export const useWorkspaceList = () => {
       if (data.description) formData.append("description", data.description);
       if (data.image) formData.append("image", data.image);
       const response = await responseMapper(
-        await client(`/workspaces/${workspace.id}`, {
-          method: "PUT",
+        await client(`/workspaces/${workspace.id}/update`, {
+          method: "POST",
           body: formData,
         }),
       );
@@ -125,8 +125,8 @@ export const useWorkspaceList = () => {
   const deleteWorkspace = useCallback(
     async (workspace: Workspace) => {
       const response = await responseMapper(
-        await client(`/workspaces/${workspace.id}`, {
-          method: "DELETE",
+        await client(`/workspaces/${workspace.id}/delete`, {
+          method: "POST",
         }),
       );
       await refetch();
@@ -176,8 +176,8 @@ export const useWorkspaceList = () => {
   const deleteWorkspaceRole = useCallback(
     async (workspace: Workspace, role: WorkspaceRole) => {
       const response = await responseMapper(
-        await client(`/workspaces/${workspace.id}/roles/${role.id}`, {
-          method: "DELETE",
+        await client(`/workspaces/${workspace.id}/roles/${role.id}/delete`, {
+          method: "POST",
         }),
       );
       return response.data;
@@ -202,8 +202,8 @@ export const useWorkspaceList = () => {
   const removeWorkspaceMember = useCallback(
     async (workspace: Workspace, memberId: string) => {
       const response = await responseMapper(
-        await client(`/workspaces/${workspace.id}/members/${memberId}`, {
-          method: "DELETE",
+        await client(`/workspaces/${workspace.id}/members/${memberId}/remove`, {
+          method: "POST",
         }),
       );
       await refetch();
@@ -227,8 +227,8 @@ export const useWorkspaceList = () => {
   const removeWorkspaceMemberRole = useCallback(
     async (workspace: Workspace, membershipId: string, roleId: string) => {
       const response = await responseMapper(
-        await client(`/workspaces/${workspace.id}/members/${membershipId}/roles/${roleId}`, {
-          method: "DELETE",
+        await client(`/workspaces/${workspace.id}/members/${membershipId}/roles/${roleId}/remove`, {
+          method: "POST",
         }),
       );
       return response.data;

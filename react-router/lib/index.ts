@@ -5,7 +5,13 @@ export {
   SSOCallback,
   MagicLinkVerification,
 } from "@snipextt/wacht";
-export { UserButton, UserControls, ManageAccount } from "@snipextt/wacht";
+export {
+  UserButton,
+  UserControls,
+  ManageAccount,
+  OrganizationSwitcher,
+  OrganizationList,
+} from "@snipextt/wacht";
 export {
   AgentConversation,
   AgentConversationHub,

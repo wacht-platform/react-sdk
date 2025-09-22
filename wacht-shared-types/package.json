@@ -1,6 +1,6 @@
 {
   "name": "@snipextt/wacht-types",
-  "version": "0.0.4",
+  "version": "0.0.7",
   "description": "Shared TypeScript types for wacht libraries",
   "main": "./src/index.ts",
   "types": "./src/index.ts",

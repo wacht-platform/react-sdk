@@ -184,7 +184,6 @@ const ActionLink = styled.button<{ $destructive?: boolean }>`
 const FooterSection = styled.div`
   background: var(--color-background-hover);
   padding: 8px 12px;
-  margin-top: var(--space-sm);
 `;
 
 const FooterButton = styled.button`

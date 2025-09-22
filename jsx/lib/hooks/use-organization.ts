@@ -74,8 +74,8 @@ export const useOrganizationList = () => {
 
   const removeOrganizationMember = useCallback(
     async (organization: Organization, member: OrganizationMembership) => {
-      await client(`/organizations/${organization.id}/members/${member.id}`, {
-        method: "DELETE",
+      await client(`/organizations/${organization.id}/members/${member.id}/remove`, {
+        method: "POST",
       });
       await refetch();
     },
@@ -114,8 +114,8 @@ export const useOrganizationList = () => {
         return prev;
       }, new FormData());
       const response = await responseMapper<Organization>(
-        await client(`/organizations/${organization.id}`, {
-          method: "PATCH",
+        await client(`/organizations/${organization.id}/update`, {
+          method: "POST",
           body: form,
         })
       );
@@ -127,8 +127,8 @@ export const useOrganizationList = () => {
 
   const removeOrganizationRoles = useCallback(
     async (organization: Organization, role: OrganizationRole) => {
-      await client(`/organizations/${organization.id}/roles/${role.id}`, {
-        method: "DELETE",
+      await client(`/organizations/${organization.id}/roles/${role.id}/remove`, {
+        method: "POST",
       });
     },
     [client]
@@ -170,8 +170,8 @@ export const useOrganizationList = () => {
   const removeOrganizationDomain = useCallback(
     async (organization: Organization, domain: OrganizationDomain) => {
       const response = await responseMapper<OrganizationDomain>(
-        await client(`/organizations/${organization.id}/domains/${domain.id}`, {
-          method: "DELETE",
+        await client(`/organizations/${organization.id}/domains/${domain.id}/remove`, {
+          method: "POST",
         })
       );
 
@@ -206,7 +206,7 @@ export const useOrganizationList = () => {
     async (organization: Organization) => {
       const response = await responseMapper<void>(
         await client(`/organizations/${organization.id}/leave`, {
-          method: "DELETE",
+          method: "POST",
         })
       );
       return response.data;
@@ -217,8 +217,8 @@ export const useOrganizationList = () => {
   const deleteOrganization = useCallback(
     async (organization: Organization) => {
       const response = await responseMapper<void>(
-        await client(`/organizations/${organization.id}`, {
-          method: "DELETE",
+        await client(`/organizations/${organization.id}/delete`, {
+          method: "POST",
         })
       );
       return response.data;
@@ -234,9 +234,9 @@ export const useOrganizationList = () => {
     ) => {
       const response = await responseMapper<OrganizationMembership>(
         await client(
-          `/organizations/${organization.id}/members/${member.id}/roles/${role.id}`,
+          `/organizations/${organization.id}/members/${member.id}/roles/${role.id}/add`,
           {
-            method: "PUT",
+            method: "POST",
           }
         )
       );
@@ -253,9 +253,9 @@ export const useOrganizationList = () => {
     ) => {
       const response = await responseMapper<OrganizationMembership>(
         await client(
-          `/organizations/${organization.id}/members/${member.id}/roles/${role.id}`,
+          `/organizations/${organization.id}/members/${member.id}/roles/${role.id}/remove`,
           {
-            method: "DELETE",
+            method: "POST",
           }
         )
       );
@@ -294,9 +294,9 @@ export const useOrganizationList = () => {
     async (organization: Organization, invitation: OrganizationInvitation) => {
       const response = await responseMapper<OrganizationInvitation>(
         await client(
-          `/organizations/${organization.id}/invitations/${invitation.id}`,
+          `/organizations/${organization.id}/invitations/${invitation.id}/remove`,
           {
-            method: "DELETE",
+            method: "POST",
           }
         )
       );

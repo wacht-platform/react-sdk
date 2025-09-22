@@ -223,8 +223,8 @@ export function ProfileCompletion({
   const message = "Please provide the following information to continue";
 
   const authSettings = deployment?.auth_settings;
-  const isVerifying = attempt?.current_step === "verify_phone" ||
-                     attempt?.current_step === "verify_email" ||
+  const isVerifying = attempt?.current_step === "verify_phone_otp" ||
+                     attempt?.current_step === "verify_email_otp" ||
                      showVerification;
 
   const handleInputChange = (e: React.ChangeEvent<HTMLInputElement>) => {
@@ -255,6 +255,9 @@ export function ProfileCompletion({
         case "phone_number":
           isFieldEnabled = authSettings?.phone_number?.enabled || false;
           break;
+        case "email_address":
+          isFieldEnabled = authSettings?.email_address?.enabled || false;
+          break;
         default:
           isFieldEnabled = true;
       }
@@ -272,11 +275,18 @@ export function ProfileCompletion({
         newErrors.username = "Username must be 3-30 characters and contain only letters, numbers, underscores, and hyphens";
       }
     }
-    
+
     if (formData.phone_number && missingFields.includes("phone_number")) {
       const phonePattern = /^\d{7,15}$/;
       if (!phonePattern.test(formData.phone_number)) {
         newErrors.phone_number = "Phone number must contain 7-15 digits";
+      }
+    }
+
+    if (formData.email && missingFields.includes("email_address")) {
+      const emailPattern = /^[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}$/;
+      if (!emailPattern.test(formData.email)) {
+        newErrors.email_address = "Please enter a valid email address";
       }
     }
 
@@ -306,13 +316,13 @@ export function ProfileCompletion({
   };
 
   if (isVerifying) {
-    const verificationTitle = attempt.current_step === "verify_phone" 
-      ? "Verify Your Phone Number" 
+    const verificationTitle = attempt.current_step === "verify_phone_otp"
+      ? "Verify Your Phone Number"
       : "Verify Your Email";
-    const verificationMessage = attempt.current_step === "verify_phone"
+    const verificationMessage = attempt.current_step === "verify_phone_otp"
       ? "Enter the 6-digit code sent to your phone"
       : "Enter the 6-digit code sent to your email";
-    const resendStrategy: "phone_otp" | "email_otp" = attempt.current_step === "verify_phone" ? "phone_otp" : "email_otp";
+    const resendStrategy: "phone_otp" | "email_otp" = attempt.current_step === "verify_phone_otp" ? "phone_otp" : "email_otp";
 
     return (
       <DefaultStylesProvider>
@@ -451,6 +461,26 @@ export function ProfileCompletion({
                 setCountryCode={setCountryCode}
               />
               {errors.phone_number && <ErrorMessage>{errors.phone_number}</ErrorMessage>}
+            </FormGroup>
+          )}
+
+          {missingFields.includes("email_address") && authSettings?.email_address?.enabled && (
+            <FormGroup>
+              <Label htmlFor="email">
+                Email address {authSettings.email_address.required && "*"}
+              </Label>
+              <Input
+                type="email"
+                id="email"
+                name="email"
+                value={formData.email || ""}
+                onChange={handleInputChange}
+                placeholder="Enter your email address"
+                aria-invalid={!!errors.email_address}
+                disabled={isLoading}
+                autoComplete="email"
+              />
+              {errors.email_address && <ErrorMessage>{errors.email_address}</ErrorMessage>}
             </FormGroup>
           )}
 

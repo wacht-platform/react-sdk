@@ -6,9 +6,7 @@ import type { Session, SigninAttempt } from "@/types";
 interface SSOCallbackResult {
   session: Session;
   redirect_uri?: string;
-  signin_attempt?: SigninAttempt;
 }
-
 
 interface SSOCallbackState {
   loading: boolean;
@@ -17,8 +15,6 @@ interface SSOCallbackState {
   redirectUri: string | null;
   processed: boolean;
   signinAttempt: SigninAttempt | null;
-  requiresCompletion: boolean;
-  requires2FA: boolean;
 }
 
 /**
@@ -33,9 +29,9 @@ export function useSSOCallback(): SSOCallbackState {
   const [session, setSession] = useState<Session | null>(null);
   const [redirectUri, setRedirectUri] = useState<string | null>(null);
   const [processed, setProcessed] = useState(false);
-  const [signinAttempt, setSigninAttempt] = useState<SigninAttempt | null>(null);
-  const [requiresCompletion, setRequiresCompletion] = useState(false);
-  const [requires2FA, setRequires2FA] = useState(false);
+  const [signinAttempt, setSigninAttempt] = useState<SigninAttempt | null>(
+    null,
+  );
 
   useEffect(() => {
     if (processed || clientLoading) return;
@@ -48,11 +44,8 @@ export function useSSOCallback(): SSOCallbackState {
 
     if (!code && !oauthError) {
       setProcessed(true);
-      const err = new Error(
-        "No OAuth callback data found."
-      );
+      const err = new Error("No OAuth callback data found.");
       setError(err);
-      // Component will handle redirect based on this error
       return;
     }
 
@@ -82,47 +75,46 @@ export function useSSOCallback(): SSOCallbackState {
       // State format: base64_data.hmac_signature
       let endpoint: string;
       let method: string;
-      
+
       try {
-        // Extract the base64 data part (before the dot)
-        const stateParts = state.split('.');
+        const stateParts = state.split(".");
         if (stateParts.length !== 2) {
           throw new Error("Invalid OAuth state format - missing signature");
         }
-        
-        // Decode base64 URL-safe encoding
-        const base64Data = stateParts[0].replace(/-/g, '+').replace(/_/g, '/');
-        // Add padding if needed
-        const padding = base64Data.length % 4 ? '='.repeat(4 - base64Data.length % 4) : '';
+
+        const base64Data = stateParts[0].replace(/-/g, "+").replace(/_/g, "/");
+        const padding =
+          base64Data.length % 4 ? "=".repeat(4 - (base64Data.length % 4)) : "";
         const decodedBytes = atob(base64Data + padding);
-        
-        // Parse the action from decoded state
-        const stateAction = decodedBytes.split('|')[0];
-        
-        if (stateAction === 'sign_in') {
+        const stateAction = decodedBytes.split("|")[0];
+        if (stateAction === "sign_in") {
           endpoint = `/auth/oauth2/callback`;
           method = "GET";
-        } else if (stateAction === 'connect_social') {
+        } else if (stateAction === "connect_social") {
           endpoint = `/me/sso-connection-callback`;
           method = "POST";
         } else {
           throw new Error(`Unknown OAuth action: ${stateAction}`);
         }
       } catch (e) {
-        // State is malformed or invalid
-        const error = e instanceof Error ? e : new Error("Failed to parse OAuth state");
-        setError(new Error(`Invalid OAuth callback: ${error.message}. The authorization link may be expired or malformed. Please try signing in again.`));
+        const error =
+          e instanceof Error ? e : new Error("Failed to parse OAuth state");
+        setError(
+          new Error(
+            `Invalid OAuth callback: ${error.message}. The authorization link may be expired or malformed. Please try signing in again.`,
+          ),
+        );
         setLoading(false);
         return;
       }
 
       const response = await client(
         `${endpoint}?code=${encodeURIComponent(
-          code
+          code,
         )}&state=${encodeURIComponent(state)}`,
         {
           method: method,
-        }
+        },
       );
 
       const result = await responseMapper<SSOCallbackResult>(response);
@@ -130,26 +122,17 @@ export function useSSOCallback(): SSOCallbackState {
       if ("data" in result) {
         const sessionData = result.data.session;
         const redirectUriData = result.data.redirect_uri || null;
-        const signinAttemptData = result.data.signin_attempt || null;
 
         setSession(sessionData);
         setRedirectUri(redirectUriData);
 
-        // Check for signin attempt that requires 2FA or profile completion
-        if (signinAttemptData && sessionData.signin_attempts) {
-          const attempt = sessionData.signin_attempts.find(
-            (a: SigninAttempt) => a.id === signinAttemptData.id
-          );
-
-          if (attempt && !attempt.completed) {
+        if (
+          sessionData.signin_attempts &&
+          sessionData.signin_attempts.length > 0
+        ) {
+          const attempt = sessionData.signin_attempts.at(-1);
+          if (attempt) {
             setSigninAttempt(attempt);
-
-            if (attempt.current_step === "verify_second_factor" &&
-                attempt.second_method_authentication_required) {
-              setRequires2FA(true);
-            } else if (attempt.current_step === "complete_profile") {
-              setRequiresCompletion(true);
-            }
           }
         }
       } else {
@@ -165,9 +148,6 @@ export function useSSOCallback(): SSOCallbackState {
     }
   };
 
-
-  // Component will handle navigation based on these states
-
   return {
     loading,
     error,
@@ -175,8 +155,5 @@ export function useSSOCallback(): SSOCallbackState {
     redirectUri,
     processed,
     signinAttempt,
-    requiresCompletion,
-    requires2FA,
   };
 }
-

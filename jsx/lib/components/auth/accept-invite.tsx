@@ -5,8 +5,6 @@ import { useNavigation } from "@/hooks/use-navigation";
 import { useDeployment } from "@/hooks/use-deployment";
 import { DefaultStylesProvider } from "../utility/root";
 import { Button } from "../utility";
-import { AuthFormImage } from "./auth-image";
-import { NavigationLink } from "../utility/navigation";
 
 const Container = styled.div`
   max-width: 380px;
@@ -227,7 +225,6 @@ export function AcceptInvite({
     return (
       <DefaultStylesProvider>
         <Container>
-          <AuthFormImage />
           <Header>
             <Title>Invalid Invitation</Title>
             <Subtitle>No invitation token found</Subtitle>
@@ -252,7 +249,6 @@ export function AcceptInvite({
     return (
       <DefaultStylesProvider>
         <Container>
-          <AuthFormImage />
           <Header>
             <Title>Processing Invitation</Title>
             <Subtitle>Please wait while we verify your invitation</Subtitle>
@@ -272,7 +268,6 @@ export function AcceptInvite({
     return (
       <DefaultStylesProvider>
         <Container>
-          <AuthFormImage />
           <Header>
             <Title>Invitation Accepted!</Title>
             <Subtitle>You've successfully joined the organization</Subtitle>
@@ -297,7 +292,6 @@ export function AcceptInvite({
     return (
       <DefaultStylesProvider>
         <Container>
-          <AuthFormImage />
           <Header>
             <Title>Already a Member</Title>
             <Subtitle>You're already part of this organization</Subtitle>
@@ -322,7 +316,6 @@ export function AcceptInvite({
     return (
       <DefaultStylesProvider>
         <Container>
-          <AuthFormImage />
           <Header>
             <Title>{isSignup ? "Sign Up Required" : "Sign In Required"}</Title>
             <Subtitle>To accept this invitation</Subtitle>
@@ -343,16 +336,6 @@ export function AcceptInvite({
               {isSignup ? "Sign Up to Accept" : "Sign In to Accept"}
             </Button>
           </StatusContainer>
-          <Footer>
-            <div>
-              Wrong email?{" "}
-              <Link>
-                <NavigationLink to={deployment?.ui_settings?.support_page_url || "#"}>
-                  Contact your admin
-                </NavigationLink>
-              </Link>
-            </div>
-          </Footer>
         </Container>
       </DefaultStylesProvider>
     );
@@ -363,7 +346,6 @@ export function AcceptInvite({
     return (
       <DefaultStylesProvider>
         <Container>
-          <AuthFormImage />
           <Header>
             <Title>Invitation Expired</Title>
             <Subtitle>This invitation is no longer valid</Subtitle>
@@ -376,16 +358,6 @@ export function AcceptInvite({
             <SubMessage>
               Invitations are valid for 10 days. Please request a new invitation from your organization administrator.
             </SubMessage>
-            <Footer>
-              <div>
-                Need help?{" "}
-                <Link>
-                  <NavigationLink to={deployment?.ui_settings?.support_page_url || "#"}>
-                    Contact support
-                  </NavigationLink>
-                </Link>
-              </div>
-            </Footer>
           </StatusContainer>
         </Container>
       </DefaultStylesProvider>
@@ -397,7 +369,6 @@ export function AcceptInvite({
     return (
       <DefaultStylesProvider>
         <Container>
-          <AuthFormImage />
           <Header>
             <Title>Invitation Error</Title>
             <Subtitle>Unable to process invitation</Subtitle>

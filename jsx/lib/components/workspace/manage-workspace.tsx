@@ -343,8 +343,8 @@ const InvitationsSection = () => {
     async (invitationId: string) => {
       if (!activeWorkspace || !workspaceWithOrg) return;
       const response = await responseMapper(
-        await client(`/organizations/${workspaceWithOrg.organization.id}/invitations/${invitationId}`, {
-          method: "DELETE",
+        await client(`/organizations/${workspaceWithOrg.organization.id}/invitations/${invitationId}/remove`, {
+          method: "POST",
         }),
       );
       return response.data;
