@@ -34,20 +34,6 @@ const Subtitle = styled.p`
   font-size: var(--font-xs);
 `;
 
-const PhoneDisplay = styled.div`
-  text-align: center;
-  font-size: var(--font-lg);
-  font-weight: 600;
-  margin: var(--space-2xl) 0;
-  padding: var(--space-lg);
-  background: var(--color-background-hover);
-  border: 1px solid var(--color-border);
-  border-radius: var(--radius-md);
-  font-family: monospace;
-  letter-spacing: 0.15em;
-  color: var(--color-foreground);
-`;
-
 const ErrorMessage = styled.p`
   font-size: var(--font-2xs);
   color: var(--color-error);
@@ -89,13 +75,16 @@ const LastDigitsInput = styled(Input)`
 `;
 
 interface PhoneVerificationProps {
-  maskedPhoneNumber: string;
   onVerify: (lastFourDigits: string) => void;
   onBack: () => void;
   loading?: boolean;
 }
 
-export function PhoneVerification({ maskedPhoneNumber, onVerify, onBack, loading }: PhoneVerificationProps) {
+export function PhoneVerification({
+  onVerify,
+  onBack,
+  loading,
+}: PhoneVerificationProps) {
   const [lastFourDigits, setLastFourDigits] = useState("");
   const [error, setError] = useState("");
 
@@ -120,15 +109,14 @@ export function PhoneVerification({ maskedPhoneNumber, onVerify, onBack, loading
     <DefaultStylesProvider>
       <Container>
         <AuthFormImage />
-        
+
         <Header>
           <Title>Verify your phone number</Title>
           <Subtitle>
-            To send a verification code, please confirm the last 4 digits of your phone number
+            To send a verification code, please confirm the last 4 digits of
+            your primary phone number
           </Subtitle>
         </Header>
-
-        <PhoneDisplay>{maskedPhoneNumber}</PhoneDisplay>
 
         <Form onSubmit={handleSubmit} noValidate>
           <FormGroup>
@@ -148,7 +136,10 @@ export function PhoneVerification({ maskedPhoneNumber, onVerify, onBack, loading
             {error && <ErrorMessage>{error}</ErrorMessage>}
           </FormGroup>
 
-          <SubmitButton type="submit" disabled={loading || lastFourDigits.length !== 4}>
+          <SubmitButton
+            type="submit"
+            disabled={loading || lastFourDigits.length !== 4}
+          >
             {loading ? "Verifying..." : "Send code"}
           </SubmitButton>
         </Form>

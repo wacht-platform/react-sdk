@@ -1,6 +1,6 @@
 {
   "name": "@snipextt/wacht-nextjs",
-  "version": "0.0.1-alpha.50",
+  "version": "0.0.1-alpha.52",
   "description": "Next.js adapter for Wacht authentication library",
   "type": "module",
   "main": "dist/index.cjs.js",
@@ -42,8 +42,7 @@
   "peerDependencies": {
     "react": "catalog:",
     "react-dom": "catalog:",
-    "next": "catalog:",
-    "@snipextt/wacht": "workspace:*"
+    "next": "catalog:"
   },
   "dependencies": {
     "rollup-plugin-preserve-use-client": "^3.0.1"

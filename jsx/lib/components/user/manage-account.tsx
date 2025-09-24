@@ -18,6 +18,7 @@ import {
   Link2,
   Shield,
   Activity,
+  X,
 } from "lucide-react";
 
 // Local interface to match the actual API response
@@ -84,7 +85,6 @@ import { EmptyState } from "@/components/utility/empty-state";
 import React from "react";
 import { ScreenContext, useScreenContext } from "./context";
 
-
 const TypographyProvider = styled.div`
   * {
     box-sizing: border-box;
@@ -125,7 +125,7 @@ const Container = styled.div`
 
   /* Blur effect at the bottom */
   &::after {
-    content: '';
+    content: "";
     position: absolute;
     bottom: 0;
     left: 0;
@@ -161,8 +161,6 @@ const TabsList = styled.div`
     display: none;
   }
 `;
-
-
 
 const Tab = styled.button<{ $isActive: boolean }>`
   padding: 12px 12px;
@@ -212,29 +210,6 @@ const TabContent = styled.div`
   }
 `;
 
-
-
-const EditButton = styled.button`
-  padding: 8px 16px;
-  border-radius: var(--radius-sm);
-  border: none;
-  background: var(--color-input-background);
-  color: var(--color-foreground);
-  font-size: 14px;
-  font-weight: 500;
-  cursor: pointer;
-  display: flex;
-  align-items: center;
-  gap: 8px;
-  transition: all 0.2s ease;
-
-  &:hover {
-    background: var(--color-border);
-  }
-`;
-
-
-
 const IconButton = styled.button`
   background: none;
   border: none;
@@ -261,23 +236,48 @@ const HeaderCTAContainer = styled.div`
   margin-bottom: 0;
 `;
 
-
-
-
-
-
-
-
-
-
-
 const UnknownBrowserIcon = () => (
-  <svg width="20" height="20" viewBox="0 0 24 24" fill="none" style={{ color: 'var(--color-secondary-text)' }}>
-    <circle cx="12" cy="12" r="11" fill="currentColor" stroke="currentColor" strokeWidth="0.5" opacity="0.6" />
-    <circle cx="12" cy="12" r="8" fill="none" stroke="currentColor" strokeWidth="0.5" opacity="0.3" />
-    <path d="M12 8c-2.2 0-4 1.8-4 4s1.8 4 4 4 4-1.8 4-4-1.8-4-4-4zm0 6c-1.1 0-2-.9-2-2s.9-2 2-2 2 .9 2 2-.9 2-2 2z" fill="currentColor" opacity="0.5" />
+  <svg
+    width="20"
+    height="20"
+    viewBox="0 0 24 24"
+    fill="none"
+    style={{ color: "var(--color-secondary-text)" }}
+  >
+    <circle
+      cx="12"
+      cy="12"
+      r="11"
+      fill="currentColor"
+      stroke="currentColor"
+      strokeWidth="0.5"
+      opacity="0.6"
+    />
+    <circle
+      cx="12"
+      cy="12"
+      r="8"
+      fill="none"
+      stroke="currentColor"
+      strokeWidth="0.5"
+      opacity="0.3"
+    />
+    <path
+      d="M12 8c-2.2 0-4 1.8-4 4s1.8 4 4 4 4-1.8 4-4-1.8-4-4-4zm0 6c-1.1 0-2-.9-2-2s.9-2 2-2 2 .9 2 2-.9 2-2 2z"
+      fill="currentColor"
+      opacity="0.5"
+    />
     <circle cx="12" cy="12" r="1" fill="currentColor" />
-    <text x="12" y="16.5" textAnchor="middle" fill="currentColor" fontSize="6" opacity="0.7">?</text>
+    <text
+      x="12"
+      y="16.5"
+      textAnchor="middle"
+      fill="currentColor"
+      fontSize="6"
+      opacity="0.7"
+    >
+      ?
+    </text>
   </svg>
 );
 
@@ -317,7 +317,7 @@ const ActiveSessionsSection = () => {
   const { signins, removeSignin, refetch, loading } = useUserSignins();
   const { refetch: refetchSession } = useSession();
   const { toast } = useScreenContext();
-  
+
   // Type the signins data properly
   const typedSignins = signins as UserSignIn[] | undefined;
 
@@ -325,14 +325,14 @@ const ActiveSessionsSection = () => {
     try {
       await removeSignin(sessionId);
       // Refetch both the signins list and the current session
-      await Promise.all([
-        refetch(),
-        refetchSession()
-      ]);
+      await Promise.all([refetch(), refetchSession()]);
       setActiveSession(null);
       toast("Session ended successfully", "info");
     } catch (error: any) {
-      toast(error.message || "Failed to end session. Please try again.", "error");
+      toast(
+        error.message || "Failed to end session. Please try again.",
+        "error",
+      );
     }
   };
 
@@ -343,7 +343,9 @@ const ActiveSessionsSection = () => {
     if (isNaN(date.getTime())) return "Unknown";
 
     const now = new Date();
-    const diffInMinutes = Math.floor((now.getTime() - date.getTime()) / (1000 * 60));
+    const diffInMinutes = Math.floor(
+      (now.getTime() - date.getTime()) / (1000 * 60),
+    );
 
     if (diffInMinutes < 1) return "Just now";
     if (diffInMinutes < 60) return `${diffInMinutes}m ago`;
@@ -364,18 +366,22 @@ const ActiveSessionsSection = () => {
   return (
     <>
       <div style={{ marginBottom: "16px" }}>
-        <h3 style={{
-          fontSize: "16px",
-          color: "var(--color-foreground)",
-          margin: 0
-        }}>
+        <h3
+          style={{
+            fontSize: "16px",
+            color: "var(--color-foreground)",
+            margin: 0,
+          }}
+        >
           Active Sessions
         </h3>
-        <p style={{
-          fontSize: "14px",
-          color: "var(--color-muted)",
-          margin: 0
-        }}>
+        <p
+          style={{
+            fontSize: "14px",
+            color: "var(--color-muted)",
+            margin: 0,
+          }}
+        >
           Manage your active browser sessions and sign-ins
         </p>
       </div>
@@ -394,14 +400,25 @@ const ActiveSessionsSection = () => {
               {typedSignins.map((signin) => (
                 <TableRow key={signin.id}>
                   <TableCell>
-                    <div style={{ display: "flex", alignItems: "center", gap: "8px" }}>
+                    <div
+                      style={{
+                        display: "flex",
+                        alignItems: "center",
+                        gap: "8px",
+                      }}
+                    >
                       <IconWrapper>
                         <BrowserIcon browser={signin.browser || "Unknown"} />
                       </IconWrapper>
                       <div>
                         <div>{signin.browser || "Unknown Browser"}</div>
                         {signin.device && (
-                          <div style={{ fontSize: "12px", color: "var(--color-muted)" }}>
+                          <div
+                            style={{
+                              fontSize: "12px",
+                              color: "var(--color-muted)",
+                            }}
+                          >
                             {signin.device}
                           </div>
                         )}
@@ -413,11 +430,15 @@ const ActiveSessionsSection = () => {
                       <div>
                         {signin.city && signin.country
                           ? `${signin.city}, ${signin.country}`
-                          : "Unknown location"
-                        }
+                          : "Unknown location"}
                       </div>
                       {signin.ip_address && (
-                        <div style={{ fontSize: "12px", color: "var(--color-muted)" }}>
+                        <div
+                          style={{
+                            fontSize: "12px",
+                            color: "var(--color-muted)",
+                          }}
+                        >
                           {signin.ip_address}
                         </div>
                       )}
@@ -429,14 +450,22 @@ const ActiveSessionsSection = () => {
                   <ActionsCell>
                     <Dropdown
                       open={activeSession === signin.id}
-                      openChange={(isOpen) => setActiveSession(isOpen ? signin.id : null)}
+                      openChange={(isOpen) =>
+                        setActiveSession(isOpen ? signin.id : null)
+                      }
                     >
                       <DropdownTrigger>
                         <IconButton>•••</IconButton>
                       </DropdownTrigger>
                       <DropdownItems>
                         <DropdownItem onClick={() => logoutSession(signin.id)}>
-                          <div style={{ display: "flex", alignItems: "center", gap: "8px" }}>
+                          <div
+                            style={{
+                              display: "flex",
+                              alignItems: "center",
+                              gap: "8px",
+                            }}
+                          >
                             <LogOut size={14} />
                             End Session
                           </div>
@@ -468,7 +497,9 @@ const EmailManagementSection = () => {
   const [verifyingEmailId, setVerifyingEmailId] = useState<string | null>(null);
   const [searchQuery, setSearchQuery] = useState("");
   const emailButtonRef = useRef<HTMLButtonElement>(null);
-  const verifyButtonRefs = useRef<{ [key: string]: HTMLButtonElement | null }>({});
+  const verifyButtonRefs = useRef<{ [key: string]: HTMLButtonElement | null }>(
+    {},
+  );
   const {
     user,
     createEmailAddress,
@@ -511,19 +542,19 @@ const EmailManagementSection = () => {
     if (!searchQuery.trim()) return user.user_email_addresses;
 
     return user.user_email_addresses.filter((email) =>
-      email.email.toLowerCase().includes(searchQuery.toLowerCase())
+      email.email.toLowerCase().includes(searchQuery.toLowerCase()),
     );
   }, [user?.user_email_addresses, searchQuery]);
 
   return (
     <>
-      <HeaderCTAContainer style={{ marginBottom: '20px' }}>
+      <HeaderCTAContainer style={{ marginBottom: "20px" }}>
         <SearchInput
           value={searchQuery}
           onChange={setSearchQuery}
           placeholder="Search Email"
         />
-        <div style={{ position: 'relative' }}>
+        <div style={{ position: "relative" }}>
           <Button
             ref={emailButtonRef}
             onClick={() => setIsAddingEmail(true)}
@@ -532,7 +563,7 @@ const EmailManagementSection = () => {
               borderRadius: "6px",
               fontSize: "14px",
               fontWeight: 500,
-              height: "36px"
+              height: "36px",
             }}
           >
             Add Email
@@ -566,7 +597,9 @@ const EmailManagementSection = () => {
 
       {!filteredEmails?.length ? (
         <EmptyState
-          title={searchQuery ? "No emails match your search" : "No email addresses"}
+          title={
+            searchQuery ? "No emails match your search" : "No email addresses"
+          }
           description="Add an email address to get started."
         />
       ) : (
@@ -591,7 +624,8 @@ const EmailManagementSection = () => {
                 </TableCell>
                 <ActionsCell>
                   {/* Only show dropdown if there are actions available (not primary or not verified) */}
-                  {(email.id !== user?.primary_email_address_id || !email.verified) ? (
+                  {email.id !== user?.primary_email_address_id ||
+                  !email.verified ? (
                     <Dropdown
                       open={activeDropdown === email.id}
                       openChange={(isOpen) =>
@@ -599,29 +633,39 @@ const EmailManagementSection = () => {
                       }
                     >
                       <DropdownTrigger>
-                        <IconButton 
+                        <IconButton
                           ref={(ref: HTMLButtonElement | null) => {
                             if (ref) verifyButtonRefs.current[email.id] = ref;
                           }}
-                        >•••</IconButton>
+                        >
+                          •••
+                        </IconButton>
                       </DropdownTrigger>
                       <DropdownItems>
-                        {email.id !== user?.primary_email_address_id && email.verified && (
-                          <DropdownItem
-                            onClick={async () => {
-                              try {
-                                await makeEmailPrimary(email.id);
-                                user.refetch();
-                                setActiveDropdown(null);
-                                toast("Primary email updated successfully", "info");
-                              } catch (error: any) {
-                                toast(error.message || "Failed to update primary email", "error");
-                              }
-                            }}
-                          >
-                            Make primary
-                          </DropdownItem>
-                        )}
+                        {email.id !== user?.primary_email_address_id &&
+                          email.verified && (
+                            <DropdownItem
+                              onClick={async () => {
+                                try {
+                                  await makeEmailPrimary(email.id);
+                                  user.refetch();
+                                  setActiveDropdown(null);
+                                  toast(
+                                    "Primary email updated successfully",
+                                    "info",
+                                  );
+                                } catch (error: any) {
+                                  toast(
+                                    error.message ||
+                                      "Failed to update primary email",
+                                    "error",
+                                  );
+                                }
+                              }}
+                            >
+                              Make primary
+                            </DropdownItem>
+                          )}
                         {!email.verified && (
                           <DropdownItem
                             onClick={async () => {
@@ -655,7 +699,10 @@ const EmailManagementSection = () => {
       )}
       {verifyingEmailId && (
         <EmailAddPopover
-          existingEmail={user?.user_email_addresses?.find(e => e.id === verifyingEmailId)?.email}
+          existingEmail={
+            user?.user_email_addresses?.find((e) => e.id === verifyingEmailId)
+              ?.email
+          }
           triggerRef={{ current: verifyButtonRefs.current[verifyingEmailId] }}
           onClose={() => setVerifyingEmailId(null)}
           onAddEmail={async () => {
@@ -702,8 +749,8 @@ const PhoneManagementSection = () => {
 
   // Helper function to get country flag from dial code
   const getCountryFlag = (countryCode: string) => {
-    const country = countries.find(c => c.dialCode === countryCode);
-    return country?.flag || '🌍';
+    const country = countries.find((c) => c.dialCode === countryCode);
+    return country?.flag || "🌍";
   };
 
   // Filter phones based on search query
@@ -712,19 +759,19 @@ const PhoneManagementSection = () => {
     if (!searchQuery.trim()) return user.user_phone_numbers;
 
     return user.user_phone_numbers.filter((phone) =>
-      phone.phone_number.toLowerCase().includes(searchQuery.toLowerCase())
+      phone.phone_number.toLowerCase().includes(searchQuery.toLowerCase()),
     );
   }, [user?.user_phone_numbers, searchQuery]);
 
   return (
     <>
-      <HeaderCTAContainer style={{ marginBottom: '20px' }}>
+      <HeaderCTAContainer style={{ marginBottom: "20px" }}>
         <SearchInput
           value={searchQuery}
           onChange={setSearchQuery}
           placeholder="Search Phone"
         />
-        <div style={{ position: 'relative' }}>
+        <div style={{ position: "relative" }}>
           <Button
             ref={phoneButtonRef}
             onClick={() => setIsAddingPhone(true)}
@@ -733,7 +780,7 @@ const PhoneManagementSection = () => {
               borderRadius: "6px",
               fontSize: "14px",
               fontWeight: 500,
-              height: "36px"
+              height: "36px",
             }}
           >
             Add Phone
@@ -743,7 +790,10 @@ const PhoneManagementSection = () => {
               triggerRef={phoneButtonRef}
               onClose={() => setIsAddingPhone(false)}
               onAddPhone={async (phone, countryCode) => {
-                const newPhoneData = await createPhoneNumber(phone, countryCode);
+                const newPhoneData = await createPhoneNumber(
+                  phone,
+                  countryCode,
+                );
                 setNewPhone(newPhoneData.data.id);
                 await preparePhoneVerification(newPhoneData.data.id);
                 // Don't close the popover - let it transition to OTP step
@@ -761,8 +811,13 @@ const PhoneManagementSection = () => {
           )}
           {verifyingPhoneId && (
             <PhoneAddPopover
-              existingPhone={user?.user_phone_numbers?.find(p => p.id === verifyingPhoneId)?.phone_number}
-              triggerRef={{ current: phoneVerifyButtonRefs.current[verifyingPhoneId] }}
+              existingPhone={
+                user?.user_phone_numbers?.find((p) => p.id === verifyingPhoneId)
+                  ?.phone_number
+              }
+              triggerRef={{
+                current: phoneVerifyButtonRefs.current[verifyingPhoneId],
+              }}
               onClose={() => setVerifyingPhoneId(null)}
               onAddPhone={async () => {
                 // This won't be called since we're starting at OTP step
@@ -783,7 +838,9 @@ const PhoneManagementSection = () => {
 
       {!filteredPhones?.length ? (
         <EmptyState
-          title={searchQuery ? "No phones match your search" : "No phone numbers"}
+          title={
+            searchQuery ? "No phones match your search" : "No phone numbers"
+          }
           description="Add a phone number to get started."
         />
       ) : (
@@ -799,8 +856,16 @@ const PhoneManagementSection = () => {
             {filteredPhones.map((phone) => (
               <TableRow key={phone.id}>
                 <TableCell>
-                  <div style={{ display: "flex", alignItems: "center", gap: "8px" }}>
-                    <span style={{ fontSize: "18px" }}>{getCountryFlag(phone.country_code)}</span>
+                  <div
+                    style={{
+                      display: "flex",
+                      alignItems: "center",
+                      gap: "8px",
+                    }}
+                  >
+                    <span style={{ fontSize: "18px" }}>
+                      {getCountryFlag(phone.country_code)}
+                    </span>
                     <span>{phone.country_code}</span>
                     <span>{phone.phone_number}</span>
                   </div>
@@ -820,24 +885,28 @@ const PhoneManagementSection = () => {
                     }
                   >
                     <DropdownTrigger>
-                      <IconButton 
+                      <IconButton
                         ref={(ref: HTMLButtonElement | null) => {
-                          if (ref) phoneVerifyButtonRefs.current[phone.id] = ref;
+                          if (ref)
+                            phoneVerifyButtonRefs.current[phone.id] = ref;
                         }}
-                      >•••</IconButton>
+                      >
+                        •••
+                      </IconButton>
                     </DropdownTrigger>
                     <DropdownItems>
-                      {phone.id !== user?.primary_phone_number_id && phone.verified && (
-                        <DropdownItem
-                          onClick={async () => {
-                            await makePhonePrimary(phone.id);
-                            setActiveDropdown(null);
-                            user.refetch();
-                          }}
-                        >
-                          Make primary
-                        </DropdownItem>
-                      )}
+                      {phone.id !== user?.primary_phone_number_id &&
+                        phone.verified && (
+                          <DropdownItem
+                            onClick={async () => {
+                              await makePhonePrimary(phone.id);
+                              setActiveDropdown(null);
+                              user.refetch();
+                            }}
+                          >
+                            Make primary
+                          </DropdownItem>
+                        )}
                       {!phone.verified && (
                         <DropdownItem
                           onClick={async () => {
@@ -915,28 +984,30 @@ const SocialManagementSection = () => {
     },
   };
 
-  const enabledProviders = deployment?.social_connections.filter(
-    (conn) => conn.enabled,
-  );
+  const enabledProviders =
+    deployment?.social_connections.filter((conn) => conn.enabled) || [];
 
   return (
     <>
       <div style={{ marginBottom: "24px" }}>
-        <h3 style={{
-          fontSize: "16px",
-          fontWeight: 600,
-          color: "rgba(255, 255, 255, 0.9)",
-          margin: "0 0 6px 0",
-          letterSpacing: "-0.01em"
-        }}>
+        <h3
+          style={{
+            fontSize: "16px",
+            margin: "0 0 6px 0",
+            letterSpacing: "-0.01em",
+            color: "var(--color-foreground)",
+          }}
+        >
           Connected Accounts
         </h3>
-        <p style={{
-          fontSize: "13px",
-          color: "rgba(255, 255, 255, 0.5)",
-          margin: 0,
-          lineHeight: "1.5"
-        }}>
+        <p
+          style={{
+            fontSize: "13px",
+            margin: 0,
+            lineHeight: "1.5",
+            color: "var(--color-muted)",
+          }}
+        >
           Connect social accounts for easy sign-in and profile sync
         </p>
       </div>
@@ -944,49 +1015,31 @@ const SocialManagementSection = () => {
         style={{
           display: "flex",
           flexDirection: "column",
-          gap: "12px",
         }}
       >
-        {enabledProviders?.map((provider) => {
-          const connectedAccount = user?.social_connections?.find(
-            (conn) => conn.provider === provider.provider,
-          );
+        {enabledProviders.map((provider, index) => {
+          const connectedAccounts =
+            user?.social_connections?.filter(
+              (conn) => conn.provider === provider.provider,
+            ) || [];
           const providerInfo =
             socialAuthProviders[
-            provider.provider as keyof typeof socialAuthProviders
+              provider.provider as keyof typeof socialAuthProviders
             ];
 
           if (!providerInfo) return null;
 
           return (
-            <div
-              key={provider.provider}
-              style={{
-                display: "flex",
-                alignItems: "center",
-                justifyContent: "space-between",
-                padding: "16px",
-                background: "rgba(255, 255, 255, 0.03)",
-                border: "1px solid rgba(255, 255, 255, 0.08)",
-                borderRadius: "8px",
-                transition: "all 0.2s ease",
-              }}
-            >
+            <div key={provider.provider}>
               <div
                 style={{
                   display: "flex",
                   alignItems: "center",
-                  gap: "12px",
+                  justifyContent: "space-between",
+                  padding: "12px 0",
+                  minHeight: "58px",
                 }}
               >
-                <IconWrapper>{providerInfo.icon}</IconWrapper>
-                <div
-                  style={{ fontSize: "14px", color: "var(--color-foreground)" }}
-                >
-                  {providerInfo.label}
-                </div>
-              </div>
-              {connectedAccount ? (
                 <div
                   style={{
                     display: "flex",
@@ -994,66 +1047,98 @@ const SocialManagementSection = () => {
                     gap: "12px",
                   }}
                 >
+                  <IconWrapper>{providerInfo.icon}</IconWrapper>
                   <div
-                    style={{ fontSize: "14px", color: "var(--color-muted)" }}
-                  >
-                    {connectedAccount.email_address}
-                  </div>
-                  <EditButton
-                    onClick={async () => {
-                      await disconnectSocialConnection(
-                        connectedAccount.id.toString(),
-                      );
-                      user.refetch();
-                    }}
                     style={{
-                      background: "transparent",
-                      color: "rgba(255, 255, 255, 0.5)",
-                      border: "1px solid rgba(255, 255, 255, 0.1)",
-                      fontSize: "13px",
-                      padding: "6px 14px",
-                    }}
-                    onMouseEnter={(e) => {
-                      e.currentTarget.style.background = "rgba(239, 68, 68, 0.1)";
-                      e.currentTarget.style.color = "rgb(239, 68, 68)";
-                      e.currentTarget.style.borderColor = "rgba(239, 68, 68, 0.3)";
-                    }}
-                    onMouseLeave={(e) => {
-                      e.currentTarget.style.background = "transparent";
-                      e.currentTarget.style.color = "rgba(255, 255, 255, 0.5)";
-                      e.currentTarget.style.borderColor = "rgba(255, 255, 255, 0.1)";
+                      fontSize: "14px",
+                      fontWeight: 500,
+                      color: "var(--color-foreground)",
                     }}
                   >
-                    Disconnect
-                  </EditButton>
+                    {providerInfo.label}
+                  </div>
                 </div>
-              ) : (
-                <EditButton
-                  onClick={() => {
-                    connectSocialAccount({
-                      provider: provider.provider,
-                      redirectUri: window.location.href
-                    });
-                  }}
+
+                <div
                   style={{
-                    background: "rgba(99, 102, 241, 0.1)",
-                    color: "rgb(129, 140, 248)",
-                    border: "1px solid rgba(99, 102, 241, 0.3)",
-                    fontSize: "13px",
-                    padding: "6px 14px",
-                    fontWeight: "500",
-                  }}
-                  onMouseEnter={(e) => {
-                    e.currentTarget.style.background = "rgba(99, 102, 241, 0.2)";
-                    e.currentTarget.style.borderColor = "rgba(99, 102, 241, 0.5)";
-                  }}
-                  onMouseLeave={(e) => {
-                    e.currentTarget.style.background = "rgba(99, 102, 241, 0.1)";
-                    e.currentTarget.style.borderColor = "rgba(99, 102, 241, 0.3)";
+                    display: "flex",
+                    flexDirection: "row",
+                    alignItems: "center",
+                    justifyContent: "flex-end",
+                    gap: "8px",
                   }}
                 >
-                  Connect
-                </EditButton>
+                  {connectedAccounts.map((account) => (
+                    <div
+                      key={account.id}
+                      style={{
+                        display: "flex",
+                        alignItems: "center",
+                        gap: "6px",
+                        background: "var(--color-input-background)",
+                        border: "1px solid var(--color-border)",
+                        borderRadius: "6px",
+                        padding: "4px 8px",
+                        fontSize: "13px",
+                        color: "var(--color-muted)",
+                      }}
+                    >
+                      <span>{account.email_address}</span>
+                      <IconButton
+                        onClick={async () => {
+                          await disconnectSocialConnection(
+                            account.id.toString(),
+                          );
+                          user.refetch();
+                        }}
+                        style={{ padding: "2px" }}
+                      >
+                        <X size={14} />
+                      </IconButton>
+                    </div>
+                  ))}
+
+                  {connectedAccounts.length > 0 ? (
+                    <Button
+                      onClick={() => {
+                        connectSocialAccount({
+                          provider: provider.provider,
+                          redirectUri: window.location.href,
+                        });
+                      }}
+                      style={{
+                        padding: "6px 24px",
+                        fontSize: "13px",
+                      }}
+                    >
+                      Add
+                    </Button>
+                  ) : (
+                    <Button
+                      onClick={() => {
+                        connectSocialAccount({
+                          provider: provider.provider,
+                          redirectUri: window.location.href,
+                        });
+                      }}
+                      style={{
+                        padding: "6px 14px",
+                        fontSize: "13px",
+                      }}
+                    >
+                      Connect
+                    </Button>
+                  )}
+                </div>
+              </div>
+
+              {index < enabledProviders.length - 1 && (
+                <div
+                  style={{
+                    height: "1px",
+                    background: "var(--color-border)",
+                  }}
+                />
               )}
             </div>
           );
@@ -1112,7 +1197,7 @@ export const ManageAccount = () => {
   return (
     <TypographyProvider>
       <ScreenContext.Provider
-        value={{ screen: null, setScreen: () => { }, toast }}
+        value={{ screen: null, setScreen: () => {}, toast }}
       >
         <Container>
           <TabsContainer>
@@ -1236,7 +1321,7 @@ export const ManageAccount = () => {
   );
 };
 
-
+import { Switch } from "../utility/switch";
 
 const SecurityManagementSection = () => {
   const { deployment } = useDeployment();
@@ -1249,22 +1334,45 @@ const SecurityManagementSection = () => {
     deleteAuthenticator,
     generateBackupCodes,
     regenerateBackupCodes,
+    updateProfile,
   } = useUser();
   const { toast } = useScreenContext();
 
+  const [secondFactorPolicy, setSecondFactorPolicy] = useState(
+    user?.second_factor_policy || "none",
+  );
+
+  const handleSecondFactorPolicyChange = async (
+    policy: "none" | "enforced",
+  ) => {
+    try {
+      await updateProfile({ second_factor_policy: policy });
+      setSecondFactorPolicy(policy);
+      toast("Second factor policy updated successfully", "info");
+    } catch (error: any) {
+      toast(error.message || "Failed to update second factor policy", "error");
+    }
+  };
+
   const [showTOTPPopover, setShowTOTPPopover] = useState(false);
   const [showPasswordPopover, setShowPasswordPopover] = useState(false);
-  const [showRemovePasswordPopover, setShowRemovePasswordPopover] = useState(false);
+  const [showRemovePasswordPopover, setShowRemovePasswordPopover] =
+    useState(false);
   const [showBackupCodesPopover, setShowBackupCodesPopover] = useState(false);
   const totpButtonRef = useRef<HTMLButtonElement>(null);
   const passwordButtonRef = useRef<HTMLButtonElement>(null);
   const removePasswordButtonRef = useRef<HTMLButtonElement>(null);
   const backupCodesButtonRef = useRef<HTMLButtonElement>(null);
-  const [setupStep, setSetupStep] = useState<'table' | 'qr' | 'verify' | 'backup' | 'success'>('table');
+  const [setupStep, setSetupStep] = useState<
+    "table" | "qr" | "verify" | "backup" | "success"
+  >("table");
   const [qrCodeUrl, setQrCodeUrl] = useState<string>("");
   const [secretKey, setSecretKey] = useState<string>("");
   const [authenticatorId, setAuthenticatorId] = useState<string>("");
-  const [verificationCodes, setVerificationCodes] = useState<string[]>(["", ""]);
+  const [verificationCodes, setVerificationCodes] = useState<string[]>([
+    "",
+    "",
+  ]);
   const [backupCodes, setBackupCodes] = useState<string[]>([]);
   const [isGeneratingCodes, setIsGeneratingCodes] = useState(false);
   const [isVerifying, setIsVerifying] = useState(false);
@@ -1275,11 +1383,18 @@ const SecurityManagementSection = () => {
   const passwordEnabled = deployment?.auth_settings?.password?.enabled;
 
   // Don't render if nothing is enabled
-  if (!authFactorsEnabled?.authenticator && !authFactorsEnabled?.backup_code && !passwordEnabled) {
+  if (
+    !authFactorsEnabled?.authenticator &&
+    !authFactorsEnabled?.backup_code &&
+    !passwordEnabled
+  ) {
     return null;
   }
 
-  const handleChangePassword = async (currentPassword: string, newPassword: string) => {
+  const handleChangePassword = async (
+    currentPassword: string,
+    newPassword: string,
+  ) => {
     await updatePassword(currentPassword, newPassword);
     await user.refetch();
     toast("Password updated successfully", "info");
@@ -1291,34 +1406,35 @@ const SecurityManagementSection = () => {
     toast("Password removed successfully", "info");
   };
 
-  // Check if user can remove password (has alternative auth methods)
   const canRemovePassword = () => {
     if (!user) return false;
-    
-    // Check for verified email (for email OTP or magic link)
-    const hasVerifiedEmail = user.user_email_addresses?.some(email => email.verified);
-    
-    // Check for verified phone (for phone OTP)
-    const hasVerifiedPhone = user.user_phone_numbers?.some(phone => phone.verified);
-    
-    // Check for social connections
-    const hasSocialConnection = user.social_connections && user.social_connections.length > 0;
-    
-    // Check if any alternative auth methods are enabled and available
+
+    const hasVerifiedEmail = user.user_email_addresses?.some(
+      (email) => email.verified,
+    );
+
+    const hasVerifiedPhone = user.user_phone_numbers?.some(
+      (phone) => phone.verified,
+    );
+
+    const hasSocialConnection =
+      user.social_connections && user.social_connections.length > 0;
+
     const authSettings = deployment?.auth_settings;
-    
-    const hasAlternativeAuth = 
-      (authSettings?.first_factor === 'email_otp' && hasVerifiedEmail) ||
+
+    const hasAlternativeAuth =
+      (authSettings?.first_factor === "email_otp" && hasVerifiedEmail) ||
       (authSettings?.magic_link?.enabled && hasVerifiedEmail) ||
-      (authSettings?.passkey?.enabled) ||
+      authSettings?.passkey?.enabled ||
       (authSettings?.auth_factors_enabled?.phone_otp && hasVerifiedPhone) ||
-      (hasSocialConnection && deployment?.social_connections?.some(sc => sc.enabled));
-    
+      (hasSocialConnection &&
+        deployment?.social_connections?.some((sc) => sc.enabled));
+
     return hasAlternativeAuth;
   };
 
   const handleVerifyAuthenticator = async () => {
-    if (verificationCodes.some(code => code.length !== 6)) {
+    if (verificationCodes.some((code) => code.length !== 6)) {
       toast("Please enter both 6-digit verification codes", "error");
       return;
     }
@@ -1327,15 +1443,14 @@ const SecurityManagementSection = () => {
       setIsVerifying(true);
       await verifyAuthenticator(authenticatorId, verificationCodes);
       await user.refetch();
-      
-      // Generate backup codes automatically
+
       if (authFactorsEnabled?.backup_code) {
         const codes = await generateBackupCodes();
         setBackupCodes(codes);
         await user.refetch();
-        setSetupStep('backup');
+        setSetupStep("backup");
       } else {
-        setSetupStep('success');
+        setSetupStep("success");
       }
     } catch (error: any) {
       toast(error.message || "Invalid verification codes", "error");
@@ -1345,7 +1460,7 @@ const SecurityManagementSection = () => {
   };
 
   const handleCompleteSetup = () => {
-    setSetupStep('table');
+    setSetupStep("table");
     setQrCodeUrl("");
     setSecretKey("");
     setAuthenticatorId("");
@@ -1356,7 +1471,7 @@ const SecurityManagementSection = () => {
 
   const handleRemoveAuthenticator = async () => {
     if (!user?.user_authenticator?.id) return;
-    
+
     try {
       setIsRemovingAuth(true);
       await deleteAuthenticator(user.user_authenticator.id);
@@ -1371,7 +1486,7 @@ const SecurityManagementSection = () => {
 
   const handleGenerateNewBackupCodes = async () => {
     if (isGeneratingCodes) return;
-    
+
     try {
       setIsGeneratingCodes(true);
       const codes = await regenerateBackupCodes();
@@ -1387,21 +1502,24 @@ const SecurityManagementSection = () => {
   };
 
   const copyBackupCodes = () => {
-    const codesText = backupCodes.join('\n');
-    navigator.clipboard.writeText(codesText).then(() => {
-      toast("Backup codes copied to clipboard", "info");
-    }).catch(() => {
-      toast("Failed to copy backup codes", "error");
-    });
+    const codesText = backupCodes.join("\n");
+    navigator.clipboard
+      .writeText(codesText)
+      .then(() => {
+        toast("Backup codes copied to clipboard", "info");
+      })
+      .catch(() => {
+        toast("Failed to copy backup codes", "error");
+      });
   };
 
   const downloadBackupCodes = () => {
-    const codesText = backupCodes.join('\n');
-    const blob = new Blob([codesText], { type: 'text/plain' });
+    const codesText = backupCodes.join("\n");
+    const blob = new Blob([codesText], { type: "text/plain" });
     const url = URL.createObjectURL(blob);
-    const a = document.createElement('a');
+    const a = document.createElement("a");
     a.href = url;
-    a.download = 'wacht-backup-codes.txt';
+    a.download = "wacht-backup-codes.txt";
     a.click();
     URL.revokeObjectURL(url);
     toast("Backup codes downloaded", "info");
@@ -1412,50 +1530,70 @@ const SecurityManagementSection = () => {
 
   if (passwordEnabled) {
     securityItems.push({
-      id: 'password',
-      name: 'Password',
-      description: 'Secure your account with a strong password',
-      status: user?.has_password ? 'Enabled' : 'Disabled',
-      actions: user?.has_password ? ['change'] : ['setup'],
+      id: "password",
+      name: "Password",
+      description: "Secure your account with a strong password",
+      status: user?.has_password ? "Enabled" : "Disabled",
+      actions: user?.has_password ? ["change"] : ["setup"],
     });
   }
 
   if (authFactorsEnabled?.authenticator) {
     securityItems.push({
-      id: 'authenticator',
-      name: 'Two-Factor Authentication',
-      description: 'Use an authenticator app for extra security',
-      status: user?.user_authenticator ? 'Enabled' : 'Disabled',
-      actions: user?.user_authenticator ? ['remove'] : ['setup'],
+      id: "authenticator",
+      name: "Two-Factor Authentication",
+      description: "Use an authenticator app for extra security",
+      status: user?.user_authenticator ? "Enabled" : "Disabled",
+      actions: user?.user_authenticator ? ["remove"] : ["setup"],
     });
   }
 
-  if (authFactorsEnabled?.backup_code && user?.user_authenticator) {
+  if (user?.user_authenticator) {
     securityItems.push({
-      id: 'backup_codes',
-      name: 'Backup Codes',
-      description: 'Recovery codes if you lose your authenticator',
-      status: user?.backup_codes_generated ? 'Generated' : 'Not Generated',
-      actions: ['generate'],
+      id: "backup_codes",
+      name: "Backup Codes",
+      description: "Recovery codes if you lose your authenticator",
+      status: user?.backup_codes_generated ? "Generated" : "Not Generated",
+      actions: ["generate"],
     });
   }
 
-  // Show 2FA setup flow instead of table when in setup mode
-  if (setupStep !== 'table') {
+  if (
+    user?.user_authenticator ||
+    user?.backup_codes_generated ||
+    user.second_factor_policy === "enforced" ||
+    user.primary_phone_number_id
+  ) {
+    securityItems.push({
+      id: "second_factor_policy",
+      name: "Second Factor Policy",
+      description: "Require a second factor for all sign-ins",
+      status: secondFactorPolicy === "enforced" ? "Enforced" : "Optional",
+      actions: ["toggle"],
+    });
+  }
+
+  if (setupStep !== "table") {
     return (
       <>
         <HeaderCTAContainer>
-          <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
+          <div style={{ display: "flex", alignItems: "center", gap: "8px" }}>
             <Shield size={16} />
-            <span style={{ fontSize: '14px', fontWeight: 500, color: 'var(--color-foreground)' }}>
-              {setupStep === 'qr' && 'Setup Two-Factor Authentication'}
-              {setupStep === 'verify' && 'Verify Your Authenticator'}
-              {setupStep === 'backup' && 'Save Your Backup Codes'}
-              {setupStep === 'success' && 'Setup Complete!'}
+            <span
+              style={{
+                fontSize: "14px",
+                fontWeight: 500,
+                color: "var(--color-foreground)",
+              }}
+            >
+              {setupStep === "qr" && "Setup Two-Factor Authentication"}
+              {setupStep === "verify" && "Verify Your Authenticator"}
+              {setupStep === "backup" && "Save Your Backup Codes"}
+              {setupStep === "success" && "Setup Complete!"}
             </span>
           </div>
           <Button
-            onClick={() => setSetupStep('table')}
+            onClick={() => setSetupStep("table")}
             style={{
               padding: "8px 16px",
               fontSize: "14px",
@@ -1472,97 +1610,149 @@ const SecurityManagementSection = () => {
           </Button>
         </HeaderCTAContainer>
 
-        <div style={{ maxWidth: '500px', margin: '0 auto', textAlign: 'center', padding: '24px' }}>
-          {setupStep === 'qr' && (
+        <div
+          style={{
+            maxWidth: "500px",
+            margin: "0 auto",
+            textAlign: "center",
+            padding: "24px",
+          }}
+        >
+          {setupStep === "qr" && (
             <>
-              <p style={{ color: 'var(--color-secondary-text)', marginBottom: '24px' }}>
-                Scan this QR code with your authenticator app (Google Authenticator, Authy, etc.)
+              <p
+                style={{
+                  color: "var(--color-secondary-text)",
+                  marginBottom: "24px",
+                }}
+              >
+                Scan this QR code with your authenticator app (Google
+                Authenticator, Authy, etc.)
               </p>
-              
-              <div style={{ display: 'flex', justifyContent: 'center', marginBottom: '24px' }}>
+
+              <div
+                style={{
+                  display: "flex",
+                  justifyContent: "center",
+                  marginBottom: "24px",
+                }}
+              >
                 {isLoadingQR ? (
-                  <div style={{ 
-                    width: '200px', 
-                    height: '200px',
-                    border: '1px solid var(--color-border)',
-                    borderRadius: 'var(--radius-md)',
-                    display: 'flex',
-                    alignItems: 'center',
-                    justifyContent: 'center',
-                    background: 'var(--color-input-background)'
-                  }}>
-                    <div style={{ textAlign: 'center' }}>
-                      <div style={{ 
-                        width: '24px', 
-                        height: '24px', 
-                        border: '2px solid var(--color-border)',
-                        borderTop: '2px solid var(--color-primary)',
-                        borderRadius: '50%',
-                        animation: `${spin} 1s linear infinite`,
-                        margin: '0 auto 8px'
-                      }}></div>
-                      <div style={{ fontSize: '12px', color: 'var(--color-secondary-text)' }}>
+                  <div
+                    style={{
+                      width: "200px",
+                      height: "200px",
+                      border: "1px solid var(--color-border)",
+                      borderRadius: "var(--radius-md)",
+                      display: "flex",
+                      alignItems: "center",
+                      justifyContent: "center",
+                      background: "var(--color-input-background)",
+                    }}
+                  >
+                    <div style={{ textAlign: "center" }}>
+                      <div
+                        style={{
+                          width: "24px",
+                          height: "24px",
+                          border: "2px solid var(--color-border)",
+                          borderTop: "2px solid var(--color-primary)",
+                          borderRadius: "50%",
+                          animation: `${spin} 1s linear infinite`,
+                          margin: "0 auto 8px",
+                        }}
+                      ></div>
+                      <div
+                        style={{
+                          fontSize: "12px",
+                          color: "var(--color-secondary-text)",
+                        }}
+                      >
                         Loading QR Code...
                       </div>
                     </div>
                   </div>
                 ) : qrCodeUrl ? (
-                  <div style={{ 
-                    border: '1px solid var(--color-border)',
-                    borderRadius: 'var(--radius-md)',
-                    padding: '16px',
-                    background: 'white'
-                  }}>
-                    <QRCodeSVG 
+                  <div
+                    style={{
+                      border: "1px solid var(--color-border)",
+                      borderRadius: "var(--radius-md)",
+                      padding: "16px",
+                      background: "white",
+                    }}
+                  >
+                    <QRCodeSVG
                       value={qrCodeUrl}
                       size={200}
                       level="M"
-                      includeMargin={false}
+                      marginSize={0}
                     />
                   </div>
                 ) : (
-                  <div style={{ 
-                    width: '200px', 
-                    height: '200px',
-                    border: '1px solid var(--color-border)',
-                    borderRadius: 'var(--radius-md)',
-                    display: 'flex',
-                    alignItems: 'center',
-                    justifyContent: 'center',
-                    background: 'var(--color-input-background)',
-                    color: 'var(--color-error)',
-                    fontSize: '14px',
-                    textAlign: 'center'
-                  }}>
+                  <div
+                    style={{
+                      width: "200px",
+                      height: "200px",
+                      border: "1px solid var(--color-border)",
+                      borderRadius: "var(--radius-md)",
+                      display: "flex",
+                      alignItems: "center",
+                      justifyContent: "center",
+                      background: "var(--color-input-background)",
+                      color: "var(--color-error)",
+                      fontSize: "14px",
+                      textAlign: "center",
+                    }}
+                  >
                     QR Code Not Available
                   </div>
                 )}
               </div>
 
-              <div style={{ 
-                background: 'var(--color-input-background)',
-                border: '1px solid var(--color-border)',
-                borderRadius: 'var(--radius-md)',
-                padding: '12px',
-                marginBottom: '24px'
-              }}>
-                <p style={{ fontSize: '14px', color: 'var(--color-secondary-text)', margin: '0 0 8px 0' }}>
+              <div
+                style={{
+                  background: "var(--color-input-background)",
+                  border: "1px solid var(--color-border)",
+                  borderRadius: "var(--radius-md)",
+                  padding: "12px",
+                  marginBottom: "24px",
+                }}
+              >
+                <p
+                  style={{
+                    fontSize: "14px",
+                    color: "var(--color-secondary-text)",
+                    margin: "0 0 8px 0",
+                  }}
+                >
                   Or enter this code manually:
                 </p>
-                <code style={{ fontFamily: 'monospace', fontSize: '14px', wordBreak: 'break-all' }}>
-                  {secretKey || 'Loading...'}
+                <code
+                  style={{
+                    fontFamily: "monospace",
+                    fontSize: "14px",
+                    wordBreak: "break-all",
+                  }}
+                >
+                  {secretKey || "Loading..."}
                 </code>
               </div>
 
               <Button
-                onClick={() => setSetupStep('verify')}
+                onClick={() => setSetupStep("verify")}
                 disabled={!qrCodeUrl || !secretKey}
                 style={{
                   padding: "10px 20px",
-                  background: (!qrCodeUrl || !secretKey) ? "var(--color-border)" : "var(--color-primary)",
-                  color: (!qrCodeUrl || !secretKey) ? "var(--color-secondary-text)" : "white",
-                  border: `1px solid ${(!qrCodeUrl || !secretKey) ? "var(--color-border)" : "var(--color-primary)"}`,
-                  cursor: (!qrCodeUrl || !secretKey) ? "not-allowed" : "pointer"
+                  background:
+                    !qrCodeUrl || !secretKey
+                      ? "var(--color-border)"
+                      : "var(--color-primary)",
+                  color:
+                    !qrCodeUrl || !secretKey
+                      ? "var(--color-secondary-text)"
+                      : "white",
+                  border: `1px solid ${!qrCodeUrl || !secretKey ? "var(--color-border)" : "var(--color-primary)"}`,
+                  cursor: !qrCodeUrl || !secretKey ? "not-allowed" : "pointer",
                 }}
               >
                 I've Scanned the Code
@@ -1570,40 +1760,71 @@ const SecurityManagementSection = () => {
             </>
           )}
 
-          {setupStep === 'verify' && (
+          {setupStep === "verify" && (
             <>
-              <p style={{ color: 'var(--color-secondary-text)', marginBottom: '24px' }}>
-                Enter two consecutive codes from your authenticator app to verify setup
+              <p
+                style={{
+                  color: "var(--color-secondary-text)",
+                  marginBottom: "24px",
+                }}
+              >
+                Enter two consecutive codes from your authenticator app to
+                verify setup
               </p>
 
-              <div style={{ display: 'flex', gap: '12px', justifyContent: 'center', marginBottom: '24px' }}>
+              <div
+                style={{
+                  display: "flex",
+                  gap: "12px",
+                  justifyContent: "center",
+                  marginBottom: "24px",
+                }}
+              >
                 <Input
                   type="text"
                   placeholder="000000"
                   value={verificationCodes[0]}
                   onChange={(e) => {
-                    const value = e.target.value.replace(/[^0-9]/g, '').substring(0, 6);
+                    const value = e.target.value
+                      .replace(/[^0-9]/g, "")
+                      .substring(0, 6);
                     setVerificationCodes([value, verificationCodes[1]]);
                   }}
                   maxLength={6}
-                  style={{ width: '100px', textAlign: 'center', fontFamily: 'monospace' }}
+                  style={{
+                    width: "100px",
+                    textAlign: "center",
+                    fontFamily: "monospace",
+                  }}
                 />
                 <Input
                   type="text"
                   placeholder="000000"
                   value={verificationCodes[1]}
                   onChange={(e) => {
-                    const value = e.target.value.replace(/[^0-9]/g, '').substring(0, 6);
+                    const value = e.target.value
+                      .replace(/[^0-9]/g, "")
+                      .substring(0, 6);
                     setVerificationCodes([verificationCodes[0], value]);
                   }}
                   maxLength={6}
-                  style={{ width: '100px', textAlign: 'center', fontFamily: 'monospace' }}
+                  style={{
+                    width: "100px",
+                    textAlign: "center",
+                    fontFamily: "monospace",
+                  }}
                 />
               </div>
 
-              <div style={{ display: 'flex', gap: '12px', justifyContent: 'center' }}>
+              <div
+                style={{
+                  display: "flex",
+                  gap: "12px",
+                  justifyContent: "center",
+                }}
+              >
                 <Button
-                  onClick={() => setSetupStep('qr')}
+                  onClick={() => setSetupStep("qr")}
                   style={{
                     padding: "8px 16px",
                     background: "var(--color-background)",
@@ -1614,7 +1835,10 @@ const SecurityManagementSection = () => {
                 </Button>
                 <Button
                   onClick={handleVerifyAuthenticator}
-                  disabled={isVerifying || verificationCodes.some(code => code.length !== 6)}
+                  disabled={
+                    isVerifying ||
+                    verificationCodes.some((code) => code.length !== 6)
+                  }
                   style={{
                     padding: "8px 16px",
                     background: "var(--color-primary)",
@@ -1628,36 +1852,51 @@ const SecurityManagementSection = () => {
             </>
           )}
 
-          {setupStep === 'backup' && (
+          {setupStep === "backup" && (
             <>
-              <div style={{
-                background: "var(--color-warning-background)",
-                border: "1px solid var(--color-warning-border)",
-                borderRadius: "var(--radius-md)",
-                padding: "16px",
-                marginBottom: "24px",
-                display: "flex",
-                alignItems: "flex-start",
-                gap: "12px",
-                textAlign: "left"
-              }}>
-                <AlertTriangle size={16} style={{ color: "var(--color-warning)", marginTop: "2px" }} />
+              <div
+                style={{
+                  background: "var(--color-warning-background)",
+                  border: "1px solid var(--color-warning-border)",
+                  borderRadius: "var(--radius-md)",
+                  padding: "16px",
+                  marginBottom: "24px",
+                  display: "flex",
+                  alignItems: "flex-start",
+                  gap: "12px",
+                  textAlign: "left",
+                }}
+              >
+                <AlertTriangle
+                  size={16}
+                  style={{ color: "var(--color-warning)", marginTop: "2px" }}
+                />
                 <div>
-                  <div style={{ fontWeight: 500, marginBottom: "4px" }}>Important!</div>
-                  <div style={{ fontSize: "14px", color: "var(--color-secondary-text)" }}>
-                    Store these codes safely. Each code can only be used once if you lose access to your authenticator device.
+                  <div style={{ fontWeight: 500, marginBottom: "4px" }}>
+                    Important!
+                  </div>
+                  <div
+                    style={{
+                      fontSize: "14px",
+                      color: "var(--color-secondary-text)",
+                    }}
+                  >
+                    Store these codes safely. Each code can only be used once if
+                    you lose access to your authenticator device.
                   </div>
                 </div>
               </div>
 
-              <div style={{
-                display: "grid",
-                gridTemplateColumns: "repeat(2, 1fr)",
-                gap: "8px",
-                marginBottom: "24px",
-                maxWidth: "300px",
-                margin: "0 auto 24px auto"
-              }}>
+              <div
+                style={{
+                  display: "grid",
+                  gridTemplateColumns: "repeat(2, 1fr)",
+                  gap: "8px",
+                  marginBottom: "24px",
+                  maxWidth: "300px",
+                  margin: "0 auto 24px auto",
+                }}
+              >
                 {backupCodes.map((code, index) => (
                   <div
                     key={index}
@@ -1678,7 +1917,14 @@ const SecurityManagementSection = () => {
                 ))}
               </div>
 
-              <div style={{ display: "flex", gap: "12px", justifyContent: "center", marginBottom: "24px" }}>
+              <div
+                style={{
+                  display: "flex",
+                  gap: "12px",
+                  justifyContent: "center",
+                  marginBottom: "24px",
+                }}
+              >
                 <Button
                   onClick={copyBackupCodes}
                   style={{
@@ -1718,12 +1964,32 @@ const SecurityManagementSection = () => {
             </>
           )}
 
-          {setupStep === 'success' && (
+          {setupStep === "success" && (
             <>
-              <div style={{ marginBottom: '24px' }}>
-                <Check size={48} style={{ color: 'var(--color-success)', marginBottom: '16px' }} />
-                <h3 style={{ fontSize: '18px', fontWeight: 600, margin: '0 0 8px 0' }}>All Set!</h3>
-                <p style={{ fontSize: '14px', color: 'var(--color-secondary-text)', margin: 0 }}>
+              <div style={{ marginBottom: "24px" }}>
+                <Check
+                  size={48}
+                  style={{
+                    color: "var(--color-success)",
+                    marginBottom: "16px",
+                  }}
+                />
+                <h3
+                  style={{
+                    fontSize: "18px",
+                    fontWeight: 600,
+                    margin: "0 0 8px 0",
+                  }}
+                >
+                  All Set!
+                </h3>
+                <p
+                  style={{
+                    fontSize: "14px",
+                    color: "var(--color-secondary-text)",
+                    margin: 0,
+                  }}
+                >
                   Your account is now protected with two-factor authentication.
                 </p>
               </div>
@@ -1749,8 +2015,14 @@ const SecurityManagementSection = () => {
   return (
     <>
       <HeaderCTAContainer>
-        <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
-          <span style={{ fontSize: '14px', fontWeight: 400, color: 'var(--color-foreground)' }}>
+        <div style={{ display: "flex", alignItems: "center", gap: "8px" }}>
+          <span
+            style={{
+              fontSize: "14px",
+              fontWeight: 400,
+              color: "var(--color-foreground)",
+            }}
+          >
             Security Settings
           </span>
         </div>
@@ -1765,49 +2037,61 @@ const SecurityManagementSection = () => {
         <div>
           {securityItems.map((item, index) => (
             <div key={item.id}>
-              <div 
+              <div
                 style={{
-                  display: 'flex',
-                  alignItems: 'center',
-                  justifyContent: 'space-between',
-                  padding: '16px 0',
+                  display: "flex",
+                  alignItems: "center",
+                  justifyContent: "space-between",
+                  padding: "16px 0",
                 }}
               >
                 <div style={{ flex: 1 }}>
-                  <div style={{ fontWeight: 400, color: 'var(--color-foreground)' }}>
+                  <div
+                    style={{
+                      fontWeight: 400,
+                      color: "var(--color-foreground)",
+                    }}
+                  >
                     {item.name}
                   </div>
-                  <div style={{ fontSize: '13px', color: 'var(--color-secondary-text)' }}>
+                  <div
+                    style={{
+                      fontSize: "13px",
+                      color: "var(--color-secondary-text)",
+                    }}
+                  >
                     {item.description}
                   </div>
                 </div>
-                
-                <div style={{ display: 'flex', alignItems: 'center', gap: '12px' }}>
+
+                <div
+                  style={{ display: "flex", alignItems: "center", gap: "12px" }}
+                >
                   <span
                     style={{
-                      padding: '4px 12px',
-                      borderRadius: '16px',
-                      fontSize: '12px',
+                      padding: "4px 12px",
+                      borderRadius: "16px",
+                      fontSize: "12px",
                       fontWeight: 400,
-                      background: 
-                        item.status === 'Enabled' || item.status === 'Generated' 
-                          ? 'var(--color-success-background)' 
-                          : 'var(--color-background-hover)',
-                      color: 
-                        item.status === 'Enabled' || item.status === 'Generated'
-                          ? 'var(--color-success)' 
-                          : 'var(--color-secondary-text)',
+                      background:
+                        item.status === "Enabled" || item.status === "Generated"
+                          ? "var(--color-success-background)"
+                          : "var(--color-background-hover)",
+                      color:
+                        item.status === "Enabled" || item.status === "Generated"
+                          ? "var(--color-success)"
+                          : "var(--color-secondary-text)",
                     }}
                   >
                     {item.status}
                   </span>
-                  
-                  <div style={{ position: 'relative' }}>
-                    {item.id === 'password' && (
+
+                  <div style={{ position: "relative" }}>
+                    {item.id === "password" && (
                       <>
                         {user?.has_password ? (
-                          <div style={{ display: 'flex', gap: '8px' }}>
-                            <div style={{ position: 'relative' }}>
+                          <div style={{ display: "flex", gap: "8px" }}>
+                            <div style={{ position: "relative" }}>
                               <Button
                                 ref={passwordButtonRef}
                                 onClick={() => setShowPasswordPopover(true)}
@@ -1823,7 +2107,7 @@ const SecurityManagementSection = () => {
                               >
                                 Change
                               </Button>
-                              
+
                               {showPasswordPopover && (
                                 <ChangePasswordPopover
                                   triggerRef={passwordButtonRef}
@@ -1832,12 +2116,14 @@ const SecurityManagementSection = () => {
                                 />
                               )}
                             </div>
-                            
+
                             {canRemovePassword() && (
-                              <div style={{ position: 'relative' }}>
+                              <div style={{ position: "relative" }}>
                                 <Button
                                   ref={removePasswordButtonRef}
-                                  onClick={() => setShowRemovePasswordPopover(true)}
+                                  onClick={() =>
+                                    setShowRemovePasswordPopover(true)
+                                  }
                                   style={{
                                     padding: "6px 12px",
                                     fontSize: "12px",
@@ -1850,11 +2136,13 @@ const SecurityManagementSection = () => {
                                 >
                                   Remove
                                 </Button>
-                                
+
                                 {showRemovePasswordPopover && (
                                   <RemovePasswordPopover
                                     triggerRef={removePasswordButtonRef}
-                                    onClose={() => setShowRemovePasswordPopover(false)}
+                                    onClose={() =>
+                                      setShowRemovePasswordPopover(false)
+                                    }
                                     onRemovePassword={handleRemovePassword}
                                   />
                                 )}
@@ -1862,7 +2150,7 @@ const SecurityManagementSection = () => {
                             )}
                           </div>
                         ) : (
-                          <div style={{ position: 'relative' }}>
+                          <div style={{ position: "relative" }}>
                             <Button
                               ref={passwordButtonRef}
                               onClick={() => setShowPasswordPopover(true)}
@@ -1878,7 +2166,7 @@ const SecurityManagementSection = () => {
                             >
                               Setup
                             </Button>
-                            
+
                             {showPasswordPopover && (
                               <ChangePasswordPopover
                                 triggerRef={passwordButtonRef}
@@ -1891,68 +2179,76 @@ const SecurityManagementSection = () => {
                         )}
                       </>
                     )}
-                    
-                    {item.id === 'authenticator' && !user?.user_authenticator && (
+
+                    {item.id === "authenticator" &&
+                      !user?.user_authenticator && (
+                        <>
+                          <div style={{ position: "relative" }}>
+                            <Button
+                              ref={totpButtonRef}
+                              onClick={() => setShowTOTPPopover(true)}
+                              disabled={isLoadingQR}
+                              style={{
+                                padding: "6px 12px",
+                                fontSize: "12px",
+                                background: "var(--color-primary)",
+                                color: "white",
+                                border: "1px solid var(--color-primary)",
+                                borderRadius: "var(--radius-md)",
+                                fontWeight: "400",
+                              }}
+                            >
+                              {isLoadingQR ? "Setting up..." : "Setup"}
+                            </Button>
+
+                            {showTOTPPopover && (
+                              <SetupTOTPPopover
+                                triggerRef={totpButtonRef}
+                                onClose={() => setShowTOTPPopover(false)}
+                                onSetupTOTP={async () => {
+                                  const result = await setupAuthenticator();
+                                  setAuthenticatorId(result.id);
+                                  return result;
+                                }}
+                                onVerifyTOTP={async (codes) => {
+                                  await verifyAuthenticator(
+                                    authenticatorId,
+                                    codes,
+                                  );
+                                  await user.refetch();
+                                  toast(
+                                    "Two-factor authentication enabled successfully!",
+                                    "info",
+                                  );
+                                }}
+                              />
+                            )}
+                          </div>
+                        </>
+                      )}
+
+                    {item.id === "authenticator" &&
+                      user?.user_authenticator && (
+                        <Button
+                          onClick={handleRemoveAuthenticator}
+                          disabled={isRemovingAuth}
+                          style={{
+                            padding: "6px 12px",
+                            fontSize: "12px",
+                            background: "var(--color-error)",
+                            color: "white",
+                            border: "1px solid var(--color-error)",
+                            borderRadius: "var(--radius-md)",
+                            fontWeight: "400",
+                          }}
+                        >
+                          {isRemovingAuth ? "Removing..." : "Remove"}
+                        </Button>
+                      )}
+
+                    {item.id === "backup_codes" && (
                       <>
-                        <div style={{ position: 'relative' }}>
-                          <Button
-                            ref={totpButtonRef}
-                            onClick={() => setShowTOTPPopover(true)}
-                            disabled={isLoadingQR}
-                            style={{
-                              padding: "6px 12px",
-                              fontSize: "12px",
-                              background: "var(--color-primary)",
-                              color: "white",
-                              border: "1px solid var(--color-primary)",
-                              borderRadius: "var(--radius-md)",
-                              fontWeight: "400",
-                            }}
-                          >
-                            {isLoadingQR ? 'Setting up...' : 'Setup'}
-                          </Button>
-                          
-                          {showTOTPPopover && (
-                            <SetupTOTPPopover
-                              triggerRef={totpButtonRef}
-                              onClose={() => setShowTOTPPopover(false)}
-                            onSetupTOTP={async () => {
-                              const result = await setupAuthenticator();
-                              setAuthenticatorId(result.id);
-                              return result;
-                            }}
-                            onVerifyTOTP={async (codes) => {
-                              await verifyAuthenticator(authenticatorId, codes);
-                              await user.refetch();
-                              toast("Two-factor authentication enabled successfully!", "info");
-                            }}
-                          />
-                        )}
-                        </div>
-                      </>
-                    )}
-                    
-                    {item.id === 'authenticator' && user?.user_authenticator && (
-                      <Button
-                        onClick={handleRemoveAuthenticator}
-                        disabled={isRemovingAuth}
-                        style={{
-                          padding: "6px 12px",
-                          fontSize: "12px",
-                          background: "var(--color-error)",
-                          color: "white",
-                          border: "1px solid var(--color-error)",
-                          borderRadius: "var(--radius-md)",
-                          fontWeight: "400",
-                        }}
-                      >
-                        {isRemovingAuth ? 'Removing...' : 'Remove'}
-                      </Button>
-                    )}
-                    
-                    {item.id === 'backup_codes' && (
-                      <>
-                        <div style={{ position: 'relative' }}>
+                        <div style={{ position: "relative" }}>
                           <Button
                             ref={backupCodesButtonRef}
                             onClick={handleGenerateNewBackupCodes}
@@ -1967,9 +2263,13 @@ const SecurityManagementSection = () => {
                               fontWeight: "400",
                             }}
                           >
-                            {isGeneratingCodes ? 'Generating...' : (user?.backup_codes_generated ? 'Regenerate' : 'Generate')}
+                            {isGeneratingCodes
+                              ? "Generating..."
+                              : user?.backup_codes_generated
+                                ? "Regenerate"
+                                : "Generate"}
                           </Button>
-                          
+
                           {showBackupCodesPopover && (
                             <BackupCodesPopover
                               triggerRef={backupCodesButtonRef}
@@ -1978,20 +2278,31 @@ const SecurityManagementSection = () => {
                               onCopy={copyBackupCodes}
                               onDownload={downloadBackupCodes}
                             />
-                        )}
+                          )}
                         </div>
                       </>
+                    )}
+
+                    {item.id === "second_factor_policy" && (
+                      <Switch
+                        checked={secondFactorPolicy === "enforced"}
+                        onChange={(checked) => {
+                          handleSecondFactorPolicyChange(
+                            checked ? "enforced" : "none",
+                          );
+                        }}
+                      />
                     )}
                   </div>
                 </div>
               </div>
-              
+
               {index < securityItems.length - 1 && (
-                <div 
+                <div
                   style={{
-                    height: '1px',
-                    background: 'var(--color-border)',
-                    margin: '0',
+                    height: "1px",
+                    background: "var(--color-border)",
+                    margin: "0",
                   }}
                 />
               )}
@@ -2005,7 +2316,8 @@ const SecurityManagementSection = () => {
 
 const ProfileDetailsManagementSection = () => {
   const { deployment } = useDeployment();
-  const { user, updateProfile, updateProfilePicture, deleteAccount } = useUser();
+  const { user, updateProfile, updateProfilePicture, deleteAccount } =
+    useUser();
   const { toast } = useScreenContext();
 
   // State for profile management
@@ -2139,9 +2451,21 @@ const ProfileDetailsManagementSection = () => {
 
   return (
     <>
-      <div style={{ display: "flex", flexDirection: "column", gap: "var(--space-2xl)" }}>
+      <div
+        style={{
+          display: "flex",
+          flexDirection: "column",
+          gap: "var(--space-2xl)",
+        }}
+      >
         {/* Profile Picture Section - Two Column Layout */}
-        <div style={{ display: "flex", gap: "var(--space-2xl)", alignItems: "center" }}>
+        <div
+          style={{
+            display: "flex",
+            gap: "var(--space-2xl)",
+            alignItems: "center",
+          }}
+        >
           {/* Left Column - Profile Picture Preview */}
           <div style={{ flexShrink: 0 }}>
             <div
@@ -2150,7 +2474,9 @@ const ProfileDetailsManagementSection = () => {
                 height: "120px",
                 borderRadius: "50%",
                 border: "2px dashed var(--color-border)",
-                background: previewUrl ? "transparent" : "var(--color-input-background)",
+                background: previewUrl
+                  ? "transparent"
+                  : "var(--color-input-background)",
                 cursor: "pointer",
                 display: "flex",
                 alignItems: "center",
@@ -2195,23 +2521,33 @@ const ProfileDetailsManagementSection = () => {
           {/* Right Column - Content and Controls */}
           <div style={{ flex: 1 }}>
             <div style={{ marginBottom: "var(--space-lg)" }}>
-              <h3 style={{
-                fontSize: "var(--font-sm)",
-                color: "var(--color-foreground)",
-                margin: "0 0 var(--space-2xs) 0"
-              }}>
+              <h3
+                style={{
+                  fontSize: "var(--font-sm)",
+                  color: "var(--color-foreground)",
+                  margin: "0 0 var(--space-2xs) 0",
+                }}
+              >
                 Profile Picture
               </h3>
-              <p style={{
-                fontSize: "var(--font-xs)",
-                color: "var(--color-secondary-text)",
-                margin: 0
-              }}>
+              <p
+                style={{
+                  fontSize: "var(--font-xs)",
+                  color: "var(--color-secondary-text)",
+                  margin: 0,
+                }}
+              >
                 Upload an image to represent your profile
               </p>
             </div>
 
-            <div style={{ display: "flex", gap: "var(--space-sm)", marginBottom: "var(--space-sm)" }}>
+            <div
+              style={{
+                display: "flex",
+                gap: "var(--space-sm)",
+                marginBottom: "var(--space-sm)",
+              }}
+            >
               <Button
                 onClick={() => fileInputRef.current?.click()}
                 style={{
@@ -2236,12 +2572,15 @@ const ProfileDetailsManagementSection = () => {
                   // Save the removal to backend
                   try {
                     await updateProfile({
-                      remove_profile_picture: true
+                      remove_profile_picture: true,
                     });
                     await user.refetch();
                     toast("Profile picture removed successfully", "info");
                   } catch (error: any) {
-                    toast(error.message || "Failed to remove profile picture", "error");
+                    toast(
+                      error.message || "Failed to remove profile picture",
+                      "error",
+                    );
                     // Reset preview on error
                     setPreviewUrl(user?.profile_picture_url || null);
                   }
@@ -2279,23 +2618,33 @@ const ProfileDetailsManagementSection = () => {
         {/* Profile Details */}
         <div>
           <div style={{ marginBottom: "var(--space-md)" }}>
-            <h3 style={{
-              fontSize: "var(--font-sm)",
-              color: "var(--color-foreground)",
-              margin: "0 0 var(--space-2xs) 0"
-            }}>
+            <h3
+              style={{
+                fontSize: "var(--font-sm)",
+                color: "var(--color-foreground)",
+                margin: "0 0 var(--space-2xs) 0",
+              }}
+            >
               Profile Details
             </h3>
-            <p style={{
-              fontSize: "var(--font-xs)",
-              color: "var(--color-secondary-text)",
-              margin: 0
-            }}>
+            <p
+              style={{
+                fontSize: "var(--font-xs)",
+                color: "var(--color-secondary-text)",
+                margin: 0,
+              }}
+            >
               Basic information about your profile
             </p>
           </div>
 
-          <div style={{ display: "flex", flexDirection: "column", gap: "var(--space-lg)" }}>
+          <div
+            style={{
+              display: "flex",
+              flexDirection: "column",
+              gap: "var(--space-lg)",
+            }}
+          >
             {/* First Name and Last Name in same row */}
             <div style={{ display: "flex", gap: "var(--space-md)" }}>
               <FormGroup style={{ flex: 1 }}>
@@ -2357,47 +2706,60 @@ const ProfileDetailsManagementSection = () => {
         {/* Danger Zone */}
         <div>
           <div style={{ marginBottom: "16px" }}>
-            <h3 style={{
-              fontSize: "16px",
-              color: "var(--color-foreground)",
-              margin: "0 0 4px 0"
-            }}>
+            <h3
+              style={{
+                fontSize: "16px",
+                color: "var(--color-foreground)",
+                margin: "0 0 4px 0",
+              }}
+            >
               Danger Zone
             </h3>
-            <p style={{
-              fontSize: "14px",
-              color: "var(--color-muted)",
-              margin: 0
-            }}>
+            <p
+              style={{
+                fontSize: "14px",
+                color: "var(--color-muted)",
+                margin: 0,
+              }}
+            >
               Irreversible and destructive actions
             </p>
           </div>
 
-          <div style={{
-            padding: "20px",
-            border: "1px solid var(--color-error)",
-            borderRadius: "8px"
-          }}>
-            <div style={{
-              display: "flex",
-              alignItems: "center",
-              justifyContent: "space-between",
-              marginBottom: showDeleteConfirm ? "20px" : "0"
-            }}>
+          <div
+            style={{
+              padding: "20px",
+              border: "1px solid var(--color-error)",
+              borderRadius: "8px",
+            }}
+          >
+            <div
+              style={{
+                display: "flex",
+                alignItems: "center",
+                justifyContent: "space-between",
+                marginBottom: showDeleteConfirm ? "20px" : "0",
+              }}
+            >
               <div>
-                <div style={{
-                  fontSize: "14px",
-                  color: "var(--color-foreground)",
-                  marginBottom: "4px",
-                  fontWeight: "500"
-                }}>
+                <div
+                  style={{
+                    fontSize: "14px",
+                    color: "var(--color-foreground)",
+                    marginBottom: "4px",
+                    fontWeight: "500",
+                  }}
+                >
                   Delete Account
                 </div>
-                <div style={{
-                  fontSize: "13px",
-                  color: "var(--color-muted)"
-                }}>
-                  Once you delete your account, there is no going back. Please be certain.
+                <div
+                  style={{
+                    fontSize: "13px",
+                    color: "var(--color-muted)",
+                  }}
+                >
+                  Once you delete your account, there is no going back. Please
+                  be certain.
                 </div>
               </div>
               <Button
@@ -2416,7 +2778,7 @@ const ProfileDetailsManagementSection = () => {
                   padding: "6px 12px",
                   fontSize: "13px",
                   height: "32px",
-                  width: "auto"
+                  width: "auto",
                 }}
               >
                 {showDeleteConfirm ? "Cancel" : "Delete"}
@@ -2426,7 +2788,9 @@ const ProfileDetailsManagementSection = () => {
             {showDeleteConfirm && (
               <div style={{ maxWidth: "400px" }}>
                 <FormGroup>
-                  <Label htmlFor="confirm_username">Confirm by typing your username</Label>
+                  <Label htmlFor="confirm_username">
+                    Confirm by typing your username
+                  </Label>
                   <Input
                     id="confirm_username"
                     type="text"
@@ -2439,13 +2803,22 @@ const ProfileDetailsManagementSection = () => {
                   onClick={handleDeleteAccount}
                   disabled={confirmName !== user?.username || isDeleting}
                   style={{
-                    background: confirmName === user?.username ? "var(--color-error)" : "transparent",
-                    color: confirmName === user?.username ? "white" : "var(--color-muted)",
+                    background:
+                      confirmName === user?.username
+                        ? "var(--color-error)"
+                        : "transparent",
+                    color:
+                      confirmName === user?.username
+                        ? "white"
+                        : "var(--color-muted)",
                     border: "1px solid var(--color-border)",
                     padding: "8px 16px",
                     fontSize: "14px",
                     height: "36px",
-                    cursor: confirmName === user?.username ? "pointer" : "not-allowed",
+                    cursor:
+                      confirmName === user?.username
+                        ? "pointer"
+                        : "not-allowed",
                     opacity: confirmName === user?.username ? 1 : 0.6,
                     marginTop: "12px",
                   }}

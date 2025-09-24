@@ -1,46 +1,60 @@
+import React from "react";
 import styled from "styled-components";
 
-export const Switch = styled.label`
+const SwitchContainer = styled.label`
+  display: inline-flex;
+  align-items: center;
+  cursor: pointer;
   position: relative;
-  display: inline-block;
+`;
+
+const SwitchInput = styled.input`
+  opacity: 0;
+  width: 0;
+  height: 0;
+  position: absolute;
+`;
+
+const SwitchSlider = styled.span<{ checked: boolean }>`
+  position: relative;
   width: 40px;
-  height: 20px;
-  
-  input {
-    opacity: 0;
-    width: 0;
-    height: 0;
-  }
-  
-  span {
-    position: absolute;
-    cursor: pointer;
-    top: 0;
-    left: 0;
-    right: 0;
-    bottom: 0;
-    background-color: var(--color-border);
-    transition: .4s;
-    border-radius: 34px;
-  }
-  
-  span:before {
-    position: absolute;
+  height: 24px;
+  border-radius: 12px;
+  background-color: ${(props) =>
+    props.checked ? "var(--color-primary)" : "var(--color-border)"};
+  transition: background-color 0.2s ease;
+  border: 1px solid
+    ${(props) =>
+      props.checked ? "var(--color-primary)" : "var(--color-border)"};
+
+  &::before {
     content: "";
-    height: 16px;
-    width: 16px;
-    left: 2px;
-    bottom: 2px;
-    background-color: var(--color-background);
-    transition: .4s;
+    position: absolute;
+    width: 18px;
+    height: 18px;
     border-radius: 50%;
-  }
-  
-  input:checked + span {
-    background-color: var(--color-primary);
-  }
-  
-  input:checked + span:before {
-    transform: translateX(20px);
+    background-color: ${(props) =>
+      props.checked ? "white" : "var(--color-muted)"};
+    top: 2px;
+    left: ${(props) => (props.checked ? "20px" : "2px")};
+    transition: left 0.2s ease;
   }
 `;
+
+interface SwitchProps {
+  checked: boolean;
+  onChange: (checked: boolean) => void;
+}
+
+export const Switch: React.FC<SwitchProps> = ({ checked, onChange }) => {
+  const handleChange = (event: React.ChangeEvent<HTMLInputElement>) => {
+    onChange(event.target.checked);
+  };
+
+  return (
+    <SwitchContainer>
+      <SwitchInput type="checkbox" checked={checked} onChange={handleChange} />
+      <SwitchSlider checked={checked} />
+    </SwitchContainer>
+  );
+};

@@ -186,7 +186,6 @@ function SignInFormContent() {
   const handleInputChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     let { name, value } = e.target;
     if (name === "phone") {
-      // Allow only digits for phone number
       value = value.replace(/[^0-9]/g, "");
     } else if (name === "email") {
       setEmail(value);
@@ -210,6 +209,7 @@ function SignInFormContent() {
   const createSignIn = async (e: React.FormEvent) => {
     e.preventDefault();
     if (loading || isSubmitting) return;
+    discardSignInAttempt();
 
     const newErrors: Record<string, string> = {};
 
@@ -253,7 +253,6 @@ function SignInFormContent() {
       return;
     }
 
-    // Determine strategy based on firstFactor
     let strategy = "";
     switch (firstFactor) {
       case "email_password":
@@ -307,7 +306,6 @@ function SignInFormContent() {
 
     try {
       await signIn.completeVerification(otpCode);
-      // Reset OTP state after successful verification
       setOtpSent(false);
       setOtpCode("");
     } catch (err) {
@@ -337,7 +335,6 @@ function SignInFormContent() {
     }
   };
 
-  // Check for signin_attempt_id in URL params (from SSO callback redirect)
   useEffect(() => {
     if (sessionLoading) return;
 
@@ -345,16 +342,15 @@ function SignInFormContent() {
     const attemptId = urlParams.get("signin_attempt_id");
 
     if (attemptId && session?.signin_attempts && !signinAttempt) {
-      const attempt = session.signin_attempts.find(a => a.id === attemptId);
+      const attempt = session.signin_attempts.find((a) => a.id === attemptId);
       if (attempt) {
         setSignInAttempt(attempt);
 
-        // Clean up URL - remove signin_attempt_id but keep other params
         urlParams.delete("signin_attempt_id");
         const newUrl = urlParams.toString()
           ? `${window.location.pathname}?${urlParams.toString()}`
           : window.location.pathname;
-        window.history.replaceState({}, '', newUrl);
+        window.history.replaceState({}, "", newUrl);
       }
     }
   }, [session, sessionLoading, signinAttempt, setSignInAttempt]);
@@ -362,7 +358,6 @@ function SignInFormContent() {
   useEffect(() => {
     if (!signinAttempt) return;
 
-    // Handle successful signin
     if (signinAttempt.completed) {
       setIsRedirecting(true);
       let redirectUri: string | null = new URLSearchParams(
@@ -395,17 +390,19 @@ function SignInFormContent() {
 
     if (!signIn || otpSent) return;
 
-    // Map current_step to strategy
-    const strategyMap: Record<string, "phone_otp" | "email_otp" | "magic_link"> = {
-      "verify_email": "email_otp",
-      "verify_email_otp": "email_otp",
-      "verify_email_link": "magic_link",
-      "verify_phone": "phone_otp",
-      "verify_phone_otp": "phone_otp",
+    const strategyMap: Record<
+      string,
+      "phone_otp" | "email_otp" | "magic_link"
+    > = {
+      verify_email: "email_otp",
+      verify_email_otp: "email_otp",
+      verify_email_link: "magic_link",
+      verify_phone: "phone_otp",
+      verify_phone_otp: "phone_otp",
     };
 
     const strategy = strategyMap[signinAttempt.current_step];
-    if (!strategy) return; // Not a verification step
+    if (!strategy) return;
 
     const prepareVerificationAsync = async () => {
       try {
@@ -420,14 +417,7 @@ function SignInFormContent() {
     };
 
     prepareVerificationAsync();
-  }, [
-    signinAttempt,
-    signIn,
-    otpSent,
-    setOtpSent,
-    navigate,
-    deployment,
-  ]);
+  }, [signinAttempt, signIn, otpSent, setOtpSent, navigate, deployment]);
 
   useEffect(() => {
     const newErrors: Record<string, string> = {};
@@ -466,10 +456,12 @@ function SignInFormContent() {
     return <ForgotPassword onBack={() => setShowForgotPassword(false)} />;
   }
 
-  // Handle 2FA step
   if (signinAttempt?.current_step === "verify_second_factor") {
     return (
       <TwoFactorVerification
+        attempt={signinAttempt}
+        completeVerification={signIn.completeVerification}
+        prepareVerification={signIn.prepareVerification}
         onBack={() => {
           discardSignInAttempt();
           resetFormData();
@@ -479,7 +471,6 @@ function SignInFormContent() {
     );
   }
 
-  // Handle profile completion step
   if (signinAttempt?.current_step === "complete_profile") {
     return (
       <ProfileCompletion
@@ -496,7 +487,6 @@ function SignInFormContent() {
     );
   }
 
-  // Show loading state while checking for signin attempt from URL
   if (sessionLoading) {
     return (
       <DefaultStylesProvider>
@@ -510,7 +500,6 @@ function SignInFormContent() {
     );
   }
 
-  // Show loading state while redirecting after successful signin
   if (isRedirecting) {
     return (
       <DefaultStylesProvider>
@@ -524,16 +513,16 @@ function SignInFormContent() {
     );
   }
 
-  // Check if we're in a verification step
-  const isVerificationStep = signinAttempt?.current_step && [
-    "verify_email",
-    "verify_email_otp",
-    "verify_email_link",
-    "verify_phone",
-    "verify_phone_otp"
-  ].includes(signinAttempt.current_step);
+  const isVerificationStep =
+    signinAttempt?.current_step &&
+    [
+      "verify_email",
+      "verify_email_otp",
+      "verify_email_link",
+      "verify_phone",
+      "verify_phone_otp",
+    ].includes(signinAttempt.current_step);
 
-  // Show OTP form if we're in verification step AND OTP has been sent
   const showOtpForm = isVerificationStep && otpSent;
 
   return (
@@ -694,7 +683,9 @@ function SignInFormContent() {
             <Footer>
               Don't have an account?{" "}
               <Link>
-                <NavigationLink to={`${deployment!.ui_settings?.sign_up_page_url}${window.location.search}`}>
+                <NavigationLink
+                  to={`${deployment!.ui_settings?.sign_up_page_url}${window.location.search}`}
+                >
                   Sign up
                 </NavigationLink>
               </Link>

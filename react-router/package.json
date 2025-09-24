@@ -1,6 +1,6 @@
 {
   "name": "@snipextt/wacht-react-router",
-  "version": "0.0.1-alpha.8",
+  "version": "0.0.1-alpha.9",
   "description": "React Router adapter for Wacht authentication library",
   "type": "module",
   "main": "dist/index.cjs.js",
@@ -30,8 +30,7 @@
   "peerDependencies": {
     "react": "catalog:",
     "react-dom": "catalog:",
-    "react-router": "catalog:",
-    "@snipextt/wacht": "workspace:*"
+    "react-router": "catalog:"
   },
   "dependencies": {
     "rollup-plugin-preserve-use-client": "^3.0.1"

@@ -1,4 +1,10 @@
-import React, { useCallback, useMemo, useRef, useState, useEffect } from "react";
+import React, {
+  useCallback,
+  useMemo,
+  useRef,
+  useState,
+  useEffect,
+} from "react";
 import styled from "styled-components";
 import {
   Building,
@@ -26,7 +32,6 @@ import { InviteMemberPopover } from "./invite-member-popover";
 import {
   OrganizationRole,
   OrganizationDomain,
-
   OrganizationMembership,
   OrganizationInvitation,
 } from "@/types";
@@ -88,7 +93,7 @@ const Container = styled.div`
 
   /* Blur effect at the bottom */
   &::after {
-    content: '';
+    content: "";
     position: absolute;
     bottom: 0;
     left: 0;
@@ -181,20 +186,17 @@ const HeaderCTAContainer = styled.div`
 `;
 
 const GeneralSettingsSection = () => {
-  const {
-    activeOrganization: selectedOrganization,
-    loading,
-
-  } = useActiveOrganization();
+  const { activeOrganization: selectedOrganization, loading } =
+    useActiveOrganization();
   const { workspaces: workspaceList } = useWorkspaceList();
   const { deployment } = useDeployment();
-  const { deleteOrganization: deleteOrgFromList, updateOrganization } = useOrganizationList();
+  const { deleteOrganization: deleteOrgFromList, updateOrganization } =
+    useOrganizationList();
   const { toast } = useScreenContext();
   const [name, setName] = useState(selectedOrganization?.name || "");
   const [description, setDescription] = useState(
     selectedOrganization?.description || "",
   );
-
 
   const [previewUrl, setPreviewUrl] = useState<string | null>(
     selectedOrganization?.image_url || null,
@@ -216,7 +218,7 @@ const GeneralSettingsSection = () => {
   // Auto-save functionality - triggers on blur
   const autoSave = React.useCallback(async () => {
     if (!selectedOrganization) return;
-    
+
     try {
       setIsSaving(true);
       await updateOrganization(selectedOrganization, {
@@ -225,7 +227,8 @@ const GeneralSettingsSection = () => {
       });
       toast("Changes saved", "info");
     } catch (error: any) {
-      const errorMessage = error.message || "Failed to save changes. Please try again.";
+      const errorMessage =
+        error.message || "Failed to save changes. Please try again.";
       toast(errorMessage, "error");
     } finally {
       setIsSaving(false);
@@ -303,7 +306,7 @@ const GeneralSettingsSection = () => {
       }
 
       // Validate file type
-      if (!file.type.startsWith('image/')) {
+      if (!file.type.startsWith("image/")) {
         toast("Please select a valid image file", "error");
         return;
       }
@@ -355,15 +358,29 @@ const GeneralSettingsSection = () => {
           }}
         >
           <Spinner size={16} />
-          <span style={{ fontSize: "var(--font-xs)", color: "var(--color-muted)" }}>
+          <span
+            style={{ fontSize: "var(--font-xs)", color: "var(--color-muted)" }}
+          >
             Saving changes...
           </span>
         </div>
       )}
 
-      <div style={{ display: "flex", flexDirection: "column", gap: "var(--space-2xl)" }}>
+      <div
+        style={{
+          display: "flex",
+          flexDirection: "column",
+          gap: "var(--space-2xl)",
+        }}
+      >
         {/* Logo Section - Two Column Layout */}
-        <div style={{ display: "flex", gap: "var(--space-2xl)", alignItems: "center" }}>
+        <div
+          style={{
+            display: "flex",
+            gap: "var(--space-2xl)",
+            alignItems: "center",
+          }}
+        >
           {/* Left Column - Logo Preview */}
           <div style={{ flexShrink: 0 }}>
             <div
@@ -372,7 +389,9 @@ const GeneralSettingsSection = () => {
                 height: "120px",
                 borderRadius: "50%",
                 border: "2px dashed var(--color-border)",
-                background: previewUrl ? "transparent" : "var(--color-input-background)",
+                background: previewUrl
+                  ? "transparent"
+                  : "var(--color-input-background)",
                 cursor: "pointer",
                 display: "flex",
                 alignItems: "center",
@@ -418,23 +437,33 @@ const GeneralSettingsSection = () => {
           {/* Right Column - Content and Controls */}
           <div style={{ flex: 1 }}>
             <div style={{ marginBottom: "var(--space-lg)" }}>
-              <h3 style={{
-                fontSize: "var(--font-sm)",
-                color: "var(--color-foreground)",
-                margin: "0 0 var(--space-2xs) 0"
-              }}>
+              <h3
+                style={{
+                  fontSize: "var(--font-sm)",
+                  color: "var(--color-foreground)",
+                  margin: "0 0 var(--space-2xs) 0",
+                }}
+              >
                 Organization Logo
               </h3>
-              <p style={{
-                fontSize: "var(--font-xs)",
-                color: "var(--color-secondary-text)",
-                margin: 0
-              }}>
+              <p
+                style={{
+                  fontSize: "var(--font-xs)",
+                  color: "var(--color-secondary-text)",
+                  margin: 0,
+                }}
+              >
                 Upload an image to represent your organization
               </p>
             </div>
 
-            <div style={{ display: "flex", gap: "var(--space-sm)", marginBottom: "var(--space-sm)" }}>
+            <div
+              style={{
+                display: "flex",
+                gap: "var(--space-sm)",
+                marginBottom: "var(--space-sm)",
+              }}
+            >
               <Button
                 onClick={() => fileInputRef.current?.click()}
                 style={{
@@ -499,23 +528,33 @@ const GeneralSettingsSection = () => {
         {/* Organization Details */}
         <div>
           <div style={{ marginBottom: "var(--space-md)" }}>
-            <h3 style={{
-              fontSize: "var(--font-sm)",
-              color: "var(--color-foreground)",
-              margin: "0 0 var(--space-2xs) 0"
-            }}>
+            <h3
+              style={{
+                fontSize: "var(--font-sm)",
+                color: "var(--color-foreground)",
+                margin: "0 0 var(--space-2xs) 0",
+              }}
+            >
               Organization Details
             </h3>
-            <p style={{
-              fontSize: "var(--font-xs)",
-              color: "var(--color-secondary-text)",
-              margin: 0
-            }}>
+            <p
+              style={{
+                fontSize: "var(--font-xs)",
+                color: "var(--color-secondary-text)",
+                margin: 0,
+              }}
+            >
               Basic information about your organization
             </p>
           </div>
 
-          <div style={{ display: "flex", flexDirection: "column", gap: "var(--space-lg)" }}>
+          <div
+            style={{
+              display: "flex",
+              flexDirection: "column",
+              gap: "var(--space-lg)",
+            }}
+          >
             <FormGroup>
               <Label htmlFor="name">Organization Name</Label>
               <Input
@@ -544,11 +583,13 @@ const GeneralSettingsSection = () => {
                   fontFamily: "inherit",
                 }}
               />
-              <p style={{
-                fontSize: "var(--font-2xs)",
-                color: "var(--color-muted)",
-                margin: "var(--space-2xs) 0 0 0"
-              }}>
+              <p
+                style={{
+                  fontSize: "var(--font-2xs)",
+                  color: "var(--color-muted)",
+                  margin: "var(--space-2xs) 0 0 0",
+                }}
+              >
                 Brief description of your organization
               </p>
             </FormGroup>
@@ -571,26 +612,26 @@ const GeneralSettingsSection = () => {
                 >
                   Multi-Factor Authentication
                 </Label>
-                <div style={{ fontSize: "var(--font-2xs)", color: "var(--color-muted)" }} id="mfa-description">
+                <div
+                  style={{
+                    fontSize: "var(--font-2xs)",
+                    color: "var(--color-muted)",
+                  }}
+                  id="mfa-description"
+                >
                   Require all members to set up MFA for added security
                 </div>
               </div>
-              <Switch>
-                <input
-                  type="checkbox"
-                  checked={security.mfa_required}
-                  onChange={() => {
-                    setSecurity((prev) => ({
-                      ...prev,
-                      mfa_required: !prev.mfa_required,
-                    }));
-                    setTimeout(() => autoSave(), 100);
-                  }}
-                  aria-label="Require multi-factor authentication for all members"
-                  aria-describedby="mfa-description"
-                />
-                <span></span>
-              </Switch>
+              <Switch
+                checked={security.mfa_required}
+                onChange={() => {
+                  setSecurity((prev) => ({
+                    ...prev,
+                    mfa_required: !prev.mfa_required,
+                  }));
+                  setTimeout(() => autoSave(), 100);
+                }}
+              />
             </div>
 
             {deployment?.b2b_settings?.ip_allowlist_per_org_enabled && (
@@ -613,26 +654,28 @@ const GeneralSettingsSection = () => {
                     >
                       IP Restrictions
                     </Label>
-                    <div style={{ fontSize: "var(--font-2xs)", color: "var(--color-muted)" }} id="ip-restrictions-description">
+                    <div
+                      style={{
+                        fontSize: "var(--font-2xs)",
+                        color: "var(--color-muted)",
+                      }}
+                      id="ip-restrictions-description"
+                    >
                       Only allow access from specific IP addresses
                     </div>
                   </div>
-                  <Switch>
-                    <input
-                      type="checkbox"
-                      checked={security.ip_restrictions}
-                      onChange={() => {
-                        setSecurity((prev) => ({
-                          ...prev,
-                          ip_restrictions: !prev.ip_restrictions,
-                        }));
-                        setTimeout(() => autoSave(), 100);
-                      }}
-                      aria-label="Enable IP address restrictions"
-                      aria-describedby="ip-restrictions-description"
-                    />
-                    <span></span>
-                  </Switch>
+                  <Switch
+                    checked={security.ip_restrictions}
+                    onChange={() => {
+                      setSecurity((prev) => ({
+                        ...prev,
+                        ip_restrictions: !prev.ip_restrictions,
+                      }));
+                      setTimeout(() => autoSave(), 100);
+                    }}
+                    aria-label="Enable IP address restrictions"
+                    aria-describedby="ip-restrictions-description"
+                  />
                 </div>
 
                 {security.ip_restrictions && (
@@ -656,11 +699,13 @@ const GeneralSettingsSection = () => {
                         fontFamily: "monospace",
                       }}
                     />
-                    <p style={{
-                      fontSize: "var(--font-2xs)",
-                      color: "var(--color-muted)",
-                      margin: "var(--space-2xs) 0 0 0"
-                    }}>
+                    <p
+                      style={{
+                        fontSize: "var(--font-2xs)",
+                        color: "var(--color-muted)",
+                        margin: "var(--space-2xs) 0 0 0",
+                      }}
+                    >
                       Enter one IP address or CIDR block per line
                     </p>
                   </FormGroup>
@@ -687,11 +732,13 @@ const GeneralSettingsSection = () => {
                     }}
                     placeholder="Select default workspace"
                   />
-                  <p style={{
-                    fontSize: "var(--font-2xs)",
-                    color: "var(--color-muted)",
-                    margin: "var(--space-2xs) 0 0 0"
-                  }}>
+                  <p
+                    style={{
+                      fontSize: "var(--font-2xs)",
+                      color: "var(--color-muted)",
+                      margin: "var(--space-2xs) 0 0 0",
+                    }}
+                  >
                     Workspace that new members will be added to automatically
                   </p>
                 </FormGroup>
@@ -713,47 +760,60 @@ const GeneralSettingsSection = () => {
 
             <div>
               <div style={{ marginBottom: "16px" }}>
-                <h3 style={{
-                  fontSize: "16px",
-                  color: "var(--color-foreground)",
-                  margin: "0 0 4px 0"
-                }}>
+                <h3
+                  style={{
+                    fontSize: "16px",
+                    color: "var(--color-foreground)",
+                    margin: "0 0 4px 0",
+                  }}
+                >
                   Danger Zone
                 </h3>
-                <p style={{
-                  fontSize: "14px",
-                  color: "var(--color-muted)",
-                  margin: 0
-                }}>
+                <p
+                  style={{
+                    fontSize: "14px",
+                    color: "var(--color-muted)",
+                    margin: 0,
+                  }}
+                >
                   Irreversible and destructive actions
                 </p>
               </div>
 
-              <div style={{ 
-                padding: "20px", 
-                border: "1px solid var(--color-error)",
-                borderRadius: "8px"
-              }}>
-                <div style={{ 
-                  display: "flex", 
-                  alignItems: "center", 
-                  justifyContent: "space-between", 
-                  marginBottom: showDeleteConfirm ? "20px" : "0"
-                }}>
+              <div
+                style={{
+                  padding: "20px",
+                  border: "1px solid var(--color-error)",
+                  borderRadius: "8px",
+                }}
+              >
+                <div
+                  style={{
+                    display: "flex",
+                    alignItems: "center",
+                    justifyContent: "space-between",
+                    marginBottom: showDeleteConfirm ? "20px" : "0",
+                  }}
+                >
                   <div>
-                    <div style={{ 
-                      fontSize: "14px", 
-                      color: "var(--color-foreground)", 
-                      marginBottom: "4px", 
-                      fontWeight: "500" 
-                    }}>
+                    <div
+                      style={{
+                        fontSize: "14px",
+                        color: "var(--color-foreground)",
+                        marginBottom: "4px",
+                        fontWeight: "500",
+                      }}
+                    >
                       Delete Organization
                     </div>
-                    <div style={{ 
-                      fontSize: "13px", 
-                      color: "var(--color-muted)" 
-                    }}>
-                      Once you delete this organization, there is no going back. Please be certain.
+                    <div
+                      style={{
+                        fontSize: "13px",
+                        color: "var(--color-muted)",
+                      }}
+                    >
+                      Once you delete this organization, there is no going back.
+                      Please be certain.
                     </div>
                   </div>
                   <Button
@@ -772,7 +832,7 @@ const GeneralSettingsSection = () => {
                       padding: "6px 12px",
                       fontSize: "13px",
                       height: "32px",
-                      width: "auto"
+                      width: "auto",
                     }}
                   >
                     {showDeleteConfirm ? "Cancel" : "Delete"}
@@ -782,7 +842,9 @@ const GeneralSettingsSection = () => {
                 {showDeleteConfirm && (
                   <div style={{ maxWidth: "400px" }}>
                     <FormGroup>
-                      <Label htmlFor="confirm_name">Confirm by typing the organization name</Label>
+                      <Label htmlFor="confirm_name">
+                        Confirm by typing the organization name
+                      </Label>
                       <Input
                         id="confirm_name"
                         type="text"
@@ -793,16 +855,28 @@ const GeneralSettingsSection = () => {
                     </FormGroup>
                     <Button
                       onClick={handleDeleteOrganization}
-                      disabled={confirmName !== selectedOrganization?.name || isDeleting}
+                      disabled={
+                        confirmName !== selectedOrganization?.name || isDeleting
+                      }
                       style={{
-                        background: confirmName === selectedOrganization?.name ? "var(--color-error)" : "transparent",
-                        color: confirmName === selectedOrganization?.name ? "white" : "var(--color-muted)",
+                        background:
+                          confirmName === selectedOrganization?.name
+                            ? "var(--color-error)"
+                            : "transparent",
+                        color:
+                          confirmName === selectedOrganization?.name
+                            ? "white"
+                            : "var(--color-muted)",
                         border: "1px solid var(--color-border)",
                         padding: "8px 16px",
                         fontSize: "14px",
                         height: "36px",
-                        cursor: confirmName === selectedOrganization?.name ? "pointer" : "not-allowed",
-                        opacity: confirmName === selectedOrganization?.name ? 1 : 0.6,
+                        cursor:
+                          confirmName === selectedOrganization?.name
+                            ? "pointer"
+                            : "not-allowed",
+                        opacity:
+                          confirmName === selectedOrganization?.name ? 1 : 0.6,
                         marginTop: "12px",
                       }}
                     >
@@ -953,7 +1027,7 @@ const DomainsSection = () => {
               borderRadius: "6px",
               fontSize: "14px",
               fontWeight: 500,
-              height: "36px"
+              height: "36px",
             }}
           >
             New Domain
@@ -1080,7 +1154,10 @@ const DomainsSection = () => {
                               gap: "8px",
                             }}
                           >
-                            <ExternalLink size={16} color="var(--color-muted)" />{" "}
+                            <ExternalLink
+                              size={16}
+                              color="var(--color-muted)"
+                            />{" "}
                             Visit Domain
                           </div>
                         </DropdownItem>
@@ -1099,8 +1176,8 @@ const DomainsSection = () => {
                               gap: "8px",
                             }}
                           >
-                            <Trash size={16} color="var(--color-error)" /> Remove
-                            Domain
+                            <Trash size={16} color="var(--color-error)" />{" "}
+                            Remove Domain
                           </div>
                         </DropdownItem>
                       </DropdownItems>
@@ -1209,7 +1286,8 @@ const MembersSection = () => {
       }
       reloadMembers();
     } catch (error: any) {
-      const errorMessage = error.message || "Failed to update role. Please try again.";
+      const errorMessage =
+        error.message || "Failed to update role. Please try again.";
       toast(errorMessage, "error");
     }
   };
@@ -1301,7 +1379,8 @@ const MembersSection = () => {
             {filteredMembers.map((member) => {
               const memberRoles = member.roles || [];
               const userData = member.user;
-              const isCurrentUser = userData?.id === session?.active_signin?.user_id;
+              const isCurrentUser =
+                userData?.id === session?.active_signin?.user_id;
 
               return (
                 <TableRow key={member.id}>
@@ -1311,8 +1390,9 @@ const MembersSection = () => {
                         {userData?.profile_picture_url ? (
                           <img
                             src={userData.profile_picture_url}
-                            alt={`${userData.first_name || ""} ${userData.last_name || ""
-                              }`}
+                            alt={`${userData.first_name || ""} ${
+                              userData.last_name || ""
+                            }`}
                             style={{
                               width: "100%",
                               height: "100%",
@@ -1327,16 +1407,31 @@ const MembersSection = () => {
                         )}
                       </AvatarPlaceholder>
                       <div>
-                        <div style={{ display: "flex", alignItems: "center", gap: "8px" }}>
-                          <span style={{ fontSize: "14px", fontWeight: 500, color: "var(--color-foreground)" }}>
+                        <div
+                          style={{
+                            display: "flex",
+                            alignItems: "center",
+                            gap: "8px",
+                          }}
+                        >
+                          <span
+                            style={{
+                              fontSize: "14px",
+                              fontWeight: 500,
+                              color: "var(--color-foreground)",
+                            }}
+                          >
                             {(() => {
                               if (!userData) return "Unknown User";
 
-                              const fullName = `${userData.first_name || ""} ${userData.last_name || ""}`.trim();
+                              const fullName =
+                                `${userData.first_name || ""} ${userData.last_name || ""}`.trim();
                               if (fullName) return fullName;
 
-                              return userData.primary_email_address?.email ||
-                                "Unknown User";
+                              return (
+                                userData.primary_email_address?.email ||
+                                "Unknown User"
+                              );
                             })()}
                           </span>
                           {isCurrentUser && (
@@ -1353,7 +1448,12 @@ const MembersSection = () => {
                             </span>
                           )}
                         </div>
-                        <div style={{ fontSize: "13px", color: "var(--color-secondary-text)" }}>
+                        <div
+                          style={{
+                            fontSize: "13px",
+                            color: "var(--color-secondary-text)",
+                          }}
+                        >
                           {userData?.primary_email_address?.email}
                         </div>
                       </div>
@@ -1385,7 +1485,11 @@ const MembersSection = () => {
                               justifyContent: "space-between",
                             }}
                           >
-                            <span>{memberRoles.length > 0 ? memberRoles[0].name : "No role"}</span>
+                            <span>
+                              {memberRoles.length > 0
+                                ? memberRoles[0].name
+                                : "No role"}
+                            </span>
                             <ChevronDown size={14} />
                           </Button>
                         </DropdownTrigger>
@@ -1395,7 +1499,9 @@ const MembersSection = () => {
                             return (
                               <DropdownItem
                                 key={role.id}
-                                onClick={() => toggleRole(member, role, hasRole)}
+                                onClick={() =>
+                                  toggleRole(member, role, hasRole)
+                                }
                               >
                                 <div
                                   style={{
@@ -1406,7 +1512,10 @@ const MembersSection = () => {
                                 >
                                   <span>{role.name}</span>
                                   {hasRole && (
-                                    <Check size={16} color="var(--color-success)" />
+                                    <Check
+                                      size={16}
+                                      color="var(--color-success)"
+                                    />
                                   )}
                                 </div>
                               </DropdownItem>
@@ -1494,7 +1603,8 @@ const InvitationsSection = () => {
       reloadInvitations();
       toast("Invitation cancelled successfully", "info");
     } catch (error: any) {
-      const errorMessage = error.message || "Failed to cancel invitation. Please try again.";
+      const errorMessage =
+        error.message || "Failed to cancel invitation. Please try again.";
       toast(errorMessage, "error");
     }
   };
@@ -1504,7 +1614,8 @@ const InvitationsSection = () => {
       await resendInvitation(invitation);
       toast("Invitation resent successfully", "info");
     } catch (error: any) {
-      const errorMessage = error.message || "Failed to resend invitation. Please try again.";
+      const errorMessage =
+        error.message || "Failed to resend invitation. Please try again.";
       toast(errorMessage, "error");
     }
   };
@@ -1588,7 +1699,9 @@ const InvitationsSection = () => {
             {filteredInvitations.map((invitation) => (
               <TableRow key={invitation.id}>
                 <TableCell>{invitation.email}</TableCell>
-                <TableCell>{invitation.initial_organization_role?.name || "No role"}</TableCell>
+                <TableCell>
+                  {invitation.initial_organization_role?.name || "No role"}
+                </TableCell>
                 <TableCell>
                   {new Date(invitation.created_at).toLocaleDateString("en-US", {
                     month: "short",
@@ -1707,7 +1820,11 @@ const RolesSection = () => {
       reloadRoles();
     } catch (error) {
       // Handle error based on whether we were editing or creating
-      const errorMessage = (error as any)?.message || (role.id ? "Failed to update role. Please try again." : "Failed to create role. Please try again.");
+      const errorMessage =
+        (error as any)?.message ||
+        (role.id
+          ? "Failed to update role. Please try again."
+          : "Failed to create role. Please try again.");
       if (role.id) {
         setMessage({
           text: errorMessage,
@@ -1790,7 +1907,7 @@ const RolesSection = () => {
               borderRadius: "6px",
               fontSize: "14px",
               fontWeight: 500,
-              height: "36px"
+              height: "36px",
             }}
           >
             Add role
@@ -1946,7 +2063,7 @@ export const ManageOrganization = () => {
   return (
     <TypographyProvider>
       <ScreenContext.Provider
-        value={{ screen: null, setScreen: () => { }, toast }}
+        value={{ screen: null, setScreen: () => {}, toast }}
       >
         <Container>
           <TabsContainer>

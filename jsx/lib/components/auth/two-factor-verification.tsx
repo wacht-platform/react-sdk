@@ -1,6 +1,5 @@
 import { useEffect, useState } from "react";
-import styled from "styled-components";
-import { useSignIn } from "../../hooks/use-signin";
+import styled, { keyframes } from "styled-components";
 import { DefaultStylesProvider } from "../utility/root";
 import { OTPInput } from "@/components/utility/otp-input";
 import { Input } from "@/components/utility/input";
@@ -17,6 +16,9 @@ import { PhoneVerification } from "./phone-verification";
 import { ShieldIcon } from "../icons/shield";
 import { SmartphoneIcon } from "../icons/smartphone";
 import { KeyIcon } from "../icons/key";
+import { ProfileCompletionProps } from "@snipextt/wacht-types";
+import { useNavigation } from "@/hooks";
+import { Loader2 } from "lucide-react";
 
 const Container = styled.div`
   max-width: 380px;
@@ -25,6 +27,27 @@ const Container = styled.div`
   background: var(--color-background);
   border-radius: var(--radius-lg);
   box-shadow: 0 4px 12px var(--color-shadow);
+`;
+
+const spin = keyframes`
+  from {
+    transform: rotate(0deg);
+  }
+  to {
+    transform: rotate(360deg);
+  }
+`;
+
+const LoadingContainer = styled.div`
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  min-height: 200px;
+
+  svg {
+    animation: ${spin} 1s linear infinite;
+    color: var(--color-primary);
+  }
 `;
 
 const Header = styled.div`
@@ -83,13 +106,13 @@ const CodeInput = styled(Input)`
   font-family: monospace;
 `;
 
-interface TwoFactorVerificationProps {
-  onBack?: () => void;
-}
-
-export function TwoFactorVerification({ onBack }: TwoFactorVerificationProps) {
+export function TwoFactorVerification({
+  onBack,
+  attempt,
+  completeVerification,
+  prepareVerification,
+}: Omit<ProfileCompletionProps, "completeProfile">) {
   const { deployment } = useDeployment();
-  const { loading, signIn, signinAttempt, error: signInErrors } = useSignIn();
   const [verificationCode, setVerificationCode] = useState("");
   const [errors, setErrors] = useState<Record<string, string>>({});
   const [isSubmitting, setIsSubmitting] = useState(false);
@@ -97,9 +120,11 @@ export function TwoFactorVerification({ onBack }: TwoFactorVerificationProps) {
   const [showMethodSelector, setShowMethodSelector] = useState(true);
   const [showPhoneVerification, setShowPhoneVerification] = useState(false);
   const [maskedPhone, setMaskedPhone] = useState("");
+  const [isRedirecting, setIsRedirecting] = useState(false);
 
-  // Determine available 2FA methods from signin attempt
-  const available2FAMethods = signinAttempt?.available_2fa_methods || [];
+  const { navigate } = useNavigation();
+
+  const available2FAMethods = attempt?.available_2fa_methods || [];
 
   const availableMethods: TwoFactorMethod[] = [
     {
@@ -130,17 +155,17 @@ export function TwoFactorVerification({ onBack }: TwoFactorVerificationProps) {
     setSelectedMethod(methodId);
     setShowMethodSelector(false);
 
-    if (methodId === "phone_otp" && signIn) {
+    if (methodId === "phone_otp") {
       setShowPhoneVerification(true);
     }
   };
 
   const handlePhoneVerification = async (lastFourDigits: string) => {
-    if (!signIn || !signinAttempt) return;
+    if (!attempt) return;
 
     setIsSubmitting(true);
     try {
-      const response = await signIn.prepareVerification({
+      const response = await prepareVerification({
         strategy: "phone_otp",
         lastDigits: lastFourDigits,
       });
@@ -162,7 +187,7 @@ export function TwoFactorVerification({ onBack }: TwoFactorVerificationProps) {
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    if (loading || isSubmitting || !signIn) return;
+    if (isSubmitting) return;
 
     const newErrors: Record<string, string> = {};
 
@@ -188,7 +213,7 @@ export function TwoFactorVerification({ onBack }: TwoFactorVerificationProps) {
 
     setIsSubmitting(true);
     try {
-      await signIn.completeVerification(verificationCode);
+      await completeVerification(verificationCode);
     } catch (err) {
       setErrors({ submit: (err as Error).message });
     } finally {
@@ -203,26 +228,19 @@ export function TwoFactorVerification({ onBack }: TwoFactorVerificationProps) {
   };
 
   useEffect(() => {
-    if (signInErrors?.errors) {
-      const newErrors: Record<string, string> = {};
-      if (Array.isArray(signInErrors.errors)) {
-        for (const err of signInErrors.errors) {
-          newErrors.submit = err.message;
-        }
-      }
-      setErrors(newErrors);
-    }
-  }, [signInErrors]);
-
-  useEffect(() => {
-    // Check if sign-in is completed after verification
-    if (signinAttempt?.completed) {
-      let redirectUri: string | null = new URLSearchParams(window.location.search).get(
-        "redirect_uri",
-      );
+    if (attempt.completed) {
+      setIsRedirecting(true);
+      let redirectUri: string | null = new URLSearchParams(
+        window.location.search,
+      ).get("redirect_uri");
 
       if (!redirectUri) {
-        redirectUri = deployment?.ui_settings?.after_signin_redirect_url || null;
+        redirectUri =
+          deployment?.ui_settings?.after_signin_redirect_url || null;
+      }
+
+      if (!redirectUri && deployment?.frontend_host) {
+        redirectUri = `https://${deployment.frontend_host}`;
       }
 
       if (redirectUri) {
@@ -235,14 +253,26 @@ export function TwoFactorVerification({ onBack }: TwoFactorVerificationProps) {
           );
         }
 
-        window.location.href = uri.toString();
+        navigate(uri.toString());
       }
+      return;
     }
-  }, [signinAttempt, deployment]);
+  }, [attempt, deployment]);
 
-  // Show method selector
+  if (isRedirecting) {
+    return (
+      <DefaultStylesProvider>
+        <Container>
+          <AuthFormImage />
+          <LoadingContainer>
+            <Loader2 size={32} />
+          </LoadingContainer>
+        </Container>
+      </DefaultStylesProvider>
+    );
+  }
+
   if (showMethodSelector) {
-    // If no methods available, show setup prompt
     if (availableMethods.length === 0) {
       return (
         <DefaultStylesProvider>
@@ -289,11 +319,9 @@ export function TwoFactorVerification({ onBack }: TwoFactorVerificationProps) {
     );
   }
 
-  // Show phone verification
   if (showPhoneVerification && selectedMethod === "phone_otp") {
     return (
       <PhoneVerification
-        maskedPhoneNumber={maskedPhone}
         onVerify={handlePhoneVerification}
         onBack={() => {
           setShowPhoneVerification(false);
@@ -305,7 +333,6 @@ export function TwoFactorVerification({ onBack }: TwoFactorVerificationProps) {
     );
   }
 
-  // Show verification form
   return (
     <DefaultStylesProvider>
       <Container>
@@ -317,7 +344,7 @@ export function TwoFactorVerification({ onBack }: TwoFactorVerificationProps) {
             {selectedMethod === "authenticator" &&
               "Enter the 6-digit code from your authenticator app"}
             {selectedMethod === "phone_otp" &&
-              "Enter the 6-digit code sent to your phone"}
+              `Enter the 6-digit code sent to your phone ${maskedPhone}`}
             {selectedMethod === "backup_code" &&
               "Enter one of your backup codes"}
           </Subtitle>
@@ -345,7 +372,6 @@ export function TwoFactorVerification({ onBack }: TwoFactorVerificationProps) {
             <OTPInput
               onComplete={async (code) => {
                 setVerificationCode(code);
-                // Auto-submit when OTP is complete for non-backup codes
                 if (selectedMethod !== "backup_code") {
                   const event = new Event("submit", {
                     bubbles: true,
@@ -357,15 +383,18 @@ export function TwoFactorVerification({ onBack }: TwoFactorVerificationProps) {
               onResend={
                 selectedMethod === "phone_otp"
                   ? async () => {
-                      if (signIn) {
-                        await signIn.prepareVerification({
-                          strategy: "phone_otp"
+                      try {
+                        await prepareVerification({
+                          strategy: "phone_otp",
+                          lastDigits: maskedPhone.slice(-4),
                         });
+                      } catch (error) {
+                        setErrors({ submit: (error as Error).message });
                       }
                     }
                   : undefined
               }
-              error={errors.code || errors.submit}
+              error={errors.code}
               isSubmitting={isSubmitting}
             />
           )}
@@ -375,7 +404,7 @@ export function TwoFactorVerification({ onBack }: TwoFactorVerificationProps) {
 
             <SubmitButton
               type="submit"
-              disabled={isSubmitting || loading || !verificationCode}
+              disabled={isSubmitting || !verificationCode}
             >
               {isSubmitting ? "Verifying..." : "Verify"}
             </SubmitButton>
