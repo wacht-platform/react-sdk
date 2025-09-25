@@ -34,7 +34,8 @@ const AvatarContainer = styled.div<{ hasImage: boolean }>`
   height: 80px;
   border-radius: 16px;
   overflow: hidden;
-  background: ${(props) => (props.hasImage ? "transparent" : "var(--color-background)")};
+  background: ${(props) =>
+    props.hasImage ? "transparent" : "var(--color-background)"};
   border: 2px solid var(--color-border);
   display: flex;
   align-items: center;
@@ -162,12 +163,6 @@ const TextArea = styled.textarea`
   }
 `;
 
-const HelperText = styled.div`
-  font-size: 12px;
-  color: var(--color-secondary-text);
-  margin-top: 4px;
-`;
-
 const ButtonGroup = styled.div`
   display: flex;
   justify-content: space-between;
@@ -253,7 +248,6 @@ export const CreateOrganizationForm: React.FC<CreateOrganizationFormProps> = ({
   onCancel,
 }) => {
   const [name, setName] = useState("");
-  const [slug, setSlug] = useState("");
   const [description, setDescription] = useState("");
   const [image, setImage] = useState<File>();
   const [previewUrl, setPreviewUrl] = useState<string | null>(null);
@@ -265,11 +259,6 @@ export const CreateOrganizationForm: React.FC<CreateOrganizationFormProps> = ({
   // Auto-generate slug from name
   const handleNameChange = (value: string) => {
     setName(value);
-    const generatedSlug = value
-      .toLowerCase()
-      .replace(/[^a-z0-9]+/g, "-")
-      .replace(/^-+|-+$/g, "");
-    setSlug(generatedSlug);
   };
 
   const handleImageChange = (event: React.ChangeEvent<HTMLInputElement>) => {
@@ -283,7 +272,7 @@ export const CreateOrganizationForm: React.FC<CreateOrganizationFormProps> = ({
       }
 
       // Validate file type
-      if (!file.type.startsWith('image/')) {
+      if (!file.type.startsWith("image/")) {
         toast("Please select a valid image file", "error");
         return;
       }
@@ -323,11 +312,13 @@ export const CreateOrganizationForm: React.FC<CreateOrganizationFormProps> = ({
   }, [previewUrl]);
 
   const sanitizeText = (text: string): string => {
-    return text.trim().replace(/[<>\"'&]/g, '');
+    return text.trim().replace(/[<>\"'&]/g, "");
   };
 
   const validateOrganizationName = (name: string): boolean => {
-    return name.length >= 2 && name.length <= 100 && /^[a-zA-Z0-9\s_.-]+$/.test(name);
+    return (
+      name.length >= 2 && name.length <= 100 && /^[a-zA-Z0-9\s_.-]+$/.test(name)
+    );
   };
 
   const handleSubmit = async () => {
@@ -340,7 +331,10 @@ export const CreateOrganizationForm: React.FC<CreateOrganizationFormProps> = ({
     }
 
     if (!validateOrganizationName(sanitizedName)) {
-      toast("Organization name must be 2-100 characters and contain only letters, numbers, spaces, dots, underscores, and hyphens", "error");
+      toast(
+        "Organization name must be 2-100 characters and contain only letters, numbers, spaces, dots, underscores, and hyphens",
+        "error",
+      );
       return;
     }
 
@@ -358,7 +352,8 @@ export const CreateOrganizationForm: React.FC<CreateOrganizationFormProps> = ({
       });
       onSuccess?.();
     } catch (error: any) {
-      const errorMessage = error.message || "Failed to create organization. Please try again.";
+      const errorMessage =
+        error.message || "Failed to create organization. Please try again.";
       toast(errorMessage, "error");
     } finally {
       setIsSubmitting(false);
@@ -387,7 +382,8 @@ export const CreateOrganizationForm: React.FC<CreateOrganizationFormProps> = ({
         />
         <Title>Create new organization</Title>
         <Description>
-          Organizations help you manage all your team members for an org in one umbrella.
+          Organizations help you manage all your team members for an org in one
+          umbrella.
         </Description>
       </LeftPanel>
 
@@ -410,20 +406,6 @@ export const CreateOrganizationForm: React.FC<CreateOrganizationFormProps> = ({
               placeholder="Acme Inc."
               disabled={isSubmitting}
             />
-          </FormGroup>
-
-          <FormGroup>
-            <Label>Organization URL</Label>
-            <Input
-              type="text"
-              value={slug}
-              onChange={(e) => setSlug(e.target.value)}
-              placeholder="acme-inc"
-              disabled={isSubmitting}
-            />
-            <HelperText>
-              This will be your organization's unique identifier in URLs.
-            </HelperText>
           </FormGroup>
 
           <FormGroup>

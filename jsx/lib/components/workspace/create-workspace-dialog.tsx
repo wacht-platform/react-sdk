@@ -20,7 +20,8 @@ export const CreateWorkspaceDialog: React.FC<CreateWorkspaceDialogProps> = ({
 }) => {
   const [showCreateOrg, setShowCreateOrg] = useState(false);
   const [selectedOrgId, setSelectedOrgId] = useState(organizationId);
-  const { refetch: refetchOrganizations, organizationMemberships } = useOrganizationMemberships();
+  const { refetch: refetchOrganizations, organizationMemberships } =
+    useOrganizationMemberships();
 
   const handleSuccess = () => {
     onCreated?.();
@@ -36,7 +37,8 @@ export const CreateWorkspaceDialog: React.FC<CreateWorkspaceDialogProps> = ({
     // Select the newly created organization
     setTimeout(() => {
       if (organizationMemberships && organizationMemberships.length > 0) {
-        const newestOrg = organizationMemberships[organizationMemberships.length - 1];
+        const newestOrg =
+          organizationMemberships[organizationMemberships.length - 1];
         setSelectedOrgId(newestOrg.organization.id);
       }
       setShowCreateOrg(false);
@@ -47,7 +49,7 @@ export const CreateWorkspaceDialog: React.FC<CreateWorkspaceDialogProps> = ({
     <DefaultStylesProvider>
       <Dialog isOpen={isOpen} onClose={onClose}>
         <Dialog.Overlay>
-          <Dialog.Content style={{ width: "800px", maxWidth: "90vw" }}>
+          <Dialog.Content style={{ width: "900px", maxWidth: "90vw" }}>
             <Dialog.Body style={{ padding: 0 }}>
               {!showCreateOrg ? (
                 <CreateWorkspaceForm

@@ -65,6 +65,7 @@ import { EmptyState } from "@/components/utility/empty-state";
 import { useWorkspaceList } from "@/hooks/use-workspace";
 import { ConfirmationPopover } from "../utility/confirmation-popover";
 import { ScreenContext, useScreenContext } from "./context";
+import OrganizationSwitcher from "./organization-switcher";
 
 const TypographyProvider = styled.div`
   * {
@@ -188,6 +189,7 @@ const HeaderCTAContainer = styled.div`
 const GeneralSettingsSection = () => {
   const { activeOrganization: selectedOrganization, loading } =
     useActiveOrganization();
+  const { switchOrganization, refetch } = useSession();
   const { workspaces: workspaceList } = useWorkspaceList();
   const { deployment } = useDeployment();
   const { deleteOrganization: deleteOrgFromList, updateOrganization } =
@@ -215,9 +217,8 @@ const GeneralSettingsSection = () => {
   const [isDeleting, setIsDeleting] = useState(false);
   const [showDeleteConfirm, setShowDeleteConfirm] = useState(false);
 
-  // Auto-save functionality - triggers on blur
   const autoSave = React.useCallback(async () => {
-    if (!selectedOrganization) return;
+    if (!selectedOrganization || isSaving) return;
 
     try {
       setIsSaving(true);
@@ -271,7 +272,9 @@ const GeneralSettingsSection = () => {
 
     try {
       setIsDeleting(true);
+      await switchOrganization("");
       await deleteOrgFromList(selectedOrganization);
+      await refetch();
       toast("Organization deleted successfully", "info");
     } catch (error) {
       toast("Failed to delete organization", "error");
@@ -281,7 +284,15 @@ const GeneralSettingsSection = () => {
     }
   };
 
-  if (loading || !selectedOrganization) {
+  useEffect(() => {
+    return () => {
+      if (previewUrl) {
+        URL.revokeObjectURL(previewUrl);
+      }
+    };
+  }, [previewUrl]);
+
+  if (loading) {
     return (
       <div
         style={{
@@ -328,44 +339,8 @@ const GeneralSettingsSection = () => {
     }
   };
 
-  // Cleanup object URL on unmount to prevent memory leaks
-  useEffect(() => {
-    return () => {
-      if (previewUrl) {
-        URL.revokeObjectURL(previewUrl);
-      }
-    };
-  }, [previewUrl]);
-
   return (
     <>
-      {/* Auto-save indicator */}
-      {isSaving && (
-        <div
-          style={{
-            position: "fixed",
-            top: 20,
-            right: 20,
-            background: "var(--color-surface)",
-            border: "1px solid var(--color-border)",
-            borderRadius: "var(--radius-md)",
-            padding: "var(--space-xs) var(--space-sm)",
-            display: "flex",
-            alignItems: "center",
-            gap: "var(--space-xs)",
-            zIndex: 1000,
-            boxShadow: "0 2px 8px var(--color-shadow)",
-          }}
-        >
-          <Spinner size={16} />
-          <span
-            style={{ fontSize: "var(--font-xs)", color: "var(--color-muted)" }}
-          >
-            Saving changes...
-          </span>
-        </div>
-      )}
-
       <div
         style={{
           display: "flex",
@@ -840,7 +815,7 @@ const GeneralSettingsSection = () => {
                 </div>
 
                 {showDeleteConfirm && (
-                  <div style={{ maxWidth: "400px" }}>
+                  <div>
                     <FormGroup>
                       <Label htmlFor="confirm_name">
                         Confirm by typing the organization name
@@ -2033,7 +2008,7 @@ const RolesSection = () => {
 type TabType = "general" | "domains" | "members" | "invitations" | "roles";
 
 export const ManageOrganization = () => {
-  const { loading } = useActiveOrganization();
+  const { loading, activeOrganization } = useActiveOrganization();
   const [activeTab, setActiveTab] = useState<TabType>("general");
   const [toastMessage, setToastMessage] = useState<string | null>(null);
   const [toastLevel, setToastLevel] = useState<"info" | "error">("info");
@@ -2058,6 +2033,54 @@ export const ManageOrganization = () => {
       >
         <Spinner />
       </Container>
+    );
+
+  if (!activeOrganization)
+    return (
+      <TypographyProvider>
+        <Container>
+          <div
+            style={{
+              display: "flex",
+              flexDirection: "column",
+              alignItems: "center",
+              justifyContent: "center",
+              height: "100%",
+              padding: "40px 24px",
+              textAlign: "center",
+            }}
+          >
+            <div
+              style={{
+                width: "80px",
+                height: "80px",
+                borderRadius: "50%",
+                background: "var(--color-input-background)",
+                display: "flex",
+                alignItems: "center",
+                justifyContent: "center",
+                marginBottom: "24px",
+                border: "2px dashed var(--color-border)",
+              }}
+            >
+              <Building size={32} color="var(--color-muted)" />
+            </div>
+
+            <h3
+              style={{
+                fontSize: "18px",
+                fontWeight: 600,
+                color: "var(--color-foreground)",
+                margin: "0 0 8px 0",
+              }}
+            >
+              No Organization Selected
+            </h3>
+
+            <OrganizationSwitcher />
+          </div>
+        </Container>
+      </TypographyProvider>
     );
 
   return (
@@ -2159,87 +2182,3 @@ export const ManageOrganization = () => {
     </TypographyProvider>
   );
 };
-
-// Removed DeleteAccountAccordion - functionality moved to Danger tab
-/*
-const DeleteAccountAccordion = ({
-  handleDeleteAccount,
-  title,
-  description,
-}: {
-  handleDeleteAccount: () => void;
-  title: string;
-  description: string;
-}) => {
-  const [isOpen, setIsOpen] = useState(false);
-
-  return (
-    <div>
-      <button
-        type="button"
-        onClick={() => setIsOpen(!isOpen)}
-        style={{
-          display: "flex",
-          alignItems: "center",
-          justifyContent: "space-between",
-          width: "100%",
-          padding: "8px 0",
-          background: "transparent",
-          border: "none",
-          cursor: "pointer",
-          textAlign: "left",
-          color: "var(--color-error)",
-          fontWeight: 500,
-          fontSize: "14px",
-        }}
-      >
-        <div style={{ display: "flex", alignItems: "center", gap: "8px" }}>
-          <AlertTriangle size={16} />
-          {title}
-        </div>
-        <div style={{ transition: "transform 0.2s ease" }}>
-          {isOpen ? <ChevronUp size={16} /> : <ChevronDown size={16} />}
-        </div>
-      </button>
-
-      {isOpen && (
-        <div
-          style={{
-            padding: "16px",
-            background: "var(--color-error-background)",
-            borderRadius: "8px",
-            marginTop: "8px",
-          }}
-        >
-          <p
-            style={{
-              fontSize: "14px",
-              color: "var(--color-muted)",
-              margin: "0 0 16px 0",
-              lineHeight: "1.5",
-            }}
-          >
-            {description}
-          </p>
-          <button
-            type="button"
-            onClick={handleDeleteAccount}
-            style={{
-              padding: "8px 16px",
-              backgroundColor: "var(--color-error)",
-              border: "none",
-              borderRadius: "6px",
-              fontSize: "14px",
-              fontWeight: 500,
-              color: "var(--color-background)",
-              cursor: "pointer",
-            }}
-          >
-            Delete Account
-          </button>
-        </div>
-      )}
-    </div>
-  );
-};
-*/

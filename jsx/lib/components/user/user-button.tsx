@@ -359,10 +359,7 @@ export const UserButton: React.FC<UserButtonProps> = ({ showName = true }) => {
       await signOut(signInId);
       await refetch();
       setIsOpen(false);
-    } catch (error) {
-      // Failed to sign out
-      // You could add a toast notification here for better UX
-    }
+    } catch (error) {}
   };
 
   const handleSignOutAll = async () => {
@@ -370,10 +367,7 @@ export const UserButton: React.FC<UserButtonProps> = ({ showName = true }) => {
       await signOut();
       await refetch();
       setIsOpen(false);
-    } catch (error) {
-      // Failed to sign out all accounts
-      // You could add a toast notification here for better UX
-    }
+    } catch (error) {}
   };
 
   const handleSwitchUser = async (signInId: string) => {
@@ -381,10 +375,7 @@ export const UserButton: React.FC<UserButtonProps> = ({ showName = true }) => {
       await switchSignIn(signInId);
       await refetch();
       setIsOpen(false);
-    } catch (error) {
-      // Failed to switch user
-      // You could add a toast notification here for better UX
-    }
+    } catch (error) {}
   };
 
   const handleOpenManageAccount = () => {
