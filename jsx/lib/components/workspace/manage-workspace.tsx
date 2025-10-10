@@ -1,6 +1,23 @@
-import React, { useState, useCallback, useEffect, useContext, useRef } from "react";
+import React, {
+  useState,
+  useCallback,
+  useEffect,
+  useContext,
+  useRef,
+} from "react";
 import styled from "styled-components";
-import { Building, Settings, Users, Mail, Trash2, Send, Check, Shield, AlertTriangle, ChevronDown } from "lucide-react";
+import {
+  Building,
+  Settings,
+  Users,
+  Mail,
+  Trash2,
+  Send,
+  Check,
+  Shield,
+  AlertTriangle,
+  ChevronDown,
+} from "lucide-react";
 import { useActiveWorkspace, useWorkspaceList } from "@/hooks/use-workspace";
 import { useSession } from "@/hooks/use-session";
 import type { WorkspaceRole, WorkspaceWithOrganization } from "@/types";
@@ -97,7 +114,7 @@ const Container = styled.div`
 
   /* Blur effect at the bottom */
   &::after {
-    content: '';
+    content: "";
     position: absolute;
     bottom: 0;
     left: 0;
@@ -195,7 +212,6 @@ interface WorkspaceUpdate {
   image?: File;
 }
 
-
 const MemberListItem = styled.div`
   background: var(--color-background);
   padding: 16px 4px;
@@ -276,15 +292,14 @@ const IconButton = styled.button`
   }
 `;
 
-
-
-
 const InvitationsSection = () => {
   const { activeWorkspace, loading, getRoles } = useActiveWorkspace();
   const { workspaces } = useWorkspaceList();
   const { client } = useClient();
 
-  const workspaceWithOrg = workspaces?.find(w => w.id === activeWorkspace?.id) as WorkspaceWithOrganization | undefined;
+  const workspaceWithOrg = workspaces?.find(
+    (w) => w.id === activeWorkspace?.id,
+  ) as WorkspaceWithOrganization | undefined;
   const [rolesLoading, setRolesLoading] = useState(true);
   const [invitationsLoading, setInvitationsLoading] = useState(true);
   const [searchQuery, setSearchQuery] = useState("");
@@ -299,12 +314,17 @@ const InvitationsSection = () => {
     if (!activeWorkspace || !workspaceWithOrg) return [];
     try {
       const response = await responseMapper(
-        await client(`/organizations/${workspaceWithOrg.organization.id}/invitations`, {
-          method: "GET",
-        }),
+        await client(
+          `/organizations/${workspaceWithOrg.organization.id}/invitations`,
+          {
+            method: "GET",
+          },
+        ),
       );
       const allInvitations = response.data as any[];
-      return allInvitations.filter(inv => inv.workspace_id === activeWorkspace.id);
+      return allInvitations.filter(
+        (inv) => inv.workspace_id === activeWorkspace.id,
+      );
     } catch (error) {
       // Failed to fetch invitations
       return [];
@@ -315,24 +335,31 @@ const InvitationsSection = () => {
     async (email: string, roleId: string) => {
       if (!activeWorkspace || !workspaceWithOrg) return;
       const orgRolesResponse = await responseMapper(
-        await client(`/organizations/${workspaceWithOrg.organization.id}/roles`, {
-          method: "GET",
-        }),
+        await client(
+          `/organizations/${workspaceWithOrg.organization.id}/roles`,
+          {
+            method: "GET",
+          },
+        ),
       );
       const orgRoles = orgRolesResponse.data as any[];
-      const defaultOrgRole = orgRoles.find(r => !r.organization_id) || orgRoles[0];
+      const defaultOrgRole =
+        orgRoles.find((r) => !r.organization_id) || orgRoles[0];
 
       const response = await responseMapper(
-        await client(`/organizations/${workspaceWithOrg.organization.id}/invitations`, {
-          method: "POST",
-          headers: { "Content-Type": "application/json" },
-          body: JSON.stringify({
-            email,
-            role_id: defaultOrgRole?.id,
-            workspace_id: activeWorkspace.id,
-            workspace_role_id: roleId
-          }),
-        }),
+        await client(
+          `/organizations/${workspaceWithOrg.organization.id}/invitations`,
+          {
+            method: "POST",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify({
+              email,
+              role_id: defaultOrgRole?.id,
+              workspace_id: activeWorkspace.id,
+              workspace_role_id: roleId,
+            }),
+          },
+        ),
       );
       return response.data;
     },
@@ -343,9 +370,12 @@ const InvitationsSection = () => {
     async (invitationId: string) => {
       if (!activeWorkspace || !workspaceWithOrg) return;
       const response = await responseMapper(
-        await client(`/organizations/${workspaceWithOrg.organization.id}/invitations/${invitationId}/remove`, {
-          method: "POST",
-        }),
+        await client(
+          `/organizations/${workspaceWithOrg.organization.id}/invitations/${invitationId}/remove`,
+          {
+            method: "POST",
+          },
+        ),
       );
       return response.data;
     },
@@ -362,7 +392,7 @@ const InvitationsSection = () => {
       try {
         const [rolesData, invitationsData] = await Promise.all([
           getRoles(),
-          getInvitations()
+          getInvitations(),
         ]);
         setRoles(rolesData);
         setInvitations(invitationsData);
@@ -393,7 +423,12 @@ const InvitationsSection = () => {
     try {
       // Resend is typically done by canceling and creating a new invitation
       await discardInvitation(invitation.id);
-      await createInvitation(invitation.email, invitation.workspace_role_id || invitation.initial_workspace_role?.id || invitation.role_id);
+      await createInvitation(
+        invitation.email,
+        invitation.workspace_role_id ||
+          invitation.initial_workspace_role?.id ||
+          invitation.role_id,
+      );
       // Refresh invitations
       const updatedInvitations = await getInvitations();
       setInvitations(updatedInvitations);
@@ -423,7 +458,9 @@ const InvitationsSection = () => {
 
   if (loading || rolesLoading || invitationsLoading) {
     return (
-      <div style={{ display: "flex", justifyContent: "center", padding: "40px 0" }}>
+      <div
+        style={{ display: "flex", justifyContent: "center", padding: "40px 0" }}
+      >
         <Spinner />
       </div>
     );
@@ -446,7 +483,6 @@ const InvitationsSection = () => {
         </div>
       )}
 
-
       <HeaderCTAContainer>
         <SearchInput
           value={searchQuery}
@@ -462,7 +498,7 @@ const InvitationsSection = () => {
               borderRadius: "6px",
               fontSize: "14px",
               fontWeight: 500,
-              height: "36px"
+              height: "36px",
             }}
           >
             Invite Members
@@ -482,7 +518,11 @@ const InvitationsSection = () => {
       <div>
         {filteredInvitations.length === 0 ? (
           <EmptyState
-            title={searchQuery ? "No invitations match your search" : "No pending invitations"}
+            title={
+              searchQuery
+                ? "No invitations match your search"
+                : "No pending invitations"
+            }
             description="Invite new members to your workspace."
           />
         ) : (
@@ -492,7 +532,11 @@ const InvitationsSection = () => {
                 <MemberListItemContent>
                   <MemberInfo>
                     <MemberName>{invitation.email}</MemberName>
-                    <MemberEmail>{invitation.initial_workspace_role?.name || invitation.initial_organization_role?.name || invitation.role?.name}</MemberEmail>
+                    <MemberEmail>
+                      {invitation.initial_workspace_role?.name ||
+                        invitation.initial_organization_role?.name ||
+                        invitation.role?.name}
+                    </MemberEmail>
                   </MemberInfo>
                 </MemberListItemContent>
                 <MemberListItemActions>
@@ -501,8 +545,16 @@ const InvitationsSection = () => {
                       <IconButton>•••</IconButton>
                     </DropdownTrigger>
                     <DropdownItems>
-                      <DropdownItem onClick={() => handleResendInvitation(invitation)}>
-                        <div style={{ display: "flex", alignItems: "center", gap: "8px" }}>
+                      <DropdownItem
+                        onClick={() => handleResendInvitation(invitation)}
+                      >
+                        <div
+                          style={{
+                            display: "flex",
+                            alignItems: "center",
+                            gap: "8px",
+                          }}
+                        >
                           <Mail size={16} color="var(--color-muted)" />
                           <span>Resend Invitation</span>
                         </div>
@@ -511,7 +563,13 @@ const InvitationsSection = () => {
                         $destructive
                         onClick={() => handleCancelInvitation(invitation)}
                       >
-                        <div style={{ display: "flex", alignItems: "center", gap: "8px" }}>
+                        <div
+                          style={{
+                            display: "flex",
+                            alignItems: "center",
+                            gap: "8px",
+                          }}
+                        >
                           <Trash2 size={16} color="var(--color-error)" />
                           <span>Cancel Invitation</span>
                         </div>
@@ -529,12 +587,24 @@ const InvitationsSection = () => {
 };
 
 const MembersSection = () => {
-  const { activeWorkspace, loading, getMembers, getRoles, removeMember, addMemberRole, removeMemberRole } = useActiveWorkspace();
+  const {
+    activeWorkspace,
+    loading,
+    getMembers,
+    getRoles,
+    removeMember,
+    addMemberRole,
+    removeMemberRole,
+  } = useActiveWorkspace();
   const { session } = useSession();
   const { toast } = useContext(ScreenContext) || {};
   const [searchQuery, setSearchQuery] = useState("");
 
-  const { data: members = [], isLoading: membersLoading, mutate: reloadMembers } = useSWR(
+  const {
+    data: members = [],
+    isLoading: membersLoading,
+    mutate: reloadMembers,
+  } = useSWR(
     activeWorkspace ? `/api/workspaces/${activeWorkspace.id}/members` : null,
     () => getMembers() || [],
   );
@@ -547,19 +617,22 @@ const MembersSection = () => {
   const roles = rolesData as WorkspaceRole[];
 
   const filteredMembers = React.useMemo(() => {
-    if (!searchQuery) return members as unknown as WorkspaceMembershipResponse[];
-    return (members as unknown as WorkspaceMembershipResponse[]).filter((member: WorkspaceMembershipResponse) => {
-      const userData = member.public_user_data;
-      if (!userData) return false;
-      const firstName = userData.first_name || "";
-      const lastName = userData.last_name || "";
-      const email = userData.primary_email_address?.email || "";
-      const fullName = `${firstName} ${lastName}`.trim();
-      return (
-        fullName.toLowerCase().includes(searchQuery.toLowerCase()) ||
-        email.toLowerCase().includes(searchQuery.toLowerCase())
-      );
-    });
+    if (!searchQuery)
+      return members as unknown as WorkspaceMembershipResponse[];
+    return (members as unknown as WorkspaceMembershipResponse[]).filter(
+      (member: WorkspaceMembershipResponse) => {
+        const userData = member.public_user_data;
+        if (!userData) return false;
+        const firstName = userData.first_name || "";
+        const lastName = userData.last_name || "";
+        const email = userData.primary_email_address?.email || "";
+        const fullName = `${firstName} ${lastName}`.trim();
+        return (
+          fullName.toLowerCase().includes(searchQuery.toLowerCase()) ||
+          email.toLowerCase().includes(searchQuery.toLowerCase())
+        );
+      },
+    );
   }, [members, searchQuery]);
 
   const handleRemoveMember = async (memberId: string) => {
@@ -572,7 +645,11 @@ const MembersSection = () => {
     }
   };
 
-  const handleToggleRole = async (membershipId: string, roleId: string, hasRole: boolean) => {
+  const handleToggleRole = async (
+    membershipId: string,
+    roleId: string,
+    hasRole: boolean,
+  ) => {
     try {
       if (hasRole) {
         await removeMemberRole(membershipId, roleId);
@@ -596,7 +673,9 @@ const MembersSection = () => {
 
   if (loading || membersLoading || rolesLoading) {
     return (
-      <div style={{ display: "flex", justifyContent: "center", padding: "40px 0" }}>
+      <div
+        style={{ display: "flex", justifyContent: "center", padding: "40px 0" }}
+      >
         <Spinner />
       </div>
     );
@@ -614,7 +693,9 @@ const MembersSection = () => {
 
       {filteredMembers.length === 0 ? (
         <EmptyState
-          title={searchQuery ? "No members match your search" : "No members yet"}
+          title={
+            searchQuery ? "No members match your search" : "No members yet"
+          }
           description="Invite members to your workspace to get started."
         />
       ) : (
@@ -630,7 +711,8 @@ const MembersSection = () => {
             {filteredMembers.map((member: WorkspaceMembershipResponse) => {
               const userData = member.public_user_data;
               const memberRoles = member.roles || [];
-              const isCurrentUser = userData?.id === session?.active_signin?.user_id;
+              const isCurrentUser =
+                userData?.id === session?.active_signin?.user_id;
 
               return (
                 <TableRow key={member.id}>
@@ -648,20 +730,38 @@ const MembersSection = () => {
                             }}
                           />
                         ) : (
-                          getInitials(userData?.first_name, userData?.last_name) || "?"
+                          getInitials(
+                            userData?.first_name,
+                            userData?.last_name,
+                          ) || "?"
                         )}
                       </AvatarPlaceholder>
                       <div>
-                        <div style={{ display: "flex", alignItems: "center", gap: "8px" }}>
-                          <span style={{ fontSize: "14px", fontWeight: 500, color: "var(--color-foreground)" }}>
+                        <div
+                          style={{
+                            display: "flex",
+                            alignItems: "center",
+                            gap: "8px",
+                          }}
+                        >
+                          <span
+                            style={{
+                              fontSize: "14px",
+                              fontWeight: 500,
+                              color: "var(--color-foreground)",
+                            }}
+                          >
                             {(() => {
                               if (!userData) return "Unknown User";
 
-                              const fullName = `${userData.first_name || ""} ${userData.last_name || ""}`.trim();
+                              const fullName =
+                                `${userData.first_name || ""} ${userData.last_name || ""}`.trim();
                               if (fullName) return fullName;
 
-                              return userData.primary_email_address?.email ||
-                                "Unknown User";
+                              return (
+                                userData.primary_email_address?.email ||
+                                "Unknown User"
+                              );
                             })()}
                           </span>
                           {isCurrentUser && (
@@ -678,7 +778,12 @@ const MembersSection = () => {
                             </span>
                           )}
                         </div>
-                        <div style={{ fontSize: "13px", color: "var(--color-secondary-text)" }}>
+                        <div
+                          style={{
+                            fontSize: "13px",
+                            color: "var(--color-secondary-text)",
+                          }}
+                        >
                           {userData?.primary_email_address?.email}
                         </div>
                       </div>
@@ -709,7 +814,11 @@ const MembersSection = () => {
                             justifyContent: "space-between",
                           }}
                         >
-                          <span>{memberRoles.length > 0 ? memberRoles[0].name : "No role"}</span>
+                          <span>
+                            {memberRoles.length > 0
+                              ? memberRoles[0].name
+                              : "No role"}
+                          </span>
                           <ChevronDown size={14} />
                         </Button>
                       </DropdownTrigger>
@@ -719,7 +828,9 @@ const MembersSection = () => {
                           return (
                             <DropdownItem
                               key={role.id}
-                              onClick={() => handleToggleRole(member.id, role.id, hasRole)}
+                              onClick={() =>
+                                handleToggleRole(member.id, role.id, hasRole)
+                              }
                             >
                               <div
                                 style={{
@@ -730,7 +841,10 @@ const MembersSection = () => {
                               >
                                 <span>{role.name}</span>
                                 {hasRole && (
-                                  <Check size={16} color="var(--color-success)" />
+                                  <Check
+                                    size={16}
+                                    color="var(--color-success)"
+                                  />
                                 )}
                               </div>
                             </DropdownItem>
@@ -741,7 +855,13 @@ const MembersSection = () => {
                           $destructive
                           onClick={() => handleRemoveMember(member.id)}
                         >
-                          <div style={{ display: "flex", alignItems: "center", gap: "8px" }}>
+                          <div
+                            style={{
+                              display: "flex",
+                              alignItems: "center",
+                              gap: "8px",
+                            }}
+                          >
                             <Trash2 size={16} color="var(--color-error)" />
                             <span>Remove Member</span>
                           </div>
@@ -758,7 +878,6 @@ const MembersSection = () => {
     </>
   );
 };
-
 
 const GeneralSettingsSection = () => {
   const { activeWorkspace, loading, updateWorkspace } = useActiveWorkspace();
@@ -848,7 +967,14 @@ const GeneralSettingsSection = () => {
     } finally {
       setIsAutoSaving(false);
     }
-  }, [activeWorkspace, updateWorkspace, name, description, image, isAutoSaving]);
+  }, [
+    activeWorkspace,
+    updateWorkspace,
+    name,
+    description,
+    image,
+    isAutoSaving,
+  ]);
 
   const scheduleAutoSave = React.useCallback(() => {
     if (autoSaveTimeoutRef.current) {
@@ -864,7 +990,9 @@ const GeneralSettingsSection = () => {
     scheduleAutoSave();
   };
 
-  const handleDescriptionChange = (e: React.ChangeEvent<HTMLTextAreaElement>) => {
+  const handleDescriptionChange = (
+    e: React.ChangeEvent<HTMLTextAreaElement>,
+  ) => {
     setDescription(e.target.value);
     scheduleAutoSave();
   };
@@ -901,10 +1029,21 @@ const GeneralSettingsSection = () => {
 
   return (
     <>
-
-      <div style={{ display: "flex", flexDirection: "column", gap: "var(--space-2xl)" }}>
+      <div
+        style={{
+          display: "flex",
+          flexDirection: "column",
+          gap: "var(--space-2xl)",
+        }}
+      >
         {/* Logo Section - Two Column Layout */}
-        <div style={{ display: "flex", gap: "var(--space-2xl)", alignItems: "center" }}>
+        <div
+          style={{
+            display: "flex",
+            gap: "var(--space-2xl)",
+            alignItems: "center",
+          }}
+        >
           {/* Left Column - Logo Preview */}
           <div style={{ flexShrink: 0 }}>
             <div
@@ -913,7 +1052,9 @@ const GeneralSettingsSection = () => {
                 height: "120px",
                 borderRadius: "50%",
                 border: "2px dashed var(--color-border)",
-                background: previewUrl ? "transparent" : "var(--color-input-background)",
+                background: previewUrl
+                  ? "transparent"
+                  : "var(--color-input-background)",
                 cursor: "pointer",
                 display: "flex",
                 alignItems: "center",
@@ -958,23 +1099,33 @@ const GeneralSettingsSection = () => {
           {/* Right Column - Content and Controls */}
           <div style={{ flex: 1 }}>
             <div style={{ marginBottom: "var(--space-lg)" }}>
-              <h3 style={{ 
-                fontSize: "var(--font-sm)", 
-                color: "var(--color-foreground)", 
-                margin: "0 0 var(--space-2xs) 0" 
-              }}>
+              <h3
+                style={{
+                  fontSize: "var(--font-sm)",
+                  color: "var(--color-foreground)",
+                  margin: "0 0 var(--space-2xs) 0",
+                }}
+              >
                 Workspace Logo
               </h3>
-              <p style={{ 
-                fontSize: "var(--font-xs)", 
-                color: "var(--color-secondary-text)", 
-                margin: 0 
-              }}>
+              <p
+                style={{
+                  fontSize: "var(--font-xs)",
+                  color: "var(--color-secondary-text)",
+                  margin: 0,
+                }}
+              >
                 Upload an image to represent your workspace
               </p>
             </div>
 
-            <div style={{ display: "flex", gap: "var(--space-sm)", marginBottom: "var(--space-sm)" }}>
+            <div
+              style={{
+                display: "flex",
+                gap: "var(--space-sm)",
+                marginBottom: "var(--space-sm)",
+              }}
+            >
               <Button
                 onClick={() => fileInputRef.current?.click()}
                 style={{
@@ -1018,9 +1169,9 @@ const GeneralSettingsSection = () => {
               </Button>
             </div>
 
-            {/* <p style={{ 
-              fontSize: "var(--font-2xs)", 
-              color: "var(--color-muted)", 
+            {/* <p style={{
+              fontSize: "var(--font-2xs)",
+              color: "var(--color-muted)",
               margin: 0,
               lineHeight: 1.4,
             }}>
@@ -1042,23 +1193,33 @@ const GeneralSettingsSection = () => {
         {/* Workspace Details */}
         <div>
           <div style={{ marginBottom: "var(--space-md)" }}>
-            <h3 style={{ 
-              fontSize: "var(--font-sm)", 
-              color: "var(--color-foreground)", 
-              margin: "0 0 var(--space-2xs) 0" 
-            }}>
+            <h3
+              style={{
+                fontSize: "var(--font-sm)",
+                color: "var(--color-foreground)",
+                margin: "0 0 var(--space-2xs) 0",
+              }}
+            >
               Workspace Details
             </h3>
-            <p style={{ 
-              fontSize: "var(--font-xs)", 
-              color: "var(--color-secondary-text)", 
-              margin: 0 
-            }}>
+            <p
+              style={{
+                fontSize: "var(--font-xs)",
+                color: "var(--color-secondary-text)",
+                margin: 0,
+              }}
+            >
               Basic information about your workspace
             </p>
           </div>
 
-          <div style={{ display: "flex", flexDirection: "column", gap: "var(--space-lg)" }}>
+          <div
+            style={{
+              display: "flex",
+              flexDirection: "column",
+              gap: "var(--space-lg)",
+            }}
+          >
             <FormGroup>
               <Label htmlFor="name">Workspace Name</Label>
               <Input
@@ -1087,11 +1248,13 @@ const GeneralSettingsSection = () => {
                   fontFamily: "inherit",
                 }}
               />
-              <p style={{ 
-                fontSize: "var(--font-2xs)", 
-                color: "var(--color-muted)", 
-                margin: "var(--space-2xs) 0 0 0" 
-              }}>
+              <p
+                style={{
+                  fontSize: "var(--font-2xs)",
+                  color: "var(--color-muted)",
+                  margin: "var(--space-2xs) 0 0 0",
+                }}
+              >
                 Brief description of your workspace and its purpose
               </p>
             </FormGroup>
@@ -1111,47 +1274,60 @@ const GeneralSettingsSection = () => {
         {/* Danger Zone */}
         <div>
           <div style={{ marginBottom: "16px" }}>
-            <h3 style={{
-              fontSize: "16px",
-              color: "var(--color-foreground)",
-              margin: "0 0 4px 0"
-            }}>
+            <h3
+              style={{
+                fontSize: "16px",
+                color: "var(--color-foreground)",
+                margin: "0 0 4px 0",
+              }}
+            >
               Danger Zone
             </h3>
-            <p style={{
-              fontSize: "14px",
-              color: "var(--color-muted)",
-              margin: 0
-            }}>
+            <p
+              style={{
+                fontSize: "14px",
+                color: "var(--color-muted)",
+                margin: 0,
+              }}
+            >
               Irreversible and destructive actions
             </p>
           </div>
 
-          <div style={{ 
-            padding: "20px", 
-            border: "1px solid var(--color-error)",
-            borderRadius: "8px"
-          }}>
-            <div style={{ 
-              display: "flex", 
-              alignItems: "center", 
-              justifyContent: "space-between", 
-              marginBottom: showDeleteConfirm ? "20px" : "0"
-            }}>
+          <div
+            style={{
+              padding: "20px",
+              border: "1px solid var(--color-error)",
+              borderRadius: "8px",
+            }}
+          >
+            <div
+              style={{
+                display: "flex",
+                alignItems: "center",
+                justifyContent: "space-between",
+                marginBottom: showDeleteConfirm ? "20px" : "0",
+              }}
+            >
               <div>
-                <div style={{ 
-                  fontSize: "14px", 
-                  color: "var(--color-foreground)", 
-                  marginBottom: "4px", 
-                  fontWeight: "500" 
-                }}>
+                <div
+                  style={{
+                    fontSize: "14px",
+                    color: "var(--color-foreground)",
+                    marginBottom: "4px",
+                    fontWeight: "500",
+                  }}
+                >
                   Delete Workspace
                 </div>
-                <div style={{ 
-                  fontSize: "13px", 
-                  color: "var(--color-muted)" 
-                }}>
-                  Once you delete this workspace, there is no going back. Please be certain.
+                <div
+                  style={{
+                    fontSize: "13px",
+                    color: "var(--color-muted)",
+                  }}
+                >
+                  Once you delete this workspace, there is no going back. Please
+                  be certain.
                 </div>
               </div>
               <Button
@@ -1170,7 +1346,7 @@ const GeneralSettingsSection = () => {
                   padding: "6px 12px",
                   fontSize: "13px",
                   height: "32px",
-                  width: "auto"
+                  width: "auto",
                 }}
               >
                 {showDeleteConfirm ? "Cancel" : "Delete"}
@@ -1178,9 +1354,11 @@ const GeneralSettingsSection = () => {
             </div>
 
             {showDeleteConfirm && (
-              <div style={{ maxWidth: "400px" }}>
+              <div>
                 <FormGroup>
-                  <Label htmlFor="confirm_workspace_name">Confirm by typing the workspace name</Label>
+                  <Label htmlFor="confirm_workspace_name">
+                    Confirm by typing the workspace name
+                  </Label>
                   <Input
                     id="confirm_workspace_name"
                     type="text"
@@ -1193,13 +1371,22 @@ const GeneralSettingsSection = () => {
                   onClick={handleDeleteWorkspace}
                   disabled={confirmName !== activeWorkspace?.name || isDeleting}
                   style={{
-                    background: confirmName === activeWorkspace?.name ? "var(--color-error)" : "transparent",
-                    color: confirmName === activeWorkspace?.name ? "white" : "var(--color-muted)",
+                    background:
+                      confirmName === activeWorkspace?.name
+                        ? "var(--color-error)"
+                        : "transparent",
+                    color:
+                      confirmName === activeWorkspace?.name
+                        ? "white"
+                        : "var(--color-muted)",
                     border: "1px solid var(--color-border)",
                     padding: "8px 16px",
                     fontSize: "14px",
                     height: "36px",
-                    cursor: confirmName === activeWorkspace?.name ? "pointer" : "not-allowed",
+                    cursor:
+                      confirmName === activeWorkspace?.name
+                        ? "pointer"
+                        : "not-allowed",
                     opacity: confirmName === activeWorkspace?.name ? 1 : 0.6,
                     marginTop: "12px",
                   }}
@@ -1257,7 +1444,8 @@ const GeneralSettingsSection = () => {
 };
 
 const RolesSection = () => {
-  const { activeWorkspace, loading, getRoles, createRole, deleteRole } = useActiveWorkspace();
+  const { activeWorkspace, loading, getRoles, createRole, deleteRole } =
+    useActiveWorkspace();
   const { toast } = useContext(ScreenContext) || {};
   const [searchQuery, setSearchQuery] = useState("");
   const [rolePopover, setRolePopover] = useState<{
@@ -1265,12 +1453,18 @@ const RolesSection = () => {
     role?: WorkspaceRole;
     triggerElement?: HTMLElement | null;
   }>({ isOpen: false });
-  const [roleForOptionPopover, setRoleForOptionPopover] = useState<string | null>(null);
+  const [roleForOptionPopover, setRoleForOptionPopover] = useState<
+    string | null
+  >(null);
   const [roleForDeletion, setRoleForDeletion] = useState<string | null>(null);
   const addRoleButtonRef = useRef<HTMLButtonElement>(null);
   const dropdownButtonRefs = useRef<Map<string, HTMLButtonElement>>(new Map());
 
-  const { data: roles = [], isLoading: rolesLoading, mutate: reloadRoles } = useSWR(
+  const {
+    data: roles = [],
+    isLoading: rolesLoading,
+    mutate: reloadRoles,
+  } = useSWR(
     activeWorkspace ? `/api/workspaces/${activeWorkspace.id}/roles` : null,
     () => getRoles() || [],
   );
@@ -1314,7 +1508,9 @@ const RolesSection = () => {
 
   if (loading || rolesLoading) {
     return (
-      <div style={{ display: "flex", justifyContent: "center", padding: "40px 0" }}>
+      <div
+        style={{ display: "flex", justifyContent: "center", padding: "40px 0" }}
+      >
         <Spinner />
       </div>
     );
@@ -1331,13 +1527,18 @@ const RolesSection = () => {
         <div style={{ position: "relative" }}>
           <Button
             ref={addRoleButtonRef}
-            onClick={() => setRolePopover({ isOpen: true, triggerElement: addRoleButtonRef.current })}
+            onClick={() =>
+              setRolePopover({
+                isOpen: true,
+                triggerElement: addRoleButtonRef.current,
+              })
+            }
             style={{
               padding: "8px 16px",
               borderRadius: "6px",
               fontSize: "14px",
               fontWeight: 500,
-              height: "36px"
+              height: "36px",
             }}
           >
             Add role
@@ -1356,9 +1557,7 @@ const RolesSection = () => {
       {filteredRoles.length === 0 ? (
         <EmptyState
           title={
-            searchQuery
-              ? "No roles match your search"
-              : "No roles available"
+            searchQuery ? "No roles match your search" : "No roles available"
           }
           description={
             searchQuery
@@ -1367,7 +1566,13 @@ const RolesSection = () => {
           }
         />
       ) : (
-        <div style={{ position: "relative", overflowX: "auto", overflowY: "visible" }}>
+        <div
+          style={{
+            position: "relative",
+            overflowX: "auto",
+            overflowY: "visible",
+          }}
+        >
           <Table>
             <TableHead>
               <TableRow>
@@ -1390,7 +1595,9 @@ const RolesSection = () => {
                     </div>
                   </TableCell>
                   <TableCell style={{ color: "var(--color-secondary-text)" }}>
-                    {role.permissions && role.permissions.length > 0 ? role.permissions.join(", ") : ""}
+                    {role.permissions && role.permissions.length > 0
+                      ? role.permissions.join(", ")
+                      : ""}
                   </TableCell>
                   <ActionsCell>
                     <div
@@ -1411,7 +1618,8 @@ const RolesSection = () => {
                         <DropdownTrigger>
                           <IconButton
                             ref={(el) => {
-                              if (el) dropdownButtonRefs.current.set(role.id, el);
+                              if (el)
+                                dropdownButtonRefs.current.set(role.id, el);
                             }}
                             disabled={!(role as any).workspace_id}
                             data-role-dropdown-trigger={role.id}
@@ -1423,8 +1631,14 @@ const RolesSection = () => {
                           <DropdownItem
                             onClick={() => {
                               setRoleForOptionPopover(null);
-                              const triggerBtn = dropdownButtonRefs.current.get(role.id);
-                              setRolePopover({ isOpen: true, role, triggerElement: triggerBtn || null });
+                              const triggerBtn = dropdownButtonRefs.current.get(
+                                role.id,
+                              );
+                              setRolePopover({
+                                isOpen: true,
+                                role,
+                                triggerElement: triggerBtn || null,
+                              });
                             }}
                           >
                             Edit Role
@@ -1447,17 +1661,20 @@ const RolesSection = () => {
                           onCancel={() => setRoleForDeletion(null)}
                         />
                       )}
-                      {rolePopover.isOpen && rolePopover.role?.id === role.id && (
-                        <AddWorkspaceRolePopover
-                          role={rolePopover.role}
-                          triggerRef={{ current: rolePopover.triggerElement || null }}
-                          onClose={() => {
-                            setRolePopover({ isOpen: false });
-                            setRoleForOptionPopover(null);
-                          }}
-                          onSuccess={handleRoleSaved}
-                        />
-                      )}
+                      {rolePopover.isOpen &&
+                        rolePopover.role?.id === role.id && (
+                          <AddWorkspaceRolePopover
+                            role={rolePopover.role}
+                            triggerRef={{
+                              current: rolePopover.triggerElement || null,
+                            }}
+                            onClose={() => {
+                              setRolePopover({ isOpen: false });
+                              setRoleForOptionPopover(null);
+                            }}
+                            onSuccess={handleRoleSaved}
+                          />
+                        )}
                     </div>
                   </ActionsCell>
                 </TableRow>
@@ -1470,10 +1687,11 @@ const RolesSection = () => {
   );
 };
 
-
 export const ManageWorkspace = () => {
   const { activeWorkspace, loading } = useActiveWorkspace();
-  const [activeTab, setActiveTab] = useState<"general" | "members" | "invitations" | "roles">("general");
+  const [activeTab, setActiveTab] = useState<
+    "general" | "members" | "invitations" | "roles"
+  >("general");
   const [toastMessage, setToastMessage] = useState<string | null>(null);
   const [toastLevel, setToastLevel] = useState<"info" | "error">("info");
 
@@ -1502,7 +1720,9 @@ export const ManageWorkspace = () => {
   if (!activeWorkspace) return null;
 
   return (
-    <ScreenContext.Provider value={{ screen: null, setScreen: () => { }, toast }}>
+    <ScreenContext.Provider
+      value={{ screen: null, setScreen: () => {}, toast }}
+    >
       <TypographyProvider>
         <Container>
           <TabsContainer>

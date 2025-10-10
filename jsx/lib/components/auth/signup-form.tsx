@@ -292,20 +292,23 @@ export function SignUpForm() {
     if (token && !inviteData && signUp) {
       setInviteToken(token);
       // Fetch invitation details using the signup hook
-      signUp.validateDeploymentInvitation(token).then((data) => {
-        setInviteData(data);
-        // Pre-fill form if invitation is valid
-        if (data.valid) {
-          setFormData(prev => ({
-            ...prev,
-            first_name: data.first_name || prev.first_name,
-            last_name: data.last_name || prev.last_name,
-            email: data.email || prev.email,
-          }));
-        }
-      }).catch(err => {
-        console.error("Failed to validate invitation:", err);
-      });
+      signUp
+        .validateDeploymentInvitation(token)
+        .then((data) => {
+          setInviteData(data);
+          // Pre-fill form if invitation is valid
+          if (data.valid) {
+            setFormData((prev) => ({
+              ...prev,
+              first_name: data.first_name || prev.first_name,
+              last_name: data.last_name || prev.last_name,
+              email: data.email || prev.email,
+            }));
+          }
+        })
+        .catch((err) => {
+          console.error("Failed to validate invitation:", err);
+        });
     }
   }, [deployment, isWaitlistMode, navigate, inviteData, signUp]);
 
@@ -449,8 +452,12 @@ export function SignUpForm() {
 
     setIsSubmitting(true);
     try {
+      const searchParams = new URLSearchParams(window.location.search);
+      const redirectUri = searchParams.get("redirect_uri") || undefined;
+
       const { data } = await oauthSignIn.create({
         provider: connection.provider as OAuthProvider,
+        redirectUri,
       });
       if (data && typeof data === "object" && "oauth_url" in data) {
         window.location.href = data.oauth_url as string;
@@ -497,30 +504,6 @@ export function SignUpForm() {
   };
 
   useEffect(() => {
-    if (session?.active_signin) {
-      let redirectUri: string | null = new URLSearchParams(
-        window.location.search,
-      ).get("redirect_uri");
-      if (!redirectUri) {
-        redirectUri =
-          deployment?.ui_settings?.after_signup_redirect_url || null;
-      }
-      if (!redirectUri && deployment?.frontend_host) {
-        redirectUri = `https://${deployment.frontend_host}`;
-      }
-      if (redirectUri) {
-        const uri = new URL(redirectUri);
-        if (deployment?.mode === "staging") {
-          uri.searchParams.set(
-            "__dev_session__",
-            localStorage.getItem("__dev_session__") || "",
-          );
-        }
-        navigate(uri.toString());
-      }
-      return;
-    }
-
     if (!signupAttempt) return;
 
     if (signupAttempt.completed) {
@@ -565,7 +548,6 @@ export function SignUpForm() {
 
   useEffect(() => {
     const newErrors: Record<string, string> = {};
-    // SignUp errors logged
     if (signUpErrors?.errors) {
       if (Array.isArray(signUpErrors?.errors)) {
         for (const err of signUpErrors.errors) {
@@ -907,7 +889,9 @@ export function SignUpForm() {
             <Footer>
               Already have an account?{" "}
               <Link>
-                <NavigationLink to={`${deployment!.ui_settings?.sign_in_page_url}${window.location.search}`}>
+                <NavigationLink
+                  to={`${deployment!.ui_settings?.sign_in_page_url}${window.location.search}`}
+                >
                   Sign in
                 </NavigationLink>
               </Link>

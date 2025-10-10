@@ -1,17 +1,20 @@
 import { responseMapper } from "../utils/response-mapper";
 import { useClient } from "./use-client";
 import useSWR from "swr";
-import { useCallback, useEffect } from "react";
+import { useCallback } from "react";
 import { ApiResult } from "@/types";
-import { 
-  Notification, 
-  NotificationListResponse, 
+import {
+  Notification,
+  NotificationListResponse,
   BulkUpdateResponse,
   NotificationListParams,
-  ChannelCounts
+  ChannelCounts,
 } from "@/types/notification";
 import { Client } from "@/types";
-import { useNotificationStream, type NotificationMessage } from "./use-notification-stream";
+import {
+  useNotificationStream,
+  type NotificationMessage,
+} from "./use-notification-stream";
 
 type UseNotificationsReturnType =
   | {
@@ -41,36 +44,50 @@ type UseNotificationsReturnType =
       refetch: () => Promise<void>;
     };
 
-async function fetchNotifications(client: Client, params?: NotificationListParams): Promise<NotificationListResponse> {
+async function fetchNotifications(
+  client: Client,
+  params?: NotificationListParams,
+): Promise<NotificationListResponse> {
   const queryString = new URLSearchParams();
-  
+
   if (params) {
-    if (params.limit) queryString.append('limit', params.limit.toString());
-    if (params.offset) queryString.append('offset', params.offset.toString());
+    if (params.limit) queryString.append("limit", params.limit.toString());
+    if (params.offset) queryString.append("offset", params.offset.toString());
     if (params.channels) {
-      params.channels.forEach(channel => queryString.append('channels', channel));
+      params.channels.forEach((channel) =>
+        queryString.append("channels", channel),
+      );
     }
     if (params.organization_ids) {
-      params.organization_ids.forEach(id => queryString.append('organization_ids', id.toString()));
+      params.organization_ids.forEach((id) =>
+        queryString.append("organization_ids", id.toString()),
+      );
     }
     if (params.workspace_ids) {
-      params.workspace_ids.forEach(id => queryString.append('workspace_ids', id.toString()));
+      params.workspace_ids.forEach((id) =>
+        queryString.append("workspace_ids", id.toString()),
+      );
     }
-    if (params.is_read !== undefined) queryString.append('is_read', params.is_read.toString());
-    if (params.is_archived !== undefined) queryString.append('is_archived', params.is_archived.toString());
-    if (params.severity) queryString.append('severity', params.severity);
+    if (params.is_read !== undefined)
+      queryString.append("is_read", params.is_read.toString());
+    if (params.is_archived !== undefined)
+      queryString.append("is_archived", params.is_archived.toString());
+    if (params.severity) queryString.append("severity", params.severity);
   }
-  
-  const url = `/notifications${queryString.toString() ? '?' + queryString.toString() : ''}`;
-  
+
+  const url = `/notifications${queryString.toString() ? "?" + queryString.toString() : ""}`;
+
   const response = await client(url, {
     method: "GET",
   });
-  const responseParsed = await responseMapper<NotificationListResponse>(response);
+  const responseParsed =
+    await responseMapper<NotificationListResponse>(response);
   return responseParsed.data;
 }
 
-export async function fetchChannelCounts(client: Client): Promise<ChannelCounts> {
+export async function fetchChannelCounts(
+  client: Client,
+): Promise<ChannelCounts> {
   const response = await client("/notifications/channel-counts", {
     method: "GET",
   });
@@ -80,7 +97,7 @@ export async function fetchChannelCounts(client: Client): Promise<ChannelCounts>
 
 async function markNotificationAsRead(
   client: Client,
-  notificationId: string
+  notificationId: string,
 ): Promise<ApiResult<{ success: boolean }>> {
   const response = await client(`/notifications/${notificationId}/read`, {
     method: "POST",
@@ -89,7 +106,7 @@ async function markNotificationAsRead(
 }
 
 async function markAllNotificationsAsRead(
-  client: Client
+  client: Client,
 ): Promise<ApiResult<BulkUpdateResponse>> {
   const response = await client("/notifications/mark-all-read", {
     method: "POST",
@@ -99,7 +116,7 @@ async function markAllNotificationsAsRead(
 
 async function deleteNotification(
   client: Client,
-  notificationId: string
+  notificationId: string,
 ): Promise<ApiResult<{ success: boolean }>> {
   const response = await client(`/notifications/${notificationId}/delete`, {
     method: "POST",
@@ -107,165 +124,142 @@ async function deleteNotification(
   return responseMapper(response);
 }
 
-export function useNotifications(params?: NotificationListParams): UseNotificationsReturnType {
+export function useNotifications(
+  params?: NotificationListParams,
+): UseNotificationsReturnType {
   const { client, loading: clientLoading } = useClient();
 
   const {
     data,
     error,
     mutate: refetch,
+    isLoading: notificationLading,
   } = useSWR(
     !clientLoading ? ["notifications", JSON.stringify(params)] : null,
     () => fetchNotifications(client, params),
     {
-      refreshInterval: 60000, // Poll every 60 seconds as fallback
+      refreshInterval: 60000,
       revalidateOnFocus: true,
-    }
+    },
   );
 
-  // Set up WebSocket for real-time notifications
-  const { isConnected } = useNotificationStream({
+  useNotificationStream({
     enabled: !clientLoading && !!data,
     onNotification: useCallback(
       (notification: NotificationMessage) => {
-        // Add new notification to the list
-        refetch(
-          async (current) => {
-            if (!current) return current;
-            
-            // Check if notification already exists
-            const exists = current.notifications.some(n => n.id === notification.id.toString());
-            if (exists) return current;
-            
-            // Add new notification at the beginning
-            return {
-              ...current,
-              notifications: [
-                {
-                  id: notification.id.toString(),
-                  user_id: notification.user_id.toString(),
-                  deployment_id: notification.deployment_id.toString(),
-                  title: notification.title,
-                  body: notification.body,
-                  severity: notification.severity,
-                  action_url: notification.action_url,
-                  action_label: notification.action_label,
-                  is_read: false,
-                  is_archived: false,
-                  created_at: notification.created_at,
-                  updated_at: notification.created_at,
-                } as Notification,
-                ...current.notifications,
-              ],
-              unread_count: current.unread_count + 1,
-              total: current.total + 1,
-            };
-          },
-          false
-        );
-      },
-      [refetch]
-    ),
-    onError: useCallback(
-      () => {
-        // Notification stream error
-      },
-      []
-    ),
-  });
+        refetch(async (current) => {
+          if (!current) return current;
 
-  useEffect(() => {
-    if (isConnected) {
-      // Real-time notifications connected
-    }
-  }, [isConnected]);
+          const exists = current.notifications.some(
+            (n) => n.id === notification.id.toString(),
+          );
+          if (exists) return current;
+
+          return {
+            ...current,
+            notifications: [
+              {
+                id: notification.id.toString(),
+                user_id: notification.user_id.toString(),
+                deployment_id: notification.deployment_id.toString(),
+                title: notification.title,
+                body: notification.body,
+                severity: notification.severity,
+                action_url: notification.action_url,
+                action_label: notification.action_label,
+                is_read: false,
+                is_archived: false,
+                created_at: notification.created_at,
+                updated_at: notification.created_at,
+              } as Notification,
+              ...current.notifications,
+            ],
+            unread_count: current.unread_count + 1,
+            total: current.total + 1,
+          };
+        }, false);
+      },
+      [refetch],
+    ),
+    onError: useCallback(() => {}, []),
+  });
 
   const markAsRead = useCallback(
     async (notificationId: string) => {
       if (clientLoading) return;
-      
-      // Optimistically update the UI
-      await refetch(
-        async (current) => {
-          if (!current) return current;
-          return {
-            ...current,
-            notifications: current.notifications.map((n) =>
-              n.id === notificationId ? { ...n, is_read: true } : n
-            ),
-            unread_count: Math.max(0, current.unread_count - 1),
-          };
-        },
-        false
-      );
 
-      // Make the API call
+      await refetch(async (current) => {
+        if (!current) return current;
+        return {
+          ...current,
+          notifications: current.notifications.map((n) =>
+            n.id === notificationId ? { ...n, is_read: true } : n,
+          ),
+          unread_count: Math.max(0, current.unread_count - 1),
+        };
+      }, false);
+
       await markNotificationAsRead(client, notificationId);
-      
-      // Revalidate
+
       await refetch();
     },
-    [client, clientLoading, refetch]
+    [client, clientLoading, refetch],
   );
 
   const markAllAsRead = useCallback(async () => {
     if (clientLoading) return;
-    
-    // Optimistically update the UI
-    await refetch(
-      async (current) => {
-        if (!current) return current;
-        return {
-          ...current,
-          notifications: current.notifications.map((n) => ({ ...n, is_read: true })),
-          unread_count: 0,
-        };
-      },
-      false
-    );
 
-    // Make the API call
+    await refetch(async (current) => {
+      if (!current) return current;
+      return {
+        ...current,
+        notifications: current.notifications.map((n) => ({
+          ...n,
+          is_read: true,
+        })),
+        unread_count: 0,
+      };
+    }, false);
+
     await markAllNotificationsAsRead(client);
-    
-    // Revalidate
+
     await refetch();
   }, [client, refetch]);
 
   const deleteNotificationCallback = useCallback(
     async (notificationId: string) => {
       if (clientLoading) return;
-      
-      // Optimistically update the UI
-      await refetch(
-        async (current) => {
-          if (!current) return current;
-          const notification = current.notifications.find((n) => n.id === notificationId);
-          return {
-            ...current,
-            notifications: current.notifications.filter((n) => n.id !== notificationId),
-            unread_count: notification && !notification.is_read 
-              ? Math.max(0, current.unread_count - 1) 
-              : current.unread_count,
-            total: Math.max(0, current.total - 1),
-          };
-        },
-        false
-      );
 
-      // Make the API call
+      await refetch(async (current) => {
+        if (!current) return current;
+        const notification = current.notifications.find(
+          (n) => n.id === notificationId,
+        );
+        return {
+          ...current,
+          notifications: current.notifications.filter(
+            (n) => n.id !== notificationId,
+          ),
+          unread_count:
+            notification && !notification.is_read
+              ? Math.max(0, current.unread_count - 1)
+              : current.unread_count,
+          total: Math.max(0, current.total - 1),
+        };
+      }, false);
+
       await deleteNotification(client, notificationId);
-      
-      // Revalidate
+
       await refetch();
     },
-    [client, clientLoading, refetch]
+    [client, clientLoading, refetch],
   );
 
   const refetchWrapper = useCallback(async () => {
     await refetch();
   }, [refetch]);
 
-  if (!data || clientLoading) {
+  if (!data || clientLoading || notificationLading) {
     return {
       loading: true,
       notifications: undefined as never,

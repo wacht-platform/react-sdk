@@ -31,11 +31,6 @@ const Container = styled.div`
   background: var(--color-background);
   border-radius: var(--radius-lg);
   box-shadow: 0 4px 12px var(--color-shadow);
-  margin: 0 auto;
-  position: absolute;
-  top: 50%;
-  left: 50%;
-  transform: translate(-50%, -50%);
 `;
 
 const AccountsWrapper = styled.div`
@@ -298,7 +293,9 @@ export const SignedInAccounts: React.FC<SignedInAccountsProps> = ({
   const { deployment } = useDeployment();
   const { navigate } = useNavigation();
   const [loadingSignOut, setLoadingSignOut] = useState<string | null>(null);
-  const [switchingToAccount, setSwitchingToAccount] = useState<string | null>(null);
+  const [switchingToAccount, setSwitchingToAccount] = useState<string | null>(
+    null,
+  );
 
   const activeSignIn = session?.active_signin;
   const signins = session?.signins || [];
@@ -445,10 +442,10 @@ export const SignedInAccounts: React.FC<SignedInAccountsProps> = ({
                   ) : (
                     getInitials(
                       fullName ||
-                      account.primary_email_address?.email ||
-                      account.primary_phone_number?.phone_number ||
-                      account.username ||
-                      "U"
+                        account.primary_email_address?.email ||
+                        account.primary_phone_number?.phone_number ||
+                        account.username ||
+                        "U",
                     )
                   )}
                 </Avatar>
@@ -456,10 +453,10 @@ export const SignedInAccounts: React.FC<SignedInAccountsProps> = ({
                 <AccountDetails>
                   <AccountName>
                     {fullName ||
-                     account.primary_email_address?.email ||
-                     account.primary_phone_number?.phone_number ||
-                     account.username ||
-                     "User"}
+                      account.primary_email_address?.email ||
+                      account.primary_phone_number?.phone_number ||
+                      account.username ||
+                      "User"}
                   </AccountName>
                   <AccountEmail>
                     {account.primary_email_address?.email || account.username}
@@ -477,7 +474,9 @@ export const SignedInAccounts: React.FC<SignedInAccountsProps> = ({
                     ) : (
                       <LogOut size={12} />
                     )}
-                    {loadingSignOut === signInId ? "Signing out..." : "Sign out"}
+                    {loadingSignOut === signInId
+                      ? "Signing out..."
+                      : "Sign out"}
                   </SignOutButton>
                 )}
               </AccountItem>
@@ -495,7 +494,9 @@ export const SignedInAccounts: React.FC<SignedInAccountsProps> = ({
         <Footer>
           Don't have an account?{" "}
           <Link>
-            <NavigationLink to={`${deployment!.ui_settings?.sign_up_page_url}${window.location.search}`}>
+            <NavigationLink
+              to={`${deployment!.ui_settings?.sign_up_page_url}${window.location.search}`}
+            >
               Sign up
             </NavigationLink>
           </Link>

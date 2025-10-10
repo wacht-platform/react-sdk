@@ -13,14 +13,12 @@ export const SignedIn = ({ children }: SignedInProps) => {
   useEffect(() => {
     if (loading) return;
 
-    if (!session.signins?.length) {
-      const signInUrl = deployment?.ui_settings?.sign_in_page_url;
-      if (signInUrl) navigate(signInUrl);
-      return;
-    }
+    if (session?.signins?.length && !session.active_signin) {
+      let currentHref = window.location.href;
+      let redirectUrl = new URL(currentHref);
+      redirectUrl.searchParams.set("redirect_uri", currentHref);
 
-    if (!session.active_signin) {
-      navigate("/");
+      navigate(redirectUrl.toString());
     }
   }, [loading, session, deployment, navigate]);
 

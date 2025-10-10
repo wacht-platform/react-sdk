@@ -1,6 +1,6 @@
 {
-  "name": "@snipextt/wacht-react-router",
-  "version": "0.0.1-alpha.10",
+  "name": "@wacht/react-router",
+  "version": "0.0.1-alpha.1",
   "description": "React Router adapter for Wacht authentication library",
   "type": "module",
   "main": "dist/index.cjs.js",
@@ -21,7 +21,7 @@
   "author": "Saurav Singh",
   "license": "MIT",
   "devDependencies": {
-    "@snipextt/wacht": "workspace:*",
+    "@wacht/jsx": "workspace:*",
     "@types/node": "^22.13.1",
     "@vitejs/plugin-react": "^4.3.4",
     "vite": "^6.0.6",

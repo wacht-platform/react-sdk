@@ -52,7 +52,6 @@ const SwitcherButton = styled.button`
   min-height: 42px;
   width: 100%;
 
-
   &:disabled {
     cursor: not-allowed;
     opacity: 0.7;
@@ -95,7 +94,10 @@ const OrgName = styled.span`
   color: var(--color-foreground);
 `;
 
-const Dropdown = styled.div<{ $isOpen: boolean; $position?: { top: number; left: number } }>`
+const Dropdown = styled.div<{
+  $isOpen: boolean;
+  $position?: { top: number; left: number };
+}>`
   position: fixed;
   top: ${(props) => props.$position?.top ?? -9999}px;
   left: ${(props) => props.$position?.left ?? -9999}px;
@@ -108,12 +110,16 @@ const Dropdown = styled.div<{ $isOpen: boolean; $position?: { top: number; left:
     0 0 0 1px rgba(0, 0, 0, 0.02);
   z-index: 99999;
   overflow: hidden;
-  visibility: ${(props) => (props.$position && props.$isOpen ? "visible" : "hidden")};
+  visibility: ${(props) =>
+    props.$position && props.$isOpen ? "visible" : "hidden"};
   opacity: ${(props) => (props.$isOpen && props.$position ? 1 : 0)};
   transform: ${(props) =>
     props.$isOpen ? "translateY(0)" : "translateY(-8px)"};
   pointer-events: ${(props) => (props.$isOpen ? "auto" : "none")};
-  transition: opacity 0.15s ease, transform 0.15s ease, visibility 0s linear ${(props) => props.$isOpen ? "0s" : "0.15s"};
+  transition:
+    opacity 0.15s ease,
+    transform 0.15s ease,
+    visibility 0s linear ${(props) => (props.$isOpen ? "0s" : "0.15s")};
 `;
 
 const MenuItem = styled.div<{ $isActive?: boolean; as?: React.ElementType }>`
@@ -330,9 +336,15 @@ const StatusMessage = styled.div<{ $isError?: boolean }>`
   padding: 8px 10px;
   border-radius: 4px;
   font-size: 10px;
-  background: ${(props) => (props.$isError ? "var(--color-error-background)" : "var(--color-primary-background)")};
-  color: ${(props) => (props.$isError ? "var(--color-error)" : "var(--color-primary)")};
-  border: 1px solid ${(props) => (props.$isError ? "var(--color-error)" : "var(--color-primary)")};
+  background: ${(props) =>
+    props.$isError
+      ? "var(--color-error-background)"
+      : "var(--color-primary-background)"};
+  color: ${(props) =>
+    props.$isError ? "var(--color-error)" : "var(--color-primary)"};
+  border: 1px solid
+    ${(props) =>
+      props.$isError ? "var(--color-error)" : "var(--color-primary)"};
   display: flex;
   align-items: center;
   gap: 6px;
@@ -418,9 +430,10 @@ const SkeletonButton = styled.div`
   min-height: 42px;
   width: 100%;
   animation: pulse 1.5s ease-in-out infinite;
-  
+
   @keyframes pulse {
-    0%, 100% {
+    0%,
+    100% {
       opacity: 1;
     }
     50% {
@@ -454,7 +467,9 @@ export const OrganizationSwitcher = () => {
   const [open, setOpen] = useState(false);
   const [isSwitching, setIsSwitching] = useState(false);
   const [expandedOrgs, setExpandedOrgs] = useState<Set<string>>(new Set());
-  const [dropdownPosition, setDropdownPosition] = useState<{ top: number; left: number } | undefined>();
+  const [dropdownPosition, setDropdownPosition] = useState<
+    { top: number; left: number } | undefined
+  >();
   const dropdownRef = useRef<HTMLDivElement>(null);
   const buttonRef = useRef<HTMLButtonElement>(null);
 
@@ -524,36 +539,36 @@ export const OrganizationSwitcher = () => {
 
   useEffect(() => {
     if (!open) return;
-    
+
     let cleanupFn: (() => void) | null = null;
-    
+
     // Small delay to ensure Portal is mounted and refs are attached
     const timer = setTimeout(() => {
       const handleClickOutside = (event: MouseEvent) => {
         const target = event.target as Node;
-        
+
         // Check if target is the button or inside the button
         if (buttonRef.current?.contains(target)) {
           return;
         }
-        
-        // Check if target is the dropdown or inside the dropdown  
+
+        // Check if target is the dropdown or inside the dropdown
         if (dropdownRef.current?.contains(target)) {
           return;
         }
-        
+
         // If we get here, click was outside both elements
         setOpen(false);
         setLeaveError(null);
       };
 
       document.addEventListener("mousedown", handleClickOutside);
-      
+
       cleanupFn = () => {
         document.removeEventListener("mousedown", handleClickOutside);
       };
     }, 50);
-    
+
     return () => {
       clearTimeout(timer);
       cleanupFn?.();
@@ -569,7 +584,7 @@ export const OrganizationSwitcher = () => {
           const rect = buttonRef.current.getBoundingClientRect();
           setDropdownPosition({
             top: rect.bottom + 8,
-            left: rect.left
+            left: rect.left,
           });
         }
       });
@@ -680,565 +695,611 @@ export const OrganizationSwitcher = () => {
           <ChevronsUpDown size={16} />
         </SwitcherButton>
 
-        {typeof window !== 'undefined' && ReactDOM.createPortal(
-          <DefaultStylesProvider>
-            <Dropdown ref={dropdownRef} $isOpen={open} $position={dropdownPosition}>
-          {organizationLoading || workspacesLoading ? (
-            <ShimmerWrapper>
-              {/* Show current active item shimmer */}
-              <ShimmerItem>
-                <ShimmerAvatar />
-                <ShimmerContent>
-                  <ShimmerLine width="120px" />
-                  <ShimmerSmallLine width="80px" />
-                </ShimmerContent>
-              </ShimmerItem>
-              <Separator />
+        {typeof window !== "undefined" &&
+          ReactDOM.createPortal(
+            <DefaultStylesProvider>
+              <Dropdown
+                ref={dropdownRef}
+                $isOpen={open}
+                $position={dropdownPosition}
+              >
+                {organizationLoading || workspacesLoading ? (
+                  <ShimmerWrapper>
+                    {/* Show current active item shimmer */}
+                    <ShimmerItem>
+                      <ShimmerAvatar />
+                      <ShimmerContent>
+                        <ShimmerLine width="120px" />
+                        <ShimmerSmallLine width="80px" />
+                      </ShimmerContent>
+                    </ShimmerItem>
+                    <Separator />
 
-              {/* Show 2-3 organization shimmers */}
-              <ShimmerItem>
-                <ShimmerAvatar />
-                <ShimmerContent>
-                  <ShimmerLine width="100px" />
-                </ShimmerContent>
-              </ShimmerItem>
-              <Separator />
+                    {/* Show 2-3 organization shimmers */}
+                    <ShimmerItem>
+                      <ShimmerAvatar />
+                      <ShimmerContent>
+                        <ShimmerLine width="100px" />
+                      </ShimmerContent>
+                    </ShimmerItem>
+                    <Separator />
 
-              <ShimmerItem>
-                <ShimmerAvatar />
-                <ShimmerContent>
-                  <ShimmerLine width="140px" />
-                  <ShimmerSmallLine width="60px" />
-                </ShimmerContent>
-              </ShimmerItem>
-              <Separator />
+                    <ShimmerItem>
+                      <ShimmerAvatar />
+                      <ShimmerContent>
+                        <ShimmerLine width="140px" />
+                        <ShimmerSmallLine width="60px" />
+                      </ShimmerContent>
+                    </ShimmerItem>
+                    <Separator />
 
-              <ShimmerItem>
-                <ShimmerAvatar />
-                <ShimmerContent>
-                  <ShimmerLine width="110px" />
-                </ShimmerContent>
-              </ShimmerItem>
-            </ShimmerWrapper>
-          ) : (
-            <div>
-              {/* Always show personal account first */}
-              <MenuItem
-                  as="button"
-                  $isActive={isPersonalActive}
-                  onClick={(e) => {
-                    e.stopPropagation();
-                    if (!isPersonalActive) {
-                      handleSwitchOrganization();
-                    }
-                  }}
-                  disabled={isSwitching || isPersonalActive}
-                >
-                  {isPersonalActive && <ActiveIndicator />}
-                  <MenuItemContent>
-                    <PersonalIcon>
-                      {session?.active_signin?.user?.profile_picture_url ? (
-                        <PersonalAvatar
-                          src={session.active_signin.user.profile_picture_url}
-                          alt="Personal account"
-                        />
-                      ) : (
-                        <User size={12} />
-                      )}
-                    </PersonalIcon>
-                    <MenuItemInfo>
-                      <MenuItemName>Personal account</MenuItemName>
-                    </MenuItemInfo>
-                  </MenuItemContent>
-                  {!isPersonalActive && <HoverArrow className="hover-arrow" size={14} />}
-                </MenuItem>
-
-              {/* Only show separator if we're going to show an active organization */}
-              {!isPersonalActive && activeOrganization && <Separator />}
-
-              {/* Show active organization if not personal */}
-              {!isPersonalActive && activeOrganization && (
-                  <MenuItem
-                    $isActive={true}
-                    onClick={() => {
-                      if (workspacesEnabled) {
-                        toggleOrgExpanded(activeOrganization.id);
-                      }
-                    }}
-                    style={
-                      isSwitching
-                        ? { pointerEvents: "none", opacity: 0.7 }
-                        : undefined
-                    }
-                  >
-                    <ActiveIndicator />
-                    <MenuItemContent>
-                      {workspacesEnabled && (
-                        <ChevronDown
-                          size={12}
-                          style={{
-                            marginRight: "4px",
-                            transform: expandedOrgs.has(activeOrganization.id)
-                              ? "rotate(0deg)"
-                              : "rotate(-90deg)",
-                            transition: "transform 0.2s ease",
-                            color: "var(--color-secondary-text)",
-                          }}
-                        />
-                      )}
-                      <MenuItemAvatar>
-                        {activeOrganization.image_url ? (
-                          <MenuItemAvatarImage
-                            src={activeOrganization.image_url}
-                            alt={activeOrganization.name}
-                          />
-                        ) : (
-                          getInitials(activeOrganization.name)
-                        )}
-                      </MenuItemAvatar>
-                      <MenuItemInfo>
-                        <MenuItemName>{activeOrganization.name}</MenuItemName>
-                        {(() => {
-                          const membership = organizationMemberships?.find(
-                            (m) => m.organization.id === activeOrganization.id,
-                          );
-                          if (membership?.role && membership.role.length > 0) {
-                            return (
-                              <MenuItemRole>
-                                {membership.role[0].name === "owner"
-                                  ? "Owner"
-                                  : membership.role[0].name === "admin"
-                                    ? "Admin"
-                                    : "Member"}
-                              </MenuItemRole>
-                            );
-                          }
-                          return null;
-                        })()}
-                      </MenuItemInfo>
-                    </MenuItemContent>
-                    <div
-                      style={{
-                        display: "flex",
-                        alignItems: "center",
-                        gap: "8px",
-                      }}
-                    >
-                      <ManageButton
-                        onClick={(e) => {
-                          e.stopPropagation();
-                          manageOrgDialog.open();
-                          // Keep dropdown open
-                        }}
-                        title="Manage organization"
-                      >
-                        <Settings size={12} />
-                      </ManageButton>
-                      <LogoutButton
-                        onClick={async (e) => {
-                          e.stopPropagation();
-                          setLeavingOrg(true);
-                          setLeaveError(null);
-                          try {
-                            await leaveOrganization();
-                            await refetchOrganizations();
-                            setTimeout(() => {
-                              // Keep dropdown open after leaving org
-                              setLeavingOrg(false);
-                            }, 500);
-                          } catch (error) {
-                            setLeaveError(
-                              error instanceof Error
-                                ? error.message
-                                : "Failed to leave organization",
-                            );
-                            setLeavingOrg(false);
-                          }
-                        }}
-                        disabled={leavingOrg}
-                        title="Leave organization"
-                      >
-                        <LogOut size={12} />
-                      </LogoutButton>
-                    </div>
-                  </MenuItem>
-              )}
-
-              {/* Show workspaces if active org is expanded */}
-              {activeOrganization &&
-                workspacesEnabled &&
-                expandedOrgs.has(activeOrganization.id) && (
-                  <>
-                    {workspaceList
-                      ?.filter(
-                        (w: WorkspaceWithOrganization) =>
-                          w.organization.id === activeOrganization.id,
-                      )
-                      .map((workspace: WorkspaceWithOrganization) => {
-                        const isWorkspaceActive =
-                          activeWorkspace?.id === workspace.id;
-                        return (
-                          <WorkspaceItem
-                            as={isWorkspaceActive ? undefined : "button"}
-                            key={workspace.id}
-                            $isActive={isWorkspaceActive}
-                            onClick={
-                              isWorkspaceActive
-                                ? undefined
-                                : () => handleSwitchWorkspace(workspace.id)
-                            }
-                            {...(isWorkspaceActive
-                              ? {
-                                  style: isSwitching
-                                    ? { pointerEvents: "none", opacity: 0.7 }
-                                    : undefined,
-                                }
-                              : { disabled: isSwitching })}
-                          >
-                            {isWorkspaceActive && <ActiveIndicator />}
-                            <MenuItemContent>
-                              <WorkspaceAvatar>
-                                {workspace.image_url ? (
-                                  <img
-                                    src={workspace.image_url}
-                                    alt={workspace.name}
-                                    style={{
-                                      width: "100%",
-                                      height: "100%",
-                                      objectFit: "cover",
-                                    }}
-                                  />
-                                ) : (
-                                  getInitials(workspace.name).charAt(0)
-                                )}
-                              </WorkspaceAvatar>
-                              <MenuItemInfo>
-                                <MenuItemName>{workspace.name}</MenuItemName>
-                              </MenuItemInfo>
-                            </MenuItemContent>
-                            {isWorkspaceActive ? (
-                              <div
-                                style={{
-                                  display: "flex",
-                                  alignItems: "center",
-                                  gap: "8px",
-                                }}
-                              >
-                                <ManageButton
-                                  onClick={(e) => {
-                                    e.stopPropagation();
-                                    manageWorkspaceDialog.open();
-                                    // Keep dropdown open
-                                  }}
-                                  title="Manage workspace"
-                                >
-                                  <Settings size={12} />
-                                </ManageButton>
-                                <LogoutButton
-                                  onClick={async (e) => {
-                                    e.stopPropagation();
-                                    try {
-                                      if (leaveWorkspace) {
-                                        await leaveWorkspace();
-                                        // Keep dropdown open
-                                      }
-                                    } catch (error: any) {
-                                      const errorMessage = error.message || "Failed to leave workspace. Please try again.";
-                                      toast(errorMessage, "error");
-                                    }
-                                  }}
-                                  title="Leave workspace"
-                                >
-                                  <LogOut size={12} />
-                                </LogoutButton>
-                              </div>
-                            ) : (
-                              <HoverArrow className="hover-arrow" size={14} />
-                            )}
-                          </WorkspaceItem>
-                        );
-                      })}
-                    <WorkspaceItem
+                    <ShimmerItem>
+                      <ShimmerAvatar />
+                      <ShimmerContent>
+                        <ShimmerLine width="110px" />
+                      </ShimmerContent>
+                    </ShimmerItem>
+                  </ShimmerWrapper>
+                ) : (
+                  <div>
+                    {/* Always show personal account first */}
+                    <MenuItem
                       as="button"
-                      onClick={() => {
-                        setSelectedOrgForWorkspace(activeOrganization.id);
-                        createWorkspaceDialog.open();
-                        // Keep dropdown open
+                      $isActive={isPersonalActive}
+                      onClick={(e) => {
+                        e.stopPropagation();
+                        if (!isPersonalActive) {
+                          handleSwitchOrganization();
+                        }
                       }}
-                      disabled={isSwitching}
+                      disabled={isSwitching || isPersonalActive}
                     >
+                      {isPersonalActive && <ActiveIndicator />}
                       <MenuItemContent>
-                        <PlusIcon style={{ width: "14px", height: "14px" }}>
-                          <Plus size={12} />
-                        </PlusIcon>
+                        <PersonalIcon>
+                          {session?.active_signin?.user?.profile_picture_url ? (
+                            <PersonalAvatar
+                              src={
+                                session.active_signin.user.profile_picture_url
+                              }
+                              alt="Personal account"
+                            />
+                          ) : (
+                            <User size={12} />
+                          )}
+                        </PersonalIcon>
                         <MenuItemInfo>
-                          <MenuItemName>Create workspace</MenuItemName>
+                          <MenuItemName>Personal account</MenuItemName>
                         </MenuItemInfo>
                       </MenuItemContent>
-                    </WorkspaceItem>
-                  </>
-                )}
+                      {!isPersonalActive && (
+                        <HoverArrow className="hover-arrow" size={14} />
+                      )}
+                    </MenuItem>
 
-              {/* Show status messages */}
-              {(leavingOrg || leaveError) && (
-                <>
-                  {leavingOrg && (
-                    <StatusMessage>
-                      <Spinner />
-                      Leaving organization...
-                    </StatusMessage>
-                  )}
-                  {leaveError && (
-                    <StatusMessage $isError>
-                      <span>⚠️</span>
-                      {leaveError}
-                    </StatusMessage>
-                  )}
-                </>
-              )}
+                    {/* Only show separator if we're going to show an active organization */}
+                    {!isPersonalActive && activeOrganization && <Separator />}
 
-              <Separator />
-
-              {/* Separator before other organizations */}
-
-              {/* Show other organizations */}
-              {organizationMemberships &&
-                organizationMemberships.length > 0 && (
-                  <>
-                    {organizationMemberships
-                      .filter(
-                        (m) => m.organization.id !== activeOrganization?.id,
-                      )
-                      .map((membership, index, filteredArray) => {
-                        const org = membership.organization;
-                        const orgWorkspaces =
-                          workspaceList?.filter(
-                            (w: WorkspaceWithOrganization) =>
-                              w.organization.id === org.id,
-                          ) || [];
-                        const isExpanded = expandedOrgs.has(org.id);
-
-                        return (
-                          <React.Fragment key={org.id}>
-                            <MenuItem
-                              as="button"
-                              $isActive={false}
-                              onClick={() => {
-                                if (workspacesEnabled) {
-                                  toggleOrgExpanded(org.id);
-                                } else {
-                                  handleSwitchOrganization(org.id);
-                                }
+                    {/* Show active organization if not personal */}
+                    {!isPersonalActive && activeOrganization && (
+                      <MenuItem
+                        $isActive={true}
+                        onClick={() => {
+                          if (workspacesEnabled) {
+                            toggleOrgExpanded(activeOrganization.id);
+                          }
+                        }}
+                        style={
+                          isSwitching
+                            ? { pointerEvents: "none", opacity: 0.7 }
+                            : undefined
+                        }
+                      >
+                        <ActiveIndicator />
+                        <MenuItemContent>
+                          {workspacesEnabled && (
+                            <ChevronDown
+                              size={12}
+                              style={{
+                                marginRight: "4px",
+                                transform: expandedOrgs.has(
+                                  activeOrganization.id,
+                                )
+                                  ? "rotate(0deg)"
+                                  : "rotate(-90deg)",
+                                transition: "transform 0.2s ease",
+                                color: "var(--color-secondary-text)",
                               }}
-                              disabled={isSwitching}
-                            >
-                              <MenuItemContent>
-                                {workspacesEnabled && (
-                                  <ChevronDown
-                                    size={12}
-                                    style={{
-                                      marginRight: "4px",
-                                      transform: isExpanded
-                                        ? "rotate(0deg)"
-                                        : "rotate(-90deg)",
-                                      transition: "transform 0.2s ease",
-                                      color: "var(--color-secondary-text)",
-                                    }}
-                                  />
-                                )}
-                                <MenuItemAvatar>
-                                  {org.image_url ? (
-                                    <MenuItemAvatarImage
-                                      src={org.image_url}
-                                      alt={org.name}
-                                    />
-                                  ) : (
-                                    getInitials(org.name)
-                                  )}
-                                </MenuItemAvatar>
-                                <MenuItemInfo>
-                                  <MenuItemName>{org.name}</MenuItemName>
-                                  {membership.role &&
-                                    membership.role.length > 0 && (
-                                      <MenuItemRole>
-                                        {membership.role[0].name === "owner"
-                                          ? "Owner"
-                                          : membership.role[0].name === "admin"
-                                            ? "Admin"
-                                            : "Member"}
-                                      </MenuItemRole>
-                                    )}
-                                </MenuItemInfo>
-                              </MenuItemContent>
-                              <HoverArrow className="hover-arrow" size={14} />
-                            </MenuItem>
+                            />
+                          )}
+                          <MenuItemAvatar>
+                            {activeOrganization.image_url ? (
+                              <MenuItemAvatarImage
+                                src={activeOrganization.image_url}
+                                alt={activeOrganization.name}
+                              />
+                            ) : (
+                              getInitials(activeOrganization.name)
+                            )}
+                          </MenuItemAvatar>
+                          <MenuItemInfo>
+                            <MenuItemName>
+                              {activeOrganization.name}
+                            </MenuItemName>
+                            {(() => {
+                              const membership = organizationMemberships?.find(
+                                (m) =>
+                                  m.organization.id === activeOrganization.id,
+                              );
+                              if (
+                                membership?.role &&
+                                membership.role.length > 0
+                              ) {
+                                return (
+                                  <MenuItemRole>
+                                    {membership.role[0].name === "owner"
+                                      ? "Owner"
+                                      : membership.role[0].name === "admin"
+                                        ? "Admin"
+                                        : "Member"}
+                                  </MenuItemRole>
+                                );
+                              }
+                              return null;
+                            })()}
+                          </MenuItemInfo>
+                        </MenuItemContent>
+                        <div
+                          style={{
+                            display: "flex",
+                            alignItems: "center",
+                            gap: "8px",
+                          }}
+                        >
+                          <ManageButton
+                            onClick={(e) => {
+                              e.stopPropagation();
+                              manageOrgDialog.open();
+                              // Keep dropdown open
+                            }}
+                            title="Manage organization"
+                          >
+                            <Settings size={12} />
+                          </ManageButton>
+                          <LogoutButton
+                            onClick={async (e) => {
+                              e.stopPropagation();
+                              setLeavingOrg(true);
+                              setLeaveError(null);
+                              try {
+                                await leaveOrganization();
+                                await refetchOrganizations();
+                                setTimeout(() => {
+                                  // Keep dropdown open after leaving org
+                                  setLeavingOrg(false);
+                                }, 500);
+                              } catch (error) {
+                                setLeaveError(
+                                  error instanceof Error
+                                    ? error.message
+                                    : "Failed to leave organization",
+                                );
+                                setLeavingOrg(false);
+                              }
+                            }}
+                            disabled={leavingOrg}
+                            title="Leave organization"
+                          >
+                            <LogOut size={12} />
+                          </LogoutButton>
+                        </div>
+                      </MenuItem>
+                    )}
 
-                            {workspacesEnabled && isExpanded && (
-                              <>
-                                {orgWorkspaces.map(
-                                  (workspace: WorkspaceWithOrganization) => {
-                                    const isWorkspaceActive =
-                                      activeWorkspace?.id === workspace.id;
-                                    return (
-                                      <WorkspaceItem
-                                        as={
-                                          isWorkspaceActive
-                                            ? undefined
-                                            : "button"
-                                        }
-                                        key={workspace.id}
-                                        $isActive={isWorkspaceActive}
-                                        onClick={
-                                          isWorkspaceActive
-                                            ? undefined
-                                            : () =>
-                                                handleSwitchWorkspace(
-                                                  workspace.id,
-                                                )
-                                        }
-                                        {...(isWorkspaceActive
-                                          ? {
-                                              style: isSwitching
-                                                ? {
-                                                    pointerEvents: "none",
-                                                    opacity: 0.7,
-                                                  }
-                                                : undefined,
-                                            }
-                                          : { disabled: isSwitching })}
-                                      >
-                                        {isWorkspaceActive && (
-                                          <ActiveIndicator />
-                                        )}
-                                        <MenuItemContent>
-                                          <WorkspaceAvatar>
-                                            {workspace.image_url ? (
-                                              <img
-                                                src={workspace.image_url}
-                                                alt={workspace.name}
-                                                style={{
-                                                  width: "100%",
-                                                  height: "100%",
-                                                  objectFit: "cover",
-                                                }}
-                                              />
-                                            ) : (
-                                              getInitials(
-                                                workspace.name,
-                                              ).charAt(0)
-                                            )}
-                                          </WorkspaceAvatar>
-                                          <MenuItemInfo>
-                                            <MenuItemName>
-                                              {workspace.name}
-                                            </MenuItemName>
-                                          </MenuItemInfo>
-                                        </MenuItemContent>
-                                        {isWorkspaceActive ? (
-                                          <div
-                                            style={{
-                                              display: "flex",
-                                              alignItems: "center",
-                                              gap: "8px",
-                                            }}
-                                          >
-                                            <ManageButton
-                                              onClick={(e) => {
-                                                e.stopPropagation();
-                                                manageWorkspaceDialog.open();
-                                                // Keep dropdown open
-                                              }}
-                                              title="Manage workspace"
-                                            >
-                                              <Settings size={12} />
-                                            </ManageButton>
-                                            <LogoutButton
-                                              onClick={async (e) => {
-                                                e.stopPropagation();
-                                                try {
-                                                  if (leaveWorkspace) {
-                                                    await leaveWorkspace();
-                                                    // Keep dropdown open
-                                                  }
-                                                } catch (error: any) {
-                                                  const errorMessage = error.message || "Failed to leave workspace. Please try again.";
-                                                  toast(errorMessage, "error");
-                                                }
-                                              }}
-                                              title="Leave workspace"
-                                            >
-                                              <LogOut size={12} />
-                                            </LogoutButton>
-                                          </div>
-                                        ) : (
-                                          <HoverArrow
-                                            className="hover-arrow"
-                                            size={16}
-                                          />
-                                        )}
-                                      </WorkspaceItem>
-                                    );
-                                  },
-                                )}
+                    {/* Show workspaces if active org is expanded */}
+                    {activeOrganization &&
+                      workspacesEnabled &&
+                      expandedOrgs.has(activeOrganization.id) && (
+                        <>
+                          {workspaceList
+                            ?.filter(
+                              (w: WorkspaceWithOrganization) =>
+                                w.organization.id === activeOrganization.id,
+                            )
+                            .map((workspace: WorkspaceWithOrganization) => {
+                              const isWorkspaceActive =
+                                activeWorkspace?.id === workspace.id;
+                              return (
                                 <WorkspaceItem
-                                  as="button"
-                                  onClick={() => {
-                                    setSelectedOrgForWorkspace(org.id);
-                                    createWorkspaceDialog.open();
-                                    // Keep dropdown open
-                                  }}
-                                  disabled={isSwitching}
+                                  as={isWorkspaceActive ? undefined : "button"}
+                                  key={workspace.id}
+                                  $isActive={isWorkspaceActive}
+                                  onClick={
+                                    isWorkspaceActive
+                                      ? undefined
+                                      : () =>
+                                          handleSwitchWorkspace(workspace.id)
+                                  }
+                                  {...(isWorkspaceActive
+                                    ? {
+                                        style: isSwitching
+                                          ? {
+                                              pointerEvents: "none",
+                                              opacity: 0.7,
+                                            }
+                                          : undefined,
+                                      }
+                                    : { disabled: isSwitching })}
                                 >
+                                  {isWorkspaceActive && <ActiveIndicator />}
                                   <MenuItemContent>
-                                    <PlusIcon
-                                      style={{ width: "14px", height: "14px" }}
-                                    >
-                                      <Plus size={10} />
-                                    </PlusIcon>
+                                    <WorkspaceAvatar>
+                                      {workspace.image_url ? (
+                                        <img
+                                          src={workspace.image_url}
+                                          alt={workspace.name}
+                                          style={{
+                                            width: "100%",
+                                            height: "100%",
+                                            objectFit: "cover",
+                                          }}
+                                        />
+                                      ) : (
+                                        getInitials(workspace.name).charAt(0)
+                                      )}
+                                    </WorkspaceAvatar>
                                     <MenuItemInfo>
                                       <MenuItemName>
-                                        Create workspace
+                                        {workspace.name}
                                       </MenuItemName>
                                     </MenuItemInfo>
                                   </MenuItemContent>
+                                  {isWorkspaceActive ? (
+                                    <div
+                                      style={{
+                                        display: "flex",
+                                        alignItems: "center",
+                                        gap: "8px",
+                                      }}
+                                    >
+                                      <ManageButton
+                                        onClick={(e) => {
+                                          e.stopPropagation();
+                                          manageWorkspaceDialog.open();
+                                          // Keep dropdown open
+                                        }}
+                                        title="Manage workspace"
+                                      >
+                                        <Settings size={12} />
+                                      </ManageButton>
+                                      <LogoutButton
+                                        onClick={async (e) => {
+                                          e.stopPropagation();
+                                          try {
+                                            if (leaveWorkspace) {
+                                              await leaveWorkspace();
+                                              // Keep dropdown open
+                                            }
+                                          } catch (error: any) {
+                                            const errorMessage =
+                                              error.message ||
+                                              "Failed to leave workspace. Please try again.";
+                                            toast(errorMessage, "error");
+                                          }
+                                        }}
+                                        title="Leave workspace"
+                                      >
+                                        <LogOut size={12} />
+                                      </LogoutButton>
+                                    </div>
+                                  ) : (
+                                    <HoverArrow
+                                      className="hover-arrow"
+                                      size={14}
+                                    />
+                                  )}
                                 </WorkspaceItem>
-                              </>
-                            )}
-                            {index < filteredArray.length - 1 && <Separator />}
-                          </React.Fragment>
-                        );
-                      })}
-                  </>
-                )}
+                              );
+                            })}
+                          <WorkspaceItem
+                            as="button"
+                            onClick={() => {
+                              setSelectedOrgForWorkspace(activeOrganization.id);
+                              createWorkspaceDialog.open();
+                              // Keep dropdown open
+                            }}
+                            disabled={isSwitching}
+                          >
+                            <MenuItemContent>
+                              <PlusIcon
+                                style={{ width: "14px", height: "14px" }}
+                              >
+                                <Plus size={12} />
+                              </PlusIcon>
+                              <MenuItemInfo>
+                                <MenuItemName>Create workspace</MenuItemName>
+                              </MenuItemInfo>
+                            </MenuItemContent>
+                          </WorkspaceItem>
+                        </>
+                      )}
 
-              {/* Always show create organization button at bottom */}
-              {allowUsersToCreateOrgs && (
-                <>
-                  <Separator />
-                  <CreateOrgButton
-                    onClick={() => {
-                      createOrgDialog.open();
-                      // Keep dropdown open
-                    }}
-                    disabled={isSwitching}
-                  >
-                    <MenuItemContent>
-                      <PlusIcon>
-                        <Plus size={12} />
-                      </PlusIcon>
-                      <MenuItemInfo>
-                        <MenuItemName>Create organization</MenuItemName>
-                      </MenuItemInfo>
-                    </MenuItemContent>
-                  </CreateOrgButton>
-                </>
-              )}
-            </div>
+                    {/* Show status messages */}
+                    {(leavingOrg || leaveError) && (
+                      <>
+                        {leavingOrg && (
+                          <StatusMessage>
+                            <Spinner />
+                            Leaving organization...
+                          </StatusMessage>
+                        )}
+                        {leaveError && (
+                          <StatusMessage $isError>
+                            <span>⚠️</span>
+                            {leaveError}
+                          </StatusMessage>
+                        )}
+                      </>
+                    )}
+
+                    <Separator />
+
+                    {organizationMemberships &&
+                      organizationMemberships.length > 0 && (
+                        <>
+                          {organizationMemberships
+                            .filter(
+                              (m) =>
+                                m.organization.id !== activeOrganization?.id,
+                            )
+                            .map((membership, index, filteredArray) => {
+                              const org = membership.organization;
+                              const orgWorkspaces =
+                                workspaceList?.filter(
+                                  (w: WorkspaceWithOrganization) =>
+                                    w.organization.id === org.id,
+                                ) || [];
+                              const isExpanded = expandedOrgs.has(org.id);
+
+                              return (
+                                <React.Fragment key={org.id}>
+                                  <MenuItem
+                                    as="button"
+                                    $isActive={false}
+                                    onClick={() => {
+                                      if (workspacesEnabled) {
+                                        toggleOrgExpanded(org.id);
+                                      } else {
+                                        handleSwitchOrganization(org.id);
+                                      }
+                                    }}
+                                    disabled={isSwitching}
+                                  >
+                                    <MenuItemContent>
+                                      {workspacesEnabled && (
+                                        <ChevronDown
+                                          size={12}
+                                          style={{
+                                            marginRight: "4px",
+                                            transform: isExpanded
+                                              ? "rotate(0deg)"
+                                              : "rotate(-90deg)",
+                                            transition: "transform 0.2s ease",
+                                            color:
+                                              "var(--color-secondary-text)",
+                                          }}
+                                        />
+                                      )}
+                                      <MenuItemAvatar>
+                                        {org.image_url ? (
+                                          <MenuItemAvatarImage
+                                            src={org.image_url}
+                                            alt={org.name}
+                                          />
+                                        ) : (
+                                          getInitials(org.name)
+                                        )}
+                                      </MenuItemAvatar>
+                                      <MenuItemInfo>
+                                        <MenuItemName>{org.name}</MenuItemName>
+                                        {membership.role &&
+                                          membership.role.length > 0 && (
+                                            <MenuItemRole>
+                                              {membership.role[0].name ===
+                                              "owner"
+                                                ? "Owner"
+                                                : membership.role[0].name ===
+                                                    "admin"
+                                                  ? "Admin"
+                                                  : "Member"}
+                                            </MenuItemRole>
+                                          )}
+                                      </MenuItemInfo>
+                                    </MenuItemContent>
+                                    <HoverArrow
+                                      className="hover-arrow"
+                                      size={14}
+                                    />
+                                  </MenuItem>
+
+                                  {workspacesEnabled && isExpanded && (
+                                    <>
+                                      {orgWorkspaces.map(
+                                        (
+                                          workspace: WorkspaceWithOrganization,
+                                        ) => {
+                                          const isWorkspaceActive =
+                                            activeWorkspace?.id ===
+                                            workspace.id;
+                                          return (
+                                            <WorkspaceItem
+                                              as={
+                                                isWorkspaceActive
+                                                  ? undefined
+                                                  : "button"
+                                              }
+                                              key={workspace.id}
+                                              $isActive={isWorkspaceActive}
+                                              onClick={
+                                                isWorkspaceActive
+                                                  ? undefined
+                                                  : () =>
+                                                      handleSwitchWorkspace(
+                                                        workspace.id,
+                                                      )
+                                              }
+                                              {...(isWorkspaceActive
+                                                ? {
+                                                    style: isSwitching
+                                                      ? {
+                                                          pointerEvents: "none",
+                                                          opacity: 0.7,
+                                                        }
+                                                      : undefined,
+                                                  }
+                                                : { disabled: isSwitching })}
+                                            >
+                                              {isWorkspaceActive && (
+                                                <ActiveIndicator />
+                                              )}
+                                              <MenuItemContent>
+                                                <WorkspaceAvatar>
+                                                  {workspace.image_url ? (
+                                                    <img
+                                                      src={workspace.image_url}
+                                                      alt={workspace.name}
+                                                      style={{
+                                                        width: "100%",
+                                                        height: "100%",
+                                                        objectFit: "cover",
+                                                      }}
+                                                    />
+                                                  ) : (
+                                                    getInitials(
+                                                      workspace.name,
+                                                    ).charAt(0)
+                                                  )}
+                                                </WorkspaceAvatar>
+                                                <MenuItemInfo>
+                                                  <MenuItemName>
+                                                    {workspace.name}
+                                                  </MenuItemName>
+                                                </MenuItemInfo>
+                                              </MenuItemContent>
+                                              {isWorkspaceActive ? (
+                                                <div
+                                                  style={{
+                                                    display: "flex",
+                                                    alignItems: "center",
+                                                    gap: "8px",
+                                                  }}
+                                                >
+                                                  <ManageButton
+                                                    onClick={(e) => {
+                                                      e.stopPropagation();
+                                                      manageWorkspaceDialog.open();
+                                                      // Keep dropdown open
+                                                    }}
+                                                    title="Manage workspace"
+                                                  >
+                                                    <Settings size={12} />
+                                                  </ManageButton>
+                                                  <LogoutButton
+                                                    onClick={async (e) => {
+                                                      e.stopPropagation();
+                                                      try {
+                                                        if (leaveWorkspace) {
+                                                          await leaveWorkspace();
+                                                          // Keep dropdown open
+                                                        }
+                                                      } catch (error: any) {
+                                                        const errorMessage =
+                                                          error.message ||
+                                                          "Failed to leave workspace. Please try again.";
+                                                        toast(
+                                                          errorMessage,
+                                                          "error",
+                                                        );
+                                                      }
+                                                    }}
+                                                    title="Leave workspace"
+                                                  >
+                                                    <LogOut size={12} />
+                                                  </LogoutButton>
+                                                </div>
+                                              ) : (
+                                                <HoverArrow
+                                                  className="hover-arrow"
+                                                  size={16}
+                                                />
+                                              )}
+                                            </WorkspaceItem>
+                                          );
+                                        },
+                                      )}
+                                      <WorkspaceItem
+                                        as="button"
+                                        onClick={() => {
+                                          setSelectedOrgForWorkspace(org.id);
+                                          createWorkspaceDialog.open();
+                                          // Keep dropdown open
+                                        }}
+                                        disabled={isSwitching}
+                                      >
+                                        <MenuItemContent>
+                                          <PlusIcon
+                                            style={{
+                                              width: "14px",
+                                              height: "14px",
+                                            }}
+                                          >
+                                            <Plus size={10} />
+                                          </PlusIcon>
+                                          <MenuItemInfo>
+                                            <MenuItemName>
+                                              Create workspace
+                                            </MenuItemName>
+                                          </MenuItemInfo>
+                                        </MenuItemContent>
+                                      </WorkspaceItem>
+                                    </>
+                                  )}
+                                  {index < filteredArray.length - 1 && (
+                                    <Separator />
+                                  )}
+                                </React.Fragment>
+                              );
+                            })}
+                        </>
+                      )}
+
+                    {/* Always show create organization button at bottom */}
+                    {allowUsersToCreateOrgs && (
+                      <>
+                        <CreateOrgButton
+                          onClick={() => {
+                            createOrgDialog.open();
+                            // Keep dropdown open
+                          }}
+                          disabled={isSwitching}
+                        >
+                          <MenuItemContent>
+                            <PlusIcon>
+                              <Plus size={12} />
+                            </PlusIcon>
+                            <MenuItemInfo>
+                              <MenuItemName>Create organization</MenuItemName>
+                            </MenuItemInfo>
+                          </MenuItemContent>
+                        </CreateOrgButton>
+                      </>
+                    )}
+                  </div>
+                )}
+              </Dropdown>
+            </DefaultStylesProvider>,
+            document.body,
           )}
-        </Dropdown>
-          </DefaultStylesProvider>,
-          document.body
-        )}
 
         {organizationsEnabled && allowUsersToCreateOrgs && (
           <CreateOrganizationDialog

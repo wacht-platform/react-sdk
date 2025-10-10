@@ -8,6 +8,6 @@ catalog:
   next: ^15.0.0
   react-router: ^7.0.0
   typescript: ^5.7.2
-  "@snipextt/wacht-types": ^0.0.2
+  "@wacht/types": latest
   "@types/react": ^19.0.2
   "@types/react-dom": ^19.0.2

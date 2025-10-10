@@ -322,8 +322,11 @@ function SignInFormContent() {
 
     setIsSubmitting(true);
     try {
+      const searchParams = new URLSearchParams(window.location.search);
+      const redirectUri = searchParams.get("redirect_uri") || undefined;
       const { data } = await oauthSignIn.create({
         provider: connection.provider as OAuthProvider,
+        redirectUri,
       });
       if (data && typeof data === "object" && "oauth_url" in data) {
         window.location.href = data.oauth_url as string;

@@ -70,7 +70,12 @@ import { useDeployment } from "@/hooks/use-deployment";
 import { countries } from "@/constants/geo";
 import { FormGroup, Label } from "../utility/form";
 import { Input } from "../utility/input";
-import { Spinner, Button, SearchInput } from "../utility";
+import {
+  Spinner,
+  Button,
+  SearchInput,
+  DefaultStylesProvider,
+} from "../utility";
 import {
   Table,
   TableBody,
@@ -1045,6 +1050,7 @@ const SocialManagementSection = () => {
                     display: "flex",
                     alignItems: "center",
                     gap: "12px",
+                    color: "var(--color-foreground)",
                   }}
                 >
                   <IconWrapper>{providerInfo.icon}</IconWrapper>
@@ -1052,7 +1058,6 @@ const SocialManagementSection = () => {
                     style={{
                       fontSize: "14px",
                       fontWeight: 500,
-                      color: "var(--color-foreground)",
                     }}
                   >
                     {providerInfo.label}
@@ -1174,15 +1179,17 @@ export const ManageAccount = () => {
 
   if (loading)
     return (
-      <Container
-        style={{
-          display: "flex",
-          justifyContent: "center",
-          alignItems: "center",
-        }}
-      >
-        <Spinner />
-      </Container>
+      <DefaultStylesProvider>
+        <Container
+          style={{
+            display: "flex",
+            justifyContent: "center",
+            alignItems: "center",
+          }}
+        >
+          <Spinner />
+        </Container>
+      </DefaultStylesProvider>
     );
 
   const authSettings = deployment?.auth_settings;
@@ -1195,129 +1202,134 @@ export const ManageAccount = () => {
     authSettings?.auth_factors_enabled?.backup_code;
 
   return (
-    <TypographyProvider>
-      <ScreenContext.Provider
-        value={{ screen: null, setScreen: () => {}, toast }}
-      >
-        <Container>
-          <TabsContainer>
-            <TabsList>
-              <Tab
-                $isActive={activeTab === "profile"}
-                onClick={() => setActiveTab("profile")}
-              >
-                <TabIcon>
-                  <User size={16} />
-                  Profile
-                </TabIcon>
-              </Tab>
-
-              {showEmailTab && (
+    <DefaultStylesProvider>
+      <TypographyProvider>
+        <ScreenContext.Provider
+          value={{ screen: null, setScreen: () => {}, toast }}
+        >
+          <Container>
+            <TabsContainer>
+              <TabsList>
                 <Tab
-                  $isActive={activeTab === "email"}
-                  onClick={() => setActiveTab("email")}
+                  $isActive={activeTab === "profile"}
+                  onClick={() => setActiveTab("profile")}
                 >
                   <TabIcon>
-                    <Mail size={16} />
-                    Email
+                    <User size={16} />
+                    Profile
                   </TabIcon>
                 </Tab>
-              )}
 
-              {showPhoneTab && (
-                <Tab
-                  $isActive={activeTab === "phone"}
-                  onClick={() => setActiveTab("phone")}
-                >
-                  <TabIcon>
-                    <Phone size={16} />
-                    Phone
-                  </TabIcon>
-                </Tab>
-              )}
-
-              <Tab
-                $isActive={activeTab === "social"}
-                onClick={() => setActiveTab("social")}
-              >
-                <TabIcon>
-                  <Link2 size={16} />
-                  Connections
-                </TabIcon>
-              </Tab>
-
-              {showSecurityTab && (
-                <Tab
-                  $isActive={activeTab === "security"}
-                  onClick={() => setActiveTab("security")}
-                >
-                  <TabIcon>
-                    <Shield size={16} />
-                    Security
-                  </TabIcon>
-                </Tab>
-              )}
-
-              <Tab
-                $isActive={activeTab === "sessions"}
-                onClick={() => setActiveTab("sessions")}
-              >
-                <TabIcon>
-                  <Activity size={16} />
-                  Sessions
-                </TabIcon>
-              </Tab>
-            </TabsList>
-          </TabsContainer>
-
-          <TabContent>
-            {activeTab === "profile" && <ProfileDetailsManagementSection />}
-            {activeTab === "email" && showEmailTab && (
-              <EmailManagementSection />
-            )}
-            {activeTab === "phone" && showPhoneTab && (
-              <PhoneManagementSection />
-            )}
-            {activeTab === "social" && <SocialManagementSection />}
-            {activeTab === "security" && showSecurityTab && (
-              <SecurityManagementSection />
-            )}
-            {activeTab === "sessions" && <ActiveSessionsSection />}
-          </TabContent>
-
-          {toastMessage && (
-            <div
-              style={{
-                position: "absolute",
-                bottom: "20px",
-                right: "20px",
-                background: "var(--color-input-background)",
-                border: "1px solid var(--color-border)",
-                borderRadius: "8px",
-                padding: "12px 16px",
-                boxShadow: "0 4px 12px var(--color-shadow)",
-                animation: "slideUp 0.3s ease-out",
-              }}
-            >
-              <div
-                style={{ display: "flex", alignItems: "center", gap: "8px" }}
-              >
-                {toastLevel === "error" ? (
-                  <AlertTriangle size={16} color="var(--color-error)" />
-                ) : (
-                  <Check size={16} color="var(--color-success)" />
+                {showEmailTab && (
+                  <Tab
+                    $isActive={activeTab === "email"}
+                    onClick={() => setActiveTab("email")}
+                  >
+                    <TabIcon>
+                      <Mail size={16} />
+                      Email
+                    </TabIcon>
+                  </Tab>
                 )}
-                <span
-                  style={{ fontSize: "14px", color: "var(--color-foreground)" }}
+
+                {showPhoneTab && (
+                  <Tab
+                    $isActive={activeTab === "phone"}
+                    onClick={() => setActiveTab("phone")}
+                  >
+                    <TabIcon>
+                      <Phone size={16} />
+                      Phone
+                    </TabIcon>
+                  </Tab>
+                )}
+
+                <Tab
+                  $isActive={activeTab === "social"}
+                  onClick={() => setActiveTab("social")}
                 >
-                  {toastMessage}
-                </span>
+                  <TabIcon>
+                    <Link2 size={16} />
+                    Connections
+                  </TabIcon>
+                </Tab>
+
+                {showSecurityTab && (
+                  <Tab
+                    $isActive={activeTab === "security"}
+                    onClick={() => setActiveTab("security")}
+                  >
+                    <TabIcon>
+                      <Shield size={16} />
+                      Security
+                    </TabIcon>
+                  </Tab>
+                )}
+
+                <Tab
+                  $isActive={activeTab === "sessions"}
+                  onClick={() => setActiveTab("sessions")}
+                >
+                  <TabIcon>
+                    <Activity size={16} />
+                    Sessions
+                  </TabIcon>
+                </Tab>
+              </TabsList>
+            </TabsContainer>
+
+            <TabContent>
+              {activeTab === "profile" && <ProfileDetailsManagementSection />}
+              {activeTab === "email" && showEmailTab && (
+                <EmailManagementSection />
+              )}
+              {activeTab === "phone" && showPhoneTab && (
+                <PhoneManagementSection />
+              )}
+              {activeTab === "social" && <SocialManagementSection />}
+              {activeTab === "security" && showSecurityTab && (
+                <SecurityManagementSection />
+              )}
+              {activeTab === "sessions" && <ActiveSessionsSection />}
+            </TabContent>
+
+            {toastMessage && (
+              <div
+                style={{
+                  position: "absolute",
+                  bottom: "20px",
+                  right: "20px",
+                  background: "var(--color-input-background)",
+                  border: "1px solid var(--color-border)",
+                  borderRadius: "8px",
+                  padding: "12px 16px",
+                  boxShadow: "0 4px 12px var(--color-shadow)",
+                  animation: "slideUp 0.3s ease-out",
+                }}
+              >
+                <div
+                  style={{ display: "flex", alignItems: "center", gap: "8px" }}
+                >
+                  {toastLevel === "error" ? (
+                    <AlertTriangle size={16} color="var(--color-error)" />
+                  ) : (
+                    <Check size={16} color="var(--color-success)" />
+                  )}
+                  <span
+                    style={{
+                      fontSize: "14px",
+                      color: "var(--color-foreground)",
+                    }}
+                  >
+                    {toastMessage}
+                  </span>
+                </div>
               </div>
-            </div>
-          )}
-        </Container>
-      </ScreenContext.Provider>
-    </TypographyProvider>
+            )}
+          </Container>
+        </ScreenContext.Provider>
+      </TypographyProvider>
+    </DefaultStylesProvider>
   );
 };
 

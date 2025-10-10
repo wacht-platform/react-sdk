@@ -4,6 +4,7 @@ import { ChevronLeft, ChevronDown, Plus } from "lucide-react";
 import { useWorkspaceList } from "@/hooks/use-workspace";
 import { useOrganizationMemberships } from "@/hooks/use-organization";
 import { useScreenContext } from "../organization/context";
+import { DefaultStylesProvider } from "../utility";
 
 const Container = styled.div`
   display: flex;
@@ -35,7 +36,8 @@ const AvatarContainer = styled.div<{ hasImage: boolean }>`
   height: 80px;
   border-radius: 16px;
   overflow: hidden;
-  background: ${(props) => (props.hasImage ? "transparent" : "var(--color-background)")};
+  background: ${(props) =>
+    props.hasImage ? "transparent" : "var(--color-background)"};
   border: 2px solid var(--color-border);
   display: flex;
   align-items: center;
@@ -281,7 +283,9 @@ const DropdownContent = styled.div`
   background: var(--color-background);
   border: 1px solid var(--color-border);
   border-radius: 6px;
-  box-shadow: 0 4px 6px -1px var(--color-shadow), 0 2px 4px -1px var(--color-shadow);
+  box-shadow:
+    0 4px 6px -1px var(--color-shadow),
+    0 2px 4px -1px var(--color-shadow);
   z-index: 10;
   max-height: 200px;
   overflow-y: auto;
@@ -380,26 +384,24 @@ export const CreateWorkspaceForm: React.FC<CreateWorkspaceFormProps> = ({
   const { createWorkspace } = useWorkspaceList();
   const { organizationMemberships } = useOrganizationMemberships();
 
-  const selectedOrg = organizationMemberships?.find(m => m.organization.id === selectedOrgId)?.organization;
-
+  const selectedOrg = organizationMemberships?.find(
+    (m) => m.organization.id === selectedOrgId,
+  )?.organization;
 
   const handleImageChange = (event: React.ChangeEvent<HTMLInputElement>) => {
     if (event.target.files && event.target.files[0]) {
       const file = event.target.files[0];
 
-      // Validate file size
       if (file.size > 2 * 1024 * 1024) {
         toast("File size cannot exceed 2MB", "error");
         return;
       }
 
-      // Validate file type
-      if (!file.type.startsWith('image/')) {
+      if (!file.type.startsWith("image/")) {
         toast("Please select a valid image file", "error");
         return;
       }
 
-      // Revoke previous object URL to prevent memory leaks
       if (previewUrl) {
         URL.revokeObjectURL(previewUrl);
       }
@@ -425,24 +427,29 @@ export const CreateWorkspaceForm: React.FC<CreateWorkspaceFormProps> = ({
   };
 
   const sanitizeText = (text: string): string => {
-    return text.trim().replace(/[<>\"'&]/g, '');
+    return text.trim().replace(/[<>\"'&]/g, "");
   };
 
   const validateWorkspaceName = (name: string): boolean => {
-    return name.length >= 2 && name.length <= 100 && /^[a-zA-Z0-9\s_.-]+$/.test(name);
+    return (
+      name.length >= 2 && name.length <= 100 && /^[a-zA-Z0-9\s_.-]+$/.test(name)
+    );
   };
 
   const handleSubmit = async () => {
     const sanitizedName = sanitizeText(name);
     const sanitizedDescription = sanitizeText(description);
-    
+
     if (!sanitizedName || !selectedOrgId) {
       toast("Please enter a workspace name", "error");
       return;
     }
 
     if (!validateWorkspaceName(sanitizedName)) {
-      toast("Workspace name must be 2-100 characters and contain only letters, numbers, spaces, dots, underscores, and hyphens", "error");
+      toast(
+        "Workspace name must be 2-100 characters and contain only letters, numbers, spaces, dots, underscores, and hyphens",
+        "error",
+      );
       return;
     }
 
@@ -453,17 +460,22 @@ export const CreateWorkspaceForm: React.FC<CreateWorkspaceFormProps> = ({
 
     setIsSubmitting(true);
     try {
-      await createWorkspace(selectedOrgId, sanitizedName, image, sanitizedDescription);
+      await createWorkspace(
+        selectedOrgId,
+        sanitizedName,
+        image,
+        sanitizedDescription,
+      );
       onSuccess?.();
     } catch (error: any) {
-      const errorMessage = error.message || "Failed to create workspace. Please try again.";
+      const errorMessage =
+        error.message || "Failed to create workspace. Please try again.";
       toast(errorMessage, "error");
     } finally {
       setIsSubmitting(false);
     }
   };
 
-  // Cleanup object URL on unmount to prevent memory leaks
   useEffect(() => {
     return () => {
       if (previewUrl) {
@@ -472,149 +484,166 @@ export const CreateWorkspaceForm: React.FC<CreateWorkspaceFormProps> = ({
     };
   }, [previewUrl]);
 
-  // Close dropdown on outside click
   React.useEffect(() => {
     const handleClickOutside = (event: MouseEvent) => {
-      if (dropdownRef.current && !dropdownRef.current.contains(event.target as Node)) {
+      if (
+        dropdownRef.current &&
+        !dropdownRef.current.contains(event.target as Node)
+      ) {
         setDropdownOpen(false);
       }
     };
 
-    document.addEventListener('mousedown', handleClickOutside);
-    return () => document.removeEventListener('mousedown', handleClickOutside);
+    document.addEventListener("mousedown", handleClickOutside);
+    return () => document.removeEventListener("mousedown", handleClickOutside);
   }, []);
 
   return (
-    <Container>
-      <LeftPanel>
-        <AvatarContainer hasImage={!!previewUrl} onClick={handleFileSelect}>
-          {previewUrl ? (
-            <AvatarImage src={previewUrl} alt="Workspace logo" />
-          ) : (
-            <AvatarPlaceholder>{getInitials(name || "W")}</AvatarPlaceholder>
-          )}
-          <UploadOverlay>
-            <UploadText>Upload Logo</UploadText>
-          </UploadOverlay>
-        </AvatarContainer>
-        <HiddenInput
-          type="file"
-          ref={fileInputRef}
-          onChange={handleImageChange}
-          accept="image/png, image/jpeg, image/gif"
-          disabled={isSubmitting}
-        />
-        <Title>Create new workspace</Title>
-        <Description>
-          Workspaces are used to organize your projects and team members into logical groups.
-        </Description>
-      </LeftPanel>
+    <DefaultStylesProvider>
+      <Container>
+        <LeftPanel>
+          <AvatarContainer hasImage={!!previewUrl} onClick={handleFileSelect}>
+            {previewUrl ? (
+              <AvatarImage src={previewUrl} alt="Workspace logo" />
+            ) : (
+              <AvatarPlaceholder>{getInitials(name || "W")}</AvatarPlaceholder>
+            )}
+            <UploadOverlay>
+              <UploadText>Upload Logo</UploadText>
+            </UploadOverlay>
+          </AvatarContainer>
+          <HiddenInput
+            type="file"
+            ref={fileInputRef}
+            onChange={handleImageChange}
+            accept="image/png, image/jpeg, image/gif"
+            disabled={isSubmitting}
+          />
+          <Title>Create new workspace</Title>
+          <Description>
+            Workspaces are used to organize your projects and team members into
+            logical groups.
+          </Description>
+        </LeftPanel>
 
-      <RightPanel>
-        <FormHeader>
-          <FormTitle>Choose your workspace name</FormTitle>
-          <FormDescription>
-            Enter a name for your new workspace. This will be visible to all
-            members.
-          </FormDescription>
-        </FormHeader>
+        <RightPanel>
+          <FormHeader>
+            <FormTitle>Choose your workspace name</FormTitle>
+            <FormDescription>
+              Enter a name for your new workspace. This will be visible to all
+              members.
+            </FormDescription>
+          </FormHeader>
 
-        <FormContent>
-          <FormGroup>
-            <Label>Organization</Label>
-            <DropdownContainer ref={dropdownRef}>
-              <DropdownButton
-                type="button"
-                onClick={() => setDropdownOpen(!dropdownOpen)}
-                disabled={isSubmitting}
-              >
-                <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
-                  <OrgAvatar>
-                    {selectedOrg?.image_url ? (
-                      <OrgAvatarImage src={selectedOrg.image_url} alt={selectedOrg.name} />
-                    ) : (
-                      getInitials(selectedOrg?.name || 'O').charAt(0)
-                    )}
-                  </OrgAvatar>
-                  <span>{selectedOrg?.name || 'Select organization'}</span>
-                </div>
-                <ChevronDown size={16} style={{ color: 'var(--color-secondary-text)' }} />
-              </DropdownButton>
-              {dropdownOpen && (
-                <DropdownContent>
-                  {organizationMemberships?.map((membership) => (
-                    <DropdownItem
-                      key={membership.organization.id}
-                      onClick={() => {
-                        setSelectedOrgId(membership.organization.id);
-                        setDropdownOpen(false);
-                      }}
-                    >
-                      <OrgAvatar>
-                        {membership.organization.image_url ? (
-                          <OrgAvatarImage 
-                            src={membership.organization.image_url} 
-                            alt={membership.organization.name} 
-                          />
-                        ) : (
-                          getInitials(membership.organization.name).charAt(0)
-                        )}
-                      </OrgAvatar>
-                      <span>{membership.organization.name}</span>
-                    </DropdownItem>
-                  ))}
-                  <CreateOrgItem
-                    onClick={() => {
-                      setDropdownOpen(false);
-                      onCreateOrganization?.();
+          <FormContent>
+            <FormGroup>
+              <Label>Organization</Label>
+              <DropdownContainer ref={dropdownRef}>
+                <DropdownButton
+                  type="button"
+                  onClick={() => setDropdownOpen(!dropdownOpen)}
+                  disabled={isSubmitting}
+                >
+                  <div
+                    style={{
+                      display: "flex",
+                      alignItems: "center",
+                      gap: "8px",
                     }}
                   >
-                    <PlusIcon>
-                      <Plus size={12} />
-                    </PlusIcon>
-                    <span>Create new organization</span>
-                  </CreateOrgItem>
-                </DropdownContent>
-              )}
-            </DropdownContainer>
-          </FormGroup>
+                    <OrgAvatar>
+                      {selectedOrg?.image_url ? (
+                        <OrgAvatarImage
+                          src={selectedOrg.image_url}
+                          alt={selectedOrg.name}
+                        />
+                      ) : (
+                        getInitials(selectedOrg?.name || "O").charAt(0)
+                      )}
+                    </OrgAvatar>
+                    <span>{selectedOrg?.name || "Select organization"}</span>
+                  </div>
+                  <ChevronDown
+                    size={16}
+                    style={{ color: "var(--color-secondary-text)" }}
+                  />
+                </DropdownButton>
+                {dropdownOpen && (
+                  <DropdownContent>
+                    {organizationMemberships?.map((membership) => (
+                      <DropdownItem
+                        key={membership.organization.id}
+                        onClick={() => {
+                          setSelectedOrgId(membership.organization.id);
+                          setDropdownOpen(false);
+                        }}
+                      >
+                        <OrgAvatar>
+                          {membership.organization.image_url ? (
+                            <OrgAvatarImage
+                              src={membership.organization.image_url}
+                              alt={membership.organization.name}
+                            />
+                          ) : (
+                            getInitials(membership.organization.name).charAt(0)
+                          )}
+                        </OrgAvatar>
+                        <span>{membership.organization.name}</span>
+                      </DropdownItem>
+                    ))}
+                    <CreateOrgItem
+                      onClick={() => {
+                        setDropdownOpen(false);
+                        onCreateOrganization?.();
+                      }}
+                    >
+                      <PlusIcon>
+                        <Plus size={12} />
+                      </PlusIcon>
+                      <span>Create new organization</span>
+                    </CreateOrgItem>
+                  </DropdownContent>
+                )}
+              </DropdownContainer>
+            </FormGroup>
 
-          <FormGroup>
-            <Label>Workspace name</Label>
-            <Input
-              type="text"
-              value={name}
-              onChange={(e) => setName(e.target.value)}
-              placeholder="your-workspace-name"
-              disabled={isSubmitting}
-            />
-          </FormGroup>
+            <FormGroup>
+              <Label>Workspace name</Label>
+              <Input
+                type="text"
+                value={name}
+                onChange={(e) => setName(e.target.value)}
+                placeholder="Workspace Name"
+                disabled={isSubmitting}
+              />
+            </FormGroup>
 
-          <FormGroup>
-            <Label>Description (optional)</Label>
-            <TextArea
-              value={description}
-              onChange={(e) => setDescription(e.target.value)}
-              placeholder="What is this workspace for?"
-              disabled={isSubmitting}
-            />
-          </FormGroup>
-        </FormContent>
+            <FormGroup>
+              <Label>Description (optional)</Label>
+              <TextArea
+                value={description}
+                onChange={(e) => setDescription(e.target.value)}
+                placeholder="What is this workspace for?"
+                disabled={isSubmitting}
+              />
+            </FormGroup>
+          </FormContent>
 
-        <ButtonGroup>
-          <BackButton onClick={onCancel} disabled={isSubmitting}>
-            <ChevronLeft size={16} />
-            Back
-          </BackButton>
-          <SubmitButton
-            onClick={handleSubmit}
-            disabled={isSubmitting || !name.trim()}
-          >
-            {isSubmitting ? "Creating..." : "Create"}
-          </SubmitButton>
-        </ButtonGroup>
-      </RightPanel>
-    </Container>
+          <ButtonGroup>
+            <BackButton onClick={onCancel} disabled={isSubmitting}>
+              <ChevronLeft size={16} />
+              Back
+            </BackButton>
+            <SubmitButton
+              onClick={handleSubmit}
+              disabled={isSubmitting || !name.trim()}
+            >
+              {isSubmitting ? "Creating..." : "Create"}
+            </SubmitButton>
+          </ButtonGroup>
+        </RightPanel>
+      </Container>
+    </DefaultStylesProvider>
   );
 };
 

@@ -10,7 +10,9 @@ export {
   UserControls,
   ManageAccount,
   OrganizationSwitcher,
-  OrganizationList,
+  ManageOrganization,
+  CreateWorkspaceForm,
+  CreateOrganizationForm,
 } from "@snipextt/wacht";
 export {
   AgentConversation,

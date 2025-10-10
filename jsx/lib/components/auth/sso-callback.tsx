@@ -134,7 +134,6 @@ export function SSOCallback() {
     navigate(signInUrl);
   };
 
-  // Handle navigation based on state
   useEffect(() => {
     if (!processed || loading) return;
 
@@ -144,7 +143,6 @@ export function SSOCallback() {
         const url = new URL(signinUrl, window.location.origin);
         url.searchParams.set("signin_attempt_id", signinAttempt.id);
 
-        // Preserve the original redirect URI if present
         if (redirectUri) {
           url.searchParams.set("redirect_uri", redirectUri);
         }
@@ -155,13 +153,22 @@ export function SSOCallback() {
     }
 
     if (signinAttempt?.completed) {
-      const finalRedirectUrl =
+      const redirectUrl = new URL(
         redirectUri ||
-        deployment?.ui_settings?.after_signin_redirect_url ||
-        deployment?.frontend_host;
+          deployment?.ui_settings?.after_signin_redirect_url ||
+          deployment?.frontend_host ||
+          "",
+      );
 
-      if (finalRedirectUrl) {
-        navigate(finalRedirectUrl);
+      if (redirectUrl) {
+        if (deployment?.mode === "staging") {
+          redirectUrl.searchParams.set(
+            "__dev_session__",
+            localStorage.getItem("__dev_session__") || "",
+          );
+        }
+
+        navigate(redirectUrl.toString());
       }
     }
   }, [

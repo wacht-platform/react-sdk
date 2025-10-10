@@ -18,13 +18,9 @@ const AccountButton = styled.button`
   border: none;
   background: transparent;
   cursor: pointer;
-  padding: 6px;
+  padding: 0px 12px;
   border-radius: 30px;
   transition: background-color 0.2s ease;
-
-  &:hover {
-    background: var(--color-input-background);
-  }
 `;
 
 const AvatarContainer = styled.div`
@@ -32,8 +28,8 @@ const AvatarContainer = styled.div`
 `;
 
 const Avatar = styled.div`
-  width: 24px;
-  height: 24px;
+  width: 36px;
+  height: 36px;
   border-radius: 50%;
   overflow: hidden;
   background: var(--color-background-hover);
@@ -43,6 +39,7 @@ const Avatar = styled.div`
   font-size: 14px;
   font-weight: 500;
   color: var(--color-secondary-text);
+  border: 1px solid var(--color-border);
 
   img {
     width: 100%;

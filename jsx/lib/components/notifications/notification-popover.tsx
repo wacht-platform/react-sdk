@@ -5,14 +5,24 @@ import { NotificationItem } from "./notification-item";
 import { Spinner } from "../utility/spinner";
 import type { Notification } from "@/types/notification";
 
-const Popover = styled.div<{ 
-  $position?: { top?: number; bottom?: number; left?: number; right?: number } 
+const Popover = styled.div<{
+  $position?: { top?: number; bottom?: number; left?: number; right?: number };
 }>`
   position: fixed;
-  ${(props) => props.$position?.top !== undefined ? `top: ${props.$position.top}px;` : ''}
-  ${(props) => props.$position?.bottom !== undefined ? `bottom: ${props.$position.bottom}px;` : ''}
-  ${(props) => props.$position?.left !== undefined ? `left: ${props.$position.left}px;` : ''}
-  ${(props) => props.$position?.right !== undefined ? `right: ${props.$position.right}px;` : ''}
+  ${(props) =>
+    props.$position?.top !== undefined ? `top: ${props.$position.top}px;` : ""}
+  ${(props) =>
+    props.$position?.bottom !== undefined
+      ? `bottom: ${props.$position.bottom}px;`
+      : ""}
+  ${(props) =>
+    props.$position?.left !== undefined
+      ? `left: ${props.$position.left}px;`
+      : ""}
+  ${(props) =>
+    props.$position?.right !== undefined
+      ? `right: ${props.$position.right}px;`
+      : ""}
   width: 400px;
   max-height: 600px;
   background: var(--color-background);
@@ -135,7 +145,7 @@ const ViewAllLink = styled.a`
   font-weight: 500;
   text-decoration: none;
   transition: color 0.2s ease;
-  
+
   &:hover {
     color: var(--color-primary-hover);
     text-decoration: underline;
@@ -151,60 +161,68 @@ interface NotificationPopoverProps {
   onDelete: (id: string) => void;
 }
 
-export const NotificationPopover = forwardRef<HTMLDivElement, NotificationPopoverProps>(({
-  position,
-  notifications,
-  loading,
-  onMarkAsRead,
-  onMarkAllAsRead,
-  onDelete,
-}, ref) => {
-  const hasUnread = notifications.some(n => !n.is_read);
+export const NotificationPopover = forwardRef<
+  HTMLDivElement,
+  NotificationPopoverProps
+>(
+  (
+    {
+      position,
+      notifications,
+      loading,
+      onMarkAsRead,
+      onMarkAllAsRead,
+      onDelete,
+    },
+    ref,
+  ) => {
+    const hasUnread = !loading && notifications.some((n) => !n.is_read);
+    console.log("loadings", loading);
 
-  return (
-    <Popover ref={ref} $position={position}>
-      <Header>
-        <Title>Notifications</Title>
-        {hasUnread && (
-          <MarkAllButton onClick={onMarkAllAsRead}>
-            Mark all as read
-          </MarkAllButton>
+    return (
+      <Popover ref={ref} $position={position}>
+        <Header>
+          <Title>Notifications</Title>
+          {hasUnread && (
+            <MarkAllButton onClick={onMarkAllAsRead}>
+              Mark all as read
+            </MarkAllButton>
+          )}
+        </Header>
+
+        <Content>
+          {loading ? (
+            <LoadingContainer>
+              <Spinner />
+            </LoadingContainer>
+          ) : notifications.length === 0 ? (
+            <EmptyStateContainer>
+              <EmptyIcon>
+                <BellOff />
+              </EmptyIcon>
+              <EmptyTitle>No notifications</EmptyTitle>
+              <EmptyDescription>You're all caught up!</EmptyDescription>
+            </EmptyStateContainer>
+          ) : (
+            notifications.map((notification) => (
+              <NotificationItem
+                key={notification.id}
+                notification={notification}
+                onMarkAsRead={onMarkAsRead}
+                onDelete={onDelete}
+              />
+            ))
+          )}
+        </Content>
+
+        {!loading && notifications.length > 0 && (
+          <Footer>
+            <ViewAllLink href="/notifications">
+              View all notifications
+            </ViewAllLink>
+          </Footer>
         )}
-      </Header>
-
-
-      <Content>
-        {loading ? (
-          <LoadingContainer>
-            <Spinner />
-          </LoadingContainer>
-        ) : notifications.length === 0 ? (
-          <EmptyStateContainer>
-            <EmptyIcon>
-              <BellOff />
-            </EmptyIcon>
-            <EmptyTitle>No notifications</EmptyTitle>
-            <EmptyDescription>You're all caught up!</EmptyDescription>
-          </EmptyStateContainer>
-        ) : (
-          notifications.map((notification) => (
-            <NotificationItem
-              key={notification.id}
-              notification={notification}
-              onMarkAsRead={onMarkAsRead}
-              onDelete={onDelete}
-            />
-          ))
-        )}
-      </Content>
-
-      {notifications.length > 0 && (
-        <Footer>
-          <ViewAllLink href="/notifications">
-            View all notifications
-          </ViewAllLink>
-        </Footer>
-      )}
-    </Popover>
-  );
-});
+      </Popover>
+    );
+  },
+);

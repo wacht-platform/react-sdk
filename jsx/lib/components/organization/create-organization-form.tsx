@@ -3,6 +3,7 @@ import styled from "styled-components";
 import { useOrganizationList } from "@/hooks/use-organization";
 import { ChevronLeft } from "lucide-react";
 import { useScreenContext } from "./context";
+import { DefaultStylesProvider } from "../utility";
 
 const Container = styled.div`
   display: flex;
@@ -256,7 +257,6 @@ export const CreateOrganizationForm: React.FC<CreateOrganizationFormProps> = ({
   const { createOrganization } = useOrganizationList();
   const { toast } = useScreenContext();
 
-  // Auto-generate slug from name
   const handleNameChange = (value: string) => {
     setName(value);
   };
@@ -265,19 +265,16 @@ export const CreateOrganizationForm: React.FC<CreateOrganizationFormProps> = ({
     if (event.target.files && event.target.files[0]) {
       const file = event.target.files[0];
 
-      // Validate file size
       if (file.size > 2 * 1024 * 1024) {
         toast("File size cannot exceed 2MB", "error");
         return;
       }
 
-      // Validate file type
       if (!file.type.startsWith("image/")) {
         toast("Please select a valid image file", "error");
         return;
       }
 
-      // Revoke previous object URL to prevent memory leaks
       if (previewUrl) {
         URL.revokeObjectURL(previewUrl);
       }
@@ -302,7 +299,6 @@ export const CreateOrganizationForm: React.FC<CreateOrganizationFormProps> = ({
     );
   };
 
-  // Cleanup object URL on unmount to prevent memory leaks
   useEffect(() => {
     return () => {
       if (previewUrl) {
@@ -361,78 +357,80 @@ export const CreateOrganizationForm: React.FC<CreateOrganizationFormProps> = ({
   };
 
   return (
-    <Container>
-      <LeftPanel>
-        <AvatarContainer hasImage={!!previewUrl} onClick={handleFileSelect}>
-          {previewUrl ? (
-            <AvatarImage src={previewUrl} alt="Organization logo" />
-          ) : (
-            <AvatarPlaceholder>{getInitials(name || "O")}</AvatarPlaceholder>
-          )}
-          <UploadOverlay>
-            <UploadText>Upload Logo</UploadText>
-          </UploadOverlay>
-        </AvatarContainer>
-        <HiddenInput
-          type="file"
-          ref={fileInputRef}
-          onChange={handleImageChange}
-          accept="image/png, image/jpeg, image/gif"
-          disabled={isSubmitting}
-        />
-        <Title>Create new organization</Title>
-        <Description>
-          Organizations help you manage all your team members for an org in one
-          umbrella.
-        </Description>
-      </LeftPanel>
+    <DefaultStylesProvider>
+      <Container>
+        <LeftPanel>
+          <AvatarContainer hasImage={!!previewUrl} onClick={handleFileSelect}>
+            {previewUrl ? (
+              <AvatarImage src={previewUrl} alt="Organization logo" />
+            ) : (
+              <AvatarPlaceholder>{getInitials(name || "O")}</AvatarPlaceholder>
+            )}
+            <UploadOverlay>
+              <UploadText>Upload Logo</UploadText>
+            </UploadOverlay>
+          </AvatarContainer>
+          <HiddenInput
+            type="file"
+            ref={fileInputRef}
+            onChange={handleImageChange}
+            accept="image/png, image/jpeg, image/gif"
+            disabled={isSubmitting}
+          />
+          <Title>Create new organization</Title>
+          <Description>
+            Organizations help you manage all your team members for an org in
+            one umbrella.
+          </Description>
+        </LeftPanel>
 
-      <RightPanel>
-        <FormHeader>
-          <FormTitle>Choose your organization name</FormTitle>
-          <FormDescription>
-            This is the name of your company or team. You can always change it
-            later.
-          </FormDescription>
-        </FormHeader>
+        <RightPanel>
+          <FormHeader>
+            <FormTitle>Choose your organization name</FormTitle>
+            <FormDescription>
+              This is the name of your company or team. You can always change it
+              later.
+            </FormDescription>
+          </FormHeader>
 
-        <FormContent>
-          <FormGroup>
-            <Label>Organization name</Label>
-            <Input
-              type="text"
-              value={name}
-              onChange={(e) => handleNameChange(e.target.value)}
-              placeholder="Acme Inc."
-              disabled={isSubmitting}
-            />
-          </FormGroup>
+          <FormContent>
+            <FormGroup>
+              <Label>Organization name</Label>
+              <Input
+                type="text"
+                value={name}
+                onChange={(e) => handleNameChange(e.target.value)}
+                placeholder="Acme Inc."
+                disabled={isSubmitting}
+              />
+            </FormGroup>
 
-          <FormGroup>
-            <Label>Description (optional)</Label>
-            <TextArea
-              value={description}
-              onChange={(e) => setDescription(e.target.value)}
-              placeholder="What does your organization do?"
-              disabled={isSubmitting}
-            />
-          </FormGroup>
-        </FormContent>
+            <FormGroup>
+              <Label>Description (optional)</Label>
+              <TextArea
+                value={description}
+                onChange={(e) => setDescription(e.target.value)}
+                placeholder="What does your organization do?"
+                disabled={isSubmitting}
+              />
+            </FormGroup>
+          </FormContent>
 
-        <ButtonGroup>
-          <BackButton onClick={onCancel} disabled={isSubmitting}>
-            <ChevronLeft size={16} />
-            Back
-          </BackButton>
-          <SubmitButton
-            onClick={handleSubmit}
-            disabled={isSubmitting || !name.trim()}
-          >
-            {isSubmitting ? "Creating..." : "Create"}
-          </SubmitButton>
-        </ButtonGroup>
-      </RightPanel>
-    </Container>
+          <ButtonGroup>
+            <BackButton onClick={onCancel} disabled={isSubmitting}>
+              <ChevronLeft size={16} />
+              Back
+            </BackButton>
+            <SubmitButton
+              onClick={handleSubmit}
+              disabled={isSubmitting || !name.trim()}
+            >
+              {isSubmitting ? "Creating..." : "Create"}
+            </SubmitButton>
+          </ButtonGroup>
+        </RightPanel>
+      </Container>
+    </DefaultStylesProvider>
   );
 };
 

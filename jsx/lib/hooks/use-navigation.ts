@@ -17,37 +17,35 @@ export const useNavigation = () => {
   const navigateToSignIn = (redirectUri?: string) => {
     if (!deployment) return;
 
-    // Use relative path for local development to preserve context
     const currentHost = redirectUri || window.location.href;
     const params = new URLSearchParams();
     params.set("redirect_uri", currentHost);
 
     if (deployment?.mode === "staging") {
-      params.set(
-        "dev_session",
-        localStorage.getItem("__dev_session__") ?? ""
-      );
+      params.set("dev_session", localStorage.getItem("__dev_session__") ?? "");
     }
 
-    navigate(`/sign-in?${params.toString()}`, { replace: true });
+    navigate(
+      `${deployment.ui_settings.sign_in_page_url}?${params.toString()}`,
+      { replace: true },
+    );
   };
 
   const navigateToSignUp = (redirectUri?: string) => {
     if (!deployment) return;
 
-    // Use relative path for local development to preserve context
     const currentHost = redirectUri || window.location.href;
     const params = new URLSearchParams();
     params.set("redirect_uri", currentHost);
 
     if (deployment?.mode === "staging") {
-      params.set(
-        "dev_session",
-        localStorage.getItem("__dev_session__") ?? ""
-      );
+      params.set("dev_session", localStorage.getItem("__dev_session__") ?? "");
     }
 
-    navigate(`/sign-up?${params.toString()}`, { replace: true });
+    navigate(
+      `${deployment.ui_settings.sign_up_page_url}?${params.toString()}`,
+      { replace: true },
+    );
   };
 
   return {

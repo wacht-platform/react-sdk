@@ -85,99 +85,100 @@ interface NotificationBellProps {
   workspaceIds?: number[];
 }
 
-export function NotificationBell({ 
-  className, 
-  showBadge = true, 
-  channels = ["user"], 
-  organizationIds, 
-  workspaceIds 
+export function NotificationBell({
+  className,
+  showBadge = true,
+  channels = ["user"],
+  organizationIds,
+  workspaceIds,
 }: NotificationBellProps) {
   const [isOpen, setIsOpen] = useState(false);
-  const [popoverPosition, setPopoverPosition] = useState<{ top?: number; bottom?: number; left?: number; right?: number } | undefined>();
+  const [popoverPosition, setPopoverPosition] = useState<
+    { top?: number; bottom?: number; left?: number; right?: number } | undefined
+  >();
   const containerRef = useRef<HTMLDivElement>(null);
   const popoverRef = useRef<HTMLDivElement>(null);
-  
+
   const notificationParams = {
     channels,
     organization_ids: organizationIds,
     workspace_ids: workspaceIds,
     limit: 20,
   };
-  
-  const { unreadCount, notifications, loading, markAsRead, markAllAsRead, deleteNotification } = useNotifications(notificationParams);
+
+  const {
+    unreadCount,
+    notifications,
+    loading,
+    markAsRead,
+    markAllAsRead,
+    deleteNotification,
+  } = useNotifications(notificationParams);
 
   useEffect(() => {
     if (!isOpen) return;
-    
+
     const timer = setTimeout(() => {
       const handleClickOutside = (event: MouseEvent) => {
         const target = event.target as Node;
-        
+
         if (containerRef.current?.contains(target)) {
           return;
         }
-        
+
         if (popoverRef.current?.contains(target)) {
           return;
         }
-        
+
         setIsOpen(false);
       };
 
       document.addEventListener("mousedown", handleClickOutside);
-      
+
       return () => {
         document.removeEventListener("mousedown", handleClickOutside);
       };
     }, 50);
-    
+
     return () => {
       clearTimeout(timer);
     };
   }, [isOpen]);
 
-  // Update popover position when open
   useEffect(() => {
     if (isOpen && containerRef.current) {
       const rect = containerRef.current.getBoundingClientRect();
       const popoverWidth = 400;
       const popoverHeight = 600;
-      
+
       const windowWidth = window.innerWidth;
       const windowHeight = window.innerHeight;
-      
-      // Calculate available space
+
       const spaceRight = windowWidth - rect.left;
       const spaceBelow = windowHeight - rect.bottom;
       const spaceAbove = rect.top;
-      
+
       // Determine horizontal position
       let left: number | undefined;
       let right: number | undefined;
-      
+
       if (spaceRight >= popoverWidth) {
-        // Align left edge with button
         left = rect.left;
       } else {
-        // Not enough space on right, align right edge with button right
         right = windowWidth - rect.right;
       }
-      
-      // Determine vertical position
+
       let top: number | undefined;
       let bottom: number | undefined;
-      
+
       if (spaceBelow >= popoverHeight + 8) {
-        // Position below
         top = rect.bottom + 8;
       } else if (spaceAbove >= popoverHeight + 8) {
-        // Position above
         bottom = windowHeight - rect.top + 8;
       } else {
-        // Not enough space, position below with limited height
         top = rect.bottom + 8;
       }
-      
+
       setPopoverPosition({ top, bottom, left, right });
     } else {
       setPopoverPosition(undefined);
@@ -195,21 +196,23 @@ export function NotificationBell({
             )}
           </NotificationButton>
         </CircularContainer>
-        
-        {typeof window !== 'undefined' && isOpen && ReactDOM.createPortal(
-          <DefaultStylesProvider>
-            <NotificationPopover
-              ref={popoverRef}
-              position={popoverPosition}
-              notifications={notifications}
-              loading={loading}
-              onMarkAsRead={markAsRead}
-              onMarkAllAsRead={markAllAsRead}
-              onDelete={deleteNotification}
-            />
-          </DefaultStylesProvider>,
-          document.body
-        )}
+
+        {typeof window !== "undefined" &&
+          isOpen &&
+          ReactDOM.createPortal(
+            <DefaultStylesProvider>
+              <NotificationPopover
+                ref={popoverRef}
+                position={popoverPosition}
+                notifications={notifications}
+                loading={loading}
+                onMarkAsRead={markAsRead}
+                onMarkAllAsRead={markAllAsRead}
+                onDelete={deleteNotification}
+              />
+            </DefaultStylesProvider>,
+            document.body,
+          )}
       </Container>
     </DefaultStylesProvider>
   );
