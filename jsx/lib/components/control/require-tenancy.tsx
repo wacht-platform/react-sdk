@@ -84,21 +84,14 @@ export const RequireTenancy = ({ children }: RequireTenancyProps) => {
   ]);
 
   const handleOrganizationCreated = () => {
-    setShowCreateOrg(false);
-
-    // After org creation, check if we need workspace
-    if (workspacesEnabled) {
-      // Wait a bit for the organization to be set as active
-      setTimeout(() => {
-        if (activeOrganization) {
-          setShowCreateWorkspace(true);
-        }
-      }, 500);
-    }
+    // Don't manually set state here - let the useEffect handle it
+    // after the organization data is refetched and activeOrganization updates
+    // The useEffect will automatically show workspace dialog if needed
   };
 
   const handleWorkspaceCreated = () => {
-    setShowCreateWorkspace(false);
+    // Don't manually set state here - let the useEffect handle it
+    // after the workspace data is refetched and activeWorkspace updates
   };
 
   // Show loading state
@@ -124,32 +117,36 @@ export const RequireTenancy = ({ children }: RequireTenancyProps) => {
     return <>{children}</>;
   }
 
-  // Render dialogs
+  // Render dialogs - we should only get here if requirements aren't met
+  // Safety check: if no dialogs should show, render null (shouldn't happen with correct useEffect logic)
+  if (!showCreateOrg && !showCreateWorkspace) {
+    return null;
+  }
+
   return (
     <>
       {showCreateOrg && (
         <CreateOrganizationDialog
-          isOpen={showCreateOrg}
+          isOpen={true}
           onClose={() => {
             // Don't allow closing if organization is required
+            // User must create an organization or sign out
           }}
           onCreated={handleOrganizationCreated}
         />
       )}
 
-      {showCreateWorkspace && activeOrganization && (
+      {showCreateWorkspace && (
         <CreateWorkspaceDialog
-          isOpen={showCreateWorkspace}
+          isOpen={true}
           onClose={() => {
             // Don't allow closing if workspace is required
+            // User must create a workspace
           }}
           onCreated={handleWorkspaceCreated}
-          organizationId={activeOrganization.id}
+          organizationId={activeOrganization!.id}
         />
       )}
-
-      {/* Don't render children until requirements are met */}
-      {null}
     </>
   );
 };
