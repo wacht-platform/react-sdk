@@ -19,5 +19,5 @@ export {
 export type {
   ProfileCompletionData,
   ProfileCompletionProps,
-} from "@snipextt/wacht-types";
+} from "@wacht/types";
 export { AcceptInvite } from "./accept-invite";

@@ -1,11 +1,11 @@
 import React from "react";
 import { DefaultStylesProvider } from "../utility/root";
-import CreateOrganizationForm from "./create-organization-form";
+import { CreateOrganizationForm } from "./create-organization-form";
 import { Dialog } from "../utility/dialog";
 
 interface CreateOrganizationDialogProps {
   isOpen: boolean;
-  onClose: () => void;
+  onClose?: () => void;
   onCreated?: () => void;
 }
 
@@ -14,7 +14,7 @@ export const CreateOrganizationDialog: React.FC<
 > = ({ isOpen, onClose, onCreated }) => {
   const handleSuccess = () => {
     onCreated?.();
-    onClose();
+    onClose?.();
   };
 
   return (
@@ -34,5 +34,3 @@ export const CreateOrganizationDialog: React.FC<
     </DefaultStylesProvider>
   );
 };
-
-export default CreateOrganizationDialog;

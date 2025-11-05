@@ -1,9 +1,7 @@
 "use client";
 
 import React from "react";
-import {
-  DeploymentProvider as BaseProvider
-} from "@snipextt/wacht";
+import { DeploymentProvider as BaseProvider } from "@wacht/jsx";
 import { createReactRouterAdapter } from "./react-router-adapter";
 
 /**
@@ -13,7 +11,7 @@ import { createReactRouterAdapter } from "./react-router-adapter";
  */
 export function DeploymentProvider({
   children,
-  publicKey
+  publicKey,
 }: {
   children: React.ReactNode;
   publicKey: string;

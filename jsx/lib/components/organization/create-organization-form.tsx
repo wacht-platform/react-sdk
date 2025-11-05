@@ -417,10 +417,14 @@ export const CreateOrganizationForm: React.FC<CreateOrganizationFormProps> = ({
           </FormContent>
 
           <ButtonGroup>
-            <BackButton onClick={onCancel} disabled={isSubmitting}>
-              <ChevronLeft size={16} />
-              Back
-            </BackButton>
+            {onCancel ? (
+              <BackButton onClick={onCancel} disabled={isSubmitting}>
+                <ChevronLeft size={16} />
+                Back
+              </BackButton>
+            ) : (
+              <div></div>
+            )}
             <SubmitButton
               onClick={handleSubmit}
               disabled={isSubmitting || !name.trim()}
@@ -433,5 +437,3 @@ export const CreateOrganizationForm: React.FC<CreateOrganizationFormProps> = ({
     </DefaultStylesProvider>
   );
 };
-
-export default CreateOrganizationForm;
