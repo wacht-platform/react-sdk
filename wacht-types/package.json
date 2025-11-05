@@ -1,6 +1,6 @@
 {
   "name": "@wacht/types",
-  "version": "0.0.1-alpha.2",
+  "version": "0.0.1-alpha.3",
   "description": "Shared TypeScript types for wacht libraries",
   "main": "./src/index.ts",
   "types": "./src/index.ts",
