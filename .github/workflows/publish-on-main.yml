@@ -29,6 +29,31 @@ jobs:
       - name: Build all packages
         run: pnpm run build
 
+      - name: Check and publish Types package
+        id: publish-types
+        run: |
+          cd wacht-types
+          PACKAGE_NAME=$(node -p "require('./package.json').name")
+          LOCAL_VERSION=$(node -p "require('./package.json').version")
+
+          echo "Package: $PACKAGE_NAME"
+          echo "Local version: $LOCAL_VERSION"
+
+          # Fetch latest version from npm (ignore errors if package doesn't exist)
+          NPM_VERSION=$(npm view $PACKAGE_NAME version 2>/dev/null || echo "0.0.0")
+          echo "NPM version: $NPM_VERSION"
+
+          if [ "$LOCAL_VERSION" != "$NPM_VERSION" ]; then
+            echo "Version mismatch detected. Publishing $PACKAGE_NAME@$LOCAL_VERSION..."
+            npm publish --access public
+            echo "published=true" >> $GITHUB_OUTPUT
+          else
+            echo "Version $LOCAL_VERSION already published. Skipping."
+            echo "published=false" >> $GITHUB_OUTPUT
+          fi
+        env:
+          NODE_AUTH_TOKEN: ${{ secrets.NPM_TOKEN }}
+
       - name: Check and publish JSX package
         id: publish-jsx
         run: |
@@ -106,6 +131,12 @@ jobs:
         run: |
           echo "## Publication Summary" >> $GITHUB_STEP_SUMMARY
           echo "" >> $GITHUB_STEP_SUMMARY
+
+          if [ "${{ steps.publish-types.outputs.published }}" == "true" ]; then
+            echo "✅ @wacht/types published" >> $GITHUB_STEP_SUMMARY
+          else
+            echo "⏭️ @wacht/types skipped (version already published)" >> $GITHUB_STEP_SUMMARY
+          fi
 
           if [ "${{ steps.publish-jsx.outputs.published }}" == "true" ]; then
             echo "✅ @wacht/jsx published" >> $GITHUB_STEP_SUMMARY

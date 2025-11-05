@@ -7,6 +7,9 @@
   "files": [
     "src"
   ],
+  "scripts": {
+    "build": "echo 'Types package does not require building'"
+  },
   "devDependencies": {
     "typescript": "^5.8.3"
   }
