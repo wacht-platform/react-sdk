@@ -1,5 +1,5 @@
 {
-  "name": "@snipextt/nextjs",
+  "name": "@wacht/nextjs",
   "version": "0.0.1-alpha.1",
   "description": "Next.js adapter for Wacht authentication library",
   "type": "module",

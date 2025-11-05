@@ -94,6 +94,13 @@ export const RequireActiveTenancy = ({
 
   const handleOrganizationCreated = async () => {
     await refetchOrganizations();
+
+    // Only show workspace creation dialog if workspaces are enabled
+    if (!workspacesEnabled) {
+      setDialogMode(null);
+      return;
+    }
+
     setTimeout(() => {
       if (organizationMemberships && organizationMemberships.length > 0) {
         const newestOrg =
