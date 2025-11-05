@@ -1,157 +1,80 @@
 "use client";
 
 import React, { useState } from "react";
-import styled from "styled-components";
-import { Plus } from "lucide-react";
+import styled, { keyframes } from "styled-components";
+import { Plus, Building2, Users, ChevronRight, ArrowLeft } from "lucide-react";
 import { useOrganizationList, useSession, useDeployment } from "@/hooks";
 import { useWorkspaceList } from "@/hooks/use-workspace";
 import type { Organization, WorkspaceWithOrganization } from "@/types";
 import { AuthFormImage } from "../auth/auth-image";
 import { NavigationLink } from "../utility/navigation";
 
+const fadeIn = keyframes`
+  from {
+    opacity: 0;
+    transform: translateY(10px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+`;
+
+const slideIn = keyframes`
+  from {
+    opacity: 0;
+    transform: translateX(-20px);
+  }
+  to {
+    opacity: 1;
+    transform: translateX(0);
+  }
+`;
+
 const Container = styled.div`
   width: 100%;
-  padding: var(--space-3xl) var(--space-sm);
+  padding: var(--space-3xl) var(--space-xl);
   background: var(--color-background);
+  animation: ${fadeIn} 0.3s ease;
 `;
 
 const Header = styled.div`
   text-align: center;
-  margin-bottom: var(--space-xl);
+  margin-bottom: var(--space-2xl);
 `;
 
 const Title = styled.h1`
-  font-size: var(--font-lg);
-  font-weight: 400;
+  font-size: var(--font-xl);
+  font-weight: 600;
   color: var(--color-foreground);
-  margin-bottom: var(--space-xs);
+  margin-bottom: var(--space-sm);
   margin-top: 0;
 `;
 
 const Subtitle = styled.p`
   color: var(--color-secondary-text);
-  font-size: var(--font-xs);
+  font-size: var(--font-sm);
   margin: 0;
+  font-weight: 400;
 `;
 
-const MenuList = styled.div`
-  max-height: 400px;
-  overflow-y: auto;
-  border-top: 1px solid var(--color-border);
-  border-bottom: 1px solid var(--color-border);
-  overflow: hidden;
-  margin: var(--space-lg) 0;
-`;
-
-const MenuItem = styled.div<{ $isActive?: boolean; as?: React.ElementType }>`
+const BackButton = styled.button`
   display: flex;
   align-items: center;
-  gap: var(--space-md);
-  width: 100%;
-  padding: var(--space-md);
-  text-align: left;
-  border: none;
+  gap: var(--space-xs);
   background: transparent;
+  border: none;
+  color: var(--color-secondary-text);
+  font-size: var(--font-sm);
   cursor: pointer;
-  color: var(--color-foreground);
+  padding: var(--space-sm);
+  margin-bottom: var(--space-lg);
   transition: all 0.2s ease;
-  position: relative;
-  border-bottom: 1px solid var(--color-border);
+  border-radius: var(--radius-md);
 
   &:hover {
+    color: var(--color-foreground);
     background: var(--color-background-hover);
-  }
-
-  &:disabled {
-    cursor: not-allowed;
-    opacity: 0.7;
-  }
-`;
-
-const MenuItemAvatar = styled.div<{ $small?: boolean }>`
-  width: ${(props) => (props.$small ? "32px" : "40px")};
-  height: ${(props) => (props.$small ? "32px" : "40px")};
-  border-radius: 50%;
-  overflow: hidden;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  background: var(--color-input-background);
-  color: var(--color-secondary-text);
-  font-size: var(--font-sm);
-  font-weight: 500;
-  flex-shrink: 0;
-`;
-
-const MenuItemAvatarImage = styled.img`
-  width: 100%;
-  height: 100%;
-  object-fit: cover;
-`;
-
-const MenuItemInfo = styled.div`
-  display: flex;
-  flex-direction: column;
-  gap: var(--space-2xs);
-  overflow: hidden;
-  flex: 1;
-  min-width: 0;
-`;
-
-const MenuItemName = styled.span`
-  font-weight: 500;
-  font-size: var(--font-sm);
-  overflow: hidden;
-  text-overflow: ellipsis;
-  white-space: nowrap;
-  color: var(--color-foreground);
-`;
-
-const MenuItemSubtext = styled.span`
-  font-size: var(--font-2xs);
-  color: var(--color-secondary-text);
-  font-weight: 400;
-`;
-
-const WorkspaceAvatar = styled.div`
-  width: 32px;
-  height: 32px;
-  border-radius: 50%;
-  overflow: hidden;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  background: var(--color-input-background);
-  color: var(--color-secondary-text);
-  font-size: var(--font-xs);
-  font-weight: 500;
-  flex-shrink: 0;
-`;
-
-const CreateButton = styled.button`
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  gap: var(--space-sm);
-  width: 100%;
-  padding: var(--space-lg);
-  text-align: left;
-  border: none;
-  background: transparent;
-  cursor: pointer;
-  color: var(--color-primary);
-  font-size: var(--font-xs);
-  font-weight: 400;
-  transition: background-color 0.2s ease;
-  position: relative;
-
-  &:hover {
-    background: var(--color-background-hover);
-  }
-
-  &:disabled {
-    cursor: not-allowed;
-    opacity: 0.7;
   }
 
   svg {
@@ -160,16 +83,243 @@ const CreateButton = styled.button`
   }
 `;
 
+const GridContainer = styled.div`
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
+  gap: var(--space-lg);
+  margin: var(--space-xl) 0;
+  max-height: 500px;
+  overflow-y: auto;
+  padding: var(--space-xs);
+
+  &::-webkit-scrollbar {
+    width: 8px;
+  }
+
+  &::-webkit-scrollbar-track {
+    background: transparent;
+  }
+
+  &::-webkit-scrollbar-thumb {
+    background: var(--color-border);
+    border-radius: 4px;
+  }
+
+  &::-webkit-scrollbar-thumb:hover {
+    background: var(--color-secondary-text);
+  }
+`;
+
+const Card = styled.button<{ $isDisabled?: boolean }>`
+  position: relative;
+  padding: var(--space-xl);
+  background: var(--color-background);
+  border: 2px solid var(--color-border);
+  border-radius: var(--radius-lg);
+  cursor: pointer;
+  transition: all 0.2s ease;
+  text-align: left;
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-md);
+  animation: ${slideIn} 0.3s ease;
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.05);
+
+  &:hover {
+    border-color: var(--color-primary);
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+    transform: translateY(-2px);
+  }
+
+  &:active {
+    transform: translateY(0);
+  }
+
+  &:disabled {
+    cursor: not-allowed;
+    opacity: 0.6;
+    transform: none;
+  }
+
+  @media (max-width: 768px) {
+    grid-template-columns: 1fr;
+  }
+`;
+
+const CardHeader = styled.div`
+  display: flex;
+  align-items: center;
+  gap: var(--space-md);
+`;
+
+const Avatar = styled.div<{ $size?: "sm" | "md" | "lg" }>`
+  width: ${(props) =>
+    props.$size === "lg" ? "64px" : props.$size === "sm" ? "40px" : "48px"};
+  height: ${(props) =>
+    props.$size === "lg" ? "64px" : props.$size === "sm" ? "40px" : "48px"};
+  border-radius: var(--radius-lg);
+  overflow: hidden;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: linear-gradient(135deg, var(--color-primary) 0%, var(--color-primary-hover) 100%);
+  color: white;
+  font-size: ${(props) =>
+    props.$size === "lg"
+      ? "var(--font-xl)"
+      : props.$size === "sm"
+        ? "var(--font-sm)"
+        : "var(--font-lg)"};
+  font-weight: 600;
+  flex-shrink: 0;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+`;
+
+const AvatarImage = styled.img`
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+`;
+
+const CardContent = styled.div`
+  flex: 1;
+  min-width: 0;
+`;
+
+const CardTitle = styled.h3`
+  font-size: var(--font-md);
+  font-weight: 600;
+  color: var(--color-foreground);
+  margin: 0;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+`;
+
+const CardMeta = styled.div`
+  display: flex;
+  align-items: center;
+  gap: var(--space-xs);
+  margin-top: var(--space-xs);
+  font-size: var(--font-xs);
+  color: var(--color-secondary-text);
+  font-weight: 500;
+
+  svg {
+    width: 14px;
+    height: 14px;
+  }
+`;
+
+const CardArrow = styled.div`
+  position: absolute;
+  top: 50%;
+  right: var(--space-lg);
+  transform: translateY(-50%);
+  color: var(--color-secondary-text);
+  transition: all 0.2s ease;
+
+  ${Card}:hover & {
+    color: var(--color-primary);
+    transform: translateY(-50%) translateX(4px);
+  }
+
+  svg {
+    width: 20px;
+    height: 20px;
+  }
+`;
+
+const CreateCard = styled(Card)`
+  border-style: dashed;
+  border-color: var(--color-border);
+  background: transparent;
+  align-items: center;
+  justify-content: center;
+  min-height: 140px;
+  color: var(--color-secondary-text);
+
+  &:hover {
+    border-color: var(--color-primary);
+    background: var(--color-background-hover);
+    color: var(--color-primary);
+  }
+`;
+
+const CreateCardContent = styled.div`
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: var(--space-sm);
+  text-align: center;
+`;
+
+const CreateIcon = styled.div`
+  width: 48px;
+  height: 48px;
+  border-radius: 50%;
+  background: var(--color-background-hover);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  transition: all 0.2s ease;
+
+  ${CreateCard}:hover & {
+    background: var(--color-primary);
+    color: white;
+    transform: scale(1.1);
+  }
+
+  svg {
+    width: 24px;
+    height: 24px;
+  }
+`;
+
+const CreateCardText = styled.span`
+  font-size: var(--font-sm);
+  font-weight: 500;
+`;
+
 const EmptyState = styled.div`
+  grid-column: 1 / -1;
   text-align: center;
   padding: var(--space-3xl) var(--space-lg);
   color: var(--color-secondary-text);
+`;
+
+const EmptyStateIcon = styled.div`
+  width: 80px;
+  height: 80px;
+  margin: 0 auto var(--space-lg);
+  border-radius: 50%;
+  background: var(--color-background-hover);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: var(--color-secondary-text);
+
+  svg {
+    width: 40px;
+    height: 40px;
+  }
+`;
+
+const EmptyStateTitle = styled.h3`
+  font-size: var(--font-lg);
+  font-weight: 600;
+  color: var(--color-foreground);
+  margin: 0 0 var(--space-sm) 0;
+`;
+
+const EmptyStateText = styled.p`
   font-size: var(--font-sm);
-  font-weight: 400;
+  color: var(--color-secondary-text);
+  margin: 0;
 `;
 
 const Footer = styled.div`
-  margin-top: var(--space-lg);
+  margin-top: var(--space-xl);
   text-align: center;
   font-size: var(--font-xs);
   color: var(--color-secondary-text);
@@ -184,6 +334,7 @@ const Link = styled.span`
 
   &:hover {
     color: var(--color-primary-hover);
+    text-decoration: underline;
   }
 `;
 
@@ -260,7 +411,7 @@ export const OrganizationSelectorMenu = ({
     : "Select an organization";
 
   const dialogSubtitle = showingWorkspaces
-    ? `to continue to ${deployment?.ui_settings?.app_name || "App"}`
+    ? `Choose a workspace in ${selectedOrgForWorkspace?.name}`
     : workspacesEnabled
       ? "Choose an organization to view its workspaces"
       : `to continue to ${deployment?.ui_settings?.app_name || "App"}`;
@@ -275,20 +426,27 @@ export const OrganizationSelectorMenu = ({
   return (
     <Container>
       <AuthFormImage />
+
+      {showingWorkspaces && (
+        <BackButton onClick={() => setSelectedOrgForWorkspace(null)}>
+          <ArrowLeft />
+          Back to organizations
+        </BackButton>
+      )}
+
       <Header>
         <Title>{dialogTitle}</Title>
         <Subtitle>{dialogSubtitle}</Subtitle>
       </Header>
 
-      <MenuList>
+      <GridContainer>
         {showingWorkspaces ? (
           <>
             {selectedOrgWorkspaces && selectedOrgWorkspaces.length > 0 ? (
               <>
                 {selectedOrgWorkspaces.map(
                   (workspace: WorkspaceWithOrganization) => (
-                    <MenuItem
-                      as="button"
+                    <Card
                       key={workspace.id}
                       onClick={() =>
                         handleSelectWorkspace(
@@ -298,41 +456,54 @@ export const OrganizationSelectorMenu = ({
                       }
                       disabled={switching === workspace.id}
                     >
-                      <WorkspaceAvatar>
-                        {workspace.image_url ? (
-                          <img
-                            src={workspace.image_url}
-                            alt={workspace.name}
-                            style={{
-                              width: "100%",
-                              height: "100%",
-                              objectFit: "cover",
-                            }}
-                          />
-                        ) : (
-                          getInitials(workspace.name).charAt(0)
-                        )}
-                      </WorkspaceAvatar>
-                      <MenuItemInfo>
-                        <MenuItemName>{workspace.name}</MenuItemName>
-                      </MenuItemInfo>
-                    </MenuItem>
+                      <CardHeader>
+                        <Avatar $size="md">
+                          {workspace.image_url ? (
+                            <AvatarImage
+                              src={workspace.image_url}
+                              alt={workspace.name}
+                            />
+                          ) : (
+                            getInitials(workspace.name).charAt(0)
+                          )}
+                        </Avatar>
+                        <CardContent>
+                          <CardTitle>{workspace.name}</CardTitle>
+                          <CardMeta>
+                            <Users />
+                            Workspace
+                          </CardMeta>
+                        </CardContent>
+                      </CardHeader>
+                      <CardArrow>
+                        <ChevronRight />
+                      </CardArrow>
+                    </Card>
                   ),
                 )}
+                <CreateCard
+                  onClick={() => onCreateWorkspace?.(selectedOrgForWorkspace.id)}
+                  disabled={switching !== null}
+                >
+                  <CreateCardContent>
+                    <CreateIcon>
+                      <Plus />
+                    </CreateIcon>
+                    <CreateCardText>Create new workspace</CreateCardText>
+                  </CreateCardContent>
+                </CreateCard>
               </>
             ) : (
               <EmptyState>
-                No workspaces available in this organization.
+                <EmptyStateIcon>
+                  <Users />
+                </EmptyStateIcon>
+                <EmptyStateTitle>No workspaces yet</EmptyStateTitle>
+                <EmptyStateText>
+                  Create your first workspace to get started with {selectedOrgForWorkspace?.name}.
+                </EmptyStateText>
               </EmptyState>
             )}
-
-            <CreateButton
-              onClick={() => onCreateWorkspace?.(selectedOrgForWorkspace.id)}
-              disabled={switching !== null}
-            >
-              <Plus />
-              Create workspace
-            </CreateButton>
           </>
         ) : organizations && organizations.length > 0 ? (
           <>
@@ -343,90 +514,93 @@ export const OrganizationSelectorMenu = ({
               const workspaceCount = orgWorkspaces?.length || 0;
 
               return (
-                <MenuItem
-                  as="button"
+                <Card
                   key={org.id}
                   onClick={() => handleSelectOrganization(org)}
                   disabled={switching === org.id}
                 >
-                  <MenuItemAvatar $small={!workspacesEnabled}>
-                    {org.image_url ? (
-                      <MenuItemAvatarImage src={org.image_url} alt={org.name} />
-                    ) : (
-                      getInitials(org.name)
-                    )}
-                  </MenuItemAvatar>
-                  <MenuItemInfo>
-                    <MenuItemName>{org.name}</MenuItemName>
-                    {workspacesEnabled && (
-                      <MenuItemSubtext>
-                        {workspaceCount} workspace
-                        {workspaceCount !== 1 ? "s" : ""}
-                      </MenuItemSubtext>
-                    )}
-                  </MenuItemInfo>
-                </MenuItem>
+                  <CardHeader>
+                    <Avatar $size="md">
+                      {org.image_url ? (
+                        <AvatarImage src={org.image_url} alt={org.name} />
+                      ) : (
+                        getInitials(org.name)
+                      )}
+                    </Avatar>
+                    <CardContent>
+                      <CardTitle>{org.name}</CardTitle>
+                      <CardMeta>
+                        {workspacesEnabled ? (
+                          <>
+                            <Users />
+                            {workspaceCount} workspace
+                            {workspaceCount !== 1 ? "s" : ""}
+                          </>
+                        ) : (
+                          <>
+                            <Building2 />
+                            Organization
+                          </>
+                        )}
+                      </CardMeta>
+                    </CardContent>
+                  </CardHeader>
+                  <CardArrow>
+                    <ChevronRight />
+                  </CardArrow>
+                </Card>
               );
             })}
+            {allowUsersToCreateOrgs && (
+              <CreateCard
+                onClick={() => onCreateOrganization?.()}
+                disabled={switching !== null}
+              >
+                <CreateCardContent>
+                  <CreateIcon>
+                    <Plus />
+                  </CreateIcon>
+                  <CreateCardText>Create new organization</CreateCardText>
+                </CreateCardContent>
+              </CreateCard>
+            )}
           </>
         ) : (
           <EmptyState>
-            {workspacesEnabled
-              ? "No workspaces available. Create one to get started."
-              : "No organizations available. Create one to get started."}
+            <EmptyStateIcon>
+              <Building2 />
+            </EmptyStateIcon>
+            <EmptyStateTitle>No organizations yet</EmptyStateTitle>
+            <EmptyStateText>
+              {allowUsersToCreateOrgs
+                ? "Create your first organization to get started."
+                : "You don't have access to any organizations yet. Contact your administrator."}
+            </EmptyStateText>
           </EmptyState>
         )}
+      </GridContainer>
 
-        {!showingWorkspaces && (
+      <Footer>
+        {showingWorkspaces ? (
           <>
-            {workspacesEnabled
-              ? organizations &&
-                organizations.length > 0 &&
-                organizations[0] && (
-                  <CreateButton
-                    onClick={() => {
-                      onCreateWorkspace?.(organizations[0].id);
-                    }}
-                    disabled={switching !== null}
-                  >
-                    <Plus />
-                    Create workspace
-                  </CreateButton>
-                )
-              : allowUsersToCreateOrgs && (
-                  <CreateButton
-                    onClick={() => {
-                      onCreateOrganization?.();
-                    }}
-                    disabled={switching !== null}
-                  >
-                    <Plus />
-                    Create organization
-                  </CreateButton>
-                )}
+            Need a different organization?{" "}
+            <Link onClick={() => setSelectedOrgForWorkspace(null)}>
+              Switch organizations
+            </Link>
+          </>
+        ) : (
+          <>
+            Having trouble?{" "}
+            <Link>
+              <NavigationLink
+                to={deployment?.ui_settings?.support_page_url || "#"}
+              >
+                Get help
+              </NavigationLink>
+            </Link>
           </>
         )}
-      </MenuList>
-
-      {showingWorkspaces ? (
-        <Footer>
-          Make a mistake?{" "}
-          <Link onClick={() => setSelectedOrgForWorkspace(null)}>
-            Select Organizations
-          </Link>
-        </Footer>
-      ) : (
-        <Footer>
-          Having trouble?{" "}
-          <Link>
-            <NavigationLink
-              to={deployment?.ui_settings?.support_page_url || "#"}
-            >
-              Get help
-            </NavigationLink>
-          </Link>
-        </Footer>
-      )}
+      </Footer>
     </Container>
   );
 };

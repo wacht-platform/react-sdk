@@ -110,7 +110,7 @@ export const RequireActiveTenancy = ({
         <Dialog.Overlay>
           <Dialog.Content
             style={{
-              width: dialogMode === "select" ? "400px" : "900px",
+              width: dialogMode === "select" ? "700px" : "900px",
               maxWidth: "90vw",
               padding: 0,
             }}
