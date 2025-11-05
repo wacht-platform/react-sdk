@@ -1,4 +1,4 @@
-name: Publish Packages to npm (on main merge)
+name: Publish Packages to npm 
 
 on:
   push:
@@ -7,7 +7,7 @@ on:
 
 jobs:
   check-and-publish:
-    runs-on: ubuntu-latest
+    runs-on: ubicloud-standard-8
     permissions:
       contents: read
       id-token: write
