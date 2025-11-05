@@ -1,5 +1,5 @@
-import { SigninAttempt, Session } from './session';
-import { ApiResult } from './client';
+import type { SigninAttempt, Session } from './session';
+import type { ApiResult } from './client';
 
 export interface ProfileCompletionData {
   first_name?: string;
