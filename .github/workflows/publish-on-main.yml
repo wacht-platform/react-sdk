@@ -46,7 +46,7 @@ jobs:
 
           if [ "$LOCAL_VERSION" != "$NPM_VERSION" ]; then
             echo "Version mismatch detected. Publishing $PACKAGE_NAME@$LOCAL_VERSION..."
-            pnpm publish --provenance --access public --no-git-checks
+            pnpm publish --access public --no-git-checks
             echo "published=true" >> $GITHUB_OUTPUT
           else
             echo "Version $LOCAL_VERSION already published. Skipping."
@@ -70,7 +70,7 @@ jobs:
 
           if [ "$LOCAL_VERSION" != "$NPM_VERSION" ]; then
             echo "Version mismatch detected. Publishing $PACKAGE_NAME@$LOCAL_VERSION..."
-            pnpm publish --provenance --access public --no-git-checks
+            pnpm publish --access public --no-git-checks
             echo "published=true" >> $GITHUB_OUTPUT
           else
             echo "Version $LOCAL_VERSION already published. Skipping."
@@ -94,7 +94,7 @@ jobs:
 
           if [ "$LOCAL_VERSION" != "$NPM_VERSION" ]; then
             echo "Version mismatch detected. Publishing $PACKAGE_NAME@$LOCAL_VERSION..."
-            pnpm publish --provenance --access public --no-git-checks
+            pnpm publish --access public --no-git-checks
             echo "published=true" >> $GITHUB_OUTPUT
           else
             echo "Version $LOCAL_VERSION already published. Skipping."
