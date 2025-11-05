@@ -1,4 +1,5 @@
 packages:
+  - wacht-types
   - jsx
   - nextjs
   - react-router

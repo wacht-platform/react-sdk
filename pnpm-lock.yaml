@@ -12,9 +12,6 @@ catalogs:
     '@types/react-dom':
       specifier: ^19.0.2
       version: 19.1.6
-    '@wacht/types':
-      specifier: latest
-      version: 0.0.1-alpha.1
     next:
       specifier: ^15.0.0
       version: 15.3.5
@@ -60,8 +57,8 @@ importers:
   jsx:
     dependencies:
       '@wacht/types':
-        specifier: 'catalog:'
-        version: 0.0.1-alpha.1
+        specifier: '*'
+        version: link:../wacht-types
       lucide-react:
         specifier: ^0.474.0
         version: 0.474.0(react@19.1.0)
@@ -161,6 +158,12 @@ importers:
       vite-plugin-dts:
         specifier: ^4.4.0
         version: 4.5.4(@types/node@22.16.0)(rollup@4.44.2)(typescript@5.8.3)(vite@6.3.5(@types/node@22.16.0)(jiti@2.4.2)(terser@5.43.1))
+
+  wacht-types:
+    devDependencies:
+      typescript:
+        specifier: ^5.8.3
+        version: 5.8.3
 
 packages:
 
@@ -824,9 +827,6 @@ packages:
 
   '@vue/shared@3.5.17':
     resolution: {integrity: sha512-CabR+UN630VnsJO/jHWYBC1YVXyMq94KKp6iF5MQgZJs5I8cmjw6oVMO1oDbtBkENSHSSn/UadWlW/OAgdmKrg==}
-
-  '@wacht/types@0.0.1-alpha.1':
-    resolution: {integrity: sha512-iiFz4cuWJ5lzjEXLKIDQE8M21Ek5MqWGRhobKThuVHLpyQMG+ESXFR9VDMimENiggPyxnyJW82BRKPP5DgJ4gQ==}
 
   acorn@8.15.0:
     resolution: {integrity: sha512-NZyJarBfL7nWwIq+FDL6Zp/yHEhePMNnnJ0y3qfieCrmNvYct8uvtiV41UvlSe6apAfk0fY1FbWx+NwfmpvtTg==}
@@ -2010,8 +2010,6 @@ snapshots:
       typescript: 5.8.3
 
   '@vue/shared@3.5.17': {}
-
-  '@wacht/types@0.0.1-alpha.1': {}
 
   acorn@8.15.0: {}
 

@@ -5,6 +5,7 @@
   "description": "Wacht authentication library workspace",
   "scripts": {
     "build": "pnpm -r build",
+    "build:types": "pnpm --filter @wacht/types build",
     "build:jsx": "pnpm --filter @wacht/jsx build",
     "build:nextjs": "pnpm --filter @wacht/nextjs build",
     "build:react-router": "pnpm --filter @wacht/react-router build"
