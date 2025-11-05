@@ -11,7 +11,7 @@ export default defineConfig({
         index: "./lib/index.ts",
         server: "./lib/server/index.ts",
       },
-      name: "@snipextt/wacht-nextjs",
+      name: "@wacht/nextjs",
       formats: ["cjs", "es"],
     },
     rollupOptions: {
@@ -23,7 +23,7 @@ export default defineConfig({
           "react/jsx-runtime": "jsxRuntime",
           "next": "Next",
           "next/server": "NextServer",
-          "@snipextt/wacht": "Wacht",
+          "@wacht/jsx": "Wacht",
         },
       },
     },

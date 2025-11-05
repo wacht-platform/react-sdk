@@ -3,7 +3,7 @@
 import React from "react";
 import { 
   DeploymentProvider as BaseProvider
-} from "@snipextt/wacht";
+} from "@wacht/jsx";
 import { createNextjsAdapter } from "./nextjs-adapter";
 
 /**
