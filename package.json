@@ -1,13 +1,13 @@
 {
-  "name": "@snipextt/wacht-workspace",
+  "name": "@wacht/wacht-workspace",
   "version": "1.0.0",
   "private": true,
   "description": "Wacht authentication library workspace",
   "scripts": {
     "build": "pnpm -r build",
-    "build:jsx": "pnpm --filter @snipextt/wacht build",
-    "build:nextjs": "pnpm --filter @snipextt/wacht-nextjs build",
-    "build:react-router": "pnpm --filter @snipextt/wacht-react-router build"
+    "build:jsx": "pnpm --filter @wacht/jsx build",
+    "build:nextjs": "pnpm --filter @wacht/nextjs build",
+    "build:react-router": "pnpm --filter @wacht/react-router build"
   },
   "devDependencies": {
     "react": "catalog:",

@@ -8,7 +8,7 @@ export default defineConfig({
   build: {
     lib: {
       entry: "./lib/index.ts",
-      name: "@snipextt/wacht-react-router",
+      name: "@wacht/react-router",
       fileName: (format) => `index.${format}.js`,
       formats: ["cjs", "es"],
     },
@@ -20,7 +20,7 @@ export default defineConfig({
           react: "React",
           "react/jsx-runtime": "jsxRuntime",
           "react-router-dom": "ReactRouterDOM",
-          "@snipextt/wacht": "Wacht",
+          "@wacht/jsx": "Wacht",
         },
       },
     },

@@ -1,6 +1,6 @@
 {
   "name": "@wacht/nextjs",
-  "version": "0.0.1-alpha.1",
+  "version": "0.0.1-alpha.2",
   "description": "Next.js adapter for Wacht authentication library",
   "type": "module",
   "main": "dist/index.cjs.js",
@@ -33,13 +33,13 @@
   "author": "Saurav Singh",
   "license": "MIT",
   "devDependencies": {
-    "@wacht/jsx": "workspace:*",
     "@types/node": "^22.13.1",
     "@vitejs/plugin-react": "^4.3.4",
     "vite": "^6.0.6",
     "vite-plugin-dts": "^4.4.0"
   },
   "peerDependencies": {
+    "@wacht/jsx": "*",
     "react": "catalog:",
     "react-dom": "catalog:",
     "next": "catalog:"
