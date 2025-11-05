@@ -16,7 +16,7 @@ import { PhoneVerification } from "./phone-verification";
 import { ShieldIcon } from "../icons/shield";
 import { SmartphoneIcon } from "../icons/smartphone";
 import { KeyIcon } from "../icons/key";
-import { ProfileCompletionProps } from "@snipextt/wacht-types";
+import { ProfileCompletionProps } from "@wacht/types";
 import { useNavigation } from "@/hooks";
 import { Loader2 } from "lucide-react";
 

@@ -4,7 +4,7 @@ export {
   WaitlistForm,
   SSOCallback,
   MagicLinkVerification,
-} from "@snipextt/wacht";
+} from "@wacht/jsx";
 export {
   UserButton,
   UserControls,
@@ -13,23 +13,24 @@ export {
   ManageOrganization,
   CreateWorkspaceForm,
   CreateOrganizationForm,
-} from "@snipextt/wacht";
+} from "@wacht/jsx";
 export {
   AgentConversation,
   AgentConversationHub,
   AgentConversationHistory,
   AgentConversationProvider,
   useAgentConversationContext,
-} from "@snipextt/wacht";
-export { DeploymentInitialized, DeploymentInitializing } from "@snipextt/wacht";
+} from "@wacht/jsx";
+export { DeploymentInitialized, DeploymentInitializing } from "@wacht/jsx";
 export {
   SignedIn,
   SignedOut,
   SignedInAccounts,
+  RequireActiveTenancy,
   NavigateToSignIn,
   AcceptInvite,
-} from "@snipextt/wacht";
-export { NotificationBell, NotificationPopover } from "@snipextt/wacht";
+} from "@wacht/jsx";
+export { NotificationBell, NotificationPopover } from "@wacht/jsx";
 export {
   useUser,
   useSession,
@@ -47,7 +48,7 @@ export {
   useChannelCounts,
   useAgentConversation,
   useConversationSessions,
-} from "@snipextt/wacht";
-export { DeploymentProvider as BaseDeploymentProvider } from "@snipextt/wacht";
+} from "@wacht/jsx";
+export { DeploymentProvider as BaseDeploymentProvider } from "@wacht/jsx";
 export { DeploymentProvider } from "./providers";
 export { createReactRouterAdapter } from "./react-router-adapter";

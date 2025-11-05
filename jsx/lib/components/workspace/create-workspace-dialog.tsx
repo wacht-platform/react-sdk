@@ -2,12 +2,12 @@ import React, { useState } from "react";
 import { DefaultStylesProvider } from "../utility/root";
 import { CreateWorkspaceForm } from "./create-workspace-form";
 import { Dialog } from "../utility/dialog";
-import CreateOrganizationForm from "../organization/create-organization-form";
+import { CreateOrganizationForm } from "../organization/create-organization-form";
 import { useOrganizationMemberships } from "@/hooks/use-organization";
 
 interface CreateWorkspaceDialogProps {
   isOpen: boolean;
-  onClose: () => void;
+  onClose?: () => void;
   onCreated?: () => void;
   organizationId: string;
 }
@@ -25,7 +25,7 @@ export const CreateWorkspaceDialog: React.FC<CreateWorkspaceDialogProps> = ({
 
   const handleSuccess = () => {
     onCreated?.();
-    onClose();
+    onClose?.();
   };
 
   const handleCreateOrganization = () => {
@@ -71,5 +71,3 @@ export const CreateWorkspaceDialog: React.FC<CreateWorkspaceDialogProps> = ({
     </DefaultStylesProvider>
   );
 };
-
-export default CreateWorkspaceDialog;

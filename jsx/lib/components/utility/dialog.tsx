@@ -17,7 +17,7 @@ import { DefaultStylesProvider } from "./root";
 // Context for Dialog state
 interface DialogContextValue {
   isOpen: boolean;
-  onClose: () => void;
+  onClose?: () => void;
 }
 
 const DialogContext = createContext<DialogContextValue | undefined>(undefined);
@@ -98,7 +98,7 @@ const StyledFooter = styled.div`
 // Dialog Root Component
 interface DialogProps {
   isOpen: boolean;
-  onClose: () => void;
+  onClose?: () => void;
   children: ReactNode;
 }
 
@@ -110,7 +110,7 @@ const DialogRoot: FC<DialogProps> = ({ isOpen, onClose, children }) => {
 
     const handleEscape = (e: KeyboardEvent) => {
       if (e.key === "Escape" && isOpen) {
-        onClose();
+        onClose?.();
       }
     };
 
@@ -131,7 +131,7 @@ const DialogRoot: FC<DialogProps> = ({ isOpen, onClose, children }) => {
         {children}
       </DialogContext.Provider>
     </DefaultStylesProvider>,
-    document.body
+    document.body,
   );
 };
 
@@ -142,7 +142,7 @@ const DialogOverlay: FC<{ children?: ReactNode }> = ({ children }) => {
 
   const handleOverlayClick = (e: React.MouseEvent) => {
     if (contentRef.current && !contentRef.current.contains(e.target as Node)) {
-      onClose();
+      onClose?.();
     }
   };
 

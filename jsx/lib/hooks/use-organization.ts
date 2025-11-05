@@ -221,9 +221,11 @@ export const useOrganizationList = () => {
           method: "POST",
         })
       );
+      await refetch();
+      await refetchSession();
       return response.data;
     },
-    [client]
+    [client, refetch, refetchSession]
   );
 
   const addRoleToOrganizationMember = useCallback(

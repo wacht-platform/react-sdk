@@ -1,8 +1,8 @@
 "use client";
 
 import { useNavigate } from "react-router";
-import type { PlatformAdapter, NavigateOptions } from "@snipextt/wacht";
-import { isSafeUrl, isExternalUrl } from "@snipextt/wacht";
+import type { PlatformAdapter, NavigateOptions } from "@wacht/jsx";
+import { isSafeUrl, isExternalUrl } from "@wacht/jsx";
 
 const useNavigateAdapter = () => {
   try {

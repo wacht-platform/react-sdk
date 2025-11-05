@@ -19,9 +19,9 @@ import {
 } from "@/hooks/use-organization";
 import { useActiveWorkspace, useWorkspaceList } from "@/hooks/use-workspace";
 import { useDeployment, useSession } from "@/hooks";
-import CreateOrganizationDialog from "./create-organization-dialog";
+import { CreateOrganizationDialog } from "./create-organization-dialog";
 import { ManageOrganizationDialog } from "./manage-organization-dialog";
-import CreateWorkspaceDialog from "../workspace/create-workspace-dialog";
+import { CreateWorkspaceDialog } from "../workspace/create-workspace-dialog";
 import { ManageWorkspaceDialog } from "../workspace/manage-workspace-dialog";
 import { useDialog } from "../utility/use-dialog";
 import type { WorkspaceWithOrganization } from "@/types";
@@ -463,7 +463,13 @@ const SkeletonIcon = styled.div`
   border-radius: 2px;
 `;
 
-export const OrganizationSwitcher = () => {
+interface OrganizationSwitcherProps {
+  showPersonal?: boolean;
+}
+
+export const OrganizationSwitcher = ({
+  showPersonal = true,
+}: OrganizationSwitcherProps) => {
   const [open, setOpen] = useState(false);
   const [isSwitching, setIsSwitching] = useState(false);
   const [expandedOrgs, setExpandedOrgs] = useState<Set<string>>(new Set());
@@ -542,22 +548,18 @@ export const OrganizationSwitcher = () => {
 
     let cleanupFn: (() => void) | null = null;
 
-    // Small delay to ensure Portal is mounted and refs are attached
     const timer = setTimeout(() => {
       const handleClickOutside = (event: MouseEvent) => {
         const target = event.target as Node;
 
-        // Check if target is the button or inside the button
         if (buttonRef.current?.contains(target)) {
           return;
         }
 
-        // Check if target is the dropdown or inside the dropdown
         if (dropdownRef.current?.contains(target)) {
           return;
         }
 
-        // If we get here, click was outside both elements
         setOpen(false);
         setLeaveError(null);
       };
@@ -575,10 +577,8 @@ export const OrganizationSwitcher = () => {
     };
   }, [open]);
 
-  // Update dropdown position when open
   useEffect(() => {
     if (open && buttonRef.current) {
-      // Small delay to ensure button ref is properly measured
       requestAnimationFrame(() => {
         if (buttonRef.current) {
           const rect = buttonRef.current.getBoundingClientRect();
@@ -589,12 +589,10 @@ export const OrganizationSwitcher = () => {
         }
       });
     } else {
-      // Clear position when closing to prevent stale positions
       setDropdownPosition(undefined);
     }
   }, [open]);
 
-  // Clear error after 5 seconds
   useEffect(() => {
     if (leaveError) {
       const timer = setTimeout(() => {
@@ -616,7 +614,6 @@ export const OrganizationSwitcher = () => {
     setIsSwitching(true);
     switchOrganization(orgId).finally(() => {
       setIsSwitching(false);
-      // Don't close dropdown - let user continue exploring or click outside to close
     });
   };
 
@@ -624,7 +621,6 @@ export const OrganizationSwitcher = () => {
     setIsSwitching(true);
     switchWorkspace(workspaceId).finally(() => {
       setIsSwitching(false);
-      // Don't close dropdown - let user continue exploring or click outside to close
     });
   };
 
@@ -647,7 +643,6 @@ export const OrganizationSwitcher = () => {
       .slice(0, 2);
   };
 
-  // Show skeleton loader while initial data is loading
   if (organizationLoading || sessionLoading) {
     return (
       <DefaultStylesProvider>
@@ -742,43 +737,51 @@ export const OrganizationSwitcher = () => {
                   </ShimmerWrapper>
                 ) : (
                   <div>
-                    {/* Always show personal account first */}
-                    <MenuItem
-                      as="button"
-                      $isActive={isPersonalActive}
-                      onClick={(e) => {
-                        e.stopPropagation();
-                        if (!isPersonalActive) {
-                          handleSwitchOrganization();
-                        }
-                      }}
-                      disabled={isSwitching || isPersonalActive}
-                    >
-                      {isPersonalActive && <ActiveIndicator />}
-                      <MenuItemContent>
-                        <PersonalIcon>
-                          {session?.active_signin?.user?.profile_picture_url ? (
-                            <PersonalAvatar
-                              src={
-                                session.active_signin.user.profile_picture_url
-                              }
-                              alt="Personal account"
-                            />
-                          ) : (
-                            <User size={12} />
+                    {/* Show personal account first if enabled */}
+                    {showPersonal && (
+                      <>
+                        <MenuItem
+                          as="button"
+                          $isActive={isPersonalActive}
+                          onClick={(e) => {
+                            e.stopPropagation();
+                            if (!isPersonalActive) {
+                              handleSwitchOrganization();
+                            }
+                          }}
+                          disabled={isSwitching || isPersonalActive}
+                        >
+                          {isPersonalActive && <ActiveIndicator />}
+                          <MenuItemContent>
+                            <PersonalIcon>
+                              {session?.active_signin?.user
+                                ?.profile_picture_url ? (
+                                <PersonalAvatar
+                                  src={
+                                    session.active_signin.user
+                                      .profile_picture_url
+                                  }
+                                  alt="Personal account"
+                                />
+                              ) : (
+                                <User size={12} />
+                              )}
+                            </PersonalIcon>
+                            <MenuItemInfo>
+                              <MenuItemName>Personal account</MenuItemName>
+                            </MenuItemInfo>
+                          </MenuItemContent>
+                          {!isPersonalActive && (
+                            <HoverArrow className="hover-arrow" size={14} />
                           )}
-                        </PersonalIcon>
-                        <MenuItemInfo>
-                          <MenuItemName>Personal account</MenuItemName>
-                        </MenuItemInfo>
-                      </MenuItemContent>
-                      {!isPersonalActive && (
-                        <HoverArrow className="hover-arrow" size={14} />
-                      )}
-                    </MenuItem>
+                        </MenuItem>
 
-                    {/* Only show separator if we're going to show an active organization */}
-                    {!isPersonalActive && activeOrganization && <Separator />}
+                        {/* Show separator after personal account if we're going to show an active organization */}
+                        {!isPersonalActive && activeOrganization && (
+                          <Separator />
+                        )}
+                      </>
+                    )}
 
                     {/* Show active organization if not personal */}
                     {!isPersonalActive && activeOrganization && (
@@ -860,7 +863,6 @@ export const OrganizationSwitcher = () => {
                             onClick={(e) => {
                               e.stopPropagation();
                               manageOrgDialog.open();
-                              // Keep dropdown open
                             }}
                             title="Manage organization"
                           >
@@ -875,7 +877,6 @@ export const OrganizationSwitcher = () => {
                                 await leaveOrganization();
                                 await refetchOrganizations();
                                 setTimeout(() => {
-                                  // Keep dropdown open after leaving org
                                   setLeavingOrg(false);
                                 }, 500);
                               } catch (error) {
@@ -966,7 +967,6 @@ export const OrganizationSwitcher = () => {
                                         onClick={(e) => {
                                           e.stopPropagation();
                                           manageWorkspaceDialog.open();
-                                          // Keep dropdown open
                                         }}
                                         title="Manage workspace"
                                       >
@@ -978,7 +978,6 @@ export const OrganizationSwitcher = () => {
                                           try {
                                             if (leaveWorkspace) {
                                               await leaveWorkspace();
-                                              // Keep dropdown open
                                             }
                                           } catch (error: any) {
                                             const errorMessage =
@@ -1006,7 +1005,6 @@ export const OrganizationSwitcher = () => {
                             onClick={() => {
                               setSelectedOrgForWorkspace(activeOrganization.id);
                               createWorkspaceDialog.open();
-                              // Keep dropdown open
                             }}
                             disabled={isSwitching}
                           >
@@ -1052,7 +1050,7 @@ export const OrganizationSwitcher = () => {
                               (m) =>
                                 m.organization.id !== activeOrganization?.id,
                             )
-                            .map((membership, index, filteredArray) => {
+                            .map((membership) => {
                               const org = membership.organization;
                               const orgWorkspaces =
                                 workspaceList?.filter(
@@ -1198,7 +1196,6 @@ export const OrganizationSwitcher = () => {
                                                     onClick={(e) => {
                                                       e.stopPropagation();
                                                       manageWorkspaceDialog.open();
-                                                      // Keep dropdown open
                                                     }}
                                                     title="Manage workspace"
                                                   >
@@ -1210,7 +1207,6 @@ export const OrganizationSwitcher = () => {
                                                       try {
                                                         if (leaveWorkspace) {
                                                           await leaveWorkspace();
-                                                          // Keep dropdown open
                                                         }
                                                       } catch (error: any) {
                                                         const errorMessage =
@@ -1242,7 +1238,6 @@ export const OrganizationSwitcher = () => {
                                         onClick={() => {
                                           setSelectedOrgForWorkspace(org.id);
                                           createWorkspaceDialog.open();
-                                          // Keep dropdown open
                                         }}
                                         disabled={isSwitching}
                                       >
@@ -1264,36 +1259,50 @@ export const OrganizationSwitcher = () => {
                                       </WorkspaceItem>
                                     </>
                                   )}
-                                  {index < filteredArray.length - 1 && (
-                                    <Separator />
-                                  )}
+                                  <Separator />
                                 </React.Fragment>
                               );
                             })}
                         </>
                       )}
 
-                    {/* Always show create organization button at bottom */}
-                    {allowUsersToCreateOrgs && (
-                      <>
-                        <CreateOrgButton
-                          onClick={() => {
-                            createOrgDialog.open();
-                            // Keep dropdown open
-                          }}
-                          disabled={isSwitching}
-                        >
-                          <MenuItemContent>
-                            <PlusIcon>
-                              <Plus size={12} />
-                            </PlusIcon>
-                            <MenuItemInfo>
-                              <MenuItemName>Create organization</MenuItemName>
-                            </MenuItemInfo>
-                          </MenuItemContent>
-                        </CreateOrgButton>
-                      </>
-                    )}
+                    {/* Show create button at bottom - workspace if enabled, otherwise organization */}
+                    {workspacesEnabled
+                      ? activeOrganization && (
+                          <CreateOrgButton
+                            onClick={() => {
+                              setSelectedOrgForWorkspace(activeOrganization.id);
+                              createWorkspaceDialog.open();
+                            }}
+                            disabled={isSwitching}
+                          >
+                            <MenuItemContent>
+                              <PlusIcon>
+                                <Plus size={12} />
+                              </PlusIcon>
+                              <MenuItemInfo>
+                                <MenuItemName>Create workspace</MenuItemName>
+                              </MenuItemInfo>
+                            </MenuItemContent>
+                          </CreateOrgButton>
+                        )
+                      : allowUsersToCreateOrgs && (
+                          <CreateOrgButton
+                            onClick={() => {
+                              createOrgDialog.open();
+                            }}
+                            disabled={isSwitching}
+                          >
+                            <MenuItemContent>
+                              <PlusIcon>
+                                <Plus size={12} />
+                              </PlusIcon>
+                              <MenuItemInfo>
+                                <MenuItemName>Create organization</MenuItemName>
+                              </MenuItemInfo>
+                            </MenuItemContent>
+                          </CreateOrgButton>
+                        )}
                   </div>
                 )}
               </Dropdown>

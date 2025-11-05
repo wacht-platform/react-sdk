@@ -630,10 +630,14 @@ export const CreateWorkspaceForm: React.FC<CreateWorkspaceFormProps> = ({
           </FormContent>
 
           <ButtonGroup>
-            <BackButton onClick={onCancel} disabled={isSubmitting}>
-              <ChevronLeft size={16} />
-              Back
-            </BackButton>
+            {onCancel ? (
+              <BackButton onClick={onCancel} disabled={isSubmitting}>
+                <ChevronLeft size={16} />
+                Back
+              </BackButton>
+            ) : (
+              <div></div>
+            )}
             <SubmitButton
               onClick={handleSubmit}
               disabled={isSubmitting || !name.trim()}

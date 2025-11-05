@@ -7,7 +7,7 @@ import { useDeployment } from "../../hooks/use-deployment";
 import { useNavigation } from "../../hooks/use-navigation";
 import { PhoneNumberInput } from "../utility/phone";
 import { OTPInput } from "../utility/otp-input";
-import { ProfileCompletionData, ProfileCompletionProps } from "@snipextt/wacht-types";
+import { ProfileCompletionData, ProfileCompletionProps } from "@wacht/types";
 import { AuthFormImage } from "./auth-image";
 import { NavigationLink } from "../utility/navigation";
 import { DefaultStylesProvider } from "../utility/root";
@@ -203,7 +203,6 @@ export function ProfileCompletion({
     }
   };
 
-
   // Show loading state while redirecting
   if (isRedirecting || !attempt) {
     return (
@@ -223,9 +222,10 @@ export function ProfileCompletion({
   const message = "Please provide the following information to continue";
 
   const authSettings = deployment?.auth_settings;
-  const isVerifying = attempt?.current_step === "verify_phone_otp" ||
-                     attempt?.current_step === "verify_email_otp" ||
-                     showVerification;
+  const isVerifying =
+    attempt?.current_step === "verify_phone_otp" ||
+    attempt?.current_step === "verify_email_otp" ||
+    showVerification;
 
   const handleInputChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const { name, value } = e.target;
@@ -263,7 +263,9 @@ export function ProfileCompletion({
       }
 
       if (isFieldEnabled && (!fieldValue || fieldValue.trim() === "")) {
-        const fieldName = field.replace("_", " ").replace(/\b\w/g, (l: string) => l.toUpperCase());
+        const fieldName = field
+          .replace("_", " ")
+          .replace(/\b\w/g, (l: string) => l.toUpperCase());
         newErrors[field] = `${fieldName} is required`;
       }
     });
@@ -272,7 +274,8 @@ export function ProfileCompletion({
     if (formData.username && missingFields.includes("username")) {
       const usernameRegex = /^[a-zA-Z0-9_-]{3,30}$/;
       if (!usernameRegex.test(formData.username)) {
-        newErrors.username = "Username must be 3-30 characters and contain only letters, numbers, underscores, and hyphens";
+        newErrors.username =
+          "Username must be 3-30 characters and contain only letters, numbers, underscores, and hyphens";
       }
     }
 
@@ -316,19 +319,22 @@ export function ProfileCompletion({
   };
 
   if (isVerifying) {
-    const verificationTitle = attempt.current_step === "verify_phone_otp"
-      ? "Verify Your Phone Number"
-      : "Verify Your Email";
-    const verificationMessage = attempt.current_step === "verify_phone_otp"
-      ? "Enter the 6-digit code sent to your phone"
-      : "Enter the 6-digit code sent to your email";
-    const resendStrategy: "phone_otp" | "email_otp" = attempt.current_step === "verify_phone_otp" ? "phone_otp" : "email_otp";
+    const verificationTitle =
+      attempt.current_step === "verify_phone_otp"
+        ? "Verify Your Phone Number"
+        : "Verify Your Email";
+    const verificationMessage =
+      attempt.current_step === "verify_phone_otp"
+        ? "Enter the 6-digit code sent to your phone"
+        : "Enter the 6-digit code sent to your email";
+    const resendStrategy: "phone_otp" | "email_otp" =
+      attempt.current_step === "verify_phone_otp" ? "phone_otp" : "email_otp";
 
     return (
       <DefaultStylesProvider>
         <Container>
           <AuthFormImage />
-          
+
           <Header>
             <Title>{verificationTitle}</Title>
             <Subtitle>{verificationMessage}</Subtitle>
@@ -353,14 +359,19 @@ export function ProfileCompletion({
 
           <Footer>
             <div>
-              <Link onClick={() => setShowVerification(false)} style={{ cursor: "pointer" }}>
+              <Link
+                onClick={() => setShowVerification(false)}
+                style={{ cursor: "pointer" }}
+              >
                 Back to profile completion
               </Link>
             </div>
             <div style={{ marginTop: "var(--space-sm)" }}>
               Having trouble?{" "}
               <Link>
-                <NavigationLink to={deployment?.ui_settings.support_page_url || "#"}>
+                <NavigationLink
+                  to={deployment?.ui_settings.support_page_url || "#"}
+                >
                   Get help
                 </NavigationLink>
               </Link>
@@ -375,114 +386,139 @@ export function ProfileCompletion({
     <DefaultStylesProvider>
       <Container>
         <AuthFormImage />
-        
+
         <Header>
           <Title>{title}</Title>
           <Subtitle>{message}</Subtitle>
         </Header>
 
         <Form onSubmit={handleSubmit} noValidate>
-          {(missingFields.includes("first_name") || missingFields.includes("last_name")) &&
-           (authSettings?.first_name?.enabled || authSettings?.last_name?.enabled) && (
-            <NameFields $isBothEnabled={!!(authSettings?.first_name?.enabled && authSettings?.last_name?.enabled &&
-                                           missingFields.includes("first_name") && missingFields.includes("last_name"))}>
-              {missingFields.includes("first_name") && authSettings?.first_name?.enabled && (
-                <FormGroup>
-                  <Label htmlFor="first_name">
-                    First name {authSettings.first_name.required && "*"}
-                  </Label>
-                  <Input
-                type="text"
-                id="first_name"
-                name="first_name"
-                value={formData.first_name || ""}
-                onChange={handleInputChange}
-                placeholder="Enter your first name"
-                aria-invalid={!!errors.first_name}
-                disabled={isLoading}
-                autoComplete="given-name"
-              />
-                  {errors.first_name && <ErrorMessage>{errors.first_name}</ErrorMessage>}
-                </FormGroup>
-              )}
+          {(missingFields.includes("first_name") ||
+            missingFields.includes("last_name")) &&
+            (authSettings?.first_name?.enabled ||
+              authSettings?.last_name?.enabled) && (
+              <NameFields
+                $isBothEnabled={
+                  !!(
+                    authSettings?.first_name?.enabled &&
+                    authSettings?.last_name?.enabled &&
+                    missingFields.includes("first_name") &&
+                    missingFields.includes("last_name")
+                  )
+                }
+              >
+                {missingFields.includes("first_name") &&
+                  authSettings?.first_name?.enabled && (
+                    <FormGroup>
+                      <Label htmlFor="first_name">
+                        First name {authSettings.first_name.required && "*"}
+                      </Label>
+                      <Input
+                        type="text"
+                        id="first_name"
+                        name="first_name"
+                        value={formData.first_name || ""}
+                        onChange={handleInputChange}
+                        placeholder="Enter your first name"
+                        aria-invalid={!!errors.first_name}
+                        disabled={isLoading}
+                        autoComplete="given-name"
+                      />
+                      {errors.first_name && (
+                        <ErrorMessage>{errors.first_name}</ErrorMessage>
+                      )}
+                    </FormGroup>
+                  )}
 
-              {missingFields.includes("last_name") && authSettings?.last_name?.enabled && (
-                <FormGroup>
-                  <Label htmlFor="last_name">
-                    Last name {authSettings.last_name.required && "*"}
-                  </Label>
-                  <Input
-                type="text"
-                id="last_name"
-                name="last_name"
-                value={formData.last_name || ""}
-                onChange={handleInputChange}
-                placeholder="Enter your last name"
-                aria-invalid={!!errors.last_name}
-                disabled={isLoading}
-                autoComplete="family-name"
-              />
-                  {errors.last_name && <ErrorMessage>{errors.last_name}</ErrorMessage>}
-                </FormGroup>
-              )}
-            </NameFields>
-          )}
+                {missingFields.includes("last_name") &&
+                  authSettings?.last_name?.enabled && (
+                    <FormGroup>
+                      <Label htmlFor="last_name">
+                        Last name {authSettings.last_name.required && "*"}
+                      </Label>
+                      <Input
+                        type="text"
+                        id="last_name"
+                        name="last_name"
+                        value={formData.last_name || ""}
+                        onChange={handleInputChange}
+                        placeholder="Enter your last name"
+                        aria-invalid={!!errors.last_name}
+                        disabled={isLoading}
+                        autoComplete="family-name"
+                      />
+                      {errors.last_name && (
+                        <ErrorMessage>{errors.last_name}</ErrorMessage>
+                      )}
+                    </FormGroup>
+                  )}
+              </NameFields>
+            )}
 
-          {missingFields.includes("username") && authSettings?.username?.enabled && (
-            <FormGroup>
-              <Label htmlFor="username">
-                Username {authSettings.username.required && "*"}
-              </Label>
-              <Input
-                type="text"
-                id="username"
-                name="username"
-                value={formData.username || ""}
-                onChange={handleInputChange}
-                placeholder="Choose a username"
-                aria-invalid={!!errors.username}
-                disabled={isLoading}
-                autoComplete="username"
-              />
-              {errors.username && <ErrorMessage>{errors.username}</ErrorMessage>}
-            </FormGroup>
-          )}
+          {missingFields.includes("username") &&
+            authSettings?.username?.enabled && (
+              <FormGroup>
+                <Label htmlFor="username">
+                  Username {authSettings.username.required && "*"}
+                </Label>
+                <Input
+                  type="text"
+                  id="username"
+                  name="username"
+                  value={formData.username || ""}
+                  onChange={handleInputChange}
+                  placeholder="Choose a username"
+                  aria-invalid={!!errors.username}
+                  disabled={isLoading}
+                  autoComplete="username"
+                />
+                {errors.username && (
+                  <ErrorMessage>{errors.username}</ErrorMessage>
+                )}
+              </FormGroup>
+            )}
 
-          {missingFields.includes("phone_number") && authSettings?.phone_number?.enabled && (
-            <FormGroup>
-              <Label htmlFor="phone_number">
-                Phone number {authSettings.phone_number.required && "*"}
-              </Label>
-              <PhoneNumberInput
-                value={formData.phone_number || ""}
-                onChange={handlePhoneChange}
-                error={errors.phone_number}
-                countryCode={countryCode}
-                setCountryCode={setCountryCode}
-              />
-              {errors.phone_number && <ErrorMessage>{errors.phone_number}</ErrorMessage>}
-            </FormGroup>
-          )}
+          {missingFields.includes("phone_number") &&
+            authSettings?.phone_number?.enabled && (
+              <FormGroup>
+                <Label htmlFor="phone_number">
+                  Phone number {authSettings.phone_number.required && "*"}
+                </Label>
+                <PhoneNumberInput
+                  value={formData.phone_number || ""}
+                  onChange={handlePhoneChange}
+                  error={errors.phone_number}
+                  countryCode={countryCode}
+                  setCountryCode={setCountryCode}
+                />
+                {errors.phone_number && (
+                  <ErrorMessage>{errors.phone_number}</ErrorMessage>
+                )}
+              </FormGroup>
+            )}
 
-          {missingFields.includes("email_address") && authSettings?.email_address?.enabled && (
-            <FormGroup>
-              <Label htmlFor="email">
-                Email address {authSettings.email_address.required && "*"}
-              </Label>
-              <Input
-                type="email"
-                id="email"
-                name="email"
-                value={formData.email || ""}
-                onChange={handleInputChange}
-                placeholder="Enter your email address"
-                aria-invalid={!!errors.email_address}
-                disabled={isLoading}
-                autoComplete="email"
-              />
-              {errors.email_address && <ErrorMessage>{errors.email_address}</ErrorMessage>}
-            </FormGroup>
-          )}
+          {missingFields.includes("email_address") &&
+            authSettings?.email_address?.enabled && (
+              <FormGroup>
+                <Label htmlFor="email">
+                  Email address {authSettings.email_address.required && "*"}
+                </Label>
+                <Input
+                  type="email"
+                  id="email"
+                  name="email"
+                  value={formData.email || ""}
+                  onChange={handleInputChange}
+                  placeholder="Enter your email address"
+                  aria-invalid={!!errors.email_address}
+                  disabled={isLoading}
+                  autoComplete="email"
+                />
+                {errors.email_address && (
+                  <ErrorMessage>{errors.email_address}</ErrorMessage>
+                )}
+              </FormGroup>
+            )}
 
           {displayError && (
             <ErrorMessage style={{ marginBottom: "var(--space-md)" }}>
@@ -506,7 +542,9 @@ export function ProfileCompletion({
           <div style={{ marginTop: "var(--space-sm)" }}>
             Having trouble?{" "}
             <Link>
-              <NavigationLink to={deployment?.ui_settings.support_page_url || "#"}>
+              <NavigationLink
+                to={deployment?.ui_settings.support_page_url || "#"}
+              >
                 Get help
               </NavigationLink>
             </Link>
