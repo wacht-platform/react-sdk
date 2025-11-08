@@ -8,6 +8,8 @@ import { useWorkspaceList } from "@/hooks/use-workspace";
 import type { Organization, WorkspaceWithOrganization } from "@/types";
 import { AuthFormImage } from "../auth/auth-image";
 import { NavigationLink } from "../utility/navigation";
+import { UserButton } from "../user/user-button";
+import { Button } from "../utility/button";
 
 const fadeIn = keyframes`
   from {
@@ -38,24 +40,11 @@ const Container = styled.div`
   animation: ${fadeIn} 0.3s ease;
 `;
 
-const Header = styled.div`
-  text-align: center;
-  margin-bottom: var(--space-2xl);
-`;
-
-const Title = styled.h1`
-  font-size: var(--font-xl);
-  font-weight: 600;
-  color: var(--color-foreground);
-  margin-bottom: var(--space-sm);
-  margin-top: 0;
-`;
-
-const Subtitle = styled.p`
-  color: var(--color-secondary-text);
-  font-size: var(--font-sm);
-  margin: 0;
-  font-weight: 400;
+const TopBar = styled.div`
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: var(--space-lg);
 `;
 
 const BackButton = styled.button`
@@ -68,9 +57,9 @@ const BackButton = styled.button`
   font-size: var(--font-sm);
   cursor: pointer;
   padding: var(--space-sm);
-  margin-bottom: var(--space-lg);
   transition: all 0.2s ease;
   border-radius: var(--radius-md);
+  font-weight: 400;
 
   &:hover {
     color: var(--color-foreground);
@@ -81,6 +70,26 @@ const BackButton = styled.button`
     width: 16px;
     height: 16px;
   }
+`;
+
+const Header = styled.div`
+  text-align: center;
+  margin-bottom: var(--space-2xl);
+`;
+
+const Title = styled.h1`
+  font-size: var(--font-lg);
+  font-weight: 500;
+  color: var(--color-foreground);
+  margin-bottom: var(--space-xs);
+  margin-top: 0;
+`;
+
+const Subtitle = styled.p`
+  color: var(--color-secondary-text);
+  font-size: var(--font-xs);
+  margin: 0;
+  font-weight: 400;
 `;
 
 const GridContainer = styled.div`
@@ -154,25 +163,25 @@ const CardHeader = styled.div`
 
 const Avatar = styled.div<{ $size?: "sm" | "md" | "lg" }>`
   width: ${(props) =>
-    props.$size === "lg" ? "64px" : props.$size === "sm" ? "40px" : "48px"};
+    props.$size === "lg" ? "64px" : props.$size === "sm" ? "36px" : "48px"};
   height: ${(props) =>
-    props.$size === "lg" ? "64px" : props.$size === "sm" ? "40px" : "48px"};
-  border-radius: var(--radius-lg);
+    props.$size === "lg" ? "64px" : props.$size === "sm" ? "36px" : "48px"};
+  border-radius: 50%;
   overflow: hidden;
   display: flex;
   align-items: center;
   justify-content: center;
-  background: linear-gradient(135deg, var(--color-primary) 0%, var(--color-primary-hover) 100%);
-  color: white;
+  background: var(--color-background-hover);
+  border: 1px solid var(--color-border);
+  color: var(--color-secondary-text);
   font-size: ${(props) =>
     props.$size === "lg"
-      ? "var(--font-xl)"
+      ? "var(--font-lg)"
       : props.$size === "sm"
-        ? "var(--font-sm)"
-        : "var(--font-lg)"};
-  font-weight: 600;
+        ? "var(--font-xs)"
+        : "var(--font-sm)"};
+  font-weight: 500;
   flex-shrink: 0;
-  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
 `;
 
 const AvatarImage = styled.img`
@@ -187,8 +196,8 @@ const CardContent = styled.div`
 `;
 
 const CardTitle = styled.h3`
-  font-size: var(--font-md);
-  font-weight: 600;
+  font-size: var(--font-sm);
+  font-weight: 500;
   color: var(--color-foreground);
   margin: 0;
   overflow: hidden;
@@ -201,9 +210,9 @@ const CardMeta = styled.div`
   align-items: center;
   gap: var(--space-xs);
   margin-top: var(--space-xs);
-  font-size: var(--font-xs);
+  font-size: 12px;
   color: var(--color-secondary-text);
-  font-weight: 500;
+  font-weight: 400;
 
   svg {
     width: 14px;
@@ -277,7 +286,7 @@ const CreateIcon = styled.div`
 `;
 
 const CreateCardText = styled.span`
-  font-size: var(--font-sm);
+  font-size: 13px;
   font-weight: 500;
 `;
 
@@ -306,16 +315,27 @@ const EmptyStateIcon = styled.div`
 `;
 
 const EmptyStateTitle = styled.h3`
-  font-size: var(--font-lg);
-  font-weight: 600;
+  font-size: var(--font-md);
+  font-weight: 500;
   color: var(--color-foreground);
   margin: 0 0 var(--space-sm) 0;
 `;
 
 const EmptyStateText = styled.p`
-  font-size: var(--font-sm);
+  font-size: var(--font-xs);
   color: var(--color-secondary-text);
-  margin: 0;
+  margin: 0 0 var(--space-lg) 0;
+`;
+
+const EmptyStateCTA = styled.div`
+  display: flex;
+  justify-content: center;
+  margin-top: var(--space-lg);
+`;
+
+const CTAButton = styled(Button)`
+  width: auto;
+  padding: var(--space-sm) var(--space-lg);
 `;
 
 const Footer = styled.div`
@@ -427,12 +447,17 @@ export const OrganizationSelectorMenu = ({
     <Container>
       <AuthFormImage />
 
-      {showingWorkspaces && (
-        <BackButton onClick={() => setSelectedOrgForWorkspace(null)}>
-          <ArrowLeft />
-          Back to organizations
-        </BackButton>
-      )}
+      <TopBar>
+        {showingWorkspaces ? (
+          <BackButton onClick={() => setSelectedOrgForWorkspace(null)}>
+            <ArrowLeft />
+            Back to organizations
+          </BackButton>
+        ) : (
+          <div />
+        )}
+        <UserButton showName={false} />
+      </TopBar>
 
       <Header>
         <Title>{dialogTitle}</Title>
@@ -502,6 +527,12 @@ export const OrganizationSelectorMenu = ({
                 <EmptyStateText>
                   Create your first workspace to get started with {selectedOrgForWorkspace?.name}.
                 </EmptyStateText>
+                <EmptyStateCTA>
+                  <CTAButton onClick={() => onCreateWorkspace?.(selectedOrgForWorkspace!.id)}>
+                    <Plus />
+                    Create workspace
+                  </CTAButton>
+                </EmptyStateCTA>
               </EmptyState>
             )}
           </>
@@ -576,6 +607,14 @@ export const OrganizationSelectorMenu = ({
                 ? "Create your first organization to get started."
                 : "You don't have access to any organizations yet. Contact your administrator."}
             </EmptyStateText>
+            {allowUsersToCreateOrgs && (
+              <EmptyStateCTA>
+                <CTAButton onClick={() => onCreateOrganization?.()}>
+                  <Plus />
+                  Create organization
+                </CTAButton>
+              </EmptyStateCTA>
+            )}
           </EmptyState>
         )}
       </GridContainer>
