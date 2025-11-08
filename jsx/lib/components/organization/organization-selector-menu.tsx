@@ -7,13 +7,13 @@ import { useOrganizationList, useSession, useDeployment } from "@/hooks";
 import { useWorkspaceList } from "@/hooks/use-workspace";
 import type { Organization, WorkspaceWithOrganization } from "@/types";
 import { AuthFormImage } from "../auth/auth-image";
-import { NavigationLink } from "../utility/navigation";
 import { UserButton } from "../user/user-button";
 import { Button } from "../utility/button";
 
 const Container = styled.div`
   width: 100%;
   padding: var(--space-2xl);
+  padding-bottom: var(--space-lg);
   background: var(--color-background);
 `;
 
@@ -21,14 +21,10 @@ const HeaderBar = styled.div`
   display: flex;
   justify-content: space-between;
   align-items: center;
-  margin-bottom: var(--space-3xl);
+  margin-bottom: var(--space-xl);
 `;
 
 const BackButton = styled.button`
-  display: flex;
-  align-items: center;
-  gap: var(--space-xs);
-  background: transparent;
   border: none;
   color: var(--color-secondary-text);
   font-size: var(--font-xs);
@@ -238,6 +234,7 @@ const EmptyStateCTA = styled(Button)`
 
 const Footer = styled.div`
   margin-top: var(--space-lg);
+  margin-bottom: var(--space-lg);
   text-align: center;
   font-size: var(--font-xs);
   color: var(--color-secondary-text);
@@ -344,16 +341,16 @@ export const OrganizationSelectorMenu = ({
     <Container>
       <AuthFormImage />
 
-      {showingWorkspaces && (
-        <BackButton onClick={() => setSelectedOrgForWorkspace(null)}>
-          <ArrowLeft />
-          Back to organizations
-        </BackButton>
-      )}
-
       <HeaderBar>
         <TitleSection>
-          <Title>{dialogTitle}</Title>
+          <div style={{ display: "flex", gap: "6px" }}>
+            {showingWorkspaces && (
+              <BackButton onClick={() => setSelectedOrgForWorkspace(null)}>
+                <ArrowLeft />
+              </BackButton>
+            )}
+            <Title>{dialogTitle}</Title>
+          </div>
           <Subtitle>{dialogSubtitle}</Subtitle>
         </TitleSection>
         <UserButton showName={false} />
@@ -499,27 +496,18 @@ export const OrganizationSelectorMenu = ({
           </CreateButton>
         )}
 
-      <Footer>
-        {showingWorkspaces ? (
+      {showingWorkspaces ? (
+        <Footer>
           <>
             Wrong organization?{" "}
             <Link onClick={() => setSelectedOrgForWorkspace(null)}>
               Go back
             </Link>
           </>
-        ) : (
-          <>
-            Having trouble?{" "}
-            <Link>
-              <NavigationLink
-                to={deployment?.ui_settings?.support_page_url || "#"}
-              >
-                Get help
-              </NavigationLink>
-            </Link>
-          </>
-        )}
-      </Footer>
+        </Footer>
+      ) : (
+        <></>
+      )}
     </Container>
   );
 };

@@ -18,7 +18,6 @@ const AccountButton = styled.button`
   border: none;
   background: transparent;
   cursor: pointer;
-  padding: 0px 12px;
   border-radius: 30px;
   transition: background-color 0.2s ease;
 `;
