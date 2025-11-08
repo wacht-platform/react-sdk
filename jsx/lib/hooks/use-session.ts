@@ -99,6 +99,11 @@ async function switchWorkspace(
 const tokenSingletonMap = new Map<string, SessionToken>();
 const fetchSingleton = new Map<string, Promise<ApiResult<SessionToken>>>();
 
+export function clearTokenCache() {
+  tokenSingletonMap.clear();
+  fetchSingleton.clear();
+}
+
 async function getSessionToken(
   client: Client,
   template?: string
@@ -127,7 +132,7 @@ export function useSession(): UseSessionReturnType {
   });
 
   const refetch = useCallback(async () => {
-    await mutate();
+    await mutate(undefined, { revalidate: true });
   }, [mutate]);
 
   const getToken = useCallback(
@@ -191,12 +196,12 @@ export function useSession(): UseSessionReturnType {
     session,
     switchSignIn: async (signInId: string) => {
       await switchSignIn(client, signInId);
-      await mutate();
+      await mutate(undefined, { revalidate: true });
     },
     signOut: async (signInId?: string) => {
       await signOut(client, signInId);
-      await mutate();
-      
+      await mutate(undefined, { revalidate: true });
+
       if (deployment?.ui_settings) {
         if (signInId && deployment.ui_settings.after_sign_out_one_page_url) {
           navigate(deployment.ui_settings.after_sign_out_one_page_url);
@@ -207,11 +212,13 @@ export function useSession(): UseSessionReturnType {
     },
     switchOrganization: async (organizationId?: string) => {
       await switchOrganization(client, organizationId);
-      await mutate();
+      clearTokenCache();
+      await mutate(undefined, { revalidate: true });
     },
     switchWorkspace: async (workspaceId: string) => {
       await switchWorkspace(client, workspaceId);
-      await mutate();
+      clearTokenCache();
+      await mutate(undefined, { revalidate: true });
     },
     getToken,
     addNewAccount,

@@ -1,6 +1,6 @@
 {
   "name": "@wacht/jsx",
-  "version": "0.0.1-alpha.4",
+  "version": "0.0.1-alpha.5",
   "description": "",
   "type": "module",
   "main": "dist/index.cjs.js",

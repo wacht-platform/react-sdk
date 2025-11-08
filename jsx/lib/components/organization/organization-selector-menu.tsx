@@ -1,49 +1,88 @@
 "use client";
 
-import React, { useState } from "react";
+import { useState } from "react";
 import styled from "styled-components";
-import { Plus } from "lucide-react";
+import { Plus, Building2, Users, ChevronRight, ArrowLeft } from "lucide-react";
 import { useOrganizationList, useSession, useDeployment } from "@/hooks";
 import { useWorkspaceList } from "@/hooks/use-workspace";
 import type { Organization, WorkspaceWithOrganization } from "@/types";
 import { AuthFormImage } from "../auth/auth-image";
-import { NavigationLink } from "../utility/navigation";
+import { UserButton } from "../user/user-button";
+import { Button } from "../utility/button";
 
 const Container = styled.div`
   width: 100%;
-  padding: var(--space-3xl) var(--space-sm);
+  padding: var(--space-2xl);
+  padding-bottom: var(--space-lg);
   background: var(--color-background);
 `;
 
-const Header = styled.div`
-  text-align: center;
+const HeaderBar = styled.div`
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
   margin-bottom: var(--space-xl);
 `;
 
+const BackButton = styled.button`
+  border: none;
+  color: var(--color-secondary-text);
+  font-size: var(--font-xs);
+  cursor: pointer;
+  padding: var(--space-xs) 0;
+  transition: color 0.2s ease;
+  font-weight: 400;
+
+  &:hover {
+    color: var(--color-foreground);
+  }
+
+  svg {
+    width: 14px;
+    height: 14px;
+  }
+`;
+
+const TitleSection = styled.div`
+  flex: 1;
+`;
+
 const Title = styled.h1`
-  font-size: var(--font-lg);
+  font-size: var(--font-md);
   font-weight: 400;
   color: var(--color-foreground);
-  margin-bottom: var(--space-xs);
-  margin-top: 0;
+  margin: 0;
 `;
 
 const Subtitle = styled.p`
   color: var(--color-secondary-text);
   font-size: var(--font-xs);
-  margin: 0;
+  margin: var(--space-2xs) 0 0 0;
+  font-weight: 400;
 `;
 
-const MenuList = styled.div`
+const ListContainer = styled.div`
   max-height: 400px;
   overflow-y: auto;
   border-top: 1px solid var(--color-border);
   border-bottom: 1px solid var(--color-border);
-  overflow: hidden;
   margin: var(--space-lg) 0;
+
+  &::-webkit-scrollbar {
+    width: 6px;
+  }
+
+  &::-webkit-scrollbar-track {
+    background: transparent;
+  }
+
+  &::-webkit-scrollbar-thumb {
+    background: var(--color-border);
+    border-radius: 3px;
+  }
 `;
 
-const MenuItem = styled.div<{ $isActive?: boolean; as?: React.ElementType }>`
+const ListItem = styled.button`
   display: flex;
   align-items: center;
   gap: var(--space-md);
@@ -54,9 +93,12 @@ const MenuItem = styled.div<{ $isActive?: boolean; as?: React.ElementType }>`
   background: transparent;
   cursor: pointer;
   color: var(--color-foreground);
-  transition: all 0.2s ease;
-  position: relative;
+  transition: background-color 0.2s ease;
   border-bottom: 1px solid var(--color-border);
+
+  &:last-child {
+    border-bottom: none;
+  }
 
   &:hover {
     background: var(--color-background-hover);
@@ -64,68 +106,70 @@ const MenuItem = styled.div<{ $isActive?: boolean; as?: React.ElementType }>`
 
   &:disabled {
     cursor: not-allowed;
-    opacity: 0.7;
+    opacity: 0.6;
   }
 `;
 
-const MenuItemAvatar = styled.div<{ $small?: boolean }>`
-  width: ${(props) => (props.$small ? "32px" : "40px")};
-  height: ${(props) => (props.$small ? "32px" : "40px")};
+const Avatar = styled.div`
+  width: 40px;
+  height: 40px;
   border-radius: 50%;
   overflow: hidden;
   display: flex;
   align-items: center;
   justify-content: center;
-  background: var(--color-input-background);
+  background: var(--color-background-hover);
+  border: 1px solid var(--color-border);
   color: var(--color-secondary-text);
-  font-size: var(--font-sm);
+  font-size: 14px;
   font-weight: 500;
   flex-shrink: 0;
 `;
 
-const MenuItemAvatarImage = styled.img`
+const AvatarImage = styled.img`
   width: 100%;
   height: 100%;
   object-fit: cover;
 `;
 
-const MenuItemInfo = styled.div`
-  display: flex;
-  flex-direction: column;
-  gap: var(--space-2xs);
-  overflow: hidden;
+const ItemContent = styled.div`
   flex: 1;
   min-width: 0;
 `;
 
-const MenuItemName = styled.span`
-  font-weight: 500;
+const ItemName = styled.div`
   font-size: var(--font-sm);
+  font-weight: 500;
+  color: var(--color-foreground);
   overflow: hidden;
   text-overflow: ellipsis;
   white-space: nowrap;
-  color: var(--color-foreground);
 `;
 
-const MenuItemSubtext = styled.span`
-  font-size: var(--font-2xs);
-  color: var(--color-secondary-text);
-  font-weight: 400;
-`;
-
-const WorkspaceAvatar = styled.div`
-  width: 32px;
-  height: 32px;
-  border-radius: 50%;
-  overflow: hidden;
+const ItemMeta = styled.div`
   display: flex;
   align-items: center;
-  justify-content: center;
-  background: var(--color-input-background);
+  gap: var(--space-xs);
+  margin-top: 2px;
+  font-size: 12px;
   color: var(--color-secondary-text);
-  font-size: var(--font-xs);
-  font-weight: 500;
-  flex-shrink: 0;
+  font-weight: 400;
+
+  svg {
+    width: 12px;
+    height: 12px;
+  }
+`;
+
+const ItemArrow = styled.div`
+  color: var(--color-secondary-text);
+  display: flex;
+  align-items: center;
+
+  svg {
+    width: 16px;
+    height: 16px;
+  }
 `;
 
 const CreateButton = styled.button`
@@ -134,16 +178,14 @@ const CreateButton = styled.button`
   justify-content: center;
   gap: var(--space-sm);
   width: 100%;
-  padding: var(--space-lg);
-  text-align: left;
+  padding: var(--space-md);
   border: none;
   background: transparent;
   cursor: pointer;
   color: var(--color-primary);
   font-size: var(--font-xs);
-  font-weight: 400;
+  font-weight: 500;
   transition: background-color 0.2s ease;
-  position: relative;
 
   &:hover {
     background: var(--color-background-hover);
@@ -151,25 +193,48 @@ const CreateButton = styled.button`
 
   &:disabled {
     cursor: not-allowed;
-    opacity: 0.7;
+    opacity: 0.6;
   }
 
   svg {
-    width: 16px;
-    height: 16px;
+    width: 14px;
+    height: 14px;
   }
 `;
 
 const EmptyState = styled.div`
   text-align: center;
   padding: var(--space-3xl) var(--space-lg);
+  min-height: 200px;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
   color: var(--color-secondary-text);
+`;
+
+const EmptyStateTitle = styled.div`
   font-size: var(--font-sm);
-  font-weight: 400;
+  font-weight: 500;
+  color: var(--color-foreground);
+  margin-bottom: var(--space-xs);
+`;
+
+const EmptyStateText = styled.div`
+  font-size: var(--font-xs);
+  color: var(--color-secondary-text);
+  margin-bottom: var(--space-lg);
+`;
+
+const EmptyStateCTA = styled(Button)`
+  width: auto;
+  margin: 0 auto;
+  padding: var(--space-sm) var(--space-lg);
 `;
 
 const Footer = styled.div`
   margin-top: var(--space-lg);
+  margin-bottom: var(--space-lg);
   text-align: center;
   font-size: var(--font-xs);
   color: var(--color-secondary-text);
@@ -260,7 +325,7 @@ export const OrganizationSelectorMenu = ({
     : "Select an organization";
 
   const dialogSubtitle = showingWorkspaces
-    ? `to continue to ${deployment?.ui_settings?.app_name || "App"}`
+    ? `Choose a workspace in ${selectedOrgForWorkspace?.name}`
     : workspacesEnabled
       ? "Choose an organization to view its workspaces"
       : `to continue to ${deployment?.ui_settings?.app_name || "App"}`;
@@ -275,157 +340,173 @@ export const OrganizationSelectorMenu = ({
   return (
     <Container>
       <AuthFormImage />
-      <Header>
-        <Title>{dialogTitle}</Title>
-        <Subtitle>{dialogSubtitle}</Subtitle>
-      </Header>
 
-      <MenuList>
+      <HeaderBar>
+        <TitleSection>
+          <div style={{ display: "flex", gap: "6px" }}>
+            {showingWorkspaces && (
+              <BackButton onClick={() => setSelectedOrgForWorkspace(null)}>
+                <ArrowLeft />
+              </BackButton>
+            )}
+            <Title>{dialogTitle}</Title>
+          </div>
+          <Subtitle>{dialogSubtitle}</Subtitle>
+        </TitleSection>
+        <UserButton showName={false} />
+      </HeaderBar>
+
+      <ListContainer>
         {showingWorkspaces ? (
           <>
             {selectedOrgWorkspaces && selectedOrgWorkspaces.length > 0 ? (
-              <>
-                {selectedOrgWorkspaces.map(
-                  (workspace: WorkspaceWithOrganization) => (
-                    <MenuItem
-                      as="button"
-                      key={workspace.id}
-                      onClick={() =>
-                        handleSelectWorkspace(
-                          selectedOrgForWorkspace,
-                          workspace,
-                        )
-                      }
-                      disabled={switching === workspace.id}
-                    >
-                      <WorkspaceAvatar>
-                        {workspace.image_url ? (
-                          <img
-                            src={workspace.image_url}
-                            alt={workspace.name}
-                            style={{
-                              width: "100%",
-                              height: "100%",
-                              objectFit: "cover",
-                            }}
-                          />
-                        ) : (
-                          getInitials(workspace.name).charAt(0)
-                        )}
-                      </WorkspaceAvatar>
-                      <MenuItemInfo>
-                        <MenuItemName>{workspace.name}</MenuItemName>
-                      </MenuItemInfo>
-                    </MenuItem>
-                  ),
-                )}
-              </>
+              selectedOrgWorkspaces.map(
+                (workspace: WorkspaceWithOrganization) => (
+                  <ListItem
+                    key={workspace.id}
+                    onClick={() =>
+                      handleSelectWorkspace(selectedOrgForWorkspace, workspace)
+                    }
+                    disabled={switching === workspace.id}
+                  >
+                    <Avatar>
+                      {workspace.image_url ? (
+                        <AvatarImage
+                          src={workspace.image_url}
+                          alt={workspace.name}
+                        />
+                      ) : (
+                        getInitials(workspace.name).charAt(0)
+                      )}
+                    </Avatar>
+                    <ItemContent>
+                      <ItemName>{workspace.name}</ItemName>
+                      <ItemMeta>
+                        <Users />
+                        Workspace
+                      </ItemMeta>
+                    </ItemContent>
+                    <ItemArrow>
+                      <ChevronRight />
+                    </ItemArrow>
+                  </ListItem>
+                ),
+              )
             ) : (
               <EmptyState>
-                No workspaces available in this organization.
+                <EmptyStateTitle>No workspaces yet</EmptyStateTitle>
+                <EmptyStateText>
+                  Create your first workspace for{" "}
+                  {selectedOrgForWorkspace?.name}
+                </EmptyStateText>
+                <EmptyStateCTA
+                  onClick={() =>
+                    onCreateWorkspace?.(selectedOrgForWorkspace!.id)
+                  }
+                >
+                  <Plus />
+                  Create workspace
+                </EmptyStateCTA>
               </EmptyState>
             )}
-
-            <CreateButton
-              onClick={() => onCreateWorkspace?.(selectedOrgForWorkspace.id)}
-              disabled={switching !== null}
-            >
-              <Plus />
-              Create workspace
-            </CreateButton>
           </>
         ) : organizations && organizations.length > 0 ? (
-          <>
-            {organizations.map((org) => {
-              const orgWorkspaces = workspaces?.filter(
-                (w: WorkspaceWithOrganization) => w.organization.id === org.id,
-              );
-              const workspaceCount = orgWorkspaces?.length || 0;
+          organizations.map((org) => {
+            const orgWorkspaces = workspaces?.filter(
+              (w: WorkspaceWithOrganization) => w.organization.id === org.id,
+            );
+            const workspaceCount = orgWorkspaces?.length || 0;
 
-              return (
-                <MenuItem
-                  as="button"
-                  key={org.id}
-                  onClick={() => handleSelectOrganization(org)}
-                  disabled={switching === org.id}
-                >
-                  <MenuItemAvatar $small={!workspacesEnabled}>
-                    {org.image_url ? (
-                      <MenuItemAvatarImage src={org.image_url} alt={org.name} />
-                    ) : (
-                      getInitials(org.name)
-                    )}
-                  </MenuItemAvatar>
-                  <MenuItemInfo>
-                    <MenuItemName>{org.name}</MenuItemName>
-                    {workspacesEnabled && (
-                      <MenuItemSubtext>
+            return (
+              <ListItem
+                key={org.id}
+                onClick={() => handleSelectOrganization(org)}
+                disabled={switching === org.id}
+              >
+                <Avatar>
+                  {org.image_url ? (
+                    <AvatarImage src={org.image_url} alt={org.name} />
+                  ) : (
+                    getInitials(org.name)
+                  )}
+                </Avatar>
+                <ItemContent>
+                  <ItemName>{org.name}</ItemName>
+                  <ItemMeta>
+                    {workspacesEnabled ? (
+                      <>
+                        <Users />
                         {workspaceCount} workspace
                         {workspaceCount !== 1 ? "s" : ""}
-                      </MenuItemSubtext>
+                      </>
+                    ) : (
+                      <>
+                        <Building2 />
+                        Organization
+                      </>
                     )}
-                  </MenuItemInfo>
-                </MenuItem>
-              );
-            })}
-          </>
+                  </ItemMeta>
+                </ItemContent>
+                <ItemArrow>
+                  <ChevronRight />
+                </ItemArrow>
+              </ListItem>
+            );
+          })
         ) : (
           <EmptyState>
-            {workspacesEnabled
-              ? "No workspaces available. Create one to get started."
-              : "No organizations available. Create one to get started."}
+            <EmptyStateTitle>No organizations yet</EmptyStateTitle>
+            <EmptyStateText>
+              {allowUsersToCreateOrgs
+                ? "Create your first organization to get started"
+                : "You don't have access to any organizations yet"}
+            </EmptyStateText>
+            {allowUsersToCreateOrgs && (
+              <EmptyStateCTA onClick={() => onCreateOrganization?.()}>
+                <Plus />
+                Create organization
+              </EmptyStateCTA>
+            )}
           </EmptyState>
         )}
+      </ListContainer>
 
-        {!showingWorkspaces && (
-          <>
-            {workspacesEnabled
-              ? organizations &&
-                organizations.length > 0 &&
-                organizations[0] && (
-                  <CreateButton
-                    onClick={() => {
-                      onCreateWorkspace?.(organizations[0].id);
-                    }}
-                    disabled={switching !== null}
-                  >
-                    <Plus />
-                    Create workspace
-                  </CreateButton>
-                )
-              : allowUsersToCreateOrgs && (
-                  <CreateButton
-                    onClick={() => {
-                      onCreateOrganization?.();
-                    }}
-                    disabled={switching !== null}
-                  >
-                    <Plus />
-                    Create organization
-                  </CreateButton>
-                )}
-          </>
+      {showingWorkspaces &&
+        selectedOrgWorkspaces &&
+        selectedOrgWorkspaces.length > 0 && (
+          <CreateButton
+            onClick={() => onCreateWorkspace?.(selectedOrgForWorkspace.id)}
+            disabled={switching !== null}
+          >
+            <Plus />
+            Create new workspace
+          </CreateButton>
         )}
-      </MenuList>
+
+      {!showingWorkspaces &&
+        organizations &&
+        organizations.length > 0 &&
+        allowUsersToCreateOrgs && (
+          <CreateButton
+            onClick={() => onCreateOrganization?.()}
+            disabled={switching !== null}
+          >
+            <Plus />
+            Create new organization
+          </CreateButton>
+        )}
 
       {showingWorkspaces ? (
         <Footer>
-          Make a mistake?{" "}
-          <Link onClick={() => setSelectedOrgForWorkspace(null)}>
-            Select Organizations
-          </Link>
+          <>
+            Wrong organization?{" "}
+            <Link onClick={() => setSelectedOrgForWorkspace(null)}>
+              Go back
+            </Link>
+          </>
         </Footer>
       ) : (
-        <Footer>
-          Having trouble?{" "}
-          <Link>
-            <NavigationLink
-              to={deployment?.ui_settings?.support_page_url || "#"}
-            >
-              Get help
-            </NavigationLink>
-          </Link>
-        </Footer>
+        <></>
       )}
     </Container>
   );

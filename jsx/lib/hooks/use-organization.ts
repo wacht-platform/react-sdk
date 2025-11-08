@@ -15,7 +15,7 @@ import type {
   RoleCreate,
 } from "@/types";
 import { responseMapper } from "@/utils/response-mapper";
-import { useSession } from "./use-session";
+import { useSession, clearTokenCache } from "./use-session";
 import { useCallback, useMemo } from "react";
 
 export const useOrganizationList = () => {
@@ -98,6 +98,7 @@ export const useOrganizationList = () => {
           body: formData,
         })
       );
+      clearTokenCache();
       await refetch();
       await refetchSession();
       return response;
@@ -221,6 +222,7 @@ export const useOrganizationList = () => {
           method: "POST",
         })
       );
+      clearTokenCache();
       await refetch();
       await refetchSession();
       return response.data;
@@ -610,10 +612,14 @@ export const useOrganizationMemberships = () => {
     }
   );
 
+  const refetch = useCallback(async () => {
+    await mutate(undefined, { revalidate: true });
+  }, [mutate]);
+
   return {
     organizationMemberships: data,
     loading: loading || isLoading,
     error,
-    refetch: mutate,
+    refetch,
   };
 };

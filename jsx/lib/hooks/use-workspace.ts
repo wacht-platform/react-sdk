@@ -7,7 +7,7 @@ import {
   WorkspaceWithOrganization,
 } from "@/types";
 import { useCallback, useMemo } from "react";
-import { useSession } from "./use-session";
+import { useSession, clearTokenCache } from "./use-session";
 
 async function fetchWorkspaceMemberships(client: Client) {
   const response = await responseMapper<WorkspaceMembership[]>(
@@ -49,11 +49,15 @@ export const useWorkspaceMemberships = () => {
     },
   );
 
+  const refetch = useCallback(async () => {
+    await mutate(undefined, { revalidate: true });
+  }, [mutate]);
+
   return {
     workspaceMemberships: data,
     loading: clientLoading || swrLoading,
     error,
-    refetch: mutate,
+    refetch,
   };
 };
 
@@ -89,6 +93,7 @@ export const useWorkspaceList = () => {
         method: "POST",
         body: formData,
       });
+      clearTokenCache();
       await refetch();
       return result;
     },
@@ -129,6 +134,7 @@ export const useWorkspaceList = () => {
           method: "POST",
         }),
       );
+      clearTokenCache();
       await refetch();
       return response.data;
     },
