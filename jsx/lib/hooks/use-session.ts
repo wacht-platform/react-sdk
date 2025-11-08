@@ -99,6 +99,11 @@ async function switchWorkspace(
 const tokenSingletonMap = new Map<string, SessionToken>();
 const fetchSingleton = new Map<string, Promise<ApiResult<SessionToken>>>();
 
+export function clearTokenCache() {
+  tokenSingletonMap.clear();
+  fetchSingleton.clear();
+}
+
 async function getSessionToken(
   client: Client,
   template?: string
@@ -207,10 +212,12 @@ export function useSession(): UseSessionReturnType {
     },
     switchOrganization: async (organizationId?: string) => {
       await switchOrganization(client, organizationId);
+      clearTokenCache();
       await mutate();
     },
     switchWorkspace: async (workspaceId: string) => {
       await switchWorkspace(client, workspaceId);
+      clearTokenCache();
       await mutate();
     },
     getToken,
