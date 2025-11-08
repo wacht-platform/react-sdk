@@ -13,16 +13,15 @@ import { Button } from "../utility/button";
 
 const Container = styled.div`
   width: 100%;
-  max-width: 400px;
   padding: var(--space-3xl);
   background: var(--color-background);
 `;
 
-const TopBar = styled.div`
+const HeaderBar = styled.div`
   display: flex;
   justify-content: space-between;
   align-items: center;
-  margin-bottom: var(--space-md);
+  margin-bottom: var(--space-lg);
 `;
 
 const BackButton = styled.button`
@@ -34,7 +33,7 @@ const BackButton = styled.button`
   color: var(--color-secondary-text);
   font-size: var(--font-xs);
   cursor: pointer;
-  padding: var(--space-xs);
+  padding: var(--space-xs) 0;
   transition: color 0.2s ease;
   font-weight: 400;
 
@@ -48,23 +47,21 @@ const BackButton = styled.button`
   }
 `;
 
-const Header = styled.div`
-  text-align: center;
-  margin-bottom: var(--space-lg);
+const TitleSection = styled.div`
+  flex: 1;
 `;
 
 const Title = styled.h1`
   font-size: var(--font-lg);
   font-weight: 400;
   color: var(--color-foreground);
-  margin-bottom: var(--space-xs);
-  margin-top: 0;
+  margin: 0;
 `;
 
 const Subtitle = styled.p`
   color: var(--color-secondary-text);
   font-size: var(--font-xs);
-  margin: 0;
+  margin: var(--space-2xs) 0 0 0;
   font-weight: 400;
 `;
 
@@ -211,7 +208,12 @@ const CreateButton = styled.button`
 
 const EmptyState = styled.div`
   text-align: center;
-  padding: var(--space-2xl) var(--space-lg);
+  padding: var(--space-3xl) var(--space-lg);
+  min-height: 200px;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
   color: var(--color-secondary-text);
 `;
 
@@ -342,22 +344,20 @@ export const OrganizationSelectorMenu = ({
     <Container>
       <AuthFormImage />
 
-      <TopBar>
-        {showingWorkspaces ? (
-          <BackButton onClick={() => setSelectedOrgForWorkspace(null)}>
-            <ArrowLeft />
-            Back
-          </BackButton>
-        ) : (
-          <div />
-        )}
-        <UserButton showName={false} />
-      </TopBar>
+      {showingWorkspaces && (
+        <BackButton onClick={() => setSelectedOrgForWorkspace(null)}>
+          <ArrowLeft />
+          Back to organizations
+        </BackButton>
+      )}
 
-      <Header>
-        <Title>{dialogTitle}</Title>
-        <Subtitle>{dialogSubtitle}</Subtitle>
-      </Header>
+      <HeaderBar>
+        <TitleSection>
+          <Title>{dialogTitle}</Title>
+          <Subtitle>{dialogSubtitle}</Subtitle>
+        </TitleSection>
+        <UserButton showName={false} />
+      </HeaderBar>
 
       <ListContainer>
         {showingWorkspaces ? (
