@@ -612,10 +612,14 @@ export const useOrganizationMemberships = () => {
     }
   );
 
+  const refetch = useCallback(async () => {
+    await mutate(undefined, { revalidate: true });
+  }, [mutate]);
+
   return {
     organizationMemberships: data,
     loading: loading || isLoading,
     error,
-    refetch: mutate,
+    refetch,
   };
 };

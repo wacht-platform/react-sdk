@@ -49,11 +49,15 @@ export const useWorkspaceMemberships = () => {
     },
   );
 
+  const refetch = useCallback(async () => {
+    await mutate(undefined, { revalidate: true });
+  }, [mutate]);
+
   return {
     workspaceMemberships: data,
     loading: clientLoading || swrLoading,
     error,
-    refetch: mutate,
+    refetch,
   };
 };
 
