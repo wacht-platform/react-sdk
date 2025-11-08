@@ -1,7 +1,7 @@
 "use client";
 
 import React, { useState } from "react";
-import styled, { keyframes } from "styled-components";
+import styled from "styled-components";
 import { Plus, Building2, Users, ChevronRight, ArrowLeft } from "lucide-react";
 import { useOrganizationList, useSession, useDeployment } from "@/hooks";
 import { useWorkspaceList } from "@/hooks/use-workspace";
@@ -11,40 +11,18 @@ import { NavigationLink } from "../utility/navigation";
 import { UserButton } from "../user/user-button";
 import { Button } from "../utility/button";
 
-const fadeIn = keyframes`
-  from {
-    opacity: 0;
-    transform: translateY(10px);
-  }
-  to {
-    opacity: 1;
-    transform: translateY(0);
-  }
-`;
-
-const slideIn = keyframes`
-  from {
-    opacity: 0;
-    transform: translateX(-20px);
-  }
-  to {
-    opacity: 1;
-    transform: translateX(0);
-  }
-`;
-
 const Container = styled.div`
   width: 100%;
-  padding: var(--space-3xl) var(--space-xl);
+  max-width: 400px;
+  padding: var(--space-3xl);
   background: var(--color-background);
-  animation: ${fadeIn} 0.3s ease;
 `;
 
 const TopBar = styled.div`
   display: flex;
   justify-content: space-between;
   align-items: center;
-  margin-bottom: var(--space-lg);
+  margin-bottom: var(--space-md);
 `;
 
 const BackButton = styled.button`
@@ -54,32 +32,30 @@ const BackButton = styled.button`
   background: transparent;
   border: none;
   color: var(--color-secondary-text);
-  font-size: var(--font-sm);
+  font-size: var(--font-xs);
   cursor: pointer;
-  padding: var(--space-sm);
-  transition: all 0.2s ease;
-  border-radius: var(--radius-md);
+  padding: var(--space-xs);
+  transition: color 0.2s ease;
   font-weight: 400;
 
   &:hover {
     color: var(--color-foreground);
-    background: var(--color-background-hover);
   }
 
   svg {
-    width: 16px;
-    height: 16px;
+    width: 14px;
+    height: 14px;
   }
 `;
 
 const Header = styled.div`
   text-align: center;
-  margin-bottom: var(--space-2xl);
+  margin-bottom: var(--space-lg);
 `;
 
 const Title = styled.h1`
   font-size: var(--font-lg);
-  font-weight: 500;
+  font-weight: 400;
   color: var(--color-foreground);
   margin-bottom: var(--space-xs);
   margin-top: 0;
@@ -92,17 +68,15 @@ const Subtitle = styled.p`
   font-weight: 400;
 `;
 
-const GridContainer = styled.div`
-  display: grid;
-  grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
-  gap: var(--space-lg);
-  margin: var(--space-xl) 0;
-  max-height: 500px;
+const ListContainer = styled.div`
+  max-height: 400px;
   overflow-y: auto;
-  padding: var(--space-xs);
+  border-top: 1px solid var(--color-border);
+  border-bottom: 1px solid var(--color-border);
+  margin: var(--space-lg) 0;
 
   &::-webkit-scrollbar {
-    width: 8px;
+    width: 6px;
   }
 
   &::-webkit-scrollbar-track {
@@ -111,61 +85,41 @@ const GridContainer = styled.div`
 
   &::-webkit-scrollbar-thumb {
     background: var(--color-border);
-    border-radius: 4px;
-  }
-
-  &::-webkit-scrollbar-thumb:hover {
-    background: var(--color-secondary-text);
+    border-radius: 3px;
   }
 `;
 
-const Card = styled.button<{ $isDisabled?: boolean }>`
-  position: relative;
-  padding: var(--space-xl);
-  background: var(--color-background);
-  border: 2px solid var(--color-border);
-  border-radius: var(--radius-lg);
-  cursor: pointer;
-  transition: all 0.2s ease;
-  text-align: left;
+const ListItem = styled.button`
   display: flex;
-  flex-direction: column;
+  align-items: center;
   gap: var(--space-md);
-  animation: ${slideIn} 0.3s ease;
-  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.05);
+  width: 100%;
+  padding: var(--space-md);
+  text-align: left;
+  border: none;
+  background: transparent;
+  cursor: pointer;
+  color: var(--color-foreground);
+  transition: background-color 0.2s ease;
+  border-bottom: 1px solid var(--color-border);
 
-  &:hover {
-    border-color: var(--color-primary);
-    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
-    transform: translateY(-2px);
+  &:last-child {
+    border-bottom: none;
   }
 
-  &:active {
-    transform: translateY(0);
+  &:hover {
+    background: var(--color-background-hover);
   }
 
   &:disabled {
     cursor: not-allowed;
     opacity: 0.6;
-    transform: none;
-  }
-
-  @media (max-width: 768px) {
-    grid-template-columns: 1fr;
   }
 `;
 
-const CardHeader = styled.div`
-  display: flex;
-  align-items: center;
-  gap: var(--space-md);
-`;
-
-const Avatar = styled.div<{ $size?: "sm" | "md" | "lg" }>`
-  width: ${(props) =>
-    props.$size === "lg" ? "64px" : props.$size === "sm" ? "36px" : "48px"};
-  height: ${(props) =>
-    props.$size === "lg" ? "64px" : props.$size === "sm" ? "36px" : "48px"};
+const Avatar = styled.div`
+  width: 40px;
+  height: 40px;
   border-radius: 50%;
   overflow: hidden;
   display: flex;
@@ -174,12 +128,7 @@ const Avatar = styled.div<{ $size?: "sm" | "md" | "lg" }>`
   background: var(--color-background-hover);
   border: 1px solid var(--color-border);
   color: var(--color-secondary-text);
-  font-size: ${(props) =>
-    props.$size === "lg"
-      ? "var(--font-lg)"
-      : props.$size === "sm"
-        ? "var(--font-xs)"
-        : "var(--font-sm)"};
+  font-size: 14px;
   font-weight: 500;
   flex-shrink: 0;
 `;
@@ -190,29 +139,69 @@ const AvatarImage = styled.img`
   object-fit: cover;
 `;
 
-const CardContent = styled.div`
+const ItemContent = styled.div`
   flex: 1;
   min-width: 0;
 `;
 
-const CardTitle = styled.h3`
+const ItemName = styled.div`
   font-size: var(--font-sm);
   font-weight: 500;
   color: var(--color-foreground);
-  margin: 0;
   overflow: hidden;
   text-overflow: ellipsis;
   white-space: nowrap;
 `;
 
-const CardMeta = styled.div`
+const ItemMeta = styled.div`
   display: flex;
   align-items: center;
   gap: var(--space-xs);
-  margin-top: var(--space-xs);
+  margin-top: 2px;
   font-size: 12px;
   color: var(--color-secondary-text);
   font-weight: 400;
+
+  svg {
+    width: 12px;
+    height: 12px;
+  }
+`;
+
+const ItemArrow = styled.div`
+  color: var(--color-secondary-text);
+  display: flex;
+  align-items: center;
+
+  svg {
+    width: 16px;
+    height: 16px;
+  }
+`;
+
+const CreateButton = styled.button`
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: var(--space-sm);
+  width: 100%;
+  padding: var(--space-md);
+  border: none;
+  background: transparent;
+  cursor: pointer;
+  color: var(--color-primary);
+  font-size: var(--font-xs);
+  font-weight: 500;
+  transition: background-color 0.2s ease;
+
+  &:hover {
+    background: var(--color-background-hover);
+  }
+
+  &:disabled {
+    cursor: not-allowed;
+    opacity: 0.6;
+  }
 
   svg {
     width: 14px;
@@ -220,126 +209,33 @@ const CardMeta = styled.div`
   }
 `;
 
-const CardArrow = styled.div`
-  position: absolute;
-  top: 50%;
-  right: var(--space-lg);
-  transform: translateY(-50%);
-  color: var(--color-secondary-text);
-  transition: all 0.2s ease;
-
-  ${Card}:hover & {
-    color: var(--color-primary);
-    transform: translateY(-50%) translateX(4px);
-  }
-
-  svg {
-    width: 20px;
-    height: 20px;
-  }
-`;
-
-const CreateCard = styled(Card)`
-  border-style: dashed;
-  border-color: var(--color-border);
-  background: transparent;
-  align-items: center;
-  justify-content: center;
-  min-height: 140px;
-  color: var(--color-secondary-text);
-
-  &:hover {
-    border-color: var(--color-primary);
-    background: var(--color-background-hover);
-    color: var(--color-primary);
-  }
-`;
-
-const CreateCardContent = styled.div`
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  gap: var(--space-sm);
-  text-align: center;
-`;
-
-const CreateIcon = styled.div`
-  width: 48px;
-  height: 48px;
-  border-radius: 50%;
-  background: var(--color-background-hover);
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  transition: all 0.2s ease;
-
-  ${CreateCard}:hover & {
-    background: var(--color-primary);
-    color: white;
-    transform: scale(1.1);
-  }
-
-  svg {
-    width: 24px;
-    height: 24px;
-  }
-`;
-
-const CreateCardText = styled.span`
-  font-size: 13px;
-  font-weight: 500;
-`;
-
 const EmptyState = styled.div`
-  grid-column: 1 / -1;
   text-align: center;
-  padding: var(--space-3xl) var(--space-lg);
+  padding: var(--space-2xl) var(--space-lg);
   color: var(--color-secondary-text);
 `;
 
-const EmptyStateIcon = styled.div`
-  width: 80px;
-  height: 80px;
-  margin: 0 auto var(--space-lg);
-  border-radius: 50%;
-  background: var(--color-background-hover);
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  color: var(--color-secondary-text);
-
-  svg {
-    width: 40px;
-    height: 40px;
-  }
-`;
-
-const EmptyStateTitle = styled.h3`
-  font-size: var(--font-md);
+const EmptyStateTitle = styled.div`
+  font-size: var(--font-sm);
   font-weight: 500;
   color: var(--color-foreground);
-  margin: 0 0 var(--space-sm) 0;
+  margin-bottom: var(--space-xs);
 `;
 
-const EmptyStateText = styled.p`
+const EmptyStateText = styled.div`
   font-size: var(--font-xs);
   color: var(--color-secondary-text);
-  margin: 0 0 var(--space-lg) 0;
+  margin-bottom: var(--space-lg);
 `;
 
-const EmptyStateCTA = styled.div`
-  display: flex;
-  justify-content: center;
-  margin-top: var(--space-lg);
-`;
-
-const CTAButton = styled(Button)`
+const EmptyStateCTA = styled(Button)`
   width: auto;
+  margin: 0 auto;
   padding: var(--space-sm) var(--space-lg);
 `;
 
 const Footer = styled.div`
-  margin-top: var(--space-xl);
+  margin-top: var(--space-lg);
   text-align: center;
   font-size: var(--font-xs);
   color: var(--color-secondary-text);
@@ -354,7 +250,6 @@ const Link = styled.span`
 
   &:hover {
     color: var(--color-primary-hover);
-    text-decoration: underline;
   }
 `;
 
@@ -451,7 +346,7 @@ export const OrganizationSelectorMenu = ({
         {showingWorkspaces ? (
           <BackButton onClick={() => setSelectedOrgForWorkspace(null)}>
             <ArrowLeft />
-            Back to organizations
+            Back
           </BackButton>
         ) : (
           <div />
@@ -464,167 +359,148 @@ export const OrganizationSelectorMenu = ({
         <Subtitle>{dialogSubtitle}</Subtitle>
       </Header>
 
-      <GridContainer>
+      <ListContainer>
         {showingWorkspaces ? (
           <>
             {selectedOrgWorkspaces && selectedOrgWorkspaces.length > 0 ? (
-              <>
-                {selectedOrgWorkspaces.map(
-                  (workspace: WorkspaceWithOrganization) => (
-                    <Card
-                      key={workspace.id}
-                      onClick={() =>
-                        handleSelectWorkspace(
-                          selectedOrgForWorkspace,
-                          workspace,
-                        )
-                      }
-                      disabled={switching === workspace.id}
-                    >
-                      <CardHeader>
-                        <Avatar $size="md">
-                          {workspace.image_url ? (
-                            <AvatarImage
-                              src={workspace.image_url}
-                              alt={workspace.name}
-                            />
-                          ) : (
-                            getInitials(workspace.name).charAt(0)
-                          )}
-                        </Avatar>
-                        <CardContent>
-                          <CardTitle>{workspace.name}</CardTitle>
-                          <CardMeta>
-                            <Users />
-                            Workspace
-                          </CardMeta>
-                        </CardContent>
-                      </CardHeader>
-                      <CardArrow>
-                        <ChevronRight />
-                      </CardArrow>
-                    </Card>
-                  ),
-                )}
-                <CreateCard
-                  onClick={() => onCreateWorkspace?.(selectedOrgForWorkspace.id)}
-                  disabled={switching !== null}
-                >
-                  <CreateCardContent>
-                    <CreateIcon>
-                      <Plus />
-                    </CreateIcon>
-                    <CreateCardText>Create new workspace</CreateCardText>
-                  </CreateCardContent>
-                </CreateCard>
-              </>
+              selectedOrgWorkspaces.map(
+                (workspace: WorkspaceWithOrganization) => (
+                  <ListItem
+                    key={workspace.id}
+                    onClick={() =>
+                      handleSelectWorkspace(selectedOrgForWorkspace, workspace)
+                    }
+                    disabled={switching === workspace.id}
+                  >
+                    <Avatar>
+                      {workspace.image_url ? (
+                        <AvatarImage
+                          src={workspace.image_url}
+                          alt={workspace.name}
+                        />
+                      ) : (
+                        getInitials(workspace.name).charAt(0)
+                      )}
+                    </Avatar>
+                    <ItemContent>
+                      <ItemName>{workspace.name}</ItemName>
+                      <ItemMeta>
+                        <Users />
+                        Workspace
+                      </ItemMeta>
+                    </ItemContent>
+                    <ItemArrow>
+                      <ChevronRight />
+                    </ItemArrow>
+                  </ListItem>
+                ),
+              )
             ) : (
               <EmptyState>
-                <EmptyStateIcon>
-                  <Users />
-                </EmptyStateIcon>
                 <EmptyStateTitle>No workspaces yet</EmptyStateTitle>
                 <EmptyStateText>
-                  Create your first workspace to get started with {selectedOrgForWorkspace?.name}.
+                  Create your first workspace for {selectedOrgForWorkspace?.name}
                 </EmptyStateText>
-                <EmptyStateCTA>
-                  <CTAButton onClick={() => onCreateWorkspace?.(selectedOrgForWorkspace!.id)}>
-                    <Plus />
-                    Create workspace
-                  </CTAButton>
+                <EmptyStateCTA
+                  onClick={() =>
+                    onCreateWorkspace?.(selectedOrgForWorkspace!.id)
+                  }
+                >
+                  <Plus />
+                  Create workspace
                 </EmptyStateCTA>
               </EmptyState>
             )}
           </>
         ) : organizations && organizations.length > 0 ? (
-          <>
-            {organizations.map((org) => {
-              const orgWorkspaces = workspaces?.filter(
-                (w: WorkspaceWithOrganization) => w.organization.id === org.id,
-              );
-              const workspaceCount = orgWorkspaces?.length || 0;
+          organizations.map((org) => {
+            const orgWorkspaces = workspaces?.filter(
+              (w: WorkspaceWithOrganization) => w.organization.id === org.id,
+            );
+            const workspaceCount = orgWorkspaces?.length || 0;
 
-              return (
-                <Card
-                  key={org.id}
-                  onClick={() => handleSelectOrganization(org)}
-                  disabled={switching === org.id}
-                >
-                  <CardHeader>
-                    <Avatar $size="md">
-                      {org.image_url ? (
-                        <AvatarImage src={org.image_url} alt={org.name} />
-                      ) : (
-                        getInitials(org.name)
-                      )}
-                    </Avatar>
-                    <CardContent>
-                      <CardTitle>{org.name}</CardTitle>
-                      <CardMeta>
-                        {workspacesEnabled ? (
-                          <>
-                            <Users />
-                            {workspaceCount} workspace
-                            {workspaceCount !== 1 ? "s" : ""}
-                          </>
-                        ) : (
-                          <>
-                            <Building2 />
-                            Organization
-                          </>
-                        )}
-                      </CardMeta>
-                    </CardContent>
-                  </CardHeader>
-                  <CardArrow>
-                    <ChevronRight />
-                  </CardArrow>
-                </Card>
-              );
-            })}
-            {allowUsersToCreateOrgs && (
-              <CreateCard
-                onClick={() => onCreateOrganization?.()}
-                disabled={switching !== null}
+            return (
+              <ListItem
+                key={org.id}
+                onClick={() => handleSelectOrganization(org)}
+                disabled={switching === org.id}
               >
-                <CreateCardContent>
-                  <CreateIcon>
-                    <Plus />
-                  </CreateIcon>
-                  <CreateCardText>Create new organization</CreateCardText>
-                </CreateCardContent>
-              </CreateCard>
-            )}
-          </>
+                <Avatar>
+                  {org.image_url ? (
+                    <AvatarImage src={org.image_url} alt={org.name} />
+                  ) : (
+                    getInitials(org.name)
+                  )}
+                </Avatar>
+                <ItemContent>
+                  <ItemName>{org.name}</ItemName>
+                  <ItemMeta>
+                    {workspacesEnabled ? (
+                      <>
+                        <Users />
+                        {workspaceCount} workspace
+                        {workspaceCount !== 1 ? "s" : ""}
+                      </>
+                    ) : (
+                      <>
+                        <Building2 />
+                        Organization
+                      </>
+                    )}
+                  </ItemMeta>
+                </ItemContent>
+                <ItemArrow>
+                  <ChevronRight />
+                </ItemArrow>
+              </ListItem>
+            );
+          })
         ) : (
           <EmptyState>
-            <EmptyStateIcon>
-              <Building2 />
-            </EmptyStateIcon>
             <EmptyStateTitle>No organizations yet</EmptyStateTitle>
             <EmptyStateText>
               {allowUsersToCreateOrgs
-                ? "Create your first organization to get started."
-                : "You don't have access to any organizations yet. Contact your administrator."}
+                ? "Create your first organization to get started"
+                : "You don't have access to any organizations yet"}
             </EmptyStateText>
             {allowUsersToCreateOrgs && (
-              <EmptyStateCTA>
-                <CTAButton onClick={() => onCreateOrganization?.()}>
-                  <Plus />
-                  Create organization
-                </CTAButton>
+              <EmptyStateCTA onClick={() => onCreateOrganization?.()}>
+                <Plus />
+                Create organization
               </EmptyStateCTA>
             )}
           </EmptyState>
         )}
-      </GridContainer>
+      </ListContainer>
+
+      {showingWorkspaces &&
+        selectedOrgWorkspaces &&
+        selectedOrgWorkspaces.length > 0 && (
+          <CreateButton
+            onClick={() => onCreateWorkspace?.(selectedOrgForWorkspace.id)}
+            disabled={switching !== null}
+          >
+            <Plus />
+            Create new workspace
+          </CreateButton>
+        )}
+
+      {!showingWorkspaces && organizations && organizations.length > 0 && allowUsersToCreateOrgs && (
+        <CreateButton
+          onClick={() => onCreateOrganization?.()}
+          disabled={switching !== null}
+        >
+          <Plus />
+          Create new organization
+        </CreateButton>
+      )}
 
       <Footer>
         {showingWorkspaces ? (
           <>
-            Need a different organization?{" "}
+            Wrong organization?{" "}
             <Link onClick={() => setSelectedOrgForWorkspace(null)}>
-              Switch organizations
+              Go back
             </Link>
           </>
         ) : (
