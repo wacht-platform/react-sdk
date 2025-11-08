@@ -1,7 +1,7 @@
 "use client";
 
-import type { PlatformAdapter, NavigateOptions } from "@snipextt/wacht";
-import { isSafeUrl, isExternalUrl } from "@snipextt/wacht";
+import type { PlatformAdapter, NavigateOptions } from "@wacht/jsx";
+import { isSafeUrl, isExternalUrl } from "@wacht/jsx";
 
 /**
  * Next.js adapter that uses the universal window.next.router API.

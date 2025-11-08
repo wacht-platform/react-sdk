@@ -1,0 +1,157 @@
+name: Publish Packages to npm 
+
+on:
+  push:
+    branches:
+      - main
+
+jobs:
+  check-and-publish:
+    runs-on: ubicloud-standard-8
+    permissions:
+      contents: read
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: '22.x'
+          registry-url: 'https://registry.npmjs.org'
+
+      - name: Install pnpm
+        run: npm i -g pnpm
+
+      - name: Install dependencies
+        run: pnpm install --frozen-lockfile
+
+      - name: Build all packages
+        run: pnpm run build
+
+      - name: Check and publish Types package
+        id: publish-types
+        run: |
+          cd wacht-types
+          PACKAGE_NAME=$(node -p "require('./package.json').name")
+          LOCAL_VERSION=$(node -p "require('./package.json').version")
+
+          echo "Package: $PACKAGE_NAME"
+          echo "Local version: $LOCAL_VERSION"
+
+          # Fetch latest version from npm (ignore errors if package doesn't exist)
+          NPM_VERSION=$(npm view $PACKAGE_NAME version 2>/dev/null || echo "0.0.0")
+          echo "NPM version: $NPM_VERSION"
+
+          if [ "$LOCAL_VERSION" != "$NPM_VERSION" ]; then
+            echo "Version mismatch detected. Publishing $PACKAGE_NAME@$LOCAL_VERSION..."
+            npm publish --access public
+            echo "published=true" >> $GITHUB_OUTPUT
+          else
+            echo "Version $LOCAL_VERSION already published. Skipping."
+            echo "published=false" >> $GITHUB_OUTPUT
+          fi
+        env:
+          NODE_AUTH_TOKEN: ${{ secrets.NPM_TOKEN }}
+
+      - name: Check and publish JSX package
+        id: publish-jsx
+        run: |
+          cd jsx
+          PACKAGE_NAME=$(node -p "require('./package.json').name")
+          LOCAL_VERSION=$(node -p "require('./package.json').version")
+
+          echo "Package: $PACKAGE_NAME"
+          echo "Local version: $LOCAL_VERSION"
+
+          # Fetch latest version from npm (ignore errors if package doesn't exist)
+          NPM_VERSION=$(npm view $PACKAGE_NAME version 2>/dev/null || echo "0.0.0")
+          echo "NPM version: $NPM_VERSION"
+
+          if [ "$LOCAL_VERSION" != "$NPM_VERSION" ]; then
+            echo "Version mismatch detected. Publishing $PACKAGE_NAME@$LOCAL_VERSION..."
+            pnpm publish --access public --no-git-checks
+            echo "published=true" >> $GITHUB_OUTPUT
+          else
+            echo "Version $LOCAL_VERSION already published. Skipping."
+            echo "published=false" >> $GITHUB_OUTPUT
+          fi
+        env:
+          NODE_AUTH_TOKEN: ${{ secrets.NPM_TOKEN }}
+
+      - name: Check and publish Next.js package
+        id: publish-nextjs
+        run: |
+          cd nextjs
+          PACKAGE_NAME=$(node -p "require('./package.json').name")
+          LOCAL_VERSION=$(node -p "require('./package.json').version")
+
+          echo "Package: $PACKAGE_NAME"
+          echo "Local version: $LOCAL_VERSION"
+
+          NPM_VERSION=$(npm view $PACKAGE_NAME version 2>/dev/null || echo "0.0.0")
+          echo "NPM version: $NPM_VERSION"
+
+          if [ "$LOCAL_VERSION" != "$NPM_VERSION" ]; then
+            echo "Version mismatch detected. Publishing $PACKAGE_NAME@$LOCAL_VERSION..."
+            pnpm publish --access public --no-git-checks
+            echo "published=true" >> $GITHUB_OUTPUT
+          else
+            echo "Version $LOCAL_VERSION already published. Skipping."
+            echo "published=false" >> $GITHUB_OUTPUT
+          fi
+        env:
+          NODE_AUTH_TOKEN: ${{ secrets.NPM_TOKEN }}
+
+      - name: Check and publish React Router package
+        id: publish-react-router
+        run: |
+          cd react-router
+          PACKAGE_NAME=$(node -p "require('./package.json').name")
+          LOCAL_VERSION=$(node -p "require('./package.json').version")
+
+          echo "Package: $PACKAGE_NAME"
+          echo "Local version: $LOCAL_VERSION"
+
+          NPM_VERSION=$(npm view $PACKAGE_NAME version 2>/dev/null || echo "0.0.0")
+          echo "NPM version: $NPM_VERSION"
+
+          if [ "$LOCAL_VERSION" != "$NPM_VERSION" ]; then
+            echo "Version mismatch detected. Publishing $PACKAGE_NAME@$LOCAL_VERSION..."
+            pnpm publish --access public --no-git-checks
+            echo "published=true" >> $GITHUB_OUTPUT
+          else
+            echo "Version $LOCAL_VERSION already published. Skipping."
+            echo "published=false" >> $GITHUB_OUTPUT
+          fi
+        env:
+          NODE_AUTH_TOKEN: ${{ secrets.NPM_TOKEN }}
+
+      - name: Summary
+        run: |
+          echo "## Publication Summary" >> $GITHUB_STEP_SUMMARY
+          echo "" >> $GITHUB_STEP_SUMMARY
+
+          if [ "${{ steps.publish-types.outputs.published }}" == "true" ]; then
+            echo "✅ @wacht/types published" >> $GITHUB_STEP_SUMMARY
+          else
+            echo "⏭️ @wacht/types skipped (version already published)" >> $GITHUB_STEP_SUMMARY
+          fi
+
+          if [ "${{ steps.publish-jsx.outputs.published }}" == "true" ]; then
+            echo "✅ @wacht/jsx published" >> $GITHUB_STEP_SUMMARY
+          else
+            echo "⏭️ @wacht/jsx skipped (version already published)" >> $GITHUB_STEP_SUMMARY
+          fi
+
+          if [ "${{ steps.publish-nextjs.outputs.published }}" == "true" ]; then
+            echo "✅ @wacht/nextjs published" >> $GITHUB_STEP_SUMMARY
+          else
+            echo "⏭️ @wacht/nextjs skipped (version already published)" >> $GITHUB_STEP_SUMMARY
+          fi
+
+          if [ "${{ steps.publish-react-router.outputs.published }}" == "true" ]; then
+            echo "✅ @wacht/react-router published" >> $GITHUB_STEP_SUMMARY
+          else
+            echo "⏭️ @wacht/react-router skipped (version already published)" >> $GITHUB_STEP_SUMMARY
+          fi
