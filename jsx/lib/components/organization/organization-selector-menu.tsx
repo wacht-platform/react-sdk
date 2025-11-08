@@ -1,6 +1,6 @@
 "use client";
 
-import React, { useState } from "react";
+import { useState } from "react";
 import styled from "styled-components";
 import { Plus, Building2, Users, ChevronRight, ArrowLeft } from "lucide-react";
 import { useOrganizationList, useSession, useDeployment } from "@/hooks";
@@ -13,7 +13,7 @@ import { Button } from "../utility/button";
 
 const Container = styled.div`
   width: 100%;
-  padding: var(--space-3xl);
+  padding: var(--space-2xl);
   background: var(--color-background);
 `;
 
@@ -21,7 +21,7 @@ const HeaderBar = styled.div`
   display: flex;
   justify-content: space-between;
   align-items: center;
-  margin-bottom: var(--space-lg);
+  margin-bottom: var(--space-3xl);
 `;
 
 const BackButton = styled.button`
@@ -52,7 +52,7 @@ const TitleSection = styled.div`
 `;
 
 const Title = styled.h1`
-  font-size: var(--font-lg);
+  font-size: var(--font-md);
   font-weight: 400;
   color: var(--color-foreground);
   margin: 0;
@@ -399,7 +399,8 @@ export const OrganizationSelectorMenu = ({
               <EmptyState>
                 <EmptyStateTitle>No workspaces yet</EmptyStateTitle>
                 <EmptyStateText>
-                  Create your first workspace for {selectedOrgForWorkspace?.name}
+                  Create your first workspace for{" "}
+                  {selectedOrgForWorkspace?.name}
                 </EmptyStateText>
                 <EmptyStateCTA
                   onClick={() =>
@@ -485,15 +486,18 @@ export const OrganizationSelectorMenu = ({
           </CreateButton>
         )}
 
-      {!showingWorkspaces && organizations && organizations.length > 0 && allowUsersToCreateOrgs && (
-        <CreateButton
-          onClick={() => onCreateOrganization?.()}
-          disabled={switching !== null}
-        >
-          <Plus />
-          Create new organization
-        </CreateButton>
-      )}
+      {!showingWorkspaces &&
+        organizations &&
+        organizations.length > 0 &&
+        allowUsersToCreateOrgs && (
+          <CreateButton
+            onClick={() => onCreateOrganization?.()}
+            disabled={switching !== null}
+          >
+            <Plus />
+            Create new organization
+          </CreateButton>
+        )}
 
       <Footer>
         {showingWorkspaces ? (
