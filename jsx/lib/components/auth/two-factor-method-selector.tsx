@@ -33,38 +33,35 @@ const Subtitle = styled.p`
 const MethodList = styled.div`
   display: flex;
   flex-direction: column;
-  gap: var(--space-xs);
+  gap: var(--space-md);
 `;
 
 const MethodButton = styled.button`
-  width: 100%;
-  padding: var(--space-sm) var(--space-md);
-  border: 1px solid var(--color-border);
-  border-radius: var(--radius-md);
-  font-weight: 500;
-  font-size: var(--font-xs);
-  cursor: pointer;
-  transition: background-color 0.2s, color 0.2s, border-color 0.2s;
   display: flex;
-  justify-content: flex-start;
   align-items: center;
   gap: var(--space-sm);
-  height: 36px;
-  background-color: var(--color-input-background);
+  padding: 0;
+  border: none;
+  background: none;
+  cursor: pointer;
+  text-align: left;
+  font-weight: 500;
+  font-size: var(--font-sm);
   color: var(--color-foreground);
+  transition: color 0.2s;
 
   &:hover:not(:disabled) {
-    background-color: var(--color-border);
+    color: var(--color-primary);
   }
 
   &:disabled {
-    opacity: 0.7;
+    opacity: 0.5;
     cursor: not-allowed;
   }
 
   svg {
-    width: 16px;
-    height: 16px;
+    width: 20px;
+    height: 20px;
     flex-shrink: 0;
     color: var(--color-primary);
   }
