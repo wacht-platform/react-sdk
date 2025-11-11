@@ -1,7 +1,8 @@
 import { useState } from "react";
 import styled from "styled-components";
 import { Button } from "@/components/utility";
-import { Form } from "../utility/form";
+import { Input } from "@/components/utility/input";
+import { Form, FormGroup, Label } from "../utility/form";
 import { DefaultStylesProvider } from "../utility/root";
 import { AuthFormImage } from "./auth-image";
 
@@ -64,47 +65,12 @@ const Link = styled.span`
   }
 `;
 
-const InputWrapper = styled.div`
-  display: flex;
-  justify-content: center;
-  gap: var(--space-sm);
-  margin: var(--space-lg) 0;
-`;
-
-const DigitInput = styled.input`
-  width: 56px;
-  height: 64px;
+const LastDigitsInput = styled(Input)`
   text-align: center;
-  font-size: var(--font-xl);
-  font-weight: 600;
-  color: var(--color-foreground);
-  background: var(--color-background);
-  border: 2px solid var(--color-border);
-  border-radius: var(--radius-md);
-  transition: all 0.15s ease;
-  outline: none;
-
-  &:focus {
-    border-color: var(--color-primary);
-    box-shadow: 0 0 0 3px rgba(var(--color-primary-rgb, 59, 130, 246), 0.1);
-  }
-
-  &:disabled {
-    opacity: 0.5;
-    cursor: not-allowed;
-  }
-
-  &::placeholder {
-    color: var(--color-muted);
-  }
-`;
-
-const HelpText = styled.p`
-  text-align: center;
-  font-size: var(--font-xs);
-  color: var(--color-secondary-text);
-  margin: var(--space-md) 0;
-  line-height: 1.5;
+  font-size: var(--font-md);
+  letter-spacing: 0.5em;
+  font-family: monospace;
+  padding: var(--space-sm) var(--space-md);
 `;
 
 interface PhoneVerificationProps {
@@ -118,70 +84,24 @@ export function PhoneVerification({
   onBack,
   loading,
 }: PhoneVerificationProps) {
-  const [digits, setDigits] = useState(["", "", "", ""]);
+  const [lastFourDigits, setLastFourDigits] = useState("");
   const [error, setError] = useState("");
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
 
-    const lastFourDigits = digits.join("");
     if (lastFourDigits.length !== 4) {
-      setError("Please enter all 4 digits");
+      setError("Please enter the last 4 digits of your phone number");
       return;
     }
 
     onVerify(lastFourDigits);
   };
 
-  const handleInputChange = (index: number, value: string) => {
-    // Only allow digits
-    const digit = value.replace(/\D/g, "").slice(-1);
-
-    const newDigits = [...digits];
-    newDigits[index] = digit;
-    setDigits(newDigits);
+  const handleInputChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const value = e.target.value.replace(/\D/g, "").slice(0, 4);
+    setLastFourDigits(value);
     setError("");
-
-    // Auto-focus next input
-    if (digit && index < 3) {
-      const nextInput = document.getElementById(`digit-${index + 1}`);
-      nextInput?.focus();
-    }
-
-    // Auto-submit when all 4 digits are entered
-    if (digit && index === 3 && newDigits.every(d => d)) {
-      const form = document.getElementById("phone-verification-form");
-      if (form) {
-        const submitEvent = new Event("submit", { bubbles: true, cancelable: true });
-        form.dispatchEvent(submitEvent);
-      }
-    }
-  };
-
-  const handleKeyDown = (index: number, e: React.KeyboardEvent<HTMLInputElement>) => {
-    if (e.key === "Backspace" && !digits[index] && index > 0) {
-      // Move to previous input on backspace if current is empty
-      const prevInput = document.getElementById(`digit-${index - 1}`);
-      prevInput?.focus();
-    }
-  };
-
-  const handlePaste = (e: React.ClipboardEvent<HTMLInputElement>) => {
-    e.preventDefault();
-    const pastedData = e.clipboardData.getData("text").replace(/\D/g, "").slice(0, 4);
-
-    if (pastedData) {
-      const newDigits = [...digits];
-      for (let i = 0; i < pastedData.length && i < 4; i++) {
-        newDigits[i] = pastedData[i];
-      }
-      setDigits(newDigits);
-
-      // Focus last filled input
-      const lastIndex = Math.min(pastedData.length, 3);
-      const lastInput = document.getElementById(`digit-${lastIndex}`);
-      lastInput?.focus();
-    }
   };
 
   return (
@@ -192,48 +112,40 @@ export function PhoneVerification({
         <Header>
           <Title>Verify your phone number</Title>
           <Subtitle>
-            Enter the last 4 digits of your registered phone number
+            To send a verification code, please confirm the last 4 digits of
+            your primary phone number
           </Subtitle>
         </Header>
 
-        <Form id="phone-verification-form" onSubmit={handleSubmit} noValidate>
-          <HelpText>
-            We'll send a verification code to this number
-          </HelpText>
-
-          <InputWrapper>
-            {digits.map((digit, index) => (
-              <DigitInput
-                key={index}
-                id={`digit-${index}`}
-                type="text"
-                inputMode="numeric"
-                maxLength={1}
-                value={digit}
-                onChange={(e) => handleInputChange(index, e.target.value)}
-                onKeyDown={(e) => handleKeyDown(index, e)}
-                onPaste={handlePaste}
-                disabled={loading}
-                autoFocus={index === 0}
-                autoComplete="off"
-                aria-label={`Digit ${index + 1}`}
-              />
-            ))}
-          </InputWrapper>
-
-          {error && <ErrorMessage>{error}</ErrorMessage>}
+        <Form onSubmit={handleSubmit} noValidate>
+          <FormGroup>
+            <Label htmlFor="lastDigits">Last 4 digits</Label>
+            <LastDigitsInput
+              type="text"
+              id="lastDigits"
+              name="lastDigits"
+              value={lastFourDigits}
+              onChange={handleInputChange}
+              placeholder="0000"
+              maxLength={4}
+              autoComplete="off"
+              aria-invalid={!!error}
+              autoFocus
+            />
+            {error && <ErrorMessage>{error}</ErrorMessage>}
+          </FormGroup>
 
           <SubmitButton
             type="submit"
-            disabled={loading || digits.some(d => !d)}
+            disabled={loading || lastFourDigits.length !== 4}
           >
-            {loading ? "Verifying..." : "Continue"}
+            {loading ? "Verifying..." : "Send code"}
           </SubmitButton>
         </Form>
 
         <Footer>
           <Link onClick={onBack} style={{ cursor: "pointer" }}>
-            Try a different method
+            Choose a different method
           </Link>
         </Footer>
       </Container>

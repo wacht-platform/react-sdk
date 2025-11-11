@@ -33,94 +33,63 @@ const Subtitle = styled.p`
 const MethodList = styled.div`
   display: flex;
   flex-direction: column;
-  gap: var(--space-md);
+  gap: var(--space-sm);
 `;
 
 const MethodButton = styled.button`
   display: flex;
   align-items: center;
-  gap: var(--space-lg);
-  padding: var(--space-xl);
+  gap: var(--space-md);
+  padding: var(--space-md);
   background: var(--color-background);
-  border: 1.5px solid var(--color-border);
-  border-radius: var(--radius-lg);
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-md);
   cursor: pointer;
-  transition: all 0.15s ease;
+  transition: all 0.2s;
   text-align: left;
   width: 100%;
-  position: relative;
-  overflow: hidden;
-
-  &::before {
-    content: '';
-    position: absolute;
-    top: 0;
-    left: 0;
-    right: 0;
-    bottom: 0;
-    background: linear-gradient(135deg, var(--color-primary) 0%, var(--color-primary-hover) 100%);
-    opacity: 0;
-    transition: opacity 0.15s ease;
-  }
+  min-height: 48px;
 
   &:hover:not(:disabled) {
     border-color: var(--color-primary);
-    transform: translateY(-2px);
-    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.08);
-
-    &::before {
-      opacity: 0.04;
-    }
-  }
-
-  &:active:not(:disabled) {
-    transform: translateY(0);
-    box-shadow: 0 2px 6px rgba(0, 0, 0, 0.06);
   }
 
   &:disabled {
-    opacity: 0.4;
+    opacity: 0.7;
     cursor: not-allowed;
-    border-color: var(--color-border);
   }
 `;
 
 const MethodIcon = styled.div`
-  width: 48px;
-  height: 48px;
-  background: linear-gradient(135deg, var(--color-primary) 0%, var(--color-primary-hover) 100%);
-  border-radius: var(--radius-md);
+  width: 20px;
+  height: 20px;
+  flex-shrink: 0;
+  color: var(--color-primary);
   display: flex;
   align-items: center;
   justify-content: center;
-  flex-shrink: 0;
-  position: relative;
-  z-index: 1;
 
   svg {
-    width: 22px;
-    height: 22px;
-    color: white;
+    width: 100%;
+    height: 100%;
   }
 `;
 
 const MethodContent = styled.div`
   flex: 1;
-  position: relative;
-  z-index: 1;
 `;
 
 const MethodName = styled.div`
-  font-weight: 600;
+  font-weight: 500;
   color: var(--color-foreground);
-  margin-bottom: var(--space-xs);
-  font-size: var(--font-md);
+  margin-bottom: var(--space-2xs);
+  font-size: var(--font-sm);
 `;
 
 const MethodDescription = styled.div`
   font-size: var(--font-xs);
   color: var(--color-secondary-text);
-  line-height: 1.5;
+  line-height: 1.4;
 `;
 
 const Footer = styled.div`
@@ -168,9 +137,9 @@ export function TwoFactorMethodSelector({ methods, onSelectMethod, onBack }: Two
         <AuthFormImage />
 
         <Header>
-          <Title>Verify your identity</Title>
+          <Title>Two-factor authentication</Title>
           <Subtitle>
-            Choose a verification method to continue
+            Choose how you'd like to verify your identity
           </Subtitle>
         </Header>
 
