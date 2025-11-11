@@ -100,10 +100,7 @@ const Link = styled.span`
 `;
 
 const CodeInput = styled(Input)`
-  text-align: center;
-  font-size: var(--font-lg);
-  letter-spacing: 0.5em;
-  font-family: monospace;
+  padding: var(--space-sm) var(--space-md);
 `;
 
 export function TwoFactorVerification({

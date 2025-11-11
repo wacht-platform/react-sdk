@@ -66,10 +66,6 @@ const Link = styled.span`
 `;
 
 const LastDigitsInput = styled(Input)`
-  text-align: center;
-  font-size: var(--font-md);
-  letter-spacing: 0.5em;
-  font-family: monospace;
   padding: var(--space-sm) var(--space-md);
 `;
 
