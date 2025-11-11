@@ -33,63 +33,41 @@ const Subtitle = styled.p`
 const MethodList = styled.div`
   display: flex;
   flex-direction: column;
-  gap: var(--space-sm);
+  gap: var(--space-xs);
 `;
 
 const MethodButton = styled.button`
-  display: flex;
-  align-items: center;
-  gap: var(--space-md);
-  padding: var(--space-md);
-  background: var(--color-background);
+  width: 100%;
+  padding: var(--space-sm) var(--space-md);
   border: 1px solid var(--color-border);
   border-radius: var(--radius-md);
+  font-weight: 500;
+  font-size: var(--font-xs);
   cursor: pointer;
-  transition: all 0.2s;
-  text-align: left;
-  width: 100%;
-  min-height: 48px;
+  transition: background-color 0.2s, color 0.2s, border-color 0.2s;
+  display: flex;
+  justify-content: flex-start;
+  align-items: center;
+  gap: var(--space-sm);
+  height: 36px;
+  background-color: var(--color-input-background);
+  color: var(--color-foreground);
 
   &:hover:not(:disabled) {
-    border-color: var(--color-primary);
+    background-color: var(--color-border);
   }
 
   &:disabled {
     opacity: 0.7;
     cursor: not-allowed;
   }
-`;
-
-const MethodIcon = styled.div`
-  width: 20px;
-  height: 20px;
-  flex-shrink: 0;
-  color: var(--color-primary);
-  display: flex;
-  align-items: center;
-  justify-content: center;
 
   svg {
-    width: 100%;
-    height: 100%;
+    width: 16px;
+    height: 16px;
+    flex-shrink: 0;
+    color: var(--color-primary);
   }
-`;
-
-const MethodContent = styled.div`
-  flex: 1;
-`;
-
-const MethodName = styled.div`
-  font-weight: 500;
-  color: var(--color-foreground);
-  margin-bottom: var(--space-2xs);
-  font-size: var(--font-sm);
-`;
-
-const MethodDescription = styled.div`
-  font-size: var(--font-xs);
-  color: var(--color-secondary-text);
-  line-height: 1.4;
 `;
 
 const Footer = styled.div`
@@ -149,15 +127,10 @@ export function TwoFactorMethodSelector({ methods, onSelectMethod, onBack }: Two
               key={method.id}
               onClick={() => handleMethodClick(method.id)}
               disabled={!method.available}
+              type="button"
             >
-              <MethodIcon>{method.icon}</MethodIcon>
-              <MethodContent>
-                <MethodName>{method.name}</MethodName>
-                <MethodDescription>
-                  {method.description}
-                  {method.phoneNumber && ` ${method.phoneNumber}`}
-                </MethodDescription>
-              </MethodContent>
+              {method.icon}
+              <span>{method.name}</span>
             </MethodButton>
           ))}
         </MethodList>
