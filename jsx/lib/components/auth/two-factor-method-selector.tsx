@@ -40,21 +40,23 @@ const MethodButton = styled.button`
   display: flex;
   align-items: flex-start;
   gap: var(--space-md);
-  padding: var(--space-lg) 0;
+  padding: var(--space-lg) var(--space-md);
+  margin: 0 calc(var(--space-md) * -1);
   border: none;
   border-bottom: 1px solid var(--color-border);
+  border-radius: 0;
   background: none;
   cursor: pointer;
   text-align: left;
-  width: 100%;
-  transition: background-color 0.2s;
+  width: calc(100% + (var(--space-md) * 2));
+  transition: all 0.2s ease;
 
   &:last-child {
     border-bottom: none;
   }
 
   &:hover:not(:disabled) {
-    background-color: rgba(99, 102, 241, 0.02);
+    background-color: rgba(99, 102, 241, 0.05);
   }
 
   &:disabled {
