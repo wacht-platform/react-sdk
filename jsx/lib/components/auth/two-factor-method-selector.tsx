@@ -33,25 +33,28 @@ const Subtitle = styled.p`
 const MethodList = styled.div`
   display: flex;
   flex-direction: column;
-  gap: var(--space-md);
+  gap: 0;
 `;
 
 const MethodButton = styled.button`
   display: flex;
-  align-items: center;
-  gap: var(--space-sm);
-  padding: 0;
+  align-items: flex-start;
+  gap: var(--space-md);
+  padding: var(--space-lg) 0;
   border: none;
+  border-bottom: 1px solid var(--color-border);
   background: none;
   cursor: pointer;
   text-align: left;
-  font-weight: 500;
-  font-size: var(--font-sm);
-  color: var(--color-foreground);
-  transition: color 0.2s;
+  width: 100%;
+  transition: background-color 0.2s;
+
+  &:last-child {
+    border-bottom: none;
+  }
 
   &:hover:not(:disabled) {
-    color: var(--color-primary);
+    background-color: rgba(99, 102, 241, 0.02);
   }
 
   &:disabled {
@@ -64,7 +67,27 @@ const MethodButton = styled.button`
     height: 20px;
     flex-shrink: 0;
     color: var(--color-primary);
+    margin-top: 2px;
   }
+`;
+
+const MethodContent = styled.div`
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-2xs);
+`;
+
+const MethodName = styled.div`
+  font-weight: 500;
+  font-size: var(--font-sm);
+  color: var(--color-foreground);
+`;
+
+const MethodDescription = styled.div`
+  font-size: var(--font-xs);
+  color: var(--color-secondary-text);
+  line-height: 1.4;
 `;
 
 const Footer = styled.div`
@@ -127,7 +150,13 @@ export function TwoFactorMethodSelector({ methods, onSelectMethod, onBack }: Two
               type="button"
             >
               {method.icon}
-              <span>{method.name}</span>
+              <MethodContent>
+                <MethodName>{method.name}</MethodName>
+                <MethodDescription>
+                  {method.description}
+                  {method.phoneNumber && ` ${method.phoneNumber}`}
+                </MethodDescription>
+              </MethodContent>
             </MethodButton>
           ))}
         </MethodList>
