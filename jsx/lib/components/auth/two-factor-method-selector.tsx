@@ -1,6 +1,4 @@
-import { useState } from "react";
 import styled from "styled-components";
-import { Button } from "@/components/utility";
 import { AuthFormImage } from "./auth-image";
 import { DefaultStylesProvider } from "../utility/root";
 
@@ -35,71 +33,94 @@ const Subtitle = styled.p`
 const MethodList = styled.div`
   display: flex;
   flex-direction: column;
-  gap: var(--space-sm);
-  margin-bottom: var(--space-lg);
+  gap: var(--space-md);
 `;
 
-const MethodButton = styled.button<{ selected?: boolean }>`
+const MethodButton = styled.button`
   display: flex;
   align-items: center;
-  gap: var(--space-md);
-  padding: var(--space-lg);
-  background: ${props => props.selected ? 'var(--color-primary-background)' : 'var(--color-background)'};
-  border: 1px solid ${props => props.selected ? 'var(--color-primary)' : 'var(--color-border)'};
-  border-radius: var(--radius-md);
+  gap: var(--space-lg);
+  padding: var(--space-xl);
+  background: var(--color-background);
+  border: 1.5px solid var(--color-border);
+  border-radius: var(--radius-lg);
   cursor: pointer;
-  transition: all 0.2s;
+  transition: all 0.15s ease;
   text-align: left;
   width: 100%;
+  position: relative;
+  overflow: hidden;
+
+  &::before {
+    content: '';
+    position: absolute;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    background: linear-gradient(135deg, var(--color-primary) 0%, var(--color-primary-hover) 100%);
+    opacity: 0;
+    transition: opacity 0.15s ease;
+  }
 
   &:hover:not(:disabled) {
-    background: ${props => props.selected ? 'var(--color-primary-background)' : 'var(--color-background-hover)'};
     border-color: var(--color-primary);
-    box-shadow: 0 2px 4px var(--color-shadow);
+    transform: translateY(-2px);
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.08);
+
+    &::before {
+      opacity: 0.04;
+    }
+  }
+
+  &:active:not(:disabled) {
+    transform: translateY(0);
+    box-shadow: 0 2px 6px rgba(0, 0, 0, 0.06);
   }
 
   &:disabled {
-    opacity: 0.5;
+    opacity: 0.4;
     cursor: not-allowed;
+    border-color: var(--color-border);
   }
 `;
 
 const MethodIcon = styled.div`
-  width: 44px;
-  height: 44px;
-  background: var(--color-background-hover);
-  border-radius: 50%;
+  width: 48px;
+  height: 48px;
+  background: linear-gradient(135deg, var(--color-primary) 0%, var(--color-primary-hover) 100%);
+  border-radius: var(--radius-md);
   display: flex;
   align-items: center;
   justify-content: center;
   flex-shrink: 0;
+  position: relative;
+  z-index: 1;
 
   svg {
-    width: 20px;
-    height: 20px;
-    color: var(--color-foreground);
+    width: 22px;
+    height: 22px;
+    color: white;
   }
 `;
 
-const MethodInfo = styled.div`
+const MethodContent = styled.div`
   flex: 1;
+  position: relative;
+  z-index: 1;
 `;
 
 const MethodName = styled.div`
-  font-weight: 500;
+  font-weight: 600;
   color: var(--color-foreground);
-  margin-bottom: var(--space-2xs);
-  font-size: var(--font-sm);
+  margin-bottom: var(--space-xs);
+  font-size: var(--font-md);
 `;
 
 const MethodDescription = styled.div`
   font-size: var(--font-xs);
   color: var(--color-secondary-text);
-  line-height: 1.4;
-`;
-
-const ContinueButton = styled(Button)`
-  width: 100%;
+  line-height: 1.5;
 `;
 
 const Footer = styled.div`
@@ -137,12 +158,8 @@ interface TwoFactorMethodSelectorProps {
 }
 
 export function TwoFactorMethodSelector({ methods, onSelectMethod, onBack }: TwoFactorMethodSelectorProps) {
-  const [selectedMethod, setSelectedMethod] = useState<string | null>(null);
-
-  const handleContinue = () => {
-    if (selectedMethod) {
-      onSelectMethod(selectedMethod);
-    }
+  const handleMethodClick = (methodId: string) => {
+    onSelectMethod(methodId);
   };
 
   return (
@@ -151,9 +168,9 @@ export function TwoFactorMethodSelector({ methods, onSelectMethod, onBack }: Two
         <AuthFormImage />
 
         <Header>
-          <Title>Two-factor authentication</Title>
+          <Title>Verify your identity</Title>
           <Subtitle>
-            Choose how you'd like to verify your identity
+            Choose a verification method to continue
           </Subtitle>
         </Header>
 
@@ -161,28 +178,20 @@ export function TwoFactorMethodSelector({ methods, onSelectMethod, onBack }: Two
           {methods.map((method) => (
             <MethodButton
               key={method.id}
-              onClick={() => setSelectedMethod(method.id)}
-              selected={selectedMethod === method.id}
+              onClick={() => handleMethodClick(method.id)}
               disabled={!method.available}
             >
               <MethodIcon>{method.icon}</MethodIcon>
-              <MethodInfo>
+              <MethodContent>
                 <MethodName>{method.name}</MethodName>
                 <MethodDescription>
                   {method.description}
-                  {method.phoneNumber && ` to ${method.phoneNumber}`}
+                  {method.phoneNumber && ` ${method.phoneNumber}`}
                 </MethodDescription>
-              </MethodInfo>
+              </MethodContent>
             </MethodButton>
           ))}
         </MethodList>
-
-        <ContinueButton
-          onClick={handleContinue}
-          disabled={!selectedMethod}
-        >
-          Continue
-        </ContinueButton>
 
         {onBack && (
           <Footer>
