@@ -49,7 +49,7 @@ const MethodButton = styled.button`
   cursor: pointer;
   text-align: left;
   width: calc(100% + (var(--space-md) * 2));
-  transition: all 0.2s ease;
+  transition: background-color 0.2s ease;
 
   &:last-child {
     border-bottom: none;
