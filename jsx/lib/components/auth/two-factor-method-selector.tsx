@@ -126,7 +126,11 @@ interface TwoFactorMethodSelectorProps {
   onBack?: () => void;
 }
 
-export function TwoFactorMethodSelector({ methods, onSelectMethod, onBack }: TwoFactorMethodSelectorProps) {
+export function TwoFactorMethodSelector({
+  methods,
+  onSelectMethod,
+  onBack,
+}: TwoFactorMethodSelectorProps) {
   const handleMethodClick = (methodId: string) => {
     onSelectMethod(methodId);
   };
@@ -138,9 +142,7 @@ export function TwoFactorMethodSelector({ methods, onSelectMethod, onBack }: Two
 
         <Header>
           <Title>Two-factor authentication</Title>
-          <Subtitle>
-            Choose how you'd like to verify your identity
-          </Subtitle>
+          <Subtitle>Choose how you'd like to verify your identity</Subtitle>
         </Header>
 
         <MethodList>
