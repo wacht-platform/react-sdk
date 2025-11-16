@@ -21,7 +21,7 @@ export function AuthFormImage() {
   const logoUrl = deployment?.ui_settings?.logo_image_url;
 
   if (!logoUrl) {
-    return null;
+    return <ImageContainer />;
   }
 
   return (
