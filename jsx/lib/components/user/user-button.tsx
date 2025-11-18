@@ -1,4 +1,4 @@
-import React, { useState, useRef, useEffect } from "react";
+import React, { useState, useRef, useEffect, JSX } from "react";
 import ReactDOM from "react-dom";
 import styled from "styled-components";
 import { LogOut, Settings, Plus } from "lucide-react";
@@ -209,7 +209,9 @@ interface UserButtonProps {
   showName?: boolean;
 }
 
-export const UserButton: React.FC<UserButtonProps> = ({ showName = true }) => {
+export const UserButton: React.FC<UserButtonProps> = ({
+  showName = true,
+}): JSX.Element => {
   const [isOpen, setIsOpen] = useState(false);
   const [dropdownPosition, setDropdownPosition] = useState<
     | {

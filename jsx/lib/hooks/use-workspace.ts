@@ -2,12 +2,10 @@ import { Client, Workspace, WorkspaceRole } from "@/types";
 import { useClient } from "./use-client";
 import useSWR from "swr";
 import { responseMapper } from "@/utils/response-mapper";
-import {
-  WorkspaceMembership,
-  WorkspaceWithOrganization,
-} from "@/types";
+import { WorkspaceMembership, WorkspaceWithOrganization } from "@/types";
 import { useCallback, useMemo } from "react";
 import { useSession, clearTokenCache } from "./use-session";
+import { useDeployment } from "./use-deployment";
 
 async function fetchWorkspaceMemberships(client: Client) {
   const response = await responseMapper<WorkspaceMembership[]>(
@@ -31,6 +29,7 @@ async function leaveWorkspace(
 
 export const useWorkspaceMemberships = () => {
   const { client, loading: clientLoading } = useClient();
+  const { deployment } = useDeployment();
 
   const {
     data,
@@ -38,7 +37,9 @@ export const useWorkspaceMemberships = () => {
     error,
     mutate,
   } = useSWR(
-    !clientLoading ? "/me/workspace-memberships" : null,
+    !clientLoading && deployment?.b2b_settings.workspaces_enabled
+      ? "/me/workspace-memberships"
+      : null,
     () => fetchWorkspaceMemberships(client),
     {
       refreshInterval: 30000,
@@ -108,9 +109,12 @@ export const useWorkspaceList = () => {
     },
     [client, refetch],
   );
-  
+
   const updateWorkspace = useCallback(
-    async (workspace: Workspace, data: { name?: string; description?: string; image?: File }) => {
+    async (
+      workspace: Workspace,
+      data: { name?: string; description?: string; image?: File },
+    ) => {
       const formData = new FormData();
       if (data.name) formData.append("name", data.name);
       if (data.description) formData.append("description", data.description);
@@ -126,7 +130,7 @@ export const useWorkspaceList = () => {
     },
     [client, refetch],
   );
-  
+
   const deleteWorkspace = useCallback(
     async (workspace: Workspace) => {
       const response = await responseMapper(
@@ -140,7 +144,7 @@ export const useWorkspaceList = () => {
     },
     [client, refetch],
   );
-  
+
   const getWorkspaceMembers = useCallback(
     async (workspace: Workspace) => {
       const response = await responseMapper<WorkspaceMembership[]>(
@@ -152,7 +156,7 @@ export const useWorkspaceList = () => {
     },
     [client],
   );
-  
+
   const getWorkspaceRoles = useCallback(
     async (workspace: Workspace) => {
       const response = await responseMapper<WorkspaceRole[]>(
@@ -164,7 +168,7 @@ export const useWorkspaceList = () => {
     },
     [client],
   );
-  
+
   const createWorkspaceRole = useCallback(
     async (workspace: Workspace, name: string, permissions: string[]) => {
       const response = await responseMapper<WorkspaceRole>(
@@ -178,7 +182,7 @@ export const useWorkspaceList = () => {
     },
     [client],
   );
-  
+
   const deleteWorkspaceRole = useCallback(
     async (workspace: Workspace, role: WorkspaceRole) => {
       const response = await responseMapper(
@@ -190,7 +194,7 @@ export const useWorkspaceList = () => {
     },
     [client],
   );
-  
+
   const inviteWorkspaceMember = useCallback(
     async (workspace: Workspace, email: string, roleId?: string) => {
       const response = await responseMapper(
@@ -204,7 +208,7 @@ export const useWorkspaceList = () => {
     },
     [client],
   );
-  
+
   const removeWorkspaceMember = useCallback(
     async (workspace: Workspace, memberId: string) => {
       const response = await responseMapper(
@@ -217,25 +221,31 @@ export const useWorkspaceList = () => {
     },
     [client, refetch],
   );
-  
+
   const addWorkspaceMemberRole = useCallback(
     async (workspace: Workspace, membershipId: string, roleId: string) => {
       const response = await responseMapper(
-        await client(`/workspaces/${workspace.id}/members/${membershipId}/roles/${roleId}`, {
-          method: "POST",
-        }),
+        await client(
+          `/workspaces/${workspace.id}/members/${membershipId}/roles/${roleId}`,
+          {
+            method: "POST",
+          },
+        ),
       );
       return response.data;
     },
     [client],
   );
-  
+
   const removeWorkspaceMemberRole = useCallback(
     async (workspace: Workspace, membershipId: string, roleId: string) => {
       const response = await responseMapper(
-        await client(`/workspaces/${workspace.id}/members/${membershipId}/roles/${roleId}/remove`, {
-          method: "POST",
-        }),
+        await client(
+          `/workspaces/${workspace.id}/members/${membershipId}/roles/${roleId}/remove`,
+          {
+            method: "POST",
+          },
+        ),
       );
       return response.data;
     },
@@ -298,78 +308,89 @@ export const useActiveWorkspace = () => {
 
   const leaveCurrentWorkspace = useCallback(async () => {
     if (!activeWorkspace || !session?.active_signin?.user_id) return;
-    return await leaveWorkspaceFromList(activeWorkspace.id, session.active_signin.user_id);
+    return await leaveWorkspaceFromList(
+      activeWorkspace.id,
+      session.active_signin.user_id,
+    );
   }, [activeWorkspace, leaveWorkspaceFromList, session]);
-  
+
   const updateCurrentWorkspace = useCallback(
     async (data: { name?: string; description?: string; image?: File }) => {
       if (!activeWorkspace) return;
       return await updateWorkspace(activeWorkspace, data);
     },
-    [activeWorkspace, updateWorkspace]
+    [activeWorkspace, updateWorkspace],
   );
-  
+
   const deleteCurrentWorkspace = useCallback(async () => {
     if (!activeWorkspace) return;
     return await deleteWorkspace(activeWorkspace);
   }, [activeWorkspace, deleteWorkspace]);
-  
+
   const getCurrentWorkspaceMembers = useCallback(async () => {
     if (!activeWorkspace) return [];
     return await getWorkspaceMembers(activeWorkspace);
   }, [activeWorkspace, getWorkspaceMembers]);
-  
+
   const getCurrentWorkspaceRoles = useCallback(async () => {
     if (!activeWorkspace) return [];
     return await getWorkspaceRoles(activeWorkspace);
   }, [activeWorkspace, getWorkspaceRoles]);
-  
+
   const createCurrentWorkspaceRole = useCallback(
     async (name: string, permissions: string[]) => {
       if (!activeWorkspace) return;
       return await createWorkspaceRole(activeWorkspace, name, permissions);
     },
-    [activeWorkspace, createWorkspaceRole]
+    [activeWorkspace, createWorkspaceRole],
   );
-  
+
   const deleteCurrentWorkspaceRole = useCallback(
     async (role: WorkspaceRole) => {
       if (!activeWorkspace) return;
       return await deleteWorkspaceRole(activeWorkspace, role);
     },
-    [activeWorkspace, deleteWorkspaceRole]
+    [activeWorkspace, deleteWorkspaceRole],
   );
-  
+
   const inviteCurrentWorkspaceMember = useCallback(
     async (email: string, roleId?: string) => {
       if (!activeWorkspace) return;
       return await inviteWorkspaceMember(activeWorkspace, email, roleId);
     },
-    [activeWorkspace, inviteWorkspaceMember]
+    [activeWorkspace, inviteWorkspaceMember],
   );
-  
+
   const removeCurrentWorkspaceMember = useCallback(
     async (memberId: string) => {
       if (!activeWorkspace) return;
       return await removeWorkspaceMember(activeWorkspace, memberId);
     },
-    [activeWorkspace, removeWorkspaceMember]
+    [activeWorkspace, removeWorkspaceMember],
   );
-  
+
   const addRoleToCurrentWorkspaceMember = useCallback(
     async (membershipId: string, roleId: string) => {
       if (!activeWorkspace) return;
-      return await addWorkspaceMemberRole(activeWorkspace, membershipId, roleId);
+      return await addWorkspaceMemberRole(
+        activeWorkspace,
+        membershipId,
+        roleId,
+      );
     },
-    [activeWorkspace, addWorkspaceMemberRole]
+    [activeWorkspace, addWorkspaceMemberRole],
   );
-  
+
   const removeRoleFromCurrentWorkspaceMember = useCallback(
     async (membershipId: string, roleId: string) => {
       if (!activeWorkspace) return;
-      return await removeWorkspaceMemberRole(activeWorkspace, membershipId, roleId);
+      return await removeWorkspaceMemberRole(
+        activeWorkspace,
+        membershipId,
+        roleId,
+      );
     },
-    [activeWorkspace, removeWorkspaceMemberRole]
+    [activeWorkspace, removeWorkspaceMemberRole],
   );
 
   const currentLoading = loading || sessionLoading;

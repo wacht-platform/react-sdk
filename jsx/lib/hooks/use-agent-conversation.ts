@@ -91,7 +91,6 @@ export function useAgentConversation({
           setIsConnected(true);
           setConnectionState({ status: CONNECTION_STATES.CONNECTED });
 
-          // Update execution state from backend if provided
           if (message.data?.execution_status) {
             const backendStatus = message.data.execution_status;
             const frontendStatus = mapBackendToFrontendStatus(backendStatus);
@@ -99,8 +98,6 @@ export function useAgentConversation({
             setIsExecuting(isExecutionActive(frontendStatus));
           }
 
-          // Don't reload messages if they've already been loaded
-          // They're now loaded immediately on mount
           break;
 
         case "conversation_message":
@@ -116,7 +113,6 @@ export function useAgentConversation({
           break;
 
         case "platform_function":
-          // Platform function received
           handlePlatformFunction(message.data);
           break;
 
@@ -139,7 +135,6 @@ export function useAgentConversation({
           break;
 
         case "execution_status":
-          // Handle execution status updates from backend
           const status = message.data?.status;
           if (status) {
             const frontendStatus = mapBackendToFrontendStatus(status);
@@ -147,23 +142,18 @@ export function useAgentConversation({
             setIsExecuting(isExecutionActive(frontendStatus));
           }
           break;
-
-        // Messages are now loaded from API via fetchMessages() instead of WebSocket
       }
     },
     [pendingMessage],
   );
 
-  // Handle conversation messages
   const handleConversationMessage = useCallback((data: any) => {
     const { id, message_type, content } = data;
 
-    // Check if message already exists to prevent duplicates
     const messageExists = (messageId: string | number) => {
       return messages.some((msg) => msg.id === messageId);
     };
 
-    // Handle system/log messages
     if (
       message_type === "system_decision" ||
       message_type === "action_execution_result" ||
@@ -178,12 +168,10 @@ export function useAgentConversation({
       let logContent = "";
 
       if (message_type === "system_decision") {
-        // Check if this is a gather_context step and add more context
         const step = content?.step;
         const reasoning = content?.reasoning;
 
         if (step === "gathercontext") {
-          // Show the actual reasoning, clipped to a reasonable length
           if (reasoning && reasoning.length > 0) {
             const maxLength = 60;
             logContent =
@@ -216,7 +204,6 @@ export function useAgentConversation({
         } else if (step === "examineworkflow") {
           logContent = "Examining workflow";
         } else {
-          // Default with varied text based on confidence
           const confidence = content?.confidence || 0.5;
           if (confidence > 0.8) {
             logContent = "Analyzing";
@@ -288,21 +275,19 @@ export function useAgentConversation({
             id,
             role: "user",
             content: content.message,
-            images: content.images, // Include images from backend
+            images: content.images,
             timestamp: new Date(),
           },
         ]);
       }
     } else if (message_type === "agent_response") {
       if (!messageExists(id)) {
-        // Agent response indicates execution is complete
         setPendingMessage(null);
         setPendingImages(null);
         setIsExecuting(false);
         setExecutionStatus(FRONTEND_STATUS.IDLE);
         streamingMessageRef.current = null;
 
-        // Add the final response message
         setMessages((prev) => [
           ...prev,
           {
@@ -336,7 +321,6 @@ export function useAgentConversation({
       message_type === "assistant_context_gathering" ||
       message_type === "assistant_task_breakdown"
     ) {
-      // Handle various assistant message types
       let messageContent = "";
 
       if (content.reasoning_summary) {
@@ -350,7 +334,6 @@ export function useAgentConversation({
       } else if (content.acknowledgment_message) {
         messageContent = content.acknowledgment_message;
       } else {
-        // Skip if no meaningful content
         return;
       }
 
@@ -364,7 +347,6 @@ export function useAgentConversation({
         },
       ]);
     } else if (message_type === "user_input_request") {
-      // Handle user input request from conversation messages
       const inputRequest = {
         question: content.question,
         context: content.context,
@@ -376,7 +358,6 @@ export function useAgentConversation({
 
       setExecutionStatus("waiting_for_input");
 
-      // Add as a system message with metadata for the component
       setMessages((prev) => [
         ...prev,
         {
@@ -393,11 +374,9 @@ export function useAgentConversation({
     }
   }, []);
 
-  // Handle user input requests
   const handleUserInputRequest = useCallback(async (data: UserInputRequest) => {
     setExecutionStatus("waiting_for_input");
 
-    // Add the user input request as a system message
     const requestId = `input-request-${Date.now()}`;
     setMessages((prev) => [
       ...prev,
@@ -591,247 +570,261 @@ export function useAgentConversation({
   );
 
   // Fetch messages from API (1-1 conversion from WebSocket logic)
-  const fetchMessages = useCallback(async (beforeId?: string) => {
-    if (!token || !contextId) return;
-    
-    try {
-      const params = new URLSearchParams({
-        token: token,
-        limit: '50',
-      });
-      
-      if (beforeId) {
-        params.append('before_id', beforeId);
-        setIsLoadingMore(true);
-      }
-      
-      const response = await client(`/api/agent/contexts/${contextId}/messages?${params}`, {
-        method: 'GET',
-      });
-      
-      const result = await response.json();
-      
-      if (result.status === 200 && result.data) {
-        const messageData = result.data;
-        
-        // Exact same processing as WebSocket fetch_context_messages
-        if (Array.isArray(messageData.data)) {
-          const pastMessages = messageData.data
-            .filter((msg: any) => {
-              // Parse content if needed
-              let parsedContent = msg.content;
-              if (typeof msg.content === 'string') {
-                try {
-                  parsedContent = JSON.parse(msg.content);
-                } catch {
-                  parsedContent = { message: msg.content };
+  const fetchMessages = useCallback(
+    async (beforeId?: string) => {
+      if (!token || !contextId) return;
+
+      try {
+        const params = new URLSearchParams({
+          token: token,
+          limit: "50",
+        });
+
+        if (beforeId) {
+          params.append("before_id", beforeId);
+          setIsLoadingMore(true);
+        }
+
+        const response = await client(
+          `/api/agent/contexts/${contextId}/messages?${params}`,
+          {
+            method: "GET",
+          },
+        );
+
+        const result = await response.json();
+
+        if (result.status === 200 && result.data) {
+          const messageData = result.data;
+
+          // Exact same processing as WebSocket fetch_context_messages
+          if (Array.isArray(messageData.data)) {
+            const pastMessages = messageData.data
+              .filter((msg: any) => {
+                // Parse content if needed
+                let parsedContent = msg.content;
+                if (typeof msg.content === "string") {
+                  try {
+                    parsedContent = JSON.parse(msg.content);
+                  } catch {
+                    parsedContent = { message: msg.content };
+                  }
                 }
-              }
-              
-              // Get message_type from metadata or parsed content
-              const message_type = msg.metadata?.message_type || parsedContent?.message_type;
-              
-              // Include same message types as WebSocket
-              return (
-                message_type === "user_message" ||
-                message_type === "agent_response" ||
-                message_type === "assistant_acknowledgment" ||
-                message_type === "user_input_request" ||
-                message_type === "system_decision" ||
-                message_type === "action_execution_result" ||
-                message_type === "assistant_task_breakdown" ||
-                message_type === "assistant_validation" ||
-                message_type === "assistant_action_planning" ||
-                message_type === "context_results"
-              );
-            })
-            .map((msg: any) => {
-              let content = "";
-              let images = undefined;
-              let metadata = undefined;
-              
-              // Parse content if needed
-              let parsedContent = msg.content;
-              if (typeof msg.content === 'string') {
-                try {
-                  parsedContent = JSON.parse(msg.content);
-                } catch {
-                  parsedContent = msg.content;
+
+                // Get message_type from metadata or parsed content
+                const message_type =
+                  msg.metadata?.message_type || parsedContent?.message_type;
+
+                // Include same message types as WebSocket
+                return (
+                  message_type === "user_message" ||
+                  message_type === "agent_response" ||
+                  message_type === "assistant_acknowledgment" ||
+                  message_type === "user_input_request" ||
+                  message_type === "system_decision" ||
+                  message_type === "action_execution_result" ||
+                  message_type === "assistant_task_breakdown" ||
+                  message_type === "assistant_validation" ||
+                  message_type === "assistant_action_planning" ||
+                  message_type === "context_results"
+                );
+              })
+              .map((msg: any) => {
+                let content = "";
+                let images = undefined;
+                let metadata = undefined;
+
+                // Parse content if needed
+                let parsedContent = msg.content;
+                if (typeof msg.content === "string") {
+                  try {
+                    parsedContent = JSON.parse(msg.content);
+                  } catch {
+                    parsedContent = msg.content;
+                  }
                 }
-              }
-              
-              // Get message_type from metadata or parsed content
-              const message_type = msg.metadata?.message_type || parsedContent?.message_type;
-              
-              // Exact same content extraction logic
-              if (message_type === "user_message") {
-                content = parsedContent?.message || "";
-                images = parsedContent?.images || undefined;
-              } else if (message_type === "agent_response") {
-                content = parsedContent?.response || "";
-              } else if (message_type === "assistant_acknowledgment") {
-                content = parsedContent?.acknowledgment_message || "";
-              } else if (message_type === "user_input_request") {
-                content = parsedContent?.question || "";
-                metadata = {
-                  type: "user_input_request",
-                  userInputRequest: {
-                    question: parsedContent?.question || "",
-                    context: parsedContent?.context || "",
-                    input_type: parsedContent?.input_type || "text",
-                    options: parsedContent?.options || parsedContent?.suggestions || [],
-                    default_value: parsedContent?.default_value || "",
-                    placeholder: parsedContent?.placeholder || "",
-                  },
+
+                // Get message_type from metadata or parsed content
+                const message_type =
+                  msg.metadata?.message_type || parsedContent?.message_type;
+
+                // Exact same content extraction logic
+                if (message_type === "user_message") {
+                  content = parsedContent?.message || "";
+                  images = parsedContent?.images || undefined;
+                } else if (message_type === "agent_response") {
+                  content = parsedContent?.response || "";
+                } else if (message_type === "assistant_acknowledgment") {
+                  content = parsedContent?.acknowledgment_message || "";
+                } else if (message_type === "user_input_request") {
+                  content = parsedContent?.question || "";
+                  metadata = {
+                    type: "user_input_request",
+                    userInputRequest: {
+                      question: parsedContent?.question || "",
+                      context: parsedContent?.context || "",
+                      input_type: parsedContent?.input_type || "text",
+                      options:
+                        parsedContent?.options ||
+                        parsedContent?.suggestions ||
+                        [],
+                      default_value: parsedContent?.default_value || "",
+                      placeholder: parsedContent?.placeholder || "",
+                    },
+                  };
+                }
+
+                // Handle system/log messages - exact same logic
+                if (
+                  message_type === "system_decision" ||
+                  message_type === "action_execution_result" ||
+                  message_type === "assistant_task_breakdown" ||
+                  message_type === "assistant_validation" ||
+                  message_type === "assistant_action_planning" ||
+                  message_type === "context_results"
+                ) {
+                  let logContent = "";
+
+                  if (message_type === "system_decision") {
+                    const step = parsedContent?.step;
+                    const reasoning = parsedContent?.reasoning;
+
+                    if (step === "gathercontext") {
+                      if (reasoning && reasoning.length > 0) {
+                        const maxLength = 60;
+                        logContent =
+                          reasoning.length > maxLength
+                            ? `${reasoning.substring(0, maxLength)}...`
+                            : reasoning;
+                      } else {
+                        logContent = "Gathering context...";
+                      }
+                    } else if (step === "executeaction") {
+                      logContent = "Executing action";
+                    } else if (step === "deliverresponse") {
+                      logContent = "Preparing response";
+                    } else if (step === "taskplanning") {
+                      logContent = "Planning approach";
+                    } else if (step === "validateprogress") {
+                      logContent = "Validating progress";
+                    } else if (step === "acknowledge") {
+                      logContent = "Processing request";
+                    } else if (step === "finishplanning") {
+                      logContent = "Finalizing plan";
+                    } else if (step === "executetasks") {
+                      logContent = "Executing tasks";
+                    } else if (step === "requestuserinput") {
+                      logContent = "Waiting for input";
+                    } else if (step === "complete") {
+                      logContent = "Completed";
+                    } else if (step === "examinetool") {
+                      logContent = "Examining tool";
+                    } else if (step === "examineworkflow") {
+                      logContent = "Examining workflow";
+                    } else {
+                      const confidence = parsedContent?.confidence || 0.5;
+                      if (confidence > 0.8) {
+                        logContent = "Analyzing";
+                      } else if (confidence > 0.6) {
+                        logContent = "Thinking";
+                      } else {
+                        logContent = "Reasoning";
+                      }
+                    }
+                  } else if (message_type === "action_execution_result") {
+                    if (parsedContent?.task_execution?.status === "completed") {
+                      logContent = "Task execution completed";
+                    } else if (parsedContent?.task_execution?.approach) {
+                      logContent = parsedContent.task_execution.approach;
+                    } else {
+                      logContent = "Executing task";
+                    }
+                  } else if (message_type === "assistant_task_breakdown") {
+                    if (parsedContent?.task_breakdown?.total_tasks) {
+                      logContent = `Identified ${parsedContent.task_breakdown.total_tasks} tasks`;
+                    } else {
+                      logContent = "Planning tasks";
+                    }
+                  } else if (message_type === "assistant_validation") {
+                    logContent = "Validated results";
+                  } else if (message_type === "assistant_action_planning") {
+                    if (parsedContent?.task_execution?.total_tasks) {
+                      logContent = `Planned ${parsedContent.task_execution.total_tasks} tasks`;
+                    } else if (parsedContent?.task_execution?.tasks?.length) {
+                      logContent = `Planned ${parsedContent.task_execution.tasks.length} tasks`;
+                    } else {
+                      logContent = "Planning actions";
+                    }
+                  } else if (message_type === "context_results") {
+                    const query = parsedContent?.query;
+                    const resultCount = parsedContent?.result_count || 0;
+                    if (query && query !== "General context gathering") {
+                      logContent = `${query}: Found ${resultCount} results`;
+                    } else {
+                      logContent = `Found ${resultCount} results`;
+                    }
+                  }
+
+                  content = logContent;
+                  metadata = { type: "log", messageType: message_type };
+                }
+
+                return {
+                  id: msg.id,
+                  role:
+                    message_type === "user_message"
+                      ? "user"
+                      : message_type === "user_input_request"
+                        ? "system"
+                        : "assistant",
+                  content,
+                  images,
+                  timestamp: new Date(
+                    msg.timestamp || msg.created_at || Date.now(),
+                  ),
+                  metadata,
                 };
-              }
-              
-              // Handle system/log messages - exact same logic
-              if (
-                message_type === "system_decision" ||
-                message_type === "action_execution_result" ||
-                message_type === "assistant_task_breakdown" ||
-                message_type === "assistant_validation" ||
-                message_type === "assistant_action_planning" ||
-                message_type === "context_results"
-              ) {
-                let logContent = "";
-                
-                if (message_type === "system_decision") {
-                  const step = parsedContent?.step;
-                  const reasoning = parsedContent?.reasoning;
-                  
-                  if (step === "gathercontext") {
-                    if (reasoning && reasoning.length > 0) {
-                      const maxLength = 60;
-                      logContent = reasoning.length > maxLength
-                        ? `${reasoning.substring(0, maxLength)}...`
-                        : reasoning;
-                    } else {
-                      logContent = "Gathering context...";
-                    }
-                  } else if (step === "executeaction") {
-                    logContent = "Executing action";
-                  } else if (step === "deliverresponse") {
-                    logContent = "Preparing response";
-                  } else if (step === "taskplanning") {
-                    logContent = "Planning approach";
-                  } else if (step === "validateprogress") {
-                    logContent = "Validating progress";
-                  } else if (step === "acknowledge") {
-                    logContent = "Processing request";
-                  } else if (step === "finishplanning") {
-                    logContent = "Finalizing plan";
-                  } else if (step === "executetasks") {
-                    logContent = "Executing tasks";
-                  } else if (step === "requestuserinput") {
-                    logContent = "Waiting for input";
-                  } else if (step === "complete") {
-                    logContent = "Completed";
-                  } else if (step === "examinetool") {
-                    logContent = "Examining tool";
-                  } else if (step === "examineworkflow") {
-                    logContent = "Examining workflow";
-                  } else {
-                    const confidence = parsedContent?.confidence || 0.5;
-                    if (confidence > 0.8) {
-                      logContent = "Analyzing";
-                    } else if (confidence > 0.6) {
-                      logContent = "Thinking";
-                    } else {
-                      logContent = "Reasoning";
-                    }
-                  }
-                } else if (message_type === "action_execution_result") {
-                  if (parsedContent?.task_execution?.status === "completed") {
-                    logContent = "Task execution completed";
-                  } else if (parsedContent?.task_execution?.approach) {
-                    logContent = parsedContent.task_execution.approach;
-                  } else {
-                    logContent = "Executing task";
-                  }
-                } else if (message_type === "assistant_task_breakdown") {
-                  if (parsedContent?.task_breakdown?.total_tasks) {
-                    logContent = `Identified ${parsedContent.task_breakdown.total_tasks} tasks`;
-                  } else {
-                    logContent = "Planning tasks";
-                  }
-                } else if (message_type === "assistant_validation") {
-                  logContent = "Validated results";
-                } else if (message_type === "assistant_action_planning") {
-                  if (parsedContent?.task_execution?.total_tasks) {
-                    logContent = `Planned ${parsedContent.task_execution.total_tasks} tasks`;
-                  } else if (parsedContent?.task_execution?.tasks?.length) {
-                    logContent = `Planned ${parsedContent.task_execution.tasks.length} tasks`;
-                  } else {
-                    logContent = "Planning actions";
-                  }
-                } else if (message_type === "context_results") {
-                  const query = parsedContent?.query;
-                  const resultCount = parsedContent?.result_count || 0;
-                  if (query && query !== "General context gathering") {
-                    logContent = `${query}: Found ${resultCount} results`;
-                  } else {
-                    logContent = `Found ${resultCount} results`;
-                  }
-                }
-                
-                content = logContent;
-                metadata = { type: "log", messageType: message_type };
-              }
-              
-              return {
-                id: msg.id,
-                role:
-                  message_type === "user_message"
-                    ? "user"
-                    : message_type === "user_input_request"
-                      ? "system"
-                      : "assistant",
-                content,
-                images,
-                timestamp: new Date(msg.timestamp || msg.created_at || Date.now()),
-                metadata,
-              };
-            })
-            .filter((msg: any) => msg.content || msg.metadata || msg.images)
-            .sort((a: any, b: any) => {
-              // Sort by snowflake ID (ascending order - oldest first)
-              const aId = BigInt(a.id);
-              const bId = BigInt(b.id);
-              return aId < bId ? -1 : aId > bId ? 1 : 0;
-            });
-          
-          // Update oldest message ID for pagination
-          if (pastMessages.length > 0) {
-            oldestMessageIdRef.current = pastMessages[0].id;
-          }
-          
-          // If this is pagination (beforeId provided), prepend to existing messages
-          if (beforeId) {
-            setMessages((prev) => [...pastMessages, ...prev]);
-            setHasMoreMessages(pastMessages.length >= 50);
-          } else {
-            // Initial load
-            setMessages(pastMessages);
-            
-            // Check if the last message is a user_input_request to restore waiting state
+              })
+              .filter((msg: any) => msg.content || msg.metadata || msg.images)
+              .sort((a: any, b: any) => {
+                // Sort by snowflake ID (ascending order - oldest first)
+                const aId = BigInt(a.id);
+                const bId = BigInt(b.id);
+                return aId < bId ? -1 : aId > bId ? 1 : 0;
+              });
+
+            // Update oldest message ID for pagination
             if (pastMessages.length > 0) {
-              const lastMessage = pastMessages[pastMessages.length - 1];
-              if (lastMessage.metadata?.type === "user_input_request") {
-                setExecutionStatus(FRONTEND_STATUS.WAITING_FOR_INPUT);
+              oldestMessageIdRef.current = pastMessages[0].id;
+            }
+
+            // If this is pagination (beforeId provided), prepend to existing messages
+            if (beforeId) {
+              setMessages((prev) => [...pastMessages, ...prev]);
+              setHasMoreMessages(pastMessages.length >= 50);
+            } else {
+              // Initial load
+              setMessages(pastMessages);
+
+              // Check if the last message is a user_input_request to restore waiting state
+              if (pastMessages.length > 0) {
+                const lastMessage = pastMessages[pastMessages.length - 1];
+                if (lastMessage.metadata?.type === "user_input_request") {
+                  setExecutionStatus(FRONTEND_STATUS.WAITING_FOR_INPUT);
+                }
               }
             }
+
+            setIsLoadingMore(false);
           }
-          
-          setIsLoadingMore(false);
         }
+      } catch (error) {
+        console.error("Failed to fetch messages:", error);
+        setIsLoadingMore(false);
       }
-    } catch (error) {
-      console.error('Failed to fetch messages:', error);
-      setIsLoadingMore(false);
-    }
-  }, [token, contextId, client]);
+    },
+    [token, contextId, client],
+  );
 
   // Load messages immediately on mount (don't wait for WebSocket)
   useEffect(() => {
@@ -843,11 +836,7 @@ export function useAgentConversation({
 
   // Load more messages (pagination)
   const loadMoreMessages = useCallback(async () => {
-    if (
-      isLoadingMore ||
-      !hasMoreMessages ||
-      !oldestMessageIdRef.current
-    )
+    if (isLoadingMore || !hasMoreMessages || !oldestMessageIdRef.current)
       return;
 
     setIsLoadingMore(true);

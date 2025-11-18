@@ -9,6 +9,10 @@ import {
 } from "@/types";
 import { Client } from "@/types";
 import { SignIn } from "@/types";
+import { useSession } from "./use-session";
+import { useOrganizationMemberships } from "./use-organization";
+import { useWorkspaceMemberships } from "./use-workspace";
+import { useMemo } from "react";
 
 type SecondFactorPolicy = "none" | "optional" | "enforced";
 
@@ -53,7 +57,7 @@ export function useUser() {
       await client("/me", {
         method: "POST",
         body: form,
-      })
+      }),
     );
     mutate();
     return response;
@@ -63,7 +67,7 @@ export function useUser() {
     const response = await responseMapper(
       await client("/me/email-addresses", {
         method: "GET",
-      })
+      }),
     );
     return response;
   };
@@ -72,7 +76,7 @@ export function useUser() {
     const response = await responseMapper(
       await client(`/me/email-addresses/${id}`, {
         method: "GET",
-      })
+      }),
     );
     return response;
   };
@@ -85,7 +89,7 @@ export function useUser() {
       await client("/me/email-addresses", {
         method: "POST",
         body: form,
-      })
+      }),
     );
     return response;
   };
@@ -94,7 +98,7 @@ export function useUser() {
     const response = await responseMapper(
       await client(`/me/email-addresses/${id}/delete`, {
         method: "POST",
-      })
+      }),
     );
     return response;
   };
@@ -103,7 +107,7 @@ export function useUser() {
     const response = await responseMapper(
       await client(`/me/email-addresses/${id}/prepare-verification`, {
         method: "POST",
-      })
+      }),
     );
     return response;
   };
@@ -114,13 +118,16 @@ export function useUser() {
         `/me/email-addresses/${id}/attempt-verification?code=${otp}`,
         {
           method: "POST",
-        }
-      )
+        },
+      ),
     );
     return response;
   };
 
-  const createPhoneNumber = async (phone_number: string, country_code: string) => {
+  const createPhoneNumber = async (
+    phone_number: string,
+    country_code: string,
+  ) => {
     const form = new FormData();
     form.append("phone_number", phone_number);
     form.append("country_code", country_code);
@@ -129,7 +136,7 @@ export function useUser() {
       await client("/me/phone-numbers", {
         method: "POST",
         body: form,
-      })
+      }),
     );
     return response;
   };
@@ -138,7 +145,7 @@ export function useUser() {
     const response = await responseMapper(
       await client(`/me/phone-numbers/${id}/delete`, {
         method: "POST",
-      })
+      }),
     );
     return response;
   };
@@ -147,7 +154,7 @@ export function useUser() {
     const response = await responseMapper(
       await client(`/me/phone-numbers/${id}/prepare-verification`, {
         method: "POST",
-      })
+      }),
     );
     return response;
   };
@@ -155,12 +162,12 @@ export function useUser() {
   const attemptPhoneVerification = async (id: string, otp: string) => {
     const form = new FormData();
     form.append("code", otp);
-    
+
     const response = await responseMapper(
       await client(`/me/phone-numbers/${id}/attempt-verification`, {
         method: "POST",
         body: form,
-      })
+      }),
     );
     return response;
   };
@@ -169,7 +176,7 @@ export function useUser() {
     const response = await responseMapper(
       await client(`/me/phone-numbers/${id}/make-primary`, {
         method: "POST",
-      })
+      }),
     );
     mutate();
     return response;
@@ -179,7 +186,7 @@ export function useUser() {
     const response = await responseMapper(
       await client(`/me/email-addresses/${id}/make-primary`, {
         method: "POST",
-      })
+      }),
     );
     return response;
   };
@@ -188,7 +195,7 @@ export function useUser() {
     const response = await responseMapper<UserAuthenticator>(
       await client("/me/authenticator", {
         method: "POST",
-      })
+      }),
     );
     return response.data;
   };
@@ -204,7 +211,7 @@ export function useUser() {
       await client("/me/authenticator/attempt-verification", {
         method: "POST",
         body: form,
-      })
+      }),
     );
     return response;
   };
@@ -213,7 +220,7 @@ export function useUser() {
     const response = await responseMapper(
       await client(`/me/authenticator/${id}/delete`, {
         method: "POST",
-      })
+      }),
     );
     return response;
   };
@@ -222,7 +229,7 @@ export function useUser() {
     const response = await responseMapper<string[]>(
       await client("/me/backup-codes", {
         method: "POST",
-      })
+      }),
     );
     return response.data;
   };
@@ -235,7 +242,7 @@ export function useUser() {
       await client("/me/profile-picture", {
         method: "POST",
         body: formData,
-      })
+      }),
     );
     return response;
   };
@@ -244,14 +251,14 @@ export function useUser() {
     const response = await responseMapper<string[]>(
       await client("/me/backup-codes/regenerate", {
         method: "POST",
-      })
+      }),
     );
     return response.data;
   };
 
   const updatePassword = async (
     currentPassword: string,
-    newPassword: string
+    newPassword: string,
   ) => {
     const form = new FormData();
     form.append("current_password", currentPassword);
@@ -261,7 +268,7 @@ export function useUser() {
       await client("/me/update-password", {
         method: "POST",
         body: form,
-      })
+      }),
     );
     return response;
   };
@@ -274,7 +281,7 @@ export function useUser() {
       await client("/me/remove-password", {
         method: "POST",
         body: form,
-      })
+      }),
     );
     mutate(); // Refresh user data after removing password
     return response;
@@ -288,7 +295,7 @@ export function useUser() {
       await client("/me/account/delete", {
         method: "POST",
         body: form,
-      })
+      }),
     );
     return response;
   };
@@ -297,27 +304,33 @@ export function useUser() {
     const response = await responseMapper(
       await client(`/me/social-connections/${id}/disconnect`, {
         method: "POST",
-      })
+      }),
     );
     return response;
   };
 
-  const connectSocialAccount = async ({ provider, redirectUri }: { provider: string; redirectUri?: string }) => {
+  const connectSocialAccount = async ({
+    provider,
+    redirectUri,
+  }: {
+    provider: string;
+    redirectUri?: string;
+  }) => {
     const params = new URLSearchParams({ provider });
     if (redirectUri) {
       params.append("redirect_uri", redirectUri);
     }
-    
+
     const response = await responseMapper<{ oauth_url: string }>(
       await client(`/me/init-sso-connection?${params.toString()}`, {
         method: "POST",
-      })
+      }),
     );
-    
+
     if ("data" in response && response.data?.oauth_url) {
       window.open(response.data.oauth_url, "_blank");
     }
-    
+
     return response;
   };
 
@@ -357,16 +370,18 @@ export function useUser() {
 
 export function useUserSignins() {
   const { client, loading } = useClient();
-  const { data: signins, error, isLoading, mutate } = useSWR(
-    loading ? null : "/me/signins",
-    () => fetchUserSignins(client)
-  );
+  const {
+    data: signins,
+    error,
+    isLoading,
+    mutate,
+  } = useSWR(loading ? null : "/me/signins", () => fetchUserSignins(client));
 
   const removeSignin = async (id: string) => {
     const response = await responseMapper(
       await client(`/me/signins/${id}/signout`, {
         method: "POST",
-      })
+      }),
     );
     return response;
   };
@@ -377,5 +392,49 @@ export function useUserSignins() {
     removeSignin,
     refetch: mutate,
     loading: isLoading || loading,
+  };
+}
+
+export function useActiveTenancy() {
+  const { session, loading: sessionLoading } = useSession();
+  const { loading: organizationMembershipsLoading, organizationMemberships } =
+    useOrganizationMemberships();
+  const { loading: useWorkspaceMembershipsLoading, workspaceMemberships } =
+    useWorkspaceMemberships();
+
+  if (
+    sessionLoading ||
+    organizationMembershipsLoading ||
+    useWorkspaceMembershipsLoading
+  )
+    return {
+      loading: true,
+      orgMembership: null,
+      workspaceMembership: null,
+    };
+
+  const activeOrganizationMembership = useMemo(() => {
+    if (!session || !session.signins || session.signins.length === 0)
+      return null;
+    return organizationMemberships?.find(
+      (membership) =>
+        membership.id ===
+        session.active_signin?.active_organization_membership_id,
+    );
+  }, [session]);
+
+  const activeWorkspaceMembership = useMemo(() => {
+    if (!session || !session.signins || session.signins.length === 0)
+      return null;
+    return workspaceMemberships?.find(
+      (membership) =>
+        membership.id === session.active_signin?.active_workspace_membership_id,
+    );
+  }, [session]);
+
+  return {
+    loading: false,
+    orgMembership: activeOrganizationMembership,
+    workspaceMembership: activeWorkspaceMembership,
   };
 }
