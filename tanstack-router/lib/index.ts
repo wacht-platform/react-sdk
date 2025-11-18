@@ -48,6 +48,8 @@ export {
   useChannelCounts,
   useAgentConversation,
   useConversationSessions,
+  useActiveOrganization,
+  useActiveTenancy,
 } from "@wacht/jsx";
 export { DeploymentProvider as BaseDeploymentProvider } from "@wacht/jsx";
 export { DeploymentProvider } from "./providers";
