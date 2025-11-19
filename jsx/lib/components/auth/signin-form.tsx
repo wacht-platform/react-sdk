@@ -3,7 +3,6 @@ import styled, { keyframes } from "styled-components";
 import { Loader2 } from "lucide-react";
 import { useSignInWithStrategy } from "../../hooks/use-signin";
 import type { OAuthProvider } from "../../hooks/use-signin";
-import { SignInStrategy } from "../../hooks/use-signin";
 import { useSession } from "../../hooks/use-session";
 import { DefaultStylesProvider } from "../utility/root";
 import { OTPInput } from "@/components/utility/otp-input";
@@ -184,8 +183,8 @@ function SignInFormContent() {
     discardSignInAttempt,
     error: signInErrors,
     setSignInAttempt,
-  } = useSignInWithStrategy(SignInStrategy.Generic);
-  const { signIn: oauthSignIn } = useSignInWithStrategy(SignInStrategy.Oauth);
+  } = useSignInWithStrategy("generic");
+  const { signIn: oauthSignIn } = useSignInWithStrategy("oauth");
   const [formData, setFormData] = useState<SignInParams>({
     email: "",
     username: "",

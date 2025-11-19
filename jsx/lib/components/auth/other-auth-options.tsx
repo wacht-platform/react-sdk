@@ -1,11 +1,7 @@
 import { useState } from "react";
 import styled from "styled-components";
 import { useDeployment } from "@/hooks/use-deployment";
-import {
-  useSignInWithStrategy,
-  SignInStrategy,
-  type OAuthProvider,
-} from "@/hooks/use-signin";
+import { useSignInWithStrategy, type OAuthProvider } from "@/hooks/use-signin";
 import { SocialAuthButtons } from "@/components/auth/social-buttons";
 import { useSignInContext } from "@/context/signin-provider";
 import { DeploymentSocialConnection } from "@/types";
@@ -37,7 +33,7 @@ const EmailButton = styled.button`
 
 export function OtherAuthOptions() {
   const { deployment } = useDeployment();
-  const { signIn: oauthSignIn } = useSignInWithStrategy(SignInStrategy.Oauth);
+  const { signIn: oauthSignIn } = useSignInWithStrategy("oauth");
   const {
     setFirstFactor,
     firstFactor,
@@ -51,7 +47,7 @@ export function OtherAuthOptions() {
     deployment?.social_connections.filter((conn) => conn.enabled) || [];
 
   const initSocialAuthSignIn = async (
-    connection: DeploymentSocialConnection
+    connection: DeploymentSocialConnection,
   ) => {
     if (isSubmitting) return;
 

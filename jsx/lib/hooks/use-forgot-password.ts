@@ -1,20 +1,17 @@
 import { useClient } from "./use-client";
 import { responseMapper } from "../utils/response-mapper";
 import { useState } from "react";
-import { ApiResult, ErrorInterface } from "@/types";
+import { ApiResult, ErrorInterface, Session } from "@/types";
 
 export function useForgotPassword() {
   const { client, loading } = useClient();
-  const [forgotPasswordLoading, setForgotPasswordLoading] = useState(false);
-  const [forgotPasswordError, setForgotPasswordError] = useState<Error | null>(
-    null
-  );
+
+  const [error, setError] = useState<Error | null>(null);
 
   const forgotPassword = async (
     email: string
   ): Promise<ApiResult<{}, ErrorInterface>> => {
-    setForgotPasswordLoading(true);
-    setForgotPasswordError(null);
+    setError(null);
 
     const form = new FormData();
     form.append("email", email);
@@ -26,40 +23,45 @@ export function useForgotPassword() {
 
     const result = await responseMapper<{}>(response);
 
-    setForgotPasswordLoading(false);
-
     if ("errors" in result && result.errors) {
-      setForgotPasswordError(new Error(result.errors[0].message));
+      setError(new Error(result.errors[0].message));
     }
 
     return result;
   };
 
-  return {
-    loading: loading || forgotPasswordLoading,
-    forgotPassword,
-    error: forgotPasswordError,
-  };
-}
-
-export function useResetPassword() {
-  const { client, loading } = useClient();
-  const [resetPasswordLoading, setResetPasswordLoading] = useState(false);
-  const [resetPasswordError, setResetPasswordError] = useState<Error | null>(
-    null
-  );
-
-  const resetPassword = async (
+  const verifyOtp = async (
     email: string,
-    otp: string,
-    password: string
-  ): Promise<ApiResult<{}, ErrorInterface>> => {
-    setResetPasswordLoading(true);
-    setResetPasswordError(null);
+    otp: string
+  ): Promise<ApiResult<{ token: string }, ErrorInterface>> => {
+    setError(null);
 
     const form = new FormData();
     form.append("email", email);
     form.append("otp", otp);
+
+    const response = await client("/auth/forgot-password", {
+      method: "POST",
+      body: form,
+    });
+
+    const result = await responseMapper<{ token: string }>(response);
+
+    if ("errors" in result && result.errors) {
+      setError(new Error(result.errors[0].message));
+    }
+
+    return result;
+  };
+
+  const resetPassword = async (
+    token: string,
+    password: string
+  ): Promise<ApiResult<Session, ErrorInterface>> => {
+    setError(null);
+
+    const form = new FormData();
+    form.append("token", token);
     form.append("password", password);
 
     const response = await client("/auth/reset-password", {
@@ -67,20 +69,20 @@ export function useResetPassword() {
       body: form,
     });
 
-    const result = await responseMapper<{}>(response);
-
-    setResetPasswordLoading(false);
+    const result = await responseMapper<Session>(response);
 
     if ("errors" in result && result.errors) {
-      setResetPasswordError(new Error(result.errors[0].message));
+      setError(new Error(result.errors[0].message));
     }
 
     return result;
   };
 
   return {
-    loading: loading || resetPasswordLoading,
+    error,
+    loading,
+    forgotPassword,
+    verifyOtp,
     resetPassword,
-    error: resetPasswordError,
   };
 }

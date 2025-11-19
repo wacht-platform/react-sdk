@@ -3,7 +3,6 @@ import styled from "styled-components";
 import { useSignUp } from "../../hooks/use-signup";
 import {
   useSignInWithStrategy,
-  SignInStrategy,
   type OAuthProvider,
 } from "../../hooks/use-signin";
 import { useDeployment } from "../../hooks/use-deployment";
@@ -246,7 +245,7 @@ export function SignUpForm() {
     discardSignupAttempt,
     errors: signUpErrors,
   } = useSignUp();
-  const { signIn: oauthSignIn } = useSignInWithStrategy(SignInStrategy.Oauth);
+  const { signIn: oauthSignIn } = useSignInWithStrategy("oauth");
   const { deployment } = useDeployment();
   const { navigate } = useNavigation();
   const { session, refetch: refetchSession } = useSession();

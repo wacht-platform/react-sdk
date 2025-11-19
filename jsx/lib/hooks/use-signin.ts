@@ -84,15 +84,14 @@ type SignInOauth = ({
   redirectUri?: string;
 }) => Promise<ApiResult<InitSSOResponseType>>;
 
-export enum SignInStrategy {
-  Username = "username",
-  Email = "email",
-  Phone = "phone",
-  EmailOTP = "email_otp",
-  MagicLink = "magic_link",
-  Oauth = "oauth",
-  Generic = "generic",
-}
+type SignInStrategy =
+  | "username"
+  | "email"
+  | "phone"
+  | "email_otp"
+  | "magic_link"
+  | "oauth"
+  | "generic";
 
 // Declarative verification parameter types
 type EmailOTPVerificationParams = {
@@ -123,13 +122,13 @@ type PrepareVerificationResponse = {
 };
 
 type CreateSignInStrategyResult = {
-  (strategy: SignInStrategy.Username): SignInPlainUsername;
-  (strategy: SignInStrategy.Email): SignInPlainEmail;
-  (strategy: SignInStrategy.Phone): SignInPhone;
-  (strategy: SignInStrategy.EmailOTP): SignInEmailOTP;
-  (strategy: SignInStrategy.MagicLink): SignInMagicLink;
-  (strategy: SignInStrategy.Oauth): SignInOauth;
-  (strategy: SignInStrategy.Generic): SignInGeneric;
+  (strategy: "username"): SignInPlainUsername;
+  (strategy: "email"): SignInPlainEmail;
+  (strategy: "phone"): SignInPhone;
+  (strategy: "email_otp"): SignInEmailOTP;
+  (strategy: "magic_link"): SignInMagicLink;
+  (strategy: "oauth"): SignInOauth;
+  (strategy: "generic"): SignInGeneric;
 };
 
 type SignIn = {
@@ -170,29 +169,13 @@ function builder(
   setError: (error: ApiResult<unknown, ErrorInterface> | null) => void,
 ): CreateSignInStrategyResult {
   const functionMap = {
-    [SignInStrategy.Username]: builderUsername(
-      client,
-      setSignInAttempt,
-      setError,
-    ),
-    [SignInStrategy.Email]: builderEmail(client, setSignInAttempt, setError),
-    [SignInStrategy.Phone]: builderPhone(client, setSignInAttempt, setError),
-    [SignInStrategy.EmailOTP]: builderEmailOTP(
-      client,
-      setSignInAttempt,
-      setError,
-    ),
-    [SignInStrategy.MagicLink]: builderMagicLink(
-      client,
-      setSignInAttempt,
-      setError,
-    ),
-    [SignInStrategy.Oauth]: builderOauth(client, setError),
-    [SignInStrategy.Generic]: builderGeneric(
-      client,
-      setSignInAttempt,
-      setError,
-    ),
+    ["username"]: builderUsername(client, setSignInAttempt, setError),
+    ["email"]: builderEmail(client, setSignInAttempt, setError),
+    ["phone"]: builderPhone(client, setSignInAttempt, setError),
+    ["email_otp"]: builderEmailOTP(client, setSignInAttempt, setError),
+    ["magic_link"]: builderMagicLink(client, setSignInAttempt, setError),
+    ["oauth"]: builderOauth(client, setError),
+    ["generic"]: builderGeneric(client, setSignInAttempt, setError),
   };
 
   return function signInBuilder(strategy: SignInStrategy) {
@@ -523,13 +506,13 @@ export function useSignIn(): UseSignInReturnType {
 }
 
 type SignInFunction<T extends SignInStrategy> = {
-  [SignInStrategy.Username]: SignInPlainUsername;
-  [SignInStrategy.Email]: SignInPlainEmail;
-  [SignInStrategy.Phone]: SignInPhone;
-  [SignInStrategy.EmailOTP]: SignInEmailOTP;
-  [SignInStrategy.MagicLink]: SignInMagicLink;
-  [SignInStrategy.Oauth]: SignInOauth;
-  [SignInStrategy.Generic]: SignInGeneric;
+  ["username"]: SignInPlainUsername;
+  ["email"]: SignInPlainEmail;
+  ["phone"]: SignInPhone;
+  ["email_otp"]: SignInEmailOTP;
+  ["magic_link"]: SignInMagicLink;
+  ["oauth"]: SignInOauth;
+  ["generic"]: SignInGeneric;
 }[T];
 
 export type UseSignInWithStrategyReturnType<T extends SignInStrategy> =
@@ -582,20 +565,20 @@ export function useSignInWithStrategy<T extends SignInStrategy>(
 
   const strategyFunction = (() => {
     switch (strategy) {
-      case SignInStrategy.Username:
-        return signIn.createStrategy(SignInStrategy.Username);
-      case SignInStrategy.Email:
-        return signIn.createStrategy(SignInStrategy.Email);
-      case SignInStrategy.Phone:
-        return signIn.createStrategy(SignInStrategy.Phone);
-      case SignInStrategy.EmailOTP:
-        return signIn.createStrategy(SignInStrategy.EmailOTP);
-      case SignInStrategy.MagicLink:
-        return signIn.createStrategy(SignInStrategy.MagicLink);
-      case SignInStrategy.Oauth:
-        return signIn.createStrategy(SignInStrategy.Oauth);
-      case SignInStrategy.Generic:
-        return signIn.createStrategy(SignInStrategy.Generic);
+      case "username":
+        return signIn.createStrategy("username");
+      case "email":
+        return signIn.createStrategy("email");
+      case "phone":
+        return signIn.createStrategy("phone");
+      case "email_otp":
+        return signIn.createStrategy("email_otp");
+      case "magic_link":
+        return signIn.createStrategy("magic_link");
+      case "oauth":
+        return signIn.createStrategy("oauth");
+      case "generic":
+        return signIn.createStrategy("generic");
       default:
         throw new Error("Invalid sign-in strategy");
     }

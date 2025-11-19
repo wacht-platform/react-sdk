@@ -4,11 +4,12 @@ import { Button, Input, FormGroup, Label, Form } from "../utility";
 import { OTPInput } from "../utility/otp-input";
 import {
   useForgotPassword,
-  useResetPassword,
 } from "../../hooks/use-forgot-password";
 import { OtherAuthOptions } from "./other-auth-options";
 import { DefaultStylesProvider } from "../utility/root";
 import { AuthFormImage } from "./auth-image";
+import { useDeployment } from "@/hooks/use-deployment";
+import { useNavigation } from "@/hooks/use-navigation";
 
 interface ForgotPasswordProps {
   onBack: () => void;
@@ -101,30 +102,32 @@ const Link = styled.a`
 `;
 
 export function ForgotPassword({ onBack }: ForgotPasswordProps) {
+  const { deployment } = useDeployment();
+  const { navigate } = useNavigation();
   const [step, setStep] = useState<"start" | "email" | "otp" | "reset">(
     "start"
   );
   const [email, setEmail] = useState("");
   const [otp, setOtp] = useState("");
+  const [token, setToken] = useState("");
   const [password, setPassword] = useState("");
   const [confirmPassword, setConfirmPassword] = useState("");
   const {
     forgotPassword,
-    loading: forgotPasswordLoading,
-    error: forgotPasswordError,
-  } = useForgotPassword();
-  const {
+    verifyOtp,
     resetPassword,
-    loading: resetPasswordLoading,
-    error: resetPasswordError,
-  } = useResetPassword();
+    error,
+  } = useForgotPassword();
+  const [loading, setLoading] = useState(false);
 
   const handleEmailSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     if (!email) {
       return;
     }
+    setLoading(true);
     const result = await forgotPassword(email);
+    setLoading(false);
     if (!result.errors) {
       setStep("otp");
     }
@@ -135,7 +138,13 @@ export function ForgotPassword({ onBack }: ForgotPasswordProps) {
     if (otp.length !== 6) {
       return;
     }
-    setStep("reset");
+    setLoading(true);
+    const result = await verifyOtp(email, otp);
+    setLoading(false);
+    if (!result.errors && result.data) {
+      setToken(result.data.token);
+      setStep("reset");
+    }
   };
 
   const handleResetSubmit = async (e: React.FormEvent) => {
@@ -146,9 +155,37 @@ export function ForgotPassword({ onBack }: ForgotPasswordProps) {
     if (password.length < 8) {
       return;
     }
-    const result = await resetPassword(email, otp, password);
-    if (!result.errors) {
-      onBack(); // Go back to sign in form
+    if (password.length < 8) {
+      return;
+    }
+    setLoading(true);
+    const result = await resetPassword(token, password);
+    setLoading(false);
+    if (!result.errors && result.data) {
+      const session = result.data;
+      // Check for incomplete sign-in attempts (e.g. 2FA)
+      // We take the last attempt as it is the one created by the password reset
+      const incompleteAttempt =
+        session.signin_attempts && session.signin_attempts.length > 0
+          ? session.signin_attempts[session.signin_attempts.length - 1]
+          : null;
+
+      if (incompleteAttempt && !incompleteAttempt.completed) {
+        const signinUrl = deployment?.ui_settings?.sign_in_page_url;
+        if (signinUrl) {
+          const url = new URL(signinUrl, window.location.origin);
+          url.searchParams.set("signin_attempt_id", incompleteAttempt.id);
+          navigate(url.toString());
+        } else {
+          // Fallback if no sign-in URL is configured
+          onBack();
+        }
+      } else {
+        // Auto-login successful
+        const redirectUrl =
+          deployment?.ui_settings?.after_signin_redirect_url || "/";
+        navigate(redirectUrl);
+      }
     }
   };
 
@@ -162,7 +199,7 @@ export function ForgotPassword({ onBack }: ForgotPasswordProps) {
 
       <ResetButton
         onClick={() => setStep("email")}
-        disabled={forgotPasswordLoading}
+        disabled={loading}
       >
         Reset your password
       </ResetButton>
@@ -212,15 +249,15 @@ export function ForgotPassword({ onBack }: ForgotPasswordProps) {
                   required
                 />
               </FormGroup>
-              {forgotPasswordError && (
-                <ErrorMessage>{forgotPasswordError.message}</ErrorMessage>
+              {error && (
+                <ErrorMessage>{error.message}</ErrorMessage>
               )}
               <Button
                 type="submit"
-                disabled={forgotPasswordLoading}
+                disabled={loading}
                 style={{ width: "100%", marginTop: "var(--space-md)" }}
               >
-                {forgotPasswordLoading ? "Sending..." : "Send Code"}
+                {loading ? "Sending..." : "Send Code"}
               </Button>
             </Form>
             <Footer>
@@ -244,21 +281,21 @@ export function ForgotPassword({ onBack }: ForgotPasswordProps) {
             <Form onSubmit={handleOtpSubmit} noValidate>
               <OTPInput
                 onComplete={(code) => setOtp(code)}
-                isSubmitting={resetPasswordLoading}
-                error={resetPasswordError?.message}
+                isSubmitting={loading}
+                error={error?.message}
                 onResend={async () => {
                   await forgotPassword(email);
                 }}
               />
-              {resetPasswordError && (
-                <ErrorMessage>{resetPasswordError.message}</ErrorMessage>
+              {error && (
+                <ErrorMessage>{error.message}</ErrorMessage>
               )}
               <Button
                 type="submit"
-                disabled={resetPasswordLoading || otp.length !== 6}
+                disabled={loading || otp.length !== 6}
                 style={{ width: "100%", marginTop: "var(--space-md)" }}
               >
-                {resetPasswordLoading ? "Verifying..." : "Verify"}
+                {loading ? "Verifying..." : "Verify"}
               </Button>
             </Form>
             <Footer>
@@ -300,15 +337,15 @@ export function ForgotPassword({ onBack }: ForgotPasswordProps) {
                   required
                 />
               </FormGroup>
-              {resetPasswordError && (
-                <ErrorMessage>{resetPasswordError.message}</ErrorMessage>
+              {error && (
+                <ErrorMessage>{error.message}</ErrorMessage>
               )}
               <Button
                 type="submit"
-                disabled={resetPasswordLoading}
+                disabled={loading}
                 style={{ width: "100%", marginTop: "var(--space-md)" }}
               >
-                {resetPasswordLoading ? "Resetting..." : "Reset Password"}
+                {loading ? "Resetting..." : "Reset Password"}
               </Button>
             </Form>
             <Footer>
