@@ -3,6 +3,7 @@ import dts from "vite-plugin-dts";
 import { peerDependencies } from "./package.json";
 import react from "@vitejs/plugin-react";
 import preserveUseClientDirective from "rollup-plugin-preserve-use-client";
+import path from "path";
 
 export default defineConfig({
 	build: {
@@ -25,10 +26,10 @@ export default defineConfig({
 		sourcemap: true,
 		emptyOutDir: true,
 	},
-	plugins: [react(), dts()],
+	plugins: [react(), dts({ rollupTypes: true })],
 	resolve: {
 		alias: {
-			"@": "/lib",
+			"@": path.resolve(__dirname, "./lib"),
 		},
 	},
 	define: {
