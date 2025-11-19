@@ -10,29 +10,29 @@ import { useNavigation } from "./use-navigation";
 
 type UseSessionReturnType =
   | {
-      loading: true;
-      session: never;
-      switchSignIn: never;
-      switchOrganization: never;
-      switchWorkspace: never;
-      signOut: never;
-      getToken: never;
-      addNewAccount: never;
-      error: Error | null;
-      refetch: () => Promise<void>;
-    }
+    loading: true;
+    session: never;
+    switchSignIn: never;
+    switchOrganization: never;
+    switchWorkspace: never;
+    signOut: never;
+    getToken: never;
+    addNewAccount: never;
+    error: Error | null;
+    refetch: () => Promise<void>;
+  }
   | {
-      loading: false;
-      error: Error | null;
-      session: Session;
-      switchSignIn: (signInId: string) => Promise<void>;
-      signOut: (signInId?: string) => Promise<void>;
-      getToken: (template?: string) => Promise<string>;
-      switchOrganization: (organizationId?: string) => Promise<void>;
-      switchWorkspace: (workspaceId: string) => Promise<void>;
-      addNewAccount: () => void;
-      refetch: () => Promise<void>;
-    };
+    loading: false;
+    error: Error | null;
+    session: Session;
+    switchSignIn: (signInId: string) => Promise<void>;
+    signOut: (signInId?: string) => Promise<void>;
+    getToken: (template?: string) => Promise<string>;
+    switchOrganization: (organizationId?: string) => Promise<void>;
+    switchWorkspace: (workspaceId: string) => Promise<void>;
+    addNewAccount: () => void;
+    refetch: () => Promise<void>;
+  };
 
 async function fetchSession(client: Client): Promise<Session> {
   const response = await client("/session", {
@@ -73,8 +73,7 @@ async function switchOrganization(
   organizationId?: string
 ): Promise<ApiResult<Session>> {
   const response = await client(
-    `/session/switch-organization${
-      organizationId ? `?organization_id=${organizationId}` : ""
+    `/session/switch-organization${organizationId ? `?organization_id=${organizationId}` : ""
     }`,
     {
       method: "POST",
@@ -143,7 +142,7 @@ export function useSession(): UseSessionReturnType {
         return existingToken?.token || "";
       }
       if (!fetchSingleton.get(template)) {
-        fetchSingleton.set(template, getSessionToken(client));
+        fetchSingleton.set(template, getSessionToken(client, template));
       }
       const data = await fetchSingleton.get(template)!;
       fetchSingleton.delete(template);
