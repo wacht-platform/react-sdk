@@ -1,6 +1,7 @@
 "use client";
 
 import { useEffect, useState } from "react";
+import styled from "styled-components";
 import {
   useActiveOrganization,
   useOrganizationList,
@@ -20,6 +21,12 @@ interface RequireActiveTenancyProps {
 }
 
 type DialogMode = "select" | "createOrg" | "createWorkspace" | null;
+
+const StyledDialogContent = styled(Dialog.Content)`
+  transition: width 0.3s ease-in-out;
+  padding: 0;
+  max-width: 90vw;
+`;
 
 export const RequireActiveTenancy = ({
   children,
@@ -47,6 +54,11 @@ export const RequireActiveTenancy = ({
 
     if (organizations?.length === 0) {
       setDialogMode("createOrg");
+      return;
+    }
+
+    // If we are already in a creation mode, don't override it
+    if (dialogMode === "createOrg" || dialogMode === "createWorkspace") {
       return;
     }
 
@@ -78,6 +90,7 @@ export const RequireActiveTenancy = ({
     activeWorkspace,
     workspaces,
     workspacesEnabled,
+    dialogMode,
   ]);
 
   if (organizationsLoading || sessionLoading) {
@@ -115,11 +128,9 @@ export const RequireActiveTenancy = ({
     <DefaultStylesProvider>
       <Dialog isOpen={true}>
         <Dialog.Overlay>
-          <Dialog.Content
+          <StyledDialogContent
             style={{
-              width: dialogMode === "select" ? "500px" : "900px",
-              maxWidth: "90vw",
-              padding: 0,
+              width: "800px",
             }}
           >
             {dialogMode === "select" ? (
@@ -140,7 +151,11 @@ export const RequireActiveTenancy = ({
                 {dialogMode === "createOrg" && (
                   <CreateOrganizationForm
                     onSuccess={handleOrganizationCreated}
-                    onCancel={() => setDialogMode("select")}
+                    onCancel={
+                      organizations && organizations.length > 0
+                        ? () => setDialogMode("select")
+                        : undefined
+                    }
                   />
                 )}
 
@@ -165,7 +180,7 @@ export const RequireActiveTenancy = ({
                   )}
               </Dialog.Body>
             )}
-          </Dialog.Content>
+          </StyledDialogContent>
         </Dialog.Overlay>
       </Dialog>
     </DefaultStylesProvider>

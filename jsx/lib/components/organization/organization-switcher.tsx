@@ -199,7 +199,7 @@ const MenuItemInfo = styled.div`
 `;
 
 const MenuItemName = styled.span`
-  font-weight: 500;
+  font-weight: 400;
   font-size: 13px;
   overflow: hidden;
   text-overflow: ellipsis;
@@ -344,7 +344,7 @@ const StatusMessage = styled.div<{ $isError?: boolean }>`
     props.$isError ? "var(--color-error)" : "var(--color-primary)"};
   border: 1px solid
     ${(props) =>
-      props.$isError ? "var(--color-error)" : "var(--color-primary)"};
+    props.$isError ? "var(--color-error)" : "var(--color-primary)"};
   display: flex;
   align-items: center;
   gap: 6px;
@@ -835,16 +835,18 @@ export const OrganizationSwitcher = ({
                                   m.organization.id === activeOrganization.id,
                               );
                               if (
-                                membership?.role &&
-                                membership.role.length > 0
+                                membership?.roles &&
+                                membership.roles.length > 0
                               ) {
+                                const firstRole = membership.roles[0].name;
+                                const remainingRolesCount = membership.roles.length - 1;
+                                const roleDisplay = remainingRolesCount > 0
+                                  ? `${firstRole.charAt(0).toUpperCase() + firstRole.slice(1)} +${remainingRolesCount}`
+                                  : firstRole.charAt(0).toUpperCase() + firstRole.slice(1);
+
                                 return (
                                   <MenuItemRole>
-                                    {membership.role[0].name === "owner"
-                                      ? "Owner"
-                                      : membership.role[0].name === "admin"
-                                        ? "Admin"
-                                        : "Member"}
+                                    {roleDisplay}
                                   </MenuItemRole>
                                 );
                               }
@@ -919,17 +921,17 @@ export const OrganizationSwitcher = ({
                                     isWorkspaceActive
                                       ? undefined
                                       : () =>
-                                          handleSwitchWorkspace(workspace.id)
+                                        handleSwitchWorkspace(workspace.id)
                                   }
                                   {...(isWorkspaceActive
                                     ? {
-                                        style: isSwitching
-                                          ? {
-                                              pointerEvents: "none",
-                                              opacity: 0.7,
-                                            }
-                                          : undefined,
-                                      }
+                                      style: isSwitching
+                                        ? {
+                                          pointerEvents: "none",
+                                          opacity: 0.7,
+                                        }
+                                        : undefined,
+                                    }
                                     : { disabled: isSwitching })}
                                 >
                                   {isWorkspaceActive && <ActiveIndicator />}
@@ -1100,16 +1102,16 @@ export const OrganizationSwitcher = ({
                                       </MenuItemAvatar>
                                       <MenuItemInfo>
                                         <MenuItemName>{org.name}</MenuItemName>
-                                        {membership.role &&
-                                          membership.role.length > 0 && (
+                                        {membership.roles &&
+                                          membership.roles.length > 0 && (
                                             <MenuItemRole>
-                                              {membership.role[0].name ===
-                                              "owner"
-                                                ? "Owner"
-                                                : membership.role[0].name ===
-                                                    "admin"
-                                                  ? "Admin"
-                                                  : "Member"}
+                                              {(() => {
+                                                const firstRole = membership.roles[0].name;
+                                                const remainingRolesCount = membership.roles.length - 1;
+                                                return remainingRolesCount > 0
+                                                  ? `${firstRole.charAt(0).toUpperCase() + firstRole.slice(1)} +${remainingRolesCount}`
+                                                  : firstRole.charAt(0).toUpperCase() + firstRole.slice(1);
+                                              })()}
                                             </MenuItemRole>
                                           )}
                                       </MenuItemInfo>
@@ -1142,19 +1144,19 @@ export const OrganizationSwitcher = ({
                                                 isWorkspaceActive
                                                   ? undefined
                                                   : () =>
-                                                      handleSwitchWorkspace(
-                                                        workspace.id,
-                                                      )
+                                                    handleSwitchWorkspace(
+                                                      workspace.id,
+                                                    )
                                               }
                                               {...(isWorkspaceActive
                                                 ? {
-                                                    style: isSwitching
-                                                      ? {
-                                                          pointerEvents: "none",
-                                                          opacity: 0.7,
-                                                        }
-                                                      : undefined,
-                                                  }
+                                                  style: isSwitching
+                                                    ? {
+                                                      pointerEvents: "none",
+                                                      opacity: 0.7,
+                                                    }
+                                                    : undefined,
+                                                }
                                                 : { disabled: isSwitching })}
                                             >
                                               {isWorkspaceActive && (
@@ -1269,40 +1271,40 @@ export const OrganizationSwitcher = ({
                     {/* Show create button at bottom - workspace if enabled, otherwise organization */}
                     {workspacesEnabled
                       ? activeOrganization && (
-                          <CreateOrgButton
-                            onClick={() => {
-                              setSelectedOrgForWorkspace(activeOrganization.id);
-                              createWorkspaceDialog.open();
-                            }}
-                            disabled={isSwitching}
-                          >
-                            <MenuItemContent>
-                              <PlusIcon>
-                                <Plus size={12} />
-                              </PlusIcon>
-                              <MenuItemInfo>
-                                <MenuItemName>Create workspace</MenuItemName>
-                              </MenuItemInfo>
-                            </MenuItemContent>
-                          </CreateOrgButton>
-                        )
+                        <CreateOrgButton
+                          onClick={() => {
+                            setSelectedOrgForWorkspace(activeOrganization.id);
+                            createWorkspaceDialog.open();
+                          }}
+                          disabled={isSwitching}
+                        >
+                          <MenuItemContent>
+                            <PlusIcon>
+                              <Plus size={12} />
+                            </PlusIcon>
+                            <MenuItemInfo>
+                              <MenuItemName>Create workspace</MenuItemName>
+                            </MenuItemInfo>
+                          </MenuItemContent>
+                        </CreateOrgButton>
+                      )
                       : allowUsersToCreateOrgs && (
-                          <CreateOrgButton
-                            onClick={() => {
-                              createOrgDialog.open();
-                            }}
-                            disabled={isSwitching}
-                          >
-                            <MenuItemContent>
-                              <PlusIcon>
-                                <Plus size={12} />
-                              </PlusIcon>
-                              <MenuItemInfo>
-                                <MenuItemName>Create organization</MenuItemName>
-                              </MenuItemInfo>
-                            </MenuItemContent>
-                          </CreateOrgButton>
-                        )}
+                        <CreateOrgButton
+                          onClick={() => {
+                            createOrgDialog.open();
+                          }}
+                          disabled={isSwitching}
+                        >
+                          <MenuItemContent>
+                            <PlusIcon>
+                              <Plus size={12} />
+                            </PlusIcon>
+                            <MenuItemInfo>
+                              <MenuItemName>Create organization</MenuItemName>
+                            </MenuItemInfo>
+                          </MenuItemContent>
+                        </CreateOrgButton>
+                      )}
                   </div>
                 )}
               </Dropdown>

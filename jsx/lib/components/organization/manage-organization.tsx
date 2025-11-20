@@ -135,7 +135,7 @@ const Tab = styled.button<{ $isActive: boolean }>`
   border: none;
   background: none;
   font-size: 14px;
-  font-weight: 500;
+  font-weight: 400;
   color: ${(props) =>
     props.$isActive ? "var(--color-foreground)" : "var(--color-muted)"};
   cursor: pointer;
@@ -1190,7 +1190,7 @@ const AvatarPlaceholder = styled.div`
   align-items: center;
   justify-content: center;
   color: var(--color-muted);
-  font-weight: 500;
+  font-weight: 400;
   font-size: 14px;
   overflow: hidden;
 `;
@@ -1365,9 +1365,8 @@ const MembersSection = () => {
                         {userData?.profile_picture_url ? (
                           <img
                             src={userData.profile_picture_url}
-                            alt={`${userData.first_name || ""} ${
-                              userData.last_name || ""
-                            }`}
+                            alt={`${userData.first_name || ""} ${userData.last_name || ""
+                              }`}
                             style={{
                               width: "100%",
                               height: "100%",
@@ -2086,7 +2085,7 @@ export const ManageOrganization = () => {
   return (
     <TypographyProvider>
       <ScreenContext.Provider
-        value={{ screen: null, setScreen: () => {}, toast }}
+        value={{ screen: null, setScreen: () => { }, toast }}
       >
         <Container>
           <TabsContainer>

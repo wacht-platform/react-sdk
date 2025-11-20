@@ -33,7 +33,7 @@ const Header = styled.div`
 const Title = styled.h3`
   margin: 0;
   font-size: var(--font-xs);
-  font-weight: 500;
+  font-weight: 400;
   color: var(--color-foreground);
 `;
 
@@ -100,36 +100,36 @@ export const AddWorkspaceRolePopover = ({
 
   useEffect(() => {
     setMounted(true);
-    
+
     // Calculate position after a short delay
     const timer = setTimeout(() => {
       if (!popoverRef.current || !triggerRef?.current) return;
-      
+
       const triggerButton = triggerRef.current;
-      
+
       if (triggerButton) {
         const rect = triggerButton.getBoundingClientRect();
         const popoverWidth = 360;
         const popoverHeight = 250; // Approximate height
         const spacing = 8;
-        
+
         let top = 0;
         let left = 0;
-        
+
         // Check available space
         const spaceBottom = window.innerHeight - rect.bottom;
         const spaceTop = rect.top;
-        
+
         // Prefer to open below if there's space
         if (spaceBottom >= popoverHeight + spacing) {
           top = rect.bottom + spacing;
           // Align to right edge of button (bottom-right)
           left = rect.right - popoverWidth;
-          
+
           // If it goes off left edge, align to left edge of button instead (bottom-left)
           if (left < spacing) {
             left = rect.left;
-            
+
             // If that also goes off right edge, center it on screen
             if (left + popoverWidth > window.innerWidth - spacing) {
               left = (window.innerWidth - popoverWidth) / 2;
@@ -141,11 +141,11 @@ export const AddWorkspaceRolePopover = ({
           top = rect.top - popoverHeight - spacing;
           // Align to right edge of button (top-right)
           left = rect.right - popoverWidth;
-          
+
           // If it goes off left edge, align to left edge of button instead (top-left)
           if (left < spacing) {
             left = rect.left;
-            
+
             // If that also goes off right edge, center it on screen
             if (left + popoverWidth > window.innerWidth - spacing) {
               left = (window.innerWidth - popoverWidth) / 2;
@@ -157,36 +157,36 @@ export const AddWorkspaceRolePopover = ({
           // Position at bottom with scrolling if needed
           top = rect.bottom + spacing;
           left = rect.right - popoverWidth;
-          
+
           if (left < spacing) {
             left = rect.left;
           }
         }
-        
+
         setPosition({ top, left });
       }
     }, 10);
-    
+
     // Add click outside listener
     const handleClickOutside = (event: MouseEvent) => {
       if (popoverRef.current && !popoverRef.current.contains(event.target as Node)) {
         onClose?.();
       }
     };
-    
+
     // Add escape key listener
     const handleEscape = (e: KeyboardEvent) => {
       if (e.key === "Escape") {
         onClose?.();
       }
     };
-    
+
     // Delay adding the listener to prevent immediate closure
     const listenerTimer = setTimeout(() => {
       document.addEventListener('mousedown', handleClickOutside);
       document.addEventListener('keydown', handleEscape);
     }, 100);
-    
+
     return () => {
       clearTimeout(timer);
       clearTimeout(listenerTimer);
@@ -220,7 +220,7 @@ export const AddWorkspaceRolePopover = ({
   }
 
   return (
-    <PopoverContainer 
+    <PopoverContainer
       ref={popoverRef}
       style={{
         top: `${position.top}px`,

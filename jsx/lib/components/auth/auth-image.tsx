@@ -4,7 +4,7 @@ import { useDeployment } from "../../hooks/use-deployment";
 const ImageContainer = styled.div`
   display: flex;
   justify-content: center;
-  margin-bottom: var(--space-lg);
+  margin-bottom: var(--space-sm);
 `;
 
 const LogoImage = styled.img`

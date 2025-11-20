@@ -23,7 +23,7 @@ const Header = styled.div`
 
 const Title = styled.h1`
   font-size: var(--font-lg);
-  font-weight: 500;
+  font-weight: 400;
   color: var(--color-foreground);
   margin-bottom: var(--space-xs);
   margin-top: 0;
@@ -112,7 +112,7 @@ const SubMessage = styled.p`
 
 const EmailHighlight = styled.span`
   color: var(--color-primary);
-  font-weight: 500;
+  font-weight: 400;
 `;
 
 const Footer = styled.div`
@@ -125,7 +125,7 @@ const Footer = styled.div`
 const Link = styled.span`
   color: var(--color-primary);
   text-decoration: none;
-  font-weight: 500;
+  font-weight: 400;
   transition: color 0.2s;
   cursor: pointer;
 

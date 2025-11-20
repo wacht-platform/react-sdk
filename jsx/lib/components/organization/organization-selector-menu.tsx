@@ -3,73 +3,110 @@
 import { useState } from "react";
 import styled from "styled-components";
 import { Plus, Building2, Users, ChevronRight, ArrowLeft } from "lucide-react";
-import { useOrganizationList, useSession, useDeployment } from "@/hooks";
+import { useSession, useDeployment, useOrganizationMemberships } from "@/hooks";
 import { useWorkspaceList } from "@/hooks/use-workspace";
-import type { Organization, WorkspaceWithOrganization } from "@/types";
+import type { Organization, WorkspaceWithOrganization, OrganizationMembershipWithOrganization } from "@/types";
 import { AuthFormImage } from "../auth/auth-image";
-import { UserButton } from "../user/user-button";
 import { Button } from "../utility/button";
+import { UserButton } from "../user/user-button";
 
 const Container = styled.div`
   width: 100%;
-  padding: var(--space-2xl);
-  padding-bottom: var(--space-lg);
+  height: 500px;
   background: var(--color-background);
+  display: grid;
+  grid-template-columns: 280px 1fr;
+  border-radius: var(--radius-lg);
+  overflow: hidden;
 `;
 
-const HeaderBar = styled.div`
+const LeftColumn = styled.div`
+  background: var(--color-background-hover);
+  padding: 32px;
   display: flex;
+  flex-direction: column;
   justify-content: space-between;
-  align-items: center;
-  margin-bottom: var(--space-xl);
+  border-right: 1px solid var(--color-border);
+`;
+
+const RightColumn = styled.div`
+  padding: 32px;
+  display: flex;
+  flex-direction: column;
+  overflow: hidden;
+`;
+
+const ListSection = styled.div`
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  overflow: hidden;
+  margin-bottom: 24px;
+`;
+
+const ListHeader = styled.h2`
+  font-size: 14px;
+  font-weight: 400;
+  color: var(--color-secondary-text);
+  margin: 0 0 8px 0;
 `;
 
 const BackButton = styled.button`
   border: none;
   color: var(--color-secondary-text);
-  font-size: var(--font-xs);
   cursor: pointer;
-  padding: var(--space-xs) 0;
+  padding: 0;
   transition: color 0.2s ease;
-  font-weight: 400;
+  background: transparent;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  font-size: var(--font-sm);
+  margin-bottom: 16px;
 
   &:hover {
     color: var(--color-foreground);
   }
 
   svg {
-    width: 14px;
-    height: 14px;
+    width: 16px;
+    height: 16px;
   }
 `;
 
 const TitleSection = styled.div`
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  gap: 4px;
   flex: 1;
 `;
 
 const Title = styled.h1`
-  font-size: var(--font-md);
+  font-size: 16px;
   font-weight: 400;
   color: var(--color-foreground);
   margin: 0;
+  line-height: 1.2;
 `;
 
 const Subtitle = styled.p`
   color: var(--color-secondary-text);
-  font-size: var(--font-xs);
-  margin: var(--space-2xs) 0 0 0;
+  font-size: var(--font-sm);
+  margin: 0;
   font-weight: 400;
 `;
 
 const ListContainer = styled.div`
-  max-height: 400px;
+  flex: 1;
   overflow-y: auto;
-  border-top: 1px solid var(--color-border);
-  border-bottom: 1px solid var(--color-border);
-  margin: var(--space-lg) 0;
+  display: flex;
+  flex-direction: column;
+  gap: 0;
+  padding-right: 8px;
 
   &::-webkit-scrollbar {
-    width: 6px;
+    width: 4px;
   }
 
   &::-webkit-scrollbar-track {
@@ -78,7 +115,7 @@ const ListContainer = styled.div`
 
   &::-webkit-scrollbar-thumb {
     background: var(--color-border);
-    border-radius: 3px;
+    border-radius: 2px;
   }
 `;
 
@@ -87,21 +124,18 @@ const ListItem = styled.button`
   align-items: center;
   gap: var(--space-md);
   width: 100%;
-  padding: var(--space-md);
+  padding: 12px 0px;
   text-align: left;
   border: none;
+  border-bottom: 1px solid var(--color-border);
   background: transparent;
   cursor: pointer;
   color: var(--color-foreground);
   transition: background-color 0.2s ease;
-  border-bottom: 1px solid var(--color-border);
+  font-size: var(--font-sm);
 
   &:last-child {
     border-bottom: none;
-  }
-
-  &:hover {
-    background: var(--color-background-hover);
   }
 
   &:disabled {
@@ -113,7 +147,7 @@ const ListItem = styled.button`
 const Avatar = styled.div`
   width: 40px;
   height: 40px;
-  border-radius: 50%;
+  border-radius: var(--radius-md);
   overflow: hidden;
   display: flex;
   align-items: center;
@@ -122,7 +156,7 @@ const Avatar = styled.div`
   border: 1px solid var(--color-border);
   color: var(--color-secondary-text);
   font-size: 14px;
-  font-weight: 500;
+  font-weight: 400;
   flex-shrink: 0;
 `;
 
@@ -138,8 +172,8 @@ const ItemContent = styled.div`
 `;
 
 const ItemName = styled.div`
-  font-size: var(--font-sm);
-  font-weight: 500;
+  font-size: 15px;
+  font-weight: 400;
   color: var(--color-foreground);
   overflow: hidden;
   text-overflow: ellipsis;
@@ -172,64 +206,73 @@ const ItemArrow = styled.div`
   }
 `;
 
-const CreateButton = styled.button`
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  gap: var(--space-sm);
-  width: 100%;
-  padding: var(--space-md);
-  border: none;
-  background: transparent;
-  cursor: pointer;
-  color: var(--color-primary);
-  font-size: var(--font-xs);
-  font-weight: 500;
-  transition: background-color 0.2s ease;
+// const CreateButton = styled.button`
+//   display: flex;
+//   align-items: center;
+//   justify-content: center;
+//   gap: var(--space-md);
+//   width: 100%;
+//   padding: 12px 16px;
+//   border: none;
+//   border-radius: var(--radius-md);
+//   background: var(--color-primary);
+//   cursor: pointer;
+//   color: white;
+//   font-size: var(--font-sm);
+//   font-weight: 400;
+//   transition: all 0.2s ease;
+//   margin-top: var(--space-lg);
 
-  &:hover {
-    background: var(--color-background-hover);
-  }
+//   &:hover {
+//     background: var(--color-primary-hover);
+//   }
 
-  &:disabled {
-    cursor: not-allowed;
-    opacity: 0.6;
-  }
+//   &:disabled {
+//     cursor: not-allowed;
+//     opacity: 0.6;
+//   }
 
-  svg {
-    width: 14px;
-    height: 14px;
-  }
-`;
+//   svg {
+//     width: 16px;
+//     height: 16px;
+//     color: white;
+//   }
+// `;
 
 const EmptyState = styled.div`
   text-align: center;
-  padding: var(--space-3xl) var(--space-lg);
+  padding: 48px 24px;
   min-height: 200px;
   display: flex;
   flex-direction: column;
   align-items: center;
   justify-content: center;
   color: var(--color-secondary-text);
+  background: var(--color-background-hover);
+  border-radius: 12px;
+  border: 1px dashed var(--color-border);
 `;
 
 const EmptyStateTitle = styled.div`
-  font-size: var(--font-sm);
-  font-weight: 500;
+  font-size: 16px;
+  font-weight: 400;
   color: var(--color-foreground);
-  margin-bottom: var(--space-xs);
+  margin-bottom: 8px;
 `;
 
 const EmptyStateText = styled.div`
-  font-size: var(--font-xs);
+  font-size: 14px;
   color: var(--color-secondary-text);
-  margin-bottom: var(--space-lg);
+  margin-bottom: 24px;
+  max-width: 280px;
+  line-height: 1.5;
 `;
 
 const EmptyStateCTA = styled(Button)`
   width: auto;
   margin: 0 auto;
-  padding: var(--space-sm) var(--space-lg);
+  padding: 8px 24px;
+  border-radius: 8px;
 `;
 
 const Footer = styled.div`
@@ -243,7 +286,7 @@ const Footer = styled.div`
 const Link = styled.span`
   color: var(--color-primary);
   text-decoration: none;
-  font-weight: 500;
+  font-weight: 400;
   transition: color 0.2s;
   cursor: pointer;
 
@@ -263,7 +306,7 @@ export const OrganizationSelectorMenu = ({
   onCreateOrganization,
   onCreateWorkspace,
 }: OrganizationSelectorMenuProps) => {
-  const { organizations } = useOrganizationList();
+  const { organizationMemberships } = useOrganizationMemberships();
   const { workspaces } = useWorkspaceList();
   const { switchOrganization, switchWorkspace } = useSession();
   const { deployment } = useDeployment();
@@ -332,182 +375,198 @@ export const OrganizationSelectorMenu = ({
 
   const selectedOrgWorkspaces = selectedOrgForWorkspace
     ? workspaces?.filter(
-        (w: WorkspaceWithOrganization) =>
-          w.organization.id === selectedOrgForWorkspace.id,
-      )
+      (w: WorkspaceWithOrganization) =>
+        w.organization.id === selectedOrgForWorkspace.id,
+    )
     : [];
 
   return (
     <Container>
-      <AuthFormImage />
-
-      <HeaderBar>
-        <TitleSection>
-          <div style={{ display: "flex", gap: "6px" }}>
-            {showingWorkspaces && (
-              <BackButton onClick={() => setSelectedOrgForWorkspace(null)}>
-                <ArrowLeft />
-              </BackButton>
-            )}
+      <LeftColumn>
+        <div>
+          <AuthFormImage />
+          {showingWorkspaces && (
+            <BackButton onClick={() => setSelectedOrgForWorkspace(null)}>
+              <ArrowLeft size={16} /> Back
+            </BackButton>
+          )}
+          <TitleSection>
             <Title>{dialogTitle}</Title>
-          </div>
-          <Subtitle>{dialogSubtitle}</Subtitle>
-        </TitleSection>
-        <UserButton showName={false} />
-      </HeaderBar>
+            <Subtitle>{dialogSubtitle}</Subtitle>
+          </TitleSection>
+        </div>
+        <UserButton showName={true} />
+      </LeftColumn>
 
-      <ListContainer>
-        {showingWorkspaces ? (
-          <>
-            {selectedOrgWorkspaces && selectedOrgWorkspaces.length > 0 ? (
-              selectedOrgWorkspaces.map(
-                (workspace: WorkspaceWithOrganization) => (
+      <RightColumn>
+        <ListSection>
+          <ListHeader>
+            {showingWorkspaces ? "Workspaces" : "Your organizations"}
+          </ListHeader>
+          <ListContainer>
+            {showingWorkspaces ? (
+              <>
+                {selectedOrgWorkspaces && selectedOrgWorkspaces.length > 0 ? (
+                  selectedOrgWorkspaces.map(
+                    (workspace: WorkspaceWithOrganization) => (
+                      <ListItem
+                        key={workspace.id}
+                        onClick={() =>
+                          handleSelectWorkspace(selectedOrgForWorkspace, workspace)
+                        }
+                        disabled={switching === workspace.id}
+                      >
+                        <Avatar>
+                          {workspace.image_url ? (
+                            <AvatarImage
+                              src={workspace.image_url}
+                              alt={workspace.name}
+                            />
+                          ) : (
+                            getInitials(workspace.name).charAt(0)
+                          )}
+                        </Avatar>
+                        <ItemContent>
+                          <ItemName>{workspace.name}</ItemName>
+                          <ItemMeta>
+                            <Users />
+                            Workspace
+                          </ItemMeta>
+                        </ItemContent>
+                        <ItemArrow>
+                          <ChevronRight />
+                        </ItemArrow>
+                      </ListItem>
+                    ),
+                  )
+                ) : (
+                  <EmptyState>
+                    <EmptyStateTitle>No workspaces yet</EmptyStateTitle>
+                    <EmptyStateText>
+                      Create your first workspace for{" "}
+                      {selectedOrgForWorkspace?.name}
+                    </EmptyStateText>
+                    <EmptyStateCTA
+                      onClick={() =>
+                        onCreateWorkspace?.(selectedOrgForWorkspace!.id)
+                      }
+                    >
+                      <Plus />
+                      Create workspace
+                    </EmptyStateCTA>
+                  </EmptyState>
+                )}
+              </>
+            ) : organizationMemberships && organizationMemberships.length > 0 ? (
+              organizationMemberships.map((membership: OrganizationMembershipWithOrganization) => {
+                const org = membership.organization;
+                const orgWorkspaces = workspaces?.filter(
+                  (w: WorkspaceWithOrganization) => w.organization.id === org.id,
+                );
+                const workspaceCount = orgWorkspaces?.length || 0;
+                const memberCount = org.member_count;
+
+                const firstRole = membership.roles[0].name;
+                const remainingRolesCount = membership.roles.length - 1;
+                const roleName = remainingRolesCount > 0
+                  ? `${firstRole.charAt(0).toUpperCase() + firstRole.slice(1)} +${remainingRolesCount}`
+                  : firstRole.charAt(0).toUpperCase() + firstRole.slice(1);
+
+                return (
                   <ListItem
-                    key={workspace.id}
-                    onClick={() =>
-                      handleSelectWorkspace(selectedOrgForWorkspace, workspace)
-                    }
-                    disabled={switching === workspace.id}
+                    key={org.id}
+                    onClick={() => handleSelectOrganization(org)}
+                    disabled={switching === org.id}
                   >
                     <Avatar>
-                      {workspace.image_url ? (
-                        <AvatarImage
-                          src={workspace.image_url}
-                          alt={workspace.name}
-                        />
+                      {org.image_url ? (
+                        <AvatarImage src={org.image_url} alt={org.name} />
                       ) : (
-                        getInitials(workspace.name).charAt(0)
+                        getInitials(org.name)
                       )}
                     </Avatar>
                     <ItemContent>
-                      <ItemName>{workspace.name}</ItemName>
+                      <ItemName>{org.name}</ItemName>
                       <ItemMeta>
-                        <Users />
-                        Workspace
+                        {workspacesEnabled ? (
+                          <>
+                            <Users />
+                            {workspaceCount} workspace
+                            {workspaceCount !== 1 ? "s" : ""}
+                          </>
+                        ) : (
+                          <>
+                            <Building2 />
+                            {roleName} • {memberCount} member{memberCount !== 1 ? "s" : ""}
+                          </>
+                        )}
                       </ItemMeta>
                     </ItemContent>
                     <ItemArrow>
                       <ChevronRight />
                     </ItemArrow>
                   </ListItem>
-                ),
-              )
+                );
+              })
             ) : (
               <EmptyState>
-                <EmptyStateTitle>No workspaces yet</EmptyStateTitle>
+                <EmptyStateTitle>No organizations yet</EmptyStateTitle>
                 <EmptyStateText>
-                  Create your first workspace for{" "}
-                  {selectedOrgForWorkspace?.name}
+                  {allowUsersToCreateOrgs
+                    ? "Create your first organization to get started"
+                    : "You don't have access to any organizations yet"}
                 </EmptyStateText>
-                <EmptyStateCTA
-                  onClick={() =>
-                    onCreateWorkspace?.(selectedOrgForWorkspace!.id)
-                  }
-                >
-                  <Plus />
-                  Create workspace
-                </EmptyStateCTA>
+                {allowUsersToCreateOrgs && (
+                  <EmptyStateCTA onClick={() => onCreateOrganization?.()}>
+                    <Plus />
+                    Create organization
+                  </EmptyStateCTA>
+                )}
               </EmptyState>
             )}
-          </>
-        ) : organizations && organizations.length > 0 ? (
-          organizations.map((org) => {
-            const orgWorkspaces = workspaces?.filter(
-              (w: WorkspaceWithOrganization) => w.organization.id === org.id,
-            );
-            const workspaceCount = orgWorkspaces?.length || 0;
+          </ListContainer>
+        </ListSection>
 
-            return (
-              <ListItem
-                key={org.id}
-                onClick={() => handleSelectOrganization(org)}
-                disabled={switching === org.id}
-              >
-                <Avatar>
-                  {org.image_url ? (
-                    <AvatarImage src={org.image_url} alt={org.name} />
-                  ) : (
-                    getInitials(org.name)
-                  )}
-                </Avatar>
-                <ItemContent>
-                  <ItemName>{org.name}</ItemName>
-                  <ItemMeta>
-                    {workspacesEnabled ? (
-                      <>
-                        <Users />
-                        {workspaceCount} workspace
-                        {workspaceCount !== 1 ? "s" : ""}
-                      </>
-                    ) : (
-                      <>
-                        <Building2 />
-                        Organization
-                      </>
-                    )}
-                  </ItemMeta>
-                </ItemContent>
-                <ItemArrow>
-                  <ChevronRight />
-                </ItemArrow>
-              </ListItem>
-            );
-          })
+        {showingWorkspaces &&
+          selectedOrgWorkspaces &&
+          selectedOrgWorkspaces.length > 0 && (
+            <Button
+              style={{ marginTop: 'var(--space-md)' }}
+              onClick={() => onCreateWorkspace?.(selectedOrgForWorkspace.id)}
+              disabled={switching !== null}
+            >
+              <Plus size={12} />
+              Create new workspace
+            </Button>
+          )}
+
+        {!showingWorkspaces &&
+          organizationMemberships &&
+          organizationMemberships.length > 0 &&
+          allowUsersToCreateOrgs && (
+            <Button
+              style={{ marginTop: 'var(--space-md)' }}
+              onClick={() => onCreateOrganization?.()}
+              disabled={switching !== null}
+            >
+              <Plus size={12} />
+              Create new organization
+            </Button>
+          )}
+
+        {showingWorkspaces ? (
+          <Footer>
+            <>
+              Wrong organization?{" "}
+              <Link onClick={() => setSelectedOrgForWorkspace(null)}>
+                Go back
+              </Link>
+            </>
+          </Footer>
         ) : (
-          <EmptyState>
-            <EmptyStateTitle>No organizations yet</EmptyStateTitle>
-            <EmptyStateText>
-              {allowUsersToCreateOrgs
-                ? "Create your first organization to get started"
-                : "You don't have access to any organizations yet"}
-            </EmptyStateText>
-            {allowUsersToCreateOrgs && (
-              <EmptyStateCTA onClick={() => onCreateOrganization?.()}>
-                <Plus />
-                Create organization
-              </EmptyStateCTA>
-            )}
-          </EmptyState>
+          <></>
         )}
-      </ListContainer>
-
-      {showingWorkspaces &&
-        selectedOrgWorkspaces &&
-        selectedOrgWorkspaces.length > 0 && (
-          <CreateButton
-            onClick={() => onCreateWorkspace?.(selectedOrgForWorkspace.id)}
-            disabled={switching !== null}
-          >
-            <Plus />
-            Create new workspace
-          </CreateButton>
-        )}
-
-      {!showingWorkspaces &&
-        organizations &&
-        organizations.length > 0 &&
-        allowUsersToCreateOrgs && (
-          <CreateButton
-            onClick={() => onCreateOrganization?.()}
-            disabled={switching !== null}
-          >
-            <Plus />
-            Create new organization
-          </CreateButton>
-        )}
-
-      {showingWorkspaces ? (
-        <Footer>
-          <>
-            Wrong organization?{" "}
-            <Link onClick={() => setSelectedOrgForWorkspace(null)}>
-              Go back
-            </Link>
-          </>
-        </Footer>
-      ) : (
-        <></>
-      )}
-    </Container>
+      </RightColumn>
+    </Container >
   );
 };

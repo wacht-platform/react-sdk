@@ -31,7 +31,7 @@ const ButtonGroup = styled.div`
 
 const Title = styled.div`
   font-size: 16px;
-  font-weight: 500;
+  font-weight: 400;
   color: var(--color-foreground);
   margin-bottom: 8px;
   display: flex;
@@ -170,7 +170,7 @@ export const RemovePasswordPopover = ({
 
   const handleSubmit = async () => {
     if (!currentPassword || loading) return;
-    
+
     setLoading(true);
     try {
       await onRemovePassword(currentPassword);
@@ -201,11 +201,11 @@ export const RemovePasswordPopover = ({
         <AlertTriangle size={18} color="var(--color-warning, #fbbf24)" />
         Remove Password
       </Title>
-      
+
       <WarningBox>
         <WarningText>
-          You're about to remove password authentication from your account. 
-          Make sure you have another way to sign in (email, phone, social login, or passkey) 
+          You're about to remove password authentication from your account.
+          Make sure you have another way to sign in (email, phone, social login, or passkey)
           before continuing.
         </WarningText>
       </WarningBox>
@@ -233,8 +233,8 @@ export const RemovePasswordPopover = ({
         <Button
           onClick={handleSubmit}
           disabled={!currentPassword || loading}
-          style={{ 
-            width: 'auto', 
+          style={{
+            width: 'auto',
             padding: '0 var(--space-md)',
             background: 'var(--color-error)',
             borderColor: 'var(--color-error)'

@@ -25,7 +25,7 @@ export const SectionHeader = styled.div`
 
 export const SectionTitle = styled.h3`
   font-size: 15px;
-  font-weight: 500;
+  font-weight: 400;
   color: var(--color-foreground);
   margin: 0;
 `;
@@ -94,8 +94,8 @@ export const BackupCode = styled.button<{ $used?: boolean }>`
 
   &:hover:not(:disabled) {
     ${(props) =>
-      !props.$used &&
-      `
+    !props.$used &&
+    `
       background: var(--color-primary-background);
       border-color: var(--color-primary);
     `}

@@ -75,13 +75,13 @@ const LoadingContainer = styled.div`
 
 const Header = styled.div`
   text-align: center;
-  margin-bottom: var(--space-lg);
+  margin-bottom: var(--space-2xl);
   position: relative;
 `;
 
 const Title = styled.h1`
   font-size: var(--font-lg);
-  font-weight: 500;
+  font-weight: 400;
   color: var(--color-foreground);
   margin-bottom: var(--space-xs);
   margin-top: 0;
@@ -114,7 +114,7 @@ const DividerText = styled.span`
   padding: 0 var(--space-md);
   color: var(--color-muted);
   font-size: var(--font-xs);
-  font-weight: 500;
+  font-weight: 400;
   text-transform: uppercase;
   letter-spacing: 0.05em;
 `;
@@ -131,7 +131,7 @@ const ErrorMessage = styled.p`
 `;
 
 const SubmitButton = styled(Button)`
-  margin-top: var(--space-sm);
+  margin-top: var(--space-lg);
 `;
 
 const Footer = styled.div`
@@ -144,7 +144,7 @@ const Footer = styled.div`
 const Link = styled.span`
   color: var(--color-primary);
   text-decoration: none;
-  font-weight: 500;
+  font-weight: 400;
   transition: color 0.2s;
   cursor: pointer;
 

@@ -25,7 +25,7 @@ const Header = styled.div`
 
 const Title = styled.h1`
   font-size: var(--font-lg);
-  font-weight: 500;
+  font-weight: 400;
   color: var(--color-foreground);
   margin-bottom: var(--space-xs);
   margin-top: 0;
@@ -109,7 +109,7 @@ const Footer = styled.div`
 const Link = styled.span`
   color: var(--color-primary);
   text-decoration: none;
-  font-weight: 500;
+  font-weight: 400;
   transition: color 0.2s;
   cursor: pointer;
 
@@ -155,9 +155,9 @@ export function SSOCallback() {
     if (signinAttempt?.completed) {
       const redirectUrl = new URL(
         redirectUri ||
-          deployment?.ui_settings?.after_signin_redirect_url ||
-          deployment?.frontend_host ||
-          "",
+        deployment?.ui_settings?.after_signin_redirect_url ||
+        deployment?.frontend_host ||
+        "",
       );
 
       if (redirectUrl) {

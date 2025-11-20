@@ -155,7 +155,7 @@ const Tab = styled.button<{ $isActive: boolean }>`
   border: none;
   background: none;
   font-size: 14px;
-  font-weight: 500;
+  font-weight: 400;
   color: ${(props) =>
     props.$isActive ? "var(--color-foreground)" : "var(--color-muted)"};
   cursor: pointer;
@@ -242,7 +242,7 @@ const AvatarPlaceholder = styled.div`
   align-items: center;
   justify-content: center;
   color: var(--color-muted);
-  font-weight: 500;
+  font-weight: 400;
   font-size: 14px;
   overflow: hidden;
 `;
@@ -426,8 +426,8 @@ const InvitationsSection = () => {
       await createInvitation(
         invitation.email,
         invitation.workspace_role_id ||
-          invitation.initial_workspace_role?.id ||
-          invitation.role_id,
+        invitation.initial_workspace_role?.id ||
+        invitation.role_id,
       );
       // Refresh invitations
       const updatedInvitations = await getInvitations();
@@ -1721,7 +1721,7 @@ export const ManageWorkspace = () => {
 
   return (
     <ScreenContext.Provider
-      value={{ screen: null, setScreen: () => {}, toast }}
+      value={{ screen: null, setScreen: () => { }, toast }}
     >
       <TypographyProvider>
         <Container>

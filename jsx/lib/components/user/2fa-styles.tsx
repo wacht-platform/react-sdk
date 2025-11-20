@@ -48,15 +48,15 @@ export const TwoFactorIcon = styled.div<{ $active?: boolean }>`
   width: 48px;
   height: 48px;
   border-radius: 12px;
-  background: ${props => props.$active 
-    ? 'linear-gradient(135deg, var(--color-success), var(--color-success-hover))' 
+  background: ${props => props.$active
+    ? 'linear-gradient(135deg, var(--color-success), var(--color-success-hover))'
     : 'linear-gradient(135deg, var(--color-background-hover), var(--color-background))'};
   display: flex;
   align-items: center;
   justify-content: center;
   margin-right: 16px;
-  box-shadow: ${props => props.$active 
-    ? '0 2px 8px var(--color-success-shadow)' 
+  box-shadow: ${props => props.$active
+    ? '0 2px 8px var(--color-success-shadow)'
     : '0 2px 4px var(--color-shadow-light)'};
   
   svg {
@@ -91,11 +91,11 @@ export const TwoFactorStatus = styled.span<{ $active?: boolean }>`
   font-weight: 600;
   padding: 2px 8px;
   border-radius: 12px;
-  background: ${props => props.$active 
-    ? 'var(--color-success-background)' 
+  background: ${props => props.$active
+    ? 'var(--color-success-background)'
     : 'var(--color-background-hover)'};
-  color: ${props => props.$active 
-    ? 'var(--color-success)' 
+  color: ${props => props.$active
+    ? 'var(--color-success)'
     : 'var(--color-secondary-text)'};
   text-transform: uppercase;
   letter-spacing: 0.5px;
@@ -181,19 +181,19 @@ export const BackupCodeGrid = styled.div`
 export const BackupCodesGrid = BackupCodeGrid;
 
 export const BackupCodeItem = styled.button<{ $used?: boolean }>`
-  background: ${props => props.$used 
-    ? 'var(--color-background-hover)' 
+  background: ${props => props.$used
+    ? 'var(--color-background-hover)'
     : 'var(--color-background)'};
-  border: 1px solid ${props => props.$used 
-    ? 'var(--color-border)' 
+  border: 1px solid ${props => props.$used
+    ? 'var(--color-border)'
     : 'var(--color-border)'};
   border-radius: 8px;
   padding: 12px 16px;
   font-family: 'SF Mono', 'Monaco', 'Inconsolata', 'Fira Code', monospace;
   font-size: 14px;
   font-weight: 600;
-  color: ${props => props.$used 
-    ? 'var(--color-secondary-text)' 
+  color: ${props => props.$used
+    ? 'var(--color-secondary-text)'
     : 'var(--color-foreground)'};
   cursor: ${props => props.$used ? 'default' : 'pointer'};
   transition: all 0.2s ease;
@@ -218,14 +218,14 @@ export const BackupCodeItem = styled.button<{ $used?: boolean }>`
 // Clean message component
 export const Message = styled.div<{ $type?: 'success' | 'error' | 'info' }>`
   background: ${props => {
-    switch(props.$type) {
+    switch (props.$type) {
       case 'success': return 'var(--color-success-background)';
       case 'error': return 'var(--color-error-background)';
       default: return 'var(--color-background-hover)';
     }
   }};
   border: 1px solid ${props => {
-    switch(props.$type) {
+    switch (props.$type) {
       case 'success': return 'var(--color-success-border)';
       case 'error': return 'var(--color-error-border)';
       default: return 'var(--color-border)';
@@ -243,12 +243,12 @@ export const Message = styled.div<{ $type?: 'success' | 'error' | 'info' }>`
     flex-shrink: 0;
     margin-top: 2px;
     color: ${props => {
-      switch(props.$type) {
-        case 'success': return 'var(--color-success)';
-        case 'error': return 'var(--color-error)';
-        default: return 'var(--color-foreground)';
-      }
-    }};
+    switch (props.$type) {
+      case 'success': return 'var(--color-success)';
+      case 'error': return 'var(--color-error)';
+      default: return 'var(--color-foreground)';
+    }
+  }};
   }
 `;
 
@@ -334,7 +334,7 @@ export const CodeInputContainer = styled.div`
 export const CodeInputLabel = styled.label`
   display: block;
   font-size: 13px;
-  font-weight: 500;
+  font-weight: 400;
   color: var(--color-secondary-text);
   margin-bottom: 8px;
   text-align: left;
@@ -420,7 +420,7 @@ export const ActiveAuthenticatorContent = styled.div``;
 
 export const ActiveAuthenticatorTitle = styled.div`
   font-size: 14px;
-  font-weight: 500;
+  font-weight: 400;
   color: var(--color-foreground);
   margin-bottom: 2px;
 `;
@@ -589,7 +589,7 @@ export const ActionButton = styled.button<{ $variant?: 'primary' | 'secondary' |
   padding: 8px 16px;
   border-radius: 6px;
   font-size: 14px;
-  font-weight: 500;
+  font-weight: 400;
   cursor: pointer;
   transition: all 0.2s ease;
   border: none;

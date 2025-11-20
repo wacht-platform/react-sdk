@@ -43,7 +43,7 @@ const Container = styled.div`
 
 const Header = styled.div`
   text-align: center;
-  margin-bottom: var(--space-lg);
+  margin-bottom: var(--space-2xl);
   position: relative;
 
   @media (max-width: ${breakpoints.sm}) {
@@ -53,7 +53,7 @@ const Header = styled.div`
 
 const Title = styled.h1`
   font-size: var(--font-lg);
-  font-weight: 500;
+  font-weight: 400;
   color: var(--color-foreground);
   margin-bottom: var(--space-xs);
   margin-top: 0;
@@ -132,7 +132,7 @@ const FormGroup = styled.div`
 const Label = styled.label`
   font-size: var(--font-xs);
   text-align: left;
-  font-weight: 500;
+  font-weight: 400;
   color: var(--color-foreground);
 
   @media (max-width: ${breakpoints.sm}) {
@@ -158,11 +158,11 @@ const SubmitButton = styled.button`
   color: white;
   border: none;
   border-radius: var(--radius-md);
-  font-weight: 500;
+  font-weight: 400;
   font-size: var(--font-xs);
   cursor: pointer;
   transition: background-color 0.2s;
-  margin-top: var(--space-xs);
+  margin-top: var(--space-lg);
 
   &:hover:not(:disabled) {
     background: var(--color-primary-hover);
@@ -194,7 +194,7 @@ const Footer = styled.div`
 const Link = styled.span`
   color: var(--color-primary);
   text-decoration: none;
-  font-weight: 500;
+  font-weight: 400;
   transition: color 0.2s;
 
   &:hover {
@@ -717,61 +717,61 @@ export function SignUpForm() {
             <Form onSubmit={handleSubmit} noValidate>
               {(authSettings?.first_name?.enabled ||
                 authSettings?.last_name?.enabled) && (
-                <NameFields $isBothEnabled={isBothNamesEnabled}>
-                  {authSettings?.first_name?.enabled && (
-                    <FormGroup>
-                      <Label htmlFor="first_name">
-                        First name
-                        {authSettings?.first_name?.required && (
-                          <RequiredAsterisk>*</RequiredAsterisk>
+                  <NameFields $isBothEnabled={isBothNamesEnabled}>
+                    {authSettings?.first_name?.enabled && (
+                      <FormGroup>
+                        <Label htmlFor="first_name">
+                          First name
+                          {authSettings?.first_name?.required && (
+                            <RequiredAsterisk>*</RequiredAsterisk>
+                          )}
+                        </Label>
+                        <Input
+                          type="text"
+                          id="first_name"
+                          name="first_name"
+                          required
+                          minLength={3}
+                          maxLength={30}
+                          value={formData.first_name}
+                          onChange={handleInputChange}
+                          placeholder="First name"
+                          aria-invalid={!!errors.first_name}
+                          pattern="^[a-zA-Z]{3,30}$"
+                        />
+                        {errors.first_name && (
+                          <ErrorMessage>{errors.first_name}</ErrorMessage>
                         )}
-                      </Label>
-                      <Input
-                        type="text"
-                        id="first_name"
-                        name="first_name"
-                        required
-                        minLength={3}
-                        maxLength={30}
-                        value={formData.first_name}
-                        onChange={handleInputChange}
-                        placeholder="First name"
-                        aria-invalid={!!errors.first_name}
-                        pattern="^[a-zA-Z]{3,30}$"
-                      />
-                      {errors.first_name && (
-                        <ErrorMessage>{errors.first_name}</ErrorMessage>
-                      )}
-                    </FormGroup>
-                  )}
-                  {authSettings?.last_name?.enabled && (
-                    <FormGroup>
-                      <Label htmlFor="last_name">
-                        Last name
-                        {authSettings?.last_name?.required && (
-                          <RequiredAsterisk>*</RequiredAsterisk>
+                      </FormGroup>
+                    )}
+                    {authSettings?.last_name?.enabled && (
+                      <FormGroup>
+                        <Label htmlFor="last_name">
+                          Last name
+                          {authSettings?.last_name?.required && (
+                            <RequiredAsterisk>*</RequiredAsterisk>
+                          )}
+                        </Label>
+                        <Input
+                          type="text"
+                          id="last_name"
+                          name="last_name"
+                          required
+                          minLength={3}
+                          maxLength={30}
+                          value={formData.last_name}
+                          onChange={handleInputChange}
+                          placeholder="Last name"
+                          aria-invalid={!!errors.last_name}
+                          pattern="^[a-zA-Z]{3,30}$"
+                        />
+                        {errors.last_name && (
+                          <ErrorMessage>{errors.last_name}</ErrorMessage>
                         )}
-                      </Label>
-                      <Input
-                        type="text"
-                        id="last_name"
-                        name="last_name"
-                        required
-                        minLength={3}
-                        maxLength={30}
-                        value={formData.last_name}
-                        onChange={handleInputChange}
-                        placeholder="Last name"
-                        aria-invalid={!!errors.last_name}
-                        pattern="^[a-zA-Z]{3,30}$"
-                      />
-                      {errors.last_name && (
-                        <ErrorMessage>{errors.last_name}</ErrorMessage>
-                      )}
-                    </FormGroup>
-                  )}
-                </NameFields>
-              )}
+                      </FormGroup>
+                    )}
+                  </NameFields>
+                )}
 
               {authSettings?.username.enabled && (
                 <FormGroup>

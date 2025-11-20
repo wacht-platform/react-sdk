@@ -36,7 +36,7 @@ const TitleContainer = styled.div`
 
 const Title = styled.h4`
   font-size: var(--font-xs);
-  font-weight: 500;
+  font-weight: 400;
   color: var(--color-foreground);
   margin: 0;
   flex: 1;
@@ -117,7 +117,7 @@ const ActionLink = styled.a`
   align-items: center;
   gap: var(--space-2xs);
   font-size: var(--font-2xs);
-  font-weight: 500;
+  font-weight: 400;
   color: var(--color-primary);
   text-decoration: none;
   padding: var(--space-2xs) var(--space-xs);
@@ -146,10 +146,10 @@ interface NotificationItemProps {
   onDelete: (id: string) => void;
 }
 
-export function NotificationItem({ 
-  notification, 
-  onMarkAsRead, 
-  onDelete 
+export function NotificationItem({
+  notification,
+  onMarkAsRead,
+  onDelete
 }: NotificationItemProps) {
   const handleClick = () => {
     if (!notification.is_read) {
@@ -196,16 +196,16 @@ export function NotificationItem({
           <X />
         </ActionButton>
       </Header>
-      
+
       <Body>{notification.body}</Body>
-      
+
       <Footer>
         <Time>{formatTime(notification.created_at)}</Time>
         {notification.action_url && (
           <Actions>
-            <ActionLink 
-              href={notification.action_url} 
-              target="_blank" 
+            <ActionLink
+              href={notification.action_url}
+              target="_blank"
               rel="noopener noreferrer"
               onClick={(e) => e.stopPropagation()}
             >

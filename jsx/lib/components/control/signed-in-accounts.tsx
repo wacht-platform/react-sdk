@@ -47,7 +47,7 @@ const Header = styled.div`
 
 const Title = styled.h1`
   font-size: var(--font-lg);
-  font-weight: 500;
+  font-weight: 400;
   color: var(--color-foreground);
   margin-bottom: var(--space-xs);
   margin-top: 0;
@@ -127,7 +127,7 @@ const Avatar = styled.div`
   align-items: center;
   justify-content: center;
   font-size: var(--font-sm);
-  font-weight: 500;
+  font-weight: 400;
   color: var(--color-secondary-text);
   flex-shrink: 0;
 
@@ -145,7 +145,7 @@ const AccountDetails = styled.div`
 
 const AccountName = styled.div`
   font-size: var(--font-sm);
-  font-weight: 500;
+  font-weight: 400;
   color: var(--color-foreground);
   margin-bottom: var(--space-2xs);
   white-space: nowrap;
@@ -270,7 +270,7 @@ const Footer = styled.p`
 const Link = styled.span`
   color: var(--color-primary);
   text-decoration: none;
-  font-weight: 500;
+  font-weight: 400;
   transition: color 0.2s;
   cursor: pointer;
 
@@ -442,10 +442,10 @@ export const SignedInAccounts: React.FC<SignedInAccountsProps> = ({
                   ) : (
                     getInitials(
                       fullName ||
-                        account.primary_email_address?.email ||
-                        account.primary_phone_number?.phone_number ||
-                        account.username ||
-                        "U",
+                      account.primary_email_address?.email ||
+                      account.primary_phone_number?.phone_number ||
+                      account.username ||
+                      "U",
                     )
                   )}
                 </Avatar>

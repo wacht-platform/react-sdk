@@ -50,7 +50,7 @@ const ResendButton = styled.button`
   border: none;
   color: var(--color-primary);
   font-size: var(--font-xs);
-  font-weight: 500;
+  font-weight: 400;
   cursor: pointer;
   padding: 0;
   margin-top: var(--space-2xs);
@@ -168,7 +168,7 @@ export function OTPInput({
 		if (pastedDigits.length === 0) return;
 
 		const newOtp = [...otp];
-		
+
 		// Fill in the digits starting from the current index
 		for (let i = 0; i < pastedDigits.length && index + i < length; i++) {
 			newOtp[index + i] = pastedDigits[i];

@@ -44,7 +44,7 @@ const Header = styled.div`
 const Title = styled.h3`
   margin: 0;
   font-size: var(--font-xs);
-  font-weight: 500;
+  font-weight: 400;
   color: var(--color-foreground);
 `;
 
@@ -97,7 +97,7 @@ export const AddRolePopover = ({
   const [permissions, setPermissions] = useState<string[]>(
     role?.permissions || []
   );
-  const {} = useActiveOrganization();
+  const { } = useActiveOrganization();
   const [loading, setLoading] = useState(false);
   const [mounted, setMounted] = useState(false);
   const [position, setPosition] = useState({ top: 0, left: 0 });
@@ -110,21 +110,21 @@ export const AddRolePopover = ({
     deployment?.b2b_settings?.organization_permissions
   )
     ? deployment.b2b_settings.organization_permissions.map((perm) => ({
-        value: perm,
-        label: perm,
-      }))
+      value: perm,
+      label: perm,
+    }))
     : [];
 
   useEffect(() => {
     setMounted(true);
-    
+
     // Calculate position after a short delay
     const timer = setTimeout(() => {
       if (!popoverRef.current) return;
-      
+
       // Use triggerRef if available, otherwise fall back to existing logic
       let triggerButton: HTMLElement | null = null;
-      
+
       if (triggerRef?.current) {
         triggerButton = triggerRef.current;
       } else if (isEditing) {
@@ -148,49 +148,49 @@ export const AddRolePopover = ({
           }
         }
       }
-      
+
       if (triggerButton) {
         const rect = triggerButton.getBoundingClientRect();
         const popoverWidth = 400;
-        
+
         // Position below and aligned to right edge of trigger
         let top = rect.bottom + 8;
         let left = rect.right - popoverWidth;
-        
+
         // Ensure it doesn't go off screen
         if (left < 10) {
           left = rect.left;
         }
-        
+
         // If not enough space below, position above
         if (top + 300 > window.innerHeight) {
           top = rect.top - 300 - 8;
         }
-        
+
         setPosition({ top, left });
       }
     }, 10);
-    
+
     // Add click outside listener
     const handleClickOutside = (event: MouseEvent) => {
       if (popoverRef.current && !popoverRef.current.contains(event.target as Node)) {
         onClose?.();
       }
     };
-    
+
     // Add escape key listener
     const handleEscape = (e: KeyboardEvent) => {
       if (e.key === "Escape") {
         onClose?.();
       }
     };
-    
+
     // Delay adding the listeners to prevent immediate closure
     const listenerTimer = setTimeout(() => {
       document.addEventListener('mousedown', handleClickOutside);
       document.addEventListener('keydown', handleEscape);
     }, 100);
-    
+
     return () => {
       clearTimeout(timer);
       clearTimeout(listenerTimer);
@@ -209,7 +209,7 @@ export const AddRolePopover = ({
 
   const handleSave = async () => {
     const sanitizedName = sanitizeRoleName(name);
-    
+
     if (!sanitizedName) {
       toast("Please enter a role name", "error");
       return;
@@ -246,19 +246,19 @@ export const AddRolePopover = ({
   }
 
   return (
-    <PopoverContainer 
-        ref={popoverRef}
-        $isInTable={isEditing}
-        style={{
-          top: `${position.top}px`,
-          left: `${position.left}px`,
-          visibility: position.top > 0 ? 'visible' : 'hidden'
-        }}
-        onClick={(e) => e.stopPropagation()}
-        role="dialog"
-        aria-labelledby="role-dialog-title"
-        aria-modal="true"
-      >
+    <PopoverContainer
+      ref={popoverRef}
+      $isInTable={isEditing}
+      style={{
+        top: `${position.top}px`,
+        left: `${position.left}px`,
+        visibility: position.top > 0 ? 'visible' : 'hidden'
+      }}
+      onClick={(e) => e.stopPropagation()}
+      role="dialog"
+      aria-labelledby="role-dialog-title"
+      aria-modal="true"
+    >
       <Header>
         <Title id="role-dialog-title">{isEditing ? "Edit Role" : "Create New Role"}</Title>
         <CloseButton onClick={onClose} aria-label={`Close ${isEditing ? 'edit' : 'create'} role dialog`}>

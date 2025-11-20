@@ -90,7 +90,7 @@ const FormHeader = styled.div`
 
 const FormTitle = styled.h3`
   font-size: 16px;
-  font-weight: 500;
+  font-weight: 400;
   color: var(--color-foreground);
   margin-bottom: 6px;
 `;
@@ -113,7 +113,7 @@ const Label = styled.label`
   display: block;
   margin-bottom: 6px;
   font-size: 13px;
-  font-weight: 500;
+  font-weight: 400;
   color: var(--color-foreground);
 `;
 
@@ -180,7 +180,7 @@ const BackButton = styled.button`
   background: transparent;
   border: none;
   font-size: 13px;
-  font-weight: 500;
+  font-weight: 400;
   color: var(--color-secondary-text);
   cursor: pointer;
   transition: all 0.2s ease;
@@ -194,7 +194,7 @@ const SubmitButton = styled.button`
   padding: 8px 20px;
   border-radius: 6px;
   font-size: 14px;
-  font-weight: 500;
+  font-weight: 400;
   cursor: pointer;
   transition: all 0.2s ease;
   background: var(--color-primary);
@@ -236,7 +236,7 @@ const UploadOverlay = styled.div`
 const UploadText = styled.div`
   color: white;
   font-size: 12px;
-  font-weight: 500;
+  font-weight: 400;
 `;
 
 interface CreateOrganizationFormProps {

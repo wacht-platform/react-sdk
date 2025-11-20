@@ -67,7 +67,7 @@ const Badge = styled.span`
   border-radius: 50%;
   padding: 0 4px;
   font-size: var(--font-2xs);
-  font-weight: 500;
+  font-weight: 400;
   min-width: 16px;
   height: 16px;
   display: flex;

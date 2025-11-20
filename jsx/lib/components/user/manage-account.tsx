@@ -172,7 +172,7 @@ const Tab = styled.button<{ $isActive: boolean }>`
   border: none;
   background: none;
   font-size: 14px;
-  font-weight: 500;
+  font-weight: 400;
   color: ${(props) =>
     props.$isActive ? "var(--color-foreground)" : "var(--color-muted)"};
   cursor: pointer;
@@ -630,7 +630,7 @@ const EmailManagementSection = () => {
                 <ActionsCell>
                   {/* Only show dropdown if there are actions available (not primary or not verified) */}
                   {email.id !== user?.primary_email_address_id ||
-                  !email.verified ? (
+                    !email.verified ? (
                     <Dropdown
                       open={activeDropdown === email.id}
                       openChange={(isOpen) =>
@@ -662,7 +662,7 @@ const EmailManagementSection = () => {
                                 } catch (error: any) {
                                   toast(
                                     error.message ||
-                                      "Failed to update primary email",
+                                    "Failed to update primary email",
                                     "error",
                                   );
                                 }
@@ -1029,7 +1029,7 @@ const SocialManagementSection = () => {
             ) || [];
           const providerInfo =
             socialAuthProviders[
-              provider.provider as keyof typeof socialAuthProviders
+            provider.provider as keyof typeof socialAuthProviders
             ];
 
           if (!providerInfo) return null;
@@ -1205,7 +1205,7 @@ export const ManageAccount = () => {
     <DefaultStylesProvider>
       <TypographyProvider>
         <ScreenContext.Provider
-          value={{ screen: null, setScreen: () => {}, toast }}
+          value={{ screen: null, setScreen: () => { }, toast }}
         >
           <Container>
             <TabsContainer>

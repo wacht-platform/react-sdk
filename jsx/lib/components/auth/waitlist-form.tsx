@@ -25,7 +25,7 @@ const Header = styled.div`
 
 const Title = styled.h1`
   font-size: var(--font-lg);
-  font-weight: 500;
+  font-weight: 400;
   color: var(--color-foreground);
   margin-bottom: var(--space-xs);
   margin-top: 0;
@@ -58,7 +58,7 @@ const NameFields = styled.div<{ $isBothEnabled: boolean }>`
 
 const Label = styled.label`
   font-size: var(--font-xs);
-  font-weight: 500;
+  font-weight: 400;
   color: var(--color-foreground);
   text-align: left;
 `;
@@ -75,7 +75,7 @@ const Button = styled.button<{ $primary?: boolean }>`
     props.$primary ? "none" : "1px solid var(--color-input-border)"};
   border-radius: var(--radius-md);
   font-size: var(--font-xs);
-  font-weight: 500;
+  font-weight: 400;
   cursor: pointer;
   transition: background-color 0.2s;
   background: ${(props) =>
@@ -86,9 +86,9 @@ const Button = styled.button<{ $primary?: boolean }>`
 
   &:hover:not(:disabled) {
     background: ${(props) =>
-      props.$primary
-        ? "var(--color-primary-hover)"
-        : "var(--color-input-background)"};
+    props.$primary
+      ? "var(--color-primary-hover)"
+      : "var(--color-input-background)"};
   }
 
   &:disabled {
@@ -236,60 +236,60 @@ export function WaitlistForm() {
         <Form onSubmit={handleSubmit} noValidate>
           {(authSettings?.first_name?.enabled ||
             authSettings?.last_name?.enabled) && (
-            <NameFields $isBothEnabled={isBothNamesEnabled}>
-              {authSettings?.first_name?.enabled && (
-                <FormGroup>
-                  <Label htmlFor="first_name">
-                    First name
-                    {authSettings?.first_name?.required && (
-                      <RequiredAsterisk>*</RequiredAsterisk>
+              <NameFields $isBothEnabled={isBothNamesEnabled}>
+                {authSettings?.first_name?.enabled && (
+                  <FormGroup>
+                    <Label htmlFor="first_name">
+                      First name
+                      {authSettings?.first_name?.required && (
+                        <RequiredAsterisk>*</RequiredAsterisk>
+                      )}
+                    </Label>
+                    <Input
+                      type="text"
+                      id="first_name"
+                      name="first_name"
+                      required={authSettings?.first_name?.required}
+                      minLength={2}
+                      maxLength={50}
+                      value={formData.first_name}
+                      onChange={handleInputChange}
+                      placeholder="First name"
+                      aria-invalid={!!getErrorMessage("first_name")}
+                    />
+                    {getErrorMessage("first_name") && (
+                      <ErrorMessage>{getErrorMessage("first_name")}</ErrorMessage>
                     )}
-                  </Label>
-                  <Input
-                    type="text"
-                    id="first_name"
-                    name="first_name"
-                    required={authSettings?.first_name?.required}
-                    minLength={2}
-                    maxLength={50}
-                    value={formData.first_name}
-                    onChange={handleInputChange}
-                    placeholder="First name"
-                    aria-invalid={!!getErrorMessage("first_name")}
-                  />
-                  {getErrorMessage("first_name") && (
-                    <ErrorMessage>{getErrorMessage("first_name")}</ErrorMessage>
-                  )}
-                </FormGroup>
-              )}
+                  </FormGroup>
+                )}
 
-              {authSettings?.last_name?.enabled && (
-                <FormGroup>
-                  <Label htmlFor="last_name">
-                    Last name
-                    {authSettings?.last_name?.required && (
-                      <RequiredAsterisk>*</RequiredAsterisk>
+                {authSettings?.last_name?.enabled && (
+                  <FormGroup>
+                    <Label htmlFor="last_name">
+                      Last name
+                      {authSettings?.last_name?.required && (
+                        <RequiredAsterisk>*</RequiredAsterisk>
+                      )}
+                    </Label>
+                    <Input
+                      type="text"
+                      id="last_name"
+                      name="last_name"
+                      required={authSettings?.last_name?.required}
+                      minLength={2}
+                      maxLength={50}
+                      value={formData.last_name}
+                      onChange={handleInputChange}
+                      placeholder="Last name"
+                      aria-invalid={!!getErrorMessage("last_name")}
+                    />
+                    {getErrorMessage("last_name") && (
+                      <ErrorMessage>{getErrorMessage("last_name")}</ErrorMessage>
                     )}
-                  </Label>
-                  <Input
-                    type="text"
-                    id="last_name"
-                    name="last_name"
-                    required={authSettings?.last_name?.required}
-                    minLength={2}
-                    maxLength={50}
-                    value={formData.last_name}
-                    onChange={handleInputChange}
-                    placeholder="Last name"
-                    aria-invalid={!!getErrorMessage("last_name")}
-                  />
-                  {getErrorMessage("last_name") && (
-                    <ErrorMessage>{getErrorMessage("last_name")}</ErrorMessage>
-                  )}
-                </FormGroup>
-              )}
-            </NameFields>
-          )}
+                  </FormGroup>
+                )}
+              </NameFields>
+            )}
 
           <FormGroup>
             <Label htmlFor="email">

@@ -11,7 +11,7 @@ export const Button = styled.button<ButtonProps>`
   padding: var(--space-sm) var(--space-md);
   border: 1px solid transparent;
   border-radius: var(--radius-md);
-  font-weight: 500;
+  font-weight: 400;
   font-size: var(--font-xs);
   cursor: pointer;
   transition:

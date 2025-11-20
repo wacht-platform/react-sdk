@@ -29,7 +29,7 @@ export interface OrganizationMembershipWithOrganization {
   id: string;
   organization: Organization;
   user_id: string;
-  role: OrganizationRole[];
+  roles: OrganizationRole[];
   public_metadata: Record<string, unknown>;
   created_at: string;
   updated_at: string;
@@ -100,7 +100,7 @@ export interface WorkspaceMembership {
   workspace: Workspace;
   organization_id: string;
   user_id: string;
-  role: WorkspaceRole[];
+  roles: WorkspaceRole[];
   organization: Organization;
   public_metadata: Record<string, unknown>;
   created_at: string;

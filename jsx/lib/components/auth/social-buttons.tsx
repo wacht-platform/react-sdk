@@ -87,7 +87,7 @@ const SocialAuthButton = styled.button<{
   transition: all 0.2s;
   font-size: var(--font-xs);
   color: var(--color-foreground);
-  font-weight: 500;
+  font-weight: 400;
   height: 34px;
 
   ${(props) => {

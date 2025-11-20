@@ -36,7 +36,7 @@ const Avatar = styled.div`
   align-items: center;
   justify-content: center;
   font-size: 14px;
-  font-weight: 500;
+  font-weight: 400;
   color: var(--color-secondary-text);
   border: 1px solid var(--color-border);
 
@@ -49,13 +49,13 @@ const Avatar = styled.div`
 
 const UserName = styled.div`
   font-size: 14px;
-  font-weight: 500;
+  font-weight: 400;
   color: var(--color-foreground);
 `;
 
 const AccountName = styled.span`
   font-size: 14px;
-  font-weight: 500;
+  font-weight: 400;
   color: var(--color-foreground);
 `;
 
@@ -113,7 +113,7 @@ const AccountSection = styled.div<{
 
   &:hover {
     background: ${(props) =>
-      props.$isClickable ? "var(--color-background-hover)" : "transparent"};
+    props.$isClickable ? "var(--color-background-hover)" : "transparent"};
   }
 `;
 
@@ -164,11 +164,11 @@ const ActionLink = styled.button<{ $destructive?: boolean }>`
 
   &:hover {
     background: ${(props) =>
-      props.$destructive
-        ? "var(--color-error-background)"
-        : "var(--color-input-background)"};
+    props.$destructive
+      ? "var(--color-error-background)"
+      : "var(--color-input-background)"};
     color: ${(props) =>
-      props.$destructive ? "var(--color-error)" : "var(--color-foreground)"};
+    props.$destructive ? "var(--color-error)" : "var(--color-foreground)"};
   }
 
   svg {
@@ -215,12 +215,12 @@ export const UserButton: React.FC<UserButtonProps> = ({
   const [isOpen, setIsOpen] = useState(false);
   const [dropdownPosition, setDropdownPosition] = useState<
     | {
-        top?: number;
-        bottom?: number;
-        left?: number;
-        right?: number;
-        maxHeight?: number;
-      }
+      top?: number;
+      bottom?: number;
+      left?: number;
+      right?: number;
+      maxHeight?: number;
+    }
     | undefined
   >();
   const manageAccountDialog = useDialog(false);
@@ -357,7 +357,7 @@ export const UserButton: React.FC<UserButtonProps> = ({
       await signOut(signInId);
       await refetch();
       setIsOpen(false);
-    } catch (error) {}
+    } catch (error) { }
   };
 
   const handleSignOutAll = async () => {
@@ -365,7 +365,7 @@ export const UserButton: React.FC<UserButtonProps> = ({
       await signOut();
       await refetch();
       setIsOpen(false);
-    } catch (error) {}
+    } catch (error) { }
   };
 
   const handleSwitchUser = async (signInId: string) => {
@@ -373,7 +373,7 @@ export const UserButton: React.FC<UserButtonProps> = ({
       await switchSignIn(signInId);
       await refetch();
       setIsOpen(false);
-    } catch (error) {}
+    } catch (error) { }
   };
 
   const handleOpenManageAccount = () => {
@@ -394,8 +394,7 @@ export const UserButton: React.FC<UserButtonProps> = ({
                 />
               ) : (
                 getInitials(
-                  `${selectedAccount?.first_name || ""} ${
-                    selectedAccount?.last_name || ""
+                  `${selectedAccount?.first_name || ""} ${selectedAccount?.last_name || ""
                   }`,
                 )
               )}
@@ -403,9 +402,8 @@ export const UserButton: React.FC<UserButtonProps> = ({
           </AvatarContainer>
           {showName && (
             <UserName>
-              {`${selectedAccount?.first_name || ""} ${
-                selectedAccount?.last_name || ""
-              }`}
+              {`${selectedAccount?.first_name || ""} ${selectedAccount?.last_name || ""
+                }`}
             </UserName>
           )}
         </AccountButton>
@@ -423,145 +421,141 @@ export const UserButton: React.FC<UserButtonProps> = ({
                 <div>
                   {isMultiSessionEnabled
                     ? (() => {
-                        // Sort signins to put active account first
-                        const sortedSignins = [
-                          ...(session?.signins || []),
-                        ].sort((a, b) => {
-                          const aIsActive = a.user.id === selectedAccount?.id;
-                          const bIsActive = b.user.id === selectedAccount?.id;
-                          if (aIsActive && !bIsActive) return -1;
-                          if (!aIsActive && bIsActive) return 1;
-                          return 0;
-                        });
+                      // Sort signins to put active account first
+                      const sortedSignins = [
+                        ...(session?.signins || []),
+                      ].sort((a, b) => {
+                        const aIsActive = a.user.id === selectedAccount?.id;
+                        const bIsActive = b.user.id === selectedAccount?.id;
+                        if (aIsActive && !bIsActive) return -1;
+                        if (!aIsActive && bIsActive) return 1;
+                        return 0;
+                      });
 
-                        return sortedSignins.map(
-                          ({ user: account, id: signInId }, index) => {
-                            const isActive = account.id === selectedAccount?.id;
-                            const isClickable = !isActive;
+                      return sortedSignins.map(
+                        ({ user: account, id: signInId }, index) => {
+                          const isActive = account.id === selectedAccount?.id;
+                          const isClickable = !isActive;
 
-                            return (
-                              <React.Fragment key={account.id}>
-                                <AccountSection
-                                  $isClickable={isClickable}
-                                  onClick={
-                                    isClickable
-                                      ? () => handleSwitchUser(signInId)
-                                      : undefined
-                                  }
-                                >
-                                  <AccountHeader>
-                                    <AvatarContainer>
-                                      <LargerAvatar>
-                                        {account.has_profile_picture ? (
-                                          <img
-                                            src={account.profile_picture_url}
-                                            alt={account.first_name}
-                                          />
-                                        ) : (
-                                          getInitials(
-                                            `${account?.first_name || ""} ${
-                                              account?.last_name || ""
-                                            }`,
-                                          )
-                                        )}
-                                      </LargerAvatar>
-                                    </AvatarContainer>
-                                    <AccountDetails>
-                                      <NameRow>
-                                        <AccountName>
-                                          {`${account?.first_name || ""} ${
-                                            account?.last_name || ""
+                          return (
+                            <React.Fragment key={account.id}>
+                              <AccountSection
+                                $isClickable={isClickable}
+                                onClick={
+                                  isClickable
+                                    ? () => handleSwitchUser(signInId)
+                                    : undefined
+                                }
+                              >
+                                <AccountHeader>
+                                  <AvatarContainer>
+                                    <LargerAvatar>
+                                      {account.has_profile_picture ? (
+                                        <img
+                                          src={account.profile_picture_url}
+                                          alt={account.first_name}
+                                        />
+                                      ) : (
+                                        getInitials(
+                                          `${account?.first_name || ""} ${account?.last_name || ""
+                                          }`,
+                                        )
+                                      )}
+                                    </LargerAvatar>
+                                  </AvatarContainer>
+                                  <AccountDetails>
+                                    <NameRow>
+                                      <AccountName>
+                                        {`${account?.first_name || ""} ${account?.last_name || ""
                                           }`}
-                                        </AccountName>
-                                      </NameRow>
-                                      <AccountEmail>
-                                        {account.primary_email_address.email}
-                                      </AccountEmail>
-                                    </AccountDetails>
-                                  </AccountHeader>
+                                      </AccountName>
+                                    </NameRow>
+                                    <AccountEmail>
+                                      {account.primary_email_address.email}
+                                    </AccountEmail>
+                                  </AccountDetails>
+                                </AccountHeader>
 
-                                  {isActive && (
-                                    <ActionRow>
-                                      <ActionLink
-                                        onClick={handleOpenManageAccount}
-                                      >
-                                        <Settings />
-                                        Manage account
-                                      </ActionLink>
-                                      <ActionLink
-                                        $destructive
-                                        onClick={() => handleSignOut(signInId)}
-                                      >
-                                        <LogOut />
-                                        Sign out
-                                      </ActionLink>
-                                    </ActionRow>
-                                  )}
-                                </AccountSection>
-                                {index === 0 && sortedSignins.length > 1 && (
-                                  <div
-                                    style={{
-                                      borderBottom:
-                                        "1px solid var(--color-border)",
-                                      margin: "0",
-                                    }}
-                                  />
+                                {isActive && (
+                                  <ActionRow>
+                                    <ActionLink
+                                      onClick={handleOpenManageAccount}
+                                    >
+                                      <Settings />
+                                      Manage account
+                                    </ActionLink>
+                                    <ActionLink
+                                      $destructive
+                                      onClick={() => handleSignOut(signInId)}
+                                    >
+                                      <LogOut />
+                                      Sign out
+                                    </ActionLink>
+                                  </ActionRow>
                                 )}
-                              </React.Fragment>
-                            );
-                          },
-                        );
-                      })()
+                              </AccountSection>
+                              {index === 0 && sortedSignins.length > 1 && (
+                                <div
+                                  style={{
+                                    borderBottom:
+                                      "1px solid var(--color-border)",
+                                    margin: "0",
+                                  }}
+                                />
+                              )}
+                            </React.Fragment>
+                          );
+                        },
+                      );
+                    })()
                     : selectedAccount && (
-                        <AccountSection $isClickable={false}>
-                          <AccountHeader>
-                            <AvatarContainer>
-                              <LargerAvatar>
-                                {selectedAccount.has_profile_picture ? (
-                                  <img
-                                    src={selectedAccount.profile_picture_url}
-                                    alt={selectedAccount.first_name}
-                                  />
-                                ) : (
-                                  getInitials(
-                                    `${selectedAccount?.first_name || ""} ${
-                                      selectedAccount?.last_name || ""
-                                    }`,
-                                  )
-                                )}
-                              </LargerAvatar>
-                            </AvatarContainer>
-                            <AccountDetails>
-                              <NameRow>
-                                <AccountName>
-                                  {`${selectedAccount?.first_name || ""} ${
-                                    selectedAccount?.last_name || ""
+                      <AccountSection $isClickable={false}>
+                        <AccountHeader>
+                          <AvatarContainer>
+                            <LargerAvatar>
+                              {selectedAccount.has_profile_picture ? (
+                                <img
+                                  src={selectedAccount.profile_picture_url}
+                                  alt={selectedAccount.first_name}
+                                />
+                              ) : (
+                                getInitials(
+                                  `${selectedAccount?.first_name || ""} ${selectedAccount?.last_name || ""
+                                  }`,
+                                )
+                              )}
+                            </LargerAvatar>
+                          </AvatarContainer>
+                          <AccountDetails>
+                            <NameRow>
+                              <AccountName>
+                                {`${selectedAccount?.first_name || ""} ${selectedAccount?.last_name || ""
                                   }`}
-                                </AccountName>
-                              </NameRow>
-                              <AccountEmail>
-                                {selectedAccount.primary_email_address.email}
-                              </AccountEmail>
-                            </AccountDetails>
-                          </AccountHeader>
+                              </AccountName>
+                            </NameRow>
+                            <AccountEmail>
+                              {selectedAccount.primary_email_address.email}
+                            </AccountEmail>
+                          </AccountDetails>
+                        </AccountHeader>
 
-                          <ActionRow>
-                            <ActionLink onClick={handleOpenManageAccount}>
-                              <Settings />
-                              Manage account
-                            </ActionLink>
-                            <ActionLink
-                              $destructive
-                              onClick={() =>
-                                handleSignOut(session?.active_signin?.id || "")
-                              }
-                            >
-                              <LogOut />
-                              Sign out
-                            </ActionLink>
-                          </ActionRow>
-                        </AccountSection>
-                      )}
+                        <ActionRow>
+                          <ActionLink onClick={handleOpenManageAccount}>
+                            <Settings />
+                            Manage account
+                          </ActionLink>
+                          <ActionLink
+                            $destructive
+                            onClick={() =>
+                              handleSignOut(session?.active_signin?.id || "")
+                            }
+                          >
+                            <LogOut />
+                            Sign out
+                          </ActionLink>
+                        </ActionRow>
+                      </AccountSection>
+                    )}
 
                   {isMultiSessionEnabled && (
                     <>

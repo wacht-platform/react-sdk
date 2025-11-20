@@ -28,7 +28,7 @@ const Button = styled.button<{ $primary?: boolean }>`
     props.$primary ? "white" : "var(--color-secondary-text)"};
   border: 1px solid
     ${(props) =>
-      props.$primary ? "var(--color-primary)" : "var(--color-border)"};
+    props.$primary ? "var(--color-primary)" : "var(--color-border)"};
   border-radius: var(--radius-md);
   font-size: 14px;
   cursor: pointer;
@@ -36,9 +36,9 @@ const Button = styled.button<{ $primary?: boolean }>`
 
   &:hover {
     background: ${(props) =>
-      props.$primary
-        ? "var(--color-primary-hover)"
-        : "var(--color-input-background)"};
+    props.$primary
+      ? "var(--color-primary-hover)"
+      : "var(--color-input-background)"};
   }
 
   &:disabled {
@@ -56,7 +56,7 @@ const ButtonGroup = styled.div`
 
 const Title = styled.div`
   font-size: 14px;
-  font-weight: 500;
+  font-weight: 400;
   color: var(--color-foreground);
   margin-bottom: 8px;
 `;

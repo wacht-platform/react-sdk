@@ -32,7 +32,7 @@ const CountBadge = styled.span`
   padding: 1px 4px;
   border-radius: 8px;
   font-size: 10px;
-  font-weight: 500;
+  font-weight: 400;
 `;
 
 interface ChannelSelectorProps {
@@ -43,7 +43,7 @@ interface ChannelSelectorProps {
 
 const CHANNEL_LABELS = {
   user: "Personal",
-  organization: "Organization", 
+  organization: "Organization",
   workspace: "Workspace",
   current: "Current Context"
 };
@@ -51,7 +51,7 @@ const CHANNEL_LABELS = {
 export function ChannelSelector({ selectedChannels, channelCounts, onChannelsChange }: ChannelSelectorProps) {
   const toggleChannel = (channel: string) => {
     const isSelected = selectedChannels.includes(channel);
-    
+
     if (isSelected) {
       // Remove channel
       const newChannels = selectedChannels.filter(c => c !== channel);
@@ -72,7 +72,7 @@ export function ChannelSelector({ selectedChannels, channelCounts, onChannelsCha
       {Object.entries(CHANNEL_LABELS).map(([channel, label]) => {
         const count = channelCounts?.[channel as keyof ChannelCounts] || 0;
         const isSelected = selectedChannels.includes(channel);
-        
+
         return (
           <ChannelButton
             key={channel}

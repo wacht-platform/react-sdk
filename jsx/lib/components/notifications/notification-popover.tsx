@@ -51,7 +51,7 @@ const Header = styled.div`
 
 const Title = styled.h3`
   font-size: 14px;
-  font-weight: 500;
+  font-weight: 400;
   color: var(--color-foreground);
   margin: 0;
 `;
@@ -61,7 +61,7 @@ const MarkAllButton = styled.button`
   border: none;
   color: var(--color-primary);
   font-size: var(--font-xs);
-  font-weight: 500;
+  font-weight: 400;
   cursor: pointer;
   padding: 4px 8px;
   border-radius: 6px;
@@ -120,7 +120,7 @@ const EmptyIcon = styled.div`
 
 const EmptyTitle = styled.h3`
   font-size: 14px;
-  font-weight: 500;
+  font-weight: 400;
   color: var(--color-foreground);
   margin: 0 0 4px 0;
 `;
@@ -142,7 +142,7 @@ const Footer = styled.div`
 const ViewAllLink = styled.a`
   color: var(--color-primary);
   font-size: var(--font-xs);
-  font-weight: 500;
+  font-weight: 400;
   text-decoration: none;
   transition: color 0.2s ease;
 
