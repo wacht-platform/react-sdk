@@ -92,7 +92,10 @@ export const useOrganizationList = () => {
       if (organization.description) {
         formData.append("description", organization.description);
       }
-      const response = await responseMapper<Organization>(
+      const response = await responseMapper<{
+        organization: Organization,
+        membership: OrganizationMembership
+      }>(
         await client("/organizations", {
           method: "POST",
           body: formData,
