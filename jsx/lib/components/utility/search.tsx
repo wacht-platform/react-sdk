@@ -36,6 +36,7 @@ export const SearchInput = ({
           width: "100%",
           fontSize: "14px",
           color: "var(--color-text)",
+          backgroundColor: "transparent",
         }}
       />
     </div>

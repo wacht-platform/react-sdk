@@ -26,6 +26,7 @@ import { ManageWorkspaceDialog } from "../workspace/manage-workspace-dialog";
 import { useDialog } from "../utility/use-dialog";
 import type { WorkspaceWithOrganization } from "@/types";
 import { useScreenContext } from "./context";
+import { usePopoverPosition } from "@/hooks/use-popover-position";
 
 const Container = styled.div`
   position: relative;
@@ -96,12 +97,15 @@ const OrgName = styled.span`
 
 const Dropdown = styled.div<{
   $isOpen: boolean;
-  $position?: { top: number; left: number };
+  $position?: { top?: number; bottom?: number; left?: number; right?: number; maxHeight?: number };
 }>`
   position: fixed;
-  top: ${(props) => props.$position?.top ?? -9999}px;
-  left: ${(props) => props.$position?.left ?? -9999}px;
+  ${(props) => (props.$position?.top !== undefined ? `top: ${props.$position.top}px;` : "")}
+  ${(props) => (props.$position?.bottom !== undefined ? `bottom: ${props.$position.bottom}px;` : "")}
+  ${(props) => (props.$position?.left !== undefined ? `left: ${props.$position.left}px;` : "")}
+  ${(props) => (props.$position?.right !== undefined ? `right: ${props.$position.right}px;` : "")}
   width: 300px;
+  max-height: ${(props) => (props.$position?.maxHeight ? `${props.$position.maxHeight}px` : "400px")};
   background: var(--color-background);
   border-radius: 8px;
   border: 1px solid var(--color-border);
@@ -109,7 +113,7 @@ const Dropdown = styled.div<{
     0 2px 8px var(--color-shadow),
     0 0 0 1px rgba(0, 0, 0, 0.02);
   z-index: 99999;
-  overflow: hidden;
+  overflow-y: auto;
   visibility: ${(props) =>
     props.$position && props.$isOpen ? "visible" : "hidden"};
   opacity: ${(props) => (props.$isOpen && props.$position ? 1 : 0)};
@@ -207,11 +211,6 @@ const MenuItemName = styled.span`
   color: var(--color-foreground);
 `;
 
-const MenuItemRole = styled.span`
-  font-size: 10px;
-  color: var(--color-secondary-text);
-  font-weight: 400;
-`;
 
 const ManageButton = styled.button`
   padding: 3px;
@@ -473,11 +472,14 @@ export const OrganizationSwitcher = ({
   const [open, setOpen] = useState(false);
   const [isSwitching, setIsSwitching] = useState(false);
   const [expandedOrgs, setExpandedOrgs] = useState<Set<string>>(new Set());
-  const [dropdownPosition, setDropdownPosition] = useState<
-    { top: number; left: number } | undefined
-  >();
-  const dropdownRef = useRef<HTMLDivElement>(null);
   const buttonRef = useRef<HTMLButtonElement>(null);
+  const dropdownRef = useRef<HTMLDivElement>(null);
+
+  const dropdownPosition = usePopoverPosition({
+    triggerRef: buttonRef,
+    isOpen: open,
+    minWidth: 300,
+  });
 
   const createOrgDialog = useDialog(false);
   const manageOrgDialog = useDialog(false);
@@ -577,21 +579,6 @@ export const OrganizationSwitcher = ({
     };
   }, [open]);
 
-  useEffect(() => {
-    if (open && buttonRef.current) {
-      requestAnimationFrame(() => {
-        if (buttonRef.current) {
-          const rect = buttonRef.current.getBoundingClientRect();
-          setDropdownPosition({
-            top: rect.bottom + 8,
-            left: rect.left,
-          });
-        }
-      });
-    } else {
-      setDropdownPosition(undefined);
-    }
-  }, [open]);
 
   useEffect(() => {
     if (leaveError) {
@@ -829,29 +816,6 @@ export const OrganizationSwitcher = ({
                             <MenuItemName>
                               {activeOrganization.name}
                             </MenuItemName>
-                            {(() => {
-                              const membership = organizationMemberships?.find(
-                                (m) =>
-                                  m.organization.id === activeOrganization.id,
-                              );
-                              if (
-                                membership?.roles &&
-                                membership.roles.length > 0
-                              ) {
-                                const firstRole = membership.roles[0].name;
-                                const remainingRolesCount = membership.roles.length - 1;
-                                const roleDisplay = remainingRolesCount > 0
-                                  ? `${firstRole.charAt(0).toUpperCase() + firstRole.slice(1)} +${remainingRolesCount}`
-                                  : firstRole.charAt(0).toUpperCase() + firstRole.slice(1);
-
-                                return (
-                                  <MenuItemRole>
-                                    {roleDisplay}
-                                  </MenuItemRole>
-                                );
-                              }
-                              return null;
-                            })()}
                           </MenuItemInfo>
                         </MenuItemContent>
                         <div
@@ -1102,18 +1066,6 @@ export const OrganizationSwitcher = ({
                                       </MenuItemAvatar>
                                       <MenuItemInfo>
                                         <MenuItemName>{org.name}</MenuItemName>
-                                        {membership.roles &&
-                                          membership.roles.length > 0 && (
-                                            <MenuItemRole>
-                                              {(() => {
-                                                const firstRole = membership.roles[0].name;
-                                                const remainingRolesCount = membership.roles.length - 1;
-                                                return remainingRolesCount > 0
-                                                  ? `${firstRole.charAt(0).toUpperCase() + firstRole.slice(1)} +${remainingRolesCount}`
-                                                  : firstRole.charAt(0).toUpperCase() + firstRole.slice(1);
-                                              })()}
-                                            </MenuItemRole>
-                                          )}
                                       </MenuItemInfo>
                                     </MenuItemContent>
                                     <HoverArrow

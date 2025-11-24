@@ -1019,6 +1019,23 @@ const DomainsSection = () => {
         </div>
       </HeaderCTAContainer>
 
+      <div
+        style={{
+          padding: "12px 16px",
+          background: "var(--color-background-alt)",
+          borderRadius: "8px",
+          marginBottom: "24px",
+          border: "1px solid var(--color-border)",
+          fontSize: "13px",
+          color: "var(--color-secondary-text)",
+        }}
+      >
+        Users with verified domain emails automatically join this organization
+        {activeOrganization?.auto_assigned_workspace_id &&
+          " and its default workspace"}
+        .
+      </div>
+
       {!filteredDomains?.length ? (
         <EmptyState
           title={

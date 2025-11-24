@@ -6,6 +6,7 @@ import { DefaultStylesProvider } from "../utility/root";
 import { useSession, useDeployment } from "@/hooks";
 import { ManageAccountDialog } from "./manage-account-dialog";
 import { useDialog } from "../utility/use-dialog";
+import { usePopoverPosition } from "@/hooks/use-popover-position";
 
 const Container = styled.div`
   position: relative;
@@ -213,19 +214,15 @@ export const UserButton: React.FC<UserButtonProps> = ({
   showName = true,
 }): JSX.Element => {
   const [isOpen, setIsOpen] = useState(false);
-  const [dropdownPosition, setDropdownPosition] = useState<
-    | {
-      top?: number;
-      bottom?: number;
-      left?: number;
-      right?: number;
-      maxHeight?: number;
-    }
-    | undefined
-  >();
-  const manageAccountDialog = useDialog(false);
   const buttonRef = useRef<HTMLButtonElement>(null);
   const dropdownRef = useRef<HTMLDivElement>(null);
+
+  const dropdownPosition = usePopoverPosition({
+    triggerRef: buttonRef,
+    isOpen,
+    minWidth: 380,
+  });
+  const manageAccountDialog = useDialog(false);
   const { session, signOut, switchSignIn, addNewAccount, refetch } =
     useSession();
   const { deployment } = useDeployment();
@@ -265,80 +262,6 @@ export const UserButton: React.FC<UserButtonProps> = ({
     };
   }, [isOpen]);
 
-  // Update dropdown position when open
-  useEffect(() => {
-    if (isOpen && buttonRef.current) {
-      const rect = buttonRef.current.getBoundingClientRect();
-      const dropdownWidth = 380; // min-width of dropdown
-      // const dropdownHeight = 250; // More reasonable estimated height for user dropdown
-
-      const windowWidth = window.innerWidth;
-      const windowHeight = window.innerHeight;
-
-      // Calculate available space in all directions
-      const spaceRight = windowWidth - rect.left;
-      const spaceLeft = rect.right;
-      const spaceBelow = windowHeight - rect.bottom;
-      const spaceAbove = rect.top;
-
-      // UserButton positioning debug
-
-      // Determine best horizontal position
-      let left: number | undefined;
-      let right: number | undefined;
-
-      // Check if button is closer to right edge or left edge
-      const distanceFromLeft = rect.left;
-      const distanceFromRight = windowWidth - rect.right;
-
-      if (distanceFromRight < distanceFromLeft && spaceLeft >= dropdownWidth) {
-        // Button is on the right side and there's space on the left
-        // Use RIGHT positioning to keep dropdown anchored to button
-        right = windowWidth - rect.right; // Align right edges
-      } else if (spaceRight >= dropdownWidth) {
-        // Normal case - enough space on right
-        left = rect.left; // Align left edges
-      } else if (spaceLeft >= dropdownWidth) {
-        // Not enough space on right, but enough on left
-        left = rect.right - dropdownWidth; // Align dropdown's right edge with button's right edge
-      } else {
-        // Not enough space on either side - use left and center as best as possible
-        left = Math.max(
-          8,
-          Math.min(
-            windowWidth - dropdownWidth - 8,
-            rect.left - (dropdownWidth - rect.width) / 2,
-          ),
-        );
-      }
-
-      // Determine best vertical position and max height
-      let top: number | undefined;
-      let bottom: number | undefined;
-      let maxHeight: number | undefined;
-
-      if (spaceBelow >= 100) {
-        // Position below if there's at least 100px of space
-        top = rect.bottom + 8;
-        maxHeight = spaceBelow - 16; // Leave some padding from bottom
-      } else if (spaceAbove >= 100) {
-        // Position above - use BOTTOM positioning to keep it anchored above button
-        const spaceFromBottom = windowHeight - rect.top;
-        bottom = spaceFromBottom + 8; // Position 8px above the button
-        maxHeight = Math.min(400, spaceAbove - 16); // Cap at 400px or available space
-      } else {
-        // Very little space - just position below and let it scroll
-        top = rect.bottom + 8;
-        maxHeight = Math.max(100, spaceBelow - 16);
-      }
-
-      // Calculated position debug
-
-      setDropdownPosition({ top, bottom, left, right, maxHeight });
-    } else {
-      setDropdownPosition(undefined);
-    }
-  }, [isOpen]);
 
   const toggleDropdown = () => {
     setIsOpen(!isOpen);
