@@ -356,6 +356,32 @@ function SignInFormContent() {
     if (sessionLoading) return;
 
     const urlParams = new URLSearchParams(window.location.search);
+    const impersonationToken = urlParams.get("impersonation_token");
+
+    if (impersonationToken && !signinAttempt && !loading) {
+      const handleImpersonation = async () => {
+        try {
+          setIsSubmitting(true);
+          await signIn.create({
+            strategy: "impersonation",
+            token: impersonationToken,
+          });
+
+          urlParams.delete("impersonation_token");
+          const newUrl = urlParams.toString()
+            ? `${window.location.pathname}?${urlParams.toString()}`
+            : window.location.pathname;
+          window.history.replaceState({}, "", newUrl);
+        } catch (err) {
+          setErrors({ submit: (err as Error).message });
+          setIsSubmitting(false);
+        }
+      };
+
+      handleImpersonation();
+      return;
+    }
+
     const attemptId = urlParams.get("signin_attempt_id");
 
     if (attemptId && session?.signin_attempts && !signinAttempt) {
@@ -370,7 +396,7 @@ function SignInFormContent() {
         window.history.replaceState({}, "", newUrl);
       }
     }
-  }, [session, sessionLoading, signinAttempt, setSignInAttempt]);
+  }, [session, sessionLoading, signinAttempt, setSignInAttempt, signIn, loading]);
 
   useEffect(() => {
     if (!signinAttempt) return;

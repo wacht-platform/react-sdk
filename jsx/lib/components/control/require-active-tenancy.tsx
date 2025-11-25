@@ -1,17 +1,13 @@
 "use client";
 
-import { useEffect, useState } from "react";
 import styled from "styled-components";
 import {
   useActiveOrganization,
-  useOrganizationList,
   useSession,
   useDeployment,
   useOrganizationMemberships,
 } from "@/hooks";
 import { useActiveWorkspace, useWorkspaceList } from "@/hooks/use-workspace";
-import { CreateOrganizationForm } from "../organization/create-organization-form";
-import { CreateWorkspaceForm } from "../workspace/create-workspace-form";
 import { OrganizationSelectorMenu } from "../organization/organization-selector-menu";
 import { Dialog } from "../utility/dialog";
 import { DefaultStylesProvider } from "../utility/root";
@@ -20,10 +16,7 @@ interface RequireActiveTenancyProps {
   children: React.ReactNode;
 }
 
-type DialogMode = "select" | "createOrg" | "createWorkspace" | null;
-
 const StyledDialogContent = styled(Dialog.Content)`
-  transition: width 0.3s ease-in-out;
   padding: 0;
   max-width: 90vw;
 `;
@@ -31,30 +24,22 @@ const StyledDialogContent = styled(Dialog.Content)`
 export const RequireActiveTenancy = ({
   children,
 }: RequireActiveTenancyProps) => {
-  const [dialogMode, setDialogMode] = useState<DialogMode>(null);
-  const [selectedOrgForWorkspace, setSelectedOrgForWorkspace] = useState<
-    string | null
-  >(null);
-
   const { loading: sessionLoading, session } = useSession();
-  const { organizations, loading: organizationsLoading } =
-    useOrganizationList();
   const { activeOrganization } = useActiveOrganization();
   const { activeWorkspace, loading: workspaceLoading } = useActiveWorkspace();
-  const { workspaces, loading: workspaceListLoading } = useWorkspaceList();
+  const { workspaces } = useWorkspaceList();
   const { deployment } = useDeployment();
-  const { refetch: refetchOrganizations, organizationMemberships } =
-    useOrganizationMemberships();
+  const { organizationMemberships } = useOrganizationMemberships();
 
+  const workspacesEnabled =
+    deployment?.b2b_settings.workspaces_enabled ?? false;
 
-  const workspacesEnabled = deployment?.b2b_settings.workspaces_enabled;
-
-  // Find current active membership and check eligibility
+  // Check if user has restrictions on current memberships
   const activeOrgMembership = organizationMemberships?.find(
-    (m) => m.organization.id === activeOrganization?.id
+    (m) => m.organization.id === activeOrganization?.id,
   );
   const activeWorkspaceMembership = workspaces?.find(
-    (w) => w.id === session?.active_signin?.active_workspace_membership_id
+    (w) => w.id === session?.active_signin?.active_workspace_membership_id,
   );
 
   const hasOrgRestriction =
@@ -65,145 +50,57 @@ export const RequireActiveTenancy = ({
     activeWorkspaceMembership?.eligibility_restriction?.type !== "none" &&
     activeWorkspaceMembership?.eligibility_restriction?.type !== undefined;
 
-  useEffect(() => {
-    if (sessionLoading || organizationsLoading) return;
-    if (workspacesEnabled && workspaceLoading) return;
+  // Wait for initial data to load
+  if (sessionLoading || (workspacesEnabled && workspaceLoading)) {
+    return null;
+  }
 
-    if (organizations?.length === 0) {
-      setDialogMode("createOrg");
-      return;
-    }
-
-    // If we are already in a creation mode, don't override it
-    if (dialogMode === "createOrg" || dialogMode === "createWorkspace") {
-      return;
-    }
-
-    if (!activeOrganization && organizations && organizations.length > 0) {
-      setDialogMode("select");
-      return;
-    }
-
-    // Show selector if current org/workspace has restrictions
+  // Check if user has valid active tenancy
+  const hasValidTenancy = () => {
+    // If user has restrictions, they need to switch
     if (hasOrgRestriction || hasWorkspaceRestriction) {
-      setDialogMode("select");
-      return;
+      return false;
     }
 
-    if (workspacesEnabled && activeOrganization && !activeWorkspace) {
-      const orgWorkspaces = workspaces?.filter(
-        (w) => w.organization.id === activeOrganization.id,
-      );
-
-      if (!orgWorkspaces || orgWorkspaces.length === 0) {
-        setDialogMode("createWorkspace");
-      } else {
-        setDialogMode("select");
-      }
-      return;
+    // Must have an active organization
+    if (!activeOrganization) {
+      return false;
     }
 
-    setDialogMode(null);
-  }, [
-    sessionLoading,
-    organizationsLoading,
-    workspaceLoading,
-    organizations,
-    activeOrganization,
-    activeWorkspace,
-    workspaces,
-    workspacesEnabled,
-    dialogMode,
-  ]);
+    // If workspaces are disabled, org is enough
+    if (!workspacesEnabled) {
+      return true;
+    }
 
-  if (organizationsLoading || sessionLoading) {
-    return null;
-  }
+    // If workspaces enabled, must have active workspace
+    if (!activeWorkspace) {
+      return false;
+    }
 
-  if (workspacesEnabled && (workspaceLoading || workspaceListLoading)) {
-    return null;
-  }
+    // Workspace must belong to the active org
+    const workspaceBelongsToOrg = workspaces?.some(
+      (w) =>
+        w.id === activeWorkspace.id &&
+        w.organization.id === activeOrganization.id,
+    );
 
-  if (!dialogMode) {
+    return workspaceBelongsToOrg;
+  };
+
+  // If valid tenancy, render the app
+  if (hasValidTenancy()) {
+    console.log("valid");
     return <>{children}</>;
   }
 
-
-  const handleOrganizationCreated = async () => {
-    await refetchOrganizations();
-
-    // Only show workspace creation dialog if workspaces are enabled
-    if (!workspacesEnabled) {
-      setDialogMode(null);
-      return;
-    }
-
-    setTimeout(() => {
-      if (organizationMemberships && organizationMemberships.length > 0) {
-        const newestOrg =
-          organizationMemberships[organizationMemberships.length - 1];
-        setSelectedOrgForWorkspace(newestOrg.organization.id);
-      }
-      setDialogMode("createWorkspace");
-    }, 500);
-  };
-
+  // Otherwise, show the organization selector menu
+  // It handles all the org/workspace creation and selection logic
   return (
     <DefaultStylesProvider>
       <Dialog isOpen={true}>
         <Dialog.Overlay>
-          <StyledDialogContent
-            style={{
-              width: "800px",
-            }}
-          >
-            {dialogMode === "select" ? (
-              <OrganizationSelectorMenu
-                onSelect={() => {
-                  setDialogMode(null);
-                }}
-                onCreateOrganization={() => {
-                  setDialogMode("createOrg");
-                }}
-                onCreateWorkspace={(orgId) => {
-                  setSelectedOrgForWorkspace(orgId);
-                  setDialogMode("createWorkspace");
-                }}
-              />
-            ) : (
-              <Dialog.Body style={{ padding: 0 }}>
-                {dialogMode === "createOrg" && (
-                  <CreateOrganizationForm
-                    onSuccess={handleOrganizationCreated}
-                    onCancel={
-                      organizations && organizations.length > 0
-                        ? () => setDialogMode("select")
-                        : undefined
-                    }
-                  />
-                )}
-
-                {dialogMode === "createWorkspace" &&
-                  (selectedOrgForWorkspace || activeOrganization) && (
-                    <CreateWorkspaceForm
-                      organizationId={
-                        selectedOrgForWorkspace || activeOrganization!.id
-                      }
-                      onSuccess={() => {
-                        setSelectedOrgForWorkspace(null);
-                        setDialogMode(null);
-                      }}
-                      onCancel={() => {
-                        setSelectedOrgForWorkspace(null);
-                        setDialogMode("select");
-                      }}
-                      onCreateOrganization={() => {
-                        setDialogMode("createOrg");
-                      }}
-                    />
-                  )}
-              </Dialog.Body>
-            )}
+          <StyledDialogContent style={{ width: "850px" }}>
+            <OrganizationSelectorMenu />
           </StyledDialogContent>
         </Dialog.Overlay>
       </Dialog>

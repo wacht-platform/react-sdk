@@ -360,7 +360,7 @@ const PlusIcon = styled.div`
 
 interface CreateWorkspaceFormProps {
   organizationId: string;
-  onSuccess?: () => void;
+  onSuccess?: (workspace?: any) => void;
   onCancel?: () => void;
   onCreateOrganization?: () => void;
 }
@@ -460,13 +460,13 @@ export const CreateWorkspaceForm: React.FC<CreateWorkspaceFormProps> = ({
 
     setIsSubmitting(true);
     try {
-      await createWorkspace(
+      const createdWorkspace = await createWorkspace(
         selectedOrgId,
         sanitizedName,
         image,
         sanitizedDescription,
       );
-      onSuccess?.();
+      onSuccess?.(createdWorkspace);
     } catch (error: any) {
       const errorMessage =
         error.message || "Failed to create workspace. Please try again.";

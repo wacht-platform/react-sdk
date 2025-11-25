@@ -240,7 +240,7 @@ const UploadText = styled.div`
 `;
 
 interface CreateOrganizationFormProps {
-  onSuccess?: () => void;
+  onSuccess?: (organization?: any) => void;
   onCancel?: () => void;
 }
 
@@ -341,12 +341,12 @@ export const CreateOrganizationForm: React.FC<CreateOrganizationFormProps> = ({
 
     setIsSubmitting(true);
     try {
-      await createOrganization({
+      const createdOrganization = await createOrganization({
         name: sanitizedName,
         description: sanitizedDescription,
         image,
       });
-      onSuccess?.();
+      onSuccess?.(createdOrganization);
     } catch (error: any) {
       const errorMessage =
         error.message || "Failed to create organization. Please try again.";

@@ -30,6 +30,7 @@ type GenericSignInParams = {
   password?: string;
   phone?: string;
   strategy?: string;
+  token?: string;
 };
 
 type SignInGeneric = ({
@@ -38,6 +39,7 @@ type SignInGeneric = ({
   password,
   phone,
   strategy,
+  token,
 }: GenericSignInParams) => Promise<ApiResult<Session>>;
 
 type PhoneSignInParams = {
@@ -142,21 +144,21 @@ type SignIn = {
 
 type UseSignInReturnType =
   | {
-      loading: false;
-      signIn: SignIn;
-      signinAttempt: SigninAttempt | null;
-      discardSignInAttempt: () => void;
-      setSignInAttempt: (attempt: SigninAttempt | null) => void;
-      error: ApiResult<unknown, ErrorInterface> | null;
-    }
+    loading: false;
+    signIn: SignIn;
+    signinAttempt: SigninAttempt | null;
+    discardSignInAttempt: () => void;
+    setSignInAttempt: (attempt: SigninAttempt | null) => void;
+    error: ApiResult<unknown, ErrorInterface> | null;
+  }
   | {
-      loading: true;
-      signIn: never;
-      signinAttempt: null;
-      discardSignInAttempt: () => void;
-      setSignInAttempt: (attempt: SigninAttempt | null) => void;
-      error: null;
-    };
+    loading: true;
+    signIn: never;
+    signinAttempt: null;
+    discardSignInAttempt: () => void;
+    setSignInAttempt: (attempt: SigninAttempt | null) => void;
+    error: null;
+  };
 
 type InitSSOResponseType = {
   oauth_url: string;
@@ -353,6 +355,7 @@ function builderGeneric(
     password,
     phone,
     strategy,
+    token,
   }: GenericSignInParams) => {
     const form = new FormData();
 
@@ -363,6 +366,7 @@ function builderGeneric(
     if (username) form.append("username", username);
     if (password) form.append("password", password);
     if (phone) form.append("phone", phone);
+    if (token) form.append("token", token);
 
     const response = await client("/auth/signin", {
       method: "POST",
@@ -517,28 +521,28 @@ type SignInFunction<T extends SignInStrategy> = {
 
 export type UseSignInWithStrategyReturnType<T extends SignInStrategy> =
   | {
-      loading: true;
-      signIn: never;
-      signinAttempt: null;
-      discardSignInAttempt: () => void;
-      setSignInAttempt: (attempt: SigninAttempt | null) => void;
-      error: null;
-    }
+    loading: true;
+    signIn: never;
+    signinAttempt: null;
+    discardSignInAttempt: () => void;
+    setSignInAttempt: (attempt: SigninAttempt | null) => void;
+    error: null;
+  }
   | {
-      loading: false;
-      signIn: {
-        create: SignInFunction<T>;
-        completeVerification: (verificationCode: string) => Promise<Session>;
-        prepareVerification: (
-          params: VerificationParams,
-        ) => Promise<ApiResult<PrepareVerificationResponse>>;
-        completeProfile: (data: ProfileCompletionData) => Promise<Session>;
-      };
-      signinAttempt: SigninAttempt | null;
-      discardSignInAttempt: () => void;
-      setSignInAttempt: (attempt: SigninAttempt | null) => void;
-      error: ApiResult<unknown, ErrorInterface> | null;
+    loading: false;
+    signIn: {
+      create: SignInFunction<T>;
+      completeVerification: (verificationCode: string) => Promise<Session>;
+      prepareVerification: (
+        params: VerificationParams,
+      ) => Promise<ApiResult<PrepareVerificationResponse>>;
+      completeProfile: (data: ProfileCompletionData) => Promise<Session>;
     };
+    signinAttempt: SigninAttempt | null;
+    discardSignInAttempt: () => void;
+    setSignInAttempt: (attempt: SigninAttempt | null) => void;
+    error: ApiResult<unknown, ErrorInterface> | null;
+  };
 
 export function useSignInWithStrategy<T extends SignInStrategy>(
   strategy: T,
