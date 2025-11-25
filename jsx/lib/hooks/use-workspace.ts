@@ -71,6 +71,7 @@ export const useWorkspaceList = () => {
     return workspaceMemberships?.map((membership) => ({
       ...membership.workspace,
       organization: membership.organization,
+      eligibility_restriction: membership.eligibility_restriction,
     })) as WorkspaceWithOrganization[];
   }, [workspaceMemberships]);
 

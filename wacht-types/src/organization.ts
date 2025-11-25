@@ -33,6 +33,10 @@ export interface OrganizationMembershipWithOrganization {
   public_metadata: Record<string, unknown>;
   created_at: string;
   updated_at: string;
+  eligibility_restriction?: {
+    type: "none" | "ip_not_allowed" | "mfa_required" | "ip_and_mfa_required";
+    message: string;
+  };
 }
 
 export interface OrganizationMembership {
@@ -85,6 +89,10 @@ export interface Workspace {
 
 export interface WorkspaceWithOrganization extends Workspace {
   organization: Organization;
+  eligibility_restriction?: {
+    type: "none" | "ip_not_allowed" | "mfa_required" | "ip_and_mfa_required";
+    message: string;
+  };
 }
 
 export interface WorkspaceRole {
@@ -105,6 +113,10 @@ export interface WorkspaceMembership {
   public_metadata: Record<string, unknown>;
   created_at: string;
   updated_at: string;
+  eligibility_restriction?: {
+    type: "none" | "ip_not_allowed" | "mfa_required" | "ip_and_mfa_required";
+    message: string;
+  };
 }
 
 export interface OrganizationUpdate {

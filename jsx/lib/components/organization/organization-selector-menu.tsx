@@ -2,7 +2,7 @@
 
 import { useState } from "react";
 import styled from "styled-components";
-import { Plus, Building2, Users, ChevronRight, ArrowLeft } from "lucide-react";
+import { Plus, Building2, Users, ChevronRight, ArrowLeft, AlertTriangle } from "lucide-react";
 import { useSession, useDeployment, useOrganizationMemberships } from "@/hooks";
 import { useWorkspaceList } from "@/hooks/use-workspace";
 import type { Organization, WorkspaceWithOrganization, OrganizationMembershipWithOrganization } from "@/types";
@@ -120,7 +120,8 @@ const ListContainer = styled.div`
 `;
 
 const ListItem = styled.button`
-  display: flex;
+  display: grid;
+  grid-template-columns: auto 1fr auto;
   align-items: center;
   gap: var(--space-md);
   width: 100%;
@@ -203,6 +204,23 @@ const ItemArrow = styled.div`
   svg {
     width: 16px;
     height: 16px;
+  }
+`;
+
+const WarningText = styled.div`
+  grid-column: 2 / -1;
+  font-size: 12px;
+  color: var(--color-warning, #b45309);
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  margin-top: 4px;
+  font-weight: 400;
+
+  svg {
+    width: 14px;
+    height: 14px;
+    flex-shrink: 0;
   }
 `;
 
@@ -408,36 +426,49 @@ export const OrganizationSelectorMenu = ({
               <>
                 {selectedOrgWorkspaces && selectedOrgWorkspaces.length > 0 ? (
                   selectedOrgWorkspaces.map(
-                    (workspace: WorkspaceWithOrganization) => (
-                      <ListItem
-                        key={workspace.id}
-                        onClick={() =>
-                          handleSelectWorkspace(selectedOrgForWorkspace, workspace)
-                        }
-                        disabled={switching === workspace.id}
-                      >
-                        <Avatar>
-                          {workspace.image_url ? (
-                            <AvatarImage
-                              src={workspace.image_url}
-                              alt={workspace.name}
-                            />
-                          ) : (
-                            getInitials(workspace.name).charAt(0)
+                    (workspace: WorkspaceWithOrganization) => {
+                      const hasRestriction =
+                        workspace.eligibility_restriction?.type !== "none" &&
+                        workspace.eligibility_restriction?.type !== undefined;
+
+                      return (
+                        <ListItem
+                          key={workspace.id}
+                          onClick={() =>
+                            !hasRestriction && handleSelectWorkspace(selectedOrgForWorkspace, workspace)
+                          }
+                          disabled={switching === workspace.id || hasRestriction}
+                          style={{ opacity: hasRestriction ? 0.7 : 1 }}
+                        >
+                          <Avatar>
+                            {workspace.image_url ? (
+                              <AvatarImage
+                                src={workspace.image_url}
+                                alt={workspace.name}
+                              />
+                            ) : (
+                              getInitials(workspace.name).charAt(0)
+                            )}
+                          </Avatar>
+                          <ItemContent>
+                            <ItemName>{workspace.name}</ItemName>
+                            <ItemMeta>
+                              <Users />
+                              Workspace
+                            </ItemMeta>
+                          </ItemContent>
+                          <ItemArrow>
+                            <ChevronRight />
+                          </ItemArrow>
+                          {hasRestriction && (
+                            <WarningText>
+                              <AlertTriangle size={14} />
+                              {workspace.eligibility_restriction?.message}
+                            </WarningText>
                           )}
-                        </Avatar>
-                        <ItemContent>
-                          <ItemName>{workspace.name}</ItemName>
-                          <ItemMeta>
-                            <Users />
-                            Workspace
-                          </ItemMeta>
-                        </ItemContent>
-                        <ItemArrow>
-                          <ChevronRight />
-                        </ItemArrow>
-                      </ListItem>
-                    ),
+                        </ListItem>
+                      );
+                    },
                   )
                 ) : (
                   <EmptyState>
@@ -472,11 +503,16 @@ export const OrganizationSelectorMenu = ({
                   ? `${firstRole.charAt(0).toUpperCase() + firstRole.slice(1)} +${remainingRolesCount}`
                   : firstRole.charAt(0).toUpperCase() + firstRole.slice(1);
 
+                const hasRestriction =
+                  membership.eligibility_restriction?.type !== "none" &&
+                  membership.eligibility_restriction?.type !== undefined;
+
                 return (
                   <ListItem
                     key={org.id}
-                    onClick={() => handleSelectOrganization(org)}
-                    disabled={switching === org.id}
+                    onClick={() => !hasRestriction && handleSelectOrganization(org)}
+                    disabled={switching === org.id || hasRestriction}
+                    style={{ opacity: hasRestriction ? 0.7 : 1 }}
                   >
                     <Avatar>
                       {org.image_url ? (
@@ -505,6 +541,12 @@ export const OrganizationSelectorMenu = ({
                     <ItemArrow>
                       <ChevronRight />
                     </ItemArrow>
+                    {hasRestriction && (
+                      <WarningText>
+                        <AlertTriangle size={14} />
+                        {membership.eligibility_restriction?.message}
+                      </WarningText>
+                    )}
                   </ListItem>
                 );
               })

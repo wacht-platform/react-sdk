@@ -1,6 +1,6 @@
 {
   "name": "@wacht/nextjs",
-  "version": "0.0.1-alpha.6",
+  "version": "0.0.1-alpha.7",
   "description": "Next.js adapter for Wacht authentication library",
   "type": "module",
   "main": "dist/index.cjs.js",
@@ -40,6 +40,7 @@
   },
   "peerDependencies": {
     "@wacht/jsx": "*",
+    "@wacht/types": "*",
     "react": "catalog:",
     "react-dom": "catalog:",
     "next": "catalog:"

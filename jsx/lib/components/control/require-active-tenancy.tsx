@@ -36,7 +36,7 @@ export const RequireActiveTenancy = ({
     string | null
   >(null);
 
-  const { loading: sessionLoading } = useSession();
+  const { loading: sessionLoading, session } = useSession();
   const { organizations, loading: organizationsLoading } =
     useOrganizationList();
   const { activeOrganization } = useActiveOrganization();
@@ -46,7 +46,24 @@ export const RequireActiveTenancy = ({
   const { refetch: refetchOrganizations, organizationMemberships } =
     useOrganizationMemberships();
 
+
   const workspacesEnabled = deployment?.b2b_settings.workspaces_enabled;
+
+  // Find current active membership and check eligibility
+  const activeOrgMembership = organizationMemberships?.find(
+    (m) => m.organization.id === activeOrganization?.id
+  );
+  const activeWorkspaceMembership = workspaces?.find(
+    (w) => w.id === session?.active_signin?.active_workspace_membership_id
+  );
+
+  const hasOrgRestriction =
+    activeOrgMembership?.eligibility_restriction?.type !== "none" &&
+    activeOrgMembership?.eligibility_restriction?.type !== undefined;
+
+  const hasWorkspaceRestriction =
+    activeWorkspaceMembership?.eligibility_restriction?.type !== "none" &&
+    activeWorkspaceMembership?.eligibility_restriction?.type !== undefined;
 
   useEffect(() => {
     if (sessionLoading || organizationsLoading) return;
@@ -63,6 +80,12 @@ export const RequireActiveTenancy = ({
     }
 
     if (!activeOrganization && organizations && organizations.length > 0) {
+      setDialogMode("select");
+      return;
+    }
+
+    // Show selector if current org/workspace has restrictions
+    if (hasOrgRestriction || hasWorkspaceRestriction) {
       setDialogMode("select");
       return;
     }
@@ -104,6 +127,7 @@ export const RequireActiveTenancy = ({
   if (!dialogMode) {
     return <>{children}</>;
   }
+
 
   const handleOrganizationCreated = async () => {
     await refetchOrganizations();

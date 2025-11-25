@@ -175,6 +175,8 @@ export interface DeploymentUISettings {
   dark_mode_settings: DarkModeSettings;
 }
 
+
+
 export interface Deployment {
   id: number;
   created_at: string;

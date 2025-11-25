@@ -1,6 +1,10 @@
 "use client";
 
-import type { ClinetReponse, Deployment } from "@/types";
+import type {
+  ClinetReponse,
+  Deployment,
+  DeploymentUISettings,
+} from "@/types";
 import type { DeploymentContextType, PlatformAdapter } from "@/types";
 import { useState, useEffect, useMemo, createContext, useRef } from "react";
 import type { ReactNode } from "react";
@@ -13,12 +17,14 @@ interface DeploymentProviderProps {
   children: ReactNode;
   publicKey: string;
   adapter: PlatformAdapter;
+  uiOverwrites?: Partial<DeploymentUISettings>;
 }
 
 function DeploymentProvider({
   children,
   publicKey,
   adapter,
+  uiOverwrites,
 }: DeploymentProviderProps) {
   const [loading, setLoading] = useState(true);
   const [deployment, setDeployment] = useState<Deployment | null>(null);
@@ -80,6 +86,14 @@ function DeploymentProvider({
         (await deployment.json()) as ClinetReponse<Deployment>;
 
       deploymentConfig.data.backend_host = baseUrl;
+
+      if (uiOverwrites) {
+        deploymentConfig.data.ui_settings = {
+          ...deploymentConfig.data.ui_settings,
+          ...uiOverwrites,
+        };
+      }
+
       setDeployment(deploymentConfig.data);
 
       if (staging && deployment.headers.get("x-development-session")) {

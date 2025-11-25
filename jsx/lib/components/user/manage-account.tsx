@@ -68,6 +68,8 @@ import { OperaIcon } from "../icons/opera";
 import { BraveIcon } from "../icons/brave";
 import { useDeployment } from "@/hooks/use-deployment";
 import { countries } from "@/constants/geo";
+import { ConfirmationPopover } from "../utility/confirmation-popover";
+
 import { FormGroup, Label } from "../utility/form";
 import { Input } from "../utility/input";
 import {
@@ -1354,6 +1356,8 @@ const SecurityManagementSection = () => {
     user?.second_factor_policy || "none",
   );
 
+  const [showDeleteAuthPopover, setShowDeleteAuthPopover] = useState(false);
+
   const handleSecondFactorPolicyChange = async (
     policy: "none" | "enforced",
   ) => {
@@ -1488,7 +1492,8 @@ const SecurityManagementSection = () => {
       setIsRemovingAuth(true);
       await deleteAuthenticator(user.user_authenticator.id);
       await user.refetch();
-      toast("Authenticator removed successfully", "info");
+      setShowDeleteAuthPopover(false);
+      toast("Two-factor authentication removed successfully", "info");
     } catch (error: any) {
       toast(error.message || "Failed to remove authenticator", "error");
     } finally {
@@ -2241,21 +2246,30 @@ const SecurityManagementSection = () => {
 
                     {item.id === "authenticator" &&
                       user?.user_authenticator && (
-                        <Button
-                          onClick={handleRemoveAuthenticator}
-                          disabled={isRemovingAuth}
-                          style={{
-                            padding: "6px 12px",
-                            fontSize: "12px",
-                            background: "var(--color-error)",
-                            color: "white",
-                            border: "1px solid var(--color-error)",
-                            borderRadius: "var(--radius-md)",
-                            fontWeight: "400",
-                          }}
-                        >
-                          {isRemovingAuth ? "Removing..." : "Remove"}
-                        </Button>
+                        <div style={{ position: "relative" }}>
+                          <Button
+                            onClick={() => setShowDeleteAuthPopover(true)}
+                            disabled={isRemovingAuth}
+                            style={{
+                              padding: "6px 16px",
+                              fontSize: "13px",
+                              background: "var(--color-error)",
+                              border: "1px solid var(--color-error)",
+                              color: "white",
+                              cursor: isRemovingAuth ? "not-allowed" : "pointer",
+                              opacity: isRemovingAuth ? 0.6 : 1,
+                            }}
+                          >
+                            {isRemovingAuth ? "Removing..." : "Remove"}
+                          </Button>
+                          {showDeleteAuthPopover && (
+                            <ConfirmationPopover
+                              title="Remove MFA and reset policy to default?"
+                              onConfirm={handleRemoveAuthenticator}
+                              onCancel={() => setShowDeleteAuthPopover(false)}
+                            />
+                          )}
+                        </div>
                       )}
 
                     {item.id === "backup_codes" && (
