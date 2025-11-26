@@ -1,4 +1,4 @@
-import { useEffect, useState } from "react";
+import { useEffect, useState, useRef } from "react";
 import styled, { keyframes } from "styled-components";
 import { Loader2 } from "lucide-react";
 import { useSignInWithStrategy } from "../../hooks/use-signin";
@@ -45,112 +45,112 @@ const SUBMIT_ERROR_CODES: ReadonlySet<ErrorCodeType> = new Set([
 
 const spin = keyframes`
   from {
-    transform: rotate(0deg);
-  }
+  transform: rotate(0deg);
+}
   to {
-    transform: rotate(360deg);
-  }
+  transform: rotate(360deg);
+}
 `;
 
 const Container = styled.div`
-  max-width: 380px;
-  width: 380px;
-  padding: var(--space-3xl);
-  background: var(--color-background);
-  border-radius: var(--radius-lg);
-  box-shadow: 0 4px 12px var(--color-shadow);
+max - width: 380px;
+width: 380px;
+padding: var(--space - 3xl);
+background: var(--color - background);
+border - radius: var(--radius - lg);
+box - shadow: 0 4px 12px var(--color - shadow);
 `;
 
 const LoadingContainer = styled.div`
-  display: flex;
-  justify-content: center;
-  align-items: center;
-  min-height: 200px;
+display: flex;
+justify - content: center;
+align - items: center;
+min - height: 200px;
 
   svg {
-    animation: ${spin} 1s linear infinite;
-    color: var(--color-primary);
-  }
+  animation: ${spin} 1s linear infinite;
+  color: var(--color - primary);
+}
 `;
 
 const Header = styled.div`
-  text-align: center;
-  margin-bottom: var(--space-2xl);
-  position: relative;
+text - align: center;
+margin - bottom: var(--space - 2xl);
+position: relative;
 `;
 
 const Title = styled.h1`
-  font-size: var(--font-lg);
-  font-weight: 400;
-  color: var(--color-foreground);
-  margin-bottom: var(--space-xs);
-  margin-top: 0;
+font - size: var(--font - lg);
+font - weight: 400;
+color: var(--color - foreground);
+margin - bottom: var(--space - xs);
+margin - top: 0;
 `;
 
 const Subtitle = styled.p`
-  color: var(--color-secondary-text);
-  font-size: var(--font-xs);
+color: var(--color - secondary - text);
+font - size: var(--font - xs);
 `;
 
 const Divider = styled.div`
-  position: relative;
-  text-align: center;
-  margin: var(--space-2xl) 0;
+position: relative;
+text - align: center;
+margin: var(--space - 2xl) 0;
 
   &::before {
-    content: "";
-    position: absolute;
-    top: 50%;
-    left: 0;
-    right: 0;
-    height: 1px;
-    background: var(--color-border);
-  }
+  content: "";
+  position: absolute;
+  top: 50 %;
+  left: 0;
+  right: 0;
+  height: 1px;
+  background: var(--color - border);
+}
 `;
 
 const DividerText = styled.span`
-  position: relative;
-  background: var(--color-background);
-  padding: 0 var(--space-md);
-  color: var(--color-muted);
-  font-size: var(--font-xs);
-  font-weight: 400;
-  text-transform: uppercase;
-  letter-spacing: 0.05em;
+position: relative;
+background: var(--color - background);
+padding: 0 var(--space - md);
+color: var(--color - muted);
+font - size: var(--font - xs);
+font - weight: 400;
+text - transform: uppercase;
+letter - spacing: 0.05em;
 `;
 
 const PasswordGroup = styled.div`
-  position: relative;
+position: relative;
 `;
 
 const ErrorMessage = styled.p`
-  font-size: var(--font-2xs);
-  color: var(--color-error);
-  margin: 0;
-  margin-top: var(--space-2xs);
+font - size: var(--font - 2xs);
+color: var(--color - error);
+margin: 0;
+margin - top: var(--space - 2xs);
 `;
 
 const SubmitButton = styled(Button)`
-  margin-top: var(--space-lg);
+margin - top: var(--space - lg);
 `;
 
 const Footer = styled.div`
-  margin-top: var(--space-lg);
-  text-align: center;
-  font-size: var(--font-xs);
-  color: var(--color-secondary-text);
+margin - top: var(--space - lg);
+text - align: center;
+font - size: var(--font - xs);
+color: var(--color - secondary - text);
 `;
 
 const Link = styled.span`
-  color: var(--color-primary);
-  text-decoration: none;
-  font-weight: 400;
-  transition: color 0.2s;
-  cursor: pointer;
+color: var(--color - primary);
+text - decoration: none;
+font - weight: 400;
+transition: color 0.2s;
+cursor: pointer;
 
   &:hover {
-    color: var(--color-primary-hover);
-  }
+  color: var(--color - primary - hover);
+}
 `;
 
 export function SignInForm() {
@@ -352,13 +352,26 @@ function SignInFormContent() {
     }
   };
 
+  const impersonationInitiatedRef = useRef(false);
+
   useEffect(() => {
     if (sessionLoading) return;
 
     const urlParams = new URLSearchParams(window.location.search);
     const impersonationToken = urlParams.get("impersonation_token");
 
-    if (impersonationToken && !signinAttempt && !loading) {
+    if (impersonationToken && !signinAttempt && !loading && !impersonationInitiatedRef.current) {
+      // Mark as initiated immediately to prevent re-runs
+      impersonationInitiatedRef.current = true;
+
+      // Remove token from URL immediately
+      urlParams.delete("impersonation_token");
+      const newUrl = urlParams.toString()
+        ? `${window.location.pathname}?${urlParams.toString()} `
+        : window.location.pathname;
+      window.history.replaceState({}, "", newUrl);
+
+      // Then handle the impersonation
       const handleImpersonation = async () => {
         try {
           setIsSubmitting(true);
@@ -366,15 +379,11 @@ function SignInFormContent() {
             strategy: "impersonation",
             token: impersonationToken,
           });
-
-          urlParams.delete("impersonation_token");
-          const newUrl = urlParams.toString()
-            ? `${window.location.pathname}?${urlParams.toString()}`
-            : window.location.pathname;
-          window.history.replaceState({}, "", newUrl);
         } catch (err) {
           setErrors({ submit: (err as Error).message });
           setIsSubmitting(false);
+          // Reset ref on error so user can retry
+          impersonationInitiatedRef.current = false;
         }
       };
 
@@ -391,12 +400,12 @@ function SignInFormContent() {
 
         urlParams.delete("signin_attempt_id");
         const newUrl = urlParams.toString()
-          ? `${window.location.pathname}?${urlParams.toString()}`
+          ? `${window.location.pathname}?${urlParams.toString()} `
           : window.location.pathname;
         window.history.replaceState({}, "", newUrl);
       }
     }
-  }, [session, sessionLoading, signinAttempt, setSignInAttempt, signIn, loading]);
+  }, [session, sessionLoading, signinAttempt, setSignInAttempt, loading]);
 
   useEffect(() => {
     if (!signinAttempt) return;
