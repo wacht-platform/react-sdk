@@ -948,6 +948,14 @@ const PhoneManagementSection = () => {
 };
 
 const IconWrapper = styled.div`
+  width: 20px;
+  height: 20px;
+  flex-shrink: 0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  overflow: hidden;
+  
   svg {
     width: 20px;
     height: 20px;
@@ -1197,6 +1205,7 @@ export const ManageAccount = () => {
   const authSettings = deployment?.auth_settings;
   const showEmailTab = authSettings?.email_address?.enabled;
   const showPhoneTab = authSettings?.phone_number?.enabled;
+  const showSocialTab = deployment?.social_connections?.some((conn) => conn.enabled) || false;
   const showSecurityTab =
     authSettings?.password?.enabled ||
     authSettings?.auth_factors_enabled?.authenticator ||
@@ -1246,15 +1255,17 @@ export const ManageAccount = () => {
                   </Tab>
                 )}
 
-                <Tab
-                  $isActive={activeTab === "social"}
-                  onClick={() => setActiveTab("social")}
-                >
-                  <TabIcon>
-                    <Link2 size={16} />
-                    Connections
-                  </TabIcon>
-                </Tab>
+                {showSocialTab && (
+                  <Tab
+                    $isActive={activeTab === "social"}
+                    onClick={() => setActiveTab("social")}
+                  >
+                    <TabIcon>
+                      <Link2 size={16} />
+                      Connections
+                    </TabIcon>
+                  </Tab>
+                )}
 
                 {showSecurityTab && (
                   <Tab
@@ -1288,7 +1299,7 @@ export const ManageAccount = () => {
               {activeTab === "phone" && showPhoneTab && (
                 <PhoneManagementSection />
               )}
-              {activeTab === "social" && <SocialManagementSection />}
+              {activeTab === "social" && showSocialTab && <SocialManagementSection />}
               {activeTab === "security" && showSecurityTab && (
                 <SecurityManagementSection />
               )}
