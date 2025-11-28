@@ -400,11 +400,7 @@ export const OrganizationSelectorMenu = () => {
       <Dialog.Body style={{ padding: 0 }}>
         <CreateOrganizationForm
           onSuccess={handleOrganizationCreated}
-          onCancel={
-            organizationMemberships && organizationMemberships.length > 0
-              ? () => setViewMode("orgList")
-              : undefined
-          }
+          onCancel={() => setViewMode("orgList")}
         />
       </Dialog.Body>
     );
