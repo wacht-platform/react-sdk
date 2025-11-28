@@ -288,10 +288,10 @@ export const SignedInAccounts: React.FC<SignedInAccountsProps> = ({
   onAccountSelect,
   showAddAccount = true,
 }) => {
-  const { session, loading, switchSignIn, addNewAccount, signOut } =
+  const { session, loading, switchSignIn, signOut } =
     useSession();
   const { deployment } = useDeployment();
-  const { navigate } = useNavigation();
+  const { navigateToSignIn, navigate } = useNavigation();
   const [loadingSignOut, setLoadingSignOut] = useState<string | null>(null);
   const [switchingToAccount, setSwitchingToAccount] = useState<string | null>(
     null,
@@ -304,10 +304,9 @@ export const SignedInAccounts: React.FC<SignedInAccountsProps> = ({
     if (loading) return;
 
     if (!signins.length) {
-      const signInUrl = deployment?.ui_settings?.sign_in_page_url;
-      if (signInUrl) navigate(`${signInUrl}${window.location.search}`);
+      navigateToSignIn();
     }
-  }, [loading, signins, deployment, navigate]);
+  }, [loading, signins, navigateToSignIn]);
 
   const getInitials = (name: string) => {
     return name
@@ -328,7 +327,6 @@ export const SignedInAccounts: React.FC<SignedInAccountsProps> = ({
         onAccountSelect(signInId);
         setSwitchingToAccount(null);
       } else {
-        // Keep loading state during redirect
         let redirectUri = new URLSearchParams(window.location.search).get(
           "redirect_uri",
         );
@@ -357,7 +355,7 @@ export const SignedInAccounts: React.FC<SignedInAccountsProps> = ({
   };
 
   const handleSignOut = async (e: React.MouseEvent, signInId: string) => {
-    e.stopPropagation(); // Prevent account click
+    e.stopPropagation();
     setLoadingSignOut(signInId);
     try {
       await signOut(signInId);
@@ -369,12 +367,15 @@ export const SignedInAccounts: React.FC<SignedInAccountsProps> = ({
   };
 
   const handleAddAccount = () => {
-    if (addNewAccount) {
-      addNewAccount();
-    } else {
-      const signInUrl = deployment?.ui_settings?.sign_in_page_url;
-      if (signInUrl) navigate(`${signInUrl}${window.location.search}`);
+    let redirectUri = new URLSearchParams(window.location.search).get(
+      "redirect_uri",
+    );
+
+    if (!redirectUri) {
+      redirectUri = deployment!.ui_settings?.after_signin_redirect_url;
     }
+
+    navigateToSignIn(redirectUri);
   };
 
   if (loading) {

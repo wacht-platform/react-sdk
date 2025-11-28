@@ -49,13 +49,13 @@ function DeploymentProvider({
       let staging = mode === "test";
 
       let devSession = null;
-      if (new URLSearchParams(window.location.search).has("__dev_session__")) {
+      if (new URLSearchParams(window.location.search).has("dev_session")) {
         devSession = new URLSearchParams(window.location.search).get(
           "__dev_session__"
         );
         localStorage.setItem("__dev_session__", devSession ?? "");
         const newUrl = new URL(window.location.href);
-        newUrl.searchParams.delete("__dev_session__");
+        newUrl.searchParams.delete("dev_session");
         window.history.replaceState({}, "", newUrl.toString());
       } else {
         devSession = localStorage.getItem("__dev_session__");

@@ -17,7 +17,6 @@ type UseSessionReturnType =
     switchWorkspace: never;
     signOut: never;
     getToken: never;
-    addNewAccount: never;
     error: Error | null;
     refetch: () => Promise<void>;
   }
@@ -30,7 +29,6 @@ type UseSessionReturnType =
     getToken: (template?: string) => Promise<string>;
     switchOrganization: (organizationId?: string) => Promise<void>;
     switchWorkspace: (workspaceId: string) => Promise<void>;
-    addNewAccount: () => void;
     refetch: () => Promise<void>;
   };
 
@@ -155,25 +153,6 @@ export function useSession(): UseSessionReturnType {
     [client, session?.active_signin]
   );
 
-  const addNewAccount = useCallback(() => {
-    if (!deployment) return;
-
-    const signinLink = deployment.ui_settings.sign_in_page_url;
-
-    const currentHost = window.location.href;
-    const url = new URL(signinLink);
-    url.searchParams.set("redirect_uri", currentHost);
-
-    if (deployment.mode === "staging") {
-      const devSession = localStorage.getItem("__dev_session__");
-      if (devSession) {
-        url.searchParams.set("dev_session", devSession);
-      }
-    }
-
-    navigate(url.toString());
-  }, [deployment, navigate]);
-
   if (loading || !session || isLoading) {
     return {
       loading: true,
@@ -184,7 +163,6 @@ export function useSession(): UseSessionReturnType {
       switchWorkspace: null as never,
       signOut: null as never,
       getToken: null as never,
-      addNewAccount: null as never,
       refetch,
     };
   }
@@ -220,7 +198,6 @@ export function useSession(): UseSessionReturnType {
       await mutate(undefined, { revalidate: true });
     },
     getToken,
-    addNewAccount,
     refetch,
   };
 }
