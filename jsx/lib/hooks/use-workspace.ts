@@ -91,13 +91,18 @@ export const useWorkspaceList = () => {
         formData.append("description", description);
       }
       formData.append("organization_id", organizationId);
-      const result = await client("/workspaces", {
-        method: "POST",
-        body: formData,
-      });
+      const response = await responseMapper<{
+        workspace: Workspace;
+        membership: WorkspaceMembership;
+      }>(
+        await client("/workspaces", {
+          method: "POST",
+          body: formData,
+        }),
+      );
       clearTokenCache();
       await refetch();
-      return result;
+      return response.data;
     },
     [client, refetch],
   );
@@ -227,7 +232,7 @@ export const useWorkspaceList = () => {
     async (workspace: Workspace, membershipId: string, roleId: string) => {
       const response = await responseMapper(
         await client(
-          `/workspaces/${workspace.id}/members/${membershipId}/roles/${roleId}`,
+          `/workspaces/${workspace.id}/members/${membershipId}/roles/${roleId}/add`,
           {
             method: "POST",
           },
