@@ -43,7 +43,7 @@ export const useNavigation = () => {
     }
 
     navigate(
-      `${deployment.frontend_host}?${params.toString()}`,
+      `https://${deployment.frontend_host}?${params.toString()}`,
       { replace: true },
     );
   };
