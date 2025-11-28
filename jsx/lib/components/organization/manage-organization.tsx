@@ -569,45 +569,47 @@ const GeneralSettingsSection = () => {
               </p>
             </FormGroup>
 
-            <div
-              style={{
-                display: "flex",
-                alignItems: "center",
-                justifyContent: "space-between",
-              }}
-            >
-              <div>
-                <Label
-                  style={{
-                    fontSize: "var(--font-xs)",
-                    color: "var(--color-foreground)",
-                    display: "block",
-                    marginBottom: "var(--space-2xs)",
-                  }}
-                >
-                  Multi-Factor Authentication
-                </Label>
-                <div
-                  style={{
-                    fontSize: "var(--font-2xs)",
-                    color: "var(--color-muted)",
-                  }}
-                  id="mfa-description"
-                >
-                  Require all members to set up MFA for added security
-                </div>
-              </div>
-              <Switch
-                checked={security.mfa_required}
-                onChange={() => {
-                  setSecurity((prev) => ({
-                    ...prev,
-                    mfa_required: !prev.mfa_required,
-                  }));
-                  setTimeout(() => autoSave(), 100);
+            {deployment?.b2b_settings?.enforce_mfa_per_org_enabled && (
+              <div
+                style={{
+                  display: "flex",
+                  alignItems: "center",
+                  justifyContent: "space-between",
                 }}
-              />
-            </div>
+              >
+                <div>
+                  <Label
+                    style={{
+                      fontSize: "var(--font-xs)",
+                      color: "var(--color-foreground)",
+                      display: "block",
+                      marginBottom: "var(--space-2xs)",
+                    }}
+                  >
+                    Multi-Factor Authentication
+                  </Label>
+                  <div
+                    style={{
+                      fontSize: "var(--font-2xs)",
+                      color: "var(--color-muted)",
+                    }}
+                    id="mfa-description"
+                  >
+                    Require all members to set up MFA for added security
+                  </div>
+                </div>
+                <Switch
+                  checked={security.mfa_required}
+                  onChange={() => {
+                    setSecurity((prev) => ({
+                      ...prev,
+                      mfa_required: !prev.mfa_required,
+                    }));
+                    setTimeout(() => autoSave(), 100);
+                  }}
+                />
+              </div>
+            )}
 
             {deployment?.b2b_settings?.ip_allowlist_per_org_enabled && (
               <>
@@ -1752,6 +1754,7 @@ const InvitationsSection = () => {
 const RolesSection = () => {
   const { activeOrganization, loading, getRoles, removeRole } =
     useActiveOrganization();
+  const { deployment } = useDeployment();
 
   const [rolePopover, setRolePopover] = useState<{
     isOpen: boolean;
@@ -1889,29 +1892,31 @@ const RolesSection = () => {
           value={searchQuery}
         />
 
-        <div>
-          <Button
-            ref={addRoleButtonRef}
-            onClick={() => setRolePopover({ isOpen: !rolePopover.isOpen })}
-            style={{
-              padding: "8px 16px",
-              borderRadius: "6px",
-              fontSize: "14px",
-              fontWeight: 500,
-              height: "36px",
-            }}
-          >
-            Add role
-          </Button>
-          {rolePopover.isOpen && !rolePopover.role && (
-            <AddRolePopover
-              role={rolePopover.role}
-              onClose={() => setRolePopover({ isOpen: false })}
-              onSuccess={handleRoleSaved}
-              triggerRef={addRoleButtonRef}
-            />
-          )}
-        </div>
+        {deployment?.b2b_settings?.custom_org_role_enabled && (
+          <div>
+            <Button
+              ref={addRoleButtonRef}
+              onClick={() => setRolePopover({ isOpen: !rolePopover.isOpen })}
+              style={{
+                padding: "8px 16px",
+                borderRadius: "6px",
+                fontSize: "14px",
+                fontWeight: 500,
+                height: "36px",
+              }}
+            >
+              Add role
+            </Button>
+            {rolePopover.isOpen && !rolePopover.role && (
+              <AddRolePopover
+                role={rolePopover.role}
+                onClose={() => setRolePopover({ isOpen: false })}
+                onSuccess={handleRoleSaved}
+                triggerRef={addRoleButtonRef}
+              />
+            )}
+          </div>
+        )}
       </HeaderCTAContainer>
 
       {filteredRoles.length === 0 ? (

@@ -20,6 +20,7 @@ import {
 } from "lucide-react";
 import { useActiveWorkspace, useWorkspaceList } from "@/hooks/use-workspace";
 import { useSession } from "@/hooks/use-session";
+import { useDeployment } from "@/hooks/use-deployment";
 import type { WorkspaceRole, WorkspaceWithOrganization } from "@/types";
 
 interface WorkspaceInvitation {
@@ -72,6 +73,7 @@ import {
   DropdownItem,
   DropdownTrigger,
   DropdownDivider,
+  Switch,
 } from "@/components/utility";
 import {
   Table,
@@ -210,6 +212,9 @@ interface WorkspaceUpdate {
   name?: string;
   description?: string;
   image?: File;
+  enforce_2fa?: boolean;
+  enable_ip_restriction?: boolean;
+  whitelisted_ips?: string[];
 }
 
 const MemberListItem = styled.div`
@@ -882,11 +887,17 @@ const MembersSection = () => {
 const GeneralSettingsSection = () => {
   const { activeWorkspace, loading, updateWorkspace } = useActiveWorkspace();
   const { deleteWorkspace } = useWorkspaceList();
+  const { deployment } = useDeployment();
   const { toast } = useContext(ScreenContext) || {};
   const [name, setName] = useState(activeWorkspace?.name || "");
   const [description, setDescription] = useState(
     activeWorkspace?.description || "",
   );
+  const [security, setSecurity] = useState({
+    mfa_required: false,
+    ip_restrictions: false,
+    allowed_ips: "",
+  });
   const [image, setImage] = useState<File | null>(null);
   const [previewUrl, setPreviewUrl] = useState<string | null>(
     activeWorkspace?.image_url || null,
@@ -905,6 +916,11 @@ const GeneralSettingsSection = () => {
       setName(activeWorkspace.name || "");
       setDescription(activeWorkspace.description || "");
       setPreviewUrl(activeWorkspace.image_url || null);
+      setSecurity({
+        mfa_required: (activeWorkspace as any).enforce_2fa || false,
+        ip_restrictions: (activeWorkspace as any).enable_ip_restriction || false,
+        allowed_ips: (activeWorkspace as any).whitelisted_ips?.join("\n") || "",
+      });
     }
   }, [activeWorkspace]);
 
@@ -955,6 +971,19 @@ const GeneralSettingsSection = () => {
       if (description !== activeWorkspace.description) {
         data.description = description;
       }
+      if (security.mfa_required !== (activeWorkspace as any).enforce_2fa) {
+        data.enforce_2fa = security.mfa_required;
+      }
+      if (security.ip_restrictions !== (activeWorkspace as any).enable_ip_restriction) {
+        data.enable_ip_restriction = security.ip_restrictions;
+      }
+      const currentIps = ((activeWorkspace as any).whitelisted_ips || []).join("\n");
+      if (security.allowed_ips !== currentIps) {
+        data.whitelisted_ips = security.allowed_ips
+          .split("\n")
+          .map((ip) => ip.trim())
+          .filter((ip) => ip !== "");
+      }
 
       // Only save if there are actual changes
       if (Object.keys(data).length > 0) {
@@ -973,6 +1002,7 @@ const GeneralSettingsSection = () => {
     name,
     description,
     image,
+    security,
     isAutoSaving,
   ]);
 
@@ -1258,6 +1288,127 @@ const GeneralSettingsSection = () => {
                 Brief description of your workspace and its purpose
               </p>
             </FormGroup>
+
+            {deployment?.b2b_settings?.enforce_mfa_per_workspace_enabled && (
+              <div
+                style={{
+                  display: "flex",
+                  alignItems: "center",
+                  justifyContent: "space-between",
+                }}
+              >
+                <div>
+                  <Label
+                    style={{
+                      fontSize: "var(--font-xs)",
+                      color: "var(--color-foreground)",
+                      display: "block",
+                      marginBottom: "var(--space-2xs)",
+                    }}
+                  >
+                    Multi-Factor Authentication
+                  </Label>
+                  <div
+                    style={{
+                      fontSize: "var(--font-2xs)",
+                      color: "var(--color-muted)",
+                    }}
+                    id="mfa-description"
+                  >
+                    Require all members to set up MFA for added security
+                  </div>
+                </div>
+                <Switch
+                  checked={security.mfa_required}
+                  onChange={() => {
+                    setSecurity((prev) => ({
+                      ...prev,
+                      mfa_required: !prev.mfa_required,
+                    }));
+                    setTimeout(() => autoSave(), 100);
+                  }}
+                />
+              </div>
+            )}
+
+            {deployment?.b2b_settings?.ip_allowlist_per_workspace_enabled && (
+              <>
+                <div
+                  style={{
+                    display: "flex",
+                    alignItems: "center",
+                    justifyContent: "space-between",
+                  }}
+                >
+                  <div>
+                    <Label
+                      style={{
+                        fontSize: "var(--font-xs)",
+                        color: "var(--color-foreground)",
+                        display: "block",
+                        marginBottom: "var(--space-2xs)",
+                      }}
+                    >
+                      IP Restrictions
+                    </Label>
+                    <div
+                      style={{
+                        fontSize: "var(--font-2xs)",
+                        color: "var(--color-muted)",
+                      }}
+                      id="ip-restrictions-description"
+                    >
+                      Only allow access from specific IP addresses
+                    </div>
+                  </div>
+                  <Switch
+                    checked={security.ip_restrictions}
+                    onChange={() => {
+                      setSecurity((prev) => ({
+                        ...prev,
+                        ip_restrictions: !prev.ip_restrictions,
+                      }));
+                      setTimeout(() => autoSave(), 100);
+                    }}
+                    aria-label="Enable IP address restrictions"
+                    aria-describedby="ip-restrictions-description"
+                  />
+                </div>
+
+                {security.ip_restrictions && (
+                  <FormGroup>
+                    <Label htmlFor="allowed_ips">Allowed IP Addresses</Label>
+                    <Input
+                      id="allowed_ips"
+                      as="textarea"
+                      value={security.allowed_ips}
+                      onChange={(e) =>
+                        setSecurity((prev) => ({
+                          ...prev,
+                          allowed_ips: e.target.value,
+                        }))
+                      }
+                      onBlur={autoSave}
+                      placeholder="192.168.1.1&#10;10.0.0.0/24"
+                      style={{
+                        minHeight: "80px",
+                        resize: "vertical",
+                        fontFamily: "monospace",
+                      }}
+                    />
+                    <p
+                      style={{
+                        fontSize: "var(--font-2xs)",
+                        color: "var(--color-muted)",
+                        margin: "var(--space-2xs) 0 0 0",
+                      }}
+                    >
+                      Enter one IP address or CIDR block per line
+                    </p>
+                  </FormGroup>
+                )}
+              </>
+            )}
           </div>
         </div>
 
@@ -1447,6 +1598,7 @@ const RolesSection = () => {
   const { activeWorkspace, loading, getRoles, createRole, deleteRole } =
     useActiveWorkspace();
   const { toast } = useContext(ScreenContext) || {};
+  const { deployment } = useDeployment();
   const [searchQuery, setSearchQuery] = useState("");
   const [rolePopover, setRolePopover] = useState<{
     isOpen: boolean;
@@ -1525,24 +1677,26 @@ const RolesSection = () => {
           value={searchQuery}
         />
         <div style={{ position: "relative" }}>
-          <Button
-            ref={addRoleButtonRef}
-            onClick={() =>
-              setRolePopover({
-                isOpen: true,
-                triggerElement: addRoleButtonRef.current,
-              })
-            }
-            style={{
-              padding: "8px 16px",
-              borderRadius: "6px",
-              fontSize: "14px",
-              fontWeight: 500,
-              height: "36px",
-            }}
-          >
-            Add role
-          </Button>
+          {deployment?.b2b_settings?.custom_workspace_role_enabled && (
+            <Button
+              ref={addRoleButtonRef}
+              onClick={() =>
+                setRolePopover({
+                  isOpen: true,
+                  triggerElement: addRoleButtonRef.current,
+                })
+              }
+              style={{
+                padding: "8px 16px",
+                borderRadius: "6px",
+                fontSize: "14px",
+                fontWeight: 500,
+                height: "36px",
+              }}
+            >
+              Add role
+            </Button>
+          )}
           {rolePopover.isOpen && !rolePopover.role && (
             <AddWorkspaceRolePopover
               role={rolePopover.role}

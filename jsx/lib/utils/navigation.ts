@@ -1,14 +1,11 @@
 export const isExternalUrl = (url: string): boolean => {
-  // Normalize URL for case-insensitive comparison
   const normalizedUrl = url.toLowerCase().trim();
 
-  // Check for dangerous protocols first
   const dangerousProtocols = ["javascript:", "data:", "vbscript:"];
   if (
     dangerousProtocols.some((protocol) => normalizedUrl.startsWith(protocol))
   ) {
-    // Blocked navigation to dangerous URL
-    return true; // Treat as external to prevent router handling
+    return true;
   }
 
   const externalProtocols = [

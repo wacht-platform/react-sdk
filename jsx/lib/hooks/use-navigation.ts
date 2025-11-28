@@ -31,6 +31,23 @@ export const useNavigation = () => {
     );
   };
 
+  const navigateToAccountSelection = (redirectUri?: string) => {
+    if (!deployment) return;
+
+    const currentHost = redirectUri || window.location.href;
+    const params = new URLSearchParams();
+    params.set("redirect_uri", currentHost);
+
+    if (deployment?.mode === "staging") {
+      params.set("dev_session", localStorage.getItem("__dev_session__") ?? "");
+    }
+
+    navigate(
+      `${deployment.frontend_host}?${params.toString()}`,
+      { replace: true },
+    );
+  };
+
   const navigateToSignUp = (redirectUri?: string) => {
     if (!deployment) return;
 
@@ -51,6 +68,7 @@ export const useNavigation = () => {
   return {
     navigate,
     navigateToSignIn,
+    navigateToAccountSelection,
     navigateToSignUp,
   };
 };

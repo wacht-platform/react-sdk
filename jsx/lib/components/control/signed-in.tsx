@@ -8,19 +8,15 @@ interface SignedInProps {
 export const SignedIn = ({ children }: SignedInProps) => {
   const { session, loading } = useSession();
   const { deployment } = useDeployment();
-  const { navigate } = useNavigation();
+  const { navigateToAccountSelection } = useNavigation();
 
   useEffect(() => {
     if (loading) return;
 
     if (session?.signins?.length && !session.active_signin) {
-      let currentHref = window.location.href;
-      let redirectUrl = new URL(currentHref);
-      redirectUrl.searchParams.set("redirect_uri", currentHref);
-
-      navigate(redirectUrl.toString());
+      navigateToAccountSelection();
     }
-  }, [loading, session, deployment, navigate]);
+  }, [loading, session, deployment, navigateToAccountSelection]);
 
   if (loading) return null;
   if (!session.signins?.length || !session.active_signin) return null;

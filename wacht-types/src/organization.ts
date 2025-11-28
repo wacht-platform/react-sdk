@@ -83,6 +83,9 @@ export interface Workspace {
   member_count: number;
   public_metadata: Record<string, unknown>;
   private_metadata: Record<string, unknown>;
+  enforce_2fa: boolean;
+  enable_ip_restriction: boolean;
+  whitelisted_ips: string[];
   created_at: string;
   updated_at: string;
 }

@@ -25,6 +25,9 @@ export interface B2BSettings {
   default_org_member_role_id: number;
   workspace_permissions: string[];
   organization_permissions: string[];
+  ip_allowlist_per_workspace_enabled: boolean;
+  enforce_mfa_per_org_enabled: boolean;
+  enforce_mfa_per_workspace_enabled: boolean;
 }
 
 export interface AuthFactorsEnabled {

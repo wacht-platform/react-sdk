@@ -119,12 +119,28 @@ export const useWorkspaceList = () => {
   const updateWorkspace = useCallback(
     async (
       workspace: Workspace,
-      data: { name?: string; description?: string; image?: File },
+      data: {
+        name?: string;
+        description?: string;
+        image?: File;
+        enforce_2fa?: boolean;
+        enable_ip_restriction?: boolean;
+        whitelisted_ips?: string[];
+      },
     ) => {
       const formData = new FormData();
       if (data.name) formData.append("name", data.name);
       if (data.description) formData.append("description", data.description);
       if (data.image) formData.append("image", data.image);
+      if (data.enforce_2fa !== undefined) {
+        formData.append("enforce_2fa", String(data.enforce_2fa));
+      }
+      if (data.enable_ip_restriction !== undefined) {
+        formData.append("enable_ip_restriction", String(data.enable_ip_restriction));
+      }
+      if (data.whitelisted_ips) {
+        data.whitelisted_ips.forEach((ip) => formData.append("whitelisted_ips", ip));
+      }
       const response = await responseMapper(
         await client(`/workspaces/${workspace.id}/update`, {
           method: "POST",
