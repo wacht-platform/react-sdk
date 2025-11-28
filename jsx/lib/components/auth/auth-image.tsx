@@ -1,15 +1,31 @@
+import { useState } from "react";
 import styled from "styled-components";
 import { useDeployment } from "../../hooks/use-deployment";
 
 const ImageContainer = styled.div`
   display: flex;
   justify-content: center;
-  margin-bottom: var(--space-sm);
+  margin-bottom: var(--space-lg);
+`;
+
+const LogoWrapper = styled.div`
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 80px;
+  height: 80px;
+  background: var(--color-muted-background, rgba(0, 0, 0, 0.05));
+  border-radius: 50%;
+  padding: var(--space-md, 12px);
+
+  @media (prefers-color-scheme: dark) {
+    background: var(--color-muted-background, rgba(255, 255, 255, 0.08));
+  }
 `;
 
 const LogoImage = styled.img`
-  max-width: 60px;
-  max-height: 60px;
+  max-width: 100%;
+  max-height: 100%;
   width: auto;
   height: auto;
   object-fit: contain;
@@ -17,22 +33,23 @@ const LogoImage = styled.img`
 
 export function AuthFormImage() {
   const { deployment } = useDeployment();
+  const [imageError, setImageError] = useState(false);
 
   const logoUrl = deployment?.ui_settings?.logo_image_url;
 
-  if (!logoUrl) {
-    return <ImageContainer />;
+  if (!logoUrl || imageError) {
+    return null;
   }
 
   return (
     <ImageContainer>
-      <LogoImage
-        src={logoUrl}
-        alt="Logo"
-        onError={(e) => {
-          e.currentTarget.style.display = "none";
-        }}
-      />
+      <LogoWrapper>
+        <LogoImage
+          src={logoUrl}
+          alt="Logo"
+          onError={() => setImageError(true)}
+        />
+      </LogoWrapper>
     </ImageContainer>
   );
 }

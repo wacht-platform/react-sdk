@@ -230,6 +230,8 @@ export function ForgotPassword({ onBack }: ForgotPasswordProps) {
 
         {step === "email" && (
           <>
+            <AuthFormImage />
+
             <Header>
               <Title>Forgot Password</Title>
               <Message>
@@ -272,6 +274,8 @@ export function ForgotPassword({ onBack }: ForgotPasswordProps) {
 
         {step === "otp" && (
           <>
+            <AuthFormImage />
+
             <Header>
               <Title>Enter Verification Code</Title>
               <Message>
@@ -310,6 +314,8 @@ export function ForgotPassword({ onBack }: ForgotPasswordProps) {
 
         {step === "reset" && (
           <>
+            <AuthFormImage />
+
             <Header>
               <Title>Reset Password</Title>
               <Message>Create a new password for your account.</Message>
