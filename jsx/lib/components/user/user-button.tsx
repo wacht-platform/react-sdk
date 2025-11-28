@@ -3,7 +3,7 @@ import ReactDOM from "react-dom";
 import styled from "styled-components";
 import { LogOut, Settings, Plus } from "lucide-react";
 import { DefaultStylesProvider } from "../utility/root";
-import { useSession, useDeployment } from "@/hooks";
+import { useSession, useDeployment, useNavigation } from "@/hooks";
 import { ManageAccountDialog } from "./manage-account-dialog";
 import { useDialog } from "../utility/use-dialog";
 import { usePopoverPosition } from "@/hooks/use-popover-position";
@@ -223,8 +223,9 @@ export const UserButton: React.FC<UserButtonProps> = ({
     minWidth: 380,
   });
   const manageAccountDialog = useDialog(false);
-  const { session, signOut, switchSignIn, addNewAccount, refetch } =
+  const { session, signOut, switchSignIn, refetch } =
     useSession();
+  const { navigateToSignIn } = useNavigation();
   const { deployment } = useDeployment();
 
   const selectedAccount = session?.active_signin?.user;
@@ -487,7 +488,7 @@ export const UserButton: React.FC<UserButtonProps> = ({
                           borderBottom: "1px solid var(--color-border)",
                         }}
                       >
-                        <FooterButton onClick={addNewAccount}>
+                        <FooterButton onClick={() => navigateToSignIn()}>
                           <Plus />
                           Add new account
                         </FooterButton>
