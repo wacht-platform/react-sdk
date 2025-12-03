@@ -50,6 +50,13 @@ export {
   useConversationSessions,
   useActiveOrganization,
   useActiveTenancy,
+  useWorkspaceList,
+  useOrganizationMemberships,
+  useWorkspaceMemberships,
+  useActiveWorkspace,
+  useInvitation,
+  useUserSignins,
+  useMagicLinkVerification,
 } from "@wacht/jsx";
 export { DeploymentProvider as BaseDeploymentProvider } from "@wacht/jsx";
 export { DeploymentProvider } from "./providers";
