@@ -927,7 +927,7 @@ const DomainsSection = () => {
     isLoading,
     mutate,
   } = useSWR(
-    activeOrganization?.id ? `/domains/${activeOrganization.id}` : null,
+    activeOrganization?.id ? `wacht-org-domains:${activeOrganization.id}` : null,
     async () => {
       const realDomains = (await getOrganizationDomains?.()) || [];
       return realDomains.map((domain, index) => ({
@@ -1236,14 +1236,14 @@ const MembersSection = () => {
     mutate: reloadMembers,
   } = useSWR(
     activeOrganization
-      ? `/api/organizations/${activeOrganization.id}/members`
+      ? `wacht-api-organizations:${activeOrganization.id}:members`
       : null,
     () => getMembers?.() || [],
   );
 
   const { data: rolesData = [], isLoading: rolesLoading } = useSWR(
     activeOrganization
-      ? `/api/organizations/${activeOrganization.id}/roles`
+      ? `wacht-api-organizations:${activeOrganization.id}:roles`
       : null,
     () => getRoles?.() || [],
   );
@@ -1564,14 +1564,14 @@ const InvitationsSection = () => {
     mutate: reloadInvitations,
   } = useSWR(
     activeOrganization
-      ? `/api/organizations/${activeOrganization.id}/invitations`
+      ? `wacht-api-organizations:${activeOrganization.id}:invitations`
       : null,
     () => getInvitations?.() || [],
   );
 
   const { data: rolesData = [], isLoading: rolesLoading } = useSWR(
     activeOrganization
-      ? `/api/organizations/${activeOrganization.id}/roles`
+      ? `wacht-api-organizations:${activeOrganization.id}:roles`
       : null,
     () => getRoles?.() || [],
   );
@@ -1777,7 +1777,7 @@ const RolesSection = () => {
     mutate: reloadRoles,
   } = useSWR(
     activeOrganization
-      ? `/api/organizations/${activeOrganization.id}/roles`
+      ? `wacht-api-organizations:${activeOrganization.id}:roles`
       : null,
     () => getRoles?.() || [],
   );

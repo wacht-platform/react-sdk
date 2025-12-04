@@ -610,12 +610,12 @@ const MembersSection = () => {
     isLoading: membersLoading,
     mutate: reloadMembers,
   } = useSWR(
-    activeWorkspace ? `/api/workspaces/${activeWorkspace.id}/members` : null,
+    activeWorkspace ? `wacht-api-workspaces:${activeWorkspace.id}:members` : null,
     () => getMembers() || [],
   );
 
   const { data: rolesData = [], isLoading: rolesLoading } = useSWR(
-    activeWorkspace ? `/api/workspaces/${activeWorkspace.id}/roles` : null,
+    activeWorkspace ? `wacht-api-workspaces:${activeWorkspace.id}:roles` : null,
     () => getRoles() || [],
   );
 
@@ -1617,7 +1617,7 @@ const RolesSection = () => {
     isLoading: rolesLoading,
     mutate: reloadRoles,
   } = useSWR(
-    activeWorkspace ? `/api/workspaces/${activeWorkspace.id}/roles` : null,
+    activeWorkspace ? `wacht-api-workspaces:${activeWorkspace.id}:roles` : null,
     () => getRoles() || [],
   );
 

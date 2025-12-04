@@ -50,7 +50,7 @@ export function useConversationSessions(token: string): UseConversationSessionsR
   }, [client, token]);
 
   const { data, error, mutate } = useSWR(
-    token ? `sessions-${token}` : null,
+    token ? `wacht-agent-sessions:${token}` : null,
     fetcher,
     {
       revalidateOnFocus: false,

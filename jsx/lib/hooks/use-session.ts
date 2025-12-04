@@ -1,6 +1,6 @@
 import { responseMapper } from "../utils/response-mapper";
 import { useClient } from "./use-client";
-import useSWR from "swr";
+import useSWR, { useSWRConfig } from "swr";
 import { useCallback } from "react";
 import { ApiResult } from "@/types";
 import { Session, SessionToken } from "@/types";
@@ -115,6 +115,7 @@ export function useSession(): UseSessionReturnType {
   const { client, loading } = useClient();
   const { deployment } = useDeployment();
   const { navigate } = useNavigation();
+  const { cache } = useSWRConfig();
   const {
     data: session,
     error,
@@ -177,6 +178,57 @@ export function useSession(): UseSessionReturnType {
     },
     signOut: async (signInId?: string) => {
       await signOut(client, signInId);
+      
+      // Explicitly clear known SDK cache keys with specific namespacing
+      // to avoid colliding with user's own cache keys.
+      
+      // Known SDK keys (static):
+      const staticKeys = [
+        "/session",
+        "/user",
+        "/me/signins",
+        "/me/organization-memberships",
+        "/me/workspace-memberships",
+        "wacht-notifications:channel-counts"
+      ];
+
+      // Dynamic keys prefixes:
+      const dynamicKeyPrefixes = [
+        "wacht-notifications:",  // notifications
+        "wacht-agent-sessions:", // use-conversation-sessions
+        "wacht-agent-contexts:", // use-context-manager
+        "wacht-org-domains:",    // organization domains
+        "wacht-api-workspaces:", // workspace API calls
+        "wacht-api-organizations:" // organization API calls
+      ];
+
+      if (cache instanceof Map) {
+        // Safe iteration for Map
+        // We use Array.from to avoid iteration issues if environment is old
+        const keys = Array.from(cache.keys());
+        for (const key of keys) {
+          let shouldDelete = false;
+          
+          if (staticKeys.includes(key as string)) {
+            shouldDelete = true;
+          } else if (typeof key === 'string') {
+             // check string prefixes
+             if (dynamicKeyPrefixes.some(prefix => key.startsWith(prefix))) {
+                shouldDelete = true;
+             }
+          } 
+          // Note: We removed array keys because we converted them to namespaced strings
+          // for better specificity and collision avoidance.
+
+          if (shouldDelete) {
+            cache.delete(key);
+          }
+        }
+      }
+      
+      // Clear token cache
+      clearTokenCache();
+      
       await mutate(undefined, { revalidate: true });
 
       if (deployment?.ui_settings) {

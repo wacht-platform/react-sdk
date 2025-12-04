@@ -135,7 +135,7 @@ export function useNotifications(
     mutate: refetch,
     isLoading: notificationLading,
   } = useSWR(
-    !clientLoading ? ["notifications", JSON.stringify(params)] : null,
+    !clientLoading ? `wacht-notifications:${JSON.stringify(params)}` : null,
     () => fetchNotifications(client, params),
     {
       refreshInterval: 60000,

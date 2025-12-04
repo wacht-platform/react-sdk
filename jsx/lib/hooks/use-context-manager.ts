@@ -48,7 +48,7 @@ export function useContextManager(token: string): UseContextManagerReturnType {
   }, [client, token]);
 
   const { data, error, mutate } = useSWR(
-    token ? `contexts-${token}` : null,
+    token ? `wacht-agent-contexts:${token}` : null,
     fetcher,
     {
       revalidateOnFocus: false,

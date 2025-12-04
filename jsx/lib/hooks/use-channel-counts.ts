@@ -34,7 +34,7 @@ export function useChannelCounts(): UseChannelCountsReturnType {
     error,
     mutate: refetch,
   } = useSWR(
-    !clientLoading ? ["notifications", "channel-counts"] : null,
+    !clientLoading ? "wacht-notifications:channel-counts" : null,
     () => fetchChannelCounts(client),
     {
       refreshInterval: 30000, // Poll every 30 seconds
