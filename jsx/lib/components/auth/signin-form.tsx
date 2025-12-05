@@ -165,6 +165,9 @@ function SignInFormContent() {
   const { deployment } = useDeployment();
   const { navigate } = useNavigation();
   const { session, loading: sessionLoading } = useSession();
+  const isMultiSessionEnabled =
+    deployment?.auth_settings?.multi_session_support?.enabled ?? false;
+
   const {
     setEmail,
     otpSent,
@@ -196,6 +199,40 @@ function SignInFormContent() {
   const [otpCode, setOtpCode] = useState("");
   const [countryCode, setCountryCode] = useState<string | undefined>("US");
   const [isRedirecting, setIsRedirecting] = useState(false);
+
+  useEffect(() => {
+    if (
+      !sessionLoading &&
+      session?.active_signin &&
+      !isMultiSessionEnabled &&
+      !isRedirecting
+    ) {
+      setIsRedirecting(true);
+      let redirectUri = new URLSearchParams(window.location.search).get(
+        "redirect_uri",
+      );
+
+      if (!redirectUri) {
+        redirectUri =
+          deployment?.ui_settings?.after_signin_redirect_url || null;
+      }
+
+      if (!redirectUri && deployment?.frontend_host) {
+        redirectUri = `https://${deployment.frontend_host}`;
+      }
+
+      if (redirectUri) {
+        navigate(redirectUri);
+      }
+    }
+  }, [
+    session,
+    sessionLoading,
+    isMultiSessionEnabled,
+    deployment,
+    navigate,
+    isRedirecting,
+  ]);
 
   const handleInputChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     let { name, value } = e.target;

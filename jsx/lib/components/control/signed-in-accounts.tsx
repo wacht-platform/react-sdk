@@ -299,6 +299,8 @@ export const SignedInAccounts: React.FC<SignedInAccountsProps> = ({
 
   const activeSignIn = session?.active_signin;
   const signins = session?.signins || [];
+  const isMultiSessionEnabled =
+    deployment?.auth_settings?.multi_session_support?.enabled ?? false;
 
   useEffect(() => {
     if (loading) return;
@@ -484,7 +486,7 @@ export const SignedInAccounts: React.FC<SignedInAccountsProps> = ({
             );
           })}
 
-          {showAddAccount && (
+          {showAddAccount && isMultiSessionEnabled && (
             <AddAccountButton onClick={handleAddAccount}>
               <Plus />
               Add another account

@@ -1,6 +1,7 @@
 import { useState, useEffect } from "react";
-import styled from "styled-components";
+import styled, { keyframes } from "styled-components";
 import { useSignUp } from "../../hooks/use-signup";
+import { Loader2 } from "lucide-react";
 import {
   useSignInWithStrategy,
   type OAuthProvider,
@@ -18,6 +19,15 @@ import { PhoneNumberInput } from "../utility/phone";
 import type { SignUpParams } from "@/types";
 import type { DeploymentSocialConnection } from "@/types";
 import { AuthFormImage } from "./auth-image";
+
+const spin = keyframes`
+  from {
+  transform: rotate(0deg);
+}
+  to {
+  transform: rotate(360deg);
+}
+`;
 
 const breakpoints = {
   sm: "36rem",
@@ -39,6 +49,18 @@ const Container = styled.div`
     padding: var(--space-lg);
     border-radius: 0;
   }
+`;
+
+const LoadingContainer = styled.div`
+display: flex;
+  justify-content: center;
+  align-items: center;
+  min-height: 200px;
+
+  svg {
+  animation: ${spin} 1s linear infinite;
+    color: var(--color-primary);
+}
 `;
 
 const Header = styled.div`
@@ -248,7 +270,8 @@ export function SignUpForm() {
   const { signIn: oauthSignIn } = useSignInWithStrategy("oauth");
   const { deployment } = useDeployment();
   const { navigate } = useNavigation();
-  const { session, refetch: refetchSession } = useSession();
+  const { session, refetch: refetchSession, loading: sessionLoading } =
+    useSession();
   const [formData, setFormData] = useState<SignUpParams>({
     first_name: "",
     last_name: "",
@@ -268,10 +291,51 @@ export function SignUpForm() {
     message?: string;
   } | null>(null);
   const [inviteToken, setInviteToken] = useState<string | null>(null);
+  const [isRedirecting, setIsRedirecting] = useState(false);
 
   const isSignupRestricted =
     deployment?.restrictions?.sign_up_mode === "restricted";
   const isWaitlistMode = deployment?.restrictions?.sign_up_mode === "waitlist";
+  const isMultiSessionEnabled =
+    deployment?.auth_settings?.multi_session_support?.enabled ?? false;
+
+  useEffect(() => {
+    if (
+      !sessionLoading &&
+      session?.active_signin &&
+      !isMultiSessionEnabled &&
+      !isRedirecting
+    ) {
+      setIsRedirecting(true);
+      let redirectUri = new URLSearchParams(window.location.search).get(
+        "redirect_uri",
+      );
+
+      if (!redirectUri) {
+        redirectUri =
+          deployment?.ui_settings?.after_signin_redirect_url || null;
+      }
+
+      if (!redirectUri && deployment?.frontend_host) {
+        redirectUri = `https://${deployment.frontend_host}`;
+      }
+
+      if (!redirectUri && deployment?.frontend_host) {
+        redirectUri = `https://${deployment.frontend_host}`;
+      }
+
+      if (redirectUri) {
+        navigate(redirectUri);
+      }
+    }
+  }, [
+    session,
+    sessionLoading,
+    isMultiSessionEnabled,
+    deployment,
+    navigate,
+    isRedirecting,
+  ]);
 
   useEffect(() => {
     if (!deployment) return;
@@ -280,10 +344,10 @@ export function SignUpForm() {
     const invitation_token = params.get("invite_token");
 
     if (isWaitlistMode && !invitation_token) {
+      setIsRedirecting(true);
       const waitlistUrl =
         deployment.ui_settings?.waitlist_page_url ||
-        `${deployment.frontend_host}/waitlist` ||
-        "/waitlist";
+        `https://${deployment.frontend_host}/waitlist`;
       navigate(waitlistUrl);
       return;
     }
@@ -583,6 +647,32 @@ export function SignUpForm() {
     setErrors(newErrors);
   }, [signUpErrors]);
 
+  if (sessionLoading) {
+    return (
+      <DefaultStylesProvider>
+        <Container>
+          <AuthFormImage />
+          <LoadingContainer>
+            <Loader2 size={32} />
+          </LoadingContainer>
+        </Container>
+      </DefaultStylesProvider>
+    );
+  }
+
+  if (isRedirecting) {
+    return (
+      <DefaultStylesProvider>
+        <Container>
+          <AuthFormImage />
+          <LoadingContainer>
+            <Loader2 size={32} />
+          </LoadingContainer>
+        </Container>
+      </DefaultStylesProvider>
+    );
+  }
+
   // Show restricted message if signup is restricted
   if (isSignupRestricted) {
     return (
@@ -715,61 +805,61 @@ export function SignUpForm() {
             <Form onSubmit={handleSubmit} noValidate>
               {(authSettings?.first_name?.enabled ||
                 authSettings?.last_name?.enabled) && (
-                <NameFields $isBothEnabled={isBothNamesEnabled}>
-                  {authSettings?.first_name?.enabled && (
-                    <FormGroup>
-                      <Label htmlFor="first_name">
-                        First name
-                        {authSettings?.first_name?.required && (
-                          <RequiredAsterisk>*</RequiredAsterisk>
+                  <NameFields $isBothEnabled={isBothNamesEnabled}>
+                    {authSettings?.first_name?.enabled && (
+                      <FormGroup>
+                        <Label htmlFor="first_name">
+                          First name
+                          {authSettings?.first_name?.required && (
+                            <RequiredAsterisk>*</RequiredAsterisk>
+                          )}
+                        </Label>
+                        <Input
+                          type="text"
+                          id="first_name"
+                          name="first_name"
+                          required
+                          minLength={3}
+                          maxLength={30}
+                          value={formData.first_name}
+                          onChange={handleInputChange}
+                          placeholder="First name"
+                          aria-invalid={!!errors.first_name}
+                          pattern="^[a-zA-Z]{3,30}$"
+                        />
+                        {errors.first_name && (
+                          <ErrorMessage>{errors.first_name}</ErrorMessage>
                         )}
-                      </Label>
-                      <Input
-                        type="text"
-                        id="first_name"
-                        name="first_name"
-                        required
-                        minLength={3}
-                        maxLength={30}
-                        value={formData.first_name}
-                        onChange={handleInputChange}
-                        placeholder="First name"
-                        aria-invalid={!!errors.first_name}
-                        pattern="^[a-zA-Z]{3,30}$"
-                      />
-                      {errors.first_name && (
-                        <ErrorMessage>{errors.first_name}</ErrorMessage>
-                      )}
-                    </FormGroup>
-                  )}
-                  {authSettings?.last_name?.enabled && (
-                    <FormGroup>
-                      <Label htmlFor="last_name">
-                        Last name
-                        {authSettings?.last_name?.required && (
-                          <RequiredAsterisk>*</RequiredAsterisk>
+                      </FormGroup>
+                    )}
+                    {authSettings?.last_name?.enabled && (
+                      <FormGroup>
+                        <Label htmlFor="last_name">
+                          Last name
+                          {authSettings?.last_name?.required && (
+                            <RequiredAsterisk>*</RequiredAsterisk>
+                          )}
+                        </Label>
+                        <Input
+                          type="text"
+                          id="last_name"
+                          name="last_name"
+                          required
+                          minLength={3}
+                          maxLength={30}
+                          value={formData.last_name}
+                          onChange={handleInputChange}
+                          placeholder="Last name"
+                          aria-invalid={!!errors.last_name}
+                          pattern="^[a-zA-Z]{3,30}$"
+                        />
+                        {errors.last_name && (
+                          <ErrorMessage>{errors.last_name}</ErrorMessage>
                         )}
-                      </Label>
-                      <Input
-                        type="text"
-                        id="last_name"
-                        name="last_name"
-                        required
-                        minLength={3}
-                        maxLength={30}
-                        value={formData.last_name}
-                        onChange={handleInputChange}
-                        placeholder="Last name"
-                        aria-invalid={!!errors.last_name}
-                        pattern="^[a-zA-Z]{3,30}$"
-                      />
-                      {errors.last_name && (
-                        <ErrorMessage>{errors.last_name}</ErrorMessage>
-                      )}
-                    </FormGroup>
-                  )}
-                </NameFields>
-              )}
+                      </FormGroup>
+                    )}
+                  </NameFields>
+                )}
 
               {authSettings?.username.enabled && (
                 <FormGroup>
