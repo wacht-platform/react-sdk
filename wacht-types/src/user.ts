@@ -1,5 +1,6 @@
 import type { SocialConnectionProvider } from "./auth";
 import type { SecondFactorPolicy } from "./deployment";
+import type { Segment } from "./segment";
 
 export type VerificationStrategy =
   | "otp"
@@ -67,6 +68,7 @@ export interface CurrentUser {
   backup_codes?: string[];
   has_password: boolean;
   public_metadata: Record<string, unknown>;
+  segments: Segment[];
 }
 
 export interface PublicUserData {

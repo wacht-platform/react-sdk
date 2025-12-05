@@ -5,3 +5,4 @@ export * from "./organization";
 export * from "./profile";
 export * from "./session";
 export * from "./user";
+export * from "./segment";

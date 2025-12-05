@@ -1,4 +1,5 @@
 import type { PublicUserData } from "./user";
+import type { Segment } from "./segment";
 
 export interface Organization {
   id: string;
@@ -14,6 +15,7 @@ export interface Organization {
   auto_assigned_workspace_id: string;
   created_at: string;
   updated_at: string;
+  segments: Segment[];
 }
 
 export interface OrganizationRole {
@@ -88,6 +90,7 @@ export interface Workspace {
   whitelisted_ips: string[];
   created_at: string;
   updated_at: string;
+  segments: Segment[];
 }
 
 export interface WorkspaceWithOrganization extends Workspace {
