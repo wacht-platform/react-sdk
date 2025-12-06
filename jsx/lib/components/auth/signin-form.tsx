@@ -20,28 +20,12 @@ import { NavigationLink } from "../utility/navigation";
 import { Input } from "@/components/utility/input";
 import { PhoneNumberInput } from "../utility/phone";
 import { Form, FormGroup, Label } from "../utility/form";
-import { ErrorCode, type ErrorCode as ErrorCodeType } from "@/types";
 import type { SignInParams } from "@/types";
 import type { DeploymentSocialConnection } from "@/types";
 import { useDeployment } from "@/hooks/use-deployment";
 import { useNavigation } from "@/hooks/use-navigation";
 import { Button } from "@/components/utility";
 import { AuthFormImage } from "./auth-image";
-
-// Error codes that should be displayed as submit errors
-const SUBMIT_ERROR_CODES: ReadonlySet<ErrorCodeType> = new Set([
-  ErrorCode.InvalidCredentials,
-  ErrorCode.UserNotFound,
-  ErrorCode.UserAlreadySignedIn,
-  ErrorCode.Internal,
-  ErrorCode.UserDisabled,
-  ErrorCode.CountryRestricted,
-  ErrorCode.EmailNotAllowed,
-  ErrorCode.EmailBlocked,
-  ErrorCode.DisposableEmailBlocked,
-  ErrorCode.VoipNumberBlocked,
-  ErrorCode.BannedKeyword,
-]);
 
 const spin = keyframes`
   from {
@@ -184,7 +168,6 @@ function SignInFormContent() {
     signIn,
     signinAttempt,
     discardSignInAttempt,
-    error: signInErrors,
     setSignInAttempt,
   } = useSignInWithStrategy("generic");
   const { signIn: oauthSignIn } = useSignInWithStrategy("oauth");
@@ -505,19 +488,8 @@ function SignInFormContent() {
   }, [signinAttempt, signIn, otpSent, setOtpSent, navigate, deployment]);
 
   useEffect(() => {
-    const newErrors: Record<string, string> = {};
-    if (signInErrors?.errors) {
-      if (Array.isArray(signInErrors?.errors)) {
-        for (const err of signInErrors.errors) {
-          if (SUBMIT_ERROR_CODES.has(err.code)) {
-            newErrors.submit = err.message;
-          }
-        }
-      }
-    }
-
-    setErrors(newErrors);
-  }, [signInErrors]);
+    // Error handling logic moved to try/catch blocks
+  }, []);
 
   if (showOtherOptions) {
     return <OtherSignInOptions onBack={() => setShowOtherOptions(false)} />;

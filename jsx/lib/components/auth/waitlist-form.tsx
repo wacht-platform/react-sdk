@@ -154,7 +154,7 @@ const Link = styled.a`
 
 export function WaitlistForm() {
   const { deployment } = useDeployment();
-  const { loading, error, joinWaitlist } = useWaitlist();
+  const { loading, joinWaitlist } = useWaitlist();
   const [formData, setFormData] = useState<WaitlistParams>({
     first_name: "",
     last_name: "",
@@ -162,16 +162,11 @@ export function WaitlistForm() {
   });
   const [isSubmitted, setIsSubmitted] = useState(false);
   const [isSubmitting, setIsSubmitting] = useState(false);
+  const [error, setError] = useState<Error | null>(null);
 
-  const getErrorMessage = (field?: string): string | undefined => {
-    if (!error?.errors) return undefined;
-
-    if (field) {
-      const fieldError = error.errors.find((err: any) =>
-        err.code?.toLowerCase().includes(field.toLowerCase())
-      );
-      if (fieldError) return fieldError.message;
-    } else return error?.errors[0]?.message;
+  const getErrorMessage = (_field?: string): string | undefined => {
+    if (!error) return undefined;
+    return error.message;
   };
 
   const authSettings = deployment?.auth_settings;
@@ -193,12 +188,14 @@ export function WaitlistForm() {
     if (!authSettings) return;
 
     setIsSubmitting(true);
+    setError(null);
     try {
       const result = await joinWaitlist(formData);
       if (result.data) {
         setIsSubmitted(true);
       }
     } catch (error) {
+      setError(error as Error);
     } finally {
       setIsSubmitting(false);
     }

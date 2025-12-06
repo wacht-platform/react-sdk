@@ -116,9 +116,9 @@ export function ForgotPassword({ onBack }: ForgotPasswordProps) {
     forgotPassword,
     verifyOtp,
     resetPassword,
-    error,
   } = useForgotPassword();
   const [loading, setLoading] = useState(false);
+  const [error, setError] = useState<Error | null>(null);
 
   const handleEmailSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -126,10 +126,14 @@ export function ForgotPassword({ onBack }: ForgotPasswordProps) {
       return;
     }
     setLoading(true);
-    const result = await forgotPassword(email);
-    setLoading(false);
-    if (!result.errors) {
+    setError(null);
+    try {
+      await forgotPassword(email);
       setStep("otp");
+    } catch (err) {
+      setError(err as Error);
+    } finally {
+      setLoading(false);
     }
   };
 
@@ -139,11 +143,17 @@ export function ForgotPassword({ onBack }: ForgotPasswordProps) {
       return;
     }
     setLoading(true);
-    const result = await verifyOtp(email, otp);
-    setLoading(false);
-    if (!result.errors && result.data) {
-      setToken(result.data.token);
-      setStep("reset");
+    setError(null);
+    try {
+      const result = await verifyOtp(email, otp);
+      if (result.data) {
+        setToken(result.data.token);
+        setStep("reset");
+      }
+    } catch (err) {
+      setError(err as Error);
+    } finally {
+      setLoading(false);
     }
   };
 
@@ -155,37 +165,40 @@ export function ForgotPassword({ onBack }: ForgotPasswordProps) {
     if (password.length < 8) {
       return;
     }
-    if (password.length < 8) {
-      return;
-    }
     setLoading(true);
-    const result = await resetPassword(token, password);
-    setLoading(false);
-    if (!result.errors && result.data) {
-      const session = result.data;
-      // Check for incomplete sign-in attempts (e.g. 2FA)
-      // We take the last attempt as it is the one created by the password reset
-      const incompleteAttempt =
-        session.signin_attempts && session.signin_attempts.length > 0
-          ? session.signin_attempts[session.signin_attempts.length - 1]
-          : null;
+    setError(null);
+    try {
+      const result = await resetPassword(token, password);
+      if (result.data) {
+        const session = result.data;
+        // Check for incomplete sign-in attempts (e.g. 2FA)
+        // We take the last attempt as it is the one created by the password reset
+        const incompleteAttempt =
+          session.signin_attempts && session.signin_attempts.length > 0
+            ? session.signin_attempts[session.signin_attempts.length - 1]
+            : null;
 
-      if (incompleteAttempt && !incompleteAttempt.completed) {
-        const signinUrl = deployment?.ui_settings?.sign_in_page_url;
-        if (signinUrl) {
-          const url = new URL(signinUrl, window.location.origin);
-          url.searchParams.set("signin_attempt_id", incompleteAttempt.id);
-          navigate(url.toString());
+        if (incompleteAttempt && !incompleteAttempt.completed) {
+          const signinUrl = deployment?.ui_settings?.sign_in_page_url;
+          if (signinUrl) {
+            const url = new URL(signinUrl, window.location.origin);
+            url.searchParams.set("signin_attempt_id", incompleteAttempt.id);
+            navigate(url.toString());
+          } else {
+            // Fallback if no sign-in URL is configured
+            onBack();
+          }
         } else {
-          // Fallback if no sign-in URL is configured
-          onBack();
+          // Auto-login successful
+          const redirectUrl =
+            deployment?.ui_settings?.after_signin_redirect_url || "/";
+          navigate(redirectUrl);
         }
-      } else {
-        // Auto-login successful
-        const redirectUrl =
-          deployment?.ui_settings?.after_signin_redirect_url || "/";
-        navigate(redirectUrl);
       }
+    } catch (err) {
+      setError(err as Error);
+    } finally {
+      setLoading(false);
     }
   };
 

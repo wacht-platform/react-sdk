@@ -52,15 +52,15 @@ const Container = styled.div`
 `;
 
 const LoadingContainer = styled.div`
-display: flex;
+  display: flex;
   justify-content: center;
   align-items: center;
   min-height: 200px;
 
   svg {
-  animation: ${spin} 1s linear infinite;
+    animation: ${spin} 1s linear infinite;
     color: var(--color-primary);
-}
+  }
 `;
 
 const Header = styled.div`
@@ -260,18 +260,15 @@ const RequiredAsterisk = styled.span`
 `;
 
 export function SignUpForm() {
-  const {
-    loading,
-    signUp,
-    signupAttempt,
-    discardSignupAttempt,
-    errors: signUpErrors,
-  } = useSignUp();
+  const { loading, signUp, signupAttempt, discardSignupAttempt } = useSignUp();
   const { signIn: oauthSignIn } = useSignInWithStrategy("oauth");
   const { deployment } = useDeployment();
   const { navigate } = useNavigation();
-  const { session, refetch: refetchSession, loading: sessionLoading } =
-    useSession();
+  const {
+    session,
+    refetch: refetchSession,
+    loading: sessionLoading,
+  } = useSession();
   const [formData, setFormData] = useState<SignUpParams>({
     first_name: "",
     last_name: "",
@@ -607,46 +604,6 @@ export function SignUpForm() {
     setOtpSent(true);
   }, [signupAttempt, signUp, otpSent, deployment, session, navigate]);
 
-  useEffect(() => {
-    const newErrors: Record<string, string> = {};
-    if (signUpErrors?.errors) {
-      if (Array.isArray(signUpErrors?.errors)) {
-        for (const err of signUpErrors.errors) {
-          if (err.code === "USERNAME_EXISTS") {
-            newErrors.username = err.message;
-          }
-
-          if (err.code === "EMAIL_EXISTS") {
-            newErrors.email = err.message;
-          }
-
-          if (err.code === "PHONE_NUMBER_EXISTS") {
-            newErrors.phone_number = err.message;
-          }
-
-          if (err.code === "INVALID_CREDENTIALS") {
-            newErrors.password = err.message;
-          }
-          if (
-            [
-              "COUNTRY_RESTRICTED",
-              "EMAIL_NOT_ALLOWED",
-              "EMAIL_BLOCKED",
-              "DISPOSABLE_EMAIL_BLOCKED",
-              "VOIP_NUMBER_BLOCKED",
-              "BANNED_KEYWORD",
-            ].includes(err.code)
-          ) {
-            newErrors.submit = err.message;
-          }
-        }
-      }
-    }
-
-    // New validation errors
-    setErrors(newErrors);
-  }, [signUpErrors]);
-
   if (sessionLoading) {
     return (
       <DefaultStylesProvider>
@@ -805,61 +762,61 @@ export function SignUpForm() {
             <Form onSubmit={handleSubmit} noValidate>
               {(authSettings?.first_name?.enabled ||
                 authSettings?.last_name?.enabled) && (
-                  <NameFields $isBothEnabled={isBothNamesEnabled}>
-                    {authSettings?.first_name?.enabled && (
-                      <FormGroup>
-                        <Label htmlFor="first_name">
-                          First name
-                          {authSettings?.first_name?.required && (
-                            <RequiredAsterisk>*</RequiredAsterisk>
-                          )}
-                        </Label>
-                        <Input
-                          type="text"
-                          id="first_name"
-                          name="first_name"
-                          required
-                          minLength={3}
-                          maxLength={30}
-                          value={formData.first_name}
-                          onChange={handleInputChange}
-                          placeholder="First name"
-                          aria-invalid={!!errors.first_name}
-                          pattern="^[a-zA-Z]{3,30}$"
-                        />
-                        {errors.first_name && (
-                          <ErrorMessage>{errors.first_name}</ErrorMessage>
+                <NameFields $isBothEnabled={isBothNamesEnabled}>
+                  {authSettings?.first_name?.enabled && (
+                    <FormGroup>
+                      <Label htmlFor="first_name">
+                        First name
+                        {authSettings?.first_name?.required && (
+                          <RequiredAsterisk>*</RequiredAsterisk>
                         )}
-                      </FormGroup>
-                    )}
-                    {authSettings?.last_name?.enabled && (
-                      <FormGroup>
-                        <Label htmlFor="last_name">
-                          Last name
-                          {authSettings?.last_name?.required && (
-                            <RequiredAsterisk>*</RequiredAsterisk>
-                          )}
-                        </Label>
-                        <Input
-                          type="text"
-                          id="last_name"
-                          name="last_name"
-                          required
-                          minLength={3}
-                          maxLength={30}
-                          value={formData.last_name}
-                          onChange={handleInputChange}
-                          placeholder="Last name"
-                          aria-invalid={!!errors.last_name}
-                          pattern="^[a-zA-Z]{3,30}$"
-                        />
-                        {errors.last_name && (
-                          <ErrorMessage>{errors.last_name}</ErrorMessage>
+                      </Label>
+                      <Input
+                        type="text"
+                        id="first_name"
+                        name="first_name"
+                        required
+                        minLength={3}
+                        maxLength={30}
+                        value={formData.first_name}
+                        onChange={handleInputChange}
+                        placeholder="First name"
+                        aria-invalid={!!errors.first_name}
+                        pattern="^[a-zA-Z]{3,30}$"
+                      />
+                      {errors.first_name && (
+                        <ErrorMessage>{errors.first_name}</ErrorMessage>
+                      )}
+                    </FormGroup>
+                  )}
+                  {authSettings?.last_name?.enabled && (
+                    <FormGroup>
+                      <Label htmlFor="last_name">
+                        Last name
+                        {authSettings?.last_name?.required && (
+                          <RequiredAsterisk>*</RequiredAsterisk>
                         )}
-                      </FormGroup>
-                    )}
-                  </NameFields>
-                )}
+                      </Label>
+                      <Input
+                        type="text"
+                        id="last_name"
+                        name="last_name"
+                        required
+                        minLength={3}
+                        maxLength={30}
+                        value={formData.last_name}
+                        onChange={handleInputChange}
+                        placeholder="Last name"
+                        aria-invalid={!!errors.last_name}
+                        pattern="^[a-zA-Z]{3,30}$"
+                      />
+                      {errors.last_name && (
+                        <ErrorMessage>{errors.last_name}</ErrorMessage>
+                      )}
+                    </FormGroup>
+                  )}
+                </NameFields>
+              )}
 
               {authSettings?.username.enabled && (
                 <FormGroup>

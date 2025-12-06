@@ -54,21 +54,18 @@ export type UseSignUpReturnType =
       signUp: never;
       signupAttempt: null;
       discardSignupAttempt: () => void;
-      errors: null;
     }
   | {
       loading: false;
       signUp: SignUpFunction;
       signupAttempt: SignupAttempt | null;
       discardSignupAttempt: () => void;
-      errors: ApiResult<unknown, ErrorInterface> | null;
     };
 
 function builder(
   client: Client,
   signupAttempt: SignupAttempt | null,
   setSignUpAttempt: (attempt: SignupAttempt | null) => void,
-  setErrors: (errors: ApiResult<unknown, ErrorInterface> | null) => void,
 ): SignUpFunction {
   return {
     create: async (params: SignUpParams) => {
@@ -83,9 +80,6 @@ function builder(
       const result = await responseMapper<Session>(response);
       if ("data" in result && result.data?.signup_attempts?.length) {
         setSignUpAttempt(result.data.signup_attempts?.at(-1) || null);
-        setErrors(null);
-      } else {
-        setErrors(result);
       }
       return result;
     },
@@ -128,10 +122,6 @@ function builder(
       const result = await responseMapper<Session>(response);
       if ("data" in result && result.data?.signup_attempts?.length) {
         setSignUpAttempt(result.data.signup_attempts.at(-1) || null);
-        setErrors(null);
-      } else if ("errors" in result) {
-        setErrors(result);
-        throw new Error(result.errors?.[0]?.message || "Verification failed");
       }
       return result;
     },
@@ -168,10 +158,6 @@ export function useSignUp(): UseSignUpReturnType {
   const [signupAttempt, setSignupAttempt] = useState<SignupAttempt | null>(
     null,
   );
-  const [errors, setErrors] = useState<ApiResult<
-    unknown,
-    ErrorInterface
-  > | null>(null);
 
   if (loading) {
     return {
@@ -180,9 +166,7 @@ export function useSignUp(): UseSignUpReturnType {
       signupAttempt: null,
       discardSignupAttempt: () => {
         setSignupAttempt(null);
-        setErrors(null);
       },
-      errors: null,
     };
   }
 
@@ -191,9 +175,7 @@ export function useSignUp(): UseSignUpReturnType {
     signupAttempt,
     discardSignupAttempt: () => {
       setSignupAttempt(null);
-      setErrors(null);
     },
-    signUp: builder(client, signupAttempt, setSignupAttempt, setErrors),
-    errors,
+    signUp: builder(client, signupAttempt, setSignupAttempt),
   };
 }

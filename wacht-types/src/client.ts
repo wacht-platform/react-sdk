@@ -51,12 +51,10 @@ export type ErrorCode = typeof ErrorCode[keyof typeof ErrorCode];
 
 export type ResultInterface<T, E> =
   | {
-      data: never;
-      errors: E[];
-    }
+    data: never;
+  }
   | {
-      data: T;
-      errors: never;
-    };
+    data: T;
+  };
 
 export type ApiResult<T, E = ErrorInterface> = ResultInterface<T, E>;

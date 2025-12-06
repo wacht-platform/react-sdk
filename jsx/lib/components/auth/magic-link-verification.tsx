@@ -106,7 +106,7 @@ export function MagicLinkVerification({
   );
   const [subMessage, setSubMessage] = useState("");
   const { token, attempt, redirectUri } = useMagicLinkParams();
-  const { verifyMagicLink, error, success } = useMagicLinkVerification();
+  const { verifyMagicLink } = useMagicLinkVerification();
   const { navigate } = useNavigation();
   const { deployment } = useDeployment();
   const hasVerified = useRef(false);
@@ -128,52 +128,50 @@ export function MagicLinkVerification({
       setStatus("loading");
       setSubMessage("Please wait while we verify your magic link.");
 
-      await verifyMagicLink({ token, attempt, redirectUri });
+      try {
+        await verifyMagicLink({ token, attempt, redirectUri });
+        setStatus("success");
+        setSubMessage("You will be redirected to your account shortly.");
+        onSuccess?.();
+
+        // Handle redirect similar to signin-form
+        setTimeout(() => {
+          let finalRedirectUri = redirectUri;
+
+          if (!finalRedirectUri) {
+            finalRedirectUri =
+              deployment?.ui_settings?.after_signin_redirect_url;
+          }
+
+          // Fallback to frontend host if no redirect URL configured
+          if (!finalRedirectUri && deployment?.frontend_host) {
+            finalRedirectUri = `https://${deployment.frontend_host}`;
+          }
+
+          if (finalRedirectUri) {
+            const uri = new URL(finalRedirectUri);
+
+            if (deployment?.mode === "staging") {
+              uri.searchParams.set(
+                "__dev_session__",
+                localStorage.getItem("__dev_session__") || "",
+              );
+            }
+
+            navigate(uri.toString());
+          }
+        }, 2000);
+      } catch (error: any) {
+        setStatus("error");
+        setSubMessage(
+          "The magic link may have expired or already been used. Please try signing in again.",
+        );
+        onError?.(error.message);
+      }
     };
 
     performVerification();
   }, [token, attempt]);
-
-  useEffect(() => {
-    if (success) {
-      setStatus("success");
-      setSubMessage("You will be redirected to your account shortly.");
-      onSuccess?.();
-
-      // Handle redirect similar to signin-form
-      setTimeout(() => {
-        let finalRedirectUri = redirectUri;
-
-        if (!finalRedirectUri) {
-          finalRedirectUri = deployment?.ui_settings?.after_signin_redirect_url;
-        }
-
-        // Fallback to frontend host if no redirect URL configured
-        if (!finalRedirectUri && deployment?.frontend_host) {
-          finalRedirectUri = `https://${deployment.frontend_host}`;
-        }
-
-        if (finalRedirectUri) {
-          const uri = new URL(finalRedirectUri);
-
-          if (deployment?.mode === "staging") {
-            uri.searchParams.set(
-              "__dev_session__",
-              localStorage.getItem("__dev_session__") || "",
-            );
-          }
-
-          navigate(uri.toString());
-        }
-      }, 2000);
-    } else if (error) {
-      setStatus("error");
-      setSubMessage(
-        "The magic link may have expired or already been used. Please try signing in again.",
-      );
-      onError?.(error.message);
-    }
-  }, [success, error, navigate, deployment, redirectUri, onSuccess, onError]);
 
   const handleRetry = () => {
     if (deployment?.ui_settings?.sign_in_page_url) {

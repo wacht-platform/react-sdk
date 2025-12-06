@@ -121,12 +121,7 @@ export const AddDomainPopover = ({
 
     try {
       const res = await addDomain!({ fqdn: sanitizedDomain });
-      if (res?.errors?.length) {
-        const errorMessage = res.errors[0]?.message || res.errors[0] || "Failed to add domain";
-        toast(typeof errorMessage === 'string' ? errorMessage : "Failed to add domain", "error");
-        return;
-      }
-
+      
       toast("Domain added successfully", "info");
       setCurrentDomain(res!.data);
     } catch (error: any) {

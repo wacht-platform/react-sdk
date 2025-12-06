@@ -1,7 +1,7 @@
 import { useState, useEffect } from "react";
 import { useClient } from "./use-client";
 import { responseMapper } from "../utils/response-mapper";
-import { ApiResult, ErrorInterface, ErrorCode } from "@/types";
+import { ApiResult, ErrorInterface } from "@/types";
 
 export interface MagicLinkParams {
   token?: string;
@@ -12,28 +12,20 @@ export interface MagicLinkParams {
 export interface UseMagicLinkVerificationReturnType {
   loading: boolean;
   verifyMagicLink: (params: MagicLinkParams) => Promise<ApiResult<{}, ErrorInterface>>;
-  error: Error | null;
   success: boolean | null;
 }
 
 export function useMagicLinkVerification(): UseMagicLinkVerificationReturnType {
   const { client, loading: clientLoading } = useClient();
   const [verificationLoading, setVerificationLoading] = useState(false);
-  const [verificationError, setVerificationError] = useState<Error | null>(null);
   const [verificationSuccess, setVerificationSuccess] = useState<boolean | null>(null);
 
   const verifyMagicLink = async (params: MagicLinkParams): Promise<ApiResult<{}, ErrorInterface>> => {
     if (!params.token || !params.attempt) {
-      const error = new Error("Invalid magic link parameters");
-      setVerificationError(error);
-      return {
-        data: undefined as never,
-        errors: [{ message: error.message, code: ErrorCode.BadRequestBody }]
-      };
+      throw new Error("Invalid magic link parameters");
     }
 
     setVerificationLoading(true);
-    setVerificationError(null);
     setVerificationSuccess(null);
 
     try {
@@ -52,33 +44,19 @@ export function useMagicLinkVerification(): UseMagicLinkVerificationReturnType {
       const result = await responseMapper<{}>(response);
 
       setVerificationLoading(false);
-
-      if ("errors" in result && result.errors) {
-        const error = new Error(result.errors[0].message);
-        setVerificationError(error);
-        setVerificationSuccess(false);
-      } else {
-        setVerificationSuccess(true);
-      }
+      setVerificationSuccess(true);
 
       return result;
     } catch (error) {
       setVerificationLoading(false);
-      const errorObj = error instanceof Error ? error : new Error("Magic link verification failed");
-      setVerificationError(errorObj);
       setVerificationSuccess(false);
-
-      return {
-        data: undefined as never,
-        errors: [{ message: errorObj.message, code: ErrorCode.Internal }]
-      };
+      throw error;
     }
   };
 
   return {
     loading: clientLoading || verificationLoading,
     verifyMagicLink,
-    error: verificationError,
     success: verificationSuccess,
   };
 }
