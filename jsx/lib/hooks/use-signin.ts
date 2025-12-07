@@ -471,10 +471,12 @@ export function useSignIn(): UseSignInReturnType {
       // Identifier-First flow methods
       identify: async (identifier: string): Promise<IdentifyResult> => {
         console.log("[identify] Starting with identifier:", identifier);
+        const form = new FormData();
+        form.append("identifier", identifier);
+
         const response = await client("/auth/identify", {
           method: "POST",
-          headers: { "Content-Type": "application/json" },
-          body: JSON.stringify({ identifier }),
+          body: form,
         });
 
         console.log("[identify] Response status:", response.status);
