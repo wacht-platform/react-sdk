@@ -77,6 +77,35 @@ export interface OrganizationDomain {
   updated_at: string;
 }
 
+export interface EnterpriseConnection {
+  id: string;
+  organization_id: string;
+  deployment_id: string;
+  domain_id?: string;
+  domain?: OrganizationDomain;
+  protocol: "saml" | "oidc";
+  idp_entity_id: string;
+  idp_sso_url: string;
+  idp_certificate: string;
+  created_at: string;
+  updated_at: string;
+}
+
+export interface CreateEnterpriseConnectionPayload {
+  domain_id: string;
+  protocol: "saml" | "oidc";
+  idp_entity_id: string;
+  idp_sso_url: string;
+  idp_certificate: string;
+}
+
+export interface UpdateEnterpriseConnectionPayload {
+  domain_id?: string;
+  idp_entity_id?: string;
+  idp_sso_url?: string;
+  idp_certificate?: string;
+}
+
 export interface Workspace {
   id: string;
   name: string;

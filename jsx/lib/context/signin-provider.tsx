@@ -6,6 +6,12 @@ import { FirstFactor } from "@/types";
 import { DeploymentSocialConnection } from "@/types";
 import { AuthSettings } from "@/types";
 
+export type SignInStep =
+  | "identifier"
+  | "password"
+  | "verification"
+  | "2fa";
+
 interface SignInContextType {
   email: string;
   showOtherOptions: boolean;
@@ -19,6 +25,8 @@ interface SignInContextType {
   authSettings: AuthSettings | undefined;
   firstFactor: FirstFactor | undefined;
   setFirstFactor: (factor: FirstFactor) => void;
+  signInStep: SignInStep;
+  setSignInStep: (step: SignInStep) => void;
 }
 
 const SignInContext = createContext<SignInContextType | undefined>(undefined);
@@ -44,6 +52,7 @@ export function SignInProvider({ children }: SignInProviderProps) {
   const [showOtherOptions, setShowOtherOptions] = useState(false);
   const [showForgotPassword, setShowForgotPassword] = useState(false);
   const [otpSent, setOtpSent] = useState(false);
+  const [signInStep, setSignInStep] = useState<SignInStep>("identifier");
 
   const enabledSocialsProviders =
     deployment?.social_connections.filter((conn) => conn.enabled) || [];
@@ -65,6 +74,8 @@ export function SignInProvider({ children }: SignInProviderProps) {
         enabledSocialsProviders,
         authSettings,
         firstFactor,
+        signInStep,
+        setSignInStep,
       }}
     >
       {children}

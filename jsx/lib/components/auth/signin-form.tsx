@@ -162,6 +162,8 @@ function SignInFormContent() {
     setShowOtherOptions,
     enabledSocialsProviders,
     firstFactor,
+    signInStep,
+    setSignInStep,
   } = useSignInContext();
   const {
     loading,
@@ -238,6 +240,48 @@ function SignInFormContent() {
     });
     setErrors({});
     setCountryCode("US");
+    setSignInStep("identifier");
+  };
+
+  const handleIdentify = async (email: string) => {
+    if (!email) {
+      setErrors({ email: "Email address is required" });
+      return;
+    }
+
+    try {
+      const result = await signIn.identify(email);
+
+      if (result.strategy === "sso" && result.connection_id) {
+        const searchParams = new URLSearchParams(window.location.search);
+        const redirectUri = searchParams.get("redirect_uri") || undefined;
+        const response = await signIn.initEnterpriseSso(result.connection_id, redirectUri);
+        if (response && response.sso_url) {
+          window.location.href = response.sso_url;
+        }
+      } else if (result.strategy === "social" && result.provider) {
+        const socialConnection = enabledSocialsProviders.find(
+          (conn) => conn.provider === result.provider
+        );
+        if (socialConnection) {
+          const searchParams = new URLSearchParams(window.location.search);
+          const redirectUri = searchParams.get("redirect_uri") || undefined;
+          const { data } = await oauthSignIn.create({
+            provider: socialConnection.provider as OAuthProvider,
+            redirectUri,
+          });
+          if (data && typeof data === "object" && "oauth_url" in data) {
+            window.location.href = data.oauth_url as string;
+          }
+        } else {
+          setSignInStep("password");
+        }
+      } else {
+        setSignInStep("password");
+      }
+    } catch (err) {
+      setErrors({ submit: (err as Error).message });
+    }
   };
 
   const createSignIn = async (e: React.FormEvent) => {
@@ -246,6 +290,15 @@ function SignInFormContent() {
     discardSignInAttempt();
 
     const newErrors: Record<string, string> = {};
+
+    if (signInStep === "identifier" && firstFactor === "email_password") {
+      if (!formData.email) {
+        setErrors({ email: "Email address is required" });
+        return;
+      }
+      await handleIdentify(formData.email);
+      return;
+    }
 
     if (firstFactor === "email_password") {
       if (!formData.email) {
@@ -673,8 +726,9 @@ function SignInFormContent() {
                   </FormGroup>
                 )}
 
-              {(firstFactor === "email_password" ||
-                firstFactor === "username_password") &&
+              {signInStep === "password" &&
+                (firstFactor === "email_password" ||
+                  firstFactor === "username_password") &&
                 deployment?.auth_settings?.password?.enabled && (
                   <FormGroup>
                     <div
@@ -712,7 +766,9 @@ function SignInFormContent() {
                 {errors.submit && <ErrorMessage>{errors.submit}</ErrorMessage>}
 
                 <SubmitButton type="submit" disabled={isSubmitting || loading}>
-                  {isSubmitting ? "Signing in..." : "Sign in"}
+                  {isSubmitting
+                    ? (signInStep === "identifier" ? "Checking..." : "Signing in...")
+                    : (signInStep === "identifier" ? "Continue" : "Sign in")}
                 </SubmitButton>
               </div>
 

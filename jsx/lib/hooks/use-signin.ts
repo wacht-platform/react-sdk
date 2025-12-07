@@ -4,6 +4,14 @@ import { useClient } from "./use-client";
 import type { ApiResult, Client } from "@/types";
 import type { Session, SigninAttempt, ProfileCompletionData } from "@/types";
 
+// Identifier-First flow types
+export interface IdentifyResult {
+  strategy: "sso" | "social" | "password";
+  connection_id?: string;
+  idp_url?: string;
+  provider?: string;
+}
+
 type UsernameSignInParams = {
   username: string;
   password: string;
@@ -140,6 +148,8 @@ type SignIn = {
   ) => Promise<ApiResult<PrepareVerificationResponse>>;
   completeVerification: (verificationCode: string) => Promise<Session>;
   completeProfile: (data: ProfileCompletionData) => Promise<Session>;
+  identify: (identifier: string) => Promise<IdentifyResult>;
+  initEnterpriseSso: (connectionId: string, redirectUri?: string) => Promise<{ sso_url: string; session: Session }>;
 };
 
 type UseSignInReturnType =
@@ -458,6 +468,37 @@ export function useSignIn(): UseSignInReturnType {
           throw new Error("Profile completion failed");
         }
       },
+      // Identifier-First flow methods
+      identify: async (identifier: string): Promise<IdentifyResult> => {
+        const response = await client("/auth/identify", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ identifier }),
+        });
+
+        if (!response.ok) {
+          const errorData = await response.json().catch(() => ({}));
+          throw new Error(errorData.message || "Failed to identify user");
+        }
+
+        return response.json();
+      },
+      initEnterpriseSso: async (connectionId: string, redirectUri?: string): Promise<{ sso_url: string; session: Session }> => {
+        const params = new URLSearchParams({ connection_id: connectionId });
+        if (redirectUri) {
+          params.append("redirect_uri", redirectUri);
+        }
+        const response = await client(`/auth/sso/login?${params.toString()}`, {
+          method: "POST",
+        });
+
+        if (!response.ok) {
+          const errorData = await response.json().catch(() => ({}));
+          throw new Error(errorData.message || "Failed to initiate SSO");
+        }
+
+        return response.json();
+      },
     },
     discardSignInAttempt: () => {
       setSignInAttempt(null);
@@ -493,6 +534,8 @@ export type UseSignInWithStrategyReturnType<T extends SignInStrategy> =
         params: VerificationParams,
       ) => Promise<ApiResult<PrepareVerificationResponse>>;
       completeProfile: (data: ProfileCompletionData) => Promise<Session>;
+      identify: (identifier: string) => Promise<IdentifyResult>;
+      initEnterpriseSso: (connectionId: string, redirectUri?: string) => Promise<{ sso_url: string; session: Session }>;
     };
     signinAttempt: SigninAttempt | null;
     discardSignInAttempt: () => void;
@@ -549,6 +592,8 @@ export function useSignInWithStrategy<T extends SignInStrategy>(
       completeVerification: signIn.completeVerification,
       prepareVerification: signIn.prepareVerification,
       completeProfile: signIn.completeProfile,
+      identify: signIn.identify,
+      initEnterpriseSso: signIn.initEnterpriseSso,
     },
     discardSignInAttempt,
     setSignInAttempt,

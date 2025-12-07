@@ -13,6 +13,9 @@ import type {
   OrganizationRole,
   OrganizationUpdate,
   RoleCreate,
+  EnterpriseConnection,
+  CreateEnterpriseConnectionPayload,
+  UpdateEnterpriseConnectionPayload,
 } from "@/types";
 import { responseMapper } from "@/utils/response-mapper";
 import { useSession, clearTokenCache } from "./use-session";
@@ -174,12 +177,84 @@ export const useOrganizationList = () => {
   const removeOrganizationDomain = useCallback(
     async (organization: Organization, domain: OrganizationDomain) => {
       const response = await responseMapper<OrganizationDomain>(
-        await client(`/organizations/${organization.id}/domains/${domain.id}/remove`, {
+        await client(`/organizations/${organization.id}/domains/${domain.id}/delete`, {
           method: "POST",
         })
       );
 
       return response;
+    },
+    [client]
+  );
+
+  const getEnterpriseConnections = useCallback(
+    async (organization: Organization) => {
+      const response = await responseMapper<EnterpriseConnection[]>(
+        await client(`/organizations/${organization.id}/enterprise-connections`, {
+          method: "GET",
+        })
+      );
+      return response.data;
+    },
+    [client]
+  );
+
+  const createEnterpriseConnection = useCallback(
+    async (organization: Organization, payload: CreateEnterpriseConnectionPayload) => {
+      const form = new FormData();
+      form.append("protocol", payload.protocol);
+      form.append("idp_entity_id", payload.idp_entity_id);
+      form.append("idp_sso_url", payload.idp_sso_url);
+      form.append("idp_certificate", payload.idp_certificate);
+      if (payload.domain_id) {
+        form.append("domain_id", payload.domain_id);
+      }
+
+      const response = await responseMapper<EnterpriseConnection>(
+        await client(`/organizations/${organization.id}/enterprise-connections`, {
+          method: "POST",
+          body: form,
+        })
+      );
+      return response.data;
+    },
+    [client]
+  );
+
+  const updateEnterpriseConnection = useCallback(
+    async (
+      organization: Organization,
+      connectionId: string,
+      payload: UpdateEnterpriseConnectionPayload
+    ) => {
+      const form = new FormData();
+      if (payload.idp_entity_id) form.append("idp_entity_id", payload.idp_entity_id);
+      if (payload.idp_sso_url) form.append("idp_sso_url", payload.idp_sso_url);
+      if (payload.idp_certificate) form.append("idp_certificate", payload.idp_certificate);
+      if (payload.domain_id) form.append("domain_id", payload.domain_id);
+
+      const response = await responseMapper<EnterpriseConnection>(
+        await client(
+          `/organizations/${organization.id}/enterprise-connections/${connectionId}/update`,
+          {
+            method: "POST",
+            body: form,
+          }
+        )
+      );
+      return response.data;
+    },
+    [client]
+  );
+
+  const deleteEnterpriseConnection = useCallback(
+    async (organization: Organization, connectionId: string) => {
+      await client(
+        `/organizations/${organization.id}/enterprise-connections/${connectionId}/delete`,
+        {
+          method: "POST",
+        }
+      );
     },
     [client]
   );
@@ -357,6 +432,10 @@ export const useOrganizationList = () => {
     addRole,
     removeOrganizationRoles,
     deleteOrganization,
+    getEnterpriseConnections,
+    createEnterpriseConnection,
+    updateEnterpriseConnection,
+    deleteEnterpriseConnection,
   };
 };
 
@@ -381,6 +460,10 @@ export const useActiveOrganization = () => {
     resendOrganizationInvitation,
     updateOrganization,
     removeOrganizationRoles,
+    getEnterpriseConnections,
+    createEnterpriseConnection,
+    updateEnterpriseConnection,
+    deleteEnterpriseConnection,
   } = useOrganizationList();
   const {
     session,
@@ -545,6 +628,36 @@ export const useActiveOrganization = () => {
     return data;
   }, [activeOrganization, getOrganizationInvitations]);
 
+  const getCurrentEnterpriseConnections = useCallback(async () => {
+    if (!activeOrganization) return [];
+    const data = await getEnterpriseConnections(activeOrganization);
+    return data;
+  }, [activeOrganization, getEnterpriseConnections]);
+
+  const createActiveEnterpriseConnection = useCallback(
+    async (payload: CreateEnterpriseConnectionPayload) => {
+      if (!activeOrganization) return;
+      return await createEnterpriseConnection(activeOrganization, payload);
+    },
+    [activeOrganization, createEnterpriseConnection]
+  );
+
+  const updateActiveEnterpriseConnection = useCallback(
+    async (connectionId: string, payload: UpdateEnterpriseConnectionPayload) => {
+      if (!activeOrganization) return;
+      return await updateEnterpriseConnection(activeOrganization, connectionId, payload);
+    },
+    [activeOrganization, updateEnterpriseConnection]
+  );
+
+  const deleteActiveEnterpriseConnection = useCallback(
+    async (connectionId: string) => {
+      if (!activeOrganization) return;
+      await deleteEnterpriseConnection(activeOrganization, connectionId);
+    },
+    [activeOrganization, deleteEnterpriseConnection]
+  );
+
   if (sessionLoading || loading) {
     return {
       activeOrganization: null,
@@ -566,6 +679,10 @@ export const useActiveOrganization = () => {
       discardInvitation: null as never,
       resendInvitation: null as never,
       leave: null as never,
+      getEnterpriseConnections: null as never,
+      createEnterpriseConnection: null as never,
+      updateEnterpriseConnection: null as never,
+      deleteEnterpriseConnection: null as never,
     };
   }
 
@@ -589,6 +706,10 @@ export const useActiveOrganization = () => {
     inviteMember: inviteMemberToOrganization,
     discardInvitation: discardInvitationToOrganization,
     resendInvitation: resendInvitationToOrganization,
+    getEnterpriseConnections: getCurrentEnterpriseConnections,
+    createEnterpriseConnection: createActiveEnterpriseConnection,
+    updateEnterpriseConnection: updateActiveEnterpriseConnection,
+    deleteEnterpriseConnection: deleteActiveEnterpriseConnection,
     error: null,
   };
 };

@@ -66,6 +66,7 @@ import { useWorkspaceList } from "@/hooks/use-workspace";
 import { ConfirmationPopover } from "../utility/confirmation-popover";
 import { ScreenContext, useScreenContext } from "./context";
 import OrganizationSwitcher from "./organization-switcher";
+import { SSOSettingsSection } from "./sso-settings-section";
 
 const TypographyProvider = styled.div`
   * {
@@ -956,6 +957,7 @@ const DomainsSection = () => {
     string | null
   >(null);
   const addDomainButtonRef = useRef<HTMLButtonElement>(null);
+  const actionButtonRefs = useRef<Record<string, HTMLButtonElement | null>>({});
 
   const filteredDomains = React.useMemo(() => {
     let tempDomains = domains;
@@ -1096,28 +1098,26 @@ const DomainsSection = () => {
                       }
                     >
                       <DropdownTrigger>
-                        <IconButton>•••</IconButton>
+                        <IconButton ref={(el) => { actionButtonRefs.current[domain.id] = el; }}>•••</IconButton>
                       </DropdownTrigger>
 
                       <DropdownItems>
-                        {!domain.verified && (
-                          <DropdownItem
-                            onClick={() => {
-                              handleVerifyDomain(domain.id);
-                              setSelectedDomainAction(null);
+                        <DropdownItem
+                          onClick={() => {
+                            handleVerifyDomain(domain.id);
+                            setSelectedDomainAction(null);
+                          }}
+                        >
+                          <div
+                            style={{
+                              display: "flex",
+                              alignItems: "center",
+                              gap: "8px",
                             }}
                           >
-                            <div
-                              style={{
-                                display: "flex",
-                                alignItems: "center",
-                                gap: "8px",
-                              }}
-                            >
-                              ✓ Verify Domain
-                            </div>
-                          </DropdownItem>
-                        )}
+                            {domain.verified ? "📋 View DNS Record" : "✓ Verify Domain"}
+                          </div>
+                        </DropdownItem>
                         <DropdownItem
                           onClick={() => {
                             setSelectedDomainAction(null);
@@ -1187,6 +1187,7 @@ const DomainsSection = () => {
                       <AddDomainPopover
                         domain={domain}
                         onClose={() => setDomainInVerification(null)}
+                        triggerRef={{ current: actionButtonRefs.current[domain.id] }}
                       />
                     )}
                   </div>
@@ -2026,7 +2027,7 @@ const RolesSection = () => {
   );
 };
 
-type TabType = "general" | "domains" | "members" | "invitations" | "roles";
+type TabType = "general" | "domains" | "members" | "invitations" | "roles" | "sso";
 
 export const ManageOrganization = () => {
   const { loading, activeOrganization } = useActiveOrganization();
@@ -2157,6 +2158,15 @@ export const ManageOrganization = () => {
                   Roles
                 </TabIcon>
               </Tab>
+              <Tab
+                $isActive={activeTab === "sso"}
+                onClick={() => setActiveTab("sso")}
+              >
+                <TabIcon>
+                  <Shield size={16} />
+                  SSO
+                </TabIcon>
+              </Tab>
             </TabsList>
           </TabsContainer>
 
@@ -2166,6 +2176,7 @@ export const ManageOrganization = () => {
             {activeTab === "members" && <MembersSection />}
             {activeTab === "invitations" && <InvitationsSection />}
             {activeTab === "roles" && <RolesSection />}
+            {activeTab === "sso" && <SSOSettingsSection />}
           </TabContent>
 
           {toastMessage && (
@@ -2174,12 +2185,14 @@ export const ManageOrganization = () => {
                 position: "absolute",
                 bottom: "20px",
                 right: "20px",
+                maxWidth: "360px",
                 background: "var(--color-input-background)",
                 border: "1px solid var(--color-border)",
                 borderRadius: "8px",
                 padding: "12px 16px",
                 boxShadow: "0 4px 12px var(--color-shadow)",
                 animation: "slideUp 0.3s ease-out",
+                wordBreak: "break-word",
               }}
             >
               <div
@@ -2200,6 +2213,6 @@ export const ManageOrganization = () => {
           )}
         </Container>
       </ScreenContext.Provider>
-    </TypographyProvider>
+    </TypographyProvider >
   );
 };

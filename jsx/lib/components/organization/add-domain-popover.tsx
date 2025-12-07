@@ -121,7 +121,7 @@ export const AddDomainPopover = ({
 
     try {
       const res = await addDomain!({ fqdn: sanitizedDomain });
-      
+
       toast("Domain added successfully", "info");
       setCurrentDomain(res!.data);
     } catch (error: any) {
@@ -150,68 +150,76 @@ export const AddDomainPopover = ({
 
     // Calculate position after a short delay
     const timer = setTimeout(() => {
-      if (!popoverRef.current || !triggerRef?.current) return;
+      if (!popoverRef.current) return;
 
-      const triggerButton = triggerRef.current;
+      const triggerButton = triggerRef?.current;
+      const popoverWidth = 360;
+      const popoverHeight = 250; // Approximate height
+      const spacing = 8;
 
-      if (triggerButton) {
-        const rect = triggerButton.getBoundingClientRect();
-        const popoverWidth = 360;
-        const popoverHeight = 250; // Approximate height
-        const spacing = 8;
+      let top = 0;
+      let left = 0;
 
-        let top = 0;
-        let left = 0;
-
-        // Check available space
-        const spaceBottom = window.innerHeight - rect.bottom;
-        const spaceTop = rect.top;
-
-        // Prefer to open below if there's space
-        if (spaceBottom >= popoverHeight + spacing) {
-          top = rect.bottom + spacing;
-          // Align to right edge of button (bottom-right)
-          left = rect.right - popoverWidth;
-
-          // If it goes off left edge, align to left edge of button instead (bottom-left)
-          if (left < spacing) {
-            left = rect.left;
-
-            // If that also goes off right edge, center it on screen
-            if (left + popoverWidth > window.innerWidth - spacing) {
-              left = (window.innerWidth - popoverWidth) / 2;
-            }
-          }
-        }
-        // Otherwise open above
-        else if (spaceTop >= popoverHeight + spacing) {
-          top = rect.top - popoverHeight - spacing;
-          // Align to right edge of button (top-right)
-          left = rect.right - popoverWidth;
-
-          // If it goes off left edge, align to left edge of button instead (top-left)
-          if (left < spacing) {
-            left = rect.left;
-
-            // If that also goes off right edge, center it on screen
-            if (left + popoverWidth > window.innerWidth - spacing) {
-              left = (window.innerWidth - popoverWidth) / 2;
-            }
-          }
-        }
-        // If no space above or below, position it at the best available spot
-        else {
-          // Position at bottom with scrolling if needed
-          top = rect.bottom + spacing;
-          left = rect.right - popoverWidth;
-
-          if (left < spacing) {
-            left = rect.left;
-          }
-        }
-
+      if (!triggerButton) {
+        const popoverRect = popoverRef.current.getBoundingClientRect();
+        const actualWidth = popoverRect.width || popoverWidth;
+        const actualHeight = popoverRect.height || popoverHeight;
+        top = Math.max(spacing, (window.innerHeight - actualHeight) / 2);
+        left = Math.max(spacing, (window.innerWidth - actualWidth) / 2);
         setPosition({ top, left });
+        return;
       }
+
+      const rect = triggerButton.getBoundingClientRect();
+
+      // Check available space
+      const spaceBottom = window.innerHeight - rect.bottom;
+      const spaceTop = rect.top;
+
+      // Prefer to open below if there's space
+      if (spaceBottom >= popoverHeight + spacing) {
+        top = rect.bottom + spacing;
+        // Align to right edge of button (bottom-right)
+        left = rect.right - popoverWidth;
+
+        // If it goes off left edge, align to left edge of button instead (bottom-left)
+        if (left < spacing) {
+          left = rect.left;
+
+          // If that also goes off right edge, center it on screen
+          if (left + popoverWidth > window.innerWidth - spacing) {
+            left = (window.innerWidth - popoverWidth) / 2;
+          }
+        }
+      }
+      // Otherwise open above
+      else if (spaceTop >= popoverHeight + spacing) {
+        top = rect.top - popoverHeight - spacing;
+        // Align to right edge of button (top-right)
+        left = rect.right - popoverWidth;
+
+        // If it goes off left edge, align to left edge of button instead (top-left)
+        if (left < spacing) {
+          left = rect.left;
+
+          // If that also goes off right edge, center it on screen
+          if (left + popoverWidth > window.innerWidth - spacing) {
+            left = (window.innerWidth - popoverWidth) / 2;
+          }
+        }
+      }
+      // If no space above or below, position it at the best available spot
+      else {
+        // Position at bottom with scrolling if needed
+        top = rect.bottom + spacing;
+        left = rect.right - popoverWidth;
+
+        if (left < spacing) {
+          left = rect.left;
+        }
+      }
+
+      setPosition({ top, left });
     }, 10);
 
     // Add click outside listener
@@ -328,6 +336,7 @@ export const AddDomainPopover = ({
                 fontSize: "var(--font-xs)",
                 color: "var(--color-muted)",
                 margin: 0,
+                textAlign: "left",
               }}>
                 Add the following DNS record to your domain
               </p>
