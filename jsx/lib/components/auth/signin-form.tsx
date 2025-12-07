@@ -249,6 +249,9 @@ function SignInFormContent() {
       return;
     }
 
+    setIsSubmitting(true);
+    setErrors({});
+
     try {
       const result = await signIn.identify(email);
 
@@ -257,7 +260,9 @@ function SignInFormContent() {
         const redirectUri = searchParams.get("redirect_uri") || undefined;
         const response = await signIn.initEnterpriseSso(result.connection_id, redirectUri);
         if (response && response.sso_url) {
+          setIsRedirecting(true);
           window.location.href = response.sso_url;
+          return;
         }
       } else if (result.strategy === "social" && result.provider) {
         const socialConnection = enabledSocialsProviders.find(
@@ -271,7 +276,9 @@ function SignInFormContent() {
             redirectUri,
           });
           if (data && typeof data === "object" && "oauth_url" in data) {
+            setIsRedirecting(true);
             window.location.href = data.oauth_url as string;
+            return;
           }
         } else {
           setSignInStep("password");
@@ -281,6 +288,10 @@ function SignInFormContent() {
       }
     } catch (err) {
       setErrors({ submit: (err as Error).message });
+    } finally {
+      if (!isRedirecting) {
+        setIsSubmitting(false);
+      }
     }
   };
 
@@ -766,9 +777,14 @@ function SignInFormContent() {
                 {errors.submit && <ErrorMessage>{errors.submit}</ErrorMessage>}
 
                 <SubmitButton type="submit" disabled={isSubmitting || loading}>
-                  {isSubmitting
-                    ? (signInStep === "identifier" ? "Checking..." : "Signing in...")
-                    : (signInStep === "identifier" ? "Continue" : "Sign in")}
+                  {isSubmitting ? (
+                    <>
+                      <Loader2 size={16} style={{ animation: 'spin 1s linear infinite', marginRight: '8px' }} />
+                      {signInStep === "identifier" ? "Checking..." : "Signing in..."}
+                    </>
+                  ) : (
+                    signInStep === "identifier" ? "Continue" : "Sign in"
+                  )}
                 </SubmitButton>
               </div>
 
