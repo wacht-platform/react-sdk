@@ -51,7 +51,7 @@ function DeploymentProvider({
         );
         localStorage.setItem("__dev_session__", devSession ?? "");
         const newUrl = new URL(window.location.href);
-        newUrl.searchParams.delete("dev_session");
+        newUrl.searchParams.delete("__dev_session__");
         window.history.replaceState({}, "", newUrl.toString());
       } else {
         devSession = localStorage.getItem("__dev_session__");
