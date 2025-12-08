@@ -470,7 +470,6 @@ export function useSignIn(): UseSignInReturnType {
       },
       // Identifier-First flow methods
       identify: async (identifier: string): Promise<IdentifyResult> => {
-        console.log("[identify] Starting with identifier:", identifier);
         const form = new FormData();
         form.append("identifier", identifier);
 
@@ -479,14 +478,10 @@ export function useSignIn(): UseSignInReturnType {
           body: form,
         });
 
-        console.log("[identify] Response status:", response.status);
         const result = await responseMapper<IdentifyResult>(response);
-        console.log("[identify] Mapped result:", result);
-
         return result.data;
       },
       initEnterpriseSso: async (connectionId: string, redirectUri?: string): Promise<{ sso_url: string; session: Session }> => {
-        console.log("[initEnterpriseSso] Starting with connectionId:", connectionId, "redirectUri:", redirectUri);
         const params = new URLSearchParams({ connection_id: connectionId });
         if (redirectUri) {
           params.append("redirect_uri", redirectUri);
@@ -495,10 +490,7 @@ export function useSignIn(): UseSignInReturnType {
           method: "POST",
         });
 
-        console.log("[initEnterpriseSso] Response status:", response.status);
         const result = await responseMapper<{ sso_url: string; session: Session }>(response);
-        console.log("[initEnterpriseSso] Mapped result:", result);
-
         return result.data;
       },
     },

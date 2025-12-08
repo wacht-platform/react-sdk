@@ -14,12 +14,24 @@ export const useNavigation = () => {
     }
   };
 
+  const getRedirectUri = (passedRedirectUri?: string): string => {
+    if (passedRedirectUri) {
+      return passedRedirectUri;
+    }
+    const currentParams = new URLSearchParams(window.location.search);
+    const existingRedirectUri = currentParams.get("redirect_uri");
+    if (existingRedirectUri) {
+      return existingRedirectUri;
+    }
+    return window.location.href;
+  };
+
   const navigateToSignIn = (redirectUri?: string) => {
     if (!deployment) return;
 
-    const currentHost = redirectUri || window.location.href;
+    const targetRedirectUri = getRedirectUri(redirectUri);
     const params = new URLSearchParams();
-    params.set("redirect_uri", currentHost);
+    params.set("redirect_uri", targetRedirectUri);
 
     if (deployment?.mode === "staging") {
       params.set("dev_session", localStorage.getItem("__dev_session__") ?? "");
@@ -34,9 +46,9 @@ export const useNavigation = () => {
   const navigateToAccountSelection = (redirectUri?: string) => {
     if (!deployment) return;
 
-    const currentHost = redirectUri || window.location.href;
+    const targetRedirectUri = getRedirectUri(redirectUri);
     const params = new URLSearchParams();
-    params.set("redirect_uri", currentHost);
+    params.set("redirect_uri", targetRedirectUri);
 
     if (deployment?.mode === "staging") {
       params.set("dev_session", localStorage.getItem("__dev_session__") ?? "");
@@ -51,9 +63,9 @@ export const useNavigation = () => {
   const navigateToSignUp = (redirectUri?: string) => {
     if (!deployment) return;
 
-    const currentHost = redirectUri || window.location.href;
+    const targetRedirectUri = getRedirectUri(redirectUri);
     const params = new URLSearchParams();
-    params.set("redirect_uri", currentHost);
+    params.set("redirect_uri", targetRedirectUri);
 
     if (deployment?.mode === "staging") {
       params.set("dev_session", localStorage.getItem("__dev_session__") ?? "");
