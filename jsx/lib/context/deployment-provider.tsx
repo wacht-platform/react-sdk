@@ -1,16 +1,12 @@
 "use client";
 
-import type {
-  ClinetReponse,
-  Deployment,
-  DeploymentUISettings,
-} from "@/types";
+import type { ClinetReponse, Deployment, DeploymentUISettings } from "@/types";
 import type { DeploymentContextType, PlatformAdapter } from "@/types";
 import { useState, useEffect, useMemo, createContext, useRef } from "react";
 import type { ReactNode } from "react";
 
 const DeploymentContext = createContext<DeploymentContextType | undefined>(
-  undefined
+  undefined,
 );
 
 interface DeploymentProviderProps {
@@ -49,9 +45,9 @@ function DeploymentProvider({
       let staging = mode === "test";
 
       let devSession = null;
-      if (new URLSearchParams(window.location.search).has("dev_session")) {
+      if (new URLSearchParams(window.location.search).has("__dev_session__")) {
         devSession = new URLSearchParams(window.location.search).get(
-          "__dev_session__"
+          "__dev_session__",
         );
         localStorage.setItem("__dev_session__", devSession ?? "");
         const newUrl = new URL(window.location.href);
@@ -74,7 +70,7 @@ function DeploymentProvider({
 
       const deployment = await fetch(
         `${baseUrl}/deployment${staging ? "?" : ""}${params.toString()}`,
-        opts
+        opts,
       );
 
       if (!deployment.ok) {
@@ -99,7 +95,7 @@ function DeploymentProvider({
       if (staging && deployment.headers.get("x-development-session")) {
         localStorage.setItem(
           "__dev_session__",
-          deployment.headers.get("x-development-session") ?? ""
+          deployment.headers.get("x-development-session") ?? "",
         );
       }
 
@@ -115,7 +111,7 @@ function DeploymentProvider({
       deployment,
       adapter,
     }),
-    [loading, deployment, adapter]
+    [loading, deployment, adapter],
   );
 
   return (
