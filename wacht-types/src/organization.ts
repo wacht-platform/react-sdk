@@ -84,19 +84,30 @@ export interface EnterpriseConnection {
   domain_id?: string;
   domain?: OrganizationDomain;
   protocol: "saml" | "oidc";
-  idp_entity_id: string;
-  idp_sso_url: string;
-  idp_certificate: string;
+  idp_entity_id?: string;
+  idp_sso_url?: string;
+  idp_certificate?: string;
+  oidc_client_id?: string;
+  oidc_issuer_url?: string;
+  oidc_scopes?: string;
+  jit_enabled: boolean;
+  attribute_mapping?: Record<string, string>;
   created_at: string;
   updated_at: string;
 }
 
 export interface CreateEnterpriseConnectionPayload {
-  domain_id: string;
+  domain_id?: string;
   protocol: "saml" | "oidc";
-  idp_entity_id: string;
-  idp_sso_url: string;
-  idp_certificate: string;
+  idp_entity_id?: string;
+  idp_sso_url?: string;
+  idp_certificate?: string;
+  oidc_client_id?: string;
+  oidc_client_secret?: string;
+  oidc_issuer_url?: string;
+  oidc_scopes?: string;
+  jit_enabled?: boolean;
+  attribute_mapping?: Record<string, string>;
 }
 
 export interface UpdateEnterpriseConnectionPayload {
@@ -104,6 +115,24 @@ export interface UpdateEnterpriseConnectionPayload {
   idp_entity_id?: string;
   idp_sso_url?: string;
   idp_certificate?: string;
+  oidc_client_id?: string;
+  oidc_client_secret?: string;
+  oidc_issuer_url?: string;
+  oidc_scopes?: string;
+  jit_enabled?: boolean;
+  attribute_mapping?: Record<string, string>;
+}
+
+export interface SCIMTokenInfo {
+  exists: boolean;
+  scim_base_url: string;
+  token?: {
+    token?: string;
+    token_prefix: string;
+    enabled: boolean;
+    created_at: string;
+    last_used_at?: string;
+  };
 }
 
 export interface Workspace {

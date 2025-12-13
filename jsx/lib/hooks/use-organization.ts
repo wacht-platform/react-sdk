@@ -16,6 +16,7 @@ import type {
   EnterpriseConnection,
   CreateEnterpriseConnectionPayload,
   UpdateEnterpriseConnectionPayload,
+  SCIMTokenInfo,
 } from "@/types";
 import { responseMapper } from "@/utils/response-mapper";
 import { useSession, clearTokenCache } from "./use-session";
@@ -203,11 +204,26 @@ export const useOrganizationList = () => {
     async (organization: Organization, payload: CreateEnterpriseConnectionPayload) => {
       const form = new FormData();
       form.append("protocol", payload.protocol);
-      form.append("idp_entity_id", payload.idp_entity_id);
-      form.append("idp_sso_url", payload.idp_sso_url);
-      form.append("idp_certificate", payload.idp_certificate);
+
+      // Domain is optional
       if (payload.domain_id) {
         form.append("domain_id", payload.domain_id);
+      }
+
+      if (payload.idp_entity_id) form.append("idp_entity_id", payload.idp_entity_id);
+      if (payload.idp_sso_url) form.append("idp_sso_url", payload.idp_sso_url);
+      if (payload.idp_certificate) form.append("idp_certificate", payload.idp_certificate);
+      if (payload.oidc_client_id) form.append("oidc_client_id", payload.oidc_client_id);
+      if (payload.oidc_client_secret) form.append("oidc_client_secret", payload.oidc_client_secret);
+      if (payload.oidc_issuer_url) form.append("oidc_issuer_url", payload.oidc_issuer_url);
+      if (payload.oidc_scopes) form.append("oidc_scopes", payload.oidc_scopes);
+
+      if (payload.jit_enabled !== undefined) {
+        form.append("jit_enabled", String(payload.jit_enabled));
+      }
+
+      if (payload.attribute_mapping) {
+        form.append("attribute_mapping", JSON.stringify(payload.attribute_mapping));
       }
 
       const response = await responseMapper<EnterpriseConnection>(
@@ -228,10 +244,19 @@ export const useOrganizationList = () => {
       payload: UpdateEnterpriseConnectionPayload
     ) => {
       const form = new FormData();
+
+      if (payload.domain_id) form.append("domain_id", payload.domain_id);
       if (payload.idp_entity_id) form.append("idp_entity_id", payload.idp_entity_id);
       if (payload.idp_sso_url) form.append("idp_sso_url", payload.idp_sso_url);
       if (payload.idp_certificate) form.append("idp_certificate", payload.idp_certificate);
-      if (payload.domain_id) form.append("domain_id", payload.domain_id);
+      if (payload.oidc_client_id) form.append("oidc_client_id", payload.oidc_client_id);
+      if (payload.oidc_client_secret) form.append("oidc_client_secret", payload.oidc_client_secret);
+      if (payload.oidc_issuer_url) form.append("oidc_issuer_url", payload.oidc_issuer_url);
+      if (payload.oidc_scopes) form.append("oidc_scopes", payload.oidc_scopes);
+
+      if (payload.attribute_mapping) {
+        form.append("attribute_mapping", JSON.stringify(payload.attribute_mapping));
+      }
 
       const response = await responseMapper<EnterpriseConnection>(
         await client(
@@ -251,6 +276,106 @@ export const useOrganizationList = () => {
     async (organization: Organization, connectionId: string) => {
       await client(
         `/organizations/${organization.id}/enterprise-connections/${connectionId}/delete`,
+        {
+          method: "POST",
+        }
+      );
+    },
+    [client]
+  );
+
+  const testEnterpriseConnectionConfig = useCallback(
+    async (
+      organization: Organization,
+      payload: {
+        protocol: "saml" | "oidc";
+        idp_entity_id?: string;
+        idp_sso_url?: string;
+        idp_certificate?: string;
+        oidc_issuer_url?: string;
+        oidc_client_id?: string;
+        oidc_client_secret?: string;
+      }
+    ) => {
+      const form = new FormData();
+      form.append("protocol", payload.protocol);
+
+      if (payload.idp_entity_id) form.append("idp_entity_id", payload.idp_entity_id);
+      if (payload.idp_sso_url) form.append("idp_sso_url", payload.idp_sso_url);
+      if (payload.idp_certificate) form.append("idp_certificate", payload.idp_certificate);
+      if (payload.oidc_issuer_url) form.append("oidc_issuer_url", payload.oidc_issuer_url);
+      if (payload.oidc_client_id) form.append("oidc_client_id", payload.oidc_client_id);
+      if (payload.oidc_client_secret) form.append("oidc_client_secret", payload.oidc_client_secret);
+
+      const response = await responseMapper<{
+        success: boolean;
+        protocol: string;
+        checks: Record<string, boolean>;
+        errors?: Record<string, string>;
+      }>(
+        await client(`/organizations/${organization.id}/enterprise-connections/test`, {
+          method: "POST",
+          body: form,
+        })
+      );
+      return response.data;
+    },
+    [client]
+  );
+
+  // Test an existing enterprise connection (post-validation)
+  const testEnterpriseConnection = useCallback(
+    async (organization: Organization, connectionId: string) => {
+      const response = await responseMapper<{
+        success: boolean;
+        protocol: string;
+        checks: Record<string, boolean>;
+        errors?: Record<string, string>;
+      }>(
+        await client(`/organizations/${organization.id}/enterprise-connections/${connectionId}/test`, {
+          method: "POST",
+        })
+      );
+      return response.data;
+    },
+    [client]
+  );
+
+  // SCIM Token Management
+  const generateSCIMToken = useCallback(
+    async (organization: Organization, connectionId: string) => {
+      const response = await responseMapper<SCIMTokenInfo>(
+        await client(
+          `/organizations/${organization.id}/enterprise-connections/${connectionId}/scim/token`,
+          {
+            method: "POST",
+          }
+        )
+      );
+      return response.data;
+    },
+    [client]
+  );
+
+  const getSCIMToken = useCallback(
+    async (organization: Organization, connectionId: string) => {
+      const response = await responseMapper<SCIMTokenInfo>(
+        await client(
+          `/organizations/${organization.id}/enterprise-connections/${connectionId}/scim/token`,
+          {
+            method: "GET",
+          }
+        )
+      );
+      return response.data;
+    },
+    [client]
+  );
+
+  const revokeSCIMToken = useCallback(
+    async (organization: Organization, connectionId: string) => {
+      await client(
+        `/organizations/${organization.id}/enterprise-connections/${connectionId}/scim/token/revoke`,
         {
           method: "POST",
         }
@@ -436,6 +561,11 @@ export const useOrganizationList = () => {
     createEnterpriseConnection,
     updateEnterpriseConnection,
     deleteEnterpriseConnection,
+    testEnterpriseConnectionConfig,
+    testEnterpriseConnection,
+    generateSCIMToken,
+    getSCIMToken,
+    revokeSCIMToken,
   };
 };
 
@@ -464,6 +594,11 @@ export const useActiveOrganization = () => {
     createEnterpriseConnection,
     updateEnterpriseConnection,
     deleteEnterpriseConnection,
+    testEnterpriseConnectionConfig,
+    testEnterpriseConnection,
+    generateSCIMToken,
+    getSCIMToken,
+    revokeSCIMToken,
   } = useOrganizationList();
   const {
     session,
@@ -658,6 +793,46 @@ export const useActiveOrganization = () => {
     [activeOrganization, deleteEnterpriseConnection]
   );
 
+  const testActiveEnterpriseConnectionConfig = useCallback(
+    async (payload: Parameters<typeof testEnterpriseConnectionConfig>[1]) => {
+      if (!activeOrganization) return null;
+      return await testEnterpriseConnectionConfig(activeOrganization, payload);
+    },
+    [activeOrganization, testEnterpriseConnectionConfig]
+  );
+
+  const testActiveEnterpriseConnection = useCallback(
+    async (connectionId: string) => {
+      if (!activeOrganization) return null;
+      return await testEnterpriseConnection(activeOrganization, connectionId);
+    },
+    [activeOrganization, testEnterpriseConnection]
+  );
+
+  const generateActiveSCIMToken = useCallback(
+    async (connectionId: string) => {
+      if (!activeOrganization) return;
+      return await generateSCIMToken(activeOrganization, connectionId);
+    },
+    [activeOrganization, generateSCIMToken]
+  );
+
+  const getActiveSCIMToken = useCallback(
+    async (connectionId: string) => {
+      if (!activeOrganization) return;
+      return await getSCIMToken(activeOrganization, connectionId);
+    },
+    [activeOrganization, getSCIMToken]
+  );
+
+  const revokeActiveSCIMToken = useCallback(
+    async (connectionId: string) => {
+      if (!activeOrganization) return;
+      await revokeSCIMToken(activeOrganization, connectionId);
+    },
+    [activeOrganization, revokeSCIMToken]
+  );
+
   if (sessionLoading || loading) {
     return {
       activeOrganization: null,
@@ -683,6 +858,9 @@ export const useActiveOrganization = () => {
       createEnterpriseConnection: null as never,
       updateEnterpriseConnection: null as never,
       deleteEnterpriseConnection: null as never,
+      generateSCIMToken: null as never,
+      getSCIMToken: null as never,
+      revokeSCIMToken: null as never,
     };
   }
 
@@ -710,6 +888,11 @@ export const useActiveOrganization = () => {
     createEnterpriseConnection: createActiveEnterpriseConnection,
     updateEnterpriseConnection: updateActiveEnterpriseConnection,
     deleteEnterpriseConnection: deleteActiveEnterpriseConnection,
+    testEnterpriseConnectionConfig: testActiveEnterpriseConnectionConfig,
+    testEnterpriseConnection: testActiveEnterpriseConnection,
+    generateSCIMToken: generateActiveSCIMToken,
+    getSCIMToken: getActiveSCIMToken,
+    revokeSCIMToken: revokeActiveSCIMToken,
     error: null,
   };
 };

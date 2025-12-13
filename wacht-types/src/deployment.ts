@@ -28,6 +28,7 @@ export interface B2BSettings {
   ip_allowlist_per_workspace_enabled: boolean;
   enforce_mfa_per_org_enabled: boolean;
   enforce_mfa_per_workspace_enabled: boolean;
+  enterprise_sso_enabled: boolean;
 }
 
 export interface AuthFactorsEnabled {

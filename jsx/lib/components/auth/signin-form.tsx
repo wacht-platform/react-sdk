@@ -137,6 +137,39 @@ cursor: pointer;
 }
 `;
 
+const SsoErrorBanner = styled.div`
+  background: var(--color-error-background, rgba(239, 68, 68, 0.1));
+  border: 1px solid var(--color-error, #ef4444);
+  border-radius: var(--radius-md);
+  padding: var(--space-md);
+  margin-bottom: var(--space-lg);
+  text-align: center;
+`;
+
+const SsoErrorTitle = styled.div`
+  font-weight: 600;
+  font-size: var(--font-sm);
+  color: var(--color-error, #ef4444);
+  margin-bottom: var(--space-xs);
+`;
+
+const SsoErrorMessage = styled.div`
+  font-size: var(--font-xs);
+  color: var(--color-foreground);
+  margin-bottom: var(--space-sm);
+`;
+
+const SsoErrorLink = styled.span`
+  font-size: var(--font-xs);
+  color: var(--color-primary);
+  cursor: pointer;
+  text-decoration: underline;
+  
+  &:hover {
+    color: var(--color-primary-hover);
+  }
+`;
+
 export function SignInForm() {
   return (
     <SignInProvider>
@@ -184,6 +217,25 @@ function SignInFormContent() {
   const [otpCode, setOtpCode] = useState("");
   const [countryCode, setCountryCode] = useState<string | undefined>("US");
   const [isRedirecting, setIsRedirecting] = useState(false);
+  const [ssoError, setSsoError] = useState<string | null>(null);
+
+  // Check for SSO error params in URL (e.g., from JIT provisioning disabled)
+  useEffect(() => {
+    const urlParams = new URLSearchParams(window.location.search);
+    const error = urlParams.get("error");
+    const errorDescription = urlParams.get("error_description");
+
+    if (error === "access_denied" && errorDescription) {
+      setSsoError(errorDescription);
+      // Clear error params from URL
+      urlParams.delete("error");
+      urlParams.delete("error_description");
+      const newUrl = urlParams.toString()
+        ? `${window.location.pathname}?${urlParams.toString()}`
+        : window.location.pathname;
+      window.history.replaceState({}, "", newUrl);
+    }
+  }, []);
 
   useEffect(() => {
     if (
@@ -662,6 +714,17 @@ function SignInFormContent() {
               {deployment?.ui_settings.app_name || "App"}!
             </Subtitle>
           </Header>
+        )}
+
+        {/* SSO Error Banner */}
+        {ssoError && (
+          <SsoErrorBanner>
+            <SsoErrorTitle>Access Denied</SsoErrorTitle>
+            <SsoErrorMessage>{ssoError}</SsoErrorMessage>
+            <SsoErrorLink onClick={() => setSsoError(null)}>
+              Try again
+            </SsoErrorLink>
+          </SsoErrorBanner>
         )}
 
         {!showOtpForm ? (
