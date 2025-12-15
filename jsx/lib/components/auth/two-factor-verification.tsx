@@ -182,22 +182,23 @@ export function TwoFactorVerification({
     }
   };
 
-  const handleSubmit = async (e: React.FormEvent) => {
+  const handleSubmit = async (e: React.FormEvent, codeOverride?: string) => {
     e.preventDefault();
     if (isSubmitting) return;
 
+    const codeToVerify = codeOverride || verificationCode;
     const newErrors: Record<string, string> = {};
 
-    if (!verificationCode) {
+    if (!codeToVerify) {
       newErrors.code = "Verification code is required";
     } else if (
       selectedMethod === "authenticator" &&
-      verificationCode.length !== 6
+      codeToVerify.length !== 6
     ) {
       newErrors.code = "Authentication code must be 6 digits";
     } else if (
       selectedMethod === "phone_otp" &&
-      verificationCode.length !== 6
+      codeToVerify.length !== 6
     ) {
       newErrors.code = "SMS code must be 6 digits";
     }
@@ -210,7 +211,7 @@ export function TwoFactorVerification({
 
     setIsSubmitting(true);
     try {
-      await completeVerification(verificationCode);
+      await completeVerification(codeToVerify);
     } catch (err) {
       setErrors({ submit: (err as Error).message });
     } finally {
@@ -219,7 +220,10 @@ export function TwoFactorVerification({
   };
 
   const handleInputChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-    const value = e.target.value.replace(/\D/g, "").slice(0, 6);
+    let value = e.target.value;
+    if (selectedMethod !== "backup_code") {
+      value = value.replace(/\D/g, "").slice(0, 6);
+    }
     setVerificationCode(value);
     setErrors((prev) => ({ ...prev, code: "" }));
   };
@@ -374,7 +378,7 @@ export function TwoFactorVerification({
                     bubbles: true,
                     cancelable: true,
                   });
-                  await handleSubmit(event as any);
+                  await handleSubmit(event as any, code);
                 }
               }}
               onResend={

@@ -1375,9 +1375,9 @@ const SecurityManagementSection = () => {
     try {
       await updateProfile({ second_factor_policy: policy });
       setSecondFactorPolicy(policy);
-      toast("Second factor policy updated successfully", "info");
+      toast("2FA requirement updated successfully", "info");
     } catch (error: any) {
-      toast(error.message || "Failed to update second factor policy", "error");
+      toast(error.message || "Failed to update 2FA requirement", "error");
     }
   };
 
@@ -1569,7 +1569,7 @@ const SecurityManagementSection = () => {
   if (authFactorsEnabled?.authenticator) {
     securityItems.push({
       id: "authenticator",
-      name: "Two-Factor Authentication",
+      name: "Authenticator App",
       description: "Use an authenticator app for extra security",
       status: user?.user_authenticator ? "Enabled" : "Disabled",
       actions: user?.user_authenticator ? ["remove"] : ["setup"],
@@ -1586,15 +1586,10 @@ const SecurityManagementSection = () => {
     });
   }
 
-  if (
-    user?.user_authenticator ||
-    user?.backup_codes_generated ||
-    user.second_factor_policy === "enforced" ||
-    user.primary_phone_number_id
-  ) {
+  if (user?.user_authenticator) {
     securityItems.push({
       id: "second_factor_policy",
-      name: "Second Factor Policy",
+      name: "Require 2FA",
       description: "Require a second factor for all sign-ins",
       status: secondFactorPolicy === "enforced" ? "Enforced" : "Optional",
       actions: ["toggle"],
