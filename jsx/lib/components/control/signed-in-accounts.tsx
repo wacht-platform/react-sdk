@@ -341,7 +341,7 @@ export const SignedInAccounts: React.FC<SignedInAccountsProps> = ({
           const uri = new URL(redirectUri);
           if (deployment?.mode === "staging") {
             uri.searchParams.set(
-              "dev_session",
+              "__dev_session__",
               localStorage.getItem("__dev_session__") ?? "",
             );
           }

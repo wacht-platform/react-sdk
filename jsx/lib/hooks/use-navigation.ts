@@ -34,7 +34,7 @@ export const useNavigation = () => {
     params.set("redirect_uri", targetRedirectUri);
 
     if (deployment?.mode === "staging") {
-      params.set("dev_session", localStorage.getItem("__dev_session__") ?? "");
+      params.set("__dev_session__", localStorage.getItem("__dev_session__") ?? "");
     }
 
     navigate(
@@ -51,7 +51,7 @@ export const useNavigation = () => {
     params.set("redirect_uri", targetRedirectUri);
 
     if (deployment?.mode === "staging") {
-      params.set("dev_session", localStorage.getItem("__dev_session__") ?? "");
+      params.set("__dev_session__", localStorage.getItem("__dev_session__") ?? "");
     }
 
     navigate(
@@ -68,7 +68,7 @@ export const useNavigation = () => {
     params.set("redirect_uri", targetRedirectUri);
 
     if (deployment?.mode === "staging") {
-      params.set("dev_session", localStorage.getItem("__dev_session__") ?? "");
+      params.set("__dev_session__", localStorage.getItem("__dev_session__") ?? "");
     }
 
     navigate(
