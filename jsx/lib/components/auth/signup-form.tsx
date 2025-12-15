@@ -576,7 +576,12 @@ export function SignUpForm() {
         redirectUri = `https://${deployment.frontend_host}`;
       }
       if (redirectUri) {
-        const uri = new URL(redirectUri);
+        let uri: URL;
+        try {
+          uri = new URL(redirectUri);
+        } catch {
+          uri = new URL(redirectUri, window.location.origin);
+        }
         if (deployment?.mode === "staging") {
           uri.searchParams.set(
             "__dev_session__",
@@ -762,61 +767,61 @@ export function SignUpForm() {
             <Form onSubmit={handleSubmit} noValidate>
               {(authSettings?.first_name?.enabled ||
                 authSettings?.last_name?.enabled) && (
-                <NameFields $isBothEnabled={isBothNamesEnabled}>
-                  {authSettings?.first_name?.enabled && (
-                    <FormGroup>
-                      <Label htmlFor="first_name">
-                        First name
-                        {authSettings?.first_name?.required && (
-                          <RequiredAsterisk>*</RequiredAsterisk>
+                  <NameFields $isBothEnabled={isBothNamesEnabled}>
+                    {authSettings?.first_name?.enabled && (
+                      <FormGroup>
+                        <Label htmlFor="first_name">
+                          First name
+                          {authSettings?.first_name?.required && (
+                            <RequiredAsterisk>*</RequiredAsterisk>
+                          )}
+                        </Label>
+                        <Input
+                          type="text"
+                          id="first_name"
+                          name="first_name"
+                          required
+                          minLength={3}
+                          maxLength={30}
+                          value={formData.first_name}
+                          onChange={handleInputChange}
+                          placeholder="First name"
+                          aria-invalid={!!errors.first_name}
+                          pattern="^[a-zA-Z]{3,30}$"
+                        />
+                        {errors.first_name && (
+                          <ErrorMessage>{errors.first_name}</ErrorMessage>
                         )}
-                      </Label>
-                      <Input
-                        type="text"
-                        id="first_name"
-                        name="first_name"
-                        required
-                        minLength={3}
-                        maxLength={30}
-                        value={formData.first_name}
-                        onChange={handleInputChange}
-                        placeholder="First name"
-                        aria-invalid={!!errors.first_name}
-                        pattern="^[a-zA-Z]{3,30}$"
-                      />
-                      {errors.first_name && (
-                        <ErrorMessage>{errors.first_name}</ErrorMessage>
-                      )}
-                    </FormGroup>
-                  )}
-                  {authSettings?.last_name?.enabled && (
-                    <FormGroup>
-                      <Label htmlFor="last_name">
-                        Last name
-                        {authSettings?.last_name?.required && (
-                          <RequiredAsterisk>*</RequiredAsterisk>
+                      </FormGroup>
+                    )}
+                    {authSettings?.last_name?.enabled && (
+                      <FormGroup>
+                        <Label htmlFor="last_name">
+                          Last name
+                          {authSettings?.last_name?.required && (
+                            <RequiredAsterisk>*</RequiredAsterisk>
+                          )}
+                        </Label>
+                        <Input
+                          type="text"
+                          id="last_name"
+                          name="last_name"
+                          required
+                          minLength={3}
+                          maxLength={30}
+                          value={formData.last_name}
+                          onChange={handleInputChange}
+                          placeholder="Last name"
+                          aria-invalid={!!errors.last_name}
+                          pattern="^[a-zA-Z]{3,30}$"
+                        />
+                        {errors.last_name && (
+                          <ErrorMessage>{errors.last_name}</ErrorMessage>
                         )}
-                      </Label>
-                      <Input
-                        type="text"
-                        id="last_name"
-                        name="last_name"
-                        required
-                        minLength={3}
-                        maxLength={30}
-                        value={formData.last_name}
-                        onChange={handleInputChange}
-                        placeholder="Last name"
-                        aria-invalid={!!errors.last_name}
-                        pattern="^[a-zA-Z]{3,30}$"
-                      />
-                      {errors.last_name && (
-                        <ErrorMessage>{errors.last_name}</ErrorMessage>
-                      )}
-                    </FormGroup>
-                  )}
-                </NameFields>
-              )}
+                      </FormGroup>
+                    )}
+                  </NameFields>
+                )}
 
               {authSettings?.username.enabled && (
                 <FormGroup>

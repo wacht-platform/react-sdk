@@ -81,9 +81,8 @@ export const useOrganizationList = () => {
       await client(`/organizations/${organization.id}/members/${member.id}/remove`, {
         method: "POST",
       });
-      await refetch();
     },
-    [refetch, client]
+    [client]
   );
 
   const createOrganization = useCallback(
@@ -501,7 +500,7 @@ export const useOrganizationList = () => {
     async (organization: Organization, invitation: OrganizationInvitation) => {
       const response = await responseMapper<OrganizationInvitation>(
         await client(
-          `/organizations/${organization.id}/invitations/${invitation.id}/remove`,
+          `/organizations/${organization.id}/invitations/${invitation.id}/discard`,
           {
             method: "POST",
           }

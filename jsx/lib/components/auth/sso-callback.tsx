@@ -153,12 +153,18 @@ export function SSOCallback() {
     }
 
     if (signinAttempt?.completed) {
-      const redirectUrl = new URL(
+      const redirectTarget =
         redirectUri ||
         deployment?.ui_settings?.after_signin_redirect_url ||
         deployment?.frontend_host ||
-        "",
-      );
+        "/";
+
+      let redirectUrl: URL;
+      try {
+        redirectUrl = new URL(redirectTarget);
+      } catch {
+        redirectUrl = new URL(redirectTarget, window.location.origin);
+      }
 
       if (redirectUrl) {
         if (deployment?.mode === "staging") {

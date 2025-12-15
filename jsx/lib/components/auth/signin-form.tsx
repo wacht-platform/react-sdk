@@ -558,7 +558,12 @@ function SignInFormContent() {
       }
 
       if (redirectUri) {
-        const uri = new URL(redirectUri);
+        let uri: URL;
+        try {
+          uri = new URL(redirectUri);
+        } catch {
+          uri = new URL(redirectUri, window.location.origin);
+        }
 
         if (deployment?.mode === "staging") {
           uri.searchParams.set(

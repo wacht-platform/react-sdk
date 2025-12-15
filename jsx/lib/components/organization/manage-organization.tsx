@@ -1292,6 +1292,18 @@ const MembersSection = () => {
   const memberHasRole = (member: OrganizationMembership, roleId: string) =>
     member.roles?.some((r: OrganizationRole) => r.id === roleId) || false;
 
+  const handleRemoveMember = async (member: OrganizationMembership) => {
+    try {
+      await removeMember(member);
+      reloadMembers();
+      toast("Member removed successfully", "info");
+    } catch (error: any) {
+      const errorMessage =
+        error.message || "Failed to remove member. Please try again.";
+      toast(errorMessage, "error");
+    }
+  };
+
   const handleInvitationSuccess = () => {
     setIsInviting(false);
     reloadMembers();
@@ -1518,7 +1530,7 @@ const MembersSection = () => {
                           <DropdownDivider />
                           <DropdownItem
                             $destructive
-                            onClick={() => removeMember(member)}
+                            onClick={() => handleRemoveMember(member)}
                           >
                             <div
                               style={{
