@@ -1,6 +1,18 @@
 import type { PublicUserData } from "./user";
 import type { Segment } from "./segment";
 
+// Eligibility restriction types for organization and workspace memberships
+export type EligibilityRestrictionType =
+  | "none"
+  | "ip_not_allowed"
+  | "mfa_required"
+  | "ip_and_mfa_required";
+
+export interface EligibilityRestriction {
+  type: EligibilityRestrictionType;
+  message: string;
+}
+
 export interface Organization {
   id: string;
   name: string;
@@ -35,10 +47,7 @@ export interface OrganizationMembershipWithOrganization {
   public_metadata: Record<string, unknown>;
   created_at: string;
   updated_at: string;
-  eligibility_restriction?: {
-    type: "none" | "ip_not_allowed" | "mfa_required" | "ip_and_mfa_required";
-    message: string;
-  };
+  eligibility_restriction?: EligibilityRestriction;
 }
 
 export interface OrganizationMembership {
@@ -153,10 +162,7 @@ export interface Workspace {
 
 export interface WorkspaceWithOrganization extends Workspace {
   organization: Organization;
-  eligibility_restriction?: {
-    type: "none" | "ip_not_allowed" | "mfa_required" | "ip_and_mfa_required";
-    message: string;
-  };
+  eligibility_restriction?: EligibilityRestriction;
 }
 
 export interface WorkspaceRole {
@@ -177,10 +183,7 @@ export interface WorkspaceMembership {
   public_metadata: Record<string, unknown>;
   created_at: string;
   updated_at: string;
-  eligibility_restriction?: {
-    type: "none" | "ip_not_allowed" | "mfa_required" | "ip_and_mfa_required";
-    message: string;
-  };
+  eligibility_restriction?: EligibilityRestriction;
 }
 
 export interface OrganizationUpdate {

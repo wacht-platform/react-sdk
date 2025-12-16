@@ -27,6 +27,7 @@ import { useDialog } from "../utility/use-dialog";
 import type { WorkspaceWithOrganization } from "@/types";
 import { useScreenContext } from "./context";
 import { usePopoverPosition } from "@/hooks/use-popover-position";
+import { canManageOrganization, canManageWorkspace } from "@/utils/permissions";
 
 const Container = styled.div`
   position: relative;
@@ -496,9 +497,9 @@ export const OrganizationSwitcher = ({
     loading: organizationLoading,
     refetch: refetchOrganizations,
   } = useOrganizationMemberships();
-  const { activeOrganization, leave: leaveOrganization } =
+  const { activeOrganization, activeMembership: activeOrgMembership, leave: leaveOrganization } =
     useActiveOrganization();
-  const { activeWorkspace, leave: leaveWorkspace } = useActiveWorkspace();
+  const { activeWorkspace, activeMembership: activeWsMembership, leave: leaveWorkspace } = useActiveWorkspace();
   const { workspaces: workspaceList, loading: workspacesLoading } =
     useWorkspaceList();
   const {
@@ -630,7 +631,13 @@ export const OrganizationSwitcher = ({
       .slice(0, 2);
   };
 
-  if (organizationLoading || sessionLoading) {
+  // Show loading if:
+  // 1. organizationLoading or sessionLoading is true
+  // 2. Session has an active org membership but organizationMemberships hasn't loaded yet (cache was cleared)
+  const hasActiveOrgInSession = !!session?.active_signin?.active_organization_membership_id;
+  const membershipsNotLoaded = !organizationMemberships && hasActiveOrgInSession;
+
+  if (organizationLoading || sessionLoading || membershipsNotLoaded) {
     return (
       <DefaultStylesProvider>
         <Container>
@@ -825,15 +832,17 @@ export const OrganizationSwitcher = ({
                             gap: "8px",
                           }}
                         >
-                          <ManageButton
-                            onClick={(e) => {
-                              e.stopPropagation();
-                              manageOrgDialog.open();
-                            }}
-                            title="Manage organization"
-                          >
-                            <Settings size={12} />
-                          </ManageButton>
+                          {canManageOrganization(activeOrgMembership) && (
+                            <ManageButton
+                              onClick={(e) => {
+                                e.stopPropagation();
+                                manageOrgDialog.open();
+                              }}
+                              title="Manage organization"
+                            >
+                              <Settings size={12} />
+                            </ManageButton>
+                          )}
                           <LogoutButton
                             onClick={async (e) => {
                               e.stopPropagation();
@@ -929,15 +938,17 @@ export const OrganizationSwitcher = ({
                                         gap: "8px",
                                       }}
                                     >
-                                      <ManageButton
-                                        onClick={(e) => {
-                                          e.stopPropagation();
-                                          manageWorkspaceDialog.open();
-                                        }}
-                                        title="Manage workspace"
-                                      >
-                                        <Settings size={12} />
-                                      </ManageButton>
+                                      {canManageWorkspace(activeWsMembership) && (
+                                        <ManageButton
+                                          onClick={(e) => {
+                                            e.stopPropagation();
+                                            manageWorkspaceDialog.open();
+                                          }}
+                                          title="Manage workspace"
+                                        >
+                                          <Settings size={12} />
+                                        </ManageButton>
+                                      )}
                                       <LogoutButton
                                         onClick={async (e) => {
                                           e.stopPropagation();
@@ -1146,15 +1157,17 @@ export const OrganizationSwitcher = ({
                                                     gap: "8px",
                                                   }}
                                                 >
-                                                  <ManageButton
-                                                    onClick={(e) => {
-                                                      e.stopPropagation();
-                                                      manageWorkspaceDialog.open();
-                                                    }}
-                                                    title="Manage workspace"
-                                                  >
-                                                    <Settings size={12} />
-                                                  </ManageButton>
+                                                  {canManageWorkspace(activeWsMembership) && (
+                                                    <ManageButton
+                                                      onClick={(e) => {
+                                                        e.stopPropagation();
+                                                        manageWorkspaceDialog.open();
+                                                      }}
+                                                      title="Manage workspace"
+                                                    >
+                                                      <Settings size={12} />
+                                                    </ManageButton>
+                                                  )}
                                                   <LogoutButton
                                                     onClick={async (e) => {
                                                       e.stopPropagation();

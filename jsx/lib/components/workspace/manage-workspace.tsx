@@ -2,7 +2,6 @@ import React, {
   useState,
   useCallback,
   useEffect,
-  useContext,
   useRef,
 } from "react";
 import styled from "styled-components";
@@ -10,7 +9,6 @@ import {
   Building,
   Settings,
   Users,
-  Mail,
   Trash2,
   Send,
   Check,
@@ -60,7 +58,7 @@ import { InviteMemberPopover } from "./invite-member-popover";
 import { AddWorkspaceRolePopover } from "./add-role-popover";
 import { ConfirmationPopover } from "../utility/confirmation-popover";
 import useSWR from "swr";
-import { ScreenContext } from "../user/context";
+import { ScreenContext, useScreenContext } from "../organization/context";
 import {
   Button,
   Input,
@@ -217,27 +215,6 @@ interface WorkspaceUpdate {
   whitelisted_ips?: string[];
 }
 
-const MemberListItem = styled.div`
-  background: var(--color-background);
-  padding: 16px 4px;
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-  gap: 12px;
-  border-bottom: 1px solid var(--color-border);
-  transition: all 0.2s ease;
-
-  &:hover {
-    background: var(--color-input-background);
-  }
-`;
-
-const MemberListItemContent = styled.div`
-  display: flex;
-  align-items: center;
-  gap: 12px;
-`;
-
 const AvatarPlaceholder = styled.div`
   width: 40px;
   height: 40px;
@@ -250,27 +227,6 @@ const AvatarPlaceholder = styled.div`
   font-weight: 400;
   font-size: 14px;
   overflow: hidden;
-`;
-
-const MemberInfo = styled.div`
-  display: flex;
-  flex-direction: column;
-`;
-
-const MemberName = styled.div`
-  font-size: 14px;
-  color: var(--color-foreground);
-`;
-
-const MemberEmail = styled.div`
-  font-size: 12px;
-  color: var(--color-muted);
-`;
-
-const MemberListItemActions = styled.div`
-  display: flex;
-  align-items: center;
-  gap: 8px;
 `;
 
 const IconButton = styled.button`
@@ -301,6 +257,7 @@ const InvitationsSection = () => {
   const { activeWorkspace, loading, getRoles } = useActiveWorkspace();
   const { workspaces } = useWorkspaceList();
   const { client } = useClient();
+  const { toast } = useScreenContext();
 
   const workspaceWithOrg = workspaces?.find(
     (w) => w.id === activeWorkspace?.id,
@@ -308,7 +265,6 @@ const InvitationsSection = () => {
   const [rolesLoading, setRolesLoading] = useState(true);
   const [invitationsLoading, setInvitationsLoading] = useState(true);
   const [searchQuery, setSearchQuery] = useState("");
-  const [inviteSuccess, setInviteSuccess] = useState("");
   const [invitations, setInvitations] = useState<any[]>([]);
   const [roles, setRoles] = useState<WorkspaceRole[]>([]);
   const [showInvitePopover, setShowInvitePopover] = useState(false);
@@ -327,8 +283,9 @@ const InvitationsSection = () => {
         ),
       );
       const allInvitations = response.data as any[];
+      // Filter invitations for this workspace (convert to string for comparison)
       return allInvitations.filter(
-        (inv) => inv.workspace_id === activeWorkspace.id,
+        (inv) => String(inv.workspace_id) === String(activeWorkspace.id),
       );
     } catch (error) {
       // Failed to fetch invitations
@@ -339,30 +296,18 @@ const InvitationsSection = () => {
   const createInvitation = useCallback(
     async (email: string, roleId: string) => {
       if (!activeWorkspace || !workspaceWithOrg) return;
-      const orgRolesResponse = await responseMapper(
-        await client(
-          `/organizations/${workspaceWithOrg.organization.id}/roles`,
-          {
-            method: "GET",
-          },
-        ),
-      );
-      const orgRoles = orgRolesResponse.data as any[];
-      const defaultOrgRole =
-        orgRoles.find((r) => !r.organization_id) || orgRoles[0];
+
+      const formData = new FormData();
+      formData.append("email", email);
+      formData.append("workspace_id", activeWorkspace.id);
+      formData.append("workspace_role_id", roleId);
 
       const response = await responseMapper(
         await client(
           `/organizations/${workspaceWithOrg.organization.id}/invitations`,
           {
             method: "POST",
-            headers: { "Content-Type": "application/json" },
-            body: JSON.stringify({
-              email,
-              role_id: defaultOrgRole?.id,
-              workspace_id: activeWorkspace.id,
-              workspace_role_id: roleId,
-            }),
+            body: formData,
           },
         ),
       );
@@ -376,7 +321,7 @@ const InvitationsSection = () => {
       if (!activeWorkspace || !workspaceWithOrg) return;
       const response = await responseMapper(
         await client(
-          `/organizations/${workspaceWithOrg.organization.id}/invitations/${invitationId}/remove`,
+          `/organizations/${workspaceWithOrg.organization.id}/invitations/${invitationId}/discard`,
           {
             method: "POST",
           },
@@ -437,8 +382,7 @@ const InvitationsSection = () => {
       // Refresh invitations
       const updatedInvitations = await getInvitations();
       setInvitations(updatedInvitations);
-      setInviteSuccess("Invitation resent successfully");
-      setTimeout(() => setInviteSuccess(""), 3000);
+      toast("Invitation resent successfully", "info");
     } catch (error) {
       // Failed to resend invitation
     }
@@ -449,8 +393,7 @@ const InvitationsSection = () => {
     // Refresh invitations
     const updatedInvitations = await getInvitations();
     setInvitations(updatedInvitations);
-    setInviteSuccess("Invitation sent successfully");
-    setTimeout(() => setInviteSuccess(""), 3000);
+    toast("Invitation sent successfully", "info");
   };
 
   const filteredInvitations = React.useMemo(() => {
@@ -473,20 +416,6 @@ const InvitationsSection = () => {
 
   return (
     <>
-      {inviteSuccess && (
-        <div
-          style={{
-            marginBottom: "16px",
-            padding: "12px 16px",
-            background: "var(--color-success-background)",
-            color: "var(--color-success)",
-            borderRadius: "6px",
-            fontSize: "14px",
-          }}
-        >
-          ✓ {inviteSuccess}
-        </div>
-      )}
 
       <HeaderCTAContainer>
         <SearchInput
@@ -531,60 +460,75 @@ const InvitationsSection = () => {
             description="Invite new members to your workspace."
           />
         ) : (
-          <div style={{ borderTop: "1px solid var(--color-border)" }}>
-            {filteredInvitations.map((invitation) => (
-              <MemberListItem key={invitation.id}>
-                <MemberListItemContent>
-                  <MemberInfo>
-                    <MemberName>{invitation.email}</MemberName>
-                    <MemberEmail>
-                      {invitation.initial_workspace_role?.name ||
-                        invitation.initial_organization_role?.name ||
-                        invitation.role?.name}
-                    </MemberEmail>
-                  </MemberInfo>
-                </MemberListItemContent>
-                <MemberListItemActions>
-                  <Dropdown>
-                    <DropdownTrigger>
-                      <IconButton>•••</IconButton>
-                    </DropdownTrigger>
-                    <DropdownItems>
-                      <DropdownItem
-                        onClick={() => handleResendInvitation(invitation)}
-                      >
-                        <div
-                          style={{
-                            display: "flex",
-                            alignItems: "center",
-                            gap: "8px",
-                          }}
-                        >
-                          <Mail size={16} color="var(--color-muted)" />
-                          <span>Resend Invitation</span>
-                        </div>
-                      </DropdownItem>
-                      <DropdownItem
-                        $destructive
-                        onClick={() => handleCancelInvitation(invitation)}
-                      >
-                        <div
-                          style={{
-                            display: "flex",
-                            alignItems: "center",
-                            gap: "8px",
-                          }}
-                        >
-                          <Trash2 size={16} color="var(--color-error)" />
-                          <span>Cancel Invitation</span>
-                        </div>
-                      </DropdownItem>
-                    </DropdownItems>
-                  </Dropdown>
-                </MemberListItemActions>
-              </MemberListItem>
-            ))}
-          </div>
+          <Table>
+            <TableHead>
+              <TableRow>
+                <TableHeader>Email</TableHeader>
+                <TableHeader>Role</TableHeader>
+                <TableHeader>Invited</TableHeader>
+                <TableHeader></TableHeader>
+              </TableRow>
+            </TableHead>
+            <TableBody>
+              {filteredInvitations.map((invitation) => (
+                <TableRow key={invitation.id}>
+                  <TableCell>{invitation.email}</TableCell>
+                  <TableCell>
+                    {invitation.initial_workspace_role?.name ||
+                      invitation.initial_organization_role?.name ||
+                      "No role"}
+                  </TableCell>
+                  <TableCell>
+                    {new Date(invitation.created_at).toLocaleDateString("en-US", {
+                      month: "short",
+                      day: "numeric",
+                      year: "numeric",
+                    })}
+                  </TableCell>
+                  <ActionsCell>
+                    <div style={{ position: "relative" }}>
+                      <Dropdown>
+                        <DropdownTrigger>
+                          <IconButton>•••</IconButton>
+                        </DropdownTrigger>
+                        <DropdownItems>
+                          <DropdownItem
+                            onClick={() => handleResendInvitation(invitation)}
+                          >
+                            <div
+                              style={{
+                                display: "flex",
+                                alignItems: "center",
+                                gap: "8px",
+                              }}
+                            >
+                              <Send size={16} color="var(--color-muted)" />
+                              <span>Resend Invitation</span>
+                            </div>
+                          </DropdownItem>
+                          <DropdownItem
+                            $destructive
+                            onClick={() => handleCancelInvitation(invitation)}
+                          >
+                            <div
+                              style={{
+                                display: "flex",
+                                alignItems: "center",
+                                gap: "8px",
+                              }}
+                            >
+                              <Trash2 size={16} color="var(--color-error)" />
+                              <span>Cancel Invitation</span>
+                            </div>
+                          </DropdownItem>
+                        </DropdownItems>
+                      </Dropdown>
+                    </div>
+                  </ActionsCell>
+                </TableRow>
+              ))}
+            </TableBody>
+          </Table>
         )}
       </div>
     </>
@@ -602,7 +546,7 @@ const MembersSection = () => {
     removeMemberRole,
   } = useActiveWorkspace();
   const { session } = useSession();
-  const { toast } = useContext(ScreenContext) || {};
+  const { toast } = useScreenContext();
   const [searchQuery, setSearchQuery] = useState("");
 
   const {
@@ -643,10 +587,10 @@ const MembersSection = () => {
   const handleRemoveMember = async (memberId: string) => {
     try {
       await removeMember(memberId);
-      toast?.("Member removed successfully", "info");
+      toast("Member removed successfully", "info");
       reloadMembers();
     } catch (error) {
-      toast?.("Failed to remove member", "error");
+      toast("Failed to remove member", "error");
     }
   };
 
@@ -658,15 +602,15 @@ const MembersSection = () => {
     try {
       if (hasRole) {
         await removeMemberRole(membershipId, roleId);
-        toast?.("Role removed successfully", "info");
+        toast("Role removed successfully", "info");
       } else {
         await addMemberRole(membershipId, roleId);
-        toast?.("Role added successfully", "info");
+        toast("Role added successfully", "info");
       }
       reloadMembers();
     } catch (error) {
-      toast?.("Failed to toggle role", "error");
-      toast?.("Failed to update role", "error");
+      toast("Failed to toggle role", "error");
+      toast("Failed to update role", "error");
     }
   };
 
@@ -888,7 +832,7 @@ const GeneralSettingsSection = () => {
   const { activeWorkspace, loading, updateWorkspace } = useActiveWorkspace();
   const { deleteWorkspace } = useWorkspaceList();
   const { deployment } = useDeployment();
-  const { toast } = useContext(ScreenContext) || {};
+  const { toast } = useScreenContext();
   const [name, setName] = useState(activeWorkspace?.name || "");
   const [description, setDescription] = useState(
     activeWorkspace?.description || "",
@@ -992,7 +936,7 @@ const GeneralSettingsSection = () => {
         setTimeout(() => setShowSaveNotification(false), 3000);
       }
     } catch (error) {
-      toast?.("Failed to auto-save workspace", "error");
+      toast("Failed to auto-save workspace", "error");
     } finally {
       setIsAutoSaving(false);
     }
@@ -1047,9 +991,9 @@ const GeneralSettingsSection = () => {
     try {
       setIsDeleting(true);
       await deleteWorkspace(activeWorkspace);
-      toast?.("Workspace deleted successfully", "info");
+      toast("Workspace deleted successfully", "info");
     } catch (error: any) {
-      toast?.(error.message || "Failed to delete workspace", "error");
+      toast(error.message || "Failed to delete workspace", "error");
     } finally {
       setIsDeleting(false);
       setConfirmName("");
@@ -1597,7 +1541,7 @@ const GeneralSettingsSection = () => {
 const RolesSection = () => {
   const { activeWorkspace, loading, getRoles, createRole, deleteRole } =
     useActiveWorkspace();
-  const { toast } = useContext(ScreenContext) || {};
+  const { toast } = useScreenContext();
   const { deployment } = useDeployment();
   const [searchQuery, setSearchQuery] = useState("");
   const [rolePopover, setRolePopover] = useState<{
@@ -1636,12 +1580,12 @@ const RolesSection = () => {
     try {
       await createRole(role.name, role.permissions || []);
 
-      toast?.("Role created successfully", "info");
+      toast("Role created successfully", "info");
       setRolePopover({ isOpen: false });
       reloadRoles();
     } catch (error) {
-      toast?.("Failed to save role", "error");
-      toast?.("Failed to create role", "error");
+      toast("Failed to save role", "error");
+      toast("Failed to create role", "error");
     }
   };
 
@@ -1649,12 +1593,12 @@ const RolesSection = () => {
     try {
       await deleteRole(role);
 
-      toast?.("Role deleted successfully", "info");
+      toast("Role deleted successfully", "info");
       setRoleForDeletion(null);
       reloadRoles();
     } catch (error) {
-      toast?.("Failed to delete role", "error");
-      toast?.("Failed to delete role", "error");
+      toast("Failed to delete role", "error");
+      toast("Failed to delete role", "error");
     }
   };
 

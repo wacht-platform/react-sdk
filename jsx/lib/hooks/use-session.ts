@@ -1,6 +1,6 @@
 import { responseMapper } from "../utils/response-mapper";
 import { useClient } from "./use-client";
-import useSWR, { useSWRConfig } from "swr";
+import useSWR, { useSWRConfig, mutate as globalMutate } from "swr";
 import { useCallback } from "react";
 import { ApiResult } from "@/types";
 import { Session, SessionToken } from "@/types";
@@ -171,15 +171,17 @@ export function useSession(): UseSessionReturnType {
     session,
     switchSignIn: async (signInId: string) => {
       await switchSignIn(client, signInId);
+
+      clearTokenCache();
+
+      await globalMutate("/me/organization-memberships", undefined, { revalidate: false });
+      await globalMutate("/me/workspace-memberships", undefined, { revalidate: false });
       await mutate(undefined, { revalidate: true });
+      await globalMutate("/me/organization-memberships");
+      await globalMutate("/me/workspace-memberships");
     },
     signOut: async (signInId?: string) => {
       await signOut(client, signInId);
-      
-      // Explicitly clear known SDK cache keys with specific namespacing
-      // to avoid colliding with user's own cache keys.
-      
-      // Known SDK keys (static):
       const staticKeys = [
         "/session",
         "/user",
@@ -189,43 +191,37 @@ export function useSession(): UseSessionReturnType {
         "wacht-notifications:channel-counts"
       ];
 
-      // Dynamic keys prefixes:
       const dynamicKeyPrefixes = [
-        "wacht-notifications:",  // notifications
-        "wacht-agent-sessions:", // use-conversation-sessions
-        "wacht-agent-contexts:", // use-context-manager
-        "wacht-org-domains:",    // organization domains
-        "wacht-api-workspaces:", // workspace API calls
-        "wacht-api-organizations:" // organization API calls
+        "wacht-notifications:",
+        "wacht-agent-sessions:",
+        "wacht-agent-contexts:",
+        "wacht-org-domains:",
+        "wacht-api-workspaces:",
+        "wacht-api-organizations:"
       ];
 
       if (cache instanceof Map) {
-        // Safe iteration for Map
-        // We use Array.from to avoid iteration issues if environment is old
         const keys = Array.from(cache.keys());
         for (const key of keys) {
           let shouldDelete = false;
-          
+
           if (staticKeys.includes(key as string)) {
             shouldDelete = true;
           } else if (typeof key === 'string') {
-             // check string prefixes
-             if (dynamicKeyPrefixes.some(prefix => key.startsWith(prefix))) {
-                shouldDelete = true;
-             }
-          } 
-          // Note: We removed array keys because we converted them to namespaced strings
-          // for better specificity and collision avoidance.
-
+            // check string prefixes
+            if (dynamicKeyPrefixes.some(prefix => key.startsWith(prefix))) {
+              shouldDelete = true;
+            }
+          }
           if (shouldDelete) {
             cache.delete(key);
           }
         }
       }
-      
+
       // Clear token cache
       clearTokenCache();
-      
+
       await mutate(undefined, { revalidate: true });
 
       if (deployment?.ui_settings) {

@@ -606,15 +606,19 @@ export const useActiveOrganization = () => {
   } = useSession();
   const { organizationMemberships } = useOrganizationMemberships();
 
-  const activeOrganization = useMemo(() => {
+  const activeMembership = useMemo(() => {
     return (
       organizationMemberships?.find(
-        (organization) =>
-          organization.id ===
+        (membership) =>
+          membership.id ===
           session?.active_signin?.active_organization_membership_id
-      )?.organization || null
+      ) || null
     );
   }, [organizationMemberships, session]);
+
+  const activeOrganization = useMemo(() => {
+    return activeMembership?.organization || null;
+  }, [activeMembership]);
 
   const updateActiveOrganization = useCallback(
     async (update: OrganizationUpdate) => {
@@ -835,6 +839,7 @@ export const useActiveOrganization = () => {
   if (sessionLoading || loading) {
     return {
       activeOrganization: null,
+      activeMembership: null,
       loading: true,
       error: sessionLoadingError || organizationLoadingError,
       updateOrganization: null as never,
@@ -865,6 +870,7 @@ export const useActiveOrganization = () => {
 
   return {
     activeOrganization: activeOrganization,
+    activeMembership: activeMembership,
     loading: false,
     refetch: refetchOrganizations,
     getRoles: getCurrentOrganizationRoles,

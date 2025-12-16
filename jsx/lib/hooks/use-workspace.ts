@@ -318,15 +318,19 @@ export const useActiveWorkspace = () => {
     error: sessionError,
   } = useSession();
 
-  const activeWorkspace = useMemo(() => {
+  const activeMembership = useMemo(() => {
     return (
       workspaceMemberships?.find(
-        (workspace) =>
-          workspace.id ===
+        (membership) =>
+          membership.id ===
           session?.active_signin?.active_workspace_membership_id,
-      )?.workspace || null
+      ) || null
     );
   }, [workspaceMemberships, session]);
+
+  const activeWorkspace = useMemo(() => {
+    return activeMembership?.workspace || null;
+  }, [activeMembership]);
 
   const leaveCurrentWorkspace = useCallback(async () => {
     if (!activeWorkspace || !session?.active_signin?.user_id) return;
@@ -421,6 +425,7 @@ export const useActiveWorkspace = () => {
   if (currentLoading) {
     return {
       activeWorkspace: null,
+      activeMembership: null,
       loading: true,
       error: currentError,
       refetch,
@@ -440,6 +445,7 @@ export const useActiveWorkspace = () => {
 
   return {
     activeWorkspace,
+    activeMembership,
     loading: false,
     error: currentError,
     refetch,
