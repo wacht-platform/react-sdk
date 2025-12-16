@@ -191,14 +191,17 @@ export function AcceptInvite({
   };
 
   const handleGoToAuth = () => {
-    const { token, redirectUri } = getUrlParams();
+    const { token } = getUrlParams();
     const signInUrl = deployment?.ui_settings?.sign_in_page_url || "/sign-in";
     const signUpUrl = deployment?.ui_settings?.sign_up_page_url || "/sign-up";
     const params = new URLSearchParams();
 
     if (token) params.set("invite_token", token);
     if (invitationData?.invited_email) params.set("invited_email", invitationData.invited_email);
-    if (redirectUri) params.set("redirect_uri", redirectUri);
+
+    const invitePageUrl = window.location.pathname;
+    const inviteRedirectUri = `${invitePageUrl}?token=${token}`;
+    params.set("redirect_uri", inviteRedirectUri);
 
     // Add message for display
     if (invitationData?.message) {
