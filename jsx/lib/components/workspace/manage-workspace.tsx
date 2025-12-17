@@ -19,7 +19,7 @@ import {
 import { useActiveWorkspace, useWorkspaceList } from "@/hooks/use-workspace";
 import { useSession } from "@/hooks/use-session";
 import { useDeployment } from "@/hooks/use-deployment";
-import type { WorkspaceRole, WorkspaceWithOrganization } from "@/types";
+import type { WorkspaceRole } from "@/types";
 
 interface WorkspaceInvitation {
   id: string;
@@ -83,8 +83,6 @@ import {
   TableRow,
   ActionsCell,
 } from "@/components/utility/table";
-import { useClient } from "@/hooks/use-client";
-import { responseMapper } from "@/utils/response-mapper";
 import { EmptyState } from "@/components/utility/empty-state";
 
 const TypographyProvider = styled.div`
@@ -254,14 +252,17 @@ const IconButton = styled.button`
 `;
 
 const InvitationsSection = () => {
-  const { activeWorkspace, loading, getRoles } = useActiveWorkspace();
-  const { workspaces } = useWorkspaceList();
-  const { client } = useClient();
+  const {
+    activeWorkspace,
+    loading,
+    getRoles,
+    getInvitations,
+    createInvitation,
+    discardInvitation,
+    resendInvitation,
+  } = useActiveWorkspace();
   const { toast } = useScreenContext();
 
-  const workspaceWithOrg = workspaces?.find(
-    (w) => w.id === activeWorkspace?.id,
-  ) as WorkspaceWithOrganization | undefined;
   const [rolesLoading, setRolesLoading] = useState(true);
   const [invitationsLoading, setInvitationsLoading] = useState(true);
   const [searchQuery, setSearchQuery] = useState("");
@@ -269,68 +270,6 @@ const InvitationsSection = () => {
   const [roles, setRoles] = useState<WorkspaceRole[]>([]);
   const [showInvitePopover, setShowInvitePopover] = useState(false);
   const inviteButtonRef = useRef<HTMLButtonElement>(null);
-
-  // Invitation operations - using organization invitations with workspace assignment
-  const getInvitations = useCallback(async () => {
-    if (!activeWorkspace || !workspaceWithOrg) return [];
-    try {
-      const response = await responseMapper(
-        await client(
-          `/organizations/${workspaceWithOrg.organization.id}/invitations`,
-          {
-            method: "GET",
-          },
-        ),
-      );
-      const allInvitations = response.data as any[];
-      // Filter invitations for this workspace (convert to string for comparison)
-      return allInvitations.filter(
-        (inv) => String(inv.workspace_id) === String(activeWorkspace.id),
-      );
-    } catch (error) {
-      // Failed to fetch invitations
-      return [];
-    }
-  }, [client, activeWorkspace, workspaceWithOrg]);
-
-  const createInvitation = useCallback(
-    async (email: string, roleId: string) => {
-      if (!activeWorkspace || !workspaceWithOrg) return;
-
-      const formData = new FormData();
-      formData.append("email", email);
-      formData.append("workspace_id", activeWorkspace.id);
-      formData.append("workspace_role_id", roleId);
-
-      const response = await responseMapper(
-        await client(
-          `/organizations/${workspaceWithOrg.organization.id}/invitations`,
-          {
-            method: "POST",
-            body: formData,
-          },
-        ),
-      );
-      return response.data;
-    },
-    [client, activeWorkspace, workspaceWithOrg],
-  );
-
-  const discardInvitation = useCallback(
-    async (invitationId: string) => {
-      if (!activeWorkspace || !workspaceWithOrg) return;
-      const response = await responseMapper(
-        await client(
-          `/organizations/${workspaceWithOrg.organization.id}/invitations/${invitationId}/discard`,
-          {
-            method: "POST",
-          },
-        ),
-      );
-      return response.data;
-    },
-    [client, activeWorkspace, workspaceWithOrg],
-  );
 
   // Fetch roles and invitations on mount
   useEffect(() => {
@@ -371,14 +310,7 @@ const InvitationsSection = () => {
 
   const handleResendInvitation = async (invitation: WorkspaceInvitation) => {
     try {
-      // Resend is typically done by canceling and creating a new invitation
-      await discardInvitation(invitation.id);
-      await createInvitation(
-        invitation.email,
-        invitation.workspace_role_id ||
-        invitation.initial_workspace_role?.id ||
-        invitation.role_id,
-      );
+      await resendInvitation(invitation.id);
       // Refresh invitations
       const updatedInvitations = await getInvitations();
       setInvitations(updatedInvitations);

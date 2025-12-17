@@ -274,6 +274,72 @@ export const useWorkspaceList = () => {
     [client],
   );
 
+  const getWorkspaceInvitations = useCallback(
+    async (workspace: WorkspaceWithOrganization) => {
+      const response = await responseMapper<any[]>(
+        await client(`/organizations/${workspace.organization.id}/invitations`, {
+          method: "GET",
+        }),
+      );
+      return response.data.filter(
+        (inv: any) => String(inv.workspace_id) === String(workspace.id),
+      );
+    },
+    [client],
+  );
+
+  const createWorkspaceInvitation = useCallback(
+    async (
+      workspace: WorkspaceWithOrganization,
+      email: string,
+      workspaceRoleId: string,
+    ) => {
+      const formData = new FormData();
+      formData.append("email", email);
+      formData.append("workspace_id", workspace.id);
+      formData.append("workspace_role_id", workspaceRoleId);
+
+      const response = await responseMapper(
+        await client(`/organizations/${workspace.organization.id}/invitations`, {
+          method: "POST",
+          body: formData,
+        }),
+      );
+      return response.data;
+    },
+    [client],
+  );
+
+  const discardWorkspaceInvitation = useCallback(
+    async (workspace: WorkspaceWithOrganization, invitationId: string) => {
+      const response = await responseMapper(
+        await client(
+          `/organizations/${workspace.organization.id}/invitations/${invitationId}/discard`,
+          {
+            method: "POST",
+          },
+        ),
+      );
+      return response.data;
+    },
+    [client],
+  );
+
+  const resendWorkspaceInvitation = useCallback(
+    async (workspace: WorkspaceWithOrganization, invitationId: string) => {
+      const response = await responseMapper(
+        await client(
+          `/organizations/${workspace.organization.id}/invitations/${invitationId}/resend`,
+          {
+            method: "POST",
+          },
+        ),
+      );
+      return response.data;
+    },
+    [client],
+  );
+
   return {
     workspaces: workspaces || [],
     loading,
@@ -291,6 +357,10 @@ export const useWorkspaceList = () => {
     removeWorkspaceMember,
     addWorkspaceMemberRole,
     removeWorkspaceMemberRole,
+    getWorkspaceInvitations,
+    createWorkspaceInvitation,
+    discardWorkspaceInvitation,
+    resendWorkspaceInvitation,
   };
 };
 
@@ -299,6 +369,7 @@ export const useActiveWorkspace = () => {
     refetch,
     loading,
     error: listError,
+    workspaces,
     leaveWorkspace: leaveWorkspaceFromList,
     updateWorkspace,
     deleteWorkspace,
@@ -310,6 +381,10 @@ export const useActiveWorkspace = () => {
     removeWorkspaceMember,
     addWorkspaceMemberRole,
     removeWorkspaceMemberRole,
+    getWorkspaceInvitations,
+    createWorkspaceInvitation,
+    discardWorkspaceInvitation,
+    resendWorkspaceInvitation,
   } = useWorkspaceList();
   const { workspaceMemberships } = useWorkspaceMemberships();
   const {
@@ -419,6 +494,44 @@ export const useActiveWorkspace = () => {
     [activeWorkspace, removeWorkspaceMemberRole],
   );
 
+  // Get the active workspace with organization info for invitation functions
+  const activeWorkspaceWithOrg = useMemo(() => {
+    return workspaces?.find((w) => w.id === activeWorkspace?.id) || null;
+  }, [workspaces, activeWorkspace]);
+
+  const getCurrentWorkspaceInvitations = useCallback(async () => {
+    if (!activeWorkspaceWithOrg) return [];
+    return await getWorkspaceInvitations(activeWorkspaceWithOrg);
+  }, [activeWorkspaceWithOrg, getWorkspaceInvitations]);
+
+  const createCurrentWorkspaceInvitation = useCallback(
+    async (email: string, workspaceRoleId: string) => {
+      if (!activeWorkspaceWithOrg) return;
+      return await createWorkspaceInvitation(
+        activeWorkspaceWithOrg,
+        email,
+        workspaceRoleId,
+      );
+    },
+    [activeWorkspaceWithOrg, createWorkspaceInvitation],
+  );
+
+  const discardCurrentWorkspaceInvitation = useCallback(
+    async (invitationId: string) => {
+      if (!activeWorkspaceWithOrg) return;
+      return await discardWorkspaceInvitation(activeWorkspaceWithOrg, invitationId);
+    },
+    [activeWorkspaceWithOrg, discardWorkspaceInvitation],
+  );
+
+  const resendCurrentWorkspaceInvitation = useCallback(
+    async (invitationId: string) => {
+      if (!activeWorkspaceWithOrg) return;
+      return await resendWorkspaceInvitation(activeWorkspaceWithOrg, invitationId);
+    },
+    [activeWorkspaceWithOrg, resendWorkspaceInvitation],
+  );
+
   const currentLoading = loading || sessionLoading;
   const currentError = listError || sessionError;
 
@@ -440,6 +553,10 @@ export const useActiveWorkspace = () => {
       removeMember: null as never,
       addMemberRole: null as never,
       removeMemberRole: null as never,
+      getInvitations: null as never,
+      createInvitation: null as never,
+      discardInvitation: null as never,
+      resendInvitation: null as never,
     };
   }
 
@@ -460,5 +577,9 @@ export const useActiveWorkspace = () => {
     removeMember: removeCurrentWorkspaceMember,
     addMemberRole: addRoleToCurrentWorkspaceMember,
     removeMemberRole: removeRoleFromCurrentWorkspaceMember,
+    getInvitations: getCurrentWorkspaceInvitations,
+    createInvitation: createCurrentWorkspaceInvitation,
+    discardInvitation: discardCurrentWorkspaceInvitation,
+    resendInvitation: resendCurrentWorkspaceInvitation,
   };
 };
