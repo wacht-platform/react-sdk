@@ -220,25 +220,6 @@ export const useWorkspaceList = () => {
     [client],
   );
 
-  const inviteWorkspaceMember = useCallback(
-    async (workspace: Workspace, email: string, roleId?: string) => {
-      const formData = new FormData();
-      formData.append("email", email);
-      if (roleId) {
-        formData.append("role_id", roleId);
-      }
-
-      const response = await responseMapper(
-        await client(`/workspaces/${workspace.id}/members`, {
-          method: "POST",
-          body: formData,
-        }),
-      );
-      return response.data;
-    },
-    [client],
-  );
-
   const removeWorkspaceMember = useCallback(
     async (workspace: Workspace, memberId: string) => {
       const response = await responseMapper(
@@ -361,7 +342,6 @@ export const useWorkspaceList = () => {
     getWorkspaceRoles,
     createWorkspaceRole,
     deleteWorkspaceRole,
-    inviteWorkspaceMember,
     removeWorkspaceMember,
     addWorkspaceMemberRole,
     removeWorkspaceMemberRole,
@@ -385,7 +365,6 @@ export const useActiveWorkspace = () => {
     getWorkspaceRoles,
     createWorkspaceRole,
     deleteWorkspaceRole,
-    inviteWorkspaceMember,
     removeWorkspaceMember,
     addWorkspaceMemberRole,
     removeWorkspaceMemberRole,
@@ -460,14 +439,6 @@ export const useActiveWorkspace = () => {
       return await deleteWorkspaceRole(activeWorkspace, role);
     },
     [activeWorkspace, deleteWorkspaceRole],
-  );
-
-  const inviteCurrentWorkspaceMember = useCallback(
-    async (email: string, roleId?: string) => {
-      if (!activeWorkspace) return;
-      return await inviteWorkspaceMember(activeWorkspace, email, roleId);
-    },
-    [activeWorkspace, inviteWorkspaceMember],
   );
 
   const removeCurrentWorkspaceMember = useCallback(
@@ -562,7 +533,6 @@ export const useActiveWorkspace = () => {
       addMemberRole: null as never,
       removeMemberRole: null as never,
       getInvitations: null as never,
-      createInvitation: null as never,
       discardInvitation: null as never,
       resendInvitation: null as never,
     };
@@ -581,12 +551,11 @@ export const useActiveWorkspace = () => {
     getRoles: getCurrentWorkspaceRoles,
     createRole: createCurrentWorkspaceRole,
     deleteRole: deleteCurrentWorkspaceRole,
-    inviteMember: inviteCurrentWorkspaceMember,
+    inviteMember: createCurrentWorkspaceInvitation,
     removeMember: removeCurrentWorkspaceMember,
     addMemberRole: addRoleToCurrentWorkspaceMember,
     removeMemberRole: removeRoleFromCurrentWorkspaceMember,
     getInvitations: getCurrentWorkspaceInvitations,
-    createInvitation: createCurrentWorkspaceInvitation,
     discardInvitation: discardCurrentWorkspaceInvitation,
     resendInvitation: resendCurrentWorkspaceInvitation,
   };

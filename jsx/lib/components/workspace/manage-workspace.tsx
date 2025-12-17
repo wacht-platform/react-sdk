@@ -257,7 +257,7 @@ const InvitationsSection = () => {
     loading,
     getRoles,
     getInvitations,
-    createInvitation,
+    inviteMember,
     discardInvitation,
     resendInvitation,
   } = useActiveWorkspace();
@@ -374,7 +374,7 @@ const InvitationsSection = () => {
               onClose={() => setShowInvitePopover(false)}
               onSuccess={handleInviteSuccess}
               roles={roles}
-              createInvitation={createInvitation}
+              createInvitation={inviteMember}
               triggerRef={inviteButtonRef}
             />
           )}
