@@ -193,11 +193,14 @@ export const useWorkspaceList = () => {
 
   const createWorkspaceRole = useCallback(
     async (workspace: Workspace, name: string, permissions: string[]) => {
+      const formData = new FormData();
+      formData.append("name", name);
+      permissions.forEach((permission) => formData.append("permissions", permission));
+
       const response = await responseMapper<WorkspaceRole>(
         await client(`/workspaces/${workspace.id}/roles`, {
           method: "POST",
-          headers: { "Content-Type": "application/json" },
-          body: JSON.stringify({ name, permissions }),
+          body: formData,
         }),
       );
       return response.data;
@@ -219,11 +222,16 @@ export const useWorkspaceList = () => {
 
   const inviteWorkspaceMember = useCallback(
     async (workspace: Workspace, email: string, roleId?: string) => {
+      const formData = new FormData();
+      formData.append("email", email);
+      if (roleId) {
+        formData.append("role_id", roleId);
+      }
+
       const response = await responseMapper(
         await client(`/workspaces/${workspace.id}/members`, {
           method: "POST",
-          headers: { "Content-Type": "application/json" },
-          body: JSON.stringify({ email, role_id: roleId }),
+          body: formData,
         }),
       );
       return response.data;

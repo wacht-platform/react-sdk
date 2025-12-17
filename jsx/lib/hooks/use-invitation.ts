@@ -31,28 +31,25 @@ export const useInvitation = () => {
     setInvitationData(null);
 
     try {
+      const formData = new FormData();
+      formData.append("token", token);
+
       const response = await client("/organizations/invitations/accept", {
         method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-        },
-        body: JSON.stringify({ token }),
+        body: formData,
       });
 
       const result = await responseMapper<AcceptInvitationResponse>(response);
 
-      // The backend returns everything in data field, including error cases
       const data = result.data;
       setInvitationData(data);
 
-      // Set error if there's an error_code in the response
       if (data.error_code) {
         setError(data.message || "Failed to accept invitation");
       }
 
       return data;
     } catch (err: any) {
-      // This only happens for network errors or if responseMapper throws
       const errorMessage = err.message || "Failed to accept invitation";
       setError(errorMessage);
       const errorData = { error_code: "NETWORK_ERROR", message: errorMessage };
