@@ -281,12 +281,14 @@ export const useWorkspaceList = () => {
     async (
       workspace: WorkspaceWithOrganization,
       email: string,
-      workspaceRoleId: string,
+      workspaceRoleId?: string,
     ) => {
       const formData = new FormData();
       formData.append("email", email);
       formData.append("workspace_id", workspace.id);
-      formData.append("workspace_role_id", workspaceRoleId);
+      if (workspaceRoleId) {
+        formData.append("workspace_role_id", workspaceRoleId);
+      }
 
       const response = await responseMapper(
         await client(`/organizations/${workspace.organization.id}/invitations`, {
@@ -484,7 +486,7 @@ export const useActiveWorkspace = () => {
   }, [activeWorkspaceWithOrg, getWorkspaceInvitations]);
 
   const createCurrentWorkspaceInvitation = useCallback(
-    async (email: string, workspaceRoleId: string) => {
+    async (email: string, workspaceRoleId?: string) => {
       if (!activeWorkspaceWithOrg) return;
       return await createWorkspaceInvitation(
         activeWorkspaceWithOrg,
