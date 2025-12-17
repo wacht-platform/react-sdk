@@ -409,7 +409,6 @@ const Select = styled.select`
 `;
 
 export const SSOSettingsSection = () => {
-    const { deployment } = useDeployment();
     const {
         activeOrganization,
         loading,
@@ -454,22 +453,6 @@ export const SSOSettingsSection = () => {
             <div style={{ display: "flex", justifyContent: "center", padding: "40px 0" }}>
                 <Spinner />
             </div>
-        );
-    }
-
-    if (!deployment?.b2b_settings?.enterprise_sso_enabled) {
-        return (
-            <Card>
-                <CardTitle>
-                    <Shield size={18} />
-                    Enterprise SSO
-                </CardTitle>
-                <CardDetail>
-                    <span style={{ color: "var(--color-foreground-muted)" }}>
-                        Enterprise SSO is not enabled for this deployment. Contact your administrator to enable this feature.
-                    </span>
-                </CardDetail>
-            </Card>
         );
     }
 

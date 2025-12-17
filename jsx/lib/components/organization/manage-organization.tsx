@@ -2043,6 +2043,7 @@ type TabType = "general" | "domains" | "members" | "invitations" | "roles" | "ss
 
 export const ManageOrganization = () => {
   const { loading, activeOrganization } = useActiveOrganization();
+  const { deployment } = useDeployment();
   const [activeTab, setActiveTab] = useState<TabType>("general");
   const [toastMessage, setToastMessage] = useState<string | null>(null);
   const [toastLevel, setToastLevel] = useState<"info" | "error">("info");
@@ -2170,15 +2171,17 @@ export const ManageOrganization = () => {
                   Roles
                 </TabIcon>
               </Tab>
-              <Tab
-                $isActive={activeTab === "sso"}
-                onClick={() => setActiveTab("sso")}
-              >
-                <TabIcon>
-                  <Shield size={16} />
-                  SSO
-                </TabIcon>
-              </Tab>
+              {deployment?.b2b_settings?.enterprise_sso_enabled && (
+                <Tab
+                  $isActive={activeTab === "sso"}
+                  onClick={() => setActiveTab("sso")}
+                >
+                  <TabIcon>
+                    <Shield size={16} />
+                    Single Sign-On
+                  </TabIcon>
+                </Tab>
+              )}
             </TabsList>
           </TabsContainer>
 
