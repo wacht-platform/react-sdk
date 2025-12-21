@@ -1,7 +1,7 @@
 import { SVGProps } from "react"
 
 export const ChromeIcon = (props: SVGProps<SVGSVGElement>) => (
-  <svg xmlns="http://www.w3.org/2000/svg" width={48} height={48} {...props}>
+  <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 48 48" {...props}>
     <defs>
       <linearGradient
         id="a"

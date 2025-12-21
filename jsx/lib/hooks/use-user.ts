@@ -5,6 +5,7 @@ import {
   CurrentUser,
   UserAuthenticator,
   UserEmailAddress,
+  UserPasskey,
   UserPhoneNumber,
 } from "@/types";
 import { Client } from "@/types";
@@ -13,6 +14,26 @@ import { useSession } from "./use-session";
 import { useOrganizationMemberships } from "./use-organization";
 import { useWorkspaceMemberships } from "./use-workspace";
 import { useMemo } from "react";
+
+function bufferToBase64url(buffer: ArrayBuffer): string {
+  const bytes = new Uint8Array(buffer);
+  let str = "";
+  for (let i = 0; i < bytes.length; i++) {
+    str += String.fromCharCode(bytes[i]);
+  }
+  return btoa(str).replace(/\+/g, "-").replace(/\//g, "_").replace(/=/g, "");
+}
+
+function base64urlToBuffer(base64url: string): ArrayBuffer {
+  const base64 = base64url.replace(/-/g, "+").replace(/_/g, "/");
+  const padded = base64.padEnd(base64.length + ((4 - (base64.length % 4)) % 4), "=");
+  const binary = atob(padded);
+  const bytes = new Uint8Array(binary.length);
+  for (let i = 0; i < binary.length; i++) {
+    bytes[i] = binary.charCodeAt(i);
+  }
+  return bytes.buffer;
+}
 
 type SecondFactorPolicy = "none" | "optional" | "enforced";
 
@@ -334,6 +355,111 @@ export function useUser() {
     return response;
   };
 
+  // Passkey management methods
+  const getPasskeys = async () => {
+    const response = await responseMapper<UserPasskey[]>(
+      await client("/me/passkeys", { method: "GET" }),
+    );
+    return response;
+  };
+
+  const registerPasskey = async (name?: string) => {
+    // Begin registration
+    const beginResponse = await responseMapper<{
+      options: {
+        publicKey: {
+          challenge: string;
+          rp: { name: string; id: string };
+          user: { id: string; name: string; displayName: string };
+          pubKeyCredParams: { type: string; alg: number }[];
+          timeout?: number;
+          attestation?: string;
+          authenticatorSelection?: {
+            authenticatorAttachment?: string;
+            residentKey?: string;
+            userVerification?: string;
+          };
+          excludeCredentials?: { type: string; id: string; transports?: string[] }[];
+        }
+      }
+    }>(
+      await client("/me/passkeys/register/begin", { method: "POST" }),
+    );
+
+    if (!("data" in beginResponse)) {
+      return beginResponse;
+    }
+
+    const publicKey = beginResponse.data.options.publicKey;
+
+    // Convert for WebAuthn API
+    const createOptions: PublicKeyCredentialCreationOptions = {
+      challenge: base64urlToBuffer(publicKey.challenge),
+      rp: publicKey.rp,
+      user: {
+        id: base64urlToBuffer(publicKey.user.id),
+        name: publicKey.user.name,
+        displayName: publicKey.user.displayName,
+      },
+      pubKeyCredParams: publicKey.pubKeyCredParams as PublicKeyCredentialParameters[],
+      timeout: publicKey.timeout,
+      attestation: publicKey.attestation as AttestationConveyancePreference,
+      authenticatorSelection: publicKey.authenticatorSelection as AuthenticatorSelectionCriteria,
+      excludeCredentials: publicKey.excludeCredentials?.map((cred) => ({
+        type: cred.type as PublicKeyCredentialType,
+        id: base64urlToBuffer(cred.id),
+        transports: cred.transports as AuthenticatorTransport[],
+      })),
+    };
+
+    const credential = await navigator.credentials.create({
+      publicKey: createOptions,
+    }) as PublicKeyCredential;
+
+    if (!credential) {
+      throw new Error("Failed to create credential");
+    }
+
+    const attestationResponse = credential.response as AuthenticatorAttestationResponse;
+    const credentialData = {
+      id: credential.id,
+      rawId: bufferToBase64url(credential.rawId),
+      type: credential.type,
+      response: {
+        clientDataJSON: bufferToBase64url(attestationResponse.clientDataJSON),
+        attestationObject: bufferToBase64url(attestationResponse.attestationObject),
+        transports: attestationResponse.getTransports?.() || [],
+      },
+    };
+
+    const finishResponse = await responseMapper(
+      await client(`/me/passkeys/register/finish?name=${encodeURIComponent(name || "")}`, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify(credentialData),
+      }),
+    );
+    return finishResponse;
+  };
+
+  const deletePasskey = async (id: string) => {
+    const response = await responseMapper(
+      await client(`/me/passkeys/${id}/delete`, { method: "POST" }),
+    );
+    return response;
+  };
+
+  const renamePasskey = async (id: string, name: string) => {
+    const response = await responseMapper(
+      await client(`/me/passkeys/${id}`, {
+        method: "PATCH",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ name }),
+      }),
+    );
+    return response;
+  };
+
   return {
     user: {
       ...user,
@@ -365,6 +491,11 @@ export function useUser() {
     updatePassword,
     removePassword,
     deleteAccount,
+    // Passkey management
+    getPasskeys,
+    registerPasskey,
+    deletePasskey,
+    renamePasskey,
   };
 }
 

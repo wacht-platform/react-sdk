@@ -82,3 +82,12 @@ export interface PublicUserData {
   primary_phone_number: UserPhoneNumber;
   primary_email_address: UserEmailAddress;
 }
+
+export interface UserPasskey {
+  id: string;
+  name: string;
+  created_at: string;
+  last_used_at: string | null;
+  device_type: string;
+  backed_up: boolean;
+}

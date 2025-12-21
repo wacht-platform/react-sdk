@@ -4,7 +4,6 @@ import { useClient } from "./use-client";
 import type { ApiResult, Client } from "@/types";
 import type { Session, SigninAttempt, ProfileCompletionData } from "@/types";
 
-// Identifier-First flow types
 export interface IdentifyResult {
   strategy: "sso" | "social" | "password";
   connection_id?: string;
@@ -94,6 +93,8 @@ type SignInOauth = ({
   redirectUri?: string;
 }) => Promise<ApiResult<InitSSOResponseType>>;
 
+type SignInPasskey = () => Promise<ApiResult<Session>>;
+
 type SignInStrategy =
   | "username"
   | "email"
@@ -101,6 +102,7 @@ type SignInStrategy =
   | "email_otp"
   | "magic_link"
   | "oauth"
+  | "passkey"
   | "generic";
 
 // Declarative verification parameter types
@@ -138,6 +140,7 @@ type CreateSignInStrategyResult = {
   (strategy: "email_otp"): SignInEmailOTP;
   (strategy: "magic_link"): SignInMagicLink;
   (strategy: "oauth"): SignInOauth;
+  (strategy: "passkey"): SignInPasskey;
   (strategy: "generic"): SignInGeneric;
 };
 
@@ -184,6 +187,7 @@ function builder(
     ["email_otp"]: builderEmailOTP(client, setSignInAttempt),
     ["magic_link"]: builderMagicLink(client, setSignInAttempt),
     ["oauth"]: builderOauth(client),
+    ["passkey"]: builderPasskey(client),
     ["generic"]: builderGeneric(client, setSignInAttempt),
   };
 
@@ -324,6 +328,97 @@ function builderOauth(
       }
     }
     return result;
+  };
+}
+
+// WebAuthn helpers for passkey sign-in
+function bufferToBase64url(buffer: ArrayBuffer): string {
+  const bytes = new Uint8Array(buffer);
+  let str = "";
+  for (let i = 0; i < bytes.length; i++) {
+    str += String.fromCharCode(bytes[i]);
+  }
+  return btoa(str).replace(/\+/g, "-").replace(/\//g, "_").replace(/=/g, "");
+}
+
+function base64urlToBuffer(base64url: string): ArrayBuffer {
+  const base64 = base64url.replace(/-/g, "+").replace(/_/g, "/");
+  const padded = base64.padEnd(base64.length + ((4 - (base64.length % 4)) % 4), "=");
+  const binary = atob(padded);
+  const bytes = new Uint8Array(binary.length);
+  for (let i = 0; i < binary.length; i++) {
+    bytes[i] = binary.charCodeAt(i);
+  }
+  return bytes.buffer;
+}
+
+function builderPasskey(client: Client): SignInPasskey {
+  return async () => {
+    // Begin passkey login
+    const beginResponse = await client("/auth/passkey/login/begin", {
+      method: "POST",
+    });
+    const beginResult = await responseMapper<{
+      options: {
+        publicKey: {
+          challenge: string;
+          timeout?: number;
+          rpId?: string;
+          userVerification?: string;
+          allowCredentials?: { type: string; id: string; transports?: string[] }[];
+        }
+      }
+    }>(beginResponse);
+
+    if (!("data" in beginResult)) {
+      return beginResult;
+    }
+
+    const publicKey = beginResult.data.options.publicKey;
+
+    // Convert options for WebAuthn API
+    const requestOptions: PublicKeyCredentialRequestOptions = {
+      challenge: base64urlToBuffer(publicKey.challenge),
+      timeout: publicKey.timeout,
+      rpId: publicKey.rpId,
+      userVerification: publicKey.userVerification as UserVerificationRequirement,
+      allowCredentials: publicKey.allowCredentials?.map((cred) => ({
+        type: cred.type as PublicKeyCredentialType,
+        id: base64urlToBuffer(cred.id),
+        transports: cred.transports as AuthenticatorTransport[],
+      })),
+    };
+
+    // Prompt browser for passkey
+    const credential = await navigator.credentials.get({
+      publicKey: requestOptions,
+    }) as PublicKeyCredential;
+
+    if (!credential) {
+      throw new Error("Failed to get credential");
+    }
+
+    // Build assertion data
+    const assertionResponse = credential.response as AuthenticatorAssertionResponse;
+    const assertionData = {
+      id: credential.id,
+      rawId: bufferToBase64url(credential.rawId),
+      type: credential.type,
+      response: {
+        clientDataJSON: bufferToBase64url(assertionResponse.clientDataJSON),
+        authenticatorData: bufferToBase64url(assertionResponse.authenticatorData),
+        signature: bufferToBase64url(assertionResponse.signature),
+        userHandle: assertionResponse.userHandle ? bufferToBase64url(assertionResponse.userHandle) : null,
+      },
+    };
+
+    // Finish passkey login
+    const finishResponse = await client("/auth/passkey/login/finish", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify(assertionData),
+    });
+    return responseMapper<Session>(finishResponse);
   };
 }
 
@@ -508,6 +603,7 @@ type SignInFunction<T extends SignInStrategy> = {
   ["email_otp"]: SignInEmailOTP;
   ["magic_link"]: SignInMagicLink;
   ["oauth"]: SignInOauth;
+  ["passkey"]: SignInPasskey;
   ["generic"]: SignInGeneric;
 }[T];
 
@@ -571,6 +667,8 @@ export function useSignInWithStrategy<T extends SignInStrategy>(
         return signIn.createStrategy("magic_link");
       case "oauth":
         return signIn.createStrategy("oauth");
+      case "passkey":
+        return signIn.createStrategy("passkey");
       case "generic":
         return signIn.createStrategy("generic");
       default:

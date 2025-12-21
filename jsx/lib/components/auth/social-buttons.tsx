@@ -1,6 +1,6 @@
 import styled, { css } from "styled-components";
 import { GithubIcon } from "../icons/github";
-import { MicrosoftIcon } from "../icons/microsoft";
+// import { MicrosoftIcon } from "../icons/microsoft";
 import { GoogleIcon } from "../icons/google";
 import { XIcon } from "../icons/x";
 import { FacebookIcon } from "../icons/facebook";
@@ -16,11 +16,12 @@ const socialAuthProviders = {
     fullLabel: "Continue with Google",
     icon: <GoogleIcon />,
   },
-  microsoft_oauth: {
-    shortLabel: "Microsoft",
-    fullLabel: "Continue with Microsoft",
-    icon: <MicrosoftIcon />,
-  },
+  // Microsoft OAuth temporarily disabled - unverified credentials
+  // microsoft_oauth: {
+  //   shortLabel: "Microsoft",
+  //   fullLabel: "Continue with Microsoft",
+  //   icon: <MicrosoftIcon />,
+  // },
   github_oauth: {
     shortLabel: "GitHub",
     fullLabel: "Continue with GitHub",

@@ -26,6 +26,7 @@ import { useDeployment } from "@/hooks/use-deployment";
 import { useNavigation } from "@/hooks/use-navigation";
 import { Button } from "@/components/utility";
 import { AuthFormImage } from "./auth-image";
+import { Fingerprint } from "lucide-react";
 
 const spin = keyframes`
   from {
@@ -118,6 +119,38 @@ const SubmitButton = styled(Button)`
   margin-top: var(--space-lg);
 `;
 
+const PasskeyButton = styled.button`
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: var(--space-sm);
+  width: 100%;
+  padding: var(--space-sm) var(--space-md);
+  margin-top: var(--space-sm);
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-md);
+  background: var(--color-background);
+  cursor: pointer;
+  transition: all 0.2s;
+  font-size: var(--font-sm);
+  color: var(--color-foreground);
+  font-weight: 500;
+
+  &:hover:not(:disabled) {
+    background: var(--color-background-hover);
+    border-color: var(--color-primary);
+  }
+
+  &:disabled {
+    opacity: 0.6;
+    cursor: not-allowed;
+  }
+
+  svg {
+    color: var(--color-primary);
+  }
+`;
+
 const Footer = styled.div`
   margin-top: var(--space-lg);
   text-align: center;
@@ -206,6 +239,7 @@ function SignInFormContent() {
     setSignInAttempt,
   } = useSignInWithStrategy("generic");
   const { signIn: oauthSignIn } = useSignInWithStrategy("oauth");
+  const { signIn: passkeySignIn } = useSignInWithStrategy("passkey");
   const [formData, setFormData] = useState<SignInParams>({
     email: "",
     username: "",
@@ -488,6 +522,24 @@ function SignInFormContent() {
     }
   };
 
+  const handlePasskeySignIn = async () => {
+    if (loading || isSubmitting) return;
+
+    setIsSubmitting(true);
+    setErrors({});
+    try {
+      const result = await passkeySignIn.create();
+      if ("data" in result && result.data) {
+        // Passkey login successful, session should be updated
+        setIsRedirecting(true);
+      }
+    } catch (err) {
+      setErrors({ submit: (err as Error).message || "Passkey sign-in failed" });
+    } finally {
+      setIsSubmitting(false);
+    }
+  };
+
   const impersonationInitiatedRef = useRef(false);
 
   useEffect(() => {
@@ -740,11 +792,25 @@ function SignInFormContent() {
                   connections={enabledSocialsProviders}
                   callback={initSocialAuthSignIn}
                 />
-
-                <Divider>
-                  <DividerText>or</DividerText>
-                </Divider>
               </>
+            )}
+
+            {/* Passkey Sign In */}
+            {deployment?.auth_settings?.passkey?.enabled && (
+              <PasskeyButton
+                type="button"
+                onClick={handlePasskeySignIn}
+                disabled={isSubmitting}
+              >
+                <Fingerprint size={18} />
+                Sign in with Passkey
+              </PasskeyButton>
+            )}
+
+            {(enabledSocialsProviders.length > 0 || deployment?.auth_settings?.passkey?.enabled) && (
+              <Divider>
+                <DividerText>or</DividerText>
+              </Divider>
             )}
 
             <Form onSubmit={createSignIn} noValidate>

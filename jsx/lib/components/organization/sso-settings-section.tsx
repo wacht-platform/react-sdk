@@ -3,13 +3,13 @@
 import React, { useState, useEffect } from "react";
 import styled from "styled-components";
 import useSWR from "swr";
-import { Shield, Trash, Copy, Check, Plus, ExternalLink } from "lucide-react";
+import { Shield, Copy, Check, Plus, ExternalLink } from "lucide-react";
 import { useActiveOrganization } from "@/hooks/use-organization";
 import { useDeployment } from "@/hooks";
 import { Spinner } from "../utility/spinner";
 import { ConfirmationPopover } from "../utility/confirmation-popover";
 import { useScreenContext } from "./context";
-import { Button } from "../utility";
+import { Button, Switch } from "../utility";
 import { Input } from "../utility/input";
 import { FormGroup, Label } from "../utility/form";
 import type { EnterpriseConnection, CreateEnterpriseConnectionPayload } from "@/types";
@@ -23,22 +23,25 @@ const HeaderCTAContainer = styled.div`
 `;
 
 const Card = styled.div`
-  background: var(--color-background);
-  border: 1px solid var(--color-border);
-  border-radius: 8px;
-  padding: 20px;
+  padding-bottom: 20px;
   margin-bottom: 16px;
+  border-bottom: 1px solid var(--color-border);
+
+  &:last-child {
+    border-bottom: none;
+    margin-bottom: 0;
+    padding-bottom: 0;
+  }
 `;
 
 const CardHeader = styled.div`
   display: flex;
   justify-content: space-between;
   align-items: flex-start;
-  margin-bottom: 16px;
 `;
 
 const CardTitle = styled.h3`
-  font-size: 16px;
+  font-size: 14px;
   font-weight: 500;
   color: var(--color-foreground);
   margin: 0;
@@ -50,20 +53,12 @@ const CardTitle = styled.h3`
 const Badge = styled.span`
   background: var(--color-primary-background);
   color: var(--color-primary);
-  padding: 4px 8px;
+  padding: 2px 6px;
   border-radius: 4px;
-  font-size: 12px;
-  font-weight: 400;
+  font-size: 10px;
+  font-weight: 500;
   text-transform: uppercase;
-`;
-
-const CardDetail = styled.div`
-  font-size: 13px;
-  color: var(--color-muted);
-  margin-bottom: 8px;
-  display: flex;
-  align-items: center;
-  gap: 8px;
+  letter-spacing: 0.5px;
 `;
 
 const IconButton = styled.button`
@@ -112,9 +107,6 @@ const Textarea = styled.textarea`
   }
 `;
 
-
-
-// IdP Templates
 interface IdPTemplate {
     id: string;
     name: string;
@@ -562,7 +554,7 @@ const SCIMSection = styled.div`
 `;
 
 const SCIMHeader = styled.div`
-    font-size: 13px;
+    font-size: 12px;
     font-weight: 500;
     color: var(--color-foreground);
     margin-bottom: 12px;
@@ -571,16 +563,6 @@ const SCIMHeader = styled.div`
     gap: 6px;
 `;
 
-const SCIMTokenDisplay = styled.div`
-    background: var(--color-background-alt);
-    border: 1px solid var(--color-border);
-    border-radius: 6px;
-    padding: 12px;
-    font-family: monospace;
-    font-size: 12px;
-    word-break: break-all;
-    margin-bottom: 12px;
-`;
 
 const SCIMActions = styled.div`
     display: flex;
@@ -633,7 +615,8 @@ const ConnectionCard = ({
         try {
             const result = await generateSCIMToken(connection.id);
             setShowNewToken(result.token);
-            setScimToken({ exists: true, token: result, scim_base_url: result.scim_base_url });
+            // Note: scim_base_url is inside the token object
+            setScimToken({ exists: true, token: result });
             toast("SCIM token generated. Copy it now - it won't be shown again!", "info");
         } catch (error: any) {
             toast(error.message || "Failed to generate token", "error");
@@ -667,169 +650,165 @@ const ConnectionCard = ({
         <Card>
             <CardHeader>
                 <CardTitle>
-                    <Shield size={18} />
+                    <Shield size={16} />
                     {connection.protocol === "oidc" ? "OIDC SSO" : "SAML SSO"}
                     <Badge>{connection.protocol.toUpperCase()}</Badge>
                 </CardTitle>
-                <div style={{ position: "relative" }}>
-                    <IconButton
-                        onClick={() => onDelete(connection.id)}
-                        style={{ color: "var(--color-error)" }}
-                    >
-                        <Trash size={16} />
-                    </IconButton>
-                    {connectionToDelete === connection.id && (
-                        <ConfirmationPopover
-                            title="Delete this SSO connection?"
-                            onConfirm={() => onConfirmDelete(connection.id)}
-                            onCancel={onCancelDelete}
-                        />
-                    )}
-                </div>
-            </CardHeader>
-            {connection.protocol === "saml" ? (
-                <>
-                    <CardDetail>
-                        <strong>Entity ID:</strong> {connection.idp_entity_id}
-                    </CardDetail>
-                    <CardDetail>
-                        <strong>SSO URL:</strong> {connection.idp_sso_url}
-                    </CardDetail>
-                </>
-            ) : (
-                <>
-                    <CardDetail>
-                        <strong>Issuer URL:</strong> {connection.oidc_issuer_url}
-                    </CardDetail>
-                    <CardDetail>
-                        <strong>Client ID:</strong> {connection.oidc_client_id}
-                    </CardDetail>
-                    <CardDetail>
-                        <strong>Scopes:</strong> {connection.oidc_scopes || "openid profile email"}
-                    </CardDetail>
-                </>
-            )}
-            <CardDetail>
-                <strong>Created:</strong>{" "}
-                {new Date(connection.created_at).toLocaleDateString()}
-            </CardDetail>
-
-            {/* Connection Test Section */}
-            <div style={{ marginTop: "16px", paddingTop: "16px", borderTop: "1px solid var(--color-border)" }}>
-                <div style={{ display: "flex", alignItems: "center", gap: "12px", flexWrap: "wrap" }}>
+                <div style={{ display: "flex", alignItems: "center", gap: "8px" }}>
                     <Button
-                        $outline
                         onClick={handleTestConnection}
                         disabled={testing}
-                        style={{ width: "auto", fontSize: "12px", padding: "6px 12px" }}
+                        style={{ fontSize: "12px", padding: "6px 14px", width: "80px" }}
                     >
-                        {testing ? <Spinner size={12} /> : <Shield size={14} />}
-                        {testing ? "Testing..." : "Test Connection"}
+                        {testing ? <Spinner size={14} /> : "Test"}
                     </Button>
-                    {testResult && (
-                        <span style={{
-                            fontSize: "12px",
-                            color: testResult.success ? "var(--color-success, #22c55e)" : "var(--color-error)",
-                            fontWeight: 500
-                        }}>
-                            {testResult.success ? "✓ Connection valid" : "✗ Connection failed"}
-                        </span>
-                    )}
-                </div>
-                {testResult && !testResult.success && testResult.errors && (
-                    <div style={{
-                        marginTop: "8px",
-                        padding: "8px 12px",
-                        background: "var(--color-error-background, rgba(239, 68, 68, 0.1))",
-                        borderRadius: "4px",
-                        fontSize: "12px"
-                    }}>
-                        {Object.entries(testResult.errors).map(([key, value]) => (
-                            <div key={key} style={{ color: "var(--color-error)", marginBottom: "4px" }}>
-                                <strong>{key.replace(/_/g, " ").replace(/\b\w/g, l => l.toUpperCase())}:</strong> {value}
-                            </div>
-                        ))}
+                    <div style={{ position: "relative" }}>
+                        <Button
+                            $outline
+                            onClick={() => onDelete(connection.id)}
+                            style={{ fontSize: "12px", padding: "6px 14px", width: "80px", color: "var(--color-error)", borderColor: "var(--color-error)" }}
+                        >
+                            Remove
+                        </Button>
+                        {connectionToDelete === connection.id && (
+                            <ConfirmationPopover
+                                title="Delete this SSO connection?"
+                                onConfirm={() => onConfirmDelete(connection.id)}
+                                onCancel={onCancelDelete}
+                            />
+                        )}
                     </div>
+                </div>
+            </CardHeader>
+
+            {/* Test Result */}
+            {testResult && (
+                <div style={{
+                    marginBottom: "12px",
+                    padding: "8px 12px",
+                    background: testResult.success ? "var(--color-success-background, rgba(34, 197, 94, 0.1))" : "var(--color-error-background, rgba(239, 68, 68, 0.1))",
+                    borderRadius: "6px",
+                    fontSize: "12px",
+                    color: testResult.success ? "var(--color-success, #22c55e)" : "var(--color-error)",
+                    fontWeight: 500
+                }}>
+                    {testResult.success ? "✓ Connection is valid" : "✗ Connection failed"}
+                    {testResult.errors && Object.entries(testResult.errors).map(([key, value]) => (
+                        <div key={key} style={{ fontWeight: 400, marginTop: "4px" }}>
+                            {key.replace(/_/g, " ")}: {value}
+                        </div>
+                    ))}
+                </div>
+            )}
+
+            {/* Connection Details - Compact Grid */}
+            <div style={{
+                display: "grid",
+                gridTemplateColumns: "auto 1fr",
+                gap: "4px 16px",
+                fontSize: "12px",
+                marginBottom: "16px"
+            }}>
+                {connection.protocol === "saml" ? (
+                    <>
+                        <span style={{ color: "var(--color-muted)" }}>Entity ID</span>
+                        <span style={{ color: "var(--color-foreground)", wordBreak: "break-all" }}>{connection.idp_entity_id}</span>
+                        <span style={{ color: "var(--color-muted)" }}>SSO URL</span>
+                        <span style={{ color: "var(--color-foreground)", wordBreak: "break-all" }}>{connection.idp_sso_url}</span>
+                    </>
+                ) : (
+                    <>
+                        <span style={{ color: "var(--color-muted)" }}>Issuer URL</span>
+                        <span style={{ color: "var(--color-foreground)", wordBreak: "break-all" }}>{connection.oidc_issuer_url}</span>
+                        <span style={{ color: "var(--color-muted)" }}>Client ID</span>
+                        <span style={{ color: "var(--color-foreground)" }}>{connection.oidc_client_id}</span>
+                        <span style={{ color: "var(--color-muted)" }}>Scopes</span>
+                        <span style={{ color: "var(--color-foreground)" }}>{connection.oidc_scopes || "openid profile email"}</span>
+                    </>
                 )}
+                <span style={{ color: "var(--color-muted)" }}>Created</span>
+                <span style={{ color: "var(--color-foreground)" }}>{new Date(connection.created_at).toLocaleDateString()}</span>
             </div>
 
             {/* SCIM Provisioning Section */}
             <SCIMSection>
-                <SCIMHeader>
-                    <Shield size={14} />
-                    SCIM Provisioning
-                </SCIMHeader>
+                <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: "12px" }}>
+                    <SCIMHeader style={{ marginBottom: 0 }}>
+                        <Shield size={14} />
+                        SCIM Provisioning
+                    </SCIMHeader>
+                    <SCIMActions>
+                        {(!scimToken?.exists || !scimToken?.token?.enabled) ? (
+                            <Button
+                                onClick={handleGenerateToken}
+                                disabled={scimLoading}
+                                style={{ fontSize: "12px", padding: "6px 14px", width: "130px" }}
+                            >
+                                {scimLoading ? <Spinner size={14} /> : "Generate Token"}
+                            </Button>
+                        ) : (
+                            <>
+                                <Button
+                                    onClick={handleGenerateToken}
+                                    disabled={scimLoading}
+                                    style={{ fontSize: "12px", padding: "6px 14px", width: "80px" }}
+                                >
+                                    {scimLoading ? <Spinner size={14} /> : "Rotate"}
+                                </Button>
+                                <Button
+                                    $outline
+                                    onClick={handleRevokeToken}
+                                    disabled={scimLoading}
+                                    style={{ fontSize: "12px", padding: "6px 14px", width: "80px", color: "var(--color-error)", borderColor: "var(--color-error)" }}
+                                >
+                                    Revoke
+                                </Button>
+                            </>
+                        )}
+                    </SCIMActions>
+                </div>
 
-                {scimToken?.scim_base_url && (
-                    <div style={{ marginBottom: "12px" }}>
-                        <div style={{ fontSize: "12px", color: "var(--color-muted)", marginBottom: "4px" }}>
-                            SCIM Base URL:
-                        </div>
+                {(scimToken?.token?.scim_base_url || showNewToken) && (
+                    <div style={{ marginBottom: "8px" }}>
                         <div style={{ display: "flex", alignItems: "center", gap: "8px" }}>
-                            <code style={{ fontSize: "11px", flex: 1, wordBreak: "break-all" }}>
-                                {scimToken.scim_base_url}
+                            <span style={{ fontSize: "11px", color: "var(--color-muted)", minWidth: "70px" }}>Base URL:</span>
+                            <code style={{ fontSize: "11px", flex: 1, wordBreak: "break-all", color: "var(--color-foreground)" }}>
+                                {scimToken?.token?.scim_base_url || "Loading..."}
                             </code>
-                            <IconButton onClick={() => copyToClipboard(scimToken.scim_base_url, "scim-url")}>
-                                {copiedField === "scim-url" ? <Check size={14} /> : <Copy size={14} />}
-                            </IconButton>
+                            {scimToken?.token?.scim_base_url && (
+                                <IconButton onClick={() => copyToClipboard(scimToken.token.scim_base_url, "scim-url")}>
+                                    {copiedField === "scim-url" ? <Check size={12} /> : <Copy size={12} />}
+                                </IconButton>
+                            )}
                         </div>
                     </div>
                 )}
 
                 {showNewToken && (
-                    <SCIMTokenDisplay>
-                        <div style={{ fontSize: "11px", color: "var(--color-warning)", marginBottom: "8px" }}>
-                            ⚠️ Copy this token now. It won&apos;t be shown again.
-                        </div>
-                        <div style={{ display: "flex", alignItems: "flex-start", gap: "8px" }}>
-                            <span style={{ flex: 1 }}>{showNewToken}</span>
+                    <div style={{ marginBottom: "8px" }}>
+                        <div style={{ display: "flex", alignItems: "center", gap: "8px" }}>
+                            <span style={{ fontSize: "11px", color: "var(--color-muted)", minWidth: "70px" }}>Token:</span>
+                            <code style={{ fontSize: "11px", flex: 1, wordBreak: "break-all", color: "var(--color-foreground)", fontFamily: "monospace" }}>
+                                {showNewToken}
+                            </code>
                             <IconButton onClick={() => copyToClipboard(showNewToken, "scim-token")}>
-                                {copiedField === "scim-token" ? <Check size={14} /> : <Copy size={14} />}
+                                {copiedField === "scim-token" ? <Check size={12} /> : <Copy size={12} />}
                             </IconButton>
                         </div>
-                    </SCIMTokenDisplay>
+                        <div style={{ fontSize: "11px", color: "var(--color-warning)", marginTop: "6px" }}>
+                            ⚠️ Copy this token now. It won&apos;t be shown again.
+                        </div>
+                    </div>
                 )}
 
                 {scimToken?.exists && scimToken?.token?.enabled && !showNewToken && (
-                    <div style={{ fontSize: "12px", color: "var(--color-muted)", marginBottom: "12px" }}>
-                        Token: <code>{scimToken.token.token_prefix}...</code>
+                    <div style={{ fontSize: "11px", color: "var(--color-muted)" }}>
+                        Token: <code style={{ color: "var(--color-foreground)", background: "var(--color-background-alt)", padding: "2px 6px", borderRadius: "4px" }}>{scimToken.token.token_prefix}...</code>
                         {scimToken.token.last_used_at && (
                             <span> · Last used: {new Date(scimToken.token.last_used_at).toLocaleDateString()}</span>
                         )}
                     </div>
                 )}
-
-                <SCIMActions>
-                    {(!scimToken?.exists || !scimToken?.token?.enabled) ? (
-                        <Button
-                            onClick={handleGenerateToken}
-                            disabled={scimLoading}
-                            style={{ width: "auto", fontSize: "12px", padding: "6px 12px" }}
-                        >
-                            {scimLoading ? <Spinner size={12} /> : <Plus size={14} />}
-                            Generate SCIM Token
-                        </Button>
-                    ) : (
-                        <>
-                            <Button
-                                $outline
-                                onClick={handleGenerateToken}
-                                disabled={scimLoading}
-                                style={{ width: "auto", fontSize: "12px", padding: "6px 12px" }}
-                            >
-                                Rotate Token
-                            </Button>
-                            <Button
-                                $outline
-                                onClick={handleRevokeToken}
-                                disabled={scimLoading}
-                                style={{ width: "auto", fontSize: "12px", padding: "6px 12px", color: "var(--color-error)" }}
-                            >
-                                Revoke Token
-                            </Button>
-                        </>
-                    )}
-                </SCIMActions>
             </SCIMSection>
         </Card>
     );
@@ -855,6 +834,7 @@ const SectionTitle = styled.h3`
 const CreateSSOScreen = ({ onCreate }: CreateSSOScreenProps) => {
     const { getDomains, testEnterpriseConnectionConfig } = useActiveOrganization();
     const { deployment } = useDeployment();
+    const { toast } = useScreenContext();
     const [loading, setLoading] = useState(false);
     const [selectedTemplate, setSelectedTemplate] = useState<IdPTemplate | null>(null);
     const [protocol, setProtocol] = useState<"saml" | "oidc">("saml");
@@ -934,6 +914,38 @@ const CreateSSOScreen = ({ onCreate }: CreateSSOScreenProps) => {
 
     const handleSubmit = async (e: React.FormEvent) => {
         e.preventDefault();
+
+        // Validation - check for placeholder values
+        const hasPlaceholder = (value: string) => value.includes("{") || value.includes("}");
+
+        if (protocol === "saml") {
+            if (!formData.idp_entity_id || hasPlaceholder(formData.idp_entity_id)) {
+                toast("Please enter a valid IdP Entity ID (no placeholders)", "error");
+                return;
+            }
+            if (!formData.idp_sso_url || hasPlaceholder(formData.idp_sso_url)) {
+                toast("Please enter a valid IdP SSO URL (no placeholders)", "error");
+                return;
+            }
+            if (!formData.idp_certificate) {
+                toast("Please provide the X.509 Certificate", "error");
+                return;
+            }
+        } else {
+            if (!formData.oidc_issuer_url || hasPlaceholder(formData.oidc_issuer_url)) {
+                toast("Please enter a valid Issuer URL (no placeholders)", "error");
+                return;
+            }
+            if (!formData.oidc_client_id || hasPlaceholder(formData.oidc_client_id)) {
+                toast("Please enter a valid Client ID (no placeholders)", "error");
+                return;
+            }
+            if (!formData.oidc_client_secret) {
+                toast("Please enter the Client Secret", "error");
+                return;
+            }
+        }
+
         setLoading(true);
         try {
             // Build attribute mapping from form fields (only include non-empty values)
@@ -1063,7 +1075,7 @@ const CreateSSOScreen = ({ onCreate }: CreateSSOScreenProps) => {
     };
 
     return (
-        <form onSubmit={handleSubmit}>
+        <form onSubmit={handleSubmit} autoComplete="off">
             {/* Template Selection - Accordion behavior */}
             {selectedTemplate ? (
                 <div style={{
@@ -1362,6 +1374,9 @@ const CreateSSOScreen = ({ onCreate }: CreateSSOScreenProps) => {
                                             onChange={(e) => setFormData({ ...formData, oidc_client_id: e.target.value })}
                                             placeholder="your-client-id"
                                             required
+                                            autoComplete="off"
+                                            data-lpignore="true"
+                                            data-form-type="other"
                                         />
                                     </FormGroup>
                                     <FormGroup>
@@ -1372,6 +1387,9 @@ const CreateSSOScreen = ({ onCreate }: CreateSSOScreenProps) => {
                                             onChange={(e) => setFormData({ ...formData, oidc_client_secret: e.target.value })}
                                             placeholder="your-client-secret"
                                             required
+                                            autoComplete="new-password"
+                                            data-lpignore="true"
+                                            data-form-type="other"
                                         />
                                     </FormGroup>
                                     <FormGroup>
@@ -1388,22 +1406,22 @@ const CreateSSOScreen = ({ onCreate }: CreateSSOScreenProps) => {
 
                             {/* JIT Provisioning Toggle */}
                             <FormGroup style={{ gridColumn: "1 / -1" }}>
-                                <label style={{ display: "flex", alignItems: "center", gap: "8px", cursor: "pointer" }}>
-                                    <input
-                                        type="checkbox"
+                                <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between" }}>
+                                    <div>
+                                        <span style={{ fontWeight: 400, color: "var(--color-foreground)", display: "block" }}>Enable JIT Provisioning</span>
+                                        <div style={{ fontSize: "12px", color: "var(--color-muted)", marginTop: "4px" }}>
+                                            When enabled, new users are automatically created on their first SSO login. When disabled, only pre-existing users can sign in via SSO.
+                                        </div>
+                                    </div>
+                                    <Switch
                                         checked={formData.jit_enabled}
-                                        onChange={(e) => setFormData({ ...formData, jit_enabled: e.target.checked })}
-                                        style={{ width: "16px", height: "16px" }}
+                                        onChange={() => setFormData({ ...formData, jit_enabled: !formData.jit_enabled })}
                                     />
-                                    <span style={{ fontWeight: 500, color: "var(--color-foreground)" }}>Enable JIT Provisioning</span>
-                                </label>
-                                <div style={{ fontSize: "12px", color: "var(--color-muted)", marginTop: "4px", marginLeft: "24px" }}>
-                                    When enabled, new users are automatically created on their first SSO login. When disabled, only pre-existing users can sign in via SSO.
                                 </div>
                             </FormGroup>
 
                             {/* Advanced Options - Attribute Mapping */}
-                            <div style={{ gridColumn: "1 / -1", marginTop: "8px" }}>
+                            <div style={{ gridColumn: "1 / -1", marginTop: "8px", marginBottom: "24px" }}>
                                 <div
                                     onClick={() => setShowAdvanced(!showAdvanced)}
                                     style={{
