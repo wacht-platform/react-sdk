@@ -1,12 +1,14 @@
 "use client";
 
-import { useEffect } from "react";
+import { useEffect, useState } from "react";
 import styled from "styled-components";
 import { DefaultStylesProvider } from "../utility/root";
 import { useSSOCallback } from "../../hooks/use-sso-callback";
 import { useDeployment } from "../../hooks/use-deployment";
 import { useNavigation } from "../../hooks/use-navigation";
 import { Button } from "../utility";
+import { PasskeyPrompt } from "./passkey-prompt";
+import { AuthFormImage } from "./auth-image";
 
 const Container = styled.div`
   max-width: 380px;
@@ -124,6 +126,8 @@ export function SSOCallback() {
   const { navigate } = useNavigation();
   const { error, session, processed, signinAttempt, redirectUri, loading } =
     useSSOCallback();
+  const [showPasskeyPrompt, setShowPasskeyPrompt] = useState(false);
+  const [pendingRedirectUrl, setPendingRedirectUrl] = useState<string | null>(null);
 
   const handleRetry = () => {
     window.location.reload();
@@ -134,8 +138,22 @@ export function SSOCallback() {
     navigate(signInUrl);
   };
 
+  const handlePasskeyComplete = () => {
+    setShowPasskeyPrompt(false);
+    if (pendingRedirectUrl) {
+      navigate(pendingRedirectUrl);
+    }
+  };
+
+  const handlePasskeySkip = () => {
+    setShowPasskeyPrompt(false);
+    if (pendingRedirectUrl) {
+      navigate(pendingRedirectUrl);
+    }
+  };
+
   useEffect(() => {
-    if (!processed || loading) return;
+    if (!processed || loading || showPasskeyPrompt) return;
 
     if (signinAttempt && !signinAttempt.completed) {
       const signinUrl = deployment?.ui_settings?.sign_in_page_url;
@@ -174,7 +192,19 @@ export function SSOCallback() {
           );
         }
 
-        navigate(redirectUrl.toString());
+        // Check if we should show passkey registration prompt
+        const passkeySettings = deployment?.auth_settings?.passkey;
+        const shouldPrompt =
+          passkeySettings?.enabled &&
+          passkeySettings?.prompt_registration_on_auth &&
+          !session?.active_signin?.user?.has_passkeys;
+
+        if (shouldPrompt) {
+          setPendingRedirectUrl(redirectUrl.toString());
+          setShowPasskeyPrompt(true);
+        } else {
+          navigate(redirectUrl.toString());
+        }
       }
     }
   }, [
@@ -214,6 +244,17 @@ export function SSOCallback() {
             <Message>Verifying your credentials...</Message>
             <SubMessage>This will only take a moment.</SubMessage>
           </StatusContainer>
+        </Container>
+      </DefaultStylesProvider>
+    );
+  }
+
+  if (showPasskeyPrompt) {
+    return (
+      <DefaultStylesProvider>
+        <Container>
+          <AuthFormImage />
+          <PasskeyPrompt onComplete={handlePasskeyComplete} onSkip={handlePasskeySkip} />
         </Container>
       </DefaultStylesProvider>
     );

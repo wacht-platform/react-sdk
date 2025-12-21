@@ -52,6 +52,12 @@ export interface AuthField {
   required: boolean;
 }
 
+export interface PasskeySettings {
+  enabled: boolean;
+  prompt_registration_on_auth: boolean;
+  allow_autofill: boolean;
+}
+
 export type SecondFactor =
   | "none"
   | "phone_otp"
@@ -87,7 +93,7 @@ export interface AuthSettings {
   web3_wallet: AuthField;
   password_policy: AuthField;
   magic_link: AuthField;
-  passkey: AuthField;
+  passkey: PasskeySettings;
   auth_factors_enabled: AuthFactorsEnabled;
   verification_policy: VerificationPolicy;
   second_factor_policy: SecondFactorPolicy;

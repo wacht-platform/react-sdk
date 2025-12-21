@@ -67,6 +67,7 @@ export interface CurrentUser {
   backup_codes_generated?: boolean;
   backup_codes?: string[];
   has_password: boolean;
+  has_passkeys: boolean;
   public_metadata: Record<string, unknown>;
   segments: Segment[];
 }

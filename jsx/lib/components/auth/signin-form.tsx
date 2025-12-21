@@ -12,6 +12,7 @@ import { ForgotPassword } from "./forgot-password";
 import { OtherSignInOptions } from "./other-signin-options";
 import { TwoFactorVerification } from "./two-factor-verification";
 import { ProfileCompletion } from "./profile-completion";
+import { PasskeyPrompt } from "./passkey-prompt";
 import {
   useSignInContext,
   SignInProvider,
@@ -252,6 +253,8 @@ function SignInFormContent() {
   const [countryCode, setCountryCode] = useState<string | undefined>("US");
   const [isRedirecting, setIsRedirecting] = useState(false);
   const [ssoError, setSsoError] = useState<string | null>(null);
+  const [showPasskeyPrompt, setShowPasskeyPrompt] = useState(false);
+  const [pendingRedirectUri, setPendingRedirectUri] = useState<string | null>(null);
 
   // Check for SSO error params in URL (e.g., from JIT provisioning disabled)
   useEffect(() => {
@@ -276,9 +279,9 @@ function SignInFormContent() {
       !sessionLoading &&
       session?.active_signin &&
       !isMultiSessionEnabled &&
-      !isRedirecting
+      !isRedirecting &&
+      !showPasskeyPrompt
     ) {
-      setIsRedirecting(true);
       let redirectUri = new URLSearchParams(window.location.search).get(
         "redirect_uri",
       );
@@ -292,7 +295,17 @@ function SignInFormContent() {
         redirectUri = `https://${deployment.frontend_host}`;
       }
 
-      if (redirectUri) {
+      const passkeySettings = deployment?.auth_settings?.passkey;
+      const shouldPrompt =
+        passkeySettings?.enabled &&
+        passkeySettings?.prompt_registration_on_auth &&
+        !session.active_signin?.user?.has_passkeys;
+
+      if (shouldPrompt) {
+        setPendingRedirectUri(redirectUri);
+        setShowPasskeyPrompt(true);
+      } else if (redirectUri) {
+        setIsRedirecting(true);
         navigate(redirectUri);
       }
     }
@@ -700,6 +713,33 @@ function SignInFormContent() {
           setOtpSent(false);
         }}
       />
+    );
+  }
+
+  if (showPasskeyPrompt) {
+    const handlePasskeyComplete = () => {
+      setShowPasskeyPrompt(false);
+      if (pendingRedirectUri) {
+        setIsRedirecting(true);
+        navigate(pendingRedirectUri);
+      }
+    };
+
+    const handlePasskeySkip = () => {
+      setShowPasskeyPrompt(false);
+      if (pendingRedirectUri) {
+        setIsRedirecting(true);
+        navigate(pendingRedirectUri);
+      }
+    };
+
+    return (
+      <DefaultStylesProvider>
+        <Container>
+          <AuthFormImage />
+          <PasskeyPrompt onComplete={handlePasskeyComplete} onSkip={handlePasskeySkip} />
+        </Container>
+      </DefaultStylesProvider>
     );
   }
 

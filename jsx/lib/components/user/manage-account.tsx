@@ -1,4 +1,4 @@
-import { useCallback, useState, useRef } from "react";
+import { useCallback, useState, useRef, useEffect } from "react";
 import styled, { keyframes } from "styled-components";
 import { QRCodeSVG } from "qrcode.react";
 
@@ -1360,6 +1360,9 @@ const SecurityManagementSection = () => {
     generateBackupCodes,
     regenerateBackupCodes,
     updateProfile,
+    getPasskeys,
+    registerPasskey,
+    deletePasskey,
   } = useUser();
   const { toast } = useScreenContext();
 
@@ -1390,6 +1393,12 @@ const SecurityManagementSection = () => {
   const passwordButtonRef = useRef<HTMLButtonElement>(null);
   const removePasswordButtonRef = useRef<HTMLButtonElement>(null);
   const backupCodesButtonRef = useRef<HTMLButtonElement>(null);
+
+  // Passkey state
+  const [passkeys, setPasskeys] = useState<any[]>([]);
+  const [isLoadingPasskeys, setIsLoadingPasskeys] = useState(false);
+  const [isRegisteringPasskey, setIsRegisteringPasskey] = useState(false);
+
   const [setupStep, setSetupStep] = useState<
     "table" | "qr" | "verify" | "backup" | "success"
   >("table");
@@ -1553,6 +1562,48 @@ const SecurityManagementSection = () => {
     toast("Backup codes downloaded", "info");
   };
 
+  // Passkey handlers
+  const loadPasskeys = async () => {
+    if (!deployment?.auth_settings?.passkey?.enabled) return;
+    try {
+      setIsLoadingPasskeys(true);
+      const result = await getPasskeys();
+      setPasskeys(result.data || []);
+    } catch (error) {
+      console.error("Failed to load passkeys:", error);
+    } finally {
+      setIsLoadingPasskeys(false);
+    }
+  };
+
+  const handleRegisterPasskey = async () => {
+    try {
+      setIsRegisteringPasskey(true);
+      await registerPasskey();
+      await loadPasskeys();
+      toast("Passkey registered successfully!", "info");
+    } catch (error: any) {
+      toast(error.message || "Failed to register passkey", "error");
+    } finally {
+      setIsRegisteringPasskey(false);
+    }
+  };
+
+  const handleDeletePasskey = async (id: string) => {
+    try {
+      await deletePasskey(id);
+      await loadPasskeys();
+      toast("Passkey removed", "info");
+    } catch (error: any) {
+      toast(error.message || "Failed to remove passkey", "error");
+    }
+  };
+
+  // Load passkeys on mount
+  useEffect(() => {
+    loadPasskeys();
+  }, [deployment?.auth_settings?.passkey?.enabled]);
+
   // Create security items for table display
   const securityItems = [];
 
@@ -1563,6 +1614,16 @@ const SecurityManagementSection = () => {
       description: "Secure your account with a strong password",
       status: user?.has_password ? "Enabled" : "Disabled",
       actions: user?.has_password ? ["change"] : ["setup"],
+    });
+  }
+
+  if (deployment?.auth_settings?.passkey?.enabled) {
+    securityItems.push({
+      id: "passkey",
+      name: "Passkeys",
+      description: "Sign in faster with fingerprint, face, or screen lock",
+      status: passkeys.length > 0 ? `${passkeys.length} registered` : "None",
+      actions: passkeys.length > 0 ? ["manage", "add"] : ["add"],
     });
   }
 
@@ -1595,6 +1656,7 @@ const SecurityManagementSection = () => {
       actions: ["toggle"],
     });
   }
+
 
   if (setupStep !== "table") {
     return (
@@ -2324,6 +2386,67 @@ const SecurityManagementSection = () => {
                           );
                         }}
                       />
+                    )}
+
+                    {item.id === "passkey" && (
+                      <div style={{ display: "flex", gap: "8px", alignItems: "center" }}>
+                        {isLoadingPasskeys ? (
+                          <Spinner />
+                        ) : (
+                          <>
+                            {passkeys.length > 0 && (
+                              <Dropdown>
+                                <DropdownTrigger>
+                                  <Button
+                                    style={{
+                                      padding: "6px 12px",
+                                      fontSize: "12px",
+                                      background: "var(--color-background)",
+                                      border: "1px solid var(--color-border)",
+                                      borderRadius: "var(--radius-md)",
+                                      fontWeight: "400",
+                                    }}
+                                  >
+                                    Manage
+                                  </Button>
+                                </DropdownTrigger>
+                                <DropdownItems>
+                                  {passkeys.map((passkey: any) => (
+                                    <DropdownItem
+                                      key={passkey.id}
+                                      onClick={() => {
+                                        if (confirm(`Remove passkey "${passkey.name || 'Unnamed'}"?`)) {
+                                          handleDeletePasskey(passkey.id);
+                                        }
+                                      }}
+                                    >
+                                      <div style={{ display: "flex", justifyContent: "space-between", width: "100%", alignItems: "center" }}>
+                                        <span>{passkey.name || "Unnamed Passkey"}</span>
+                                        <X size={14} style={{ color: "var(--color-error)" }} />
+                                      </div>
+                                    </DropdownItem>
+                                  ))}
+                                </DropdownItems>
+                              </Dropdown>
+                            )}
+                            <Button
+                              onClick={handleRegisterPasskey}
+                              disabled={isRegisteringPasskey}
+                              style={{
+                                padding: "6px 12px",
+                                fontSize: "12px",
+                                background: "var(--color-primary)",
+                                color: "white",
+                                border: "1px solid var(--color-primary)",
+                                borderRadius: "var(--radius-md)",
+                                fontWeight: "400",
+                              }}
+                            >
+                              {isRegisteringPasskey ? "Adding..." : "Add Passkey"}
+                            </Button>
+                          </>
+                        )}
+                      </div>
                     )}
                   </div>
                 </div>
