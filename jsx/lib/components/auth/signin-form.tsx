@@ -215,7 +215,7 @@ export function SignInForm() {
 function SignInFormContent() {
   const { deployment } = useDeployment();
   const { navigate } = useNavigation();
-  const { session, loading: sessionLoading } = useSession();
+  const { session, loading: sessionLoading, refetch: refetchSession } = useSession();
   const isMultiSessionEnabled =
     deployment?.auth_settings?.multi_session_support?.enabled ?? false;
 
@@ -543,7 +543,7 @@ function SignInFormContent() {
     try {
       const result = await passkeySignIn.create();
       if ("data" in result && result.data) {
-        // Passkey login successful, session should be updated
+        await refetchSession();
         setIsRedirecting(true);
       }
     } catch (err) {
