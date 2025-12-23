@@ -19,6 +19,7 @@ import {
   Shield,
   Activity,
   X,
+  ChevronDown,
 } from "lucide-react";
 
 // Local interface to match the actual API response
@@ -1398,6 +1399,7 @@ const SecurityManagementSection = () => {
   const [passkeys, setPasskeys] = useState<any[]>([]);
   const [isLoadingPasskeys, setIsLoadingPasskeys] = useState(false);
   const [isRegisteringPasskey, setIsRegisteringPasskey] = useState(false);
+  const [isPasskeyExpanded, setIsPasskeyExpanded] = useState(false);
 
   const [setupStep, setSetupStep] = useState<
     "table" | "qr" | "verify" | "backup" | "success"
@@ -2390,67 +2392,136 @@ const SecurityManagementSection = () => {
 
                     {item.id === "passkey" && (
                       <div style={{ display: "flex", gap: "8px", alignItems: "center" }}>
-                        {isLoadingPasskeys ? (
-                          <Spinner />
-                        ) : (
-                          <>
-                            {passkeys.length > 0 && (
-                              <Dropdown>
-                                <DropdownTrigger>
-                                  <Button
-                                    style={{
-                                      padding: "6px 12px",
-                                      fontSize: "12px",
-                                      background: "var(--color-background)",
-                                      border: "1px solid var(--color-border)",
-                                      borderRadius: "var(--radius-md)",
-                                      fontWeight: "400",
-                                    }}
-                                  >
-                                    Manage
-                                  </Button>
-                                </DropdownTrigger>
-                                <DropdownItems>
-                                  {passkeys.map((passkey: any) => (
-                                    <DropdownItem
-                                      key={passkey.id}
-                                      onClick={() => {
-                                        if (confirm(`Remove passkey "${passkey.name || 'Unnamed'}"?`)) {
-                                          handleDeletePasskey(passkey.id);
-                                        }
-                                      }}
-                                    >
-                                      <div style={{ display: "flex", justifyContent: "space-between", width: "100%", alignItems: "center" }}>
-                                        <span>{passkey.name || "Unnamed Passkey"}</span>
-                                        <X size={14} style={{ color: "var(--color-error)" }} />
-                                      </div>
-                                    </DropdownItem>
-                                  ))}
-                                </DropdownItems>
-                              </Dropdown>
-                            )}
-                            <Button
-                              onClick={handleRegisterPasskey}
-                              disabled={isRegisteringPasskey}
-                              style={{
-                                padding: "6px 12px",
-                                fontSize: "12px",
-                                background: "var(--color-primary)",
-                                color: "white",
-                                border: "1px solid var(--color-primary)",
-                                borderRadius: "var(--radius-md)",
-                                fontWeight: "400",
-                              }}
-                            >
-                              {isRegisteringPasskey ? "Adding..." : "Add Passkey"}
-                            </Button>
-                          </>
-                        )}
+                        <Button
+                          onClick={() => setIsPasskeyExpanded(!isPasskeyExpanded)}
+                          style={{
+                            padding: "6px 12px",
+                            fontSize: "12px",
+                            background: "var(--color-background)",
+                            border: "1px solid var(--color-border)",
+                            borderRadius: "var(--radius-md)",
+                            fontWeight: "400",
+                            cursor: "pointer",
+                            display: "flex",
+                            alignItems: "center",
+                            gap: "6px",
+                          }}
+                        >
+                          {isPasskeyExpanded ? "Hide" : "Manage"} ({passkeys.length})
+                          <ChevronDown
+                            size={14}
+                            style={{
+                              transform: isPasskeyExpanded ? "rotate(180deg)" : "rotate(0deg)",
+                              transition: "transform 0.2s ease",
+                            }}
+                          />
+                        </Button>
+                        <Button
+                          onClick={handleRegisterPasskey}
+                          disabled={isRegisteringPasskey}
+                          style={{
+                            padding: "6px 12px",
+                            fontSize: "12px",
+                            background: "var(--color-primary)",
+                            color: "white",
+                            border: "1px solid var(--color-primary)",
+                            borderRadius: "var(--radius-md)",
+                            fontWeight: "400",
+                            cursor: isRegisteringPasskey ? "not-allowed" : "pointer",
+                            opacity: isRegisteringPasskey ? 0.7 : 1,
+                          }}
+                        >
+                          {isRegisteringPasskey ? "Registering..." : "Add"}
+                        </Button>
                       </div>
                     )}
                   </div>
                 </div>
               </div>
+
+              {/* Passkey Accordion Content */}
+              {item.id === "passkey" && isPasskeyExpanded && (
+                <div
+                  style={{
+                    padding: "12px 0",
+                    borderTop: "1px solid var(--color-border)",
+                    marginTop: "8px",
+                  }}
+                >
+                  {isLoadingPasskeys ? (
+                    <div style={{ display: "flex", justifyContent: "center", padding: "16px" }}>
+                      <Spinner />
+                    </div>
+                  ) : passkeys.length === 0 ? (
+                    <div
+                      style={{
+                        textAlign: "center",
+                        padding: "16px",
+                        color: "var(--color-secondary-text)",
+                        fontSize: "13px",
+                      }}
+                    >
+                      No passkeys registered yet
+                    </div>
+                  ) : (
+                    <div style={{ display: "flex", flexDirection: "column", gap: "8px" }}>
+                      {passkeys.map((passkey: any) => (
+                        <div
+                          key={passkey.id}
+                          style={{
+                            display: "flex",
+                            justifyContent: "space-between",
+                            alignItems: "center",
+                            padding: "10px 12px",
+                            background: "var(--color-input-background)",
+                            borderRadius: "var(--radius-md)",
+                            border: "1px solid var(--color-border)",
+                          }}
+                        >
+                          <div style={{ display: "flex", flexDirection: "column", gap: "2px" }}>
+                            <span
+                              style={{
+                                fontWeight: 500,
+                                fontSize: "13px",
+                                color: "var(--color-foreground)",
+                              }}
+                            >
+                              {passkey.name || "Unnamed Passkey"}
+                            </span>
+                            <span
+                              style={{
+                                fontSize: "11px",
+                                color: "var(--color-secondary-text)",
+                              }}
+                            >
+                              {passkey.device_type === "platform" ? "This device" : "Security key"}
+                              {passkey.last_used_at && ` • Last used ${new Date(passkey.last_used_at).toLocaleDateString()}`}
+                            </span>
+                          </div>
+                          <Button
+                            onClick={() => {
+                              if (confirm(`Remove "${passkey.name || "Unnamed Passkey"}"?`)) {
+                                handleDeletePasskey(passkey.id);
+                              }
+                            }}
+                            style={{
+                              padding: "4px 10px",
+                              fontSize: "12px",
+                              background: "transparent",
+                              border: "1px solid var(--color-error)",
+                              borderRadius: "var(--radius-md)",
+                              color: "var(--color-error)",
+                              cursor: "pointer",
+                            }}
+                          >
+                            Remove
+                          </Button>
+                        </div>
+                      ))}
+                    </div>
+                  )}
+                </div>
+              )}
 
               {index < securityItems.length - 1 && (
                 <div
