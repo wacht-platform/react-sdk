@@ -1624,7 +1624,7 @@ const SecurityManagementSection = () => {
       id: "passkey",
       name: "Passkeys",
       description: "Sign in faster with fingerprint, face, or screen lock",
-      status: passkeys.length > 0 ? `${passkeys.length} registered` : "None",
+      status: passkeys.length > 0 ? `${passkeys.length} registered` : "",
       actions: passkeys.length > 0 ? ["manage", "add"] : ["add"],
     });
   }
@@ -2154,24 +2154,27 @@ const SecurityManagementSection = () => {
                 <div
                   style={{ display: "flex", alignItems: "center", gap: "12px" }}
                 >
-                  <span
-                    style={{
-                      padding: "4px 12px",
-                      borderRadius: "16px",
-                      fontSize: "12px",
-                      fontWeight: 400,
-                      background:
-                        item.status === "Enabled" || item.status === "Generated"
-                          ? "var(--color-success-background)"
-                          : "var(--color-background-hover)",
-                      color:
-                        item.status === "Enabled" || item.status === "Generated"
-                          ? "var(--color-success)"
-                          : "var(--color-secondary-text)",
-                    }}
-                  >
-                    {item.status}
-                  </span>
+                  {/* Status badge - hide for passkeys since they have custom buttons */}
+                  {item.status && item.id !== "passkey" && (
+                    <span
+                      style={{
+                        padding: "4px 12px",
+                        borderRadius: "16px",
+                        fontSize: "12px",
+                        fontWeight: 400,
+                        background:
+                          item.status === "Enabled" || item.status === "Generated"
+                            ? "var(--color-success-background)"
+                            : "var(--color-background-hover)",
+                        color:
+                          item.status === "Enabled" || item.status === "Generated"
+                            ? "var(--color-success)"
+                            : "var(--color-secondary-text)",
+                      }}
+                    >
+                      {item.status}
+                    </span>
+                  )}
 
                   <div style={{ position: "relative" }}>
                     {item.id === "password" && (
@@ -2405,6 +2408,8 @@ const SecurityManagementSection = () => {
                             display: "flex",
                             alignItems: "center",
                             gap: "6px",
+                            whiteSpace: "nowrap",
+                            flexShrink: 0,
                           }}
                         >
                           {isPasskeyExpanded ? "Hide" : "Manage"} ({passkeys.length})
@@ -2429,6 +2434,7 @@ const SecurityManagementSection = () => {
                             fontWeight: "400",
                             cursor: isRegisteringPasskey ? "not-allowed" : "pointer",
                             opacity: isRegisteringPasskey ? 0.7 : 1,
+                            whiteSpace: "nowrap",
                           }}
                         >
                           {isRegisteringPasskey ? "Registering..." : "Add"}
