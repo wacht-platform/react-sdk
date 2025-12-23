@@ -46,6 +46,7 @@ import { SetupTOTPPopover } from "@/components/user/setup-totp-popover";
 import { ChangePasswordPopover } from "@/components/user/change-password-popover";
 import { RemovePasswordPopover } from "@/components/user/remove-password-popover";
 import { BackupCodesPopover } from "@/components/user/backup-codes-popover";
+import { AddPasskeyPopover } from "@/components/user/add-passkey-popover";
 import {
   Dropdown,
   DropdownItem,
@@ -1400,6 +1401,8 @@ const SecurityManagementSection = () => {
   const [isLoadingPasskeys, setIsLoadingPasskeys] = useState(false);
   const [isRegisteringPasskey, setIsRegisteringPasskey] = useState(false);
   const [isPasskeyExpanded, setIsPasskeyExpanded] = useState(false);
+  const [showAddPasskeyPopover, setShowAddPasskeyPopover] = useState(false);
+  const addPasskeyButtonRef = useRef<HTMLButtonElement>(null);
 
   const [setupStep, setSetupStep] = useState<
     "table" | "qr" | "verify" | "backup" | "success"
@@ -1578,14 +1581,15 @@ const SecurityManagementSection = () => {
     }
   };
 
-  const handleRegisterPasskey = async () => {
+  const handleRegisterPasskey = async (name: string) => {
     try {
       setIsRegisteringPasskey(true);
-      await registerPasskey();
+      await registerPasskey(name || undefined);
       await loadPasskeys();
       toast("Passkey registered successfully!", "info");
     } catch (error: any) {
       toast(error.message || "Failed to register passkey", "error");
+      throw error; // Re-throw so popover can show error
     } finally {
       setIsRegisteringPasskey(false);
     }
@@ -2410,6 +2414,8 @@ const SecurityManagementSection = () => {
                             gap: "6px",
                             whiteSpace: "nowrap",
                             flexShrink: 0,
+                            width: "auto",
+                            height: "auto",
                           }}
                         >
                           {isPasskeyExpanded ? "Hide" : "Manage"} ({passkeys.length})
@@ -2421,24 +2427,37 @@ const SecurityManagementSection = () => {
                             }}
                           />
                         </Button>
-                        <Button
-                          onClick={handleRegisterPasskey}
-                          disabled={isRegisteringPasskey}
-                          style={{
-                            padding: "6px 12px",
-                            fontSize: "12px",
-                            background: "var(--color-primary)",
-                            color: "white",
-                            border: "1px solid var(--color-primary)",
-                            borderRadius: "var(--radius-md)",
-                            fontWeight: "400",
-                            cursor: isRegisteringPasskey ? "not-allowed" : "pointer",
-                            opacity: isRegisteringPasskey ? 0.7 : 1,
-                            whiteSpace: "nowrap",
-                          }}
-                        >
-                          {isRegisteringPasskey ? "Registering..." : "Add"}
-                        </Button>
+                        <div style={{ position: "relative" }}>
+                          <Button
+                            ref={addPasskeyButtonRef}
+                            onClick={() => setShowAddPasskeyPopover(true)}
+                            disabled={isRegisteringPasskey}
+                            style={{
+                              padding: "6px 12px",
+                              fontSize: "12px",
+                              background: "var(--color-primary)",
+                              color: "white",
+                              border: "1px solid var(--color-primary)",
+                              borderRadius: "var(--radius-md)",
+                              fontWeight: "400",
+                              cursor: isRegisteringPasskey ? "not-allowed" : "pointer",
+                              opacity: isRegisteringPasskey ? 0.7 : 1,
+                              whiteSpace: "nowrap",
+                              width: "auto",
+                              height: "auto",
+                            }}
+                          >
+                            {isRegisteringPasskey ? "Registering..." : "Add"}
+                          </Button>
+
+                          {showAddPasskeyPopover && (
+                            <AddPasskeyPopover
+                              triggerRef={addPasskeyButtonRef}
+                              onClose={() => setShowAddPasskeyPopover(false)}
+                              onAddPasskey={handleRegisterPasskey}
+                            />
+                          )}
+                        </div>
                       </div>
                     )}
                   </div>
@@ -2518,6 +2537,8 @@ const SecurityManagementSection = () => {
                               borderRadius: "var(--radius-md)",
                               color: "var(--color-error)",
                               cursor: "pointer",
+                              flexShrink: 0,
+                              width: "auto",
                             }}
                           >
                             Remove
