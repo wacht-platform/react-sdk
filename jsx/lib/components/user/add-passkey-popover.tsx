@@ -1,7 +1,6 @@
 import { useState, useRef, useEffect } from "react";
 import styled from "styled-components";
 import { Input } from "@/components/utility/input";
-import { Label } from "../utility/form";
 
 const PopoverContainer = styled.div`
   position: fixed;
@@ -195,18 +194,8 @@ export const AddPasskeyPopover = ({
             onClick={(e) => e.stopPropagation()}
         >
             <Title>Add Passkey</Title>
-            <div
-                style={{
-                    fontSize: "14px",
-                    color: "var(--color-muted)",
-                    marginBottom: "16px",
-                }}
-            >
-                Give your passkey a name to identify it later.
-            </div>
 
             <StyledFormGroup>
-                <Label>Name (optional)</Label>
                 <Input
                     type="text"
                     placeholder="e.g., MacBook Pro, iPhone"

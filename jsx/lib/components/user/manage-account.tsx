@@ -1402,6 +1402,7 @@ const SecurityManagementSection = () => {
   const [isRegisteringPasskey, setIsRegisteringPasskey] = useState(false);
   const [isPasskeyExpanded, setIsPasskeyExpanded] = useState(false);
   const [showAddPasskeyPopover, setShowAddPasskeyPopover] = useState(false);
+  const [passkeyToDelete, setPasskeyToDelete] = useState<string | null>(null);
   const addPasskeyButtonRef = useRef<HTMLButtonElement>(null);
 
   const [setupStep, setSetupStep] = useState<
@@ -2523,26 +2524,35 @@ const SecurityManagementSection = () => {
                               {passkey.last_used_at && ` • Last used ${new Date(passkey.last_used_at).toLocaleDateString()}`}
                             </span>
                           </div>
-                          <Button
-                            onClick={() => {
-                              if (confirm(`Remove "${passkey.name || "Unnamed Passkey"}"?`)) {
-                                handleDeletePasskey(passkey.id);
-                              }
-                            }}
-                            style={{
-                              padding: "4px 10px",
-                              fontSize: "12px",
-                              background: "transparent",
-                              border: "1px solid var(--color-error)",
-                              borderRadius: "var(--radius-md)",
-                              color: "var(--color-error)",
-                              cursor: "pointer",
-                              flexShrink: 0,
-                              width: "auto",
-                            }}
-                          >
-                            Remove
-                          </Button>
+                          <div style={{ position: "relative" }}>
+                            <Button
+                              onClick={() => setPasskeyToDelete(passkey.id)}
+                              style={{
+                                padding: "4px 10px",
+                                fontSize: "12px",
+                                background: "transparent",
+                                border: "1px solid var(--color-error)",
+                                borderRadius: "var(--radius-md)",
+                                color: "var(--color-error)",
+                                cursor: "pointer",
+                                flexShrink: 0,
+                                width: "auto",
+                              }}
+                            >
+                              Remove
+                            </Button>
+
+                            {passkeyToDelete === passkey.id && (
+                              <ConfirmationPopover
+                                title={`Remove "${passkey.name || "Unnamed Passkey"}"?`}
+                                onConfirm={() => {
+                                  handleDeletePasskey(passkey.id);
+                                  setPasskeyToDelete(null);
+                                }}
+                                onCancel={() => setPasskeyToDelete(null)}
+                              />
+                            )}
+                          </div>
                         </div>
                       ))}
                     </div>

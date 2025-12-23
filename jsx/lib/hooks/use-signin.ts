@@ -390,33 +390,46 @@ function builderPasskey(client: Client): SignInPasskey {
     };
 
     // Prompt browser for passkey
-    const credential = await navigator.credentials.get({
-      publicKey: requestOptions,
-    }) as PublicKeyCredential;
+    let credential: PublicKeyCredential;
+    try {
+      const result = await navigator.credentials.get({
+        publicKey: requestOptions,
+      }) as PublicKeyCredential;
 
-    if (!credential) {
-      throw new Error("Failed to get credential");
+      if (!result) {
+        throw new Error("Failed to get credential");
+      }
+      credential = result;
+    } catch (error: any) {
+      // Handle common WebAuthn errors with friendlier messages
+      if (error.name === "NotAllowedError") {
+        throw new Error("No passkey found on this device. Please try a different sign-in method.");
+      }
+      if (error.name === "AbortError") {
+        throw new Error("Passkey sign-in was cancelled.");
+      }
+      throw error;
     }
 
     // Build assertion data
     const assertionResponse = credential.response as AuthenticatorAssertionResponse;
-    const assertionData = {
-      id: credential.id,
-      rawId: bufferToBase64url(credential.rawId),
-      type: credential.type,
-      response: {
-        clientDataJSON: bufferToBase64url(assertionResponse.clientDataJSON),
-        authenticatorData: bufferToBase64url(assertionResponse.authenticatorData),
-        signature: bufferToBase64url(assertionResponse.signature),
-        userHandle: assertionResponse.userHandle ? bufferToBase64url(assertionResponse.userHandle) : null,
-      },
-    };
+
+    // Build form data for finish request
+    const formData = new FormData();
+    formData.append("id", credential.id);
+    formData.append("rawId", bufferToBase64url(credential.rawId));
+    formData.append("type", credential.type);
+    formData.append("clientDataJSON", bufferToBase64url(assertionResponse.clientDataJSON));
+    formData.append("authenticatorData", bufferToBase64url(assertionResponse.authenticatorData));
+    formData.append("signature", bufferToBase64url(assertionResponse.signature));
+    if (assertionResponse.userHandle) {
+      formData.append("userHandle", bufferToBase64url(assertionResponse.userHandle));
+    }
 
     // Finish passkey login
     const finishResponse = await client("/auth/passkey/login/finish", {
       method: "POST",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify(assertionData),
+      body: formData,
     });
     return responseMapper<Session>(finishResponse);
   };
