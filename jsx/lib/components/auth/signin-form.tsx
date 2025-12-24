@@ -544,7 +544,19 @@ function SignInFormContent() {
       const result = await passkeySignIn.create();
       if ("data" in result && result.data) {
         await refetchSession();
+
+        let redirectUri = new URLSearchParams(window.location.search).get("redirect_uri");
+        if (!redirectUri) {
+          redirectUri = deployment?.ui_settings?.after_signin_redirect_url || null;
+        }
+        if (!redirectUri && deployment?.frontend_host) {
+          redirectUri = `https://${deployment.frontend_host}`;
+        }
+
         setIsRedirecting(true);
+        if (redirectUri) {
+          navigate(redirectUri);
+        }
       }
     } catch (err) {
       setErrors({ submit: (err as Error).message || "Passkey sign-in failed" });
@@ -952,10 +964,7 @@ function SignInFormContent() {
 
                 <SubmitButton type="submit" disabled={isSubmitting || loading}>
                   {isSubmitting ? (
-                    <>
-                      <Loader2 size={16} style={{ animation: 'spin 1s linear infinite', marginRight: '8px' }} />
-                      {signInStep === "identifier" ? "Checking..." : "Signing in..."}
-                    </>
+                    <Loader2 size={16} className="submit-spinner" style={{ animation: `${spin} 1s linear infinite` }} />
                   ) : (
                     signInStep === "identifier" ? "Continue" : "Sign in"
                   )}
