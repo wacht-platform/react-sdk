@@ -120,6 +120,10 @@ const SubmitButton = styled(Button)`
   margin-top: var(--space-lg);
 `;
 
+const ButtonSpinner = styled(Loader2)`
+  animation: ${spin} 1s linear infinite;
+`;
+
 const PasskeyButton = styled.button`
   display: flex;
   align-items: center;
@@ -964,7 +968,7 @@ function SignInFormContent() {
 
                 <SubmitButton type="submit" disabled={isSubmitting || loading}>
                   {isSubmitting ? (
-                    <Loader2 size={16} className="submit-spinner" style={{ animation: `${spin} 1s linear infinite` }} />
+                    <ButtonSpinner size={16} />
                   ) : (
                     signInStep === "identifier" ? "Continue" : "Sign in"
                   )}
