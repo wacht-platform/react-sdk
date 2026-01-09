@@ -4,6 +4,7 @@ import { ChevronLeft, MessageCircle, Trash2 } from "lucide-react";
 import { useAgentConversationContext } from "../../context/agent-conversation-provider";
 import { ConversationSession } from "../../hooks/use-conversation-sessions";
 import { DefaultStylesProvider } from "../utility/root";
+import { ConfirmationPopover } from "../utility/confirmation-popover";
 
 interface AgentConversationHistoryProps {
   showBackButton?: boolean;
@@ -154,7 +155,7 @@ const StatusBadge = styled.span<{ $status: string }>`
   font-size: 10px;
   font-weight: 400;
   background: ${props => {
-    switch(props.$status) {
+    switch (props.$status) {
       case 'running': return 'var(--color-success-bg)';
       case 'waiting_for_input': return 'var(--color-warning-bg)';
       case 'failed': return 'var(--color-error-bg)';
@@ -162,7 +163,7 @@ const StatusBadge = styled.span<{ $status: string }>`
     }
   }};
   color: ${props => {
-    switch(props.$status) {
+    switch (props.$status) {
       case 'running': return 'var(--color-success)';
       case 'waiting_for_input': return 'var(--color-warning)';
       case 'failed': return 'var(--color-error)';
@@ -268,6 +269,7 @@ export function AgentConversationHistory({
   showBackButton = false,
 }: AgentConversationHistoryProps) {
   const [searchQuery, setSearchQuery] = useState("");
+  const [sessionToDelete, setSessionToDelete] = useState<string | null>(null);
   const {
     sessions,
     loadingSessions: loading,
@@ -312,14 +314,19 @@ export function AgentConversationHistory({
     return groups;
   };
 
-  const handleDeleteSession = async (e: React.MouseEvent, sessionId: string) => {
+  const handleDeleteSession = (e: React.MouseEvent, sessionId: string) => {
     e.stopPropagation();
-    if (confirm("Are you sure you want to delete this conversation?")) {
-      try {
-        await deleteSession(sessionId);
-      } catch (error) {
-        console.error("Failed to delete session:", error);
-      }
+    setSessionToDelete(sessionId);
+  };
+
+  const confirmDelete = async () => {
+    if (!sessionToDelete) return;
+
+    try {
+      await deleteSession(sessionToDelete);
+      setSessionToDelete(null);
+    } catch (error) {
+      console.error("Failed to delete session:", error);
     }
   };
 
@@ -333,82 +340,91 @@ export function AgentConversationHistory({
   return (
     <DefaultStylesProvider style={{ height: "100%", width: "100%" }}>
       <Container>
-      <Header>
-        {showBackButton && (
-          <BackButton onClick={() => setShowHistory(false)}>
-            <ChevronLeft size={20} />
-          </BackButton>
-        )}
-        <Title>Conversation History</Title>
-      </Header>
+        <Header>
+          {showBackButton && (
+            <BackButton onClick={() => setShowHistory(false)}>
+              <ChevronLeft size={20} />
+            </BackButton>
+          )}
+          <Title>Conversation History</Title>
+        </Header>
 
-      <SearchContainer>
-        <SearchInput
-          type="text"
-          placeholder="Search conversations..."
-          value={searchQuery}
-          onChange={(e) => setSearchQuery(e.target.value)}
-        />
-      </SearchContainer>
+        <SearchContainer>
+          <SearchInput
+            type="text"
+            placeholder="Search conversations..."
+            value={searchQuery}
+            onChange={(e) => setSearchQuery(e.target.value)}
+          />
+        </SearchContainer>
 
-      <SessionsList>
-        {loading ? (
-          <LoadingState>
-            {[1, 2, 3, 4, 5].map((i) => (
-              <SkeletonCard key={i}>
-                <SkeletonIcon />
-                <SkeletonContent>
-                  <SkeletonTitle />
-                  <SkeletonMeta />
-                </SkeletonContent>
-              </SkeletonCard>
-            ))}
-          </LoadingState>
-        ) : filteredSessions.length === 0 ? (
-          <EmptyState>
-            <MessageCircle />
-            <div>No conversations found</div>
-            {searchQuery && (
-              <div style={{ fontSize: 'var(--font-xs)', marginTop: 'var(--space-sm)' }}>
-                Try a different search term
-              </div>
-            )}
-          </EmptyState>
-        ) : (
-          Object.entries(sessionGroups).map(([group, groupSessions]) => (
-            <SessionGroup key={group}>
-              <GroupTitle>{group}</GroupTitle>
-              {groupSessions.map(session => (
-                <SessionItem
-                  key={session.id}
-                  onClick={() => selectSession(session)}
-                >
-                  <SessionIcon>
-                    <MessageCircle size={18} />
-                  </SessionIcon>
-                  <SessionContent>
-                    <SessionTitle>{session.title}</SessionTitle>
-                    <SessionMeta>
-                      <span>{formatTime(session.last_activity_at)}</span>
-                      {session.status !== 'idle' && (
-                        <StatusBadge $status={session.status}>
-                          {session.status.replace('_', ' ')}
-                        </StatusBadge>
-                      )}
-                    </SessionMeta>
-                  </SessionContent>
-                  <DeleteButton
-                    onClick={(e) => handleDeleteSession(e, session.id)}
-                  >
-                    <Trash2 size={16} />
-                  </DeleteButton>
-                </SessionItem>
+        <SessionsList>
+          {loading ? (
+            <LoadingState>
+              {[1, 2, 3, 4, 5].map((i) => (
+                <SkeletonCard key={i}>
+                  <SkeletonIcon />
+                  <SkeletonContent>
+                    <SkeletonTitle />
+                    <SkeletonMeta />
+                  </SkeletonContent>
+                </SkeletonCard>
               ))}
-            </SessionGroup>
-          ))
-        )}
-      </SessionsList>
-    </Container>
+            </LoadingState>
+          ) : filteredSessions.length === 0 ? (
+            <EmptyState>
+              <MessageCircle />
+              <div>No conversations found</div>
+              {searchQuery && (
+                <div style={{ fontSize: 'var(--font-xs)', marginTop: 'var(--space-sm)' }}>
+                  Try a different search term
+                </div>
+              )}
+            </EmptyState>
+          ) : (
+            Object.entries(sessionGroups).map(([group, groupSessions]) => (
+              <SessionGroup key={group}>
+                <GroupTitle>{group}</GroupTitle>
+                {groupSessions.map(session => (
+                  <SessionItem
+                    key={session.id}
+                    onClick={() => selectSession(session)}
+                  >
+                    <SessionIcon>
+                      <MessageCircle size={18} />
+                    </SessionIcon>
+                    <SessionContent>
+                      <SessionTitle>{session.title}</SessionTitle>
+                      <SessionMeta>
+                        <span>{formatTime(session.last_activity_at)}</span>
+                        {session.status !== 'idle' && (
+                          <StatusBadge $status={session.status}>
+                            {session.status.replace('_', ' ')}
+                          </StatusBadge>
+                        )}
+                      </SessionMeta>
+                    </SessionContent>
+                    <div style={{ position: "relative" }} onClick={(e) => e.stopPropagation()}>
+                      <DeleteButton
+                        onClick={(e) => handleDeleteSession(e, session.id)}
+                      >
+                        <Trash2 size={16} />
+                      </DeleteButton>
+                      {sessionToDelete === session.id && (
+                        <ConfirmationPopover
+                          title="Delete this conversation?"
+                          onConfirm={confirmDelete}
+                          onCancel={() => setSessionToDelete(null)}
+                        />
+                      )}
+                    </div>
+                  </SessionItem>
+                ))}
+              </SessionGroup>
+            ))
+          )}
+        </SessionsList>
+      </Container>
     </DefaultStylesProvider>
   );
 }

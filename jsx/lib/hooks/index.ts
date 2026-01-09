@@ -20,3 +20,5 @@ export { useConversationSessions } from "./use-conversation-sessions";
 export type { ConversationSession, CreateSessionRequest, ListSessionsOptions, ListSessionsResponse } from "./use-conversation-sessions";
 export { useInvitation } from "./use-invitation";
 export type { AcceptInvitationResponse } from "./use-invitation";
+export { useAgentIntegrations } from "./use-agent-integrations";
+export type { AgentIntegration } from "@wacht/types";

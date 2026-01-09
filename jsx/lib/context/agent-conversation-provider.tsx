@@ -1,5 +1,6 @@
 import { createContext, useContext, useState, useCallback, useEffect, ReactNode } from 'react';
 import { ConversationSession, useConversationSessions } from '../hooks/use-conversation-sessions';
+import { useDeployment } from '../hooks/use-deployment';
 
 interface PlatformAdapter {
   onPlatformEvent?: (eventName: string, eventData: unknown) => void;
@@ -11,28 +12,20 @@ interface PlatformAdapter {
 }
 
 interface AgentConversationContextValue {
-  // Configuration
   agentName: string;
   token: string;
   platformAdapter?: PlatformAdapter;
-
-  // Session Management
   sessions: ConversationSession[];
   selectedSession: ConversationSession | null;
   loadingSessions: boolean;
   sessionError: Error | null;
-
-  // Actions
   selectSession: (session: ConversationSession | null) => void;
   createSession: (title?: string) => Promise<ConversationSession>;
   deleteSession: (sessionId: string) => Promise<void>;
   refreshSessions: () => Promise<void>;
-
-  // UI State
   showHistory: boolean;
   setShowHistory: (show: boolean) => void;
-
-  // Callbacks
+  getFileUrl: (relativePath: string) => string;
   onSessionCreated?: (session: ConversationSession) => void;
   onSessionDeleted?: (sessionId: string) => void;
   onError?: (error: string) => void;
@@ -69,6 +62,7 @@ export function AgentConversationProvider({
   onSessionDeleted,
   onError,
 }: AgentConversationProviderProps) {
+  const { deployment } = useDeployment();
   const [selectedSession, setSelectedSession] = useState<ConversationSession | null>(
     defaultSessionId ? {
       id: defaultSessionId,
@@ -136,29 +130,32 @@ export function AgentConversationProvider({
     }
   }, [deleteSessionApi, selectedSession, onSessionDeleted, onError]);
 
+  const getFileUrl = useCallback((relativePath: string): string => {
+    if (!selectedSession || !deployment?.backend_host) {
+      return relativePath;
+    }
+    if (relativePath.startsWith('/uploads/')) {
+      const filename = relativePath.replace('/uploads/', '');
+      return `${deployment.backend_host}/api/agent/contexts/${selectedSession.id}/files/${filename}?token=${encodeURIComponent(token)}`;
+    }
+    return relativePath;
+  }, [selectedSession, deployment?.backend_host, token]);
+
   const value: AgentConversationContextValue = {
-    // Configuration
     agentName,
     token,
     platformAdapter,
-
-    // Session Management
     sessions,
     selectedSession,
     loadingSessions,
     sessionError,
-
-    // Actions
     selectSession,
     createSession,
     deleteSession,
     refreshSessions,
-
-    // UI State
     showHistory,
     setShowHistory,
-
-    // Callbacks
+    getFileUrl,
     onSessionCreated,
     onSessionDeleted,
     onError,

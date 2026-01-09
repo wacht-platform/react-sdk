@@ -11,6 +11,8 @@ import { CONNECTION_STATES } from "../../constants/ai-agent";
 import { FRONTEND_STATUS } from "../../constants/execution-status";
 import { DefaultStylesProvider } from "../utility/root";
 import { useAgentConversationContext } from "../../context/agent-conversation-provider";
+import { Markdown } from "../utility/markdown";
+import { AgentSettingsButton } from "./agent-settings-panel";
 
 const ChatContainer = styled.div`
   display: flex;
@@ -321,16 +323,16 @@ const LogMessage = styled.div<{
   `}
 
   .log-content {
-    font-size: 11px;
-    color: var(--color-secondary-text);
+    font-size: 12px;
+    color: var(--color-foreground);
+    opacity: 0.8;
     background: transparent;
-    padding: 2px 0 2px 24px;
+    padding: 3px 0 3px 24px;
     line-height: 1.4;
     text-align: left;
     word-wrap: break-word;
     word-break: break-word;
     overflow-wrap: break-word;
-    max-width: calc(100% - 24px);
   }
 `;
 
@@ -347,6 +349,34 @@ const EmptyState = styled.div`
   p {
     margin: 0;
     font-size: 13px;
+    font-size: 13px;
+  }
+`;
+
+const QuickQuestionButton = styled.button`
+  padding: 6px 12px;
+  background: var(--color-surface, var(--color-background));
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-full);
+  font-size: 0.8rem;
+  font-weight: 400;
+  color: var(--color-foreground);
+  cursor: pointer;
+  transition: all 0.2s ease;
+  white-space: nowrap;
+  box-shadow: 0 1px 2px rgba(0, 0, 0, 0.05);
+
+  &:hover {
+    background: var(--color-primary);
+    border-color: var(--color-primary);
+    color: white;
+    transform: translateY(-1px);
+    box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+  }
+
+  &:active {
+    transform: translateY(0);
+    box-shadow: 0 1px 2px rgba(0, 0, 0, 0.05);
   }
 `;
 
@@ -972,6 +1002,7 @@ export function AgentConversation({
     platformAdapter,
     selectedSession,
     selectSession,
+    getFileUrl,
   } = useAgentConversationContext();
 
   const contextId = selectedSession?.id;
@@ -1008,6 +1039,7 @@ export function AgentConversation({
 
   const {
     messages,
+    quickQuestions,
     pendingMessage,
     pendingImages,
     connectionState,
@@ -1068,7 +1100,8 @@ export function AgentConversation({
         setInput("");
         setSelectedOptions([]);
       }
-    } else if (!isExecuting && input.trim()) {
+    } else if (input.trim()) {
+      // Allow sending message even during execution (will interrupt current execution)
       sendMessage(
         input,
         uploadedImages.length > 0 ? uploadedImages : undefined,
@@ -1239,11 +1272,14 @@ export function AgentConversation({
               </AgentDetails>
             </AgentInfo>
           </HeaderLeft>
-          {executionStatus !== FRONTEND_STATUS.IDLE && (
-            <StatusBadge $status={executionStatus}>
-              {executionStatus.replace("_", " ")}
-            </StatusBadge>
-          )}
+          <div style={{ display: "flex", alignItems: "center", gap: "8px" }}>
+            {executionStatus !== FRONTEND_STATUS.IDLE && (
+              <StatusBadge $status={executionStatus}>
+                {executionStatus.replace("_", " ")}
+              </StatusBadge>
+            )}
+            <AgentSettingsButton />
+          </div>
         </ChatHeader>
 
         <MessagesContainer>
@@ -1421,7 +1457,11 @@ export function AgentConversation({
                     $isUser={message.role === "user"}
                   >
                     <Message $isUser={message.role === "user"}>
-                      <div>{message.content}</div>
+                      {message.role === "user" ? (
+                        <div>{message.content}</div>
+                      ) : (
+                        <Markdown>{message.content}</Markdown>
+                      )}
                       {message.images && message.images.length > 0 && (
                         <div
                           style={{
@@ -1432,7 +1472,8 @@ export function AgentConversation({
                           }}
                         >
                           {message.images.map((img, imgIndex) => {
-                            const imageUrl = img.url || `data:${img.mime_type};base64,${img.data}`;
+                            const rawUrl = img.url || `data:${img.mime_type};base64,${img.data}`;
+                            const imageUrl = getFileUrl(rawUrl);
                             return (
                               <MessageImage
                                 key={imgIndex}
@@ -1539,6 +1580,27 @@ export function AgentConversation({
         )}
 
         <InputForm onSubmit={handleSend}>
+          {messages.length === 0 && quickQuestions.length > 0 && (
+            <div style={{
+              display: 'flex',
+              gap: 8,
+              marginBottom: 12,
+              overflowX: 'auto',
+              paddingBottom: 4,
+              scrollbarWidth: 'none',
+              msOverflowStyle: 'none',
+            }}>
+              {quickQuestions.map((q, idx) => (
+                <QuickQuestionButton
+                  key={idx}
+                  onClick={() => sendMessage(q)}
+                  style={{ flexShrink: 0 }}
+                >
+                  {q}
+                </QuickQuestionButton>
+              ))}
+            </div>
+          )}
           <InputContainer>
             <InputWrapper>
               <MessageInput
@@ -1553,7 +1615,6 @@ export function AgentConversation({
                 placeholder={getInputPlaceholder()}
                 disabled={
                   !isConnected ||
-                  (isExecuting && !isWaitingForInput) ||
                   shouldDisableTextInput()
                 }
                 rows={1}

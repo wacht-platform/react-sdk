@@ -1,4 +1,4 @@
-import { useRef, useEffect, useState } from "react";
+import { useRef, useEffect } from "react";
 import styled from "styled-components";
 import { Button } from "./button";
 
@@ -40,20 +40,6 @@ export const ConfirmationPopover = ({
   onCancel,
 }: ConfirmationPopoverProps) => {
   const popoverRef = useRef<HTMLDivElement>(null);
-  const [position, setPosition] = useState({ top: 0, left: 0 });
-
-  useEffect(() => {
-    // Calculate position based on parent element
-    if (popoverRef.current) {
-      const rect = popoverRef.current.parentElement?.getBoundingClientRect();
-      if (rect) {
-        setPosition({
-          top: rect.bottom + 8,
-          left: rect.right - 320, // 320px is the width of popover
-        });
-      }
-    }
-  }, []);
 
   useEffect(() => {
     const handleClickOutside = (event: MouseEvent) => {
@@ -72,19 +58,18 @@ export const ConfirmationPopover = ({
   }, [onCancel]);
 
   return (
-    <PopoverContainer 
+    <PopoverContainer
       ref={popoverRef}
-      style={{ 
-        top: `${position.top}px`, 
-        left: `${position.left}px` 
+      style={{
+        right: "70px",
       }}
     >
       <Title>{title}</Title>
       <ButtonGroup>
         <Button
           onClick={onCancel}
-          style={{ 
-            fontSize: "14px", 
+          style={{
+            fontSize: "14px",
             padding: "6px 16px",
             background: "transparent",
             border: "1px solid var(--color-border)",
@@ -95,8 +80,8 @@ export const ConfirmationPopover = ({
         </Button>
         <Button
           onClick={onConfirm}
-          style={{ 
-            fontSize: "14px", 
+          style={{
+            fontSize: "14px",
             padding: "6px 16px",
             background: "var(--color-error)",
             border: "1px solid var(--color-error)",

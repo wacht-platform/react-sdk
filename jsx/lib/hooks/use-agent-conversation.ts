@@ -65,6 +65,7 @@ export function useAgentConversation({
   const { deployment } = useDeployment();
   const { client } = useClient();
   const [messages, setMessages] = useState<ConversationMessage[]>([]);
+  const [quickQuestions, setQuickQuestions] = useState<string[]>([]);
   const [pendingMessage, setPendingMessage] = useState<string | null>(null);
   const [pendingImages, setPendingImages] = useState<ImageData[] | null>(null);
   const [isConnected, setIsConnected] = useState(false);
@@ -95,7 +96,12 @@ export function useAgentConversation({
             const backendStatus = message.data.execution_status;
             const frontendStatus = mapBackendToFrontendStatus(backendStatus);
             setExecutionStatus(frontendStatus);
+            setExecutionStatus(frontendStatus);
             setIsExecuting(isExecutionActive(frontendStatus));
+          }
+
+          if (message.data?.quick_questions) {
+            setQuickQuestions(message.data.quick_questions);
           }
 
           break;
@@ -150,16 +156,9 @@ export function useAgentConversation({
   const handleConversationMessage = useCallback((data: any) => {
     const { id, message_type, content } = data;
 
-    const messageExists = (messageId: string | number) => {
-      return messages.some((msg) => msg.id === messageId);
-    };
-
     if (
       message_type === "system_decision" ||
       message_type === "action_execution_result" ||
-      message_type === "assistant_task_breakdown" ||
-      message_type === "assistant_validation" ||
-      message_type === "assistant_action_planning" ||
       message_type === "context_results"
     ) {
       setPendingMessage(null);
@@ -173,36 +172,24 @@ export function useAgentConversation({
 
         if (step === "gathercontext") {
           if (reasoning && reasoning.length > 0) {
-            const maxLength = 60;
-            logContent =
-              reasoning.length > maxLength
-                ? `${reasoning.substring(0, maxLength)}...`
-                : reasoning;
+            logContent = reasoning;
           } else {
             logContent = "Gathering context...";
           }
         } else if (step === "executeaction") {
-          logContent = "Executing action";
+          logContent = reasoning || "Running action";
         } else if (step === "deliverresponse") {
           logContent = "Preparing response";
-        } else if (step === "taskplanning") {
-          logContent = "Planning approach";
-        } else if (step === "validateprogress") {
-          logContent = "Validating progress";
         } else if (step === "acknowledge") {
           logContent = "Processing request";
-        } else if (step === "finishplanning") {
-          logContent = "Finalizing plan";
-        } else if (step === "executetasks") {
-          logContent = "Executing tasks";
         } else if (step === "requestuserinput") {
           logContent = "Waiting for input";
         } else if (step === "complete") {
           logContent = "Completed";
-        } else if (step === "examinetool") {
-          logContent = "Examining tool";
-        } else if (step === "examineworkflow") {
-          logContent = "Examining workflow";
+        } else if (step === "loadmemory") {
+          logContent = "Loading memories";
+        } else if (step === "longthinkandreason") {
+          logContent = "Deep reasoning";
         } else {
           const confidence = content?.confidence || 0.5;
           if (confidence > 0.8) {
@@ -214,28 +201,16 @@ export function useAgentConversation({
           }
         }
       } else if (message_type === "action_execution_result") {
-        if (content.task_execution?.status === "completed") {
-          logContent = "Task execution completed";
+        // Extract action purposes from the actions list
+        const actions = content.task_execution?.actions?.actions || [];
+        if (actions.length === 1) {
+          logContent = actions[0]?.purpose || "Running action";
+        } else if (actions.length > 1) {
+          logContent = `Running ${actions.length} actions`;
         } else if (content.task_execution?.approach) {
           logContent = content.task_execution.approach;
         } else {
-          logContent = "Executing task";
-        }
-      } else if (message_type === "assistant_task_breakdown") {
-        if (content.task_breakdown?.total_tasks) {
-          logContent = `Identified ${content.task_breakdown.total_tasks} tasks`;
-        } else {
-          logContent = "Planning tasks";
-        }
-      } else if (message_type === "assistant_validation") {
-        logContent = "Validated results";
-      } else if (message_type === "assistant_action_planning") {
-        if (content.task_execution?.total_tasks) {
-          logContent = `Planned ${content.task_execution.total_tasks} tasks`;
-        } else if (content.task_execution?.tasks?.length) {
-          logContent = `Planned ${content.task_execution.tasks.length} tasks`;
-        } else {
-          logContent = "Planning actions";
+          logContent = "Running action";
         }
       } else if (message_type === "context_results") {
         const query = content.query;
@@ -247,29 +222,33 @@ export function useAgentConversation({
         }
       }
 
-      if (logContent && !messageExists(id)) {
-        setMessages((prev) => [
-          ...prev,
-          {
-            id,
-            role: "system",
-            content: logContent,
-            timestamp: new Date(),
-            metadata: {
-              type: "log",
-              messageType: message_type,
+      if (logContent) {
+        setMessages((prev) => {
+          if (prev.some((msg) => msg.id === id)) return prev;
+          return [
+            ...prev,
+            {
+              id,
+              role: "system",
+              content: logContent,
+              timestamp: new Date(),
+              metadata: {
+                type: "log",
+                messageType: message_type,
+              },
             },
-          },
-        ]);
+          ];
+        });
       }
       return;
     }
 
     if (message_type === "user_message") {
-      if (!messageExists(id)) {
-        setPendingMessage(null);
-        setPendingImages(null);
-        setMessages((prev) => [
+      setPendingMessage(null);
+      setPendingImages(null);
+      setMessages((prev) => {
+        if (prev.some((msg) => msg.id === id)) return prev;
+        return [
           ...prev,
           {
             id,
@@ -278,17 +257,18 @@ export function useAgentConversation({
             images: content.images,
             timestamp: new Date(),
           },
-        ]);
-      }
+        ];
+      });
     } else if (message_type === "agent_response") {
-      if (!messageExists(id)) {
-        setPendingMessage(null);
-        setPendingImages(null);
-        setIsExecuting(false);
-        setExecutionStatus(FRONTEND_STATUS.IDLE);
-        streamingMessageRef.current = null;
+      setPendingMessage(null);
+      setPendingImages(null);
+      setIsExecuting(false);
+      setExecutionStatus(FRONTEND_STATUS.IDLE);
+      streamingMessageRef.current = null;
 
-        setMessages((prev) => [
+      setMessages((prev) => {
+        if (prev.some((msg) => msg.id === id)) return prev;
+        return [
           ...prev,
           {
             id,
@@ -297,13 +277,14 @@ export function useAgentConversation({
             timestamp: new Date(),
             isStreaming: false,
           },
-        ]);
-      }
+        ];
+      });
     } else if (message_type === "assistant_acknowledgment") {
-      if (!messageExists(id)) {
-        setPendingMessage(null);
-        setPendingImages(null);
-        setMessages((prev) => [
+      setPendingMessage(null);
+      setPendingImages(null);
+      setMessages((prev) => {
+        if (prev.some((msg) => msg.id === id)) return prev;
+        return [
           ...prev,
           {
             id,
@@ -311,41 +292,8 @@ export function useAgentConversation({
             content: content.acknowledgment_message,
             timestamp: new Date(),
           },
-        ]);
-      }
-    } else if (
-      message_type === "assistant_ideation" ||
-      message_type === "assistant_action_planning" ||
-      message_type === "action_execution_result" ||
-      message_type === "assistant_validation" ||
-      message_type === "assistant_context_gathering" ||
-      message_type === "assistant_task_breakdown"
-    ) {
-      let messageContent = "";
-
-      if (content.reasoning_summary) {
-        messageContent = content.reasoning_summary;
-      } else if (content.task_execution?.approach) {
-        messageContent = content.task_execution.approach;
-      } else if (content.strategic_synthesis) {
-        messageContent = content.strategic_synthesis;
-      } else if (content.task_breakdown?.total_tasks) {
-        messageContent = `Breaking down into ${content.task_breakdown.total_tasks} tasks...`;
-      } else if (content.acknowledgment_message) {
-        messageContent = content.acknowledgment_message;
-      } else {
-        return;
-      }
-
-      setMessages((prev) => [
-        ...prev,
-        {
-          id,
-          role: "assistant",
-          content: messageContent,
-          timestamp: new Date(),
-        },
-      ]);
+        ];
+      });
     } else if (message_type === "user_input_request") {
       const inputRequest = {
         question: content.question,
@@ -358,19 +306,22 @@ export function useAgentConversation({
 
       setExecutionStatus("waiting_for_input");
 
-      setMessages((prev) => [
-        ...prev,
-        {
-          id,
-          role: "system",
-          content: inputRequest.question,
-          timestamp: new Date(),
-          metadata: {
-            type: "user_input_request",
-            userInputRequest: inputRequest,
+      setMessages((prev) => {
+        if (prev.some((msg) => msg.id === id)) return prev;
+        return [
+          ...prev,
+          {
+            id,
+            role: "system",
+            content: inputRequest.question,
+            timestamp: new Date(),
+            metadata: {
+              type: "user_input_request",
+              userInputRequest: inputRequest,
+            },
           },
-        },
-      ]);
+        ];
+      });
     }
   }, []);
 
@@ -524,7 +475,7 @@ export function useAgentConversation({
         data: {},
       });
     }
-    return () => {}; // No cleanup needed for individual contexts
+    return () => { }; // No cleanup needed for individual contexts
   }, [isConnected, contextId, agentName]);
 
   // Send user message
@@ -597,7 +548,6 @@ export function useAgentConversation({
         if (result.status === 200 && result.data) {
           const messageData = result.data;
 
-          // Exact same processing as WebSocket fetch_context_messages
           if (Array.isArray(messageData.data)) {
             const pastMessages = messageData.data
               .filter((msg: any) => {
@@ -611,11 +561,9 @@ export function useAgentConversation({
                   }
                 }
 
-                // Get message_type from metadata or parsed content
                 const message_type =
                   msg.metadata?.message_type || parsedContent?.message_type;
 
-                // Include same message types as WebSocket
                 return (
                   message_type === "user_message" ||
                   message_type === "agent_response" ||
@@ -623,9 +571,6 @@ export function useAgentConversation({
                   message_type === "user_input_request" ||
                   message_type === "system_decision" ||
                   message_type === "action_execution_result" ||
-                  message_type === "assistant_task_breakdown" ||
-                  message_type === "assistant_validation" ||
-                  message_type === "assistant_action_planning" ||
                   message_type === "context_results"
                 );
               })
@@ -634,7 +579,6 @@ export function useAgentConversation({
                 let images = undefined;
                 let metadata = undefined;
 
-                // Parse content if needed
                 let parsedContent = msg.content;
                 if (typeof msg.content === "string") {
                   try {
@@ -644,7 +588,6 @@ export function useAgentConversation({
                   }
                 }
 
-                // Get message_type from metadata or parsed content
                 const message_type =
                   msg.metadata?.message_type || parsedContent?.message_type;
 
@@ -674,13 +617,10 @@ export function useAgentConversation({
                   };
                 }
 
-                // Handle system/log messages - exact same logic
+                // Handle system/log messages
                 if (
                   message_type === "system_decision" ||
                   message_type === "action_execution_result" ||
-                  message_type === "assistant_task_breakdown" ||
-                  message_type === "assistant_validation" ||
-                  message_type === "assistant_action_planning" ||
                   message_type === "context_results"
                 ) {
                   let logContent = "";
@@ -691,36 +631,24 @@ export function useAgentConversation({
 
                     if (step === "gathercontext") {
                       if (reasoning && reasoning.length > 0) {
-                        const maxLength = 60;
-                        logContent =
-                          reasoning.length > maxLength
-                            ? `${reasoning.substring(0, maxLength)}...`
-                            : reasoning;
+                        logContent = reasoning;
                       } else {
                         logContent = "Gathering context...";
                       }
                     } else if (step === "executeaction") {
-                      logContent = "Executing action";
+                      logContent = reasoning || "Running action";
                     } else if (step === "deliverresponse") {
                       logContent = "Preparing response";
-                    } else if (step === "taskplanning") {
-                      logContent = "Planning approach";
-                    } else if (step === "validateprogress") {
-                      logContent = "Validating progress";
                     } else if (step === "acknowledge") {
                       logContent = "Processing request";
-                    } else if (step === "finishplanning") {
-                      logContent = "Finalizing plan";
-                    } else if (step === "executetasks") {
-                      logContent = "Executing tasks";
                     } else if (step === "requestuserinput") {
                       logContent = "Waiting for input";
                     } else if (step === "complete") {
                       logContent = "Completed";
-                    } else if (step === "examinetool") {
-                      logContent = "Examining tool";
-                    } else if (step === "examineworkflow") {
-                      logContent = "Examining workflow";
+                    } else if (step === "loadmemory") {
+                      logContent = "Loading memories";
+                    } else if (step === "longthinkandreason") {
+                      logContent = "Deep reasoning";
                     } else {
                       const confidence = parsedContent?.confidence || 0.5;
                       if (confidence > 0.8) {
@@ -732,28 +660,15 @@ export function useAgentConversation({
                       }
                     }
                   } else if (message_type === "action_execution_result") {
-                    if (parsedContent?.task_execution?.status === "completed") {
-                      logContent = "Task execution completed";
+                    const actions = parsedContent?.task_execution?.actions?.actions || [];
+                    if (actions.length === 1) {
+                      logContent = actions[0]?.purpose || "Running action";
+                    } else if (actions.length > 1) {
+                      logContent = `Running ${actions.length} actions`;
                     } else if (parsedContent?.task_execution?.approach) {
                       logContent = parsedContent.task_execution.approach;
                     } else {
-                      logContent = "Executing task";
-                    }
-                  } else if (message_type === "assistant_task_breakdown") {
-                    if (parsedContent?.task_breakdown?.total_tasks) {
-                      logContent = `Identified ${parsedContent.task_breakdown.total_tasks} tasks`;
-                    } else {
-                      logContent = "Planning tasks";
-                    }
-                  } else if (message_type === "assistant_validation") {
-                    logContent = "Validated results";
-                  } else if (message_type === "assistant_action_planning") {
-                    if (parsedContent?.task_execution?.total_tasks) {
-                      logContent = `Planned ${parsedContent.task_execution.total_tasks} tasks`;
-                    } else if (parsedContent?.task_execution?.tasks?.length) {
-                      logContent = `Planned ${parsedContent.task_execution.tasks.length} tasks`;
-                    } else {
-                      logContent = "Planning actions";
+                      logContent = "Running action";
                     }
                   } else if (message_type === "context_results") {
                     const query = parsedContent?.query;
@@ -787,26 +702,21 @@ export function useAgentConversation({
               })
               .filter((msg: any) => msg.content || msg.metadata || msg.images)
               .sort((a: any, b: any) => {
-                // Sort by snowflake ID (ascending order - oldest first)
                 const aId = BigInt(a.id);
                 const bId = BigInt(b.id);
                 return aId < bId ? -1 : aId > bId ? 1 : 0;
               });
 
-            // Update oldest message ID for pagination
             if (pastMessages.length > 0) {
               oldestMessageIdRef.current = pastMessages[0].id;
             }
 
-            // If this is pagination (beforeId provided), prepend to existing messages
             if (beforeId) {
               setMessages((prev) => [...pastMessages, ...prev]);
               setHasMoreMessages(pastMessages.length >= 50);
             } else {
-              // Initial load
               setMessages(pastMessages);
 
-              // Check if the last message is a user_input_request to restore waiting state
               if (pastMessages.length > 0) {
                 const lastMessage = pastMessages[pastMessages.length - 1];
                 if (lastMessage.metadata?.type === "user_input_request") {
@@ -826,15 +736,12 @@ export function useAgentConversation({
     [token, contextId, client],
   );
 
-  // Load messages immediately on mount (don't wait for WebSocket)
   useEffect(() => {
     if (contextId && token) {
       fetchMessages();
     }
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [contextId, token]); // fetchMessages excluded to prevent infinite loop
+  }, [contextId, token]);
 
-  // Load more messages (pagination)
   const loadMoreMessages = useCallback(async () => {
     if (isLoadingMore || !hasMoreMessages || !oldestMessageIdRef.current)
       return;
@@ -857,13 +764,13 @@ export function useAgentConversation({
       data: {},
     });
 
-    // Optimistically update state
     setIsExecuting(false);
     setExecutionStatus("idle");
   }, [isConnected, isExecuting]);
 
   return {
     messages,
+    quickQuestions,
     pendingMessage,
     pendingImages,
     connectionState,
