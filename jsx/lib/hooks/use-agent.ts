@@ -36,11 +36,13 @@ export function useExchangeTicket(ticket?: string | null): UseExchangeTicketResu
     const [loading, setLoading] = useState(!!ticket);
     const [error, setError] = useState<Error | null>(null);
     const exchangedRef = useRef(false);
+    const exchangingRef = useRef(false);
 
     useEffect(() => {
-        if (!ticket || exchangedRef.current) return;
+        if (!ticket || exchangedRef.current || exchangingRef.current) return;
 
         const exchange = async () => {
+            exchangingRef.current = true;
             try {
                 setLoading(true);
                 const response = await client(`/api/agent/ticket/exchange?ticket=${encodeURIComponent(ticket)}`, {
@@ -57,6 +59,7 @@ export function useExchangeTicket(ticket?: string | null): UseExchangeTicketResu
                 setError(err instanceof Error ? err : new Error("Failed to exchange ticket"));
             } finally {
                 setLoading(false);
+                exchangingRef.current = false;
             }
         };
 
@@ -738,31 +741,135 @@ export function useAgentContexts(
         refetch: async () => { await mutate(); },
     };
 }
+
 // ============================================================================
-// useSessionAgents - Hook for fetching allowlisted agents for the session
+// useAgentSession - Unified hook for session management
+// Handles: ticket exchange, session fetching, active agent, access control
 // ============================================================================
 
-export function useSessionAgents() {
+interface AgentSessionData {
+    session_id: string;
+    context_group: string;
+    agents: AgentWithIntegrations[];
+}
+
+interface UseAgentSessionResult {
+    // Session state
+    hasSession: boolean;
+    sessionLoading: boolean;
+    sessionError: Error | null;
+    sessionId: string | null;
+    contextGroup: string | null;
+
+    // Agents
+    agents: AgentWithIntegrations[];
+    activeAgent: AgentWithIntegrations | null;
+    setActiveAgent: (agent: AgentWithIntegrations) => void;
+
+    // Ticket state
+    ticketExchanged: boolean;
+    ticketLoading: boolean;
+
+    // Helpers
+    refetch: () => Promise<void>;
+}
+
+export function useAgentSession(ticket?: string | null): UseAgentSessionResult {
     const { client } = useClient();
 
+    const [ticketExchanged, setTicketExchanged] = useState(!ticket);
+    const [ticketLoading, setTicketLoading] = useState(!!ticket);
+    const [ticketError, setTicketError] = useState<Error | null>(null);
+    const exchangedRef = useRef(false);
+    const exchangingRef = useRef(false);
+
+    const [activeAgent, setActiveAgent] = useState<AgentWithIntegrations | null>(null);
+
+    const shouldFetch = ticketExchanged;
+
     const fetcher = useCallback(async () => {
-        const response = await client("/api/agent/agents", {
+        const response = await client("/api/agent/session", {
             method: "GET",
         });
-        // The API returns the array directly in the data field
-        const parsed = await responseMapper<AgentWithIntegrations[]>(response);
+
+        if (!response.ok) {
+            if (response.status === 401 || response.status === 403) {
+                throw new Error("NO_SESSION");
+            }
+            throw new Error("Failed to fetch session");
+        }
+
+        const parsed = await responseMapper<AgentSessionData>(response);
         return parsed.data;
     }, [client]);
 
-    const { data, error, isLoading } = useSWR(
-        "wacht-session-agents-list",
+    const { data, error: fetchError, isLoading, mutate } = useSWR(
+        shouldFetch ? "wacht-agent-session" : null,
         fetcher,
         { revalidateOnFocus: false }
     );
 
+    // Handle ticket exchange
+    useEffect(() => {
+        if (!ticket || exchangedRef.current || exchangingRef.current) return;
+
+        const exchange = async () => {
+            exchangingRef.current = true;
+            setTicketLoading(true);
+            try {
+                const response = await client(`/api/agent/ticket/exchange?ticket=${encodeURIComponent(ticket)}`, {
+                    method: "POST",
+                });
+
+                if (response.ok) {
+                    exchangedRef.current = true;
+                    setTicketExchanged(true);
+                } else {
+                    setTicketError(new Error("Failed to exchange ticket"));
+                }
+            } catch (err) {
+                setTicketError(err instanceof Error ? err : new Error("Failed to exchange ticket"));
+            } finally {
+                setTicketLoading(false);
+                exchangingRef.current = false;
+            }
+        };
+
+        exchange();
+    }, [ticket, client]);
+
+    // Auto-select first agent when data arrives
+    useEffect(() => {
+        if (!activeAgent && data?.agents && data.agents.length > 0) {
+            setActiveAgent(data.agents[0]);
+        }
+    }, [data, activeAgent]);
+
+    // Reset active agent when agents list changes significantly
+    useEffect(() => {
+        if (data?.agents && activeAgent) {
+            const stillExists = data.agents.some((a: AgentWithIntegrations) => a.id === activeAgent.id);
+            if (!stillExists && data.agents.length > 0) {
+                setActiveAgent(data.agents[0]);
+            }
+        }
+    }, [data, activeAgent]);
+
+    const hasSession = !fetchError || fetchError.message !== "NO_SESSION";
+    const sessionError = ticketError || (fetchError && fetchError.message !== "NO_SESSION" ? fetchError : null);
+    const sessionLoading = ticketLoading || (shouldFetch && isLoading);
+
     return {
-        agents: data || [],
-        loading: isLoading,
-        error
+        hasSession,
+        sessionLoading,
+        sessionError,
+        sessionId: data?.session_id || null,
+        contextGroup: data?.context_group || null,
+        agents: data?.agents || [],
+        activeAgent,
+        setActiveAgent,
+        ticketExchanged,
+        ticketLoading,
+        refetch: async () => { await mutate(); }
     };
 }

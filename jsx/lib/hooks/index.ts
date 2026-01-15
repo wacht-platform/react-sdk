@@ -14,7 +14,7 @@ export * from "./use-forgot-password";
 export * from "./use-notifications";
 export * from "./use-notification-stream";
 export * from "./use-channel-counts";
-export { useAgentContext, useAgentIntegrations, useExchangeTicket, useSessionAgents } from "./use-agent";
+export { useAgentContext, useAgentIntegrations, useExchangeTicket, useAgentSession } from "./use-agent";
 export { useAgentContexts } from "./use-agent-contexts";
 export { useInvitation } from "./use-invitation";
 export type { AcceptInvitationResponse } from "./use-invitation";
