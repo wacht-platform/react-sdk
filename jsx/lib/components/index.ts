@@ -5,7 +5,6 @@ export * from "./workspace";
 export * from "./user";
 export * from "./control";
 export * from "./notifications";
-export * from "./agent";
 export * from "./utility/dialog";
 export * from "./utility/dropdown";
 export * from "./utility/form";

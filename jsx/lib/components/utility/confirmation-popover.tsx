@@ -32,12 +32,14 @@ interface ConfirmationPopoverProps {
   title: string;
   onConfirm: () => void;
   onCancel: () => void;
+  style?: React.CSSProperties;
 }
 
 export const ConfirmationPopover = ({
   title,
   onConfirm,
   onCancel,
+  style,
 }: ConfirmationPopoverProps) => {
   const popoverRef = useRef<HTMLDivElement>(null);
 
@@ -62,6 +64,7 @@ export const ConfirmationPopover = ({
       ref={popoverRef}
       style={{
         right: "70px",
+        ...style,
       }}
     >
       <Title>{title}</Title>

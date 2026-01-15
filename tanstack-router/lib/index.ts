@@ -14,13 +14,6 @@ export {
   CreateWorkspaceForm,
   CreateOrganizationForm,
 } from "@wacht/jsx";
-export {
-  AgentConversation,
-  AgentConversationHub,
-  AgentConversationHistory,
-  AgentConversationProvider,
-  useAgentConversationContext,
-} from "@wacht/jsx";
 export { DeploymentInitialized, DeploymentInitializing } from "@wacht/jsx";
 export {
   SignedIn,
@@ -46,8 +39,6 @@ export {
   useNotifications,
   useNotificationStream,
   useChannelCounts,
-  useAgentConversation,
-  useConversationSessions,
   useActiveOrganization,
   useActiveTenancy,
   useWorkspaceList,
@@ -57,6 +48,11 @@ export {
   useInvitation,
   useUserSignins,
   useMagicLinkVerification,
+  useAgentContext,
+  useAgentContexts,
+  useAgentIntegrations,
+  useExchangeTicket,
+  useSessionAgents
 } from "@wacht/jsx";
 export { DeploymentProvider as BaseDeploymentProvider } from "@wacht/jsx";
 export { DeploymentProvider } from "./providers";

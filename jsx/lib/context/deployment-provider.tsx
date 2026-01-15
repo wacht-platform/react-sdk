@@ -32,74 +32,78 @@ function DeploymentProvider({
         return;
       }
 
-      singletonLock.current = true;
-      setLoading(true);
+      try {
+        singletonLock.current = true;
+        setLoading(true);
 
-      const [_, mode, baseUrlBase64] = publicKey.split("_");
+        const [_, mode, baseUrlBase64] = publicKey.split("_");
 
-      if (!baseUrlBase64) {
-        throw new Error("Invalid public key");
-      }
+        if (!baseUrlBase64) {
+          throw new Error("Invalid public key");
+        }
 
-      let baseUrl = atob(baseUrlBase64);
-      let staging = mode === "test";
+        let baseUrl = atob(baseUrlBase64);
+        let staging = mode === "test";
 
-      let devSession = null;
-      if (new URLSearchParams(window.location.search).has("__dev_session__")) {
-        devSession = new URLSearchParams(window.location.search).get(
-          "__dev_session__",
+        let devSession = null;
+        if (new URLSearchParams(window.location.search).has("__dev_session__")) {
+          devSession = new URLSearchParams(window.location.search).get(
+            "__dev_session__",
+          );
+          localStorage.setItem("__dev_session__", devSession ?? "");
+          const newUrl = new URL(window.location.href);
+          newUrl.searchParams.delete("__dev_session__");
+          window.history.replaceState({}, "", newUrl.toString());
+        } else {
+          devSession = localStorage.getItem("__dev_session__");
+        }
+
+        let opts: RequestInit = {};
+        const params = new URLSearchParams();
+
+        if (!staging) {
+          opts = {
+            credentials: "include",
+          };
+        } else {
+          params.append("__dev_session__", devSession ?? "");
+        }
+
+        const deployment = await fetch(
+          `${baseUrl}/deployment${staging ? "?" : ""}${params.toString()}`,
+          opts,
         );
-        localStorage.setItem("__dev_session__", devSession ?? "");
-        const newUrl = new URL(window.location.href);
-        newUrl.searchParams.delete("__dev_session__");
-        window.history.replaceState({}, "", newUrl.toString());
-      } else {
-        devSession = localStorage.getItem("__dev_session__");
-      }
 
-      let opts: RequestInit = {};
-      const params = new URLSearchParams();
+        if (!deployment.ok) {
+          setLoading(false);
+          return;
+        }
 
-      if (!staging) {
-        opts = {
-          credentials: "include",
-        };
-      } else {
-        params.append("__dev_session__", devSession ?? "");
-      }
+        const deploymentConfig =
+          (await deployment.json()) as ClinetReponse<Deployment>;
 
-      const deployment = await fetch(
-        `${baseUrl}/deployment${staging ? "?" : ""}${params.toString()}`,
-        opts,
-      );
+        deploymentConfig.data.backend_host = baseUrl;
 
-      if (!deployment.ok) {
+        if (uiOverwrites) {
+          deploymentConfig.data.ui_settings = {
+            ...deploymentConfig.data.ui_settings,
+            ...uiOverwrites,
+          };
+        }
+
+        setDeployment(deploymentConfig.data);
+
+        if (staging && deployment.headers.get("x-development-session")) {
+          localStorage.setItem(
+            "__dev_session__",
+            deployment.headers.get("x-development-session") ?? "",
+          );
+        }
+
         setLoading(false);
-        return;
+      } catch (error) {
+        console.error("Failed to initialize deployment:", error);
       }
-
-      const deploymentConfig =
-        (await deployment.json()) as ClinetReponse<Deployment>;
-
-      deploymentConfig.data.backend_host = baseUrl;
-
-      if (uiOverwrites) {
-        deploymentConfig.data.ui_settings = {
-          ...deploymentConfig.data.ui_settings,
-          ...uiOverwrites,
-        };
-      }
-
-      setDeployment(deploymentConfig.data);
-
-      if (staging && deployment.headers.get("x-development-session")) {
-        localStorage.setItem(
-          "__dev_session__",
-          deployment.headers.get("x-development-session") ?? "",
-        );
-      }
-
-      setLoading(false);
     }
 
     initializeDeployment();

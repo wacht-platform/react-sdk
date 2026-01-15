@@ -14,11 +14,8 @@ export * from "./use-forgot-password";
 export * from "./use-notifications";
 export * from "./use-notification-stream";
 export * from "./use-channel-counts";
-export { useAgentConversation } from "./use-agent-conversation";
-export type { UserInputRequest, ConversationMessage } from "./use-agent-conversation";
-export { useConversationSessions } from "./use-conversation-sessions";
-export type { ConversationSession, CreateSessionRequest, ListSessionsOptions, ListSessionsResponse } from "./use-conversation-sessions";
+export { useAgentContext, useAgentIntegrations, useExchangeTicket, useSessionAgents } from "./use-agent";
+export { useAgentContexts } from "./use-agent-contexts";
 export { useInvitation } from "./use-invitation";
 export type { AcceptInvitationResponse } from "./use-invitation";
-export { useAgentIntegrations } from "./use-agent-integrations";
-export type { AgentIntegration } from "@wacht/types";
+
