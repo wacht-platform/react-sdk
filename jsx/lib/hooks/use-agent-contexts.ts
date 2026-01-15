@@ -4,6 +4,10 @@ import useSWR from "swr";
 import { responseMapper } from "../utils/response-mapper";
 import type { AgentContext, CreateContextRequest, ListContextsOptions, ListContextsResponse } from "@wacht/types";
 
+interface UseAgentContextsOptions extends ListContextsOptions {
+    enabled?: boolean;
+}
+
 type UseAgentContextsReturnType = {
     contexts: AgentContext[];
     loading: boolean;
@@ -16,10 +20,10 @@ type UseAgentContextsReturnType = {
 };
 
 export function useAgentContexts(
-    options: ListContextsOptions = {}
+    options: UseAgentContextsOptions = {}
 ): UseAgentContextsReturnType {
     const { client } = useClient();
-    const { limit = 20, offset = 0, status, search } = options;
+    const { limit = 20, offset = 0, status, search, enabled = true } = options;
 
     const fetcher = useCallback(async () => {
         const params = new URLSearchParams({
@@ -37,7 +41,7 @@ export function useAgentContexts(
     }, [client, limit, offset, status, search]);
 
     const { data, error, mutate } = useSWR(
-        `wacht-agent-contexts:${limit}:${offset}:${status}:${search}`,
+        enabled ? `wacht-agent-contexts:${limit}:${offset}:${status}:${search}` : null,
         fetcher,
         { revalidateOnFocus: false }
     );
