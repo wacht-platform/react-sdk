@@ -29,7 +29,7 @@ export {
   useForgotPassword,
   useNotifications,
   useNotificationStream,
-  useChannelCounts,
+  useScopeUnread,
   useActiveOrganization,
   useActiveTenancy,
   useWorkspaceList,

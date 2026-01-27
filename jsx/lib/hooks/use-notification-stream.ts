@@ -9,8 +9,7 @@ export interface NotificationMessage {
   title: string;
   body: string;
   severity: string;
-  action_url?: string;
-  action_label?: string;
+  ctas?: { label: string; payload: any }[];
   created_at: string;
 }
 
@@ -46,12 +45,12 @@ export function useNotificationStream({
   const { deployment, loading: deploymentLoading } = useDeployment();
   const [isConnected, setIsConnected] = useState(false);
   const [connectionError, setConnectionError] = useState<string | null>(null);
-  
+
   const wsRef = useRef<WebSocket | null>(null);
   const reconnectTimeoutRef = useRef<NodeJS.Timeout | null>(null);
   const reconnectAttemptsRef = useRef(0);
   const pingIntervalRef = useRef<NodeJS.Timeout | null>(null);
-  
+
   // Use refs to prevent recreating connect function
   const onNotificationRef = useRef(onNotification);
   const onErrorRef = useRef(onError);
@@ -60,7 +59,7 @@ export function useNotificationStream({
   const workspaceIdsRef = useRef(workspaceIds);
   const reconnectDelayRef = useRef(reconnectDelay);
   const maxReconnectAttemptsRef = useRef(maxReconnectAttempts);
-  
+
   // Update refs when values change
   onNotificationRef.current = onNotification;
   onErrorRef.current = onError;
@@ -75,7 +74,7 @@ export function useNotificationStream({
       clearTimeout(reconnectTimeoutRef.current);
       reconnectTimeoutRef.current = null;
     }
-    
+
     if (pingIntervalRef.current) {
       clearInterval(pingIntervalRef.current);
       pingIntervalRef.current = null;
@@ -99,7 +98,7 @@ export function useNotificationStream({
     const backendUrl = new URL(deployment.backend_host);
     const wsProtocol = backendUrl.protocol === 'https:' ? 'wss:' : 'ws:';
     const wsUrl = new URL(`/realtime/notifications`, `${wsProtocol}//${backendUrl.host}`);
-    
+
     // Add session token for development environments (like frontend API)
     if (deployment.mode === "staging") {
       const devSession = localStorage.getItem("__dev_session__");
@@ -107,7 +106,7 @@ export function useNotificationStream({
         wsUrl.searchParams.set('__dev_session__', devSession);
       }
     }
-    
+
     // Add channel parameters if provided
     if (channelsRef.current && channelsRef.current.length > 0) {
       channelsRef.current.forEach(channel => wsUrl.searchParams.append('channels', channel));
@@ -140,7 +139,7 @@ export function useNotificationStream({
       ws.onmessage = (event) => {
         try {
           const message: WebSocketMessage = JSON.parse(event.data);
-          
+
           if (message.type === 'notification' && message.data) {
             onNotificationRef.current?.(message.data);
           } else if (message.type === 'error') {
@@ -164,7 +163,7 @@ export function useNotificationStream({
       ws.onclose = (event) => {
         // Notification stream disconnected
         setIsConnected(false);
-        
+
         if (pingIntervalRef.current) {
           clearInterval(pingIntervalRef.current);
           pingIntervalRef.current = null;
@@ -174,9 +173,9 @@ export function useNotificationStream({
         if (enabled && event.code !== 1000 && reconnectAttemptsRef.current < maxReconnectAttemptsRef.current) {
           reconnectAttemptsRef.current++;
           const delay = reconnectDelayRef.current * Math.pow(2, reconnectAttemptsRef.current - 1); // Exponential backoff
-          
+
           // Reconnecting to notification stream
-          
+
           reconnectTimeoutRef.current = setTimeout(() => {
             connect();
           }, delay);
@@ -194,7 +193,7 @@ export function useNotificationStream({
 
   useEffect(() => {
     connect();
-    
+
     return () => {
       cleanup();
     };

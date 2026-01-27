@@ -9,7 +9,7 @@ import { AuthFormImage } from "./auth-image";
 const Container = styled.div`
   max-width: 380px;
   width: 380px;
-  padding: var(--space-3xl);
+  padding: var(--space-2xl);
   background: var(--color-background);
   border-radius: var(--radius-lg);
   box-shadow: 0 4px 12px var(--color-shadow);
@@ -22,7 +22,7 @@ const Header = styled.div`
 `;
 
 const Title = styled.h1`
-  font-size: var(--font-lg);
+  font-size: var(--font-md);
   font-weight: 400;
   color: var(--color-foreground);
   margin-bottom: var(--space-xs);
@@ -106,10 +106,9 @@ export function PhoneVerification({
         <AuthFormImage />
 
         <Header>
-          <Title>Verify your phone number</Title>
+          <Title>Verify Phone</Title>
           <Subtitle>
-            To send a verification code, please confirm the last 4 digits of
-            your primary phone number
+            Enter the last 4 digits of your phone number.
           </Subtitle>
         </Header>
 

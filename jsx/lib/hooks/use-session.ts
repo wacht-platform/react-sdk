@@ -188,7 +188,7 @@ export function useSession(): UseSessionReturnType {
         "/me/signins",
         "/me/organization-memberships",
         "/me/workspace-memberships",
-        "wacht-notifications:channel-counts"
+        "wacht-notifications:scope-unread"
       ];
 
       const dynamicKeyPrefixes = [

@@ -41,7 +41,7 @@ const spin = keyframes`
 const Container = styled.div`
   max-width: 380px;
   width: 380px;
-  padding: var(--space-3xl);
+  padding: var(--space-2xl);
   background: var(--color-background);
   border-radius: var(--radius-lg);
   box-shadow: 0 4px 12px var(--color-shadow);
@@ -61,12 +61,12 @@ display: flex;
 
 const Header = styled.div`
   text-align: center;
-  margin-bottom: var(--space-2xl);
+  margin-bottom: var(--space-lg);
   position: relative;
 `;
 
 const Title = styled.h1`
-  font-size: var(--font-lg);
+  font-size: var(--font-md);
   font-weight: 400;
   color: var(--color-foreground);
   margin-bottom: var(--space-xs);
@@ -81,7 +81,7 @@ const Subtitle = styled.p`
 const Divider = styled.div`
 position: relative;
   text-align: center;
-  margin: var(--space-2xl) 0;
+  margin: var(--space-lg) 0;
 
   &::before {
   content: "";
@@ -117,7 +117,7 @@ margin: 0;
 `;
 
 const SubmitButton = styled(Button)`
-  margin-top: var(--space-lg);
+  margin-top: var(--space-md);
 `;
 
 const ButtonSpinner = styled(Loader2)`
@@ -130,16 +130,16 @@ const PasskeyButton = styled.button`
   justify-content: center;
   gap: var(--space-sm);
   width: 100%;
+  background: var(--color-background);
+  border: 1px solid var(--color-border);
+  font-weight: 500;
   padding: var(--space-sm) var(--space-md);
   margin-top: var(--space-sm);
-  border: 1px solid var(--color-border);
-  border-radius: var(--radius-md);
-  background: var(--color-background);
+  border-radius: var(--radius-lg);
   cursor: pointer;
   transition: all 0.2s;
-  font-size: var(--font-sm);
-  color: var(--color-foreground);
-  font-weight: 500;
+  font-size: var(--font-xs);
+  color: var(--color-secondary-text);
 
   &:hover:not(:disabled) {
     background: var(--color-background-hover);
@@ -157,7 +157,7 @@ const PasskeyButton = styled.button`
 `;
 
 const Footer = styled.div`
-  margin-top: var(--space-lg);
+  margin-top: var(--space-md);
   text-align: center;
   font-size: var(--font-xs);
   color: var(--color-secondary-text);
@@ -858,7 +858,7 @@ function SignInFormContent() {
                 onClick={handlePasskeySignIn}
                 disabled={isSubmitting}
               >
-                <Fingerprint size={18} />
+                <Fingerprint size={16} />
                 Sign in with Passkey
               </PasskeyButton>
             )}

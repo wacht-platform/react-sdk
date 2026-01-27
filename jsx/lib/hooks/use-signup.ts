@@ -50,17 +50,17 @@ type PrepareVerificationResponse = {
 
 export type UseSignUpReturnType =
   | {
-      loading: true;
-      signUp: never;
-      signupAttempt: null;
-      discardSignupAttempt: () => void;
-    }
+    loading: true;
+    signUp: never;
+    signupAttempt: null;
+    discardSignupAttempt: () => void;
+  }
   | {
-      loading: false;
-      signUp: SignUpFunction;
-      signupAttempt: SignupAttempt | null;
-      discardSignupAttempt: () => void;
-    };
+    loading: false;
+    signUp: SignUpFunction;
+    signupAttempt: SignupAttempt | null;
+    discardSignupAttempt: () => void;
+  };
 
 function builder(
   client: Client,
@@ -118,7 +118,7 @@ function builder(
           body: form,
         },
       );
-      
+
       const result = await responseMapper<Session>(response);
       if ("data" in result && result.data?.signup_attempts?.length) {
         setSignUpAttempt(result.data.signup_attempts.at(-1) || null);

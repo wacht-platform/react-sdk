@@ -5,7 +5,6 @@ import { useDeployment } from "../../hooks/use-deployment";
 const ImageContainer = styled.div`
   display: flex;
   justify-content: center;
-  margin-bottom: var(--space-lg);
 `;
 
 const LogoWrapper = styled.div`
