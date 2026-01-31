@@ -1,220 +1,262 @@
+import { useState } from "react";
 import styled from "styled-components";
-import { X, ExternalLink } from "lucide-react";
-import type { Notification } from "@/types/notification";
+import { Archive, Star, RotateCcw, Circle } from "lucide-react";
+import type { Notification } from "@/types";
 
-const Item = styled.div<{ $unread: boolean }>`
-  padding: var(--space-md) var(--space-lg);
+const Item = styled.div<{ $unread: boolean; $expanded: boolean }>`
+  padding: 12px 16px;
   background: ${props => props.$unread ? "var(--color-background-hover)" : "transparent"};
-  transition: all 0.2s ease;
-  position: relative;
+  transition: background-color 0.2s ease;
   cursor: pointer;
-  border-left: ${props => props.$unread ? "3px solid var(--color-primary)" : "3px solid transparent"};
+  display: flex;
+  gap: 12px;
+  border-bottom: 1px solid var(--color-border);
 
   &:hover {
     background: var(--color-background-hover);
   }
 
-  &:not(:last-child) {
-    border-bottom: 1px solid var(--color-border);
+  &:last-child {
+    border-bottom: none;
   }
 `;
 
-const Header = styled.div`
-  display: flex;
-  align-items: flex-start;
-  justify-content: space-between;
-  gap: var(--space-sm);
-  margin-bottom: var(--space-xs);
-`;
-
-const TitleContainer = styled.div`
-  display: flex;
-  align-items: center;
+const ContentContainer = styled.div`
   flex: 1;
-  gap: var(--space-xs);
+  min-width: 0;
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
 `;
 
 const Title = styled.h4`
-  font-size: var(--font-xs);
+  font-size: 14px;
   font-weight: 400;
   color: var(--color-foreground);
-  margin: 0;
-  flex: 1;
-  line-height: 1.4;
+  margin: 0 0 2px 0;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
 `;
 
-const Severity = styled.span<{ $severity: string }>`
-  display: inline-block;
-  width: 8px;
-  height: 8px;
-  border-radius: var(--radius-full);
-  background: ${props => {
-    switch (props.$severity) {
-      case "success": return "var(--color-success)";
-      case "warning": return "var(--color-warning)";
-      case "error": return "var(--color-error)";
-      default: return "var(--color-primary)";
-    }
-  }};
-  flex-shrink: 0;
-`;
-
-const Body = styled.p`
-  font-size: var(--font-2xs);
+const Body = styled.p<{ $expanded: boolean }>`
+  font-size: 13px;
   color: var(--color-secondary-text);
-  margin: 0 0 var(--space-sm) 0;
-  line-height: 1.5;
+  margin: 0;
+  line-height: 1.4;
+  
+  ${props => !props.$expanded ? `
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+  ` : `
+    word-wrap: break-word;
+  `}
 `;
 
-const Footer = styled.div`
+const MetaContainer = styled.div`
   display: flex;
-  align-items: center;
-  justify-content: space-between;
-  gap: var(--space-sm);
+  flex-direction: column;
+  align-items: flex-end;
+  gap: 6px;
+  min-width: 40px;
 `;
 
 const Time = styled.span`
-  font-size: var(--font-2xs);
+  font-size: 11px;
   color: var(--color-muted);
+  white-space: nowrap;
 `;
 
-const Actions = styled.div`
-  display: flex;
-  align-items: center;
-  gap: var(--space-xs);
+const UnreadDot = styled.div`
+  width: 8px;
+  height: 8px;
+  border-radius: 50%;
+  background: var(--color-primary);
 `;
 
-const ActionButton = styled.button`
-  background: transparent;
-  border: none;
-  padding: var(--space-2xs);
-  cursor: pointer;
-  color: var(--color-secondary-text);
-  border-radius: var(--radius-md);
-  transition: all 0.2s ease;
-  display: flex;
-  align-items: center;
-  justify-content: center;
 
-  &:hover {
-    background: var(--color-background-hover);
-    color: var(--color-foreground);
-  }
-
-  &:focus {
-    outline: none;
-    box-shadow: 0 0 0 2px var(--color-primary);
-  }
-
-  svg {
-    width: 14px;
-    height: 14px;
-  }
-`;
-
-const ActionLink = styled.a`
-  display: inline-flex;
-  align-items: center;
-  gap: var(--space-2xs);
-  font-size: var(--font-2xs);
-  font-weight: 400;
-  color: var(--color-primary);
-  text-decoration: none;
-  padding: var(--space-2xs) var(--space-xs);
-  border-radius: var(--radius-md);
-  transition: all 0.2s ease;
-  
-  &:hover {
-    background: var(--color-background-hover);
-    color: var(--color-primary-hover);
-  }
-
-  &:focus {
-    outline: none;
-    box-shadow: 0 0 0 2px var(--color-primary);
-  }
-
-  svg {
-    width: 12px;
-    height: 12px;
-  }
-`;
+export type NotificationAction =
+  | { type: 'read'; id: string }
+  | { type: 'unread'; id: string }
+  | { type: 'archive'; id: string }
+  | { type: 'star'; id: string }
+  | { type: 'custom'; payload: any };
 
 interface NotificationItemProps {
   notification: Notification;
-  onMarkAsRead: (id: string) => void;
-  onDelete: (id: string) => void;
+  onAction: (action: NotificationAction) => void;
 }
 
 export function NotificationItem({
   notification,
-  onMarkAsRead,
-  onDelete
+  onAction,
 }: NotificationItemProps) {
-  const handleClick = () => {
+  const [expanded, setExpanded] = useState(false);
+
+  const handleClick = (e: React.MouseEvent) => {
+    if ((e.target as HTMLElement).closest('button')) return;
+    setExpanded(!expanded);
     if (!notification.is_read) {
-      onMarkAsRead(notification.id);
+      onAction({ type: 'read', id: notification.id });
     }
+  };
+
+  const handleActionClick = (cta: { label: string; payload: any }) => {
+    onAction({ type: 'custom', payload: cta.payload });
   };
 
   const formatTime = (dateString: string) => {
     const date = new Date(dateString);
     const now = new Date();
     const diff = now.getTime() - date.getTime();
-    const seconds = Math.floor(diff / 1000);
-    const minutes = Math.floor(seconds / 60);
-    const hours = Math.floor(minutes / 60);
-    const days = Math.floor(hours / 24);
 
-    if (days > 7) {
-      return date.toLocaleDateString();
-    } else if (days > 0) {
-      return `${days}d ago`;
-    } else if (hours > 0) {
-      return `${hours}h ago`;
-    } else if (minutes > 0) {
-      return `${minutes}m ago`;
-    } else {
-      return "Just now";
-    }
+    if (diff < 60000) return "Just now";
+
+    const minutes = Math.floor(diff / 60000);
+    if (minutes < 60) return `${minutes}m`;
+
+    const hours = Math.floor(minutes / 60);
+    if (hours < 24) return `${hours}h`;
+
+    const days = Math.floor(hours / 24);
+    if (days < 7) return `${days}d`;
+
+    return date.toLocaleDateString(undefined, { month: 'short', day: 'numeric' });
   };
 
   return (
-    <Item $unread={!notification.is_read} onClick={handleClick}>
-      <Header>
-        <TitleContainer>
-          <Severity $severity={notification.severity} />
-          <Title>{notification.title}</Title>
-        </TitleContainer>
-        <ActionButton
-          onClick={(e) => {
-            e.stopPropagation();
-            onDelete(notification.id);
-          }}
-          aria-label="Delete notification"
-        >
-          <X />
-        </ActionButton>
-      </Header>
+    <>
+      <Item
+        $unread={!notification.is_read}
+        $expanded={expanded}
+        onClick={handleClick}
+      >
 
-      <Body>{notification.body}</Body>
 
-      <Footer>
-        <Time>{formatTime(notification.created_at)}</Time>
-        {notification.action_url && (
-          <Actions>
-            <ActionLink
-              href={notification.action_url}
-              target="_blank"
-              rel="noopener noreferrer"
-              onClick={(e) => e.stopPropagation()}
+        <ContentContainer>
+          <div style={{ display: 'flex', alignItems: 'center', gap: '8px', marginBottom: '2px' }}>
+            {!notification.is_read && <UnreadDot />}
+            <Title>{notification.title}</Title>
+          </div>
+          <Body $expanded={expanded}>
+            {notification.body}
+          </Body>
+
+          {notification.ctas && notification.ctas.length > 0 && (
+            <div
+              style={{
+                display: 'flex',
+                gap: '8px',
+                marginTop: '10px',
+                flexWrap: 'wrap',
+              }}
             >
-              {notification.action_label || "View"}
-              <ExternalLink />
-            </ActionLink>
-          </Actions>
-        )}
-      </Footer>
-    </Item>
+              {notification.ctas.map((cta, index) => (
+                <button
+                  key={index}
+                  onClick={() => handleActionClick(cta)}
+                  style={{
+                    display: 'inline-flex',
+                    alignItems: 'center',
+                    justifyContent: 'center',
+                    padding: '5px 12px',
+                    fontSize: '12px',
+                    fontWeight: 500,
+                    borderRadius: '6px',
+                    cursor: 'pointer',
+                    transition: 'all 0.2s cubic-bezier(0.4, 0, 0.2, 1)',
+                    border: '1px solid var(--color-border)',
+                    background: 'var(--color-background)',
+                    color: 'var(--color-foreground)',
+                    boxShadow: '0 1px 2px rgba(0,0,0,0.05)',
+                  }}
+                  onMouseOver={(e) => {
+                    e.currentTarget.style.background = 'var(--color-background-hover)';
+                    e.currentTarget.style.borderColor = 'var(--color-primary)';
+                  }}
+                  onMouseOut={(e) => {
+                    e.currentTarget.style.background = 'var(--color-background)';
+                    e.currentTarget.style.borderColor = 'var(--color-border)';
+                  }}
+                >
+                  {cta.label}
+                </button>
+              ))}
+            </div>
+          )}
+
+
+        </ContentContainer>
+
+        <MetaContainer>
+          <div style={{ display: 'flex', gap: '8px', alignItems: 'center' }}>
+            {notification.is_read && (
+              <button
+                onClick={(e) => {
+                  e.stopPropagation();
+                  onAction({ type: 'unread', id: notification.id });
+                }}
+                title="Mark as unread"
+                style={{
+                  background: 'transparent',
+                  border: 'none',
+                  cursor: 'pointer',
+                  color: 'var(--color-muted)',
+                  padding: '4px 0',
+                  display: 'flex',
+                  transition: 'color 0.2s',
+                }}
+                onMouseOver={(e) => e.currentTarget.style.color = 'var(--color-foreground)'}
+                onMouseOut={(e) => e.currentTarget.style.color = 'var(--color-muted)'}
+              >
+                <Circle size={14} />
+              </button>
+            )}
+            <button
+              onClick={(e) => {
+                e.stopPropagation();
+                onAction({ type: 'star', id: notification.id });
+              }}
+              title={notification.is_starred ? "Unstar" : "Star"}
+              style={{
+                background: 'transparent',
+                border: 'none',
+                cursor: 'pointer',
+                color: notification.is_starred ? 'var(--color-warning)' : 'var(--color-muted)',
+                padding: '4px 0',
+                display: 'flex',
+                transition: 'color 0.2s',
+              }}
+              onMouseOver={(e) => e.currentTarget.style.color = notification.is_starred ? 'var(--color-warning)' : 'var(--color-foreground)'}
+              onMouseOut={(e) => e.currentTarget.style.color = notification.is_starred ? 'var(--color-warning)' : 'var(--color-muted)'}
+            >
+              <Star size={14} fill={notification.is_starred ? "currentColor" : "none"} />
+            </button>
+            <button
+              onClick={(e) => {
+                e.stopPropagation();
+                onAction({ type: 'archive', id: notification.id });
+              }}
+              title={notification.is_archived ? "Unarchive" : "Archive"}
+              style={{
+                background: 'transparent',
+                border: 'none',
+                cursor: 'pointer',
+                color: 'var(--color-muted)',
+                padding: '4px 0',
+                display: 'flex',
+                transition: 'color 0.2s',
+              }}
+              onMouseOver={(e) => e.currentTarget.style.color = 'var(--color-foreground)'}
+              onMouseOut={(e) => e.currentTarget.style.color = 'var(--color-muted)'}
+            >
+              {notification.is_archived ? <RotateCcw size={14} /> : <Archive size={14} />}
+            </button>
+          </div>
+          <Time>{formatTime(notification.created_at)}</Time>
+        </MetaContainer>
+      </Item>
+    </>
   );
 }

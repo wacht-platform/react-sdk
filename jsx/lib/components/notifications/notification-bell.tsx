@@ -1,33 +1,29 @@
 import { useState, useRef, useEffect } from "react";
 import ReactDOM from "react-dom";
-import styled from "styled-components";
-import { BellRing } from "lucide-react";
+import styled, { keyframes, css } from "styled-components";
+import { Bell } from "lucide-react";
 import { DefaultStylesProvider } from "../utility/root";
-import { useNotifications } from "@/hooks/use-notifications";
+import { useScopeUnread } from "@/hooks/use-notifications";
 import { NotificationPopover } from "./notification-popover";
+import { usePopoverPosition } from "@/hooks/use-popover-position";
 
 const Container = styled.div`
   position: relative;
+  display: inline-flex;
 `;
 
-const CircularContainer = styled.div`
-  width: 40px;
-  height: 40px;
-  border-radius: 50%;
-  background: var(--color-background);
-  border: 1px solid var(--color-border);
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  transition: all 0.2s ease;
-
-  &:hover {
-    background: var(--color-background-hover);
-    border-color: var(--color-primary);
-  }
+const ringAnimation = keyframes`
+  0% { transform: rotate(0); }
+  10% { transform: rotate(15deg); }
+  20% { transform: rotate(-15deg); }
+  30% { transform: rotate(10deg); }
+  40% { transform: rotate(-10deg); }
+  50% { transform: rotate(5deg); }
+  60% { transform: rotate(-5deg); }
+  100% { transform: rotate(0); }
 `;
 
-const NotificationButton = styled.button`
+const NotificationButton = styled.button<{ $hasUnread: boolean }>`
   position: relative;
   display: flex;
   align-items: center;
@@ -35,11 +31,19 @@ const NotificationButton = styled.button`
   border: none;
   background: transparent;
   cursor: pointer;
-  padding: 0;
-  border-radius: 50%;
+  padding: 8px;
+  border-radius: 8px;
   transition: all 0.2s ease;
-  width: 100%;
-  height: 100%;
+  color: var(--color-foreground);
+
+  &:hover {
+    background: var(--color-background-hover);
+    color: var(--color-primary);
+  }
+
+  &:hover svg {
+    animation: ${props => props.$hasUnread ? css`${ringAnimation} 2s ease` : 'none'};
+  }
 
   &:focus {
     outline: none;
@@ -47,73 +51,64 @@ const NotificationButton = styled.button`
   }
 
   svg {
-    width: 16px;
-    height: 16px;
-    color: var(--color-secondary-text);
-    transition: color 0.2s ease;
-  }
-
-  &:hover svg {
-    color: var(--color-primary);
+    width: 20px;
+    height: 20px;
   }
 `;
 
-const Badge = styled.span`
+const Badge = styled.span<{ $dotOnly?: boolean }>`
   position: absolute;
-  top: -2px;
-  right: -2px;
+  top: ${props => props.$dotOnly ? '6px' : '4px'};
+  right: ${props => props.$dotOnly ? '6px' : '4px'};
   background: var(--color-error);
   color: white;
-  border-radius: 50%;
-  padding: 0 4px;
-  font-size: var(--font-2xs);
-  font-weight: 400;
-  min-width: 16px;
-  height: 16px;
+  border-radius: 10px;
+  min-width: ${props => props.$dotOnly ? '8px' : '16px'};
+  height: ${props => props.$dotOnly ? '8px' : '16px'};
+  padding: ${props => props.$dotOnly ? '0' : '0 4px'};
+  font-size: 9px;
+  font-weight: 600;
   display: flex;
   align-items: center;
   justify-content: center;
-  border: 2px solid var(--color-background);
-  box-shadow: 0 1px 3px var(--color-shadow);
+  border: 1.5px solid var(--color-background);
+  box-shadow: 0 0 1px rgba(0, 0, 0, 0.1);
+  line-height: 1;
+  transition: all 0.2s ease;
 `;
 
 interface NotificationBellProps {
   className?: string;
   showBadge?: boolean;
-  channels?: string[];
-  organizationIds?: number[];
-  workspaceIds?: number[];
+  scope?: "all" | "current" | "user";
+  onAction?: (payload: any) => void;
 }
 
 export function NotificationBell({
   className,
   showBadge = true,
-  channels = ["user"],
-  organizationIds,
-  workspaceIds,
+  scope = "all",
+  onAction,
 }: NotificationBellProps) {
   const [isOpen, setIsOpen] = useState(false);
-  const [popoverPosition, setPopoverPosition] = useState<
-    { top?: number; bottom?: number; left?: number; right?: number } | undefined
-  >();
   const containerRef = useRef<HTMLDivElement>(null);
   const popoverRef = useRef<HTMLDivElement>(null);
+  const buttonRef = useRef<HTMLButtonElement>(null);
 
-  const notificationParams = {
-    channels,
-    organization_ids: organizationIds,
-    workspace_ids: workspaceIds,
-    limit: 20,
+  const { count: unreadCount, refetch: refetchUnread } = useScopeUnread({ scope });
+
+  const handleAction = async (action: any) => {
+    // Only handle unread count refetching, actual actions are now in NotificationPanel
+    await refetchUnread();
+    onAction?.(action.payload);
   };
 
-  const {
-    unreadCount,
-    notifications,
-    loading,
-    markAsRead,
-    markAllAsRead,
-    deleteNotification,
-  } = useNotifications(notificationParams);
+  const popoverPosition = usePopoverPosition({
+    triggerRef: buttonRef,
+    isOpen,
+    minWidth: Math.min(450, typeof window !== 'undefined' ? window.innerWidth - 32 : 300),
+    defaultMaxHeight: 550,
+  });
 
   useEffect(() => {
     if (!isOpen) return;
@@ -145,57 +140,22 @@ export function NotificationBell({
     };
   }, [isOpen]);
 
-  useEffect(() => {
-    if (isOpen && containerRef.current) {
-      const rect = containerRef.current.getBoundingClientRect();
-      const popoverWidth = 400;
-      const popoverHeight = 600;
-
-      const windowWidth = window.innerWidth;
-      const windowHeight = window.innerHeight;
-
-      const spaceRight = windowWidth - rect.left;
-      const spaceBelow = windowHeight - rect.bottom;
-      const spaceAbove = rect.top;
-
-      // Determine horizontal position
-      let left: number | undefined;
-      let right: number | undefined;
-
-      if (spaceRight >= popoverWidth) {
-        left = rect.left;
-      } else {
-        right = windowWidth - rect.right;
-      }
-
-      let top: number | undefined;
-      let bottom: number | undefined;
-
-      if (spaceBelow >= popoverHeight + 8) {
-        top = rect.bottom + 8;
-      } else if (spaceAbove >= popoverHeight + 8) {
-        bottom = windowHeight - rect.top + 8;
-      } else {
-        top = rect.bottom + 8;
-      }
-
-      setPopoverPosition({ top, bottom, left, right });
-    } else {
-      setPopoverPosition(undefined);
-    }
-  }, [isOpen]);
-
   return (
     <DefaultStylesProvider>
       <Container ref={containerRef} className={className}>
-        <CircularContainer>
-          <NotificationButton onClick={() => setIsOpen(!isOpen)}>
-            <BellRing size={16} />
-            {showBadge && unreadCount > 0 && (
-              <Badge>{unreadCount > 9 ? "9+" : unreadCount}</Badge>
-            )}
-          </NotificationButton>
-        </CircularContainer>
+        <NotificationButton
+          ref={buttonRef}
+          onClick={() => setIsOpen(!isOpen)}
+          $hasUnread={unreadCount > 0}
+          aria-label={unreadCount > 0 ? `${unreadCount} unread notifications` : "Notifications"}
+        >
+          <Bell />
+          {showBadge && unreadCount > 0 && (
+            <Badge $dotOnly={unreadCount <= 9}>
+              {unreadCount > 9 ? "9+" : ""}
+            </Badge>
+          )}
+        </NotificationButton>
 
         {typeof window !== "undefined" &&
           isOpen &&
@@ -204,11 +164,9 @@ export function NotificationBell({
               <NotificationPopover
                 ref={popoverRef}
                 position={popoverPosition}
-                notifications={notifications}
-                loading={loading}
-                onMarkAsRead={markAsRead}
-                onMarkAllAsRead={markAllAsRead}
-                onDelete={deleteNotification}
+                scope={scope}
+                onAction={handleAction}
+                onClose={() => setIsOpen(false)}
               />
             </DefaultStylesProvider>,
             document.body,

@@ -1,4 +1,4 @@
 export { NotificationBell } from "./notification-bell";
-export { ChannelSelector } from "./channel-selector";
 export { NotificationPopover } from "./notification-popover";
+export { NotificationPanel } from "./notification-panel";
 export { NotificationItem } from "./notification-item";

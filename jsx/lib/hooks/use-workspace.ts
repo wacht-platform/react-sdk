@@ -1,4 +1,4 @@
-import { Client, Workspace, WorkspaceRole } from "@/types";
+import { Client, Workspace, WorkspaceRole, PaginatedResponse } from "@/types";
 import { useClient } from "./use-client";
 import useSWR from "swr";
 import { responseMapper } from "@/utils/response-mapper";
@@ -168,11 +168,26 @@ export const useWorkspaceList = () => {
   );
 
   const getWorkspaceMembers = useCallback(
-    async (workspace: Workspace) => {
-      const response = await responseMapper<WorkspaceMembership[]>(
-        await client(`/workspaces/${workspace.id}/members`, {
-          method: "GET",
-        }),
+    async (
+      workspace: Workspace,
+      params?: { page: number; limit: number; search?: string }
+    ) => {
+      const searchParams = new URLSearchParams();
+      if (params) {
+        searchParams.set("page", params.page.toString());
+        searchParams.set("limit", params.limit.toString());
+        if (params.search) {
+          searchParams.set("search", params.search);
+        }
+      }
+
+      const response = await responseMapper<PaginatedResponse<WorkspaceMembership[]>>(
+        await client(
+          `/workspaces/${workspace.id}/members?${searchParams.toString()}`,
+          {
+            method: "GET",
+          },
+        ),
       );
       return response.data;
     },
@@ -266,13 +281,14 @@ export const useWorkspaceList = () => {
   const getWorkspaceInvitations = useCallback(
     async (workspace: WorkspaceWithOrganization) => {
       const response = await responseMapper<any[]>(
-        await client(`/organizations/${workspace.organization.id}/invitations`, {
-          method: "GET",
-        }),
+        await client(
+          `/organizations/${workspace.organization.id}/invitations?workspace_id=${workspace.id}`,
+          {
+            method: "GET",
+          },
+        ),
       );
-      return response.data.filter(
-        (inv: any) => String(inv.workspace_id) === String(workspace.id),
-      );
+      return response.data;
     },
     [client],
   );
@@ -405,7 +421,14 @@ export const useActiveWorkspace = () => {
   }, [activeWorkspace, leaveWorkspaceFromList, session]);
 
   const updateCurrentWorkspace = useCallback(
-    async (data: { name?: string; description?: string; image?: File }) => {
+    async (data: {
+      name?: string;
+      description?: string;
+      image?: File;
+      enforce_2fa?: boolean;
+      enable_ip_restriction?: boolean;
+      whitelisted_ips?: string[];
+    }) => {
       if (!activeWorkspace) return;
       return await updateWorkspace(activeWorkspace, data);
     },
@@ -417,10 +440,13 @@ export const useActiveWorkspace = () => {
     return await deleteWorkspace(activeWorkspace);
   }, [activeWorkspace, deleteWorkspace]);
 
-  const getCurrentWorkspaceMembers = useCallback(async () => {
-    if (!activeWorkspace) return [];
-    return await getWorkspaceMembers(activeWorkspace);
-  }, [activeWorkspace, getWorkspaceMembers]);
+  const getCurrentWorkspaceMembers = useCallback(
+    async (params?: { page: number; limit: number; search?: string }) => {
+      if (!activeWorkspace) return { data: [], meta: { total: 0, page: 1, limit: 10 } };
+      return await getWorkspaceMembers(activeWorkspace, params);
+    },
+    [activeWorkspace, getWorkspaceMembers],
+  );
 
   const getCurrentWorkspaceRoles = useCallback(async () => {
     if (!activeWorkspace) return [];

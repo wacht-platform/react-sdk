@@ -5,7 +5,7 @@ import { DefaultStylesProvider } from "../utility/root";
 const Container = styled.div`
   max-width: 380px;
   width: 380px;
-  padding: var(--space-3xl);
+  padding: var(--space-2xl);
   background: var(--color-background);
   border-radius: var(--radius-lg);
   box-shadow: 0 4px 12px var(--color-shadow);
@@ -18,7 +18,7 @@ const Header = styled.div`
 `;
 
 const Title = styled.h1`
-  font-size: var(--font-lg);
+  font-size: var(--font-md);
   font-weight: 400;
   color: var(--color-foreground);
   margin-bottom: var(--space-xs);
@@ -30,6 +30,8 @@ const Subtitle = styled.p`
   font-size: var(--font-xs);
 `;
 
+
+
 const MethodList = styled.div`
   display: flex;
   flex-direction: column;
@@ -38,25 +40,35 @@ const MethodList = styled.div`
 
 const MethodButton = styled.button`
   display: flex;
-  align-items: flex-start;
+  align-items: center;
   gap: var(--space-md);
-  padding: var(--space-lg) var(--space-md);
-  margin: 0 calc(var(--space-md) * -1);
-  border: none;
-  border-bottom: 1px solid var(--color-border);
-  border-radius: 0;
-  background: none;
+  padding: var(--space-md);
+  width: 100%;
+  border: 1px solid var(--color-border);
+  background: var(--color-background);
   cursor: pointer;
   text-align: left;
-  width: calc(100% + (var(--space-md) * 2));
-  transition: background-color 0.2s ease;
+  transition: all 0.2s ease;
+  position: relative;
+
+  &:first-child {
+    border-top-left-radius: var(--radius-md);
+    border-top-right-radius: var(--radius-md);
+  }
 
   &:last-child {
-    border-bottom: none;
+    border-bottom-left-radius: var(--radius-md);
+    border-bottom-right-radius: var(--radius-md);
+  }
+
+  &:not(:first-child) {
+    margin-top: -1px;
   }
 
   &:hover:not(:disabled) {
-    background-color: rgba(99, 102, 241, 0.05);
+    background-color: var(--color-background-hover);
+    border-color: var(--color-primary);
+    z-index: 1;
   }
 
   &:disabled {
@@ -69,7 +81,6 @@ const MethodButton = styled.button`
     height: 20px;
     flex-shrink: 0;
     color: var(--color-primary);
-    margin-top: 2px;
   }
 `;
 

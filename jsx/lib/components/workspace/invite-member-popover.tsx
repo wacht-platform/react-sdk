@@ -7,6 +7,7 @@ import { Button, Spinner } from "../utility";
 import { ComboBox, ComboBoxOption } from "../utility/combo-box";
 import { WorkspaceRole } from "@/types";
 import { useScreenContext } from "../organization/context";
+import { useActiveWorkspace } from "@/hooks/use-workspace";
 
 const PopoverContainer = styled.div`
   position: fixed;
@@ -73,7 +74,6 @@ interface InviteMemberPopoverProps {
   onClose?: () => void;
   onSuccess?: () => void;
   roles: WorkspaceRole[];
-  createInvitation: (email: string, roleId: string) => Promise<any>;
   triggerRef?: React.RefObject<HTMLElement | null>;
 }
 
@@ -81,7 +81,6 @@ export const InviteMemberPopover = ({
   onClose,
   onSuccess,
   roles,
-  createInvitation,
   triggerRef,
 }: InviteMemberPopoverProps) => {
   const popoverRef = useRef<HTMLDivElement>(null);
@@ -91,6 +90,7 @@ export const InviteMemberPopover = ({
   const [mounted, setMounted] = useState(false);
   const [position, setPosition] = useState({ top: 0, left: 0 });
   const { toast } = useScreenContext();
+  const { inviteMember } = useActiveWorkspace();
 
   const roleOptions: ComboBoxOption[] = roles.map((role) => ({
     value: role.id,
@@ -218,7 +218,7 @@ export const InviteMemberPopover = ({
 
     setLoading(true);
     try {
-      await createInvitation(trimmedEmail, selectedRole.id);
+      await inviteMember(trimmedEmail, selectedRole.id);
       onSuccess?.();
     } catch (error: any) {
       const errorMessage = error.message || "Failed to send invitation. Please try again.";

@@ -8,7 +8,7 @@ import {
   Users,
   ChevronRight,
   ChevronLeft,
-  AlertTriangle,
+  AlertCircle,
 } from "lucide-react";
 import { useSession, useDeployment, useOrganizationMemberships } from "@/hooks";
 import { useWorkspaceList } from "@/hooks/use-workspace";
@@ -24,12 +24,21 @@ type ViewMode = "orgList" | "workspaceList" | "createOrg" | "createWorkspace";
 
 const Container = styled.div`
   width: 100%;
-  height: 500px;
+  max-width: 1000px;
+  height: 600px;
   background: var(--color-background);
   display: grid;
   grid-template-columns: 280px 1fr;
   border-radius: var(--radius-lg);
   overflow: hidden;
+
+  @media (max-width: 768px) {
+    width: 100%;
+    grid-template-columns: 1fr;
+    height: auto;
+    max-height: 90vh;
+    overflow-y: auto;
+  }
 `;
 
 const LeftColumn = styled.div`
@@ -39,6 +48,24 @@ const LeftColumn = styled.div`
   flex-direction: column;
   justify-content: space-between;
   border-right: 1px solid var(--color-border);
+
+  @media (max-width: 768px) {
+    border-right: none;
+    border-bottom: 1px solid var(--color-border);
+    padding: 24px;
+    gap: 24px;
+    align-items: center;
+    text-align: center;
+  }
+`;
+
+const LeftColumnContent = styled.div`
+  display: flex;
+  flex-direction: column;
+
+  @media (max-width: 768px) {
+    align-items: center;
+  }
 `;
 
 const RightColumn = styled.div`
@@ -46,6 +73,11 @@ const RightColumn = styled.div`
   display: flex;
   flex-direction: column;
   overflow: hidden;
+
+  @media (max-width: 768px) {
+    padding: 24px;
+    min-height: 400px;
+  }
 `;
 
 const ListSection = styled.div`
@@ -99,6 +131,11 @@ const TitleSection = styled.div`
   align-items: flex-start;
   gap: 4px;
   flex: 1;
+
+  @media (max-width: 768px) {
+    align-items: center;
+    text-align: center;
+  }
 `;
 
 const Title = styled.h1`
@@ -153,6 +190,7 @@ const ListItem = styled.button`
   color: var(--color-foreground);
   transition: background-color 0.2s ease;
   font-size: var(--font-sm);
+  position: relative;
 
   &:last-child {
     border-bottom: none;
@@ -161,6 +199,44 @@ const ListItem = styled.button`
   &:disabled {
     cursor: not-allowed;
     opacity: 0.6;
+  }
+
+  &:hover .warning-popover {
+    visibility: visible;
+    opacity: 1;
+  }
+`;
+
+const ListItemWarningPopover = styled.div`
+  visibility: hidden;
+  opacity: 0;
+  position: absolute;
+  top: 50%;
+  right: 50px;
+  transform: translateY(-50%);
+  background: var(--color-background);
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-sm);
+  padding: 6px 10px;
+  box-shadow: 0 4px 12px var(--color-shadow);
+  z-index: 100;
+  width: max-content;
+  max-width: 300px;
+  font-size: 11px;
+  line-height: 1.4;
+  color: var(--color-warning);
+  pointer-events: none;
+  transition: opacity 0.1s ease, visibility 0.1s ease;
+
+  &::after {
+    content: "";
+    position: absolute;
+    top: 50%;
+    left: 100%;
+    margin-top: -5px;
+    border-width: 5px;
+    border-style: solid;
+    border-color: transparent transparent transparent var(--color-border);
   }
 `;
 
@@ -226,22 +302,7 @@ const ItemArrow = styled.div`
   }
 `;
 
-const WarningText = styled.div`
-  grid-column: 2 / -1;
-  font-size: 12px;
-  color: var(--color-warning, #b45309);
-  display: flex;
-  align-items: center;
-  gap: 6px;
-  margin-top: 4px;
-  font-weight: 400;
-
-  svg {
-    width: 14px;
-    height: 14px;
-    flex-shrink: 0;
-  }
-`;
+// WarningText is no longer used, replaced by right-aligned AlertCircle
 
 const EmptyState = styled.div`
   text-align: center;
@@ -316,11 +377,16 @@ export const OrganizationSelectorMenu = () => {
     }
 
     if (!workspaces || workspaces.length === 0) {
-      if (organizationMemberships[0]) {
-        setSelectedOrgId(organizationMemberships[0].organization.id);
+      const eligibleOrg = organizationMemberships.find(
+        (m) =>
+          !m.eligibility_restriction?.type ||
+          m.eligibility_restriction?.type === "none",
+      );
+      if (eligibleOrg) {
+        setSelectedOrgId(eligibleOrg.organization.id);
+        setViewMode("createWorkspace");
+        return;
       }
-      setViewMode("createWorkspace");
-      return;
     }
 
     setViewMode("orgList");
@@ -363,16 +429,24 @@ export const OrganizationSelectorMenu = () => {
     }
   };
 
-  const handleOrganizationCreated = async (organization?: any) => {
+  const handleOrganizationCreated = async (response?: any) => {
     await refetchOrganizations();
 
+    // The backend returns { data: { organization, membership } }
+    // or sometimes just the organization depending on the hook
+    const createdOrg =
+      response?.data?.organization || response?.organization || response;
+
     if (!workspacesEnabled) {
+      setViewMode("orgList");
       return;
     }
 
-    if (organization) {
-      setSelectedOrgId(organization.id);
+    if (createdOrg?.id) {
+      setSelectedOrgId(createdOrg.id);
       setViewMode("createWorkspace");
+    } else {
+      setViewMode("orgList");
     }
   };
 
@@ -431,13 +505,13 @@ export const OrganizationSelectorMenu = () => {
   return (
     <Container>
       <LeftColumn>
-        <div>
+        <LeftColumnContent>
           <AuthFormImage />
           <TitleSection>
             <Title>{dialogTitle}</Title>
             <Subtitle>{dialogSubtitle}</Subtitle>
           </TitleSection>
-        </div>
+        </LeftColumnContent>
         <UserButton showName={true} />
       </LeftColumn>
 
@@ -470,8 +544,13 @@ export const OrganizationSelectorMenu = () => {
                           !hasRestriction && handleSelectWorkspace(workspace)
                         }
                         disabled={switching === workspace.id || hasRestriction}
-                        style={{ opacity: hasRestriction ? 0.7 : 1 }}
+                        style={{ opacity: hasRestriction ? 0.6 : 1 }}
                       >
+                        {hasRestriction && (
+                          <ListItemWarningPopover className="warning-popover">
+                            {workspace.eligibility_restriction?.message}
+                          </ListItemWarningPopover>
+                        )}
                         <Avatar>
                           {workspace.image_url ? (
                             <AvatarImage
@@ -490,14 +569,14 @@ export const OrganizationSelectorMenu = () => {
                           </ItemMeta>
                         </ItemContent>
                         <ItemArrow>
+                          {hasRestriction && (
+                            <AlertCircle
+                              size={16}
+                              style={{ color: "var(--color-error)" }}
+                            />
+                          )}
                           <ChevronRight />
                         </ItemArrow>
-                        {hasRestriction && (
-                          <WarningText>
-                            <AlertTriangle size={14} />
-                            {workspace.eligibility_restriction?.message}
-                          </WarningText>
-                        )}
                       </ListItem>
                     );
                   })
@@ -545,8 +624,13 @@ export const OrganizationSelectorMenu = () => {
                       !hasRestriction && handleSelectOrganization(org)
                     }
                     disabled={switching === org.id || hasRestriction}
-                    style={{ opacity: hasRestriction ? 0.7 : 1 }}
+                    style={{ opacity: hasRestriction ? 0.6 : 1 }}
                   >
+                    {hasRestriction && (
+                      <ListItemWarningPopover className="warning-popover">
+                        {membership.eligibility_restriction?.message}
+                      </ListItemWarningPopover>
+                    )}
                     <Avatar>
                       {org.image_url ? (
                         <AvatarImage src={org.image_url} alt={org.name} />
@@ -573,14 +657,14 @@ export const OrganizationSelectorMenu = () => {
                       </ItemMeta>
                     </ItemContent>
                     <ItemArrow>
+                      {hasRestriction && (
+                        <AlertCircle
+                          size={16}
+                          style={{ color: "var(--color-error)" }}
+                        />
+                      )}
                       <ChevronRight />
                     </ItemArrow>
-                    {hasRestriction && (
-                      <WarningText>
-                        <AlertTriangle size={14} />
-                        {membership.eligibility_restriction?.message}
-                      </WarningText>
-                    )}
                   </ListItem>
                 );
               })
@@ -603,25 +687,16 @@ export const OrganizationSelectorMenu = () => {
           </ListContainer>
         </ListSection>
 
-        {showingWorkspaces &&
-          selectedOrgWorkspaces &&
-          selectedOrgWorkspaces.length > 0 && (
-            <Button
-              style={{ marginTop: "var(--space-md)" }}
-              onClick={() => setViewMode("createWorkspace")}
-              disabled={switching !== null}
-            >
-              <Plus size={12} />
-              Create new workspace
-            </Button>
-          )}
 
         {!showingWorkspaces &&
           organizationMemberships &&
           organizationMemberships.length > 0 &&
           allowUsersToCreateOrgs && (
             <Button
-              style={{ marginTop: "var(--space-md)" }}
+              $outline
+              style={{
+                marginTop: workspacesEnabled ? "8px" : "var(--space-md)",
+              }}
               onClick={() => setViewMode("createOrg")}
               disabled={switching !== null}
             >

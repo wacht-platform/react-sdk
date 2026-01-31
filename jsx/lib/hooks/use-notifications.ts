@@ -1,16 +1,17 @@
 import { responseMapper } from "../utils/response-mapper";
 import { useClient } from "./use-client";
 import useSWR from "swr";
-import { useCallback } from "react";
+import useSWRInfinite from "swr/infinite";
+import { useCallback, useMemo } from "react";
 import { ApiResult } from "@/types";
 import {
   Notification,
   NotificationListResponse,
   BulkUpdateResponse,
   NotificationListParams,
-  ChannelCounts,
-} from "@/types/notification";
-import { Client } from "@/types";
+  ScopeUnreadResponse,
+  Client,
+} from "@/types";
 import {
   useNotificationStream,
   type NotificationMessage,
@@ -18,80 +19,62 @@ import {
 
 type UseNotificationsReturnType =
   | {
-      loading: true;
-      notifications: never;
-      unreadCount: never;
-      unreadCounts: never;
-      channels: never;
-      hasMore: never;
-      markAsRead: never;
-      markAllAsRead: never;
-      deleteNotification: never;
-      error: Error | null;
-      refetch: () => Promise<void>;
-    }
+    loading: true;
+    notifications: Notification[];
+    hasMore: boolean;
+    markAsRead: never;
+    markAllAsRead: never;
+    archiveAllRead: never;
+    archiveNotification: never;
+    starNotification: never;
+    markAsUnread: never;
+    error: Error | null;
+    refetch: () => Promise<void>;
+    loadMore: () => Promise<void>;
+  }
   | {
-      loading: false;
-      error: Error | null;
-      notifications: Notification[];
-      unreadCount: number;
-      unreadCounts: ChannelCounts;
-      channels: string[];
-      hasMore: boolean;
-      markAsRead: (notificationId: string) => Promise<void>;
-      markAllAsRead: () => Promise<void>;
-      deleteNotification: (notificationId: string) => Promise<void>;
-      refetch: () => Promise<void>;
-    };
+    loading: false;
+    error: Error | null;
+    notifications: Notification[];
+    hasMore: boolean;
+    markAsRead: (notificationId: string) => Promise<void>;
+    markAllAsRead: () => Promise<void>;
+    archiveAllRead: () => Promise<void>;
+    archiveNotification: (notificationId: string) => Promise<void>;
+    starNotification: (notificationId: string) => Promise<void>;
+    markAsUnread: (notificationId: string) => Promise<void>;
+    refetch: () => Promise<void>;
+    loadMore: () => Promise<void>;
+  };
+
+function toQueryString(params?: NotificationListParams): string {
+  if (!params) return "";
+  const queryString = new URLSearchParams();
+  if (params.limit) queryString.append("limit", params.limit.toString());
+  if (params.cursor) queryString.append("cursor", params.cursor);
+  if (params.scope) queryString.append("scope", params.scope);
+  if (params.is_read !== undefined)
+    queryString.append("is_read", params.is_read.toString());
+  if (params.is_archived !== undefined)
+    queryString.append("is_archived", params.is_archived.toString());
+  if (params.is_starred !== undefined)
+    queryString.append("is_starred", params.is_starred.toString());
+  if (params.severity) queryString.append("severity", params.severity);
+  const qs = queryString.toString();
+  return qs ? "?" + qs : "";
+}
 
 async function fetchNotifications(
   client: Client,
   params?: NotificationListParams,
 ): Promise<NotificationListResponse> {
-  const queryString = new URLSearchParams();
-
-  if (params) {
-    if (params.limit) queryString.append("limit", params.limit.toString());
-    if (params.offset) queryString.append("offset", params.offset.toString());
-    if (params.channels) {
-      params.channels.forEach((channel) =>
-        queryString.append("channels", channel),
-      );
-    }
-    if (params.organization_ids) {
-      params.organization_ids.forEach((id) =>
-        queryString.append("organization_ids", id.toString()),
-      );
-    }
-    if (params.workspace_ids) {
-      params.workspace_ids.forEach((id) =>
-        queryString.append("workspace_ids", id.toString()),
-      );
-    }
-    if (params.is_read !== undefined)
-      queryString.append("is_read", params.is_read.toString());
-    if (params.is_archived !== undefined)
-      queryString.append("is_archived", params.is_archived.toString());
-    if (params.severity) queryString.append("severity", params.severity);
-  }
-
-  const url = `/notifications${queryString.toString() ? "?" + queryString.toString() : ""}`;
+  const url = `/notifications${toQueryString(params)}`;
 
   const response = await client(url, {
     method: "GET",
   });
   const responseParsed =
     await responseMapper<NotificationListResponse>(response);
-  return responseParsed.data;
-}
-
-export async function fetchChannelCounts(
-  client: Client,
-): Promise<ChannelCounts> {
-  const response = await client("/notifications/channel-counts", {
-    method: "GET",
-  });
-  const responseParsed = await responseMapper<ChannelCounts>(response);
   return responseParsed.data;
 }
 
@@ -105,58 +88,117 @@ async function markNotificationAsRead(
   return responseMapper(response);
 }
 
-async function markAllNotificationsAsRead(
-  client: Client,
-): Promise<ApiResult<BulkUpdateResponse>> {
-  const response = await client("/notifications/mark-all-read", {
-    method: "POST",
-  });
-  return responseMapper(response);
-}
-
-async function deleteNotification(
+async function markNotificationAsUnread(
   client: Client,
   notificationId: string,
 ): Promise<ApiResult<{ success: boolean }>> {
-  const response = await client(`/notifications/${notificationId}/delete`, {
+  const response = await client(`/notifications/${notificationId}/unread`, {
     method: "POST",
   });
   return responseMapper(response);
 }
 
-export function useNotifications(
+async function markAllNotificationsAsRead(
+  client: Client,
   params?: NotificationListParams,
+): Promise<ApiResult<BulkUpdateResponse>> {
+  const response = await client(`/notifications/mark-all-read${toQueryString(params)}`, {
+    method: "POST",
+  });
+  return responseMapper(response);
+}
+
+async function archiveAllReadNotifications(
+  client: Client,
+  params?: NotificationListParams,
+): Promise<ApiResult<BulkUpdateResponse>> {
+  const response = await client(`/notifications/archive-all-read${toQueryString(params)}`, {
+    method: "POST",
+  });
+  return responseMapper(response);
+}
+
+async function archiveNotification(
+  client: Client,
+  notificationId: string,
+): Promise<ApiResult<{ success: boolean }>> {
+  const response = await client(`/notifications/${notificationId}/archive`, {
+    method: "POST",
+  });
+  return responseMapper(response);
+}
+
+async function starNotification(
+  client: Client,
+  notificationId: string,
+): Promise<ApiResult<{ success: boolean; is_starred: boolean }>> {
+  const response = await client(`/notifications/${notificationId}/star`, {
+    method: "POST",
+  });
+  return responseMapper(response);
+}
+
+export interface UseNotificationsOptions extends NotificationListParams {
+  onNotification?: (notification: NotificationMessage) => void;
+}
+
+export function useNotifications(
+  params?: UseNotificationsOptions,
 ): UseNotificationsReturnType {
   const { client, loading: clientLoading } = useClient();
-
   const {
-    data,
+    data: pages,
     error,
     mutate: refetch,
-    isLoading: notificationLading,
-  } = useSWR(
-    !clientLoading ? `wacht-notifications:${JSON.stringify(params)}` : null,
-    () => fetchNotifications(client, params),
+    isLoading: notificationLoading,
+    size,
+    setSize,
+    isValidating,
+  } = useSWRInfinite<NotificationListResponse>(
+    (index, previousPageData) => {
+      if (clientLoading) return null;
+      if (index > 0 && (!previousPageData || !previousPageData.has_more)) return null;
+
+      const cursor = index === 0 ? undefined : previousPageData?.notifications[previousPageData.notifications.length - 1]?.id;
+
+      // eslint-disable-next-line @typescript-eslint/no-unused-vars
+      const { onNotification, ...queryParams } = params || {};
+      return ["wacht-notifications", { ...queryParams, cursor }];
+    },
+    ([, keyParams]) => {
+      return fetchNotifications(client, keyParams as NotificationListParams);
+    },
     {
       refreshInterval: 60000,
       revalidateOnFocus: true,
+      revalidateFirstPage: true,
     },
   );
 
+  const notifications = useMemo(() => {
+    return pages ? pages.flatMap((page) => page.notifications) : [];
+  }, [pages]);
+
+  const hasMore = pages ? pages[pages.length - 1]?.has_more : false;
+
   useNotificationStream({
-    enabled: !clientLoading && !!data,
+    enabled: !clientLoading && !!pages,
     onNotification: useCallback(
       (notification: NotificationMessage) => {
         refetch(async (current) => {
-          if (!current) return current;
+          if (!current || current.length === 0) return current;
 
-          const exists = current.notifications.some(
-            (n) => n.id === notification.id.toString(),
+          const exists = current.some((page) =>
+            page.notifications.some((n) => n.id === notification.id.toString())
           );
           if (exists) return current;
 
-          return {
-            ...current,
+          params?.onNotification?.(notification);
+
+          // Prepend to the first page
+          const firstPage = current[0];
+          const newFirstPage = {
+            ...firstPage,
             notifications: [
               {
                 id: notification.id.toString(),
@@ -165,23 +207,22 @@ export function useNotifications(
                 title: notification.title,
                 body: notification.body,
                 severity: notification.severity,
-                action_url: notification.action_url,
-                action_label: notification.action_label,
+                ctas: notification.ctas,
                 is_read: false,
                 is_archived: false,
                 created_at: notification.created_at,
                 updated_at: notification.created_at,
               } as Notification,
-              ...current.notifications,
+              ...firstPage.notifications,
             ],
-            unread_count: current.unread_count + 1,
-            total: current.total + 1,
           };
+
+          return [newFirstPage, ...current.slice(1)];
         }, false);
       },
-      [refetch],
+      [refetch, params],
     ),
-    onError: useCallback(() => {}, []),
+    onError: useCallback(() => { }, []),
   });
 
   const markAsRead = useCallback(
@@ -190,16 +231,36 @@ export function useNotifications(
 
       await refetch(async (current) => {
         if (!current) return current;
-        return {
-          ...current,
-          notifications: current.notifications.map((n) =>
+        return current.map((page) => ({
+          ...page,
+          notifications: page.notifications.map((n) =>
             n.id === notificationId ? { ...n, is_read: true } : n,
           ),
-          unread_count: Math.max(0, current.unread_count - 1),
-        };
+        }));
       }, false);
 
       await markNotificationAsRead(client, notificationId);
+
+      await refetch();
+    },
+    [client, clientLoading, refetch],
+  );
+
+  const markAsUnread = useCallback(
+    async (notificationId: string) => {
+      if (clientLoading) return;
+
+      await refetch(async (current) => {
+        if (!current) return current;
+        return current.map((page) => ({
+          ...page,
+          notifications: page.notifications.map((n) =>
+            n.id === notificationId ? { ...n, is_read: false } : n,
+          ),
+        }));
+      }, false);
+
+      await markNotificationAsUnread(client, notificationId);
 
       await refetch();
     },
@@ -211,65 +272,172 @@ export function useNotifications(
 
     await refetch(async (current) => {
       if (!current) return current;
-      return {
-        ...current,
-        notifications: current.notifications.map((n) => ({
+      return current.map((page) => ({
+        ...page,
+        notifications: page.notifications.map((n) => ({
           ...n,
           is_read: true,
         })),
-        unread_count: 0,
-      };
+      }));
     }, false);
 
-    await markAllNotificationsAsRead(client);
+    await markAllNotificationsAsRead(client, params);
 
     await refetch();
-  }, [client, refetch]);
+  }, [client, params, refetch, clientLoading]);
 
-  const deleteNotificationCallback = useCallback(
+  const archiveAllRead = useCallback(async () => {
+    if (clientLoading) return;
+
+    await refetch(async (current) => {
+      if (!current) return current;
+      return current.map((page) => ({
+        ...page,
+        notifications: page.notifications.filter((n) => !n.is_read),
+      }));
+    }, false);
+
+    await archiveAllReadNotifications(client, params);
+
+    await refetch();
+  }, [client, params, clientLoading, refetch]);
+
+  const archiveNotificationCallback = useCallback(
     async (notificationId: string) => {
       if (clientLoading) return;
 
       await refetch(async (current) => {
         if (!current) return current;
-        const notification = current.notifications.find(
-          (n) => n.id === notificationId,
-        );
-        return {
-          ...current,
-          notifications: current.notifications.filter(
-            (n) => n.id !== notificationId,
-          ),
-          unread_count:
-            notification && !notification.is_read
-              ? Math.max(0, current.unread_count - 1)
-              : current.unread_count,
-          total: Math.max(0, current.total - 1),
-        };
+        return current.map((page) => ({
+          ...page,
+          notifications: params?.is_archived !== undefined
+            ? page.notifications.filter((n) => n.id !== notificationId)
+            : page.notifications.map((n) =>
+              n.id === notificationId ? { ...n, is_archived: !n.is_archived } : n
+            ),
+        }));
       }, false);
 
-      await deleteNotification(client, notificationId);
+      await archiveNotification(client, notificationId);
+
+      await refetch();
+    },
+    [client, clientLoading, refetch, params?.is_archived],
+  );
+
+  const starNotificationCallback = useCallback(
+    async (notificationId: string) => {
+      if (clientLoading) return;
+
+      await refetch(async (current) => {
+        if (!current) return current;
+        return current.map((page) => ({
+          ...page,
+          notifications: page.notifications.map((n) =>
+            n.id === notificationId ? { ...n, is_starred: !n.is_starred } : n,
+          ),
+        }));
+      }, false);
+
+      await starNotification(client, notificationId);
 
       await refetch();
     },
     [client, clientLoading, refetch],
   );
 
+  const loadMore = useCallback(async () => {
+    if (isValidating || !hasMore) return;
+    await setSize(size + 1);
+  }, [isValidating, hasMore, setSize, size]);
+
   const refetchWrapper = useCallback(async () => {
     await refetch();
   }, [refetch]);
 
-  if (!data || clientLoading || notificationLading) {
+  const isLoading = clientLoading || notificationLoading || (size > 0 && pages && typeof pages[size - 1] === "undefined");
+
+  if (!pages || isLoading) {
     return {
       loading: true,
-      notifications: undefined as never,
-      unreadCount: undefined as never,
-      unreadCounts: undefined as never,
-      channels: undefined as never,
-      hasMore: undefined as never,
+      notifications: notifications,
+      hasMore: hasMore,
       markAsRead: undefined as never,
       markAllAsRead: undefined as never,
-      deleteNotification: undefined as never,
+      archiveAllRead: undefined as never,
+      archiveNotification: undefined as never,
+      starNotification: undefined as never,
+      markAsUnread: undefined as never,
+      error,
+      refetch: refetchWrapper,
+      loadMore,
+    } as const;
+  }
+
+  return {
+    loading: false,
+    error: error,
+    notifications: notifications,
+    hasMore: hasMore,
+    markAsRead,
+    markAllAsRead,
+    archiveAllRead,
+    archiveNotification: archiveNotificationCallback,
+    starNotification: starNotificationCallback,
+    markAsUnread,
+    refetch: refetchWrapper,
+    loadMore,
+  } as const;
+}
+
+async function fetchScopeUnread(client: Client, params?: NotificationListParams): Promise<ScopeUnreadResponse> {
+  const url = `/notifications/scope-unread${toQueryString(params)}`;
+
+  const response = await client(url, {
+    method: "GET",
+  });
+  const responseParsed = await responseMapper<ScopeUnreadResponse>(response);
+  return responseParsed.data;
+}
+
+type UseScopeUnreadReturnType =
+  | {
+    loading: true;
+    count: number;
+    error: Error | null;
+    refetch: () => Promise<void>;
+  }
+  | {
+    loading: false;
+    count: number;
+    error: Error | null;
+    refetch: () => Promise<void>;
+  };
+
+export function useScopeUnread(params?: NotificationListParams): UseScopeUnreadReturnType {
+  const { client, loading: clientLoading } = useClient();
+
+  const {
+    data,
+    error,
+    mutate: refetch,
+  } = useSWR(
+    !clientLoading ? ["wacht-notifications-unread", params] : null,
+    ([, keyParams]) => fetchScopeUnread(client, keyParams),
+    {
+      refreshInterval: 30000, // Poll every 30 seconds
+      revalidateOnFocus: true,
+    }
+  );
+
+  const refetchWrapper = async () => {
+    await refetch();
+  };
+
+  if (!data || clientLoading) {
+    return {
+      loading: true,
+      count: 0,
       error,
       refetch: refetchWrapper,
     } as const;
@@ -277,15 +445,8 @@ export function useNotifications(
 
   return {
     loading: false,
+    count: data.count,
     error,
-    notifications: data.notifications,
-    unreadCount: data.unread_count,
-    unreadCounts: data.unread_counts,
-    channels: data.channels,
-    hasMore: data.has_more,
-    markAsRead,
-    markAllAsRead,
-    deleteNotification: deleteNotificationCallback,
     refetch: refetchWrapper,
   } as const;
 }

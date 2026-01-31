@@ -28,7 +28,7 @@ export const ManageWorkspaceDialog: FC<ManageWorkspaceDialogProps> = ({
   return (
     <Dialog isOpen={isOpen} onClose={onClose}>
       <Dialog.Overlay>
-        <Dialog.Content style={{ width: "900px", maxWidth: "100%" }}>
+        <Dialog.Content style={{ width: "900px", maxWidth: "90vw" }}>
           {showHeader && (
             <Dialog.Header showCloseButton={showCloseButton}>
               {headerContent || title}

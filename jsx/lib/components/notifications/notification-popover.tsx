@@ -1,12 +1,9 @@
 import { forwardRef } from "react";
 import styled from "styled-components";
-import { BellOff } from "lucide-react";
-import { NotificationItem } from "./notification-item";
-import { Spinner } from "../utility/spinner";
-import type { Notification } from "@/types/notification";
+import { NotificationPanel, type NotificationPanelProps } from "./notification-panel";
 
 const Popover = styled.div<{
-  $position?: { top?: number; bottom?: number; left?: number; right?: number };
+  $position?: { top?: number; bottom?: number; left?: number; right?: number; maxHeight?: number };
 }>`
   position: fixed;
   ${(props) =>
@@ -23,142 +20,33 @@ const Popover = styled.div<{
     props.$position?.right !== undefined
       ? `right: ${props.$position.right}px;`
       : ""}
-  width: 400px;
-  max-height: 600px;
+  width: 450px;
+  max-width: calc(100vw - 24px);
+  max-height: ${(props) => props.$position?.maxHeight ? `${props.$position.maxHeight}px` : '700px'};
   background: var(--color-background);
   border: 1px solid var(--color-border);
   border-radius: 12px;
-  box-shadow: 0 4px 12px var(--color-shadow);
+  box-shadow: 0 10px 40px -10px rgba(0, 0, 0, 0.1), 0 0 1px rgba(0, 0, 0, 0.1);
   overflow: hidden;
   z-index: 99999;
   display: flex;
   flex-direction: column;
+  animation: fadeIn 0.15s ease-out;
+  max-height: 90vh;
 
-  @media (max-width: 480px) {
-    width: 320px;
-    max-height: 500px;
+  @keyframes fadeIn {
+    from { opacity: 0; transform: translateY(2px); }
+    to { opacity: 1; transform: translateY(0); }
+  }
+
+  @media(max-width: 480px) {
+    border-radius: 8px;
   }
 `;
 
-const Header = styled.div`
-  padding: 10px 16px;
-  border-bottom: 1px solid var(--color-border);
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-  background: var(--color-background);
-`;
-
-const Title = styled.h3`
-  font-size: 14px;
-  font-weight: 400;
-  color: var(--color-foreground);
-  margin: 0;
-`;
-
-const MarkAllButton = styled.button`
-  background: transparent;
-  border: none;
-  color: var(--color-primary);
-  font-size: var(--font-xs);
-  font-weight: 400;
-  cursor: pointer;
-  padding: 4px 8px;
-  border-radius: 6px;
-  transition: all 0.2s ease;
-
-  &:hover {
-    background: var(--color-input-background);
-    color: var(--color-primary-hover);
-  }
-
-  &:focus {
-    outline: none;
-    box-shadow: 0 0 0 2px var(--color-primary);
-  }
-`;
-
-const Content = styled.div`
-  flex: 1;
-  overflow-y: auto;
-  max-height: 450px;
-`;
-
-const LoadingContainer = styled.div`
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  padding: 32px;
-`;
-
-const EmptyStateContainer = styled.div`
-  padding: 40px 16px;
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  justify-content: center;
-  text-align: center;
-`;
-
-const EmptyIcon = styled.div`
-  width: 40px;
-  height: 40px;
-  border-radius: 50%;
-  background: var(--color-background-hover);
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  margin-bottom: 12px;
-
-  svg {
-    width: 18px;
-    height: 18px;
-    color: var(--color-secondary-text);
-    opacity: 0.6;
-  }
-`;
-
-const EmptyTitle = styled.h3`
-  font-size: 14px;
-  font-weight: 400;
-  color: var(--color-foreground);
-  margin: 0 0 4px 0;
-`;
-
-const EmptyDescription = styled.p`
-  font-size: var(--font-xs);
-  color: var(--color-secondary-text);
-  margin: 0;
-  line-height: 1.4;
-`;
-
-const Footer = styled.div`
-  padding: 8px 16px;
-  border-top: 1px solid var(--color-border);
-  background: var(--color-background);
-  text-align: center;
-`;
-
-const ViewAllLink = styled.a`
-  color: var(--color-primary);
-  font-size: var(--font-xs);
-  font-weight: 400;
-  text-decoration: none;
-  transition: color 0.2s ease;
-
-  &:hover {
-    color: var(--color-primary-hover);
-    text-decoration: underline;
-  }
-`;
-
-interface NotificationPopoverProps {
-  position?: { top?: number; bottom?: number; left?: number; right?: number };
-  notifications: Notification[];
-  loading: boolean;
-  onMarkAsRead: (id: string) => void;
-  onMarkAllAsRead: () => void;
-  onDelete: (id: string) => void;
+export interface NotificationPopoverProps extends Omit<NotificationPanelProps, 'fullWidth' | 'maxHeight'> {
+  position?: { top?: number; bottom?: number; left?: number; right?: number; maxHeight?: number };
+  onClose?: () => void;
 }
 
 export const NotificationPopover = forwardRef<
@@ -168,60 +56,21 @@ export const NotificationPopover = forwardRef<
   (
     {
       position,
-      notifications,
-      loading,
-      onMarkAsRead,
-      onMarkAllAsRead,
-      onDelete,
+      scope,
+      onAction,
+      className,
+      // onClose is kept for backward compatibility if needed, though unused in the internal trigger
     },
     ref,
   ) => {
-    const hasUnread = !loading && notifications.some((n) => !n.is_read);
-    console.log("loadings", loading);
-
     return (
-      <Popover ref={ref} $position={position}>
-        <Header>
-          <Title>Notifications</Title>
-          {hasUnread && (
-            <MarkAllButton onClick={onMarkAllAsRead}>
-              Mark all as read
-            </MarkAllButton>
-          )}
-        </Header>
-
-        <Content>
-          {loading ? (
-            <LoadingContainer>
-              <Spinner />
-            </LoadingContainer>
-          ) : notifications.length === 0 ? (
-            <EmptyStateContainer>
-              <EmptyIcon>
-                <BellOff />
-              </EmptyIcon>
-              <EmptyTitle>No notifications</EmptyTitle>
-              <EmptyDescription>You're all caught up!</EmptyDescription>
-            </EmptyStateContainer>
-          ) : (
-            notifications.map((notification) => (
-              <NotificationItem
-                key={notification.id}
-                notification={notification}
-                onMarkAsRead={onMarkAsRead}
-                onDelete={onDelete}
-              />
-            ))
-          )}
-        </Content>
-
-        {!loading && notifications.length > 0 && (
-          <Footer>
-            <ViewAllLink href="/notifications">
-              View all notifications
-            </ViewAllLink>
-          </Footer>
-        )}
+      <Popover ref={ref} $position={position} className={className}>
+        <NotificationPanel
+          scope={scope}
+          onAction={onAction}
+          fullWidth
+          maxHeight={position?.maxHeight ? `${position.maxHeight}px` : '100%'}
+        />
       </Popover>
     );
   },

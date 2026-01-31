@@ -6,27 +6,26 @@ const EmptyStateContainer = styled.div`
   flex-direction: column;
   align-items: center;
   justify-content: center;
-  padding: 48px 24px;
+  padding: 32px 16px;
   text-align: center;
   background-color: var(--color-background);
   border-radius: 12px;
   border: 1px dashed var(--color-border);
-  height: 100%;
   width: 100%;
 `;
 
 const Title = styled.h3`
-  font-size: 16px;
+  font-size: 15px;
   font-weight: 400;
   color: var(--color-foreground);
-  margin: 0 0 8px 0;
+  margin: 0 0 6px 0;
 `;
 
 const Description = styled.p`
-  font-size: 14px;
+  font-size: 13px;
   color: var(--color-muted);
   margin: 0;
-  max-width: 380px;
+  max-width: 320px;
   line-height: 1.5;
 `;
 

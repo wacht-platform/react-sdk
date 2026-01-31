@@ -1,6 +1,7 @@
 import { useState, useRef, useEffect } from "react";
 import styled from "styled-components";
 import { useOrganizationList } from "@/hooks/use-organization";
+import { useSession } from "@/hooks/use-session";
 import { ChevronLeft } from "lucide-react";
 import { useScreenContext } from "./context";
 import { DefaultStylesProvider } from "../utility";
@@ -9,6 +10,11 @@ const Container = styled.div`
   display: flex;
   height: 100%;
   min-height: 400px;
+
+  @media (max-width: 768px) {
+    flex-direction: column;
+    height: auto;
+  }
 `;
 
 const LeftPanel = styled.div`
@@ -21,6 +27,13 @@ const LeftPanel = styled.div`
   justify-content: center;
   text-align: center;
   border-right: 1px solid var(--color-border);
+
+  @media (max-width: 768px) {
+    width: 100%;
+    border-right: none;
+    border-bottom: 1px solid var(--color-border);
+    padding: 24px;
+  }
 `;
 
 const RightPanel = styled.div`
@@ -28,6 +41,10 @@ const RightPanel = styled.div`
   padding: 32px;
   display: flex;
   flex-direction: column;
+
+  @media (max-width: 768px) {
+    padding: 24px;
+  }
 `;
 
 const AvatarContainer = styled.div<{ hasImage: boolean }>`
@@ -255,6 +272,7 @@ export const CreateOrganizationForm: React.FC<CreateOrganizationFormProps> = ({
   const [isSubmitting, setIsSubmitting] = useState(false);
   const fileInputRef = useRef<HTMLInputElement>(null);
   const { createOrganization } = useOrganizationList();
+  const { refetch } = useSession();
   const { toast } = useScreenContext();
 
   const handleNameChange = (value: string) => {
@@ -346,6 +364,7 @@ export const CreateOrganizationForm: React.FC<CreateOrganizationFormProps> = ({
         description: sanitizedDescription,
         image,
       });
+      await refetch();
       onSuccess?.(createdOrganization);
     } catch (error: any) {
       const errorMessage =

@@ -16,8 +16,15 @@ const PopoverContainer = styled.div`
 
 const Title = styled.div`
   font-size: 14px;
-  font-weight: 400;
+  font-weight: 500;
   color: var(--color-foreground);
+  margin-bottom: 4px;
+  line-height: 1.4;
+`;
+
+const Description = styled.div`
+  font-size: 12px;
+  color: var(--color-secondary-text);
   margin-bottom: 16px;
   line-height: 1.4;
 `;
@@ -30,6 +37,7 @@ const ButtonGroup = styled.div`
 
 interface ConfirmationPopoverProps {
   title: string;
+  description?: string;
   onConfirm: () => void;
   onCancel: () => void;
   style?: React.CSSProperties;
@@ -37,6 +45,7 @@ interface ConfirmationPopoverProps {
 
 export const ConfirmationPopover = ({
   title,
+  description,
   onConfirm,
   onCancel,
   style,
@@ -68,6 +77,7 @@ export const ConfirmationPopover = ({
       }}
     >
       <Title>{title}</Title>
+      {description && <Description>{description}</Description>}
       <ButtonGroup>
         <Button
           onClick={onCancel}

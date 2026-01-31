@@ -4,7 +4,7 @@ import React, { useState, useEffect } from "react";
 import styled from "styled-components";
 import useSWR from "swr";
 import { Shield, Copy, Check, Plus, ExternalLink } from "lucide-react";
-import { useActiveOrganization } from "@/hooks/use-organization";
+import { useOrganizationList } from "@/hooks/use-organization";
 import { useDeployment } from "@/hooks";
 import { Spinner } from "../utility/spinner";
 import { ConfirmationPopover } from "../utility/confirmation-popover";
@@ -12,7 +12,7 @@ import { useScreenContext } from "./context";
 import { Button, Switch } from "../utility";
 import { Input } from "../utility/input";
 import { FormGroup, Label } from "../utility/form";
-import type { EnterpriseConnection, CreateEnterpriseConnectionPayload } from "@/types";
+import type { EnterpriseConnection, CreateEnterpriseConnectionPayload, Organization } from "@/types";
 
 const HeaderCTAContainer = styled.div`
   display: flex;
@@ -400,10 +400,8 @@ const Select = styled.select`
   }
 `;
 
-export const SSOSettingsSection = () => {
+export const SSOSettingsSection = ({ organization }: { organization: Organization }) => {
     const {
-        activeOrganization,
-        loading,
         getEnterpriseConnections,
         createEnterpriseConnection,
         deleteEnterpriseConnection,
@@ -411,7 +409,7 @@ export const SSOSettingsSection = () => {
         generateSCIMToken,
         getSCIMToken,
         revokeSCIMToken,
-    } = useActiveOrganization();
+    } = useOrganizationList();
     const { toast } = useScreenContext();
     const [isCreating, setIsCreating] = useState(false);
     const [connectionToDelete, setConnectionToDelete] = useState<string | null>(null);
@@ -421,8 +419,8 @@ export const SSOSettingsSection = () => {
         isLoading,
         mutate,
     } = useSWR(
-        activeOrganization?.id ? `wacht-org-sso:${activeOrganization.id}` : null,
-        async () => await getEnterpriseConnections?.() || [],
+        organization?.id ? `wacht-org-sso:${organization.id}` : null,
+        async () => await getEnterpriseConnections?.(organization) || [],
         {
             refreshInterval: 30000,
             revalidateOnFocus: false,
@@ -431,7 +429,7 @@ export const SSOSettingsSection = () => {
 
     const handleDelete = async (connectionId: string) => {
         try {
-            await deleteEnterpriseConnection?.(connectionId);
+            await deleteEnterpriseConnection?.(organization, connectionId);
             mutate();
             toast("SSO connection deleted", "info");
         } catch (error: any) {
@@ -440,7 +438,7 @@ export const SSOSettingsSection = () => {
         setConnectionToDelete(null);
     };
 
-    if (loading || isLoading) {
+    if (isLoading) {
         return (
             <div style={{ display: "flex", justifyContent: "center", padding: "40px 0" }}>
                 <Spinner />
@@ -452,10 +450,11 @@ export const SSOSettingsSection = () => {
     if (isCreating) {
         return (
             <CreateSSOScreen
+                organization={organization}
                 onClose={() => setIsCreating(false)}
                 onCreate={async (payload) => {
                     try {
-                        await createEnterpriseConnection?.(payload);
+                        await createEnterpriseConnection?.(organization, payload);
                         mutate();
                         setIsCreating(false);
                         toast("SSO connection created", "info");
@@ -520,10 +519,10 @@ export const SSOSettingsSection = () => {
                             connectionToDelete={connectionToDelete}
                             onConfirmDelete={handleDelete}
                             onCancelDelete={() => setConnectionToDelete(null)}
-                            testConnection={testEnterpriseConnection || null}
-                            generateSCIMToken={generateSCIMToken}
-                            getSCIMToken={getSCIMToken}
-                            revokeSCIMToken={revokeSCIMToken}
+                            testConnection={(id) => testEnterpriseConnection!(organization, id)}
+                            generateSCIMToken={(id) => generateSCIMToken!(organization, id)}
+                            getSCIMToken={(id) => getSCIMToken!(organization, id)}
+                            revokeSCIMToken={(id) => revokeSCIMToken!(organization, id)}
                             toast={toast}
                         />
                     ))}
@@ -831,8 +830,8 @@ const SectionTitle = styled.h3`
   letter-spacing: 0.5px;
 `;
 
-const CreateSSOScreen = ({ onCreate }: CreateSSOScreenProps) => {
-    const { getDomains, testEnterpriseConnectionConfig } = useActiveOrganization();
+const CreateSSOScreen = ({ onCreate, onClose, organization }: CreateSSOScreenProps & { organization: Organization }) => {
+    const { getOrganizationDomains: getDomains, testEnterpriseConnectionConfig } = useOrganizationList();
     const { deployment } = useDeployment();
     const { toast } = useScreenContext();
     const [loading, setLoading] = useState(false);
@@ -863,7 +862,7 @@ const CreateSSOScreen = ({ onCreate }: CreateSSOScreenProps) => {
     } = useSWR(
         "wacht-org-verified-domains-for-sso-screen",
         async () => {
-            const allDomains = await getDomains?.() || [];
+            const allDomains = await getDomains?.(organization) || [];
             return allDomains.filter(d => d.verified);
         },
         { revalidateOnFocus: false }
@@ -1063,7 +1062,7 @@ const CreateSSOScreen = ({ onCreate }: CreateSSOScreenProps) => {
                     oidc_client_secret: formData.oidc_client_secret,
                 };
 
-            const result = await testEnterpriseConnectionConfig?.(testData);
+            const result = await testEnterpriseConnectionConfig?.(organization, testData);
             if (result) {
                 setTestResult(result);
             }
@@ -1480,6 +1479,35 @@ const CreateSSOScreen = ({ onCreate }: CreateSSOScreenProps) => {
                                         </div>
                                     </div>
                                 )}
+                            </div>
+
+                            <div style={{ gridColumn: "1 / -1", display: "flex", justifyContent: "flex-end", gap: "12px", marginTop: "24px" }}>
+                                <Button
+                                    type="button"
+                                    onClick={onClose}
+                                    style={{
+                                        background: "transparent",
+                                        border: "1px solid var(--color-border)",
+                                        color: "var(--color-foreground)",
+                                        padding: "8px 16px",
+                                        borderRadius: "6px"
+                                    }}
+                                >
+                                    Cancel
+                                </Button>
+                                <Button
+                                    type="submit"
+                                    disabled={loading}
+                                    style={{
+                                        background: "var(--color-primary)",
+                                        color: "white",
+                                        border: "none",
+                                        padding: "8px 16px",
+                                        borderRadius: "6px"
+                                    }}
+                                >
+                                    {loading ? "Saving..." : "Create Connection"}
+                                </Button>
                             </div>
                         </div>
                     </div>
