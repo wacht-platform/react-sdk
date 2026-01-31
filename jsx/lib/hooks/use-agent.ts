@@ -21,55 +21,6 @@ import type {
 } from "@wacht/types";
 
 // ============================================================================
-// useExchangeTicket - Hook for exchanging a ticket (call once on page load)
-// ============================================================================
-
-interface UseExchangeTicketResult {
-    exchanged: boolean;
-    loading: boolean;
-    error: Error | null;
-}
-
-export function useExchangeTicket(ticket?: string | null): UseExchangeTicketResult {
-    const { client } = useClient();
-    const [exchanged, setExchanged] = useState(false);
-    const [loading, setLoading] = useState(!!ticket);
-    const [error, setError] = useState<Error | null>(null);
-    const exchangedRef = useRef(false);
-    const exchangingRef = useRef(false);
-
-    useEffect(() => {
-        if (!ticket || exchangedRef.current || exchangingRef.current) return;
-
-        const exchange = async () => {
-            exchangingRef.current = true;
-            try {
-                setLoading(true);
-                const response = await client(`/api/agent/ticket/exchange?ticket=${encodeURIComponent(ticket)}`, {
-                    method: "POST",
-                });
-
-                if (response.ok) {
-                    exchangedRef.current = true;
-                    setExchanged(true);
-                } else {
-                    setError(new Error("Failed to exchange ticket"));
-                }
-            } catch (err) {
-                setError(err instanceof Error ? err : new Error("Failed to exchange ticket"));
-            } finally {
-                setLoading(false);
-                exchangingRef.current = false;
-            }
-        };
-
-        exchange();
-    }, [ticket, client]);
-
-    return { exchanged, loading, error };
-}
-
-// ============================================================================
 // useAgentContext - Main hook for realtime agent chat
 // Assumes ticket has already been exchanged (uses session cookies)
 // ============================================================================
@@ -817,8 +768,8 @@ export function useAgentSession(ticket?: string | null): UseAgentSessionResult {
             exchangingRef.current = true;
             setTicketLoading(true);
             try {
-                const response = await client(`/api/agent/ticket/exchange?ticket=${encodeURIComponent(ticket)}`, {
-                    method: "POST",
+                const response = await client(`/session/ticket/exchange?ticket=${encodeURIComponent(ticket)}`, {
+                    method: "GET",
                 });
 
                 if (response.ok) {

@@ -51,7 +51,6 @@ export {
   useAgentContext,
   useAgentContexts,
   useAgentIntegrations,
-  useExchangeTicket,
   useAgentSession
 } from "@wacht/jsx";
 export { DeploymentProvider as BaseDeploymentProvider } from "@wacht/jsx";
