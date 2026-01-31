@@ -23,7 +23,7 @@ export {
   NavigateToSignIn,
   AcceptInvite,
 } from "@wacht/jsx";
-export { NotificationBell, NotificationPopover } from "@wacht/jsx";
+export { NotificationBell, NotificationPopover, NotificationPanel } from "@wacht/jsx";
 export {
   useUser,
   useSession,

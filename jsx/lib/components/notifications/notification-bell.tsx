@@ -3,7 +3,7 @@ import ReactDOM from "react-dom";
 import styled, { keyframes, css } from "styled-components";
 import { Bell } from "lucide-react";
 import { DefaultStylesProvider } from "../utility/root";
-import { useNotifications, useScopeUnread } from "@/hooks/use-notifications";
+import { useScopeUnread } from "@/hooks/use-notifications";
 import { NotificationPopover } from "./notification-popover";
 import { usePopoverPosition } from "@/hooks/use-popover-position";
 
@@ -91,66 +91,22 @@ export function NotificationBell({
   onAction,
 }: NotificationBellProps) {
   const [isOpen, setIsOpen] = useState(false);
-  const [activeTab, setActiveTab] = useState<"inbox" | "archive" | "starred">("inbox");
-  const [unreadOnly, setUnreadOnly] = useState(false);
   const containerRef = useRef<HTMLDivElement>(null);
   const popoverRef = useRef<HTMLDivElement>(null);
   const buttonRef = useRef<HTMLButtonElement>(null);
 
-  const notificationParams = {
-    scope,
-    limit: 20,
-    is_archived: activeTab === "archive",
-    is_starred: activeTab === "starred",
-    is_read: unreadOnly ? false : undefined,
-  };
-
-  const {
-    notifications,
-    loading,
-    error,
-    hasMore,
-    loadMore,
-    markAsRead,
-    markAsUnread,
-    markAllAsRead,
-    archiveAllRead,
-    archiveNotification,
-    starNotification,
-  } = useNotifications({
-    ...notificationParams,
-    onNotification: () => {
-      refetchUnread();
-    },
-  });
-
   const { count: unreadCount, refetch: refetchUnread } = useScopeUnread({ scope });
 
   const handleAction = async (action: any) => {
-    switch (action.type) {
-      case 'read':
-        await markAsRead(action.id);
-        break;
-      case 'unread':
-        await markAsUnread(action.id);
-        break;
-      case 'archive':
-        await archiveNotification(action.id);
-        break;
-      case 'star':
-        await starNotification(action.id);
-        break;
-      case 'custom':
-        onAction?.(action.payload);
-        break;
-    }
+    // Only handle unread count refetching, actual actions are now in NotificationPanel
     await refetchUnread();
+    onAction?.(action.payload);
   };
 
   const popoverPosition = usePopoverPosition({
     triggerRef: buttonRef,
     isOpen,
-    minWidth: 500,
+    minWidth: Math.min(450, typeof window !== 'undefined' ? window.innerWidth - 32 : 300),
     defaultMaxHeight: 550,
   });
 
@@ -208,18 +164,8 @@ export function NotificationBell({
               <NotificationPopover
                 ref={popoverRef}
                 position={popoverPosition}
-                notifications={notifications}
-                loading={loading}
-                activeTab={activeTab}
-                onTabChange={setActiveTab}
-                unreadOnly={unreadOnly}
-                onUnreadOnlyChange={setUnreadOnly}
+                scope={scope}
                 onAction={handleAction}
-                onMarkAllAsRead={markAllAsRead}
-                onArchiveAllRead={archiveAllRead}
-                hasMore={hasMore}
-                onLoadMore={loadMore}
-                error={error}
                 onClose={() => setIsOpen(false)}
               />
             </DefaultStylesProvider>,

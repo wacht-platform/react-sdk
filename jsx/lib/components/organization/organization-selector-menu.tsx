@@ -24,12 +24,21 @@ type ViewMode = "orgList" | "workspaceList" | "createOrg" | "createWorkspace";
 
 const Container = styled.div`
   width: 100%;
-  height: 500px;
+  max-width: 1000px;
+  height: 600px;
   background: var(--color-background);
   display: grid;
   grid-template-columns: 280px 1fr;
   border-radius: var(--radius-lg);
   overflow: hidden;
+
+  @media (max-width: 768px) {
+    width: 100%;
+    grid-template-columns: 1fr;
+    height: auto;
+    max-height: 90vh;
+    overflow-y: auto;
+  }
 `;
 
 const LeftColumn = styled.div`
@@ -39,6 +48,24 @@ const LeftColumn = styled.div`
   flex-direction: column;
   justify-content: space-between;
   border-right: 1px solid var(--color-border);
+
+  @media (max-width: 768px) {
+    border-right: none;
+    border-bottom: 1px solid var(--color-border);
+    padding: 24px;
+    gap: 24px;
+    align-items: center;
+    text-align: center;
+  }
+`;
+
+const LeftColumnContent = styled.div`
+  display: flex;
+  flex-direction: column;
+
+  @media (max-width: 768px) {
+    align-items: center;
+  }
 `;
 
 const RightColumn = styled.div`
@@ -46,6 +73,11 @@ const RightColumn = styled.div`
   display: flex;
   flex-direction: column;
   overflow: hidden;
+
+  @media (max-width: 768px) {
+    padding: 24px;
+    min-height: 400px;
+  }
 `;
 
 const ListSection = styled.div`
@@ -99,6 +131,11 @@ const TitleSection = styled.div`
   align-items: flex-start;
   gap: 4px;
   flex: 1;
+
+  @media (max-width: 768px) {
+    align-items: center;
+    text-align: center;
+  }
 `;
 
 const Title = styled.h1`
@@ -340,11 +377,16 @@ export const OrganizationSelectorMenu = () => {
     }
 
     if (!workspaces || workspaces.length === 0) {
-      if (organizationMemberships[0]) {
-        setSelectedOrgId(organizationMemberships[0].organization.id);
+      const eligibleOrg = organizationMemberships.find(
+        (m) =>
+          !m.eligibility_restriction?.type ||
+          m.eligibility_restriction?.type === "none",
+      );
+      if (eligibleOrg) {
+        setSelectedOrgId(eligibleOrg.organization.id);
+        setViewMode("createWorkspace");
+        return;
       }
-      setViewMode("createWorkspace");
-      return;
     }
 
     setViewMode("orgList");
@@ -387,16 +429,24 @@ export const OrganizationSelectorMenu = () => {
     }
   };
 
-  const handleOrganizationCreated = async (organization?: any) => {
+  const handleOrganizationCreated = async (response?: any) => {
     await refetchOrganizations();
 
+    // The backend returns { data: { organization, membership } }
+    // or sometimes just the organization depending on the hook
+    const createdOrg =
+      response?.data?.organization || response?.organization || response;
+
     if (!workspacesEnabled) {
+      setViewMode("orgList");
       return;
     }
 
-    if (organization) {
-      setSelectedOrgId(organization.id);
+    if (createdOrg?.id) {
+      setSelectedOrgId(createdOrg.id);
       setViewMode("createWorkspace");
+    } else {
+      setViewMode("orgList");
     }
   };
 
@@ -455,13 +505,13 @@ export const OrganizationSelectorMenu = () => {
   return (
     <Container>
       <LeftColumn>
-        <div>
+        <LeftColumnContent>
           <AuthFormImage />
           <TitleSection>
             <Title>{dialogTitle}</Title>
             <Subtitle>{dialogSubtitle}</Subtitle>
           </TitleSection>
-        </div>
+        </LeftColumnContent>
         <UserButton showName={true} />
       </LeftColumn>
 
@@ -637,25 +687,16 @@ export const OrganizationSelectorMenu = () => {
           </ListContainer>
         </ListSection>
 
-        {showingWorkspaces &&
-          selectedOrgWorkspaces &&
-          selectedOrgWorkspaces.length > 0 && (
-            <Button
-              style={{ marginTop: "var(--space-md)" }}
-              onClick={() => setViewMode("createWorkspace")}
-              disabled={switching !== null}
-            >
-              <Plus size={12} />
-              Create new workspace
-            </Button>
-          )}
 
         {!showingWorkspaces &&
           organizationMemberships &&
           organizationMemberships.length > 0 &&
           allowUsersToCreateOrgs && (
             <Button
-              style={{ marginTop: "var(--space-md)" }}
+              $outline
+              style={{
+                marginTop: workspacesEnabled ? "8px" : "var(--space-md)",
+              }}
               onClick={() => setViewMode("createOrg")}
               disabled={switching !== null}
             >

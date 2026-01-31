@@ -945,7 +945,7 @@ export const useOrganizationMemberships = () => {
   );
 
   const refetch = useCallback(async () => {
-    await mutate(data, { revalidate: true });
+    await mutate();
   }, [mutate]);
 
   return {

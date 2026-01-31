@@ -45,7 +45,8 @@ const StyledContent = styled.div`
   background-color: var(--color-background);
   border-radius: 8px;
   box-shadow: 0 10px 25px -5px var(--color-shadow);
-  max-width: 800px;
+  width: 100%;
+  max-width: 100%;
   max-height: 90vh;
   overflow-y: auto;
   position: relative;
@@ -157,10 +158,19 @@ const DialogOverlay: FC<{ children?: ReactNode }> = ({ children }) => {
 interface DialogContentProps {
   children: ReactNode;
   style?: React.CSSProperties;
+  className?: string;
 }
 
-const DialogContent: FC<DialogContentProps> = ({ children, style }) => {
-  return <StyledContent style={style}>{children}</StyledContent>;
+const DialogContent: FC<DialogContentProps> = ({
+  children,
+  style,
+  className,
+}) => {
+  return (
+    <StyledContent style={style} className={className}>
+      {children}
+    </StyledContent>
+  );
 };
 
 // Dialog Header Component
@@ -195,10 +205,15 @@ const DialogHeader: FC<DialogHeaderProps> = ({
 interface DialogBodyProps {
   children: ReactNode;
   style?: React.CSSProperties;
+  className?: string;
 }
 
-const DialogBody: FC<DialogBodyProps> = ({ children, style }) => {
-  return <StyledBody style={style}>{children}</StyledBody>;
+const DialogBody: FC<DialogBodyProps> = ({ children, style, className }) => {
+  return (
+    <StyledBody style={style} className={className}>
+      {children}
+    </StyledBody>
+  );
 };
 
 // Dialog Footer Component

@@ -9,7 +9,7 @@ interface CreateWorkspaceDialogProps {
   isOpen: boolean;
   onClose?: () => void;
   onCreated?: () => void;
-  organizationId: string;
+  organizationId?: string;
 }
 
 export const CreateWorkspaceDialog: React.FC<CreateWorkspaceDialogProps> = ({

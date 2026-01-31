@@ -1,6 +1,7 @@
 import { useState, useRef, useEffect } from "react";
 import styled from "styled-components";
 import { useOrganizationList } from "@/hooks/use-organization";
+import { useSession } from "@/hooks/use-session";
 import { ChevronLeft } from "lucide-react";
 import { useScreenContext } from "./context";
 import { DefaultStylesProvider } from "../utility";
@@ -271,6 +272,7 @@ export const CreateOrganizationForm: React.FC<CreateOrganizationFormProps> = ({
   const [isSubmitting, setIsSubmitting] = useState(false);
   const fileInputRef = useRef<HTMLInputElement>(null);
   const { createOrganization } = useOrganizationList();
+  const { refetch } = useSession();
   const { toast } = useScreenContext();
 
   const handleNameChange = (value: string) => {
@@ -362,6 +364,7 @@ export const CreateOrganizationForm: React.FC<CreateOrganizationFormProps> = ({
         description: sanitizedDescription,
         image,
       });
+      await refetch();
       onSuccess?.(createdOrganization);
     } catch (error: any) {
       const errorMessage =

@@ -660,16 +660,14 @@ export const OrganizationSwitcher = ({
             isOpen={manageWorkspaceDialog.isOpen}
             onClose={manageWorkspaceDialog.close}
           />
-          {selectedOrgForWorkspace && (
-            <CreateWorkspaceDialog
-              isOpen={createWorkspaceDialog.isOpen}
-              onClose={() => {
-                createWorkspaceDialog.close();
-                setSelectedOrgForWorkspace(null);
-              }}
-              organizationId={selectedOrgForWorkspace}
-            />
-          )}
+          <CreateWorkspaceDialog
+            isOpen={createWorkspaceDialog.isOpen}
+            onClose={() => {
+              createWorkspaceDialog.close();
+              setSelectedOrgForWorkspace(null);
+            }}
+            organizationId={selectedOrgForWorkspace || undefined}
+          />
         </Container>
       </DefaultStylesProvider >
     );
@@ -704,8 +702,8 @@ export const OrganizationSwitcher = ({
             <OrgName>{currentDisplay.name}</OrgName>
           </ButtonContent>
           <div style={{ display: "flex", alignItems: "center", gap: "6px" }}>
-            {(activeOrgMembership?.eligibility_restriction?.type !== "none" ||
-              activeWsMembership?.eligibility_restriction?.type !== "none") && (
+            {((activeOrgMembership?.eligibility_restriction?.type && activeOrgMembership?.eligibility_restriction?.type !== "none") ||
+              (activeWsMembership?.eligibility_restriction?.type && activeWsMembership?.eligibility_restriction?.type !== "none")) && (
                 <div
                   title={
                     activeWsMembership?.eligibility_restriction?.message ||
@@ -875,7 +873,7 @@ export const OrganizationSwitcher = ({
                             gap: "8px",
                           }}
                         >
-                          {activeOrgMembership?.eligibility_restriction?.type !== "none" && (
+                          {activeOrgMembership?.eligibility_restriction?.type && activeOrgMembership?.eligibility_restriction?.type !== "none" && (
                             <div
                               title={
                                 activeOrgMembership?.eligibility_restriction?.message
@@ -1007,8 +1005,8 @@ export const OrganizationSwitcher = ({
                                       gap: "8px",
                                     }}
                                   >
-                                    {(workspace.eligibility_restriction?.type !== "none" ||
-                                      activeOrgMembership?.eligibility_restriction?.type !== "none") && (
+                                    {((workspace.eligibility_restriction?.type && workspace.eligibility_restriction?.type !== "none") ||
+                                      (activeOrgMembership?.eligibility_restriction?.type && activeOrgMembership?.eligibility_restriction?.type !== "none")) && (
                                         <div
                                           title={
                                             workspace.eligibility_restriction?.message ||
@@ -1192,7 +1190,7 @@ export const OrganizationSwitcher = ({
                                         gap: "8px",
                                       }}
                                     >
-                                      {membership.eligibility_restriction?.type !== "none" && (
+                                      {membership.eligibility_restriction?.type && membership.eligibility_restriction?.type !== "none" && (
                                         <div
                                           title={
                                             membership.eligibility_restriction?.message
@@ -1306,8 +1304,8 @@ export const OrganizationSwitcher = ({
                                                   gap: "8px",
                                                 }}
                                               >
-                                                {(workspace.eligibility_restriction?.type !== "none" ||
-                                                  membership.eligibility_restriction?.type !== "none") && (
+                                                {((workspace.eligibility_restriction?.type && workspace.eligibility_restriction?.type !== "none") ||
+                                                  (membership.eligibility_restriction?.type && membership.eligibility_restriction?.type !== "none")) && (
                                                     <div
                                                       title={
                                                         workspace.eligibility_restriction?.message ||
@@ -1410,42 +1408,50 @@ export const OrganizationSwitcher = ({
                       )}
 
                     {/* Show create button at bottom - workspace if enabled, otherwise organization */}
-                    {workspacesEnabled
-                      ? activeOrganization && (
-                        <CreateOrgButton
-                          onClick={() => {
+                    {workspacesEnabled && (
+                      <CreateOrgButton
+                        onClick={() => {
+                          if (
+                            activeOrganization &&
+                            (!activeOrgMembership?.eligibility_restriction?.type ||
+                              activeOrgMembership?.eligibility_restriction?.type ===
+                              "none")
+                          ) {
                             setSelectedOrgForWorkspace(activeOrganization.id);
-                            createWorkspaceDialog.open();
-                          }}
-                          disabled={isSwitching}
-                        >
-                          <MenuItemContent>
-                            <PlusIcon>
-                              <Plus size={12} />
-                            </PlusIcon>
-                            <MenuItemInfo>
-                              <MenuItemName>Create workspace</MenuItemName>
-                            </MenuItemInfo>
-                          </MenuItemContent>
-                        </CreateOrgButton>
-                      )
-                      : allowUsersToCreateOrgs && (
-                        <CreateOrgButton
-                          onClick={() => {
-                            createOrgDialog.open();
-                          }}
-                          disabled={isSwitching}
-                        >
-                          <MenuItemContent>
-                            <PlusIcon>
-                              <Plus size={12} />
-                            </PlusIcon>
-                            <MenuItemInfo>
-                              <MenuItemName>Create organization</MenuItemName>
-                            </MenuItemInfo>
-                          </MenuItemContent>
-                        </CreateOrgButton>
-                      )}
+                          } else {
+                            setSelectedOrgForWorkspace(null);
+                          }
+                          createWorkspaceDialog.open();
+                        }}
+                        disabled={isSwitching}
+                      >
+                        <MenuItemContent>
+                          <PlusIcon>
+                            <Plus size={12} />
+                          </PlusIcon>
+                          <MenuItemInfo>
+                            <MenuItemName>Create workspace</MenuItemName>
+                          </MenuItemInfo>
+                        </MenuItemContent>
+                      </CreateOrgButton>
+                    )}
+                    {!workspacesEnabled && allowUsersToCreateOrgs && (
+                      <CreateOrgButton
+                        onClick={() => {
+                          createOrgDialog.open();
+                        }}
+                        disabled={isSwitching}
+                      >
+                        <MenuItemContent>
+                          <PlusIcon>
+                            <Plus size={12} />
+                          </PlusIcon>
+                          <MenuItemInfo>
+                            <MenuItemName>Create organization</MenuItemName>
+                          </MenuItemInfo>
+                        </MenuItemContent>
+                      </CreateOrgButton>
+                    )}
                   </div>
                 )}
               </Dropdown>
@@ -1471,16 +1477,14 @@ export const OrganizationSwitcher = ({
           onClose={manageWorkspaceDialog.close}
         />
 
-        {selectedOrgForWorkspace && (
-          <CreateWorkspaceDialog
-            isOpen={createWorkspaceDialog.isOpen}
-            onClose={() => {
-              createWorkspaceDialog.close();
-              setSelectedOrgForWorkspace(null);
-            }}
-            organizationId={selectedOrgForWorkspace}
-          />
-        )}
+        <CreateWorkspaceDialog
+          isOpen={createWorkspaceDialog.isOpen}
+          onClose={() => {
+            createWorkspaceDialog.close();
+            setSelectedOrgForWorkspace(null);
+          }}
+          organizationId={selectedOrgForWorkspace || undefined}
+        />
       </Container>
     </DefaultStylesProvider>
   );

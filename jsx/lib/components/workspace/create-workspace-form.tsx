@@ -3,6 +3,7 @@ import styled from "styled-components";
 import { ChevronLeft, ChevronDown, Plus } from "lucide-react";
 import { useWorkspaceList } from "@/hooks/use-workspace";
 import { useOrganizationMemberships } from "@/hooks/use-organization";
+import { useSession } from "@/hooks/use-session";
 import { useScreenContext } from "../organization/context";
 import { DefaultStylesProvider } from "../utility";
 
@@ -375,7 +376,7 @@ const PlusIcon = styled.div`
 `;
 
 interface CreateWorkspaceFormProps {
-  organizationId: string;
+  organizationId?: string;
   onSuccess?: (workspace?: any) => void;
   onCancel?: () => void;
   onCreateOrganization?: () => void;
@@ -398,6 +399,7 @@ export const CreateWorkspaceForm: React.FC<CreateWorkspaceFormProps> = ({
   const dropdownRef = useRef<HTMLDivElement>(null);
   const { toast } = useScreenContext();
   const { createWorkspace } = useWorkspaceList();
+  const { refetch } = useSession();
   const { organizationMemberships } = useOrganizationMemberships();
 
   const selectedOrg = organizationMemberships?.find(
@@ -482,6 +484,7 @@ export const CreateWorkspaceForm: React.FC<CreateWorkspaceFormProps> = ({
         image,
         sanitizedDescription,
       );
+      await refetch();
       onSuccess?.(createdWorkspace);
     } catch (error: any) {
       const errorMessage =
@@ -586,27 +589,65 @@ export const CreateWorkspaceForm: React.FC<CreateWorkspaceFormProps> = ({
                 </DropdownButton>
                 {dropdownOpen && (
                   <DropdownContent>
-                    {organizationMemberships?.map((membership) => (
-                      <DropdownItem
-                        key={membership.organization.id}
-                        onClick={() => {
-                          setSelectedOrgId(membership.organization.id);
-                          setDropdownOpen(false);
-                        }}
-                      >
-                        <OrgAvatar>
-                          {membership.organization.image_url ? (
-                            <OrgAvatarImage
-                              src={membership.organization.image_url}
-                              alt={membership.organization.name}
-                            />
-                          ) : (
-                            getInitials(membership.organization.name).charAt(0)
-                          )}
-                        </OrgAvatar>
-                        <span>{membership.organization.name}</span>
-                      </DropdownItem>
-                    ))}
+                    {organizationMemberships?.map((membership) => {
+                      const hasRestriction =
+                        membership.eligibility_restriction?.type &&
+                        membership.eligibility_restriction?.type !== "none";
+
+                      return (
+                        <DropdownItem
+                          key={membership.organization.id}
+                          onClick={() => {
+                            if (!hasRestriction) {
+                              setSelectedOrgId(membership.organization.id);
+                              setDropdownOpen(false);
+                            }
+                          }}
+                          disabled={hasRestriction}
+                          style={{
+                            opacity: hasRestriction ? 0.6 : 1,
+                            cursor: hasRestriction ? "not-allowed" : "pointer",
+                          }}
+                          title={
+                            hasRestriction
+                              ? membership.eligibility_restriction?.message
+                              : undefined
+                          }
+                        >
+                          <OrgAvatar>
+                            {membership.organization.image_url ? (
+                              <OrgAvatarImage
+                                src={membership.organization.image_url}
+                                alt={membership.organization.name}
+                              />
+                            ) : (
+                              getInitials(membership.organization.name).charAt(
+                                0,
+                              )
+                            )}
+                          </OrgAvatar>
+                          <div
+                            style={{
+                              display: "flex",
+                              flexDirection: "column",
+                              gap: "2px",
+                            }}
+                          >
+                            <span>{membership.organization.name}</span>
+                            {hasRestriction && (
+                              <span
+                                style={{
+                                  fontSize: "10px",
+                                  color: "var(--color-error)",
+                                }}
+                              >
+                                Restricted
+                              </span>
+                            )}
+                          </div>
+                        </DropdownItem>
+                      );
+                    })}
                     <CreateOrgItem
                       onClick={() => {
                         setDropdownOpen(false);

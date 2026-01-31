@@ -18,7 +18,13 @@ interface RequireActiveTenancyProps {
 
 const StyledDialogContent = styled(Dialog.Content)`
   padding: 0;
-  max-width: 90vw;
+  width: 90vw;
+  max-width: 1000px;
+
+  @media (max-width: 768px) {
+    max-width: 95vw;
+    width: 95vw;
+  }
 `;
 
 export const RequireActiveTenancy = ({
@@ -99,7 +105,7 @@ export const RequireActiveTenancy = ({
     <DefaultStylesProvider>
       <Dialog isOpen={true}>
         <Dialog.Overlay>
-          <StyledDialogContent style={{ width: "850px" }}>
+          <StyledDialogContent>
             <OrganizationSelectorMenu />
           </StyledDialogContent>
         </Dialog.Overlay>
