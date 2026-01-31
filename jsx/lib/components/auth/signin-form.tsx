@@ -118,7 +118,7 @@ margin: 0;
 
 const SubmitButton = styled(Button).withConfig({
   shouldForwardProp: (prop) => !["$fullWidth", "$size"].includes(prop),
-})<{ $fullWidth?: boolean; $size?: "sm" | "md" | "lg" }>`
+}) <{ $fullWidth?: boolean; $size?: "sm" | "md" | "lg" }>`
   margin-top: var(--space-md);
 `;
 
@@ -593,6 +593,39 @@ function SignInFormContent() {
         try {
           setIsSubmitting(true);
           await exchangeTicket(ticket);
+          setIsRedirecting(true);
+          setIsRedirecting(true);
+          let redirectUri: string | null = new URLSearchParams(
+            window.location.search,
+          ).get("redirect_uri");
+
+          if (!redirectUri) {
+            redirectUri =
+              deployment?.ui_settings?.after_signin_redirect_url || null;
+          }
+
+          if (!redirectUri && deployment?.frontend_host) {
+            redirectUri = `https://${deployment.frontend_host}`;
+          }
+
+          if (redirectUri) {
+            let uri: URL;
+            try {
+              uri = new URL(redirectUri);
+            } catch {
+              uri = new URL(redirectUri, window.location.origin);
+            }
+
+            if (deployment?.mode === "staging") {
+              uri.searchParams.set(
+                "__dev_session__",
+                localStorage.getItem("__dev_session__") || "",
+              );
+            }
+
+            navigate(uri.toString());
+          }
+          return;
         } catch (err) {
           setErrors({ submit: (err as Error).message || "Failed to exchange ticket" });
           ticketExchangeInitiatedRef.current = false;
