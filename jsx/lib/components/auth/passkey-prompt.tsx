@@ -3,6 +3,7 @@ import styled, { keyframes } from "styled-components";
 import { Fingerprint, Loader2 } from "lucide-react";
 import { useUser } from "../../hooks/use-user";
 import { useDeployment } from "../../hooks/use-deployment";
+import { Button } from "../utility/button";
 
 const Header = styled.div`
   text-align: center;
@@ -45,50 +46,6 @@ const ButtonGroup = styled.div`
   flex-direction: column;
   gap: var(--space-sm);
   margin-top: var(--space-xl);
-`;
-
-const PrimaryButton = styled.button`
-  width: 100%;
-  padding: var(--space-md) var(--space-lg);
-  background: var(--color-primary);
-  color: white;
-  border: none;
-  border-radius: var(--radius-md);
-  font-size: var(--font-sm);
-  font-weight: 500;
-  cursor: pointer;
-  transition: background 0.2s;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  gap: var(--space-sm);
-
-  &:hover:not(:disabled) {
-    background: var(--color-primary-hover);
-  }
-
-  &:disabled {
-    opacity: 0.7;
-    cursor: not-allowed;
-  }
-`;
-
-const SecondaryButton = styled.button`
-  width: 100%;
-  padding: var(--space-md) var(--space-lg);
-  background: transparent;
-  color: var(--color-secondary-text);
-  border: 1px solid var(--color-border);
-  border-radius: var(--radius-md);
-  font-size: var(--font-sm);
-  font-weight: 500;
-  cursor: pointer;
-  transition: all 0.2s;
-
-  &:hover {
-    background: var(--color-hover);
-    color: var(--color-foreground);
-  }
 `;
 
 const spin = keyframes`
@@ -148,7 +105,7 @@ export function PasskeyPrompt({ onComplete, onSkip }: PasskeyPromptProps) {
             </Header>
 
             <ButtonGroup>
-                <PrimaryButton onClick={handleRegister} disabled={isRegistering}>
+                <Button $fullWidth $size="sm" onClick={handleRegister} disabled={isRegistering}>
                     {isRegistering ? (
                         <>
                             <Spinner size={16} />
@@ -160,10 +117,10 @@ export function PasskeyPrompt({ onComplete, onSkip }: PasskeyPromptProps) {
                             Add Passkey
                         </>
                     )}
-                </PrimaryButton>
-                <SecondaryButton onClick={onSkip}>
+                </Button>
+                <Button $fullWidth $size="sm" $outline onClick={onSkip}>
                     Maybe Later
-                </SecondaryButton>
+                </Button>
             </ButtonGroup>
 
             {error && <ErrorMessage>{error}</ErrorMessage>}

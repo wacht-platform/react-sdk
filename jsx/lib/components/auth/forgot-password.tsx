@@ -269,8 +269,10 @@ export function ForgotPassword({ onBack }: ForgotPasswordProps) {
               )}
               <Button
                 type="submit"
+                $fullWidth
+                $size="sm"
                 disabled={loading}
-                style={{ width: "100%", marginTop: "var(--space-md)" }}
+                style={{ marginTop: "var(--space-md)" }}
               >
                 {loading ? "Sending..." : "Send Code"}
               </Button>
@@ -309,8 +311,10 @@ export function ForgotPassword({ onBack }: ForgotPasswordProps) {
               )}
               <Button
                 type="submit"
+                $fullWidth
+                $size="sm"
                 disabled={loading || otp.length !== 6}
-                style={{ width: "100%", marginTop: "var(--space-md)" }}
+                style={{ marginTop: "var(--space-md)" }}
               >
                 {loading ? "Verifying..." : "Verify"}
               </Button>
@@ -361,8 +365,10 @@ export function ForgotPassword({ onBack }: ForgotPasswordProps) {
               )}
               <Button
                 type="submit"
+                $fullWidth
+                $size="sm"
                 disabled={loading}
-                style={{ width: "100%", marginTop: "var(--space-md)" }}
+                style={{ marginTop: "var(--space-md)" }}
               >
                 {loading ? "Resetting..." : "Reset Password"}
               </Button>

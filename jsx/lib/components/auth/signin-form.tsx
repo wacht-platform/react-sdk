@@ -116,7 +116,9 @@ margin: 0;
   margin-top: var(--space-2xs);
 `;
 
-const SubmitButton = styled(Button)`
+const SubmitButton = styled(Button).withConfig({
+  shouldForwardProp: (prop) => !["$fullWidth", "$size"].includes(prop),
+})<{ $fullWidth?: boolean; $size?: "sm" | "md" | "lg" }>`
   margin-top: var(--space-md);
 `;
 
@@ -219,7 +221,7 @@ export function SignInForm() {
 function SignInFormContent() {
   const { deployment } = useDeployment();
   const { navigate } = useNavigation();
-  const { session, loading: sessionLoading, refetch: refetchSession } = useSession();
+  const { session, loading: sessionLoading, refetch: refetchSession, exchangeTicket } = useSession();
   const isMultiSessionEnabled =
     deployment?.auth_settings?.multi_session_support?.enabled ?? false;
 
@@ -569,38 +571,37 @@ function SignInFormContent() {
     }
   };
 
-  const impersonationInitiatedRef = useRef(false);
+  const ticketExchangeInitiatedRef = useRef(false);
 
   useEffect(() => {
     if (sessionLoading) return;
 
     const urlParams = new URLSearchParams(window.location.search);
-    const impersonationToken = urlParams.get("impersonation_token");
+    const ticket = urlParams.get("ticket");
 
-    if (impersonationToken && !signinAttempt && !loading && !impersonationInitiatedRef.current) {
-      impersonationInitiatedRef.current = true;
+    // Handle session ticket exchange for impersonation
+    if (ticket && !ticketExchangeInitiatedRef.current && !loading) {
+      ticketExchangeInitiatedRef.current = true;
 
-      urlParams.delete("impersonation_token");
+      urlParams.delete("ticket");
       const newUrl = urlParams.toString()
-        ? `${window.location.pathname}?${urlParams.toString()} `
+        ? `${window.location.pathname}?${urlParams.toString()}`
         : window.location.pathname;
       window.history.replaceState({}, "", newUrl);
 
-      const handleImpersonation = async () => {
+      const handleTicketExchange = async () => {
         try {
           setIsSubmitting(true);
-          await signIn.create({
-            strategy: "impersonation",
-            token: impersonationToken,
-          });
+          await exchangeTicket(ticket);
         } catch (err) {
-          setErrors({ submit: (err as Error).message });
+          setErrors({ submit: (err as Error).message || "Failed to exchange ticket" });
+          ticketExchangeInitiatedRef.current = false;
+        } finally {
           setIsSubmitting(false);
-          impersonationInitiatedRef.current = false;
         }
       };
 
-      handleImpersonation();
+      handleTicketExchange();
       return;
     }
 
@@ -966,7 +967,7 @@ function SignInFormContent() {
               <div>
                 {errors.submit && <ErrorMessage>{errors.submit}</ErrorMessage>}
 
-                <SubmitButton type="submit" disabled={isSubmitting || loading}>
+                <SubmitButton type="submit" $fullWidth $size="sm" disabled={isSubmitting || loading}>
                   {isSubmitting ? (
                     <ButtonSpinner size={16} />
                   ) : (
@@ -1052,6 +1053,8 @@ function SignInFormContent() {
 
               <SubmitButton
                 type="submit"
+                $fullWidth
+                $size="sm"
                 disabled={isSubmitting || loading || !otpCode}
                 style={{ margin: 0 }}
               >

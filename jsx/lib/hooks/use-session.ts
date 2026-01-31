@@ -18,6 +18,7 @@ type UseSessionReturnType =
     signOut: never;
     getToken: never;
     error: Error | null;
+    exchangeTicket: never;
     refetch: () => Promise<void>;
   }
   | {
@@ -29,6 +30,7 @@ type UseSessionReturnType =
     getToken: (template?: string) => Promise<string>;
     switchOrganization: (organizationId?: string) => Promise<void>;
     switchWorkspace: (workspaceId: string) => Promise<void>;
+    exchangeTicket: (ticket: string) => Promise<void>;
     refetch: () => Promise<void>;
   };
 
@@ -88,6 +90,19 @@ async function switchWorkspace(
     `/session/switch-workspace?workspace_id=${workspaceId}`,
     {
       method: "POST",
+    }
+  );
+  return responseMapper(response);
+}
+
+async function exchangeTicket(
+  client: Client,
+  ticket: string
+): Promise<ApiResult<Session>> {
+  const response = await client(
+    `/session/ticket/exchange?ticket=${encodeURIComponent(ticket)}`,
+    {
+      method: "GET",
     }
   );
   return responseMapper(response);
@@ -159,6 +174,7 @@ export function useSession(): UseSessionReturnType {
       switchSignIn: null as never,
       switchOrganization: null as never,
       switchWorkspace: null as never,
+      exchangeTicket: null as never,
       signOut: null as never,
       getToken: null as never,
       refetch,
@@ -239,6 +255,11 @@ export function useSession(): UseSessionReturnType {
     },
     switchWorkspace: async (workspaceId: string) => {
       await switchWorkspace(client, workspaceId);
+      clearTokenCache();
+      await mutate(undefined, { revalidate: true });
+    },
+    exchangeTicket: async (ticket: string) => {
+      await exchangeTicket(client, ticket);
       clearTokenCache();
       await mutate(undefined, { revalidate: true });
     },

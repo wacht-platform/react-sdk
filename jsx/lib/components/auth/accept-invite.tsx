@@ -238,7 +238,7 @@ export function AcceptInvite({
             <SubMessage>
               The invitation link appears to be invalid or incomplete.
             </SubMessage>
-            <Button onClick={() => navigate("/")} style={{ marginTop: "var(--space-lg)" }}>
+            <Button onClick={() => navigate("/")} $fullWidth $size="sm" style={{ marginTop: "var(--space-lg)" }}>
               Go to Home
             </Button>
           </StatusContainer>
@@ -281,7 +281,7 @@ export function AcceptInvite({
             {invitationData.workspace && (
               <SubMessage>You've been added to the {invitationData.workspace.name} workspace.</SubMessage>
             )}
-            <Button onClick={handleContinue} style={{ marginTop: "var(--space-lg)" }}>
+            <Button onClick={handleContinue} $fullWidth $size="sm" style={{ marginTop: "var(--space-lg)" }}>
               Continue to Application
             </Button>
           </StatusContainer>
@@ -303,7 +303,7 @@ export function AcceptInvite({
             <InfoIcon>ℹ</InfoIcon>
             <Message>You're already a member of {invitationData.organization?.name || "this organization"}</Message>
             <SubMessage>No action needed - you already have access.</SubMessage>
-            <Button onClick={handleContinue} style={{ marginTop: "var(--space-lg)" }}>
+            <Button onClick={handleContinue} $fullWidth $size="sm" style={{ marginTop: "var(--space-lg)" }}>
               Continue to Application
             </Button>
           </StatusContainer>
@@ -335,7 +335,7 @@ export function AcceptInvite({
                   ? "You're currently signed in with a different account. Please sign in with the invited email."
                   : "Please sign in to accept this invitation."}
             </SubMessage>
-            <Button onClick={handleGoToAuth} style={{ marginTop: "var(--space-lg)" }}>
+            <Button onClick={handleGoToAuth} $fullWidth $size="sm" style={{ marginTop: "var(--space-lg)" }}>
               {isSignup ? "Sign Up to Accept" : "Sign In to Accept"}
             </Button>
           </StatusContainer>
@@ -380,7 +380,7 @@ export function AcceptInvite({
             <ErrorIcon>✗</ErrorIcon>
             <Message>Something went wrong</Message>
             <SubMessage>{invitationData?.message || error || "Failed to accept invitation"}</SubMessage>
-            <Button onClick={handleRetry} style={{ marginTop: "var(--space-lg)" }}>
+            <Button onClick={handleRetry} $fullWidth $size="sm" style={{ marginTop: "var(--space-lg)" }}>
               Try Again
             </Button>
             <Footer>

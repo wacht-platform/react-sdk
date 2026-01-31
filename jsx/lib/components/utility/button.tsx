@@ -4,9 +4,11 @@ interface ButtonProps {
   $primary?: boolean;
   $outline?: boolean;
   $destructive?: boolean;
+  $fullWidth?: boolean;
+  $size?: "sm" | "md" | "lg";
 }
 
-export const Button = styled.button<ButtonProps & { $fullWidth?: boolean; $size?: "sm" | "md" | "lg" }>`
+export const Button = styled.button<ButtonProps>`
   width: ${(props) => (props.$fullWidth ? "100%" : "auto")};
   padding: ${(props) => {
     if (props.$size === "sm") return "4px 12px";

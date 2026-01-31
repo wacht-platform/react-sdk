@@ -208,6 +208,8 @@ export function MagicLinkVerification({
               <SubMessage>{subMessage}</SubMessage>
               <Button
                 onClick={handleRetry}
+                $fullWidth
+                $size="sm"
                 style={{ marginTop: "var(--space-xl)" }}
               >
                 Try Again

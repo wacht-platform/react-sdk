@@ -5,6 +5,7 @@ import styled from "styled-components";
 import { Check } from "lucide-react";
 import { DefaultStylesProvider } from "../utility/root";
 import { Input } from "../utility/input";
+import { Button } from "../utility/button";
 import { useDeployment } from "@/hooks/use-deployment";
 import { useWaitlist, type WaitlistParams } from "@/hooks/use-waitlist";
 import { AuthFormImage } from "./auth-image";
@@ -66,35 +67,6 @@ const Label = styled.label`
 const RequiredAsterisk = styled.span`
   color: var(--color-error);
   margin-left: var(--space-2xs);
-`;
-
-const Button = styled.button<{ $primary?: boolean }>`
-  width: 100%;
-  padding: var(--space-sm) var(--space-md);
-  border: ${(props) =>
-    props.$primary ? "none" : "1px solid var(--color-input-border)"};
-  border-radius: var(--radius-md);
-  font-size: var(--font-xs);
-  font-weight: 400;
-  cursor: pointer;
-  transition: background-color 0.2s;
-  background: ${(props) =>
-    props.$primary ? "var(--color-primary)" : "var(--color-background)"};
-  color: ${(props) => (props.$primary ? "white" : "var(--color-foreground)")};
-  margin-top: var(--space-sm);
-  height: 36px;
-
-  &:hover:not(:disabled) {
-    background: ${(props) =>
-    props.$primary
-      ? "var(--color-primary-hover)"
-      : "var(--color-input-background)"};
-  }
-
-  &:disabled {
-    opacity: 0.7;
-    cursor: not-allowed;
-  }
 `;
 
 const ErrorMessage = styled.div`
@@ -314,7 +286,7 @@ export function WaitlistForm() {
             <ErrorMessage>{getErrorMessage()}</ErrorMessage>
           )}
 
-          <Button type="submit" $primary disabled={isSubmitting || loading}>
+          <Button type="submit" $primary $fullWidth $size="sm" disabled={isSubmitting || loading}>
             {isSubmitting || loading ? "Joining waitlist..." : "Join waitlist"}
           </Button>
         </Form>

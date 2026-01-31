@@ -37,7 +37,6 @@ type GenericSignInParams = {
   password?: string;
   phone?: string;
   strategy?: string;
-  token?: string;
 };
 
 type SignInGeneric = ({
@@ -46,7 +45,6 @@ type SignInGeneric = ({
   password,
   phone,
   strategy,
-  token,
 }: GenericSignInParams) => Promise<ApiResult<Session>>;
 
 type PhoneSignInParams = {
@@ -445,7 +443,6 @@ function builderGeneric(
     password,
     phone,
     strategy,
-    token,
   }: GenericSignInParams) => {
     const form = new FormData();
 
@@ -456,7 +453,6 @@ function builderGeneric(
     if (username) form.append("username", username);
     if (password) form.append("password", password);
     if (phone) form.append("phone", phone);
-    if (token) form.append("token", token);
 
     const response = await client("/auth/signin", {
       method: "POST",

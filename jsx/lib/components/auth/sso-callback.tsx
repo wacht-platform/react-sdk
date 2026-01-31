@@ -302,6 +302,8 @@ export function SSOCallback() {
             {!isNoCallbackData && (
               <Button
                 onClick={handleRetry}
+                $fullWidth
+                $size="sm"
                 style={{ marginTop: "var(--space-lg)" }}
               >
                 Try Again
