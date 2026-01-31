@@ -193,7 +193,7 @@ export interface OrganizationUpdate {
   whitelisted_ips?: string[];
   auto_assigned_workspace_id?: string;
   enable_ip_restriction?: boolean;
-  enforce_mfa_setup?: boolean;
+  enforce_mfa?: boolean;
 }
 
 export interface RoleCreate {

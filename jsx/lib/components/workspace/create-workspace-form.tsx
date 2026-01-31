@@ -10,6 +10,11 @@ const Container = styled.div`
   display: flex;
   height: 100%;
   min-height: 400px;
+
+  @media (max-width: 768px) {
+    flex-direction: column;
+    height: auto;
+  }
 `;
 
 const LeftPanel = styled.div`
@@ -22,6 +27,13 @@ const LeftPanel = styled.div`
   justify-content: center;
   text-align: center;
   border-right: 1px solid var(--color-border);
+
+  @media (max-width: 768px) {
+    width: 100%;
+    border-right: none;
+    border-bottom: 1px solid var(--color-border);
+    padding: 24px;
+  }
 `;
 
 const RightPanel = styled.div`
@@ -29,6 +41,10 @@ const RightPanel = styled.div`
   padding: 32px;
   display: flex;
   flex-direction: column;
+
+  @media (max-width: 768px) {
+    padding: 24px;
+  }
 `;
 
 const AvatarContainer = styled.div<{ hasImage: boolean }>`

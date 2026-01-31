@@ -1,5 +1,5 @@
 import { useState, useRef, useEffect, useCallback, ChangeEvent } from "react";
-import { User, Download, AlertTriangle } from "lucide-react";
+import { User, Trash2 } from "lucide-react";
 import { useDeployment } from "@/hooks/use-deployment";
 import { useSession } from "@/hooks/use-session";
 import { useUser } from "@/hooks/use-user";
@@ -11,6 +11,7 @@ import {
     ProfileSectionLayout,
     ProfileImageContainer,
     FormRow,
+    ButtonActions,
 } from "./shared";
 
 export const ProfileDetailsManagementSection = () => {
@@ -20,7 +21,6 @@ export const ProfileDetailsManagementSection = () => {
         useUser();
     const { toast } = useScreenContext();
 
-    // State for profile management
     const [firstName, setFirstName] = useState("");
     const [lastName, setLastName] = useState("");
     const [username, setUsername] = useState("");
@@ -166,8 +166,8 @@ export const ProfileDetailsManagementSection = () => {
                     <ProfileImageContainer>
                         <div
                             style={{
-                                width: "120px",
-                                height: "120px",
+                                width: "90px",
+                                height: "90px",
                                 borderRadius: "50%",
                                 border: "2px dashed var(--color-border)",
                                 background: previewUrl
@@ -238,30 +238,20 @@ export const ProfileDetailsManagementSection = () => {
                             </p>
                         </div>
 
-                        <div
+                        <ButtonActions
                             style={{
-                                display: "flex",
-                                gap: "var(--space-sm)",
                                 marginBottom: "var(--space-sm)",
-                                flexWrap: "wrap",
                             }}
                         >
                             <Button
+                                $size="sm"
                                 onClick={() => fileInputRef.current?.click()}
-                                style={{
-                                    padding: "var(--space-xs) var(--space-md)",
-                                    fontSize: "var(--font-xs)",
-                                    height: "32px",
-                                    width: "100px",
-                                    display: "flex",
-                                    alignItems: "center",
-                                    gap: "6px",
-                                }}
                             >
-                                <Download size={14} />
                                 {previewUrl ? "Change" : "Upload"}
                             </Button>
                             <Button
+                                $size="sm"
+                                $outline
                                 onClick={async () => {
                                     setPreviewUrl(null);
                                     if (fileInputRef.current) {
@@ -283,23 +273,11 @@ export const ProfileDetailsManagementSection = () => {
                                         setPreviewUrl(user?.profile_picture_url || null);
                                     }
                                 }}
-                                style={{
-                                    background: "transparent",
-                                    color: "var(--color-muted)",
-                                    border: "1px solid var(--color-border)",
-                                    padding: "var(--space-xs) var(--space-md)",
-                                    fontSize: "var(--font-xs)",
-                                    height: "32px",
-                                    width: "100px",
-                                    display: "flex",
-                                    alignItems: "center",
-                                    gap: "6px",
-                                }}
                             >
-                                <AlertTriangle size={14} />
+                                <Trash2 size={14} style={{ marginRight: "4px" }} />
                                 Remove
                             </Button>
-                        </div>
+                        </ButtonActions>
                     </div>
                 </ProfileSectionLayout>
 
@@ -531,7 +509,7 @@ export const ProfileDetailsManagementSection = () => {
                         )}
                     </div>
                 </div>
-            </div>
+            </div >
         </>
     );
 };

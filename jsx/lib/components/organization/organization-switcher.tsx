@@ -11,6 +11,7 @@ import {
   User,
   Settings,
   LogOut,
+  AlertCircle,
 } from "lucide-react";
 import { DefaultStylesProvider } from "../utility/root";
 import {
@@ -504,7 +505,6 @@ export const OrganizationSwitcher = ({
     useWorkspaceList();
   const {
     session,
-    loading: sessionLoading,
     switchOrganization,
     switchWorkspace,
   } = useSession();
@@ -516,8 +516,7 @@ export const OrganizationSwitcher = ({
   const allowUsersToCreateOrgs =
     deployment?.b2b_settings.allow_users_to_create_orgs;
 
-  const isPersonalActive =
-    !session?.active_signin?.active_organization_membership_id;
+  const isPersonalActive = !activeOrgMembership;
 
   const currentDisplay = useMemo(() => {
     if (isPersonalActive) {
@@ -631,13 +630,10 @@ export const OrganizationSwitcher = ({
       .slice(0, 2);
   };
 
-  // Show loading if:
-  // 1. organizationLoading or sessionLoading is true
-  // 2. Session has an active org membership but organizationMemberships hasn't loaded yet (cache was cleared)
-  const hasActiveOrgInSession = !!session?.active_signin?.active_organization_membership_id;
-  const membershipsNotLoaded = !organizationMemberships && hasActiveOrgInSession;
+  const isSessionReady = !!session;
+  const showSkeleton = (!isSessionReady) || organizationLoading || (workspacesEnabled && workspacesLoading);
 
-  if (organizationLoading || sessionLoading || membershipsNotLoaded) {
+  if (showSkeleton) {
     return (
       <DefaultStylesProvider>
         <Container>
@@ -648,8 +644,34 @@ export const OrganizationSwitcher = ({
             </ButtonContent>
             <SkeletonIcon />
           </SkeletonButton>
+
+          {organizationsEnabled && allowUsersToCreateOrgs && (
+            <CreateOrganizationDialog
+              isOpen={createOrgDialog.isOpen}
+              onClose={createOrgDialog.close}
+              onCreated={handleOrganizationCreated}
+            />
+          )}
+          <ManageOrganizationDialog
+            isOpen={manageOrgDialog.isOpen}
+            onClose={manageOrgDialog.close}
+          />
+          <ManageWorkspaceDialog
+            isOpen={manageWorkspaceDialog.isOpen}
+            onClose={manageWorkspaceDialog.close}
+          />
+          {selectedOrgForWorkspace && (
+            <CreateWorkspaceDialog
+              isOpen={createWorkspaceDialog.isOpen}
+              onClose={() => {
+                createWorkspaceDialog.close();
+                setSelectedOrgForWorkspace(null);
+              }}
+              organizationId={selectedOrgForWorkspace}
+            />
+          )}
         </Container>
-      </DefaultStylesProvider>
+      </DefaultStylesProvider >
     );
   }
 
@@ -681,7 +703,21 @@ export const OrganizationSwitcher = ({
             </Avatar>
             <OrgName>{currentDisplay.name}</OrgName>
           </ButtonContent>
-          <ChevronsUpDown size={16} />
+          <div style={{ display: "flex", alignItems: "center", gap: "6px" }}>
+            {(activeOrgMembership?.eligibility_restriction?.type !== "none" ||
+              activeWsMembership?.eligibility_restriction?.type !== "none") && (
+                <div
+                  title={
+                    activeWsMembership?.eligibility_restriction?.message ||
+                    activeOrgMembership?.eligibility_restriction?.message
+                  }
+                  style={{ display: "flex", alignItems: "center" }}
+                >
+                  <AlertCircle size={14} color="var(--color-error)" />
+                </div>
+              )}
+            <ChevronsUpDown size={16} />
+          </div>
         </SwitcherButton>
 
         {typeof window !== "undefined" &&
@@ -786,10 +822,17 @@ export const OrganizationSwitcher = ({
                             toggleOrgExpanded(activeOrganization.id);
                           }
                         }}
-                        style={
-                          isSwitching
+                        style={{
+                          ...(isSwitching
                             ? { pointerEvents: "none", opacity: 0.7 }
-                            : undefined
+                            : {}),
+                          ...(activeOrgMembership?.eligibility_restriction?.type !==
+                            "none"
+                            ? { opacity: 0.6, cursor: "not-allowed" }
+                            : {}),
+                        }}
+                        title={
+                          activeOrgMembership?.eligibility_restriction?.message
                         }
                       >
                         <ActiveIndicator />
@@ -832,17 +875,28 @@ export const OrganizationSwitcher = ({
                             gap: "8px",
                           }}
                         >
-                          {canManageOrganization(activeOrgMembership) && (
-                            <ManageButton
-                              onClick={(e) => {
-                                e.stopPropagation();
-                                manageOrgDialog.open();
-                              }}
-                              title="Manage organization"
+                          {activeOrgMembership?.eligibility_restriction?.type !== "none" && (
+                            <div
+                              title={
+                                activeOrgMembership?.eligibility_restriction?.message
+                              }
+                              style={{ display: "flex", alignItems: "center" }}
                             >
-                              <Settings size={12} />
-                            </ManageButton>
+                              <AlertCircle size={14} color="var(--color-error)" />
+                            </div>
                           )}
+                          {activeOrgMembership?.eligibility_restriction?.type === "none" &&
+                            canManageOrganization(activeOrgMembership) && (
+                              <ManageButton
+                                onClick={(e) => {
+                                  e.stopPropagation();
+                                  manageOrgDialog.open();
+                                }}
+                                title="Manage organization"
+                              >
+                                <Settings size={12} />
+                              </ManageButton>
+                            )}
                           <LogoutButton
                             onClick={async (e) => {
                               e.stopPropagation();
@@ -906,6 +960,22 @@ export const OrganizationSwitcher = ({
                                         : undefined,
                                     }
                                     : { disabled: isSwitching })}
+                                  style={{
+                                    ...(workspace.eligibility_restriction?.type !==
+                                      "none" ||
+                                      activeOrgMembership?.eligibility_restriction
+                                        ?.type !== "none"
+                                      ? { opacity: 0.6, cursor: "not-allowed" }
+                                      : {}),
+                                    ...(isWorkspaceActive && isSwitching
+                                      ? { pointerEvents: "none", opacity: 0.7 }
+                                      : {}),
+                                  }}
+                                  title={
+                                    workspace.eligibility_restriction?.message ||
+                                    activeOrgMembership?.eligibility_restriction
+                                      ?.message
+                                  }
                                 >
                                   {isWorkspaceActive && <ActiveIndicator />}
                                   <MenuItemContent>
@@ -930,72 +1000,99 @@ export const OrganizationSwitcher = ({
                                       </MenuItemName>
                                     </MenuItemInfo>
                                   </MenuItemContent>
-                                  {isWorkspaceActive ? (
-                                    <div
-                                      style={{
-                                        display: "flex",
-                                        alignItems: "center",
-                                        gap: "8px",
-                                      }}
-                                    >
-                                      {canManageWorkspace(activeWsMembership) && (
-                                        <ManageButton
-                                          onClick={(e) => {
-                                            e.stopPropagation();
-                                            manageWorkspaceDialog.open();
-                                          }}
-                                          title="Manage workspace"
-                                        >
-                                          <Settings size={12} />
-                                        </ManageButton>
-                                      )}
-                                      <LogoutButton
-                                        onClick={async (e) => {
-                                          e.stopPropagation();
-                                          try {
-                                            if (leaveWorkspace) {
-                                              await leaveWorkspace();
-                                            }
-                                          } catch (error: any) {
-                                            const errorMessage =
-                                              error.message ||
-                                              "Failed to leave workspace. Please try again.";
-                                            toast(errorMessage, "error");
+                                  <div
+                                    style={{
+                                      display: "flex",
+                                      alignItems: "center",
+                                      gap: "8px",
+                                    }}
+                                  >
+                                    {(workspace.eligibility_restriction?.type !== "none" ||
+                                      activeOrgMembership?.eligibility_restriction?.type !== "none") && (
+                                        <div
+                                          title={
+                                            workspace.eligibility_restriction?.message ||
+                                            activeOrgMembership?.eligibility_restriction?.message
                                           }
+                                          style={{ display: "flex", alignItems: "center" }}
+                                        >
+                                          <AlertCircle
+                                            size={14}
+                                            color="var(--color-error)"
+                                          />
+                                        </div>
+                                      )}
+                                    {isWorkspaceActive ? (
+                                      <div
+                                        style={{
+                                          display: "flex",
+                                          alignItems: "center",
+                                          gap: "8px",
                                         }}
-                                        title="Leave workspace"
                                       >
-                                        <LogOut size={12} />
-                                      </LogoutButton>
-                                    </div>
-                                  ) : (
-                                    <HoverArrow
-                                      className="hover-arrow"
-                                      size={14}
-                                    />
-                                  )}
+                                        {activeWsMembership?.eligibility_restriction?.type === "none" &&
+                                          activeOrgMembership?.eligibility_restriction?.type === "none" &&
+                                          canManageWorkspace(activeWsMembership) && (
+                                            <ManageButton
+                                              onClick={(e) => {
+                                                e.stopPropagation();
+                                                manageWorkspaceDialog.open();
+                                              }}
+                                              title="Manage workspace"
+                                            >
+                                              <Settings size={12} />
+                                            </ManageButton>
+                                          )}
+                                        <LogoutButton
+                                          onClick={async (e) => {
+                                            e.stopPropagation();
+                                            try {
+                                              if (leaveWorkspace) {
+                                                await leaveWorkspace();
+                                              }
+                                            } catch (error: any) {
+                                              const errorMessage =
+                                                error.message ||
+                                                "Failed to leave workspace. Please try again.";
+                                              toast(errorMessage, "error");
+                                            }
+                                          }}
+                                          title="Leave workspace"
+                                        >
+                                          <LogOut size={12} />
+                                        </LogoutButton>
+                                      </div>
+                                    ) : (
+                                      <HoverArrow
+                                        className="hover-arrow"
+                                        size={14}
+                                      />
+                                    )}
+                                  </div>
                                 </WorkspaceItem>
                               );
                             })}
-                          <WorkspaceItem
-                            as="button"
-                            onClick={() => {
-                              setSelectedOrgForWorkspace(activeOrganization.id);
-                              createWorkspaceDialog.open();
-                            }}
-                            disabled={isSwitching}
-                          >
-                            <MenuItemContent>
-                              <PlusIcon
-                                style={{ width: "14px", height: "14px" }}
-                              >
-                                <Plus size={12} />
-                              </PlusIcon>
-                              <MenuItemInfo>
-                                <MenuItemName>Create workspace</MenuItemName>
-                              </MenuItemInfo>
-                            </MenuItemContent>
-                          </WorkspaceItem>
+                          {activeOrgMembership?.eligibility_restriction?.type === "none" && (
+                            <WorkspaceItem
+                              as="button"
+                              onClick={() => {
+                                setSelectedOrgForWorkspace(activeOrganization.id);
+                                createWorkspaceDialog.open();
+                              }}
+                              disabled={isSwitching}
+                            >
+                              <MenuItemContent>
+                                <PlusIcon
+                                  style={{ width: "14px", height: "14px" }}
+                                >
+                                  <Plus size={12} />
+                                </PlusIcon>
+                                <MenuItemInfo>
+                                  <MenuItemName>Create workspace</MenuItemName>
+                                </MenuItemInfo>
+                              </MenuItemContent>
+                            </WorkspaceItem>
+                          )}
                         </>
                       )}
 
@@ -1049,6 +1146,15 @@ export const OrganizationSwitcher = ({
                                       }
                                     }}
                                     disabled={isSwitching}
+                                    style={
+                                      membership.eligibility_restriction?.type !==
+                                        "none"
+                                        ? { opacity: 0.6, cursor: "not-allowed" }
+                                        : undefined
+                                    }
+                                    title={
+                                      membership.eligibility_restriction?.message
+                                    }
                                   >
                                     <MenuItemContent>
                                       {workspacesEnabled && (
@@ -1079,10 +1185,31 @@ export const OrganizationSwitcher = ({
                                         <MenuItemName>{org.name}</MenuItemName>
                                       </MenuItemInfo>
                                     </MenuItemContent>
-                                    <HoverArrow
-                                      className="hover-arrow"
-                                      size={14}
-                                    />
+                                    <div
+                                      style={{
+                                        display: "flex",
+                                        alignItems: "center",
+                                        gap: "8px",
+                                      }}
+                                    >
+                                      {membership.eligibility_restriction?.type !== "none" && (
+                                        <div
+                                          title={
+                                            membership.eligibility_restriction?.message
+                                          }
+                                          style={{ display: "flex", alignItems: "center" }}
+                                        >
+                                          <AlertCircle
+                                            size={14}
+                                            color="var(--color-error)"
+                                          />
+                                        </div>
+                                      )}
+                                      <HoverArrow
+                                        className="hover-arrow"
+                                        size={14}
+                                      />
+                                    </div>
                                   </MenuItem>
 
                                   {workspacesEnabled && isExpanded && (
@@ -1121,6 +1248,29 @@ export const OrganizationSwitcher = ({
                                                     : undefined,
                                                 }
                                                 : { disabled: isSwitching })}
+                                              style={{
+                                                ...(workspace.eligibility_restriction
+                                                  ?.type !== "none" ||
+                                                  membership.eligibility_restriction
+                                                    ?.type !== "none"
+                                                  ? {
+                                                    opacity: 0.6,
+                                                    cursor: "not-allowed",
+                                                  }
+                                                  : {}),
+                                                ...(isWorkspaceActive && isSwitching
+                                                  ? {
+                                                    pointerEvents: "none",
+                                                    opacity: 0.7,
+                                                  }
+                                                  : {}),
+                                              }}
+                                              title={
+                                                workspace.eligibility_restriction
+                                                  ?.message ||
+                                                membership.eligibility_restriction
+                                                  ?.message
+                                              }
                                             >
                                               {isWorkspaceActive && (
                                                 <ActiveIndicator />
@@ -1149,81 +1299,107 @@ export const OrganizationSwitcher = ({
                                                   </MenuItemName>
                                                 </MenuItemInfo>
                                               </MenuItemContent>
-                                              {isWorkspaceActive ? (
-                                                <div
-                                                  style={{
-                                                    display: "flex",
-                                                    alignItems: "center",
-                                                    gap: "8px",
-                                                  }}
-                                                >
-                                                  {canManageWorkspace(activeWsMembership) && (
-                                                    <ManageButton
-                                                      onClick={(e) => {
-                                                        e.stopPropagation();
-                                                        manageWorkspaceDialog.open();
-                                                      }}
-                                                      title="Manage workspace"
-                                                    >
-                                                      <Settings size={12} />
-                                                    </ManageButton>
-                                                  )}
-                                                  <LogoutButton
-                                                    onClick={async (e) => {
-                                                      e.stopPropagation();
-                                                      try {
-                                                        if (leaveWorkspace) {
-                                                          await leaveWorkspace();
-                                                        }
-                                                      } catch (error: any) {
-                                                        const errorMessage =
-                                                          error.message ||
-                                                          "Failed to leave workspace. Please try again.";
-                                                        toast(
-                                                          errorMessage,
-                                                          "error",
-                                                        );
+                                              <div
+                                                style={{
+                                                  display: "flex",
+                                                  alignItems: "center",
+                                                  gap: "8px",
+                                                }}
+                                              >
+                                                {(workspace.eligibility_restriction?.type !== "none" ||
+                                                  membership.eligibility_restriction?.type !== "none") && (
+                                                    <div
+                                                      title={
+                                                        workspace.eligibility_restriction?.message ||
+                                                        membership.eligibility_restriction?.message
                                                       }
+                                                      style={{ display: "flex", alignItems: "center" }}
+                                                    >
+                                                      <AlertCircle
+                                                        size={14}
+                                                        color="var(--color-error)"
+                                                      />
+                                                    </div>
+                                                  )}
+                                                {isWorkspaceActive ? (
+                                                  <div
+                                                    style={{
+                                                      display: "flex",
+                                                      alignItems: "center",
+                                                      gap: "8px",
                                                     }}
-                                                    title="Leave workspace"
                                                   >
-                                                    <LogOut size={12} />
-                                                  </LogoutButton>
-                                                </div>
-                                              ) : (
-                                                <HoverArrow
-                                                  className="hover-arrow"
-                                                  size={16}
-                                                />
-                                              )}
+                                                    {canManageWorkspace(activeWsMembership) && (
+                                                      <ManageButton
+                                                        onClick={(e) => {
+                                                          e.stopPropagation();
+                                                          manageWorkspaceDialog.open();
+                                                        }}
+                                                        title="Manage workspace"
+                                                      >
+                                                        <Settings size={12} />
+                                                      </ManageButton>
+                                                    )}
+                                                    <LogoutButton
+                                                      onClick={async (e) => {
+                                                        e.stopPropagation();
+                                                        try {
+                                                          if (leaveWorkspace) {
+                                                            await leaveWorkspace();
+                                                          }
+                                                        } catch (error: any) {
+                                                          const errorMessage =
+                                                            error.message ||
+                                                            "Failed to leave workspace. Please try again.";
+                                                          toast(
+                                                            errorMessage,
+                                                            "error",
+                                                          );
+                                                        }
+                                                      }}
+                                                      title="Leave workspace"
+                                                    >
+                                                      <LogOut size={12} />
+                                                    </LogoutButton>
+                                                  </div>
+                                                ) : (
+                                                  <HoverArrow
+                                                    className="hover-arrow"
+                                                    size={16}
+                                                  />
+                                                )}
+                                              </div>
                                             </WorkspaceItem>
                                           );
                                         },
                                       )}
-                                      <WorkspaceItem
-                                        as="button"
-                                        onClick={() => {
-                                          setSelectedOrgForWorkspace(org.id);
-                                          createWorkspaceDialog.open();
-                                        }}
-                                        disabled={isSwitching}
-                                      >
-                                        <MenuItemContent>
-                                          <PlusIcon
-                                            style={{
-                                              width: "14px",
-                                              height: "14px",
+                                      {membership.eligibility_restriction?.type ===
+                                        "none" && (
+                                          <WorkspaceItem
+                                            as="button"
+                                            onClick={() => {
+                                              setSelectedOrgForWorkspace(org.id);
+                                              createWorkspaceDialog.open();
                                             }}
+                                            disabled={isSwitching}
                                           >
-                                            <Plus size={10} />
-                                          </PlusIcon>
-                                          <MenuItemInfo>
-                                            <MenuItemName>
-                                              Create workspace
-                                            </MenuItemName>
-                                          </MenuItemInfo>
-                                        </MenuItemContent>
-                                      </WorkspaceItem>
+                                            <MenuItemContent>
+                                              <PlusIcon
+                                                style={{
+                                                  width: "14px",
+                                                  height: "14px",
+                                                }}
+                                              >
+                                                <Plus size={10} />
+                                              </PlusIcon>
+                                              <MenuItemInfo>
+                                                <MenuItemName>
+                                                  Create workspace
+                                                </MenuItemName>
+                                              </MenuItemInfo>
+                                            </MenuItemContent>
+                                          </WorkspaceItem>
+                                        )}
                                     </>
                                   )}
                                   <Separator />

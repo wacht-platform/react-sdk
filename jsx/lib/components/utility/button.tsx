@@ -6,45 +6,48 @@ interface ButtonProps {
   $destructive?: boolean;
 }
 
-export const Button = styled.button<ButtonProps>`
-  width: 100%;
-  padding: var(--space-sm) var(--space-md);
+export const Button = styled.button<ButtonProps & { $fullWidth?: boolean; $size?: "sm" | "md" | "lg" }>`
+  width: ${(props) => (props.$fullWidth ? "100%" : "auto")};
+  padding: ${(props) => {
+    if (props.$size === "sm") return "4px 12px";
+    if (props.$size === "lg") return "12px 24px";
+    return "var(--space-sm) var(--space-md)";
+  }};
   border: 1px solid transparent;
   border-radius: var(--radius-md);
-  font-weight: 400;
-  font-size: var(--font-xs);
+  font-weight: 500;
+  font-size: ${(props) => (props.$size === "sm" ? "12px" : "var(--font-xs)")};
   cursor: pointer;
-  transition:
-    background-color 0.2s,
-    color 0.2s,
-    border-color 0.2s;
-  display: flex;
+  transition: all 0.2s ease;
+  display: inline-flex;
   justify-content: center;
   align-items: center;
   gap: var(--space-xs);
-  height: 36px;
+  min-height: ${(props) => (props.$size === "sm" ? "32px" : "36px")};
   background-color: var(--color-primary);
   border-color: var(--color-primary);
   color: white;
 
   &:hover:not(:disabled) {
     background-color: var(--color-primary-hover);
+    border-color: var(--color-primary-hover);
   }
 
   &:disabled {
-    opacity: 0.7;
+    opacity: 0.5;
     cursor: not-allowed;
   }
 
   ${(props) =>
     props.$outline &&
     css`
-      background-color: var(--color-input-background);
+      background-color: transparent;
       color: var(--color-foreground);
       border: 1px solid var(--color-border);
 
       &:hover:not(:disabled) {
-        background-color: var(--color-border);
+        background-color: var(--color-background-alt);
+        border-color: var(--color-border-hover);
       }
     `}
 
@@ -57,7 +60,7 @@ export const Button = styled.button<ButtonProps>`
 
       &:hover:not(:disabled) {
         background-color: var(--color-error);
-        color: var(--color-background);
+        color: white;
       }
     `}
 `;

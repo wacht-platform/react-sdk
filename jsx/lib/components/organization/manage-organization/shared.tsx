@@ -29,6 +29,8 @@ export const TypographyProvider = styled.div`
 export const Container = styled.div`
   width: 100%;
   height: 600px;
+  min-height: 600px;
+  max-height: 600px;
   background: var(--color-background);
   border-radius: 20px;
   box-shadow: 0 8px 30px var(--color-shadow);
@@ -154,10 +156,10 @@ export const HeaderCTAContainer = styled.div`
   align-items: center;
   flex-wrap: wrap;
   gap: 12px;
-  margin-bottom: 0;
+  margin-bottom: 24px;
 `;
 
-export const ProfileSectionLayout = styled.div`
+export const SectionLayout = styled.div`
   display: flex;
   gap: var(--space-2xl);
   align-items: flex-start;
@@ -170,7 +172,7 @@ export const ProfileSectionLayout = styled.div`
   }
 `;
 
-export const ProfileImageContainer = styled.div`
+export const ImageContainer = styled.div`
   flex-shrink: 0;
   
   @media (max-width: 768px) {
@@ -178,7 +180,7 @@ export const ProfileImageContainer = styled.div`
   }
 `;
 
-export const SecurityItemRow = styled.div`
+export const ItemRow = styled.div`
   display: flex;
   align-items: center;
   justify-content: space-between;
@@ -192,16 +194,16 @@ export const SecurityItemRow = styled.div`
   }
 `;
 
-export const SecurityItemContent = styled.div`
+export const ItemContent = styled.div`
   flex: 1;
-  min-width: 0; /* Allow text truncate */
+  min-width: 0;
   
   @media (max-width: 600px) {
     width: 100%;
   }
 `;
 
-export const SecurityItemActions = styled.div`
+export const ItemActions = styled.div`
   display: flex;
   align-items: center;
   gap: 12px;
@@ -228,16 +230,18 @@ export const ResponsiveHeaderContainer = styled.div`
 
 export const DesktopTableContainer = styled.div`
   display: block;
-  @media (max-width: 600px) {
+  @media (max-width: 768px) {
     display: none;
   }
 `;
 
 export const MobileListContainer = styled.div`
   display: none;
-  @media (max-width: 600px) {
+  @media (max-width: 768px) {
     display: flex;
     flex-direction: column;
+    gap: 16px;
+    padding-bottom: 24px;
   }
 `;
 
@@ -248,6 +252,16 @@ export const FormRow = styled.div`
   @media (max-width: 768px) {
     flex-direction: column;
     gap: var(--space-lg);
+  }
+`;
+
+export const ButtonActions = styled.div`
+  display: flex;
+  gap: var(--space-sm);
+  flex-wrap: wrap;
+  
+  @media (max-width: 768px) {
+    justify-content: center;
   }
 `;
 
@@ -262,8 +276,8 @@ export const ConnectionItemRow = styled.div`
   @media (max-width: 600px) {
     flex-direction: column;
     align-items: flex-start;
-    gap: 8px; /* Reduced gap */
-    min-height: auto; /* Allow shrinking */
+    gap: 8px;
+    min-height: auto;
   }
 `;
 
@@ -277,20 +291,6 @@ export const ConnectionLeft = styled.div`
 
   @media (max-width: 600px) {
     width: 100%;
-  }
-`;
-
-export const ConnectionRight = styled.div`
-  display: flex;
-  flex-direction: row;
-  align-items: center;
-  justify-content: flex-end;
-  gap: 8px;
-  flex-wrap: wrap;
-  
-  @media (max-width: 600px) {
-    width: 100%;
-    justify-content: space-between; /* Spread Status and Menu */
   }
 `;
 
@@ -309,16 +309,6 @@ export const IconWrapper = styled.div`
     height: 20px;
     flex-shrink: 0;
     display: block;
-  }
-`;
-
-export const ButtonActions = styled.div`
-  display: flex;
-  gap: var(--space-sm);
-  flex-wrap: wrap;
-  
-  @media (max-width: 768px) {
-    justify-content: center;
   }
 `;
 

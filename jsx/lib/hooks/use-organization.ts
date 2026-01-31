@@ -17,6 +17,7 @@ import type {
   CreateEnterpriseConnectionPayload,
   UpdateEnterpriseConnectionPayload,
   SCIMTokenInfo,
+  PaginatedResponse,
 } from "@/types";
 import { responseMapper } from "@/utils/response-mapper";
 import { useSession, clearTokenCache } from "./use-session";
@@ -41,11 +42,26 @@ export const useOrganizationList = () => {
   );
 
   const getOrganizationMembers = useCallback(
-    async (organization: Organization) => {
-      const response = await responseMapper<OrganizationMembership[]>(
-        await client(`/organizations/${organization.id}/members`, {
-          method: "GET",
-        })
+    async (
+      organization: Organization,
+      params?: { page: number; limit: number; search?: string }
+    ) => {
+      const searchParams = new URLSearchParams();
+      if (params) {
+        searchParams.set("page", params.page.toString());
+        searchParams.set("limit", params.limit.toString());
+        if (params.search) {
+          searchParams.set("search", params.search);
+        }
+      }
+
+      const response = await responseMapper<PaginatedResponse<OrganizationMembership[]>>(
+        await client(
+          `/organizations/${organization.id}/members?${searchParams.toString()}`,
+          {
+            method: "GET",
+          }
+        )
       );
       return response.data;
     },
@@ -115,8 +131,12 @@ export const useOrganizationList = () => {
   const updateOrganization = useCallback(
     async (organization: Organization, update: OrganizationUpdate) => {
       const form = Object.entries(update).reduce((prev, [key, value]) => {
-        if (value) {
-          prev.append(key, value);
+        if (value !== undefined && value !== null) {
+          if (Array.isArray(value)) {
+            value.forEach((v) => prev.append(key, v));
+          } else {
+            prev.append(key, value as string | Blob);
+          }
         }
         return prev;
       }, new FormData());
@@ -925,7 +945,7 @@ export const useOrganizationMemberships = () => {
   );
 
   const refetch = useCallback(async () => {
-    await mutate(undefined, { revalidate: true });
+    await mutate(data, { revalidate: true });
   }, [mutate]);
 
   return {

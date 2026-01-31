@@ -8,7 +8,7 @@ import {
   Users,
   ChevronRight,
   ChevronLeft,
-  AlertTriangle,
+  AlertCircle,
 } from "lucide-react";
 import { useSession, useDeployment, useOrganizationMemberships } from "@/hooks";
 import { useWorkspaceList } from "@/hooks/use-workspace";
@@ -153,6 +153,7 @@ const ListItem = styled.button`
   color: var(--color-foreground);
   transition: background-color 0.2s ease;
   font-size: var(--font-sm);
+  position: relative;
 
   &:last-child {
     border-bottom: none;
@@ -161,6 +162,44 @@ const ListItem = styled.button`
   &:disabled {
     cursor: not-allowed;
     opacity: 0.6;
+  }
+
+  &:hover .warning-popover {
+    visibility: visible;
+    opacity: 1;
+  }
+`;
+
+const ListItemWarningPopover = styled.div`
+  visibility: hidden;
+  opacity: 0;
+  position: absolute;
+  top: 50%;
+  right: 50px;
+  transform: translateY(-50%);
+  background: var(--color-background);
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-sm);
+  padding: 6px 10px;
+  box-shadow: 0 4px 12px var(--color-shadow);
+  z-index: 100;
+  width: max-content;
+  max-width: 300px;
+  font-size: 11px;
+  line-height: 1.4;
+  color: var(--color-warning);
+  pointer-events: none;
+  transition: opacity 0.1s ease, visibility 0.1s ease;
+
+  &::after {
+    content: "";
+    position: absolute;
+    top: 50%;
+    left: 100%;
+    margin-top: -5px;
+    border-width: 5px;
+    border-style: solid;
+    border-color: transparent transparent transparent var(--color-border);
   }
 `;
 
@@ -226,22 +265,7 @@ const ItemArrow = styled.div`
   }
 `;
 
-const WarningText = styled.div`
-  grid-column: 2 / -1;
-  font-size: 12px;
-  color: var(--color-warning, #b45309);
-  display: flex;
-  align-items: center;
-  gap: 6px;
-  margin-top: 4px;
-  font-weight: 400;
-
-  svg {
-    width: 14px;
-    height: 14px;
-    flex-shrink: 0;
-  }
-`;
+// WarningText is no longer used, replaced by right-aligned AlertCircle
 
 const EmptyState = styled.div`
   text-align: center;
@@ -470,8 +494,13 @@ export const OrganizationSelectorMenu = () => {
                           !hasRestriction && handleSelectWorkspace(workspace)
                         }
                         disabled={switching === workspace.id || hasRestriction}
-                        style={{ opacity: hasRestriction ? 0.7 : 1 }}
+                        style={{ opacity: hasRestriction ? 0.6 : 1 }}
                       >
+                        {hasRestriction && (
+                          <ListItemWarningPopover className="warning-popover">
+                            {workspace.eligibility_restriction?.message}
+                          </ListItemWarningPopover>
+                        )}
                         <Avatar>
                           {workspace.image_url ? (
                             <AvatarImage
@@ -490,14 +519,14 @@ export const OrganizationSelectorMenu = () => {
                           </ItemMeta>
                         </ItemContent>
                         <ItemArrow>
+                          {hasRestriction && (
+                            <AlertCircle
+                              size={16}
+                              style={{ color: "var(--color-error)" }}
+                            />
+                          )}
                           <ChevronRight />
                         </ItemArrow>
-                        {hasRestriction && (
-                          <WarningText>
-                            <AlertTriangle size={14} />
-                            {workspace.eligibility_restriction?.message}
-                          </WarningText>
-                        )}
                       </ListItem>
                     );
                   })
@@ -545,8 +574,13 @@ export const OrganizationSelectorMenu = () => {
                       !hasRestriction && handleSelectOrganization(org)
                     }
                     disabled={switching === org.id || hasRestriction}
-                    style={{ opacity: hasRestriction ? 0.7 : 1 }}
+                    style={{ opacity: hasRestriction ? 0.6 : 1 }}
                   >
+                    {hasRestriction && (
+                      <ListItemWarningPopover className="warning-popover">
+                        {membership.eligibility_restriction?.message}
+                      </ListItemWarningPopover>
+                    )}
                     <Avatar>
                       {org.image_url ? (
                         <AvatarImage src={org.image_url} alt={org.name} />
@@ -573,14 +607,14 @@ export const OrganizationSelectorMenu = () => {
                       </ItemMeta>
                     </ItemContent>
                     <ItemArrow>
+                      {hasRestriction && (
+                        <AlertCircle
+                          size={16}
+                          style={{ color: "var(--color-error)" }}
+                        />
+                      )}
                       <ChevronRight />
                     </ItemArrow>
-                    {hasRestriction && (
-                      <WarningText>
-                        <AlertTriangle size={14} />
-                        {membership.eligibility_restriction?.message}
-                      </WarningText>
-                    )}
                   </ListItem>
                 );
               })
