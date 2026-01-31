@@ -8,7 +8,7 @@ export const SignedOut = ({ children }: SignedOutProps) => {
   const { loading, session } = useSession();
 
   if (loading) return null;
-  if (session.signins?.length) return null;
+  if (session.signins?.length && session.active_signin) return null;
 
   return <>{children}</>;
 };
