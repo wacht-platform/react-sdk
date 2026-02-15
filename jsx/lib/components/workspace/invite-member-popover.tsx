@@ -218,7 +218,7 @@ export const InviteMemberPopover = ({
 
     setLoading(true);
     try {
-      await inviteMember(trimmedEmail, selectedRole.id);
+      await inviteMember({ email: trimmedEmail, workspaceRoleId: selectedRole.id });
       onSuccess?.();
     } catch (error: any) {
       const errorMessage = error.message || "Failed to send invitation. Please try again.";

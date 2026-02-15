@@ -128,7 +128,7 @@ export const InvitationsSection = () => {
                     onClose={() => setShowInvitePopover(false)}
                     onSuccess={() => { fetchData(); setShowInvitePopover(false); toast("Invitation sent", "info"); }}
                     roles={roles}
-                    createInvitation={(payload: { email: string; role_id: string }) => inviteMember(payload.email, payload.role_id)}
+                    createInvitation={(payload: { email: string; role_id: string }) => inviteMember({ email: payload.email, workspaceRoleId: payload.role_id })}
                     triggerRef={inviteButtonRef}
                 />
             )}

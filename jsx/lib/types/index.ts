@@ -1,6 +1,6 @@
-export * from "@wacht/types";
 export * from "./platform-adapter";
 export * from "./deployment-context";
+export * from "@wacht/types";
 
 export interface PaginatedResponse<T> {
     data: T;

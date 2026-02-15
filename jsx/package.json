@@ -1,37 +1,37 @@
 {
-  "name": "@wacht/jsx",
-  "version": "0.0.1-alpha.62",
-  "description": "",
-  "type": "module",
-  "main": "dist/index.cjs.js",
-  "module": "dist/index.es.js",
-  "types": "dist/index.d.ts",
-  "files": [
-    "/dist"
-  ],
-  "scripts": {
-    "build": "tsc && vite build"
-  },
-  "keywords": [],
-  "author": "Saurav Singh",
-  "license": "MIT",
-  "devDependencies": {
-    "@types/node": "^22.13.1",
-    "@vitejs/plugin-react": "^4.3.4",
-    "vite": "^6.0.6",
-    "vite-plugin-dts": "^4.4.0"
-  },
-  "peerDependencies": {
-    "@wacht/types": "*",
-    "react": "catalog:",
-    "react-dom": "catalog:"
-  },
-  "dependencies": {
-    "lucide-react": "^0.474.0",
-    "qrcode.react": "^4.2.0",
-    "rollup-plugin-preserve-use-client": "^3.0.1",
-    "styled-components": "^6.1.13",
-    "swr": "^2.3.0",
-    "ts-pattern": "^5.6.0"
-  }
+    "name": "@wacht/jsx",
+    "version": "0.0.1-alpha.63",
+    "description": "",
+    "type": "module",
+    "main": "dist/index.cjs.js",
+    "module": "dist/index.es.js",
+    "types": "dist/index.d.ts",
+    "files": [
+        "/dist"
+    ],
+    "scripts": {
+        "build": "tsc && vite build"
+    },
+    "keywords": [],
+    "author": "Saurav Singh",
+    "license": "MIT",
+    "devDependencies": {
+        "@types/node": "^22.13.1",
+        "@vitejs/plugin-react": "^4.3.4",
+        "vite": "^6.0.6",
+        "vite-plugin-dts": "^4.4.0"
+    },
+    "peerDependencies": {
+        "@wacht/types": "*",
+        "react": "catalog:",
+        "react-dom": "catalog:"
+    },
+    "dependencies": {
+        "lucide-react": "^0.474.0",
+        "qrcode.react": "^4.2.0",
+        "rollup-plugin-preserve-use-client": "^3.0.1",
+        "styled-components": "^6.1.13",
+        "swr": "^2.3.0",
+        "ts-pattern": "^5.6.0"
+    }
 }

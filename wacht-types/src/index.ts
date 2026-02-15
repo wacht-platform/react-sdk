@@ -1,4 +1,5 @@
 export * from "./auth";
+export * from "./api-auth";
 export * from "./client";
 export * from "./deployment";
 export * from "./organization";
@@ -8,3 +9,4 @@ export * from "./user";
 export * from "./segment";
 export * from "./agent";
 export * from "./notification";
+export * from "./webhook";

@@ -51,7 +51,20 @@ export {
   useAgentContext,
   useAgentContexts,
   useAgentIntegrations,
-  useAgentSession
+  useAgentSession,
+  useWebhookAppSession,
+  useWebhookStats,
+  useWebhookEndpoints,
+  useCreateWebhookEndpoint,
+  useWebhookEvents,
+  useWebhookDeliveries,
+  useWebhookAnalytics,
+  useWebhookTimeseries,
+  useApiAuthAppSession,
+  useApiAuthKeys,
+  useApiAuthAuditLogs,
+  useApiAuthAuditAnalytics,
+  useApiAuthAuditTimeseries,
 } from "@wacht/jsx";
 export { DeploymentProvider as BaseDeploymentProvider } from "@wacht/jsx";
 export { DeploymentProvider } from "./providers";

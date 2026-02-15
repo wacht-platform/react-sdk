@@ -698,7 +698,7 @@ export function useAgentContexts(
 // Handles: ticket exchange, session fetching, active agent, access control
 // ============================================================================
 
-interface AgentSessionData {
+interface UseAgentSessionData {
     session_id: string;
     context_group: string;
     agents: AgentWithIntegrations[];
@@ -750,7 +750,7 @@ export function useAgentSession(ticket?: string | null): UseAgentSessionResult {
             throw new Error("Failed to fetch session");
         }
 
-        const parsed = await responseMapper<AgentSessionData>(response);
+        const parsed = await responseMapper<UseAgentSessionData>(response);
         return parsed.data;
     }, [client]);
 

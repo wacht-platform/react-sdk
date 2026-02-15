@@ -1,51 +1,51 @@
 {
-  "name": "@wacht/nextjs",
-  "version": "0.0.1-alpha.10",
-  "description": "Next.js adapter for Wacht authentication library",
-  "type": "module",
-  "main": "dist/index.cjs.js",
-  "module": "dist/index.es.js",
-  "types": "dist/index.d.ts",
-  "exports": {
-    ".": {
-      "types": "./dist/index.d.ts",
-      "import": "./dist/index.js",
-      "require": "./dist/index.cjs"
+    "name": "@wacht/nextjs",
+    "version": "0.0.1-alpha.11",
+    "description": "Next.js adapter for Wacht authentication library",
+    "type": "module",
+    "main": "dist/index.cjs.js",
+    "module": "dist/index.es.js",
+    "types": "dist/index.d.ts",
+    "exports": {
+        ".": {
+            "types": "./dist/index.d.ts",
+            "import": "./dist/index.js",
+            "require": "./dist/index.cjs"
+        },
+        "./server": {
+            "types": "./dist/server.d.ts",
+            "import": "./dist/server.js",
+            "require": "./dist/server.cjs"
+        }
     },
-    "./server": {
-      "types": "./dist/server.d.ts",
-      "import": "./dist/server.js",
-      "require": "./dist/server.cjs"
+    "files": [
+        "/dist"
+    ],
+    "scripts": {
+        "build": "tsc && vite build"
+    },
+    "keywords": [
+        "wacht",
+        "nextjs",
+        "authentication",
+        "platform-adapter"
+    ],
+    "author": "Saurav Singh",
+    "license": "MIT",
+    "devDependencies": {
+        "@types/node": "^22.13.1",
+        "@vitejs/plugin-react": "^4.3.4",
+        "vite": "^6.0.6",
+        "vite-plugin-dts": "^4.4.0"
+    },
+    "peerDependencies": {
+        "@wacht/jsx": "*",
+        "@wacht/types": "*",
+        "react": "catalog:",
+        "react-dom": "catalog:",
+        "next": "catalog:"
+    },
+    "dependencies": {
+        "rollup-plugin-preserve-use-client": "^3.0.1"
     }
-  },
-  "files": [
-    "/dist"
-  ],
-  "scripts": {
-    "build": "tsc && vite build"
-  },
-  "keywords": [
-    "wacht",
-    "nextjs",
-    "authentication",
-    "platform-adapter"
-  ],
-  "author": "Saurav Singh",
-  "license": "MIT",
-  "devDependencies": {
-    "@types/node": "^22.13.1",
-    "@vitejs/plugin-react": "^4.3.4",
-    "vite": "^6.0.6",
-    "vite-plugin-dts": "^4.4.0"
-  },
-  "peerDependencies": {
-    "@wacht/jsx": "*",
-    "@wacht/types": "*",
-    "react": "catalog:",
-    "react-dom": "catalog:",
-    "next": "catalog:"
-  },
-  "dependencies": {
-    "rollup-plugin-preserve-use-client": "^3.0.1"
-  }
 }

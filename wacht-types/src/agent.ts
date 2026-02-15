@@ -199,3 +199,9 @@ export interface AgentWithIntegrations {
 export type ListAgentsResponse = {
     agents: AgentWithIntegrations[];
 };
+
+export interface AgentSessionData {
+    session_id: string;
+    context_group: string;
+    agents: AgentWithIntegrations[];
+}
