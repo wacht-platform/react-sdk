@@ -39,14 +39,14 @@
         "vite-plugin-dts": "^4.4.0"
     },
     "peerDependencies": {
-        "@wacht/jsx": "^1.0.0-beta.0",
-        "@wacht/types": "^1.0.0-beta.0",
+        "@wacht/jsx": "*",
+        "@wacht/types": "*",
         "react": "catalog:",
         "react-dom": "catalog:",
         "react-router": "catalog:"
     },
     "dependencies": {
         "rollup-plugin-preserve-use-client": "^3.0.1",
-        "@wacht/backend": "^1.0.0-beta.0"
+        "@wacht/backend": "*"
     }
 }
