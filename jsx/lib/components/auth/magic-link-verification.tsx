@@ -8,6 +8,7 @@ import { DefaultStylesProvider } from "../utility/root";
 import { Button } from "../utility";
 import { useNavigation } from "../../hooks/use-navigation";
 import { useDeployment } from "../../hooks/use-deployment";
+import { getStoredDevSession } from "@/utils/dev-session";
 
 const Container = styled.div`
   max-width: 380px;
@@ -154,7 +155,7 @@ export function MagicLinkVerification({
             if (deployment?.mode === "staging") {
               uri.searchParams.set(
                 "__dev_session__",
-                localStorage.getItem("__dev_session__") || "",
+                getStoredDevSession() || "",
               );
             }
 

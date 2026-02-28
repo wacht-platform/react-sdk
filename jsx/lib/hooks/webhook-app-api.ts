@@ -7,9 +7,11 @@ import type {
     ReplayTaskStatusResponse,
     ReplayWebhookDeliveryResponse,
     TestEndpointResponse,
+    UpdateWebhookSettingsOptions,
     WebhookAppInfo,
     WebhookAppSessionData,
     WebhookDeliveryDetail,
+    WebhookSettingsResponse,
 } from "@wacht/types";
 import {
     buildCreateEndpointFormData,
@@ -136,6 +138,26 @@ export async function rotateWebhookSecret(client: HttpClient): Promise<WebhookAp
     return parseResponseData<WebhookAppInfo>(
         response,
         "Failed to rotate signing secret",
+    );
+}
+
+export async function updateWebhookSettings(
+    client: HttpClient,
+    options: UpdateWebhookSettingsOptions,
+): Promise<WebhookSettingsResponse> {
+    const params = new URLSearchParams();
+    for (const email of options.failure_notification_emails) {
+        params.append("failure_notification_emails", email);
+    }
+
+    const response = await client("/webhook/settings", {
+        method: "PUT",
+        headers: URLENCODED_HEADERS,
+        body: params.toString(),
+    });
+    return parseResponseData<WebhookSettingsResponse>(
+        response,
+        "Failed to update webhook settings",
     );
 }
 

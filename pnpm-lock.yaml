@@ -60,6 +60,114 @@ importers:
         specifier: 'catalog:'
         version: 5.9.3
 
+  examples/nextjs-e2e:
+    dependencies:
+      '@wacht/backend':
+        specifier: link:../../../node
+        version: link:../../../node
+      '@wacht/jsx':
+        specifier: link:../../jsx
+        version: link:../../jsx
+      '@wacht/nextjs':
+        specifier: link:../../nextjs
+        version: link:../../nextjs
+      next:
+        specifier: ^16.0.0
+        version: 16.1.6(react-dom@19.2.4(react@19.2.4))(react@19.2.4)
+      react:
+        specifier: ^19.0.0
+        version: 19.2.4
+      react-dom:
+        specifier: ^19.0.0
+        version: 19.2.4(react@19.2.4)
+    devDependencies:
+      '@types/node':
+        specifier: ^22.13.1
+        version: 22.19.9
+      '@types/react':
+        specifier: ^19.0.0
+        version: 19.2.13
+      '@types/react-dom':
+        specifier: ^19.0.0
+        version: 19.2.3(@types/react@19.2.13)
+      typescript:
+        specifier: ^5.9.3
+        version: 5.9.3
+
+  examples/react-router-e2e:
+    dependencies:
+      '@wacht/backend':
+        specifier: link:../../../node
+        version: link:../../../node
+      '@wacht/jsx':
+        specifier: link:../../jsx
+        version: link:../../jsx
+      '@wacht/react-router':
+        specifier: link:../../react-router
+        version: link:../../react-router
+      react:
+        specifier: ^19.0.0
+        version: 19.2.4
+      react-dom:
+        specifier: ^19.0.0
+        version: 19.2.4(react@19.2.4)
+      react-router-dom:
+        specifier: ^7.0.0
+        version: 7.13.1(react-dom@19.2.4(react@19.2.4))(react@19.2.4)
+    devDependencies:
+      '@types/react':
+        specifier: ^19.0.0
+        version: 19.2.13
+      '@types/react-dom':
+        specifier: ^19.0.0
+        version: 19.2.3(@types/react@19.2.13)
+      '@vitejs/plugin-react':
+        specifier: ^4.3.4
+        version: 4.7.0(vite@6.4.1(@types/node@22.19.9))
+      typescript:
+        specifier: ^5.9.3
+        version: 5.9.3
+      vite:
+        specifier: ^6.0.6
+        version: 6.4.1(@types/node@22.19.9)
+
+  examples/tanstack-router-e2e:
+    dependencies:
+      '@tanstack/react-router':
+        specifier: ^1.0.0
+        version: 1.158.1(react-dom@19.2.4(react@19.2.4))(react@19.2.4)
+      '@wacht/backend':
+        specifier: link:../../../node
+        version: link:../../../node
+      '@wacht/jsx':
+        specifier: link:../../jsx
+        version: link:../../jsx
+      '@wacht/tanstack-router':
+        specifier: link:../../tanstack-router
+        version: link:../../tanstack-router
+      react:
+        specifier: ^19.0.0
+        version: 19.2.4
+      react-dom:
+        specifier: ^19.0.0
+        version: 19.2.4(react@19.2.4)
+    devDependencies:
+      '@types/react':
+        specifier: ^19.0.0
+        version: 19.2.13
+      '@types/react-dom':
+        specifier: ^19.0.0
+        version: 19.2.3(@types/react@19.2.13)
+      '@vitejs/plugin-react':
+        specifier: ^4.3.4
+        version: 4.7.0(vite@6.4.1(@types/node@22.19.9))
+      typescript:
+        specifier: ^5.9.3
+        version: 5.9.3
+      vite:
+        specifier: ^6.0.6
+        version: 6.4.1(@types/node@22.19.9)
+
   jsx:
     dependencies:
       '@wacht/types':
@@ -105,6 +213,9 @@ importers:
 
   nextjs:
     dependencies:
+      '@wacht/backend':
+        specifier: link:../../node
+        version: link:../../node
       '@wacht/jsx':
         specifier: '*'
         version: link:../jsx
@@ -139,6 +250,9 @@ importers:
 
   react-router:
     dependencies:
+      '@wacht/backend':
+        specifier: link:../../node
+        version: link:../../node
       '@wacht/jsx':
         specifier: '*'
         version: link:../jsx
@@ -176,6 +290,9 @@ importers:
       '@tanstack/react-router':
         specifier: ^1.0.0
         version: 1.158.1(react-dom@19.2.4(react@19.2.4))(react@19.2.4)
+      '@wacht/backend':
+        specifier: link:../../node
+        version: link:../../node
       '@wacht/jsx':
         specifier: '*'
         version: link:../jsx
@@ -1288,8 +1405,25 @@ packages:
     resolution: {integrity: sha512-z6F7K9bV85EfseRCp2bzrpyQ0Gkw1uLoCel9XBVWPg/TjRj94SkJzUTGfOa4bs7iJvBWtQG0Wq7wnI0syw3EBQ==}
     engines: {node: '>=0.10.0'}
 
+  react-router-dom@7.13.1:
+    resolution: {integrity: sha512-UJnV3Rxc5TgUPJt2KJpo1Jpy0OKQr0AjgbZzBFjaPJcFOb2Y8jA5H3LT8HUJAiRLlWrEXWHbF1Z4SCZaQjWDHw==}
+    engines: {node: '>=20.0.0'}
+    peerDependencies:
+      react: '>=18'
+      react-dom: '>=18'
+
   react-router@7.13.0:
     resolution: {integrity: sha512-PZgus8ETambRT17BUm/LL8lX3Of+oiLaPuVTRH3l1eLvSPpKO3AvhAEb5N7ihAFZQrYDqkvvWfFh9p0z9VsjLw==}
+    engines: {node: '>=20.0.0'}
+    peerDependencies:
+      react: '>=18'
+      react-dom: '>=18'
+    peerDependenciesMeta:
+      react-dom:
+        optional: true
+
+  react-router@7.13.1:
+    resolution: {integrity: sha512-td+xP4X2/6BJvZoX6xw++A2DdEi++YypA69bJUV5oVvqf6/9/9nNlD70YO1e9d3MyamJEBQFEzk6mbfDYbqrSA==}
     engines: {node: '>=20.0.0'}
     peerDependencies:
       react: '>=18'
@@ -2478,7 +2612,21 @@ snapshots:
 
   react-refresh@0.17.0: {}
 
+  react-router-dom@7.13.1(react-dom@19.2.4(react@19.2.4))(react@19.2.4):
+    dependencies:
+      react: 19.2.4
+      react-dom: 19.2.4(react@19.2.4)
+      react-router: 7.13.1(react-dom@19.2.4(react@19.2.4))(react@19.2.4)
+
   react-router@7.13.0(react-dom@19.2.4(react@19.2.4))(react@19.2.4):
+    dependencies:
+      cookie: 1.1.1
+      react: 19.2.4
+      set-cookie-parser: 2.7.2
+    optionalDependencies:
+      react-dom: 19.2.4(react@19.2.4)
+
+  react-router@7.13.1(react-dom@19.2.4(react@19.2.4))(react@19.2.4):
     dependencies:
       cookie: 1.1.1
       react: 19.2.4

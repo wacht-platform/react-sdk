@@ -1,6 +1,6 @@
 "use client";
 
-import { createContext, useContext, useState } from "react";
+import { createContext, useContext, useEffect, useRef, useState } from "react";
 import { useDeployment } from "../hooks";
 import { FirstFactor } from "@/types";
 import { DeploymentSocialConnection } from "@/types";
@@ -48,6 +48,9 @@ export function SignInProvider({ children }: SignInProviderProps) {
   const [firstFactor, setFirstFactor] = useState<FirstFactor>(
     deployment?.auth_settings.first_factor || "email_password"
   );
+  const firstFactorHydratedRef = useRef(
+    Boolean(deployment?.auth_settings.first_factor),
+  );
   const [email, setEmail] = useState("");
   const [showOtherOptions, setShowOtherOptions] = useState(false);
   const [showForgotPassword, setShowForgotPassword] = useState(false);
@@ -58,6 +61,14 @@ export function SignInProvider({ children }: SignInProviderProps) {
     deployment?.social_connections.filter((conn) => conn.enabled) || [];
 
   const authSettings = deployment?.auth_settings;
+
+  useEffect(() => {
+    const nextFirstFactor = deployment?.auth_settings?.first_factor;
+    if (!firstFactorHydratedRef.current && nextFirstFactor) {
+      setFirstFactor(nextFirstFactor);
+      firstFactorHydratedRef.current = true;
+    }
+  }, [deployment?.auth_settings?.first_factor]);
 
   return (
     <SignInContext.Provider

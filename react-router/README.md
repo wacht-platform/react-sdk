@@ -1,121 +1,75 @@
-# @snipextt/wacht-react-router
+# @wacht/react-router
 
-React Router adapter for Wacht authentication library. This package provides platform-specific routing integration for React Router applications using the Wacht authentication system.
+React Router integration for Wacht.
 
-## Installation
+This package provides:
+- Client-side UI bindings via `DeploymentProvider`
+- Server auth helpers via `@wacht/react-router/server`
+- Server-side backend client helpers backed by `@wacht/backend`
+
+## Install
 
 ```bash
-pnpm add @snipextt/wacht-react-router @snipextt/wacht react-router-dom
+pnpm add @wacht/react-router @wacht/jsx @wacht/types react-router
 ```
 
-## Usage
+## Environment
 
-### Basic Setup
+```bash
+NEXT_PUBLIC_WACHT_PUBLISHABLE_KEY=pk_test_base64url
+WACHT_API_KEY=wk_live_xxx # only for backend API client usage
+```
+
+## Client Setup
 
 ```tsx
-import React from 'react';
-import { BrowserRouter } from 'react-router-dom';
-import { DeploymentProvider } from '@snipextt/wacht-react-router';
+import { DeploymentProvider } from "@wacht/react-router";
+import { BrowserRouter } from "react-router";
 
-function App() {
+export function App() {
   return (
-    <DeploymentProvider publicKey="your-deployment-key">
-      <BrowserRouter>
-        {/* Your app content */}
-      </BrowserRouter>
+    <DeploymentProvider publicKey={import.meta.env.VITE_WACHT_PUBLISHABLE_KEY}>
+      <BrowserRouter>{/* routes */}</BrowserRouter>
     </DeploymentProvider>
   );
 }
 ```
 
-### Advanced Setup (DeploymentProvider Outside Router)
+## Server Auth (loaders/actions)
 
-The wrapper handles the common case where `DeploymentProvider` is outside the React Router context:
+```ts
+import { json, redirect, type LoaderFunctionArgs } from "react-router";
+import { authenticateRequest } from "@wacht/react-router/server";
 
-```tsx
-import React from 'react';
-import { BrowserRouter, Routes, Route } from 'react-router-dom';
-import { DeploymentProvider } from '@snipextt/wacht-react-router';
+export async function loader({ request }: LoaderFunctionArgs) {
+  const { auth, headers } = await authenticateRequest(request, {
+    publishableKey: process.env.NEXT_PUBLIC_WACHT_PUBLISHABLE_KEY,
+  });
 
-function App() {
-  return (
-    <DeploymentProvider publicKey="your-deployment-key">
-      <BrowserRouter>
-        <Routes>
-          <Route path="/dashboard" element={<Dashboard />} />
-          {/* Navigation components inside Router automatically use React Router */}
-        </Routes>
-      </BrowserRouter>
-    </DeploymentProvider>
-  );
+  if (!auth.userId) {
+    throw redirect("/sign-in", { headers });
+  }
+
+  return json({ userId: auth.userId }, { headers });
 }
 ```
 
-### Using Navigation Components
+Important: always forward `headers` returned by `authenticateRequest()`.
 
-Once the platform adapter is configured, all Wacht navigation components will automatically use React Router for navigation:
+## Server API
 
-```tsx
-import { NavigateToSignIn, NavigationLink } from '@snipextt/wacht';
+From `@wacht/react-router/server`:
+- `authenticateRequest(request, options?)`
+- `getAuth(request, options?)`
+- `requireAuth(request, options?)`
+- `wachtClient(options?)`
+- `createWachtServerClient(options?)`
 
-function MyComponent() {
-  return (
-    <div>
-      {/* This will use React Router navigation */}
-      <NavigationLink to="/dashboard">Go to Dashboard</NavigationLink>
-      
-      {/* This will redirect to sign-in using React Router */}
-      <NavigateToSignIn />
-    </div>
-  );
-}
-```
+## Notes
 
-### Using the Navigation Hook
-
-```tsx
-import { useNavigation } from '@snipextt/wacht';
-
-function MyComponent() {
-  const { navigate } = useNavigation();
-
-  const handleClick = () => {
-    // This will use React Router navigation
-    navigate('/profile', { replace: true });
-  };
-
-  return <button onClick={handleClick}>Go to Profile</button>;
-}
-```
-
-## API
-
-### `DeploymentProvider`
-
-The main component that wraps your React application with Wacht authentication. Automatically handles React Router integration.
-
-**Props:**
-- `publicKey: string` - Your Wacht deployment public key
-- `children: ReactNode` - Your application content
-
-**Features:**
-- Automatic React Router context detection
-- Smart fallback to browser APIs when Router context not available
-- Works regardless of provider placement in component tree
-- Zero configuration required
-
-### `createReactRouterAdapter()` (Advanced)
-
-For advanced use cases where you need direct access to the platform adapter.
-
-**Returns:** `PlatformAdapter`
-
-## Requirements
-
-- React 19+
-- React Router DOM 6+
-- @snipextt/wacht
+- Current React Router server helpers are session-auth oriented.
+- For machine-token gateway auth enforcement, use `@wacht/backend` gateway APIs directly in your server logic.
 
 ## License
 
-MIT
+Licensed under the Apache License, Version 2.0. See [LICENSE.md](../LICENSE.md).

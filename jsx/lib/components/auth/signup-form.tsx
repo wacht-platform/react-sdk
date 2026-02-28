@@ -19,6 +19,7 @@ import { PhoneNumberInput } from "../utility/phone";
 import type { SignUpParams } from "@/types";
 import type { DeploymentSocialConnection } from "@/types";
 import { AuthFormImage } from "./auth-image";
+import { getStoredDevSession } from "@/utils/dev-session";
 
 const spin = keyframes`
   from {
@@ -585,7 +586,7 @@ export function SignUpForm() {
         if (deployment?.mode === "staging") {
           uri.searchParams.set(
             "__dev_session__",
-            localStorage.getItem("__dev_session__") || "",
+            getStoredDevSession() || "",
           );
         }
         navigate(uri.toString());

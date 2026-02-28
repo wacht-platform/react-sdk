@@ -1,6 +1,7 @@
 import { useEffect, useRef, useCallback, useState } from 'react';
 import { useSession } from './use-session';
 import { useDeployment } from './use-deployment';
+import { getStoredDevSession } from '@/utils/dev-session';
 
 export interface NotificationMessage {
   id: number;
@@ -101,7 +102,7 @@ export function useNotificationStream({
 
     // Add session token for development environments (like frontend API)
     if (deployment.mode === "staging") {
-      const devSession = localStorage.getItem("__dev_session__");
+      const devSession = getStoredDevSession();
       if (devSession) {
         wsUrl.searchParams.set('__dev_session__', devSession);
       }

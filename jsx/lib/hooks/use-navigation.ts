@@ -1,5 +1,6 @@
 import { useDeployment } from "./use-deployment";
 import type { NavigateOptions } from "@/types/platform-adapter";
+import { getStoredDevSession } from "@/utils/dev-session";
 
 export const useNavigation = () => {
   const { adapter, deployment } = useDeployment();
@@ -34,7 +35,7 @@ export const useNavigation = () => {
     params.set("redirect_uri", targetRedirectUri);
 
     if (deployment?.mode === "staging") {
-      params.set("__dev_session__", localStorage.getItem("__dev_session__") ?? "");
+      params.set("__dev_session__", getStoredDevSession() ?? "");
     }
 
     navigate(
@@ -51,7 +52,7 @@ export const useNavigation = () => {
     params.set("redirect_uri", targetRedirectUri);
 
     if (deployment?.mode === "staging") {
-      params.set("__dev_session__", localStorage.getItem("__dev_session__") ?? "");
+      params.set("__dev_session__", getStoredDevSession() ?? "");
     }
 
     navigate(
@@ -68,7 +69,7 @@ export const useNavigation = () => {
     params.set("redirect_uri", targetRedirectUri);
 
     if (deployment?.mode === "staging") {
-      params.set("__dev_session__", localStorage.getItem("__dev_session__") ?? "");
+      params.set("__dev_session__", getStoredDevSession() ?? "");
     }
 
     navigate(

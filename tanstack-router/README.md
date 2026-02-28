@@ -1,169 +1,83 @@
 # @wacht/tanstack-router
 
-TanStack Router adapter for Wacht authentication library. This package provides platform-specific routing integration for TanStack Router applications using the Wacht authentication system.
+TanStack Router integration for Wacht.
 
-## Installation
+This package provides:
+- Client-side UI bindings via `DeploymentProvider`
+- Server auth helpers via `@wacht/tanstack-router/server`
+- Server-side backend client helpers backed by `@wacht/backend`
+
+## Install
 
 ```bash
-pnpm add @wacht/tanstack-router @wacht/jsx @tanstack/react-router
+pnpm add @wacht/tanstack-router @wacht/jsx @wacht/types @tanstack/react-router
 ```
 
-## Usage
+## Environment
 
-### Basic Setup
+```bash
+NEXT_PUBLIC_WACHT_PUBLISHABLE_KEY=pk_test_base64url
+WACHT_API_KEY=wk_live_xxx # only for backend API client usage
+```
+
+## Client Setup
 
 ```tsx
-import React from 'react';
-import { RouterProvider, createRouter } from '@tanstack/react-router';
-import { DeploymentProvider } from '@wacht/tanstack-router';
-import { routeTree } from './routeTree.gen';
+import { createRouter, RouterProvider } from "@tanstack/react-router";
+import { DeploymentProvider } from "@wacht/tanstack-router";
+import { routeTree } from "./routeTree.gen";
 
 const router = createRouter({ routeTree });
 
-function App() {
+export function App() {
   return (
-    <DeploymentProvider publicKey="your-deployment-key">
+    <DeploymentProvider publicKey={import.meta.env.VITE_WACHT_PUBLISHABLE_KEY}>
       <RouterProvider router={router} />
     </DeploymentProvider>
   );
 }
 ```
 
-### Setup with Root Component
+## Server Auth
 
-You can also place the `DeploymentProvider` inside your root route:
+```ts
+import { authenticateRequest } from "@wacht/tanstack-router/server";
 
-```tsx
-// routes/__root.tsx
-import { Outlet } from '@tanstack/react-router';
-import { DeploymentProvider } from '@wacht/tanstack-router';
+export async function getDashboardData(request: Request) {
+  const { auth, headers } = await authenticateRequest(request, {
+    publishableKey: process.env.NEXT_PUBLIC_WACHT_PUBLISHABLE_KEY,
+  });
 
-export function Root() {
-  return (
-    <DeploymentProvider publicKey="your-deployment-key">
-      <Outlet />
-    </DeploymentProvider>
-  );
+  if (!auth.userId) {
+    return new Response(null, {
+      status: 302,
+      headers: {
+        ...Object.fromEntries(headers.entries()),
+        Location: "/sign-in",
+      },
+    });
+  }
+
+  return Response.json({ userId: auth.userId }, { headers });
 }
 ```
 
-### Using Navigation Components
+Important: always merge returned `headers` into your response.
 
-Once the platform adapter is configured, all Wacht navigation components will automatically use TanStack Router for navigation:
+## Server API
 
-```tsx
-import { NavigateToSignIn, NavigationLink } from '@wacht/tanstack-router';
+From `@wacht/tanstack-router/server`:
+- `authenticateRequest(request, options?)`
+- `getAuth(request, options?)`
+- `requireAuth(request, options?)`
+- `wachtClient(options?)`
+- `createWachtServerClient(options?)`
 
-function MyComponent() {
-  return (
-    <div>
-      {/* This will use TanStack Router navigation */}
-      <NavigationLink to="/dashboard">Go to Dashboard</NavigationLink>
+## Notes
 
-      {/* This will redirect to sign-in using TanStack Router */}
-      <NavigateToSignIn />
-    </div>
-  );
-}
-```
-
-### Using the Navigation Hook
-
-```tsx
-import { useNavigation } from '@wacht/tanstack-router';
-
-function MyComponent() {
-  const { navigate } = useNavigation();
-
-  const handleClick = () => {
-    // This will use TanStack Router navigation
-    navigate('/profile', { replace: true });
-  };
-
-  return <button onClick={handleClick}>Go to Profile</button>;
-}
-```
-
-### Using Authentication Components
-
-All Wacht authentication components work seamlessly with TanStack Router:
-
-```tsx
-import { SignInForm, UserButton, SignedIn, SignedOut } from '@wacht/tanstack-router';
-
-function AuthRoute() {
-  return (
-    <>
-      <SignedIn>
-        <UserButton />
-        <Dashboard />
-      </SignedIn>
-      <SignedOut>
-        <SignInForm />
-      </SignedOut>
-    </>
-  );
-}
-```
-
-## API
-
-### `DeploymentProvider`
-
-The main component that wraps your TanStack Router application with Wacht authentication. Automatically handles TanStack Router integration.
-
-**Props:**
-- `publicKey: string` - Your Wacht deployment public key
-- `children: ReactNode` - Your application content
-
-**Features:**
-- Automatic TanStack Router context detection
-- Smart fallback to browser APIs when Router context not available
-- Type-safe navigation with TanStack Router
-- Zero configuration required
-
-### `createTanStackRouterAdapter()` (Advanced)
-
-For advanced use cases where you need direct access to the platform adapter.
-
-**Returns:** `PlatformAdapter`
-
-**Example:**
-```tsx
-import { createTanStackRouterAdapter } from '@wacht/tanstack-router';
-import { DeploymentProvider as BaseProvider } from '@wacht/jsx';
-
-function CustomProvider({ children, publicKey }) {
-  const adapter = createTanStackRouterAdapter();
-
-  return (
-    <BaseProvider publicKey={publicKey} adapter={adapter}>
-      {children}
-    </BaseProvider>
-  );
-}
-```
-
-## Requirements
-
-- React 19+
-- @tanstack/react-router 1.0+
-- @wacht/jsx
-
-## Type Safety
-
-TanStack Router provides excellent TypeScript support. The Wacht adapter maintains full type safety when used with TanStack Router's type-safe navigation.
-
-## Comparison with Other Adapters
-
-| Feature | @wacht/nextjs | @wacht/react-router | @wacht/tanstack-router |
-|---------|---------------|---------------------|------------------------|
-| Type-safe routing | ✅ | ❌ | ✅ |
-| File-based routing | ✅ | ❌ | ✅ |
-| Server-side rendering | ✅ | ❌ | ❌ |
-| Client-side only | ❌ | ✅ | ✅ |
-| Search params | ✅ | ✅ | ✅ (Type-safe) |
+- Current TanStack server helpers are session-auth oriented.
+- For machine-token gateway auth enforcement, use `@wacht/backend` gateway APIs directly in your server logic.
 
 ## License
 
-MIT
+Licensed under the Apache License, Version 2.0. See [LICENSE.md](../LICENSE.md).

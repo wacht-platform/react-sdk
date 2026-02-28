@@ -14,6 +14,7 @@ import {
     replayWebhookDelivery,
     rotateWebhookSecret,
     testWebhookEndpoint,
+    updateWebhookSettings,
     updateWebhookEndpoint,
 } from "./webhook-app-api";
 import type { UseWebhookAppSessionResult } from "./webhook-app-types";
@@ -112,6 +113,13 @@ export function useWebhookAppSession(
         [client],
     );
 
+    const updateSettings = useCallback(
+        async (options: Parameters<typeof updateWebhookSettings>[1]) => {
+            return updateWebhookSettings(client, options);
+        },
+        [client],
+    );
+
     const fetchDeliveryDetail = useCallback(
         async (deliveryId: string) => {
             return fetchWebhookDeliveryDetail(client, deliveryId);
@@ -162,6 +170,7 @@ export function useWebhookAppSession(
         deleteEndpoint,
         testEndpoint,
         rotateSecret,
+        updateSettings,
         replayDelivery,
         fetchReplayTaskStatus,
         fetchReplayTasks,

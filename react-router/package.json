@@ -1,11 +1,23 @@
 {
     "name": "@wacht/react-router",
-    "version": "0.0.1-alpha.12",
+    "version": "1.0.0-beta.0",
     "description": "React Router adapter for Wacht authentication library",
     "type": "module",
     "main": "dist/index.cjs.js",
     "module": "dist/index.es.js",
     "types": "dist/index.d.ts",
+    "exports": {
+        ".": {
+            "types": "./dist/index.d.ts",
+            "import": "./dist/index.js",
+            "require": "./dist/index.cjs"
+        },
+        "./server": {
+            "types": "./dist/server.d.ts",
+            "import": "./dist/server.js",
+            "require": "./dist/server.cjs"
+        }
+    },
     "files": [
         "/dist"
     ],
@@ -19,7 +31,7 @@
         "platform-adapter"
     ],
     "author": "Saurav Singh",
-    "license": "MIT",
+    "license": "Apache-2.0",
     "devDependencies": {
         "@types/node": "^22.13.1",
         "@vitejs/plugin-react": "^4.3.4",
@@ -27,13 +39,14 @@
         "vite-plugin-dts": "^4.4.0"
     },
     "peerDependencies": {
-        "@wacht/jsx": "*",
-        "@wacht/types": "*",
+        "@wacht/jsx": "^1.0.0-beta.0",
+        "@wacht/types": "^1.0.0-beta.0",
         "react": "catalog:",
         "react-dom": "catalog:",
         "react-router": "catalog:"
     },
     "dependencies": {
-        "rollup-plugin-preserve-use-client": "^3.0.1"
+        "rollup-plugin-preserve-use-client": "^3.0.1",
+        "@wacht/backend": "^1.0.0-beta.0"
     }
 }

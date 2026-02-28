@@ -27,7 +27,6 @@ export interface AuthzCheckRequest {
 export interface AuthzIdentity {
 	key_id: string;
 	deployment_id: string;
-	app_id: string;
 	app_slug: string;
 	key_name: string;
 	organization_id?: string;

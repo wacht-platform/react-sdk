@@ -51,6 +51,7 @@ export {
   useAgentContext,
   useAgentContexts,
   useAgentIntegrations,
+  useAgentMcpServers,
   useAgentSession,
   useWebhookAppSession,
   useWebhookStats,

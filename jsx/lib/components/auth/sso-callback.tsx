@@ -9,6 +9,7 @@ import { useNavigation } from "../../hooks/use-navigation";
 import { Button } from "../utility";
 import { PasskeyPrompt } from "./passkey-prompt";
 import { AuthFormImage } from "./auth-image";
+import { getStoredDevSession } from "@/utils/dev-session";
 
 const Container = styled.div`
   max-width: 380px;
@@ -188,7 +189,7 @@ export function SSOCallback() {
         if (deployment?.mode === "staging") {
           redirectUrl.searchParams.set(
             "__dev_session__",
-            localStorage.getItem("__dev_session__") || "",
+            getStoredDevSession() || "",
           );
         }
 

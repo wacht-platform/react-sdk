@@ -13,7 +13,12 @@ export * from "./use-navigation";
 export * from "./use-forgot-password";
 export * from "./use-notifications";
 export * from "./use-notification-stream";
-export { useAgentContext, useAgentIntegrations, useAgentSession } from "./use-agent";
+export {
+    useAgentContext,
+    useAgentIntegrations,
+    useAgentMcpServers,
+    useAgentSession,
+} from "./use-agent";
 export { useAgentContexts } from "./use-agent-contexts";
 export { useWebhookAppSession } from "./use-webhook-app";
 export { useWebhookStats } from "./use-webhook-stats";
@@ -25,6 +30,10 @@ export { useWebhookAnalytics } from "./use-webhook-analytics";
 export { useWebhookTimeseries } from "./use-webhook-timeseries";
 export { useApiAuthAppSession } from "./use-api-auth-app";
 export { useApiAuthKeys } from "./use-api-auth-keys";
-export { useApiAuthAuditLogs, useApiAuthAuditAnalytics, useApiAuthAuditTimeseries } from "./use-api-auth-audit";
+export {
+    useApiAuthAuditLogs,
+    useApiAuthAuditAnalytics,
+    useApiAuthAuditTimeseries,
+} from "./use-api-auth-audit";
 export { useInvitation } from "./use-invitation";
 export type { AcceptInvitationResponse } from "./use-invitation";

@@ -14,6 +14,7 @@ import { DefaultStylesProvider } from "../utility/root";
 import { Button } from "../utility/button";
 import { Form, FormGroup, Label } from "../utility/form";
 import { Input } from "../utility/input";
+import { getStoredDevSession } from "@/utils/dev-session";
 
 const Container = styled.div`
   max-width: 380px;
@@ -152,7 +153,7 @@ export function ProfileCompletion({
           if (deployment?.mode === "staging") {
             uri.searchParams.set(
               "__dev_session__",
-              localStorage.getItem("__dev_session__") || "",
+              getStoredDevSession() || "",
             );
           }
           navigate(uri.toString());
@@ -197,7 +198,7 @@ export function ProfileCompletion({
           if (deployment?.mode === "staging") {
             uri.searchParams.set(
               "__dev_session__",
-              localStorage.getItem("__dev_session__") || "",
+              getStoredDevSession() || "",
             );
           }
           navigate(uri.toString());

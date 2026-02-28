@@ -208,16 +208,25 @@ export interface ReplayTaskListResponse {
 	has_more: boolean;
 }
 
+export interface UpdateWebhookSettingsOptions {
+	failure_notification_emails: string[];
+}
+
 export interface WebhookAppInfo {
 	app_slug: string;
 	name: string;
 	signing_secret: string;
 	is_active: boolean;
+	failure_notification_emails?: string[];
 }
 
 export interface WebhookAppSessionData {
 	session_id: string;
 	webhook_app: WebhookAppInfo;
+}
+
+export interface WebhookSettingsResponse {
+	failure_notification_emails: string[];
 }
 
 // Hook Options Types

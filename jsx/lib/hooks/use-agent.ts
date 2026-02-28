@@ -10,20 +10,18 @@ import {
 import { useDeployment } from "./use-deployment";
 import { useClient } from "./use-client";
 import { responseMapper } from "../utils/response-mapper";
+import { getStoredDevSession } from "../utils/dev-session";
 import type {
     AgentIntegration,
+    AgentMcpServer,
     ConsentURLResponse,
+    McpConnectResponse,
     ImageData,
     ConversationMessage,
     ListMessagesResponse,
     UserInputRequestContent,
     AgentWithIntegrations,
 } from "@wacht/types";
-
-// ============================================================================
-// useAgentContext - Main hook for realtime agent chat
-// Assumes ticket has already been exchanged (uses session cookies)
-// ============================================================================
 
 interface UseAgentContextProps {
     contextId: string;
@@ -50,7 +48,9 @@ export function useAgentContext({
     const [messages, setMessages] = useState<ConversationMessage[]>([]);
     const [quickQuestions, setQuickQuestions] = useState<string[]>([]);
     const [pendingMessage, setPendingMessage] = useState<string | null>(null);
-    const [pendingImages, setPendingImages] = useState<ImageData[] | null>(null);
+    const [pendingImages, setPendingImages] = useState<ImageData[] | null>(
+        null,
+    );
     const [pendingFiles, setPendingFiles] = useState<File[] | null>(null);
     const [isConnected, setIsConnected] = useState(false);
     const [isExecuting, setIsExecuting] = useState(false);
@@ -72,11 +72,12 @@ export function useAgentContext({
 
     const handleConversationMessage = useCallback((data: any) => {
         const { id, content } = data;
-        const message_type = data.message_type || data.metadata?.message_type || content?.type;
+        const message_type =
+            data.message_type || data.metadata?.message_type || content?.type;
 
-        let role: 'user' | 'assistant' = 'assistant';
-        if (message_type === 'user_message') {
-            role = 'user';
+        let role: "user" | "assistant" = "assistant";
+        if (message_type === "user_message") {
+            role = "user";
         }
 
         const message = {
@@ -138,8 +139,6 @@ export function useAgentContext({
             }
             return;
         }
-
-
 
         if (message_type === "agent_response") {
             if (seenMessageIdsRef.current.has(id)) return;
@@ -218,7 +217,8 @@ export function useAgentContext({
                     { method: "GET" },
                 );
 
-                const result = await responseMapper<ListMessagesResponse>(response);
+                const result =
+                    await responseMapper<ListMessagesResponse>(response);
 
                 if (result.data) {
                     const messages = [...result.data.data].sort((a, b) => {
@@ -268,7 +268,7 @@ export function useAgentContext({
             sseUrl.searchParams.append("context_id", contextId);
 
             if (deployment.mode === "staging") {
-                const devSession = localStorage.getItem("__dev_session__");
+                const devSession = getStoredDevSession();
                 if (devSession) {
                     sseUrl.searchParams.append("__dev_session__", devSession);
                 }
@@ -288,17 +288,30 @@ export function useAgentContext({
 
                 if (reconnectAttemptsRef.current > 0) {
                     setTimeout(() => {
-                        client(`/api/agent/contexts/${contextId}/messages?limit=100`, { method: "GET" })
+                        client(
+                            `/api/agent/contexts/${contextId}/messages?limit=100`,
+                            { method: "GET" },
+                        )
                             .then(async (response) => {
-                                const result = await responseMapper<ListMessagesResponse>(response);
+                                const result =
+                                    await responseMapper<ListMessagesResponse>(
+                                        response,
+                                    );
                                 if (result.data) {
-                                    const messages = [...result.data.data].sort((a, b) =>
-                                        new Date(a.timestamp).getTime() - new Date(b.timestamp).getTime()
+                                    const messages = [...result.data.data].sort(
+                                        (a, b) =>
+                                            new Date(a.timestamp).getTime() -
+                                            new Date(b.timestamp).getTime(),
                                     );
                                     setMessages(messages);
                                 }
                             })
-                            .catch(err => console.error("Failed to refetch messages:", err));
+                            .catch((err) =>
+                                console.error(
+                                    "Failed to refetch messages:",
+                                    err,
+                                ),
+                            );
                     }, 100);
                 }
                 reconnectAttemptsRef.current = 0;
@@ -313,8 +326,13 @@ export function useAgentContext({
                 eventSourceRef.current = null;
 
                 if (reconnectAttemptsRef.current < maxReconnectAttempts) {
-                    const delay = Math.min(1000 * Math.pow(2, reconnectAttemptsRef.current), 30000);
-                    console.log(`SSE: Reconnecting in ${delay}ms (attempt ${reconnectAttemptsRef.current + 1}/${maxReconnectAttempts})`);
+                    const delay = Math.min(
+                        1000 * Math.pow(2, reconnectAttemptsRef.current),
+                        30000,
+                    );
+                    console.log(
+                        `SSE: Reconnecting in ${delay}ms (attempt ${reconnectAttemptsRef.current + 1}/${maxReconnectAttempts})`,
+                    );
 
                     reconnectTimeoutRef.current = setTimeout(() => {
                         reconnectAttemptsRef.current++;
@@ -322,16 +340,23 @@ export function useAgentContext({
                     }, delay);
                 } else {
                     console.error("SSE: Max reconnection attempts reached");
-                    setConnectionState({ status: CONNECTION_STATES.DISCONNECTED });
+                    setConnectionState({
+                        status: CONNECTION_STATES.DISCONNECTED,
+                    });
                 }
             };
 
             eventSource.addEventListener("conversation_message", (event) => {
                 try {
-                    console.log("SSE received conversation_message:", event.data);
+                    console.log(
+                        "SSE received conversation_message:",
+                        event.data,
+                    );
                     const data = JSON.parse(event.data);
                     if (data.ConversationMessage) {
-                        handleConversationMessageRef.current(data.ConversationMessage);
+                        handleConversationMessageRef.current(
+                            data.ConversationMessage,
+                        );
                     }
                 } catch (err) {
                     console.error("Failed to parse conversation event:", err);
@@ -343,7 +368,10 @@ export function useAgentContext({
                     console.log("SSE received platform_event:", event.data);
                     const data = JSON.parse(event.data);
                     if (data.PlatformEvent) {
-                        handlePlatformEventRef.current(data.PlatformEvent[0], data.PlatformEvent[1]);
+                        handlePlatformEventRef.current(
+                            data.PlatformEvent[0],
+                            data.PlatformEvent[1],
+                        );
                     }
                 } catch (err) {
                     console.error("Failed to parse platform event:", err);
@@ -371,7 +399,10 @@ export function useAgentContext({
         connect();
 
         return () => {
-            console.log("SSE: Cleanup running, closing connection for context:", contextId);
+            console.log(
+                "SSE: Cleanup running, closing connection for context:",
+                contextId,
+            );
             if (reconnectTimeoutRef.current) {
                 clearTimeout(reconnectTimeoutRef.current);
                 reconnectTimeoutRef.current = null;
@@ -384,7 +415,6 @@ export function useAgentContext({
         };
         // eslint-disable-next-line react-hooks/exhaustive-deps
     }, [contextId]); // Only re-run when contextId changes
-
 
     // Send message
     const sendMessage = useCallback(
@@ -414,10 +444,13 @@ export function useAgentContext({
                 }
                 // Content-Type header is set automatically by browser with boundary for FormData
 
-                const response = await client(`/api/agent/contexts/${contextId}/execute`, {
-                    method: "POST",
-                    body: formData,
-                });
+                const response = await client(
+                    `/api/agent/contexts/${contextId}/execute`,
+                    {
+                        method: "POST",
+                        body: formData,
+                    },
+                );
 
                 if (response.ok) {
                     // SSE will provide the user message and clear pending state
@@ -443,7 +476,11 @@ export function useAgentContext({
     // Submit user input
     const submitUserInput = useCallback(
         async (input: string) => {
-            if (!contextId || executionStatus !== FRONTEND_STATUS.WAITING_FOR_INPUT) return;
+            if (
+                !contextId ||
+                executionStatus !== FRONTEND_STATUS.WAITING_FOR_INPUT
+            )
+                return;
 
             try {
                 const formData = new FormData();
@@ -470,7 +507,8 @@ export function useAgentContext({
     }, [contextId]); // eslint-disable-line react-hooks/exhaustive-deps
 
     const loadMoreMessages = useCallback(async () => {
-        if (isLoadingMore || !hasMoreMessages || !oldestMessageIdRef.current) return;
+        if (isLoadingMore || !hasMoreMessages || !oldestMessageIdRef.current)
+            return;
 
         setIsLoadingMore(true);
         try {
@@ -520,7 +558,8 @@ export function useAgentContext({
         isConnected,
         isExecuting,
         executionStatus,
-        isWaitingForInput: executionStatus === FRONTEND_STATUS.WAITING_FOR_INPUT,
+        isWaitingForInput:
+            executionStatus === FRONTEND_STATUS.WAITING_FOR_INPUT,
         hasMoreMessages,
         isLoadingMore,
         sendMessage,
@@ -548,19 +587,37 @@ type UseAgentIntegrationsReturnType = {
     integrations: AgentIntegration[];
     loading: boolean;
     error: Error | null;
-    generateConsentURL: (integrationId: string, redirectUrl?: string) => Promise<ConsentURLResponse>;
+    generateConsentURL: (
+        integrationId: string,
+        redirectUrl?: string,
+    ) => Promise<ConsentURLResponse>;
     removeIntegration: (integrationId: string) => Promise<void>;
     refetch: () => Promise<void>;
 };
 
-export function useAgentIntegrations(agentName: string | null): UseAgentIntegrationsReturnType {
+type UseAgentMcpServersReturnType = {
+    mcpServers: AgentMcpServer[];
+    loading: boolean;
+    error: Error | null;
+    connect: (mcpServerId: string) => Promise<McpConnectResponse>;
+    disconnect: (mcpServerId: string) => Promise<void>;
+    refetch: () => Promise<void>;
+};
+
+export function useAgentIntegrations(
+    agentName: string | null,
+): UseAgentIntegrationsReturnType {
     const { client } = useClient();
 
     const fetcher = useCallback(async () => {
         if (!agentName) return [];
-        const response = await client(`/api/agent/integrations?agent_name=${agentName}`, {
-            method: "GET",
-        });
+        const query = new URLSearchParams({ agent_name: agentName });
+        const response = await client(
+            `/api/agent/integrations?${query.toString()}`,
+            {
+                method: "GET",
+            },
+        );
         const parsed = await responseMapper<AgentIntegration[]>(response);
         return parsed.data;
     }, [client, agentName]);
@@ -568,27 +625,35 @@ export function useAgentIntegrations(agentName: string | null): UseAgentIntegrat
     const { data, error, mutate } = useSWR(
         agentName ? `wacht-agent-integrations:${agentName}` : null,
         fetcher,
-        { revalidateOnFocus: false }
+        { revalidateOnFocus: false },
     );
 
-    const generateConsentURL = useCallback(async (integrationId: string): Promise<ConsentURLResponse> => {
-        const url = `/api/agent/integrations/${integrationId}/consent-url`;
+    const generateConsentURL = useCallback(
+        async (integrationId: string): Promise<ConsentURLResponse> => {
+            const url = `/api/agent/integrations/${integrationId}/consent-url`;
 
-        const response = await client(url, { method: "POST" });
-        const parsed = await responseMapper<ConsentURLResponse>(response);
-        return parsed.data;
-    }, [client]);
+            const response = await client(url, { method: "POST" });
+            const parsed = await responseMapper<ConsentURLResponse>(response);
+            return parsed.data;
+        },
+        [client],
+    );
 
-    const removeIntegration = useCallback(async (integrationId: string): Promise<void> => {
-        await client(`/api/agent/integrations/${integrationId}/remove`, {
-            method: "POST",
-        });
+    const removeIntegration = useCallback(
+        async (integrationId: string): Promise<void> => {
+            await client(`/api/agent/integrations/${integrationId}/remove`, {
+                method: "POST",
+            });
 
-        await mutate((current) => {
-            if (!current) return current;
-            return current.filter((integration) => integration.id !== integrationId);
-        });
-    }, [client, mutate]);
+            await mutate((current) => {
+                if (!current) return current;
+                return current.filter(
+                    (integration) => integration.id !== integrationId,
+                );
+            });
+        },
+        [client, mutate],
+    );
 
     return {
         integrations: data || [],
@@ -596,7 +661,82 @@ export function useAgentIntegrations(agentName: string | null): UseAgentIntegrat
         error,
         generateConsentURL,
         removeIntegration,
-        refetch: async () => { await mutate(); },
+        refetch: async () => {
+            await mutate();
+        },
+    };
+}
+
+export function useAgentMcpServers(
+    agentName: string | null,
+): UseAgentMcpServersReturnType {
+    const { client } = useClient();
+
+    const fetcher = useCallback(async () => {
+        if (!agentName) return [];
+
+        const query = new URLSearchParams({ agent_name: agentName });
+        const response = await client(
+            `/api/agent/mcp-servers?${query.toString()}`,
+            {
+                method: "GET",
+            },
+        );
+        const parsed = await responseMapper<AgentMcpServer[]>(response);
+        return parsed.data;
+    }, [client, agentName]);
+
+    const { data, error, mutate } = useSWR(
+        agentName ? `wacht-agent-mcp-servers:${agentName}` : null,
+        fetcher,
+        { revalidateOnFocus: false },
+    );
+
+    const connect = useCallback(
+        async (mcpServerId: string): Promise<McpConnectResponse> => {
+            if (!agentName) throw new Error("Agent name required");
+
+            const query = new URLSearchParams({ agent_name: agentName });
+            const response = await client(
+                `/api/agent/mcp-servers/${mcpServerId}/connect?${query.toString()}`,
+                {
+                    method: "POST",
+                },
+            );
+            const parsed = await responseMapper<McpConnectResponse>(response);
+
+            await mutate();
+            return parsed.data;
+        },
+        [client, agentName, mutate],
+    );
+
+    const disconnect = useCallback(
+        async (mcpServerId: string): Promise<void> => {
+            if (!agentName) throw new Error("Agent name required");
+
+            const query = new URLSearchParams({ agent_name: agentName });
+            await client(
+                `/api/agent/mcp-servers/${mcpServerId}/disconnect?${query.toString()}`,
+                {
+                    method: "POST",
+                },
+            );
+
+            await mutate();
+        },
+        [client, agentName, mutate],
+    );
+
+    return {
+        mcpServers: data || [],
+        loading: !data && !error,
+        error,
+        connect,
+        disconnect,
+        refetch: async () => {
+            await mutate();
+        },
     };
 }
 
@@ -605,7 +745,12 @@ export function useAgentIntegrations(agentName: string | null): UseAgentIntegrat
 // Uses session cookies, no token needed
 // ============================================================================
 
-import type { AgentContext, CreateContextRequest, ListContextsOptions, ListContextsResponse } from "@wacht/types";
+import type {
+    AgentContext,
+    CreateContextRequest,
+    ListContextsOptions,
+    ListContextsResponse,
+} from "@wacht/types";
 
 type UseAgentContextsReturnType = {
     contexts: AgentContext[];
@@ -618,7 +763,7 @@ type UseAgentContextsReturnType = {
 };
 
 export function useAgentContexts(
-    options: ListContextsOptions = {}
+    options: ListContextsOptions = {},
 ): UseAgentContextsReturnType {
     const { client } = useClient();
     const { limit = 20, offset = 0, status, search } = options;
@@ -631,9 +776,12 @@ export function useAgentContexts(
         if (status) params.append("status", status);
         if (search) params.append("search", search);
 
-        const response = await client(`/api/agent/contexts?${params.toString()}`, {
-            method: "GET",
-        });
+        const response = await client(
+            `/api/agent/contexts?${params.toString()}`,
+            {
+                method: "GET",
+            },
+        );
         const parsed = await responseMapper<ListContextsResponse>(response);
         return parsed.data;
     }, [client, limit, offset, status, search]);
@@ -641,46 +789,57 @@ export function useAgentContexts(
     const { data, error, mutate } = useSWR(
         `wacht-agent-contexts:${limit}:${offset}:${status}:${search}`,
         fetcher,
-        { revalidateOnFocus: false }
+        { revalidateOnFocus: false },
     );
 
-    const createContext = useCallback(async (request: CreateContextRequest): Promise<AgentContext> => {
-        const formData = new FormData();
-        formData.append("title", request.title);
-        if (request.system_instructions) {
-            formData.append("system_instructions", request.system_instructions);
-        }
-        const response = await client("/api/agent/contexts", {
-            method: "POST",
-            body: formData,
-        });
+    const createContext = useCallback(
+        async (request: CreateContextRequest): Promise<AgentContext> => {
+            const formData = new FormData();
+            formData.append("title", request.title);
+            if (request.system_instructions) {
+                formData.append(
+                    "system_instructions",
+                    request.system_instructions,
+                );
+            }
+            const response = await client("/api/agent/contexts", {
+                method: "POST",
+                body: formData,
+            });
 
-        const parsed = await responseMapper<AgentContext>(response);
+            const parsed = await responseMapper<AgentContext>(response);
 
-        await mutate((current: ListContextsResponse | undefined) => {
-            if (!current) return current;
-            return {
-                ...current,
-                data: [parsed.data, ...current.data],
-            };
-        });
+            await mutate((current: ListContextsResponse | undefined) => {
+                if (!current) return current;
+                return {
+                    ...current,
+                    data: [parsed.data, ...current.data],
+                };
+            });
 
-        return parsed.data;
-    }, [client, mutate]);
+            return parsed.data;
+        },
+        [client, mutate],
+    );
 
-    const deleteContext = useCallback(async (id: string): Promise<void> => {
-        await client(`/api/agent/contexts/${id}/delete`, {
-            method: "POST",
-        });
+    const deleteContext = useCallback(
+        async (id: string): Promise<void> => {
+            await client(`/api/agent/contexts/${id}/delete`, {
+                method: "POST",
+            });
 
-        await mutate((current: ListContextsResponse | undefined) => {
-            if (!current) return current;
-            return {
-                ...current,
-                data: current.data.filter((ctx: AgentContext) => ctx.id !== id),
-            };
-        });
-    }, [client, mutate]);
+            await mutate((current: ListContextsResponse | undefined) => {
+                if (!current) return current;
+                return {
+                    ...current,
+                    data: current.data.filter(
+                        (ctx: AgentContext) => ctx.id !== id,
+                    ),
+                };
+            });
+        },
+        [client, mutate],
+    );
 
     return {
         contexts: data?.data || [],
@@ -689,7 +848,9 @@ export function useAgentContexts(
         hasMore: data?.has_more || false,
         createContext,
         deleteContext,
-        refetch: async () => { await mutate(); },
+        refetch: async () => {
+            await mutate();
+        },
     };
 }
 
@@ -734,7 +895,8 @@ export function useAgentSession(ticket?: string | null): UseAgentSessionResult {
     const exchangedRef = useRef(false);
     const exchangingRef = useRef(false);
 
-    const [activeAgent, setActiveAgent] = useState<AgentWithIntegrations | null>(null);
+    const [activeAgent, setActiveAgent] =
+        useState<AgentWithIntegrations | null>(null);
 
     const shouldFetch = ticketExchanged;
 
@@ -754,11 +916,14 @@ export function useAgentSession(ticket?: string | null): UseAgentSessionResult {
         return parsed.data;
     }, [client]);
 
-    const { data, error: fetchError, isLoading, mutate } = useSWR(
-        shouldFetch ? "wacht-agent-session" : null,
-        fetcher,
-        { revalidateOnFocus: false }
-    );
+    const {
+        data,
+        error: fetchError,
+        isLoading,
+        mutate,
+    } = useSWR(shouldFetch ? "wacht-agent-session" : null, fetcher, {
+        revalidateOnFocus: false,
+    });
 
     // Handle ticket exchange
     useEffect(() => {
@@ -768,9 +933,12 @@ export function useAgentSession(ticket?: string | null): UseAgentSessionResult {
             exchangingRef.current = true;
             setTicketLoading(true);
             try {
-                const response = await client(`/session/ticket/exchange?ticket=${encodeURIComponent(ticket)}`, {
-                    method: "GET",
-                });
+                const response = await client(
+                    `/session/ticket/exchange?ticket=${encodeURIComponent(ticket)}`,
+                    {
+                        method: "GET",
+                    },
+                );
 
                 if (response.ok) {
                     exchangedRef.current = true;
@@ -779,7 +947,11 @@ export function useAgentSession(ticket?: string | null): UseAgentSessionResult {
                     setTicketError(new Error("Failed to exchange ticket"));
                 }
             } catch (err) {
-                setTicketError(err instanceof Error ? err : new Error("Failed to exchange ticket"));
+                setTicketError(
+                    err instanceof Error
+                        ? err
+                        : new Error("Failed to exchange ticket"),
+                );
             } finally {
                 setTicketLoading(false);
                 exchangingRef.current = false;
@@ -799,7 +971,9 @@ export function useAgentSession(ticket?: string | null): UseAgentSessionResult {
     // Reset active agent when agents list changes significantly
     useEffect(() => {
         if (data?.agents && activeAgent) {
-            const stillExists = data.agents.some((a: AgentWithIntegrations) => a.id === activeAgent.id);
+            const stillExists = data.agents.some(
+                (a: AgentWithIntegrations) => a.id === activeAgent.id,
+            );
             if (!stillExists && data.agents.length > 0) {
                 setActiveAgent(data.agents[0]);
             }
@@ -807,7 +981,9 @@ export function useAgentSession(ticket?: string | null): UseAgentSessionResult {
     }, [data, activeAgent]);
 
     const hasSession = !fetchError || fetchError.message !== "NO_SESSION";
-    const sessionError = ticketError || (fetchError && fetchError.message !== "NO_SESSION" ? fetchError : null);
+    const sessionError =
+        ticketError ||
+        (fetchError && fetchError.message !== "NO_SESSION" ? fetchError : null);
     const sessionLoading = ticketLoading || (shouldFetch && isLoading);
 
     return {
@@ -821,6 +997,8 @@ export function useAgentSession(ticket?: string | null): UseAgentSessionResult {
         setActiveAgent,
         ticketExchanged,
         ticketLoading,
-        refetch: async () => { await mutate(); }
+        refetch: async () => {
+            await mutate();
+        },
     };
 }

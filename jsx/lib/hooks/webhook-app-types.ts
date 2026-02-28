@@ -12,9 +12,11 @@ import type {
     ReplayWebhookDeliveryResponse,
     TestEndpointOptions,
     TestEndpointResponse,
+    UpdateWebhookSettingsOptions,
     UpdateEndpointOptions,
     WebhookAppInfo,
     WebhookDeliveryDetail,
+    WebhookSettingsResponse,
 } from "@wacht/types";
 
 export interface UseWebhookAppSessionResult {
@@ -39,6 +41,9 @@ export interface UseWebhookAppSessionResult {
         options: TestEndpointOptions,
     ) => Promise<TestEndpointResponse>;
     rotateSecret: () => Promise<WebhookAppInfo>;
+    updateSettings: (
+        options: UpdateWebhookSettingsOptions,
+    ) => Promise<WebhookSettingsResponse>;
     replayDelivery: (
         options: ReplayWebhookDeliveryOptions,
     ) => Promise<ReplayWebhookDeliveryResponse>;

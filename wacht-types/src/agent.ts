@@ -7,6 +7,18 @@ export interface AgentIntegration {
     connection_metadata?: Record<string, any>;
 }
 
+export interface AgentMcpServer {
+    id: string;
+    name: string;
+    is_active?: boolean;
+    requires_connection?: boolean;
+}
+
+export interface McpConnectResponse {
+    requires_oauth: boolean;
+    oauth_url?: string;
+}
+
 export interface LinkCodeResponse {
     code: string;
     expires_at: string;
@@ -194,6 +206,7 @@ export interface AgentWithIntegrations {
     name: string;
     description: string;
     integrations: AgentIntegration[];
+    mcp_servers?: AgentMcpServer[];
 }
 
 export type ListAgentsResponse = {

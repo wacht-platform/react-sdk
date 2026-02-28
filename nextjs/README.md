@@ -1,30 +1,39 @@
-# @snipextt/wacht-nextjs
+# @wacht/nextjs
 
-Next.js adapter for Wacht authentication library. This package provides platform-specific routing integration for Next.js applications using the Wacht authentication system.
+Next.js integration for Wacht.
 
-## Installation
+This package provides:
+- Client-side UI bindings via `DeploymentProvider`
+- Server auth primitives via `@wacht/nextjs/server`
+- Middleware/proxy integration with `wachtMiddleware`
+- Server-side API client helpers backed by `@wacht/backend`
+
+## Install
 
 ```bash
-pnpm add @snipextt/wacht-nextjs @snipextt/wacht next
+pnpm add @wacht/nextjs @wacht/jsx @wacht/types
 ```
 
-## Usage
+## Environment
 
-### Basic Setup (App Router)
+```bash
+NEXT_PUBLIC_WACHT_PUBLISHABLE_KEY=pk_test_base64url
+WACHT_API_KEY=wk_live_xxx # only needed for server-side backend API calls
+```
+
+`frontendApiUrl` is derived from the publishable key. Do not pass it manually.
+
+## Client Setup
 
 ```tsx
 // app/layout.tsx
-import { DeploymentProvider } from '@snipextt/wacht-nextjs';
+import { DeploymentProvider } from "@wacht/nextjs";
 
-export default function RootLayout({
-  children,
-}: {
-  children: React.ReactNode;
-}) {
+export default function RootLayout({ children }: { children: React.ReactNode }) {
   return (
-    <html lang="en">
+    <html>
       <body>
-        <DeploymentProvider publicKey="your-deployment-key">
+        <DeploymentProvider publicKey={process.env.NEXT_PUBLIC_WACHT_PUBLISHABLE_KEY!}>
           {children}
         </DeploymentProvider>
       </body>
@@ -33,89 +42,78 @@ export default function RootLayout({
 }
 ```
 
-### Basic Setup (Pages Router)
+## Proxy (Next.js 16+)
 
-```tsx
-// pages/_app.tsx
-import type { AppProps } from 'next/app';
-import { DeploymentProvider } from '@snipextt/wacht-nextjs';
+```ts
+// proxy.ts
+import { NextResponse } from "next/server";
+import { createRouteMatcher, wachtMiddleware } from "@wacht/nextjs/server";
 
-export default function App({ Component, pageProps }: AppProps) {
-  return (
-    <DeploymentProvider publicKey="your-deployment-key">
-      <Component {...pageProps} />
-    </DeploymentProvider>
-  );
+const isProtected = createRouteMatcher(["/dashboard(.*)", "/api/private(.*)"]);
+
+export default wachtMiddleware(
+  async (auth, req) => {
+    if (!isProtected(req)) return NextResponse.next();
+    await auth.protect();
+    return NextResponse.next();
+  },
+  {
+    apiRoutePrefixes: ["/api", "/trpc"],
+  },
+);
+
+export const config = {
+  matcher: [
+    "/((?!_next|[^?]*\\.(?:html?|css|js(?!on)|jpe?g|webp|png|gif|svg|ttf|woff2?|ico|csv|docx?|xlsx?|zip|webmanifest)).*)",
+    "/(api|trpc)(.*)",
+  ],
+};
+```
+
+## Server Auth API
+
+From `@wacht/nextjs/server`:
+- `wachtMiddleware(handler?, options?)`
+- `createRouteMatcher(patterns)`
+- `auth(request, options?)` and `auth(headers)`
+- `getAuth(request, options?)`
+- `requireAuth(request, options?)`
+
+`auth.protect()` supports:
+- auth checks
+- permission checks
+- token-type checks (`session_token`, `api_key`, `oauth_token`, `machine_token`, `any`)
+
+## API-style vs document requests
+
+For middleware errors:
+- Non-API-like requests: redirect to sign-in/account portal
+- API-like requests (as detected by `apiRoutePrefixes` or `isApiRoute`): JSON error response with status code
+
+## Server Backend Client
+
+```ts
+import { NextResponse } from "next/server";
+import { wachtClient } from "@wacht/nextjs/server";
+
+export async function GET() {
+  const client = await wachtClient();
+  const apps = await client.webhooks.listWebhookApps();
+  return NextResponse.json({ apps });
 }
 ```
 
-### Using Navigation Components
+Or create explicit instances:
 
-Once the platform adapter is configured, all Wacht navigation components will automatically use Next.js router for navigation:
+```ts
+import { createWachtServerClient } from "@wacht/nextjs/server";
 
-```tsx
-import { NavigateToSignIn, NavigationLink } from '@snipextt/wacht';
-
-function MyComponent() {
-  return (
-    <div>
-      {/* This will use Next.js router navigation */}
-      <NavigationLink to="/dashboard">Go to Dashboard</NavigationLink>
-      
-      {/* This will redirect to sign-in using Next.js router */}
-      <NavigateToSignIn />
-    </div>
-  );
-}
+const client = createWachtServerClient({
+  apiKey: process.env.WACHT_API_KEY,
+  name: "internal-worker",
+});
 ```
-
-### Using the Navigation Hook
-
-```tsx
-import { useNavigation } from '@snipextt/wacht';
-
-function MyComponent() {
-  const { navigate } = useNavigation();
-
-  const handleClick = () => {
-    // This will use Next.js router navigation
-    navigate('/profile', { replace: true });
-  };
-
-  return <button onClick={handleClick}>Go to Profile</button>;
-}
-```
-
-## API
-
-### `DeploymentProvider`
-
-The main component that wraps your Next.js application with Wacht authentication. Automatically handles Next.js router integration.
-
-**Props:**
-- `publicKey: string` - Your Wacht deployment public key
-- `children: ReactNode` - Your application content
-
-**Features:**
-- Automatic Next.js router detection (App Router and Pages Router)
-- Smart fallback to browser APIs when needed
-- Server-side safe (can be used in server components)
-- Zero configuration required
-
-### `createNextjsAdapter()` (Advanced)
-
-For advanced use cases where you need direct access to the platform adapter.
-
-**Returns:** `PlatformAdapter`
-
-
-
-## Requirements
-
-- React 19+
-- Next.js 14+ or 15+
-- @snipextt/wacht
 
 ## License
 
-MIT
+Licensed under the Apache License, Version 2.0. See [LICENSE.md](../LICENSE.md).

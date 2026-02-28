@@ -15,7 +15,15 @@ export default defineConfig({
       formats: ["cjs", "es"],
     },
     rollupOptions: {
-      external: [...Object.keys(peerDependencies), "react/jsx-runtime", "next/server", "next/navigation", "next/dynamic"],
+      external: [
+        ...Object.keys(peerDependencies),
+        "react/jsx-runtime",
+        "next/navigation",
+        "next/dynamic",
+        "next/server",
+        "next/dist/server/web/types",
+        "@wacht/backend",
+      ],
       plugins: [preserveUseClientDirective()],
       output: {
         globals: {
