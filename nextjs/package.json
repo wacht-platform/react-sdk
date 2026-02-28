@@ -47,6 +47,6 @@
     },
     "dependencies": {
         "rollup-plugin-preserve-use-client": "^3.0.1",
-        "@wacht/backend": "*"
+        "@wacht/backend": "latest"
     }
 }
