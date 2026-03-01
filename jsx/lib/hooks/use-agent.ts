@@ -894,6 +894,7 @@ export function useAgentSession(ticket?: string | null): UseAgentSessionResult {
     const [ticketError, setTicketError] = useState<Error | null>(null);
     const exchangedRef = useRef(false);
     const exchangingRef = useRef(false);
+    const attemptedTicketRef = useRef<string | null>(null);
 
     const [activeAgent, setActiveAgent] =
         useState<AgentWithIntegrations | null>(null);
@@ -928,6 +929,8 @@ export function useAgentSession(ticket?: string | null): UseAgentSessionResult {
     // Handle ticket exchange
     useEffect(() => {
         if (!ticket || exchangedRef.current || exchangingRef.current) return;
+        if (attemptedTicketRef.current === ticket) return;
+        attemptedTicketRef.current = ticket;
 
         const exchange = async () => {
             exchangingRef.current = true;

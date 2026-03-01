@@ -176,6 +176,7 @@ const ExistingAccountsActions = styled.div`
     display: flex;
     gap: var(--space-sm);
     flex-wrap: wrap;
+    width: 100%;
 `;
 
 const ExistingAccountButton = styled(Button).withConfig({
