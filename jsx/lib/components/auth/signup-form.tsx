@@ -402,10 +402,6 @@ export function SignUpForm() {
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    console.log("Signup form - handleSubmit called");
-    console.log("Auth settings:", authSettings);
-    console.log("Form data:", formData);
-
     if (loading || isSubmitting) return;
 
     const newErrors: Record<string, string> = {};
@@ -480,11 +476,9 @@ export function SignUpForm() {
     setErrors(newErrors);
 
     if (Object.keys(newErrors).length > 0) {
-      console.log("Signup validation failed. Errors:", newErrors);
       return;
     }
 
-    console.log("Signup validation passed");
 
     setIsSubmitting(true);
     try {
@@ -495,9 +489,6 @@ export function SignUpForm() {
       if (inviteToken) {
         submitData.invite_token = inviteToken;
       }
-      console.log("Submitting signup data:", submitData);
-      console.log("Phone number:", submitData.phone_number);
-      console.log("Phone country code:", submitData.phone_country_code);
       await signUp.create(submitData);
     } catch (err) {
       setErrors({ submit: (err as Error).message });

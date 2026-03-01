@@ -16,11 +16,15 @@ import type {
     AgentMcpServer,
     ConsentURLResponse,
     McpConnectResponse,
-    ImageData,
     ConversationMessage,
     ListMessagesResponse,
+    FileData,
     UserInputRequestContent,
     AgentWithIntegrations,
+    AgentContext,
+    CreateContextRequest,
+    ListContextsOptions,
+    ListContextsResponse,
 } from "@wacht/types";
 
 interface UseAgentContextProps {
@@ -48,9 +52,6 @@ export function useAgentContext({
     const [messages, setMessages] = useState<ConversationMessage[]>([]);
     const [quickQuestions, setQuickQuestions] = useState<string[]>([]);
     const [pendingMessage, setPendingMessage] = useState<string | null>(null);
-    const [pendingImages, setPendingImages] = useState<ImageData[] | null>(
-        null,
-    );
     const [pendingFiles, setPendingFiles] = useState<File[] | null>(null);
     const [isConnected, setIsConnected] = useState(false);
     const [isExecuting, setIsExecuting] = useState(false);
@@ -92,7 +93,6 @@ export function useAgentContext({
             message_type === "context_results"
         ) {
             setPendingMessage(null);
-            setPendingImages(null);
             setPendingFiles(null);
 
             if (seenMessageIdsRef.current.has(id)) return;
@@ -106,13 +106,10 @@ export function useAgentContext({
 
         if (message_type === "user_message") {
             setPendingMessage(null);
-            setPendingImages(null);
             setPendingFiles(null);
 
             if (seenMessageIdsRef.current.has(id)) return;
             seenMessageIdsRef.current.add(id);
-
-            console.log(seenMessageIdsRef.current, id);
 
             setMessages((prev) => {
                 return [...prev, message];
@@ -122,7 +119,6 @@ export function useAgentContext({
 
         if (message_type === "assistant_acknowledgment") {
             setPendingMessage(null);
-            setPendingImages(null);
             setPendingFiles(null);
 
             if (seenMessageIdsRef.current.has(id)) return;
@@ -181,13 +177,11 @@ export function useAgentContext({
         [platformAdapter],
     );
 
-    // Refs for stable callback references in SSE effect
     const handleConversationMessageRef = useRef(handleConversationMessage);
     const handlePlatformEventRef = useRef(handlePlatformEvent);
     const clientRef = useRef(client);
     const deploymentRef = useRef(deployment);
 
-    // Keep refs up to date
     useEffect(() => {
         handleConversationMessageRef.current = handleConversationMessage;
         handlePlatformEventRef.current = handlePlatformEvent;
@@ -195,7 +189,6 @@ export function useAgentContext({
         deploymentRef.current = deployment;
     });
 
-    // SSE EventSource ref
     const eventSourceRef = useRef<EventSource | null>(null);
     const reconnectTimeoutRef = useRef<NodeJS.Timeout | null>(null);
     const reconnectAttemptsRef = useRef(0);
@@ -213,7 +206,7 @@ export function useAgentContext({
                 }
 
                 const response = await client(
-                    `/api/agent/contexts/${contextId}/messages?${params}`,
+                    `/agent/contexts/${contextId}/messages?${params}`,
                     { method: "GET" },
                 );
 
@@ -274,22 +267,19 @@ export function useAgentContext({
                 }
             }
 
-            console.log("SSE: Connecting to", sseUrl.toString());
-
             const eventSource = new EventSource(sseUrl.toString(), {
                 withCredentials: deployment.mode !== "staging",
             });
             eventSourceRef.current = eventSource;
 
             eventSource.onopen = () => {
-                console.log("SSE: Connected successfully");
                 setIsConnected(true);
                 setConnectionState({ status: CONNECTION_STATES.CONNECTED });
 
                 if (reconnectAttemptsRef.current > 0) {
                     setTimeout(() => {
                         client(
-                            `/api/agent/contexts/${contextId}/messages?limit=100`,
+                            `/agent/contexts/${contextId}/messages?limit=100`,
                             { method: "GET" },
                         )
                             .then(async (response) => {
@@ -330,10 +320,6 @@ export function useAgentContext({
                         1000 * Math.pow(2, reconnectAttemptsRef.current),
                         30000,
                     );
-                    console.log(
-                        `SSE: Reconnecting in ${delay}ms (attempt ${reconnectAttemptsRef.current + 1}/${maxReconnectAttempts})`,
-                    );
-
                     reconnectTimeoutRef.current = setTimeout(() => {
                         reconnectAttemptsRef.current++;
                         connect();
@@ -348,10 +334,6 @@ export function useAgentContext({
 
             eventSource.addEventListener("conversation_message", (event) => {
                 try {
-                    console.log(
-                        "SSE received conversation_message:",
-                        event.data,
-                    );
                     const data = JSON.parse(event.data);
                     if (data.ConversationMessage) {
                         handleConversationMessageRef.current(
@@ -365,7 +347,6 @@ export function useAgentContext({
 
             eventSource.addEventListener("platform_event", (event) => {
                 try {
-                    console.log("SSE received platform_event:", event.data);
                     const data = JSON.parse(event.data);
                     if (data.PlatformEvent) {
                         handlePlatformEventRef.current(
@@ -380,7 +361,6 @@ export function useAgentContext({
 
             eventSource.addEventListener("user_input_request", (event) => {
                 try {
-                    console.log("SSE received user_input_request:", event.data);
                     const data = JSON.parse(event.data);
                     if (data.UserInputRequest) {
                         handleConversationMessage({
@@ -395,14 +375,9 @@ export function useAgentContext({
             });
         };
 
-        // Initial connection
         connect();
 
         return () => {
-            console.log(
-                "SSE: Cleanup running, closing connection for context:",
-                contextId,
-            );
             if (reconnectTimeoutRef.current) {
                 clearTimeout(reconnectTimeoutRef.current);
                 reconnectTimeoutRef.current = null;
@@ -414,21 +389,17 @@ export function useAgentContext({
             setIsConnected(false);
         };
         // eslint-disable-next-line react-hooks/exhaustive-deps
-    }, [contextId]); // Only re-run when contextId changes
+    }, [contextId]);
 
     // Send message
     const sendMessage = useCallback(
         async (
             message: string,
-            images?: { mime_type: string; data?: string; url?: string }[],
             files?: File[],
         ) => {
             if (!contextId || !deployment) return;
 
             setPendingMessage(message);
-            if (images && images.length > 0) {
-                setPendingImages(images);
-            }
             if (files && files.length > 0) {
                 setPendingFiles(files);
             }
@@ -442,10 +413,9 @@ export function useAgentContext({
                         formData.append("files", file);
                     });
                 }
-                // Content-Type header is set automatically by browser with boundary for FormData
 
                 const response = await client(
-                    `/api/agent/contexts/${contextId}/execute`,
+                    `/agent/contexts/${contextId}/execute`,
                     {
                         method: "POST",
                         body: formData,
@@ -453,20 +423,14 @@ export function useAgentContext({
                 );
 
                 if (response.ok) {
-                    // SSE will provide the user message and clear pending state
                     setIsExecuting(true);
                     setExecutionStatus(FRONTEND_STATUS.RUNNING);
                 } else {
-                    // Clear pending on error - user needs to retry
                     setPendingMessage(null);
-                    setPendingImages(null);
                     setPendingFiles(null);
                 }
             } catch (err) {
-                console.error("Failed to send message:", err);
-                // Clear pending on error - user needs to retry
                 setPendingMessage(null);
-                setPendingImages(null);
                 setPendingFiles(null);
             }
         },
@@ -486,7 +450,7 @@ export function useAgentContext({
                 const formData = new FormData();
                 formData.append("agent_name", agentName);
                 formData.append("user_input", input);
-                await client(`/api/agent/contexts/${contextId}/execute`, {
+                await client(`/agent/contexts/${contextId}/execute`, {
                     method: "POST",
                     body: formData,
                 });
@@ -498,13 +462,12 @@ export function useAgentContext({
         [contextId, agentName, executionStatus, client],
     );
 
-    // Load initial messages - only once per contextId
     useEffect(() => {
         if (contextId && fetchedContextRef.current !== contextId) {
             fetchedContextRef.current = contextId;
             fetchMessages();
         }
-    }, [contextId]); // eslint-disable-line react-hooks/exhaustive-deps
+    }, [contextId]);
 
     const loadMoreMessages = useCallback(async () => {
         if (isLoadingMore || !hasMoreMessages || !oldestMessageIdRef.current)
@@ -522,12 +485,7 @@ export function useAgentContext({
         setMessages([]);
         setQuickQuestions([]);
         setPendingMessage(null);
-        setPendingImages(null);
         setPendingFiles(null);
-    }, []);
-
-    const connect = useCallback(() => {
-        // SSE auto-connects, this is kept for API compatibility
     }, []);
 
     const cancelExecution = useCallback(async () => {
@@ -537,7 +495,7 @@ export function useAgentContext({
             const formData = new FormData();
             formData.append("agent_name", agentName);
             formData.append("cancel", "true");
-            await client(`/api/agent/contexts/${contextId}/execute`, {
+            await client(`/agent/contexts/${contextId}/execute`, {
                 method: "POST",
                 body: formData,
             });
@@ -548,11 +506,56 @@ export function useAgentContext({
         }
     }, [contextId, isExecuting, agentName, client]);
 
+    const resolveMessageFileUrl = useCallback(
+        (file: FileData | null | undefined): string | null => {
+            if (!deployment || !contextId || !file) return null;
+
+            const raw = file.url || file.filename;
+            if (!raw) return null;
+            if (/^https?:\/\//i.test(raw)) return raw;
+
+            const filename = raw.startsWith("/uploads/")
+                ? (raw.split("/").pop() ?? "")
+                : raw;
+            if (!filename) return null;
+
+            const backendHost = deployment.backend_host.replace(/\/$/, "");
+            const fileUrl = new URL(
+                `${backendHost}/agent/contexts/${encodeURIComponent(contextId)}/files/${encodeURIComponent(filename)}`,
+            );
+
+            if (deployment.mode === "staging") {
+                const devSession = getStoredDevSession();
+                if (devSession) {
+                    fileUrl.searchParams.set("__dev_session__", devSession);
+                }
+            }
+
+            return fileUrl.toString();
+        },
+        [contextId, deployment],
+    );
+
+    const downloadMessageFile = useCallback(
+        (file: FileData | null | undefined): void => {
+            const fileUrl = resolveMessageFileUrl(file);
+            if (!fileUrl) return;
+
+            const link = document.createElement("a");
+            link.href = fileUrl;
+            link.download = file?.filename || "attachment";
+            link.rel = "noreferrer";
+            document.body.appendChild(link);
+            link.click();
+            document.body.removeChild(link);
+        },
+        [resolveMessageFileUrl],
+    );
+
     return {
         messages,
         quickQuestions,
         pendingMessage,
-        pendingImages,
         pendingFiles,
         connectionState,
         isConnected,
@@ -567,21 +570,10 @@ export function useAgentContext({
         clearMessages,
         loadMoreMessages,
         cancelExecution,
-        connect,
-        disconnect: () => {
-            if (eventSourceRef.current) {
-                eventSourceRef.current.close();
-                eventSourceRef.current = null;
-                setIsConnected(false);
-            }
-        },
+        resolveMessageFileUrl,
+        downloadMessageFile,
     };
 }
-
-// ============================================================================
-// useAgentIntegrations - Hook for managing agent integrations
-// Uses session cookies, no token needed
-// ============================================================================
 
 type UseAgentIntegrationsReturnType = {
     integrations: AgentIntegration[];
@@ -613,7 +605,7 @@ export function useAgentIntegrations(
         if (!agentName) return [];
         const query = new URLSearchParams({ agent_name: agentName });
         const response = await client(
-            `/api/agent/integrations?${query.toString()}`,
+            `/agent/integrations?${query.toString()}`,
             {
                 method: "GET",
             },
@@ -630,7 +622,7 @@ export function useAgentIntegrations(
 
     const generateConsentURL = useCallback(
         async (integrationId: string): Promise<ConsentURLResponse> => {
-            const url = `/api/agent/integrations/${integrationId}/consent-url`;
+            const url = `/agent/integrations/${integrationId}/consent-url`;
 
             const response = await client(url, { method: "POST" });
             const parsed = await responseMapper<ConsentURLResponse>(response);
@@ -641,7 +633,7 @@ export function useAgentIntegrations(
 
     const removeIntegration = useCallback(
         async (integrationId: string): Promise<void> => {
-            await client(`/api/agent/integrations/${integrationId}/remove`, {
+            await client(`/agent/integrations/${integrationId}/remove`, {
                 method: "POST",
             });
 
@@ -677,7 +669,7 @@ export function useAgentMcpServers(
 
         const query = new URLSearchParams({ agent_name: agentName });
         const response = await client(
-            `/api/agent/mcp-servers?${query.toString()}`,
+            `/agent/mcp-servers?${query.toString()}`,
             {
                 method: "GET",
             },
@@ -698,7 +690,7 @@ export function useAgentMcpServers(
 
             const query = new URLSearchParams({ agent_name: agentName });
             const response = await client(
-                `/api/agent/mcp-servers/${mcpServerId}/connect?${query.toString()}`,
+                `/agent/mcp-servers/${mcpServerId}/connect?${query.toString()}`,
                 {
                     method: "POST",
                 },
@@ -717,7 +709,7 @@ export function useAgentMcpServers(
 
             const query = new URLSearchParams({ agent_name: agentName });
             await client(
-                `/api/agent/mcp-servers/${mcpServerId}/disconnect?${query.toString()}`,
+                `/agent/mcp-servers/${mcpServerId}/disconnect?${query.toString()}`,
                 {
                     method: "POST",
                 },
@@ -739,18 +731,6 @@ export function useAgentMcpServers(
         },
     };
 }
-
-// ============================================================================
-// useAgentContexts - Hook for managing agent execution contexts (CRUD)
-// Uses session cookies, no token needed
-// ============================================================================
-
-import type {
-    AgentContext,
-    CreateContextRequest,
-    ListContextsOptions,
-    ListContextsResponse,
-} from "@wacht/types";
 
 type UseAgentContextsReturnType = {
     contexts: AgentContext[];
@@ -777,7 +757,7 @@ export function useAgentContexts(
         if (search) params.append("search", search);
 
         const response = await client(
-            `/api/agent/contexts?${params.toString()}`,
+            `/agent/contexts?${params.toString()}`,
             {
                 method: "GET",
             },
@@ -802,7 +782,7 @@ export function useAgentContexts(
                     request.system_instructions,
                 );
             }
-            const response = await client("/api/agent/contexts", {
+            const response = await client("/agent/contexts", {
                 method: "POST",
                 body: formData,
             });
@@ -824,7 +804,7 @@ export function useAgentContexts(
 
     const deleteContext = useCallback(
         async (id: string): Promise<void> => {
-            await client(`/api/agent/contexts/${id}/delete`, {
+            await client(`/agent/contexts/${id}/delete`, {
                 method: "POST",
             });
 
@@ -854,11 +834,6 @@ export function useAgentContexts(
     };
 }
 
-// ============================================================================
-// useAgentSession - Unified hook for session management
-// Handles: ticket exchange, session fetching, active agent, access control
-// ============================================================================
-
 interface UseAgentSessionData {
     session_id: string;
     context_group: string;
@@ -866,23 +841,19 @@ interface UseAgentSessionData {
 }
 
 interface UseAgentSessionResult {
-    // Session state
     hasSession: boolean;
     sessionLoading: boolean;
     sessionError: Error | null;
     sessionId: string | null;
     contextGroup: string | null;
 
-    // Agents
     agents: AgentWithIntegrations[];
     activeAgent: AgentWithIntegrations | null;
     setActiveAgent: (agent: AgentWithIntegrations) => void;
 
-    // Ticket state
     ticketExchanged: boolean;
     ticketLoading: boolean;
 
-    // Helpers
     refetch: () => Promise<void>;
 }
 
@@ -902,7 +873,7 @@ export function useAgentSession(ticket?: string | null): UseAgentSessionResult {
     const shouldFetch = ticketExchanged;
 
     const fetcher = useCallback(async () => {
-        const response = await client("/api/agent/session", {
+        const response = await client("/agent/session", {
             method: "GET",
         });
 
@@ -964,14 +935,12 @@ export function useAgentSession(ticket?: string | null): UseAgentSessionResult {
         exchange();
     }, [ticket, client]);
 
-    // Auto-select first agent when data arrives
     useEffect(() => {
         if (!activeAgent && data?.agents && data.agents.length > 0) {
             setActiveAgent(data.agents[0]);
         }
     }, [data, activeAgent]);
 
-    // Reset active agent when agents list changes significantly
     useEffect(() => {
         if (data?.agents && activeAgent) {
             const stillExists = data.agents.some(

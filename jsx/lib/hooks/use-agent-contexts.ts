@@ -33,7 +33,7 @@ export function useAgentContexts(
         if (status) params.append("status", status);
         if (search) params.append("search", search);
 
-        const response = await client(`/api/agent/contexts?${params.toString()}`, {
+        const response = await client(`/agent/contexts?${params.toString()}`, {
             method: "GET",
         });
         const parsed = await responseMapper<ListContextsResponse>(response);
@@ -53,7 +53,7 @@ export function useAgentContexts(
             formData.append("system_instructions", request.system_instructions);
         }
 
-        const response = await client("/api/agent/contexts", {
+        const response = await client("/agent/contexts", {
             method: "POST",
             body: formData,
         });
@@ -72,7 +72,7 @@ export function useAgentContexts(
     }, [client, mutate]);
 
     const deleteContext = useCallback(async (id: string): Promise<void> => {
-        await client(`/api/agent/contexts/${id}/delete`, {
+        await client(`/agent/contexts/${id}/delete`, {
             method: "POST",
         });
 
@@ -91,7 +91,7 @@ export function useAgentContexts(
             formData.append("title", updates.title);
         }
 
-        const response = await client(`/api/agent/contexts/${id}/update`, {
+        const response = await client(`/agent/contexts/${id}/update`, {
             method: "POST",
             body: formData,
         });

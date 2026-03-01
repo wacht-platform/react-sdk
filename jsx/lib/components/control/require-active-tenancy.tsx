@@ -95,7 +95,6 @@ export const RequireActiveTenancy = ({
 
   // If valid tenancy, render the app
   if (hasValidTenancy()) {
-    console.log("valid");
     return <>{children}</>;
   }
 

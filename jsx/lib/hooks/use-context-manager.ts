@@ -40,7 +40,7 @@ export function useContextManager(token: string): UseContextManagerReturnType {
   const { client } = useClient();
 
   const fetcher = useCallback(async () => {
-    const response = await client(`/api/agent/contexts?token=${encodeURIComponent(token)}`, {
+    const response = await client(`/agent/contexts?token=${encodeURIComponent(token)}`, {
       method: "GET",
     });
     const parsed = await responseMapper<ListContextsResponse>(response);
@@ -59,7 +59,7 @@ export function useContextManager(token: string): UseContextManagerReturnType {
     const formData = new FormData();
     formData.append('title', request.title);
     
-    const response = await client(`/api/agent/contexts?token=${encodeURIComponent(token)}`, {
+    const response = await client(`/agent/contexts?token=${encodeURIComponent(token)}`, {
       method: "POST",
       body: formData,
     });
@@ -78,7 +78,7 @@ export function useContextManager(token: string): UseContextManagerReturnType {
   }, [client, token, mutate]);
 
   const deleteContext = useCallback(async (id: string): Promise<void> => {
-    await client(`/api/agent/contexts/${id}/delete?token=${encodeURIComponent(token)}`, {
+    await client(`/agent/contexts/${id}/delete?token=${encodeURIComponent(token)}`, {
       method: "POST",
     });
     

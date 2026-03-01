@@ -392,8 +392,6 @@ export const OrganizationSelectorMenu = () => {
     setViewMode("orgList");
   }, [organizationMemberships, workspaces, workspacesEnabled]);
 
-  console.log("view mode", viewMode, workspacesEnabled);
-
   const getInitials = (name: string) => {
     return name
       .split(" ")

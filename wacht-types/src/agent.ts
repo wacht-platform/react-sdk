@@ -44,14 +44,14 @@ export interface ImageData {
 export interface FileData {
     filename: string;
     mime_type: string;
-    data: string; // base64 encoded
+    url: string;
+    size_bytes?: number;
 }
 
 export interface UserMessageContent {
     type: "user_message";
     message: string;
     sender_name?: string;
-    images?: ImageData[];
     files?: FileData[];
 }
 
