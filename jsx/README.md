@@ -1,11 +1,13 @@
-# @wacht/jsx
+<h1 align="center">
+  <a href="https://wacht.dev" style="text-decoration:none;">@wacht/jsx</a>
+</h1>
 
-Core React UI/auth package for Wacht.
+<p align="center">Core React primitives for Wacht authentication, session state, organization/workspace context, and product surface hooks.</p>
 
-Use this package directly for framework-agnostic React apps, or through:
-- `@wacht/nextjs`
-- `@wacht/react-router`
-- `@wacht/tanstack-router`
+<p align="center">
+  <a href="https://docs.wacht.dev">Documentation</a> |
+  <a href="https://www.npmjs.com/package/@wacht/jsx">npm</a>
+</p>
 
 ## Install
 
@@ -13,17 +15,15 @@ Use this package directly for framework-agnostic React apps, or through:
 pnpm add @wacht/jsx @wacht/types
 ```
 
-## Basic Setup
+## Quick start
 
 ```tsx
-import { DeploymentProvider, SignInForm, SignedIn, SignedOut } from "@wacht/jsx";
+import { DeploymentProvider, SignedIn, SignedOut, SignInForm } from "@wacht/jsx";
 
 export function App() {
   return (
-    <DeploymentProvider publicKey={process.env.NEXT_PUBLIC_WACHT_PUBLISHABLE_KEY!}>
-      <SignedIn>
-        <div>Signed in</div>
-      </SignedIn>
+    <DeploymentProvider publicKey={import.meta.env.VITE_WACHT_PUBLISHABLE_KEY}>
+      <SignedIn>Signed in</SignedIn>
       <SignedOut>
         <SignInForm />
       </SignedOut>
@@ -32,14 +32,33 @@ export function App() {
 }
 ```
 
-## Includes
+## Main exports
 
-- Components: `SignInForm`, `SignUpForm`, `UserButton`, `SignedIn`, `SignedOut`, etc.
-- Hooks: `useUser`, `useSession`, `useDeployment`, `useSignIn`, `useSignUp`, etc.
-- Permission helpers: `hasOrgPermission`, `hasWorkspacePermission`, `isOrgAdmin`, `isWorkspaceAdmin`
+Components:
 
-For router-aware navigation behavior, use one of the framework adapters instead of raw `@wacht/jsx`.
+- Auth UI: `SignInForm`, `SignUpForm`, `WaitlistForm`, `SSOCallback`, `MagicLinkVerification`
+- Session and navigation: `SignedIn`, `SignedOut`, `SignedInAccounts`, `NavigateToSignIn`
+- User/account: `UserButton`, `UserControls`, `ManageAccount`
+- Notifications: `NotificationBell`, `NotificationPopover`, `NotificationPanel`
+
+Hooks:
+
+- Auth/session: `useUser`, `useSession`, `useSignIn`, `useSignUp`, `useForgotPassword`
+- Tenancy: `useActiveOrganization`, `useActiveWorkspace`, `useActiveTenancy`
+- Notifications: `useNotifications`, `useNotificationStream`, `useScopeUnread`
+- Agent/webhook/api-auth surfaces: `useAgentSession`, `useWebhookEndpoints`, `useApiAuthKeys`, and related hooks
+
+Utilities:
+
+- Permission helpers (organization/workspace)
+- URL safety helpers
+
+## Build
+
+```bash
+pnpm build
+```
 
 ## License
 
-Licensed under the Apache License, Version 2.0. See [LICENSE.md](../LICENSE.md).
+Apache License 2.0. See [LICENSE.md](../LICENSE.md).

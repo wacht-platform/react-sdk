@@ -4,6 +4,7 @@ import { BellOff, CheckCheck, MoreHorizontal, Archive } from "lucide-react";
 import { NotificationItem, type NotificationAction } from "./notification-item";
 import { Spinner } from "../utility/spinner";
 import { useNotifications } from "@/hooks/use-notifications";
+import type { NotificationListParams } from "@/types";
 
 const PanelContainer = styled.div<{ $fullWidth?: boolean; $maxHeight?: string }>`
   width: ${props => props.$fullWidth ? '100%' : '450px'};
@@ -228,7 +229,7 @@ const EmptyDescription = styled.p`
 `;
 
 export interface NotificationPanelProps {
-    scope?: "all" | "current" | "user";
+    scope?: NotificationListParams["scope"];
     onAction?: (payload: any) => void;
     fullWidth?: boolean;
     maxHeight?: string;

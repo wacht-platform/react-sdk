@@ -1,12 +1,13 @@
-# @wacht/nextjs
+<h1 align="center">
+  <a href="https://wacht.dev" style="text-decoration:none;">@wacht/nextjs</a>
+</h1>
 
-Next.js integration for Wacht.
+<p align="center">Next.js integration for Wacht with middleware auth primitives, server helpers, and React provider exports.</p>
 
-This package provides:
-- Client-side UI bindings via `DeploymentProvider`
-- Server auth primitives via `@wacht/nextjs/server`
-- Middleware/proxy integration with `wachtMiddleware`
-- Server-side API client helpers backed by `@wacht/backend`
+<p align="center">
+  <a href="https://docs.wacht.dev">Documentation</a> |
+  <a href="https://www.npmjs.com/package/@wacht/nextjs">npm</a>
+</p>
 
 ## Install
 
@@ -17,16 +18,13 @@ pnpm add @wacht/nextjs @wacht/jsx @wacht/types
 ## Environment
 
 ```bash
-NEXT_PUBLIC_WACHT_PUBLISHABLE_KEY=pk_test_base64url
-WACHT_API_KEY=wk_live_xxx # only needed for server-side backend API calls
+NEXT_PUBLIC_WACHT_PUBLISHABLE_KEY=pk_test_xxx
+WACHT_API_KEY=wk_live_xxx
 ```
 
-`frontendApiUrl` is derived from the publishable key. Do not pass it manually.
-
-## Client Setup
+## App usage
 
 ```tsx
-// app/layout.tsx
 import { DeploymentProvider } from "@wacht/nextjs";
 
 export default function RootLayout({ children }: { children: React.ReactNode }) {
@@ -42,78 +40,25 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
 }
 ```
 
-## Proxy (Next.js 16+)
+## Server usage
 
-```ts
-// proxy.ts
-import { NextResponse } from "next/server";
-import { createRouteMatcher, wachtMiddleware } from "@wacht/nextjs/server";
+`@wacht/nextjs/server` exports:
 
-const isProtected = createRouteMatcher(["/dashboard(.*)", "/api/private(.*)"]);
+- Middleware/auth: `wachtMiddleware`, `createRouteMatcher`, `auth`, `getAuth`, `requireAuth`
+- Client access: `wachtClient`, `createWachtServerClient`
+- Types: auth payload/protect option types and related auth models
 
-export default wachtMiddleware(
-  async (auth, req) => {
-    if (!isProtected(req)) return NextResponse.next();
-    await auth.protect();
-    return NextResponse.next();
-  },
-  {
-    apiRoutePrefixes: ["/api", "/trpc"],
-  },
-);
+## Notes
 
-export const config = {
-  matcher: [
-    "/((?!_next|[^?]*\\.(?:html?|css|js(?!on)|jpe?g|webp|png|gif|svg|ttf|woff2?|ico|csv|docx?|xlsx?|zip|webmanifest)).*)",
-    "/(api|trpc)(.*)",
-  ],
-};
-```
+- `frontendApiUrl` should be derived from the publishable key flow.
+- Middleware and server helpers are designed for framework-level request handling.
 
-## Server Auth API
+## Build
 
-From `@wacht/nextjs/server`:
-- `wachtMiddleware(handler?, options?)`
-- `createRouteMatcher(patterns)`
-- `auth(request, options?)` and `auth(headers)`
-- `getAuth(request, options?)`
-- `requireAuth(request, options?)`
-
-`auth.protect()` supports:
-- auth checks
-- permission checks
-- token-type checks (`session_token`, `api_key`, `oauth_token`, `machine_token`, `any`)
-
-## API-style vs document requests
-
-For middleware errors:
-- Non-API-like requests: redirect to sign-in/account portal
-- API-like requests (as detected by `apiRoutePrefixes` or `isApiRoute`): JSON error response with status code
-
-## Server Backend Client
-
-```ts
-import { NextResponse } from "next/server";
-import { wachtClient } from "@wacht/nextjs/server";
-
-export async function GET() {
-  const client = await wachtClient();
-  const apps = await client.webhooks.listWebhookApps();
-  return NextResponse.json({ apps });
-}
-```
-
-Or create explicit instances:
-
-```ts
-import { createWachtServerClient } from "@wacht/nextjs/server";
-
-const client = createWachtServerClient({
-  apiKey: process.env.WACHT_API_KEY,
-  name: "internal-worker",
-});
+```bash
+pnpm build
 ```
 
 ## License
 
-Licensed under the Apache License, Version 2.0. See [LICENSE.md](../LICENSE.md).
+Apache License 2.0. See [LICENSE.md](../LICENSE.md).

@@ -39,7 +39,10 @@ export interface ScopeUnreadResponse {
 export interface NotificationListParams {
     limit?: number;
     cursor?: string;
-    scope?: "all" | "current" | "user";
+    scope?: "all" | "current" | "user" | "organization" | "workspace";
+    channels?: ("user" | "organization" | "workspace" | "current" | "all")[];
+    organization_ids?: string[];
+    workspace_ids?: string[];
     is_read?: boolean;
     is_archived?: boolean;
     is_starred?: boolean;

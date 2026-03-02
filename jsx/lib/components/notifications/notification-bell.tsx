@@ -6,6 +6,7 @@ import { DefaultStylesProvider } from "../utility/root";
 import { useScopeUnread } from "@/hooks/use-notifications";
 import { NotificationPopover } from "./notification-popover";
 import { usePopoverPosition } from "@/hooks/use-popover-position";
+import type { NotificationListParams } from "@/types";
 
 const Container = styled.div`
     position: relative;
@@ -85,7 +86,7 @@ const Badge = styled.span<{ $dotOnly?: boolean }>`
 interface NotificationBellProps {
     className?: string;
     showBadge?: boolean;
-    scope?: "all" | "current" | "user";
+    scope?: NotificationListParams["scope"];
     onAction?: (payload: any) => void;
 }
 

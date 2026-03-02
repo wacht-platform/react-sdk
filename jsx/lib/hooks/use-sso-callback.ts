@@ -71,14 +71,14 @@ export function useSSOCallback(): SSOCallbackState {
 
   const handleCallback = async (code: string, state: string) => {
     try {
-      // Decode the state to determine if it's sign-in or connect flow
-      // State format: base64_data.hmac_signature
+      // Decode the state to determine if it's sign-in or connect flow.
+      // Required format: base64_data.hmac_signature.relay_signature
       let endpoint: string;
       let method: string;
 
       try {
         const stateParts = state.split(".");
-        if (stateParts.length !== 2) {
+        if (stateParts.length !== 3) {
           throw new Error("Invalid OAuth state format - missing signature");
         }
 

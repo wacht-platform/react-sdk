@@ -53,6 +53,15 @@ function toQueryString(params?: NotificationListParams): string {
   if (params.limit) queryString.append("limit", params.limit.toString());
   if (params.cursor) queryString.append("cursor", params.cursor);
   if (params.scope) queryString.append("scope", params.scope);
+  if (params.channels && params.channels.length > 0) {
+    params.channels.forEach((channel) => queryString.append("channels", channel));
+  }
+  if (params.organization_ids && params.organization_ids.length > 0) {
+    params.organization_ids.forEach((id) => queryString.append("organization_ids", id));
+  }
+  if (params.workspace_ids && params.workspace_ids.length > 0) {
+    params.workspace_ids.forEach((id) => queryString.append("workspace_ids", id));
+  }
   if (params.is_read !== undefined)
     queryString.append("is_read", params.is_read.toString());
   if (params.is_archived !== undefined)
@@ -181,8 +190,37 @@ export function useNotifications(
 
   const hasMore = pages ? pages[pages.length - 1]?.has_more : false;
 
+  const streamChannels = useMemo(() => {
+    if (params?.channels && params.channels.length > 0) return params.channels;
+    switch (params?.scope) {
+      case "organization":
+        return ["organization"];
+      case "workspace":
+        return ["workspace"];
+      case "current":
+        return ["current"];
+      case "all":
+        return ["user", "organization", "workspace"];
+      case "user":
+        return ["user"];
+      default:
+        return undefined;
+    }
+  }, [params?.channels, params?.scope]);
+
+  const streamOrganizationIds = useMemo(() => {
+    return params?.organization_ids?.map((id) => Number(id)).filter((id) => Number.isFinite(id));
+  }, [params?.organization_ids]);
+
+  const streamWorkspaceIds = useMemo(() => {
+    return params?.workspace_ids?.map((id) => Number(id)).filter((id) => Number.isFinite(id));
+  }, [params?.workspace_ids]);
+
   useNotificationStream({
     enabled: !clientLoading && !!pages,
+    channels: streamChannels,
+    organizationIds: streamOrganizationIds,
+    workspaceIds: streamWorkspaceIds,
     onNotification: useCallback(
       (notification: NotificationMessage) => {
         refetch(async (current) => {

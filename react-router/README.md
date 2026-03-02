@@ -1,11 +1,13 @@
-# @wacht/react-router
+<h1 align="center">
+  <a href="https://wacht.dev" style="text-decoration:none;">@wacht/react-router</a>
+</h1>
 
-React Router integration for Wacht.
+<p align="center">React Router adapter for Wacht, including provider integration and server-side auth helpers.</p>
 
-This package provides:
-- Client-side UI bindings via `DeploymentProvider`
-- Server auth helpers via `@wacht/react-router/server`
-- Server-side backend client helpers backed by `@wacht/backend`
+<p align="center">
+  <a href="https://docs.wacht.dev">Documentation</a> |
+  <a href="https://www.npmjs.com/package/@wacht/react-router">npm</a>
+</p>
 
 ## Install
 
@@ -16,15 +18,15 @@ pnpm add @wacht/react-router @wacht/jsx @wacht/types react-router
 ## Environment
 
 ```bash
-NEXT_PUBLIC_WACHT_PUBLISHABLE_KEY=pk_test_base64url
-WACHT_API_KEY=wk_live_xxx # only for backend API client usage
+VITE_WACHT_PUBLISHABLE_KEY=pk_test_xxx
+WACHT_API_KEY=wk_live_xxx
 ```
 
-## Client Setup
+## App usage
 
 ```tsx
-import { DeploymentProvider } from "@wacht/react-router";
 import { BrowserRouter } from "react-router";
+import { DeploymentProvider } from "@wacht/react-router";
 
 export function App() {
   return (
@@ -35,41 +37,24 @@ export function App() {
 }
 ```
 
-## Server Auth (loaders/actions)
+## Server usage
 
-```ts
-import { json, redirect, type LoaderFunctionArgs } from "react-router";
-import { authenticateRequest } from "@wacht/react-router/server";
+`@wacht/react-router/server` exports:
 
-export async function loader({ request }: LoaderFunctionArgs) {
-  const { auth, headers } = await authenticateRequest(request, {
-    publishableKey: process.env.NEXT_PUBLIC_WACHT_PUBLISHABLE_KEY,
-  });
-
-  if (!auth.userId) {
-    throw redirect("/sign-in", { headers });
-  }
-
-  return json({ userId: auth.userId }, { headers });
-}
-```
-
-Important: always forward `headers` returned by `authenticateRequest()`.
-
-## Server API
-
-From `@wacht/react-router/server`:
-- `authenticateRequest(request, options?)`
-- `getAuth(request, options?)`
-- `requireAuth(request, options?)`
-- `wachtClient(options?)`
-- `createWachtServerClient(options?)`
+- Auth helpers: `authenticateRequest`, `getAuth`, `requireAuth`
+- Server client: `wachtClient`, `createWachtServerClient`
+- Auth model types (`WachtAuth`, `ProtectOptions`, `JWTPayload`, and related)
 
 ## Notes
 
-- Current React Router server helpers are session-auth oriented.
-- For machine-token gateway auth enforcement, use `@wacht/backend` gateway APIs directly in your server logic.
+This package re-exports the JSX primitives while adding React Router-specific provider wiring.
+
+## Build
+
+```bash
+pnpm build
+```
 
 ## License
 
-Licensed under the Apache License, Version 2.0. See [LICENSE.md](../LICENSE.md).
+Apache License 2.0. See [LICENSE.md](../LICENSE.md).
