@@ -158,6 +158,42 @@ function deriveAccountPortalSignInBaseUrl(frontendApiUrl: string): string {
     return `${frontend.protocol}//${portalLabels.join(".")}/sign-in`;
 }
 
+function isInternalHost(hostname: string): boolean {
+    return (
+        hostname === "0.0.0.0" ||
+        hostname === "127.0.0.1" ||
+        hostname === "::1" ||
+        hostname === "[::1]"
+    );
+}
+
+function pickForwardedHeader(headers: Headers, key: string): string | null {
+    const raw = headers.get(key);
+    if (!raw) return null;
+    return raw.split(",")[0]?.trim() || null;
+}
+
+function resolvePublicRequestUrl(request: Request | NextRequest): string {
+    const url = new URL(request.url);
+    const forwardedHost =
+        pickForwardedHeader(request.headers, "x-forwarded-host") ||
+        pickForwardedHeader(request.headers, "host");
+    const forwardedProto =
+        pickForwardedHeader(request.headers, "x-forwarded-proto") ||
+        url.protocol.replace(":", "");
+
+    if (forwardedHost) {
+        url.host = forwardedHost;
+        url.protocol = `${forwardedProto}:`;
+    }
+
+    if (isInternalHost(url.hostname)) {
+        url.hostname = "localhost";
+    }
+
+    return url.toString();
+}
+
 function resolveSignInRedirectUrl(
     request: NextRequest,
     options: WachtMiddlewareOptions,
@@ -168,7 +204,7 @@ function resolveSignInRedirectUrl(
         options.signInUrl ||
         deriveAccountPortalSignInBaseUrl(getFrontendApiUrl(options));
     const separator = base.includes("?") ? "&" : "?";
-    return `${base}${separator}redirect_uri=${encodeURIComponent(request.url)}`;
+    return `${base}${separator}redirect_uri=${encodeURIComponent(resolvePublicRequestUrl(request))}`;
 }
 
 function createRedirectToSignIn(
@@ -176,9 +212,10 @@ function createRedirectToSignIn(
     options: WachtMiddlewareOptions,
 ): (params?: RedirectToSignInOptions) => never {
     return (params?: RedirectToSignInOptions) => {
+        const publicRequestUrl = resolvePublicRequestUrl(request);
         const returnBackUrl = params?.returnBackUrl
-            ? new URL(String(params.returnBackUrl), request.url).toString()
-            : request.url;
+            ? new URL(String(params.returnBackUrl), publicRequestUrl).toString()
+            : publicRequestUrl;
         const base =
             options.signInUrl ||
             deriveAccountPortalSignInBaseUrl(getFrontendApiUrl(options));
