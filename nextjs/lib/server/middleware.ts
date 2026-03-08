@@ -173,7 +173,28 @@ function pickForwardedHeader(headers: Headers, key: string): string | null {
     return raw.split(",")[0]?.trim() || null;
 }
 
+function hasExplicitPort(host: string): boolean {
+    if (host.startsWith("[")) {
+        return host.includes("]:");
+    }
+
+    return host.includes(":");
+}
+
+function normalizePortForProtocol(
+    port: string | null,
+    protocol: string,
+): string {
+    if (!port) return "";
+    if ((protocol === "https" && port === "443") || (protocol === "http" && port === "80")) {
+        return "";
+    }
+
+    return port;
+}
+
 function resolvePublicRequestUrl(request: Request | NextRequest): string {
+    const originalUrl = new URL(request.url);
     const url = new URL(request.url);
     const forwardedHost =
         pickForwardedHeader(request.headers, "x-forwarded-host") ||
@@ -181,14 +202,25 @@ function resolvePublicRequestUrl(request: Request | NextRequest): string {
     const forwardedProto =
         pickForwardedHeader(request.headers, "x-forwarded-proto") ||
         url.protocol.replace(":", "");
+    const forwardedPort = pickForwardedHeader(request.headers, "x-forwarded-port");
 
     if (forwardedHost) {
-        url.host = forwardedHost;
         url.protocol = `${forwardedProto}:`;
+
+        if (hasExplicitPort(forwardedHost)) {
+            url.host = forwardedHost;
+        } else {
+            url.hostname = forwardedHost;
+            url.port = normalizePortForProtocol(forwardedPort, forwardedProto);
+        }
     }
 
     if (isInternalHost(url.hostname)) {
         url.hostname = "localhost";
+
+        if (!forwardedHost) {
+            url.port = originalUrl.port;
+        }
     }
 
     return url.toString();
