@@ -183,15 +183,15 @@ export const GeneralSettingsSection = ({
     if (!selectedOrganization) return <Spinner />;
 
     return (
-        <div style={{ display: "flex", flexDirection: "column", gap: "var(--space-2xl)", paddingBottom: "40px" }}>
+        <div style={{ display: "flex", flexDirection: "column", gap: "var(--space-12u)", paddingBottom: "var(--size-20u)" }}>
             <SectionLayout>
                 <ImageContainer>
                     <div
                         style={{
-                            width: "90px",
-                            height: "90px",
+                            width: "calc(var(--size-40u) + var(--space-5u))",
+                            height: "calc(var(--size-40u) + var(--space-5u))",
                             borderRadius: "50%",
-                            border: "2px dashed var(--color-border)",
+                            border: "var(--border-width-regular) dashed var(--color-border)",
                             background: previewUrl ? "transparent" : "var(--color-input-background)",
                             cursor: "pointer",
                             display: "flex",
@@ -199,7 +199,7 @@ export const GeneralSettingsSection = ({
                             justifyContent: "center",
                             overflow: "hidden",
                             transition: "all 0.2s ease",
-                            boxShadow: "0 2px 8px var(--color-shadow)",
+                            boxShadow: "var(--shadow-md)",
                         }}
                         onClick={() => fileInputRef.current?.click()}
                     >
@@ -223,16 +223,16 @@ export const GeneralSettingsSection = ({
                 </ImageContainer>
 
                 <div style={{ flex: 1 }}>
-                    <div style={{ marginBottom: "var(--space-lg)" }}>
-                        <h3 style={{ fontSize: "var(--font-sm)", color: "var(--color-foreground)", margin: "0 0 4px 0", fontWeight: "400" }}>
+                    <div style={{ marginBottom: "var(--space-8u)" }}>
+                        <h3 style={{ fontSize: "var(--font-size-lg)", color: "var(--color-foreground)", margin: "0 0 var(--space-2u) 0", fontWeight: "400" }}>
                             Organization Logo
                         </h3>
-                        <p style={{ fontSize: "var(--font-xs)", color: "var(--color-secondary-text)", margin: 0 }}>
+                        <p style={{ fontSize: "var(--font-size-md)", color: "var(--color-secondary-text)", margin: 0 }}>
                             Upload an image to represent your organization
                         </p>
                     </div>
 
-                    <ButtonActions style={{ marginBottom: "var(--space-sm)" }}>
+                    <ButtonActions style={{ marginBottom: "var(--space-4u)" }}>
                         <Button $size="sm" onClick={() => fileInputRef.current?.click()}>
                             {previewUrl ? "Change" : "Upload"}
                         </Button>
@@ -263,26 +263,26 @@ export const GeneralSettingsSection = ({
                                     }
                                 }}
                             >
-                                <Trash2 size={14} style={{ marginRight: "4px" }} /> Remove
+                                <Trash2 size={14} style={{ marginRight: "var(--space-2u)" }} /> Remove
                             </Button>
                         )}
                     </ButtonActions>
                 </div>
             </SectionLayout>
 
-            <div style={{ height: "1px", background: "var(--color-divider)" }} />
+            <div style={{ height: "var(--border-width-thin)", background: "var(--color-divider)" }} />
 
             <div>
-                <div style={{ marginBottom: "var(--space-md)", textAlign: "inherit" }}>
-                    <h3 style={{ fontSize: "var(--font-sm)", color: "var(--color-foreground)", margin: "0 0 4px 0" }}>
+                <div style={{ marginBottom: "var(--space-6u)", textAlign: "inherit" }}>
+                    <h3 style={{ fontSize: "var(--font-size-lg)", color: "var(--color-foreground)", margin: "0 0 var(--space-2u) 0" }}>
                         Organization Details
                     </h3>
-                    <p style={{ fontSize: "var(--font-xs)", color: "var(--color-secondary-text)", margin: 0 }}>
+                    <p style={{ fontSize: "var(--font-size-md)", color: "var(--color-secondary-text)", margin: 0 }}>
                         Basic information about your organization
                     </p>
                 </div>
 
-                <div style={{ display: "flex", flexDirection: "column", gap: "20px" }}>
+                <div style={{ display: "flex", flexDirection: "column", gap: "var(--space-10u)" }}>
                     <FormGroup>
                         <Label htmlFor="name">Organization Name</Label>
                         <Input
@@ -304,17 +304,17 @@ export const GeneralSettingsSection = ({
                             onChange={(e) => setDescription(e.target.value)}
                             onBlur={autoSave}
                             placeholder="Enter organization description"
-                            style={{ minHeight: "80px", resize: "vertical" }}
+                            style={{ minHeight: "var(--size-40u)", resize: "vertical" }}
                         />
                     </FormGroup>
 
                     {deployment?.b2b_settings?.enforce_mfa_per_org_enabled && (
                         <ItemRow style={{ padding: "0" }}>
                             <ItemContent>
-                                <Label style={{ fontSize: "13px", fontWeight: "400", marginBottom: "4px", display: "block" }}>
+                                <Label style={{ fontSize: "var(--font-size-md)", fontWeight: "400", marginBottom: "var(--space-2u)", display: "block" }}>
                                     Multi-Factor Authentication
                                 </Label>
-                                <p style={{ fontSize: "12px", color: "var(--color-muted)", margin: 0 }}>
+                                <p style={{ fontSize: "var(--font-size-sm)", color: "var(--color-muted)", margin: 0 }}>
                                     Require all members to set up MFA for added security
                                 </p>
                             </ItemContent>
@@ -335,10 +335,10 @@ export const GeneralSettingsSection = ({
                         <>
                             <ItemRow style={{ padding: "0" }}>
                                 <ItemContent>
-                                    <Label style={{ fontSize: "13px", fontWeight: "400", marginBottom: "4px", display: "block" }}>
+                                    <Label style={{ fontSize: "var(--font-size-md)", fontWeight: "400", marginBottom: "var(--space-2u)", display: "block" }}>
                                         IP Restrictions
                                     </Label>
-                                    <p style={{ fontSize: "12px", color: "var(--color-muted)", margin: 0 }}>
+                                    <p style={{ fontSize: "var(--font-size-sm)", color: "var(--color-muted)", margin: 0 }}>
                                         Only allow access from specific IP addresses
                                     </p>
                                 </ItemContent>
@@ -364,7 +364,7 @@ export const GeneralSettingsSection = ({
                                         onChange={(e) => setSecurity(prev => ({ ...prev, allowed_ips: e.target.value }))}
                                         onBlur={autoSave}
                                         placeholder="192.168.1.1&#10;10.0.0.0/24"
-                                        style={{ minHeight: "80px", fontFamily: "monospace" }}
+                                        style={{ minHeight: "var(--size-40u)", fontFamily: "monospace" }}
                                     />
                                 </FormGroup>
                             )}
@@ -391,40 +391,40 @@ export const GeneralSettingsSection = ({
             {
                 deployment?.b2b_settings?.allow_org_deletion && (
                     <>
-                        <div style={{ height: "1px", background: "var(--color-divider)" }} />
+                        <div style={{ height: "var(--border-width-thin)", background: "var(--color-divider)" }} />
 
                         <div>
-                            <div style={{ marginBottom: "16px" }}>
-                                <h3 style={{ fontSize: "16px", color: "var(--color-foreground)", margin: "0 0 4px 0" }}>
+                            <div style={{ marginBottom: "var(--space-8u)" }}>
+                                <h3 style={{ fontSize: "var(--font-size-xl)", color: "var(--color-foreground)", margin: "0 0 var(--space-2u) 0" }}>
                                     Danger Zone
                                 </h3>
-                                <p style={{ fontSize: "14px", color: "var(--color-muted)", margin: 0 }}>
+                                <p style={{ fontSize: "var(--font-size-lg)", color: "var(--color-muted)", margin: 0 }}>
                                     Irreversible and destructive actions
                                 </p>
                             </div>
 
                             <div style={{
-                                padding: "20px",
-                                border: "1px solid var(--color-error)",
-                                borderRadius: "8px",
+                                padding: "var(--space-10u)",
+                                border: "var(--border-width-thin) solid var(--color-error)",
+                                borderRadius: "var(--radius-md)",
                             }}>
                                 <div style={{
                                     display: "flex",
                                     alignItems: "center",
                                     justifyContent: "space-between",
-                                    marginBottom: showDeleteConfirm ? "20px" : "0",
+                                    marginBottom: showDeleteConfirm ? "var(--space-10u)" : "0",
                                 }}>
                                     <div>
                                         <div style={{
-                                            fontSize: "14px",
+                                            fontSize: "var(--font-size-lg)",
                                             color: "var(--color-foreground)",
-                                            marginBottom: "4px",
+                                            marginBottom: "var(--space-2u)",
                                             fontWeight: "500",
                                         }}>
                                             Delete Organization
                                         </div>
                                         <div style={{
-                                            fontSize: "13px",
+                                            fontSize: "var(--font-size-md)",
                                             color: "var(--color-muted)",
                                         }}>
                                             Once you delete an organization, there is no going back. Please be certain.
@@ -441,11 +441,11 @@ export const GeneralSettingsSection = ({
                                         }}
                                         style={{
                                             background: "var(--color-error)",
-                                            color: "white",
+                                            color: "var(--color-foreground-inverse)",
                                             border: "none",
-                                            padding: "6px 12px",
-                                            fontSize: "13px",
-                                            height: "32px",
+                                            padding: "var(--space-4u) var(--space-6u)",
+                                            fontSize: "var(--font-size-md)",
+                                            height: "var(--size-18u)",
                                             width: "auto",
                                         }}
                                     >
@@ -454,7 +454,7 @@ export const GeneralSettingsSection = ({
                                 </div>
 
                                 {showDeleteConfirm && (
-                                    <div style={{ width: "100%", marginTop: "16px" }}>
+                                    <div style={{ width: "100%", marginTop: "var(--space-8u)" }}>
                                         <FormGroup>
                                             <Label htmlFor="confirm_org_name">
                                                 Type <strong>{selectedOrganization.name}</strong> to confirm
@@ -477,12 +477,12 @@ export const GeneralSettingsSection = ({
                                                     ? "var(--color-error)"
                                                     : "transparent",
                                                 color: confirmName === selectedOrganization.name
-                                                    ? "white"
+                                                    ? "var(--color-foreground-inverse)"
                                                     : "var(--color-muted)",
-                                                border: "1px solid var(--color-border)",
-                                                padding: "8px 16px",
-                                                fontSize: "14px",
-                                                height: "36px",
+                                                border: "var(--border-width-thin) solid var(--color-border)",
+                                                padding: "var(--space-4u) var(--space-8u)",
+                                                fontSize: "var(--font-size-lg)",
+                                                height: "var(--size-18u)",
                                                 cursor: confirmName === selectedOrganization.name
                                                     ? "pointer"
                                                     : "not-allowed",

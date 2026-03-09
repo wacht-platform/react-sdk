@@ -12,7 +12,7 @@ const breakpoints = {
 
 const PhoneInputGroup = styled.div`
   display: flex;
-  gap: var(--space-xs);
+  gap: var(--space-2u);
   width: 100%;
 
   @media (max-width: ${breakpoints.sm}) {
@@ -32,7 +32,7 @@ const CountryCodeButton = styled.button`
   width: 100%;
   border: 0.0625rem solid var(--color-border);
   border-radius: var(--radius-md);
-  font-size: var(--font-xs);
+  font-size: var(--font-size-md);
   color: var(--color-foreground);
   background: var(--color-input-background);
   cursor: pointer;
@@ -82,7 +82,7 @@ const CountrySearch = styled.input`
   padding: 0.5rem 0.75rem;
   border: none;
   border-bottom: 0.0625rem solid var(--color-border);
-  font-size: var(--font-xs);
+  font-size: var(--font-size-md);
   color: var(--color-foreground);
   background: var(--color-background);
 
@@ -118,7 +118,7 @@ const CountryOption = styled.button`
   padding: 0.5rem 0.75rem;
   border: none;
   background: transparent;
-  font-size: var(--font-xs);
+  font-size: var(--font-size-md);
   color: var(--color-foreground);
   cursor: pointer;
   text-align: left;

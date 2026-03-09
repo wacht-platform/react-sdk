@@ -12,25 +12,26 @@ const ComboBoxTrigger = styled.button`
   align-items: center;
   justify-content: space-between;
   width: 100%;
-  padding: 8px 12px;
-  background: var(--color-background);
-  border: 1px solid var(--color-border);
-  border-radius: 6px;
-  font-size: 14px;
+  padding: var(--space-4u) var(--space-6u);
+  background: var(--color-card);
+  border: var(--border-width-thin) solid var(--color-border);
+  border-radius: var(--radius-xs);
+  font-size: var(--font-size-lg);
   color: var(--color-text);
   text-align: left;
   cursor: pointer;
   transition: all 0.2s ease;
 
   &:hover {
-    background: var(--color-background-hover);
+    background: var(--color-accent);
+    color: var(--color-accent-foreground);
     border-color: var(--color-border-hover);
   }
 
   &:focus {
     outline: none;
     border-color: var(--color-primary);
-    box-shadow: 0 0 0 2px var(--color-primary-shadow);
+    box-shadow: 0 0 0 var(--border-width-regular) var(--color-primary-shadow);
   }
 
   &:disabled {
@@ -41,15 +42,15 @@ const ComboBoxTrigger = styled.button`
 
 const DropdownMenu = styled.div<{ isOpen: boolean }>`
   position: absolute;
-  top: calc(100% + 4px);
+  top: calc(100% + var(--space-2u));
   left: 0;
   width: 100%;
-  max-height: 250px;
+  max-height: calc(calc(var(--size-50u) * 2) + var(--space-12u) + var(--space-1u));
   overflow-y: auto;
-  background: var(--color-background);
-  border-radius: 6px;
-  border: 1px solid var(--color-border);
-  box-shadow: 0 4px 12px var(--color-shadow);
+  background: var(--color-popover);
+  border-radius: var(--radius-xs);
+  border: var(--border-width-thin) solid var(--color-border);
+  box-shadow: var(--shadow-md);
   z-index: 1000;
   opacity: ${(props) => (props.isOpen ? 1 : 0)};
   transform: ${(props) => (props.isOpen ? "scale(1)" : "scale(0.95)")};
@@ -60,13 +61,13 @@ const DropdownMenu = styled.div<{ isOpen: boolean }>`
 
 const SearchInput = styled.input`
   width: 100%;
-  padding: 8px 12px;
+  padding: var(--space-4u) var(--space-6u);
   border: none;
-  border-bottom: 1px solid var(--color-border);
-  font-size: 14px;
+  border-bottom: var(--border-width-thin) solid var(--color-border);
+  font-size: var(--font-size-lg);
   outline: none;
-  background: var(--color-background);
-  color: var(--color-text);
+  background: var(--color-popover);
+  color: var(--color-popover-foreground);
 
   &::placeholder {
     color: var(--color-muted);
@@ -77,11 +78,11 @@ const Option = styled.div<{ isSelected?: boolean; disabled?: boolean }>`
   display: flex;
   align-items: center;
   justify-content: space-between;
-  padding: 8px 12px;
+  padding: var(--space-4u) var(--space-6u);
   cursor: ${(props) => (props.disabled ? "not-allowed" : "pointer")};
-  font-size: 14px;
+  font-size: var(--font-size-lg);
   background: ${(props) =>
-    props.isSelected ? "var(--color-background-hover)" : "transparent"};
+    props.isSelected ? "var(--color-accent)" : "transparent"};
   color: ${(props) =>
     props.disabled ? "var(--color-muted)" : "var(--color-text)"};
   opacity: ${(props) => (props.disabled ? 0.6 : 1)};
@@ -89,7 +90,9 @@ const Option = styled.div<{ isSelected?: boolean; disabled?: boolean }>`
 
   &:hover {
     background: ${(props) =>
-    !props.disabled ? "var(--color-background-hover)" : "transparent"};
+    !props.disabled ? "var(--color-accent)" : "transparent"};
+    color: ${(props) =>
+      !props.disabled ? "var(--color-accent-foreground)" : "var(--color-muted)"};
   }
 `;
 
@@ -98,19 +101,20 @@ const Placeholder = styled.span`
 `;
 
 const NoOptions = styled.div`
-  padding: 8px 12px;
+  padding: var(--space-4u) var(--space-6u);
   color: var(--color-muted);
-  font-size: 14px;
+  font-size: var(--font-size-lg);
   text-align: center;
 `;
 
 const GroupHeading = styled.div`
-  padding: 6px 12px;
-  font-size: 12px;
+  padding: var(--space-3u) var(--space-6u);
+  font-size: var(--font-size-sm);
   font-weight: 400;
   text-transform: uppercase;
   color: var(--color-muted);
-  background: var(--color-background-hover);
+  background: var(--color-secondary);
+  color: var(--color-secondary-foreground);
 `;
 
 export interface ComboBoxOption {

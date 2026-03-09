@@ -176,7 +176,7 @@ export const ActiveSessionsSection = () => {
     if (loading) {
         return (
             <div
-                style={{ display: "flex", justifyContent: "center", padding: "20px" }}
+                style={{ display: "flex", justifyContent: "center", padding: "var(--space-10u)" }}
             >
                 <Spinner />
             </div>
@@ -185,10 +185,10 @@ export const ActiveSessionsSection = () => {
 
     return (
         <>
-            <div style={{ marginBottom: "16px" }}>
+            <div style={{ marginBottom: "var(--space-8u)" }}>
                 <h3
                     style={{
-                        fontSize: "16px",
+                        fontSize: "var(--font-size-xl)",
                         color: "var(--color-foreground)",
                         margin: 0,
                     }}
@@ -197,7 +197,7 @@ export const ActiveSessionsSection = () => {
                 </h3>
                 <p
                     style={{
-                        fontSize: "14px",
+                        fontSize: "var(--font-size-lg)",
                         color: "var(--color-muted)",
                         margin: 0,
                     }}
@@ -227,7 +227,7 @@ export const ActiveSessionsSection = () => {
                                                         style={{
                                                             display: "flex",
                                                             alignItems: "center",
-                                                            gap: "8px",
+                                                            gap: "var(--space-4u)",
                                                         }}
                                                     >
                                                         <IconWrapper>
@@ -238,7 +238,7 @@ export const ActiveSessionsSection = () => {
                                                             {signin.device && (
                                                                 <div
                                                                     style={{
-                                                                        fontSize: "12px",
+                                                                        fontSize: "var(--font-size-sm)",
                                                                         color: "var(--color-muted)",
                                                                     }}
                                                                 >
@@ -258,7 +258,7 @@ export const ActiveSessionsSection = () => {
                                                         {signin.ip_address && (
                                                             <div
                                                                 style={{
-                                                                    fontSize: "12px",
+                                                                    fontSize: "var(--font-size-sm)",
                                                                     color: "var(--color-muted)",
                                                                 }}
                                                             >
@@ -286,7 +286,7 @@ export const ActiveSessionsSection = () => {
                                                                     style={{
                                                                         display: "flex",
                                                                         alignItems: "center",
-                                                                        gap: "8px",
+                                                                        gap: "var(--space-4u)",
                                                                     }}
                                                                 >
                                                                     <LogOut size={14} />
@@ -312,11 +312,11 @@ export const ActiveSessionsSection = () => {
                                                 <IconWrapper>
                                                     <BrowserIcon browser={signin.browser || "Unknown"} />
                                                 </IconWrapper>
-                                                <div style={{ marginLeft: "12px", display: "flex", flexDirection: "column" }}>
-                                                    <div style={{ fontWeight: 500, fontSize: "14px", color: "var(--color-foreground)" }}>
+                                                <div style={{ marginLeft: "var(--space-6u)", display: "flex", flexDirection: "column" }}>
+                                                    <div style={{ fontWeight: 500, fontSize: "var(--font-size-lg)", color: "var(--color-foreground)" }}>
                                                         {signin.browser || "Unknown"} {signin.device ? `on ${signin.device}` : ""}
                                                     </div>
-                                                    <div style={{ fontSize: "12px", color: "var(--color-muted)" }}>
+                                                    <div style={{ fontSize: "var(--font-size-sm)", color: "var(--color-muted)" }}>
                                                         {signin.city && signin.country ? `${signin.city}, ${signin.country}` : "Unknown location"} • {formatLastActive(signin.last_active_at)}
                                                     </div>
                                                 </div>
@@ -337,7 +337,7 @@ export const ActiveSessionsSection = () => {
                                                                     style={{
                                                                         display: "flex",
                                                                         alignItems: "center",
-                                                                        gap: "8px",
+                                                                        gap: "var(--space-4u)",
                                                                     }}
                                                                 >
                                                                     <LogOut size={14} />
@@ -352,7 +352,7 @@ export const ActiveSessionsSection = () => {
                                         {index < typedSignins.length - 1 && (
                                             <div
                                                 style={{
-                                                    height: "1px",
+                                                    height: "var(--border-width-thin)",
                                                     background: "var(--color-border)",
                                                 }}
                                             />

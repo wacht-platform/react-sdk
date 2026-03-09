@@ -2,63 +2,38 @@ import { useState, useRef, useEffect } from "react";
 import styled from "styled-components";
 import { QRCodeSVG } from "qrcode.react";
 import { Input } from "@/components/utility/input";
+import { Button } from "@/components/utility/button";
 import { useScreenContext } from "./context";
+import { usePopoverPosition } from "@/hooks/use-popover-position";
 
 const PopoverContainer = styled.div`
   position: fixed;
-  background: var(--color-background);
+  background: var(--color-popover);
   border-radius: var(--radius-md);
-  box-shadow: 0 4px 12px var(--color-shadow);
-  border: 1px solid var(--color-border);
-  padding: 16px;
-  width: 380px;
-  max-width: calc(100vw - 48px);
+  box-shadow: var(--shadow-md);
+  border: var(--border-width-thin) solid var(--color-border);
+  padding: var(--space-8u);
+  width: calc(calc(var(--size-50u) * 3) + var(--size-40u));
+  max-width: calc(100vw - var(--space-24u));
   z-index: 1001;
 
   @media (max-width: 600px) {
-    width: calc(100vw - 48px);
-  }
-`;
-
-const Button = styled.button<{ $primary?: boolean }>`
-  padding: 8px 16px;
-  background: ${(props) =>
-    props.$primary ? "var(--color-primary)" : "var(--color-background)"};
-  color: ${(props) =>
-    props.$primary ? "white" : "var(--color-secondary-text)"};
-  border: 1px solid
-    ${(props) =>
-    props.$primary ? "var(--color-primary)" : "var(--color-border)"};
-  border-radius: var(--radius-md);
-  font-size: 14px;
-  cursor: pointer;
-  transition: all 0.2s ease;
-
-  &:hover {
-    background: ${(props) =>
-    props.$primary
-      ? "var(--color-primary-hover)"
-      : "var(--color-input-background)"};
-  }
-
-  &:disabled {
-    opacity: 0.5;
-    cursor: not-allowed;
+    width: calc(100vw - var(--space-24u));
   }
 `;
 
 const ButtonGroup = styled.div`
   display: flex;
-  gap: 8px;
+  gap: var(--space-4u);
   justify-content: flex-end;
-  margin-top: 16px;
+  margin-top: var(--space-8u);
 `;
 
 const Title = styled.div`
-  font-size: 14px;
+  font-size: var(--font-size-lg);
   font-weight: 400;
-  color: var(--color-foreground);
-  margin-bottom: 8px;
+  color: var(--color-popover-foreground);
+  margin-bottom: var(--space-4u);
 `;
 
 interface SetupTOTPPopoverProps {
@@ -85,77 +60,16 @@ export const SetupTOTPPopover = ({
   const [codes, setCodes] = useState(["", ""]);
   const [loading, setLoading] = useState(false);
   const [mounted, setMounted] = useState(false);
-  const [position, setPosition] = useState({ top: 0, left: 0 });
   const { toast } = useScreenContext();
+  const position = usePopoverPosition({
+    triggerRef: triggerRef ?? { current: null },
+    isOpen: mounted,
+    minWidth: 380,
+    defaultMaxHeight: 460,
+  });
 
   useEffect(() => {
     setMounted(true);
-
-    // Calculate position after a short delay
-    const timer = setTimeout(() => {
-      if (!popoverRef.current || !triggerRef?.current) return;
-
-      const triggerButton = triggerRef.current;
-
-      if (triggerButton) {
-        const rect = triggerButton.getBoundingClientRect();
-        const popoverWidth = 380;
-        const popoverHeight = 400; // Approximate height for TOTP popover
-        const spacing = 8;
-
-        let top = 0;
-        let left = 0;
-
-        // Check available space
-        const spaceBottom = window.innerHeight - rect.bottom;
-        const spaceTop = rect.top;
-
-        // Prefer to open below if there's space
-        if (spaceBottom >= popoverHeight + spacing) {
-          top = rect.bottom + spacing;
-          // Align to right edge of button (bottom-right)
-          left = rect.right - popoverWidth;
-
-          // If it goes off left edge, align to left edge of button instead (bottom-left)
-          if (left < spacing) {
-            left = rect.left;
-
-            // If that also goes off right edge, center it on screen
-            if (left + popoverWidth > window.innerWidth - spacing) {
-              left = (window.innerWidth - popoverWidth) / 2;
-            }
-          }
-        }
-        // Otherwise open above
-        else if (spaceTop >= popoverHeight + spacing) {
-          top = rect.top - popoverHeight - spacing;
-          // Align to right edge of button (top-right)
-          left = rect.right - popoverWidth;
-
-          // If it goes off left edge, align to left edge of button instead (top-left)
-          if (left < spacing) {
-            left = rect.left;
-
-            // If that also goes off right edge, center it on screen
-            if (left + popoverWidth > window.innerWidth - spacing) {
-              left = (window.innerWidth - popoverWidth) / 2;
-            }
-          }
-        }
-        // If no space above or below, position it at the best available spot
-        else {
-          // Position at bottom with scrolling if needed
-          top = rect.bottom + spacing;
-          left = rect.right - popoverWidth;
-
-          if (left < spacing) {
-            left = rect.left;
-          }
-        }
-
-        setPosition({ top, left });
-      }
-    }, 10);
 
     // Add click outside listener
     const handleClickOutside = (event: MouseEvent) => {
@@ -178,11 +92,10 @@ export const SetupTOTPPopover = ({
     document.addEventListener("keydown", handleEscape);
 
     return () => {
-      clearTimeout(timer);
       document.removeEventListener("mousedown", handleClickOutside);
       document.removeEventListener("keydown", handleEscape);
     };
-  }, [onClose, triggerRef]);
+  }, [onClose]);
 
   useEffect(() => {
     const setupTOTP = async () => {
@@ -228,9 +141,12 @@ export const SetupTOTPPopover = ({
     <PopoverContainer
       ref={popoverRef}
       style={{
-        top: `${position.top}px`,
-        left: `${position.left}px`,
-        visibility: position.top > 0 ? "visible" : "hidden",
+        top: position?.top !== undefined ? `${position.top}px` : undefined,
+        bottom: position?.bottom !== undefined ? `${position.bottom}px` : undefined,
+        left: position?.left !== undefined ? `${position.left}px` : undefined,
+        right: position?.right !== undefined ? `${position.right}px` : undefined,
+        maxHeight: position?.maxHeight ? `${position.maxHeight}px` : undefined,
+        visibility: position ? "visible" : "hidden",
       }}
       onClick={(e) => e.stopPropagation()}
     >
@@ -239,9 +155,9 @@ export const SetupTOTPPopover = ({
           <Title>Setup Two-Factor Authentication</Title>
           <div
             style={{
-              fontSize: "14px",
+              fontSize: "var(--font-size-lg)",
               color: "var(--color-muted)",
-              marginBottom: "16px",
+              marginBottom: "var(--space-8u)",
             }}
           >
             Scan this QR code with your authenticator app (Google Authenticator,
@@ -252,18 +168,18 @@ export const SetupTOTPPopover = ({
             style={{
               display: "flex",
               justifyContent: "center",
-              marginBottom: "16px",
+              marginBottom: "var(--space-8u)",
             }}
           >
             {loading ? (
               <div
                 style={{
-                  width: "150px",
-                  height: "150px",
+                  width: "calc(var(--size-50u) + var(--space-24u) + var(--space-1u))",
+                  height: "calc(var(--size-50u) + var(--space-24u) + var(--space-1u))",
                   display: "flex",
                   alignItems: "center",
                   justifyContent: "center",
-                  border: "1px solid var(--color-border)",
+                  border: "var(--border-width-thin) solid var(--color-border)",
                   borderRadius: "var(--radius-md)",
                   background: "var(--color-input-background)",
                 }}
@@ -273,10 +189,10 @@ export const SetupTOTPPopover = ({
             ) : qrUrl ? (
               <div
                 style={{
-                  border: "1px solid var(--color-border)",
+                  border: "var(--border-width-thin) solid var(--color-border)",
                   borderRadius: "var(--radius-md)",
-                  padding: "8px",
-                  background: "white",
+                  padding: "var(--space-4u)",
+                  background: "var(--color-foreground-inverse)",
                 }}
               >
                 <QRCodeSVG
@@ -289,12 +205,12 @@ export const SetupTOTPPopover = ({
             ) : (
               <div
                 style={{
-                  width: "150px",
-                  height: "150px",
+                  width: "calc(var(--size-50u) + var(--space-24u) + var(--space-1u))",
+                  height: "calc(var(--size-50u) + var(--space-24u) + var(--space-1u))",
                   display: "flex",
                   alignItems: "center",
                   justifyContent: "center",
-                  border: "1px solid var(--color-border)",
+                  border: "var(--border-width-thin) solid var(--color-border)",
                   borderRadius: "var(--radius-md)",
                   background: "var(--color-input-background)",
                   color: "var(--color-error)",
@@ -309,17 +225,17 @@ export const SetupTOTPPopover = ({
             <div
               style={{
                 background: "var(--color-input-background)",
-                border: "1px solid var(--color-border)",
+                border: "var(--border-width-thin) solid var(--color-border)",
                 borderRadius: "var(--radius-md)",
-                padding: "8px",
-                marginBottom: "16px",
-                fontSize: "12px",
+                padding: "var(--space-4u)",
+                marginBottom: "var(--space-8u)",
+                fontSize: "var(--font-size-sm)",
               }}
             >
               <div
                 style={{
                   color: "var(--color-secondary-text)",
-                  marginBottom: "4px",
+                  marginBottom: "var(--space-2u)",
                 }}
               >
                 Or enter manually:
@@ -338,7 +254,6 @@ export const SetupTOTPPopover = ({
 
           <ButtonGroup>
             <Button
-              $primary
               onClick={() => setStep("verify")}
               disabled={loading || !qrUrl}
             >
@@ -351,15 +266,15 @@ export const SetupTOTPPopover = ({
           <Title>Verify Your Authenticator</Title>
           <div
             style={{
-              fontSize: "14px",
+              fontSize: "var(--font-size-lg)",
               color: "var(--color-muted)",
-              marginBottom: "16px",
+              marginBottom: "var(--space-8u)",
             }}
           >
             Enter two consecutive codes from your authenticator app
           </div>
 
-          <div style={{ display: "flex", gap: "8px", marginBottom: "16px" }}>
+          <div style={{ display: "flex", gap: "var(--space-4u)", marginBottom: "var(--space-8u)" }}>
             <Input
               id="totp-code-1"
               type="text"
@@ -393,9 +308,8 @@ export const SetupTOTPPopover = ({
           </div>
 
           <ButtonGroup>
-            <Button onClick={() => setStep("qr")}>Back</Button>
+            <Button $outline onClick={() => setStep("qr")}>Back</Button>
             <Button
-              $primary
               onClick={handleVerify}
               disabled={loading || codes.some((code) => code.length !== 6)}
             >

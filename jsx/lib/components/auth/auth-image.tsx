@@ -11,14 +11,14 @@ const LogoWrapper = styled.div`
   display: flex;
   align-items: center;
   justify-content: center;
-  width: 80px;
-  height: 80px;
-  background: var(--color-muted-background, rgba(0, 0, 0, 0.05));
+  width: var(--size-40u);
+  height: var(--size-40u);
+  background: var(--color-background-subtle);
   border-radius: 50%;
-  padding: var(--space-md, 12px);
+  padding: var(--space-6u);
 
   @media (prefers-color-scheme: dark) {
-    background: var(--color-muted-background, rgba(255, 255, 255, 0.08));
+    background: var(--color-background-subtle);
   }
 `;
 

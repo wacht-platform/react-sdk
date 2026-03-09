@@ -24,6 +24,7 @@ import {
   TabIcon,
   TabContent,
 } from "./manage-account/shared";
+import styled from "styled-components";
 
 // Modularised Sections
 import { ProfileDetailsManagementSection } from "./manage-account/profile-details";
@@ -40,6 +41,35 @@ type TabType =
   | "social"
   | "security"
   | "sessions";
+
+const LoadingState = styled(Container)`
+  display: flex;
+  justify-content: center;
+  align-items: center;
+`;
+
+const Toast = styled.div`
+  position: absolute;
+  bottom: var(--space-10u);
+  right: var(--space-10u);
+  background: var(--color-input-background);
+  border: var(--border-width-thin) solid var(--color-border);
+  border-radius: var(--radius-md);
+  padding: var(--space-6u) var(--space-8u);
+  box-shadow: var(--shadow-md);
+  animation: slideUp 0.3s ease-out;
+`;
+
+const ToastContent = styled.div`
+  display: flex;
+  align-items: center;
+  gap: var(--space-4u);
+`;
+
+const ToastText = styled.span`
+  font-size: var(--font-size-lg);
+  color: var(--color-foreground);
+`;
 
 export const ManageAccount = () => {
   const { loading } = useUser();
@@ -60,15 +90,9 @@ export const ManageAccount = () => {
   if (loading)
     return (
       <DefaultStylesProvider>
-        <Container
-          style={{
-            display: "flex",
-            justifyContent: "center",
-            alignItems: "center",
-          }}
-        >
+        <LoadingState>
           <Spinner />
-        </Container>
+        </LoadingState>
       </DefaultStylesProvider>
     );
 
@@ -180,37 +204,16 @@ export const ManageAccount = () => {
             </TabContent>
 
             {toastMessage && (
-              <div
-                style={{
-                  position: "absolute",
-                  bottom: "20px",
-                  right: "20px",
-                  background: "var(--color-input-background)",
-                  border: "1px solid var(--color-border)",
-                  borderRadius: "8px",
-                  padding: "12px 16px",
-                  boxShadow: "0 4px 12px var(--color-shadow)",
-                  animation: "slideUp 0.3s ease-out",
-                }}
-              >
-                <div
-                  style={{ display: "flex", alignItems: "center", gap: "8px" }}
-                >
+              <Toast>
+                <ToastContent>
                   {toastLevel === "error" ? (
                     <AlertTriangle size={16} color="var(--color-error)" />
                   ) : (
                     <Check size={16} color="var(--color-success)" />
                   )}
-                  <span
-                    style={{
-                      fontSize: "14px",
-                      color: "var(--color-foreground)",
-                    }}
-                  >
-                    {toastMessage}
-                  </span>
-                </div>
-              </div>
+                  <ToastText>{toastMessage}</ToastText>
+                </ToastContent>
+              </Toast>
             )}
           </Container>
         </ScreenContext.Provider>

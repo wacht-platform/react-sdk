@@ -115,7 +115,6 @@ export const InvitationsSection = () => {
                     />
                 </div>
                 <Button
-                    $size="sm"
                     ref={inviteButtonRef}
                     onClick={() => setShowInvitePopover(true)}
                 >

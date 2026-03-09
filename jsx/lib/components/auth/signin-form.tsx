@@ -26,7 +26,7 @@ import { useDeployment } from "@/hooks/use-deployment";
 import { useNavigation } from "@/hooks/use-navigation";
 import { Button } from "@/components/utility";
 import { AuthFormImage } from "./auth-image";
-import { ChevronRight, Fingerprint } from "lucide-react";
+import { ChevronRight, Fingerprint, Users } from "lucide-react";
 import { getStoredDevSession } from "@/utils/dev-session";
 
 const spin = keyframes`
@@ -39,19 +39,21 @@ const spin = keyframes`
 `;
 
 const Container = styled.div`
-    max-width: 380px;
-    width: 380px;
-    padding: var(--space-2xl);
-    background: var(--color-background);
+    max-width: calc(calc(var(--size-50u) * 4) - var(--size-10u));
+    width: calc(calc(var(--size-50u) * 4) - var(--size-10u));
+    padding: var(--space-12u);
+    background: var(--color-card);
+    color: var(--color-card-foreground);
     border-radius: var(--radius-lg);
-    box-shadow: 0 4px 12px var(--color-shadow);
+    box-shadow: var(--shadow-md);
+    border: var(--border-width-thin) solid var(--color-border);
 `;
 
 const LoadingContainer = styled.div`
     display: flex;
     justify-content: center;
     align-items: center;
-    min-height: 200px;
+    min-height: calc(var(--size-50u) * 2);
 
     svg {
         animation: ${spin} 1s linear infinite;
@@ -61,27 +63,27 @@ const LoadingContainer = styled.div`
 
 const Header = styled.div`
     text-align: center;
-    margin-bottom: var(--space-lg);
+    margin-bottom: var(--space-8u);
     position: relative;
 `;
 
 const Title = styled.h1`
-    font-size: var(--font-md);
+    font-size: var(--font-size-xl);
     font-weight: 400;
-    color: var(--color-foreground);
-    margin-bottom: var(--space-xs);
+    color: var(--color-card-foreground);
+    margin-bottom: var(--space-2u);
     margin-top: 0;
 `;
 
 const Subtitle = styled.p`
     color: var(--color-secondary-text);
-    font-size: var(--font-xs);
+    font-size: var(--font-size-md);
 `;
 
 const Divider = styled.div`
     position: relative;
     text-align: center;
-    margin: var(--space-lg) 0;
+    margin: var(--space-8u) 0;
 
     &::before {
         content: "";
@@ -89,17 +91,17 @@ const Divider = styled.div`
         top: 50%;
         left: 0;
         right: 0;
-        height: 1px;
+        height: var(--border-width-thin);
         background: var(--color-border);
     }
 `;
 
 const DividerText = styled.span`
     position: relative;
-    background: var(--color-background);
-    padding: 0 var(--space-md);
+    background: var(--color-card);
+    padding: 0 var(--space-6u);
     color: var(--color-muted);
-    font-size: var(--font-xs);
+    font-size: var(--font-size-md);
     font-weight: 400;
     text-transform: uppercase;
     letter-spacing: 0.05em;
@@ -110,48 +112,41 @@ const PasswordGroup = styled.div`
 `;
 
 const ErrorMessage = styled.p`
-    font-size: var(--font-2xs);
+    font-size: var(--font-size-xs);
     color: var(--color-error);
     margin: 0;
-    margin-top: var(--space-2xs);
+    margin-top: var(--space-1u);
 `;
 
 const SubmitButton = styled(Button).withConfig({
     shouldForwardProp: (prop) => !["$fullWidth", "$size"].includes(prop),
 })<{ $fullWidth?: boolean; $size?: "sm" | "md" | "lg" }>`
-    margin-top: var(--space-md);
+    margin-top: var(--space-6u);
+    height: var(--size-18u);
+    min-height: var(--size-18u);
+    padding-top: 0;
+    padding-bottom: 0;
+    line-height: 1;
 `;
 
 const ButtonSpinner = styled(Loader2)`
     animation: ${spin} 1s linear infinite;
 `;
 
-const PasskeyButton = styled.button`
+const PasskeyButton = styled(Button).withConfig({
+    shouldForwardProp: (prop) => !["$fullWidth", "$size", "$outline"].includes(prop),
+})<{ $fullWidth?: boolean; $size?: "sm" | "md" | "lg"; $outline?: boolean }>`
     display: flex;
     align-items: center;
-    justify-content: center;
-    gap: var(--space-sm);
-    width: 100%;
-    background: var(--color-background);
-    border: 1px solid var(--color-border);
-    font-weight: 500;
-    padding: var(--space-sm) var(--space-md);
-    margin-top: var(--space-sm);
-    border-radius: var(--radius-lg);
-    cursor: pointer;
-    transition: all 0.2s;
-    font-size: var(--font-xs);
-    color: var(--color-secondary-text);
-
-    &:hover:not(:disabled) {
-        background: var(--color-background-hover);
-        border-color: var(--color-primary);
-    }
-
-    &:disabled {
-        opacity: 0.6;
-        cursor: not-allowed;
-    }
+    justify-content: flex-start;
+    gap: var(--space-4u);
+    margin-top: var(--space-4u);
+    height: var(--size-18u);
+    min-height: var(--size-18u);
+    padding-top: 0;
+    padding-bottom: 0;
+    line-height: 1;
+    color: var(--color-foreground);
 
     svg {
         color: var(--color-primary);
@@ -159,22 +154,22 @@ const PasskeyButton = styled.button`
 `;
 
 const Footer = styled.div`
-    margin-top: var(--space-md);
+    margin-top: var(--space-6u);
     text-align: center;
-    font-size: var(--font-xs);
+    font-size: var(--font-size-md);
     color: var(--color-secondary-text);
 `;
 
 const ExistingAccountsCard = styled.div`
     display: flex;
-    gap: var(--space-sm);
+    gap: var(--space-4u);
     flex-wrap: wrap;
-    margin-bottom: var(--space-md);
+    margin-bottom: var(--space-6u);
 `;
 
 const ExistingAccountsActions = styled.div`
     display: flex;
-    gap: var(--space-sm);
+    gap: var(--space-4u);
     flex-wrap: wrap;
     width: 100%;
 `;
@@ -184,33 +179,35 @@ const ExistingAccountButton = styled(Button).withConfig({
 })<{ $size?: "sm" | "md" | "lg"; $secondary?: boolean }>`
     display: inline-flex;
     align-items: center;
-    gap: var(--space-sm);
+    gap: var(--space-4u);
     width: 100%;
     justify-content: flex-start;
-    border-radius: 999px;
-    min-height: 32px;
-    padding: 0 var(--space-md);
+    height: var(--size-18u);
+    min-height: var(--size-18u);
+    padding-top: 0;
+    padding-bottom: 0;
+    line-height: 1;
     background: transparent;
-    color: var(--color-foreground);
-    border: 1px solid var(--color-border);
+    color: var(--color-card-foreground);
+    border: var(--border-width-thin) solid var(--color-border);
     box-shadow: none;
 
     &:hover:not(:disabled) {
-        background: var(--color-background-hover);
-        border-color: var(--color-border-hover, var(--color-border));
-        color: var(--color-foreground);
+        background: var(--color-accent);
+        border-color: var(--color-border-hover);
+        color: var(--color-accent-foreground);
     }
 `;
 
 const ExistingAccountAvatar = styled.div`
-    width: 20px;
-    height: 20px;
-    border-radius: 999px;
+    width: var(--size-10u);
+    height: var(--size-10u);
+    border-radius: var(--radius-full);
     overflow: hidden;
-    background: var(--color-background);
+    background: var(--color-secondary);
     color: var(--color-secondary-text);
-    font-size: 10px;
-    line-height: 20px;
+    font-size: var(--font-size-2xs);
+    line-height: var(--size-10u);
     text-align: center;
     flex-shrink: 0;
 
@@ -222,18 +219,25 @@ const ExistingAccountAvatar = styled.div`
 `;
 
 const ExistingAccountAvatarOutline = styled(ExistingAccountAvatar)`
-    background: var(--color-background);
+    background: var(--color-secondary);
     color: var(--color-secondary-text);
-    border: 1px solid #fafafa;
+    border: var(--border-width-thin) solid var(--color-border);
 
     @media (prefers-color-scheme: dark) {
-        border: 1px solid #303030;
+        border: var(--border-width-thin) solid var(--color-border);
     }
 `;
 
-const ExistingAccountAvatarStack = styled.div`
+const ExistingAccountsIcon = styled(ExistingAccountAvatarOutline)`
     display: flex;
     align-items: center;
+    justify-content: center;
+
+    svg {
+        width: var(--size-8u);
+        height: var(--size-8u);
+        color: var(--color-secondary-text);
+    }
 `;
 
 const ExistingAccountText = styled.span`
@@ -244,8 +248,8 @@ const ExistingAccountText = styled.span`
 
 const ExistingAccountArrow = styled(ChevronRight)`
     margin-left: auto;
-    width: 14px;
-    height: 14px;
+    width: var(--space-7u);
+    height: var(--space-7u);
     color: var(--color-secondary-text);
 `;
 
@@ -262,29 +266,29 @@ const Link = styled.span`
 `;
 
 const SsoErrorBanner = styled.div`
-    background: var(--color-error-background, rgba(239, 68, 68, 0.1));
-    border: 1px solid var(--color-error, #ef4444);
+    background: var(--color-error-background);
+    border: var(--border-width-thin) solid var(--color-error);
     border-radius: var(--radius-md);
-    padding: var(--space-md);
-    margin-bottom: var(--space-lg);
+    padding: var(--space-6u);
+    margin-bottom: var(--space-8u);
     text-align: center;
 `;
 
 const SsoErrorTitle = styled.div`
     font-weight: 600;
-    font-size: var(--font-sm);
-    color: var(--color-error, #ef4444);
-    margin-bottom: var(--space-xs);
+    font-size: var(--font-size-lg);
+    color: var(--color-error);
+    margin-bottom: var(--space-2u);
 `;
 
 const SsoErrorMessage = styled.div`
-    font-size: var(--font-xs);
-    color: var(--color-foreground);
-    margin-bottom: var(--space-sm);
+    font-size: var(--font-size-md);
+    color: var(--color-card-foreground);
+    margin-bottom: var(--space-4u);
 `;
 
 const SsoErrorLink = styled.span`
-    font-size: var(--font-xs);
+    font-size: var(--font-size-md);
     color: var(--color-primary);
     cursor: pointer;
     text-decoration: underline;
@@ -1092,7 +1096,8 @@ function SignInFormContent() {
                         <ExistingAccountsActions>
                             <ExistingAccountButton
                                 type="button"
-                                $size="sm"
+                                $size="md"
+                                $outline
                                 onClick={() =>
                                     handleContinueAsSignIn(
                                         existingSignins[0].id,
@@ -1133,26 +1138,14 @@ function SignInFormContent() {
                             {existingSignins.length > 1 && (
                                 <ExistingAccountButton
                                     type="button"
-                                    $size="sm"
+                                    $size="md"
+                                    $outline
                                     onClick={handleMoreAccounts}
                                     disabled={isSubmitting || loading}
                                 >
-                                    <ExistingAccountAvatarStack>
-                                        {existingSignins
-                                            .slice(0, 3)
-                                            .map((signin, index) => (
-                                                <ExistingAccountAvatarOutline
-                                                    key={signin.id}
-                                                    style={{
-                                                        marginLeft:
-                                                            index === 0
-                                                                ? 0
-                                                                : -14,
-                                                        zIndex: index + 1,
-                                                    }}
-                                                />
-                                            ))}
-                                    </ExistingAccountAvatarStack>
+                                    <ExistingAccountsIcon as="div">
+                                        <Users />
+                                    </ExistingAccountsIcon>
                                     <ExistingAccountText>
                                         +{existingSignins.length - 1} existing
                                         signins
@@ -1179,11 +1172,15 @@ function SignInFormContent() {
                         {deployment?.auth_settings?.passkey?.enabled && (
                             <PasskeyButton
                                 type="button"
+                                $fullWidth
+                                $outline
+                                $size="md"
                                 onClick={handlePasskeySignIn}
                                 disabled={isSubmitting}
                             >
                                 <Fingerprint size={16} />
                                 Sign in with Passkey
+                                <ExistingAccountArrow />
                             </PasskeyButton>
                         )}
 
@@ -1283,7 +1280,7 @@ function SignInFormContent() {
                                                 Password
                                             </Label>
                                             <Link
-                                                style={{ fontSize: "12px" }}
+                                                style={{ fontSize: "var(--font-size-sm)" }}
                                                 onClick={() =>
                                                     setShowForgotPassword(true)
                                                 }
@@ -1318,7 +1315,7 @@ function SignInFormContent() {
                                 <SubmitButton
                                     type="submit"
                                     $fullWidth
-                                    $size="sm"
+                                    $size="md"
                                     disabled={isSubmitting || loading}
                                 >
                                     {isSubmitting ? (
@@ -1333,7 +1330,7 @@ function SignInFormContent() {
 
                             <Link
                                 style={{
-                                    fontSize: "12px",
+                                    fontSize: "var(--font-size-sm)",
                                     textAlign: "center",
                                 }}
                                 onClick={() => setShowOtherOptions(true)}
@@ -1362,7 +1359,7 @@ function SignInFormContent() {
                                 Get help
                             </NavigationLink>
                         </Link>
-                        <div style={{ marginTop: "var(--space-sm)" }}>
+                        <div style={{ marginTop: "var(--space-4u)" }}>
                             <Link
                                 onClick={() => {
                                     setOtpSent(false);
@@ -1378,7 +1375,7 @@ function SignInFormContent() {
                 ) : (
                     <>
                         <Form
-                            style={{ gap: "15px" }}
+                            style={{ gap: "var(--space-7u)" }}
                             onSubmit={completeVerification}
                             noValidate
                         >
@@ -1422,7 +1419,7 @@ function SignInFormContent() {
                             <SubmitButton
                                 type="submit"
                                 $fullWidth
-                                $size="sm"
+                                $size="md"
                                 disabled={isSubmitting || loading || !otpCode}
                                 style={{ margin: 0 }}
                             >
@@ -1442,7 +1439,7 @@ function SignInFormContent() {
                                     Get help
                                 </NavigationLink>
                             </Link>
-                            <div style={{ marginTop: "var(--space-sm)" }}>
+                            <div style={{ marginTop: "var(--space-4u)" }}>
                                 <Link
                                     onClick={() => {
                                         setOtpSent(false);

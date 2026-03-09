@@ -1,4 +1,30 @@
 import { Search } from "lucide-react";
+import styled from "styled-components";
+
+const SearchWrapper = styled.div`
+  display: flex;
+  flex-grow: 1;
+  align-items: center;
+  border: var(--border-width-thin) solid var(--color-border);
+  border-radius: var(--radius-md);
+  padding: var(--space-4u) var(--space-6u);
+  background-color: var(--color-input-background);
+  min-width: calc(var(--space-10u) * 12.5);
+`;
+
+const SearchField = styled.input`
+  border: none;
+  outline: none;
+  width: 100%;
+  font-size: var(--font-size-lg);
+  color: var(--color-text);
+  background-color: transparent;
+`;
+
+const SearchIcon = styled(Search)`
+  margin-right: var(--space-4u);
+  color: var(--color-secondary-text);
+`;
 
 interface SearchInputProps {
   placeholder: string;
@@ -12,33 +38,14 @@ export const SearchInput = ({
   value,
 }: SearchInputProps) => {
   return (
-    <div
-      style={{
-        display: "flex",
-        flexGrow: 1,
-        alignItems: "center",
-        border: "1px solid var(--color-border)",
-        borderRadius: "8px",
-        padding: "8px 12px",
-        backgroundColor: "var(--color-input-background)",
-        minWidth: "250px",
-      }}
-    >
-      <Search size={16} color="var(--color-secondary-text)" style={{ marginRight: "8px" }} />
-      <input
+    <SearchWrapper>
+      <SearchIcon size={16} />
+      <SearchField
         type="text"
         placeholder={placeholder}
         value={value}
         onChange={(e) => onChange(e.target.value)}
-        style={{
-          border: "none",
-          outline: "none",
-          width: "100%",
-          fontSize: "14px",
-          color: "var(--color-text)",
-          backgroundColor: "transparent",
-        }}
       />
-    </div>
+    </SearchWrapper>
   );
 };

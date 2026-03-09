@@ -6,49 +6,50 @@ import { Button } from "@/components/utility/button";
 import { FormGroup } from "../utility/form";
 import { OTPInput } from "../utility/otp-input";
 import { useScreenContext } from "./context";
+import { usePopoverPosition } from "@/hooks/use-popover-position";
 
 const PopoverContainer = styled.div`
   position: fixed;
-  background: var(--color-background);
+  background: var(--color-popover);
   border-radius: var(--radius-md);
-  box-shadow: 0 4px 12px var(--color-shadow);
-  border: 1px solid var(--color-border);
-  padding: 16px;
-  width: 380px;
-  max-width: calc(100vw - 48px);
+  box-shadow: var(--shadow-md);
+  border: var(--border-width-thin) solid var(--color-border);
+  padding: var(--space-8u);
+  width: calc(calc(var(--size-50u) * 3) + var(--size-40u));
+  max-width: calc(100vw - var(--space-24u));
   z-index: 1001;
 
   @media (max-width: 600px) {
-    width: calc(100vw - 48px);
+    width: calc(100vw - var(--space-24u));
   }
 `;
 
 const ButtonGroup = styled.div`
   display: flex;
-  gap: 8px;
+  gap: var(--space-4u);
   justify-content: flex-end;
-  margin-top: 16px;
+  margin-top: var(--space-8u);
 `;
 
 const Title = styled.div`
-  font-size: 14px;
+  font-size: var(--font-size-lg);
   font-weight: 400;
-  color: var(--color-foreground);
-  margin-bottom: 12px;
+  color: var(--color-popover-foreground);
+  margin-bottom: var(--space-6u);
 `;
 
 const InputWrapper = styled.div`
   display: flex;
   align-items: center;
-  gap: 8px;
+  gap: var(--space-4u);
 `;
 
 const IconWrapper = styled.div`
-  width: 40px;
-  height: 38px;
-  border-radius: var(--radius-sm);
-  background: var(--color-surface, var(--color-background));
-  border: 1px solid var(--color-border);
+  width: var(--size-20u);
+  height: calc(var(--size-18u) + var(--space-1u));
+  border-radius: var(--radius-2xs);
+  background: var(--color-background, var(--color-background));
+  border: var(--border-width-thin) solid var(--color-border);
   display: flex;
   align-items: center;
   justify-content: center;
@@ -75,77 +76,16 @@ export const EmailAddPopover = ({
 }: EmailAddPopoverProps) => {
   const popoverRef = useRef<HTMLDivElement>(null);
   const [mounted, setMounted] = useState(false);
-  const [position, setPosition] = useState({ top: 0, left: 0 });
   const { toast } = useScreenContext();
+  const position = usePopoverPosition({
+    triggerRef: triggerRef ?? { current: null },
+    isOpen: mounted,
+    minWidth: 380,
+    defaultMaxHeight: 360,
+  });
 
   useEffect(() => {
     setMounted(true);
-
-    // Calculate position after a short delay
-    const timer = setTimeout(() => {
-      if (!popoverRef.current || !triggerRef?.current) return;
-
-      const triggerButton = triggerRef.current;
-
-      if (triggerButton) {
-        const rect = triggerButton.getBoundingClientRect();
-        const popoverWidth = 380;
-        const popoverHeight = 300; // Approximate height
-        const spacing = 8;
-
-        let top = 0;
-        let left = 0;
-
-        // Check available space
-        const spaceBottom = window.innerHeight - rect.bottom;
-        const spaceTop = rect.top;
-
-        // Prefer to open below if there's space
-        if (spaceBottom >= popoverHeight + spacing) {
-          top = rect.bottom + spacing;
-          // Align to right edge of button (bottom-right)
-          left = rect.right - popoverWidth;
-
-          // If it goes off left edge, align to left edge of button instead (bottom-left)
-          if (left < spacing) {
-            left = rect.left;
-
-            // If that also goes off right edge, center it on screen
-            if (left + popoverWidth > window.innerWidth - spacing) {
-              left = (window.innerWidth - popoverWidth) / 2;
-            }
-          }
-        }
-        // Otherwise open above
-        else if (spaceTop >= popoverHeight + spacing) {
-          top = rect.top - popoverHeight - spacing;
-          // Align to right edge of button (top-right)
-          left = rect.right - popoverWidth;
-
-          // If it goes off left edge, align to left edge of button instead (top-left)
-          if (left < spacing) {
-            left = rect.left;
-
-            // If that also goes off right edge, center it on screen
-            if (left + popoverWidth > window.innerWidth - spacing) {
-              left = (window.innerWidth - popoverWidth) / 2;
-            }
-          }
-        }
-        // If no space above or below, position it at the best available spot
-        else {
-          // Position at bottom with scrolling if needed
-          top = rect.bottom + spacing;
-          left = rect.right - popoverWidth;
-
-          if (left < spacing) {
-            left = rect.left;
-          }
-        }
-
-        setPosition({ top, left });
-      }
-    }, 10);
 
     // Add click outside listener
     const handleClickOutside = (event: MouseEvent) => {
@@ -168,11 +108,10 @@ export const EmailAddPopover = ({
     document.addEventListener("keydown", handleEscape);
 
     return () => {
-      clearTimeout(timer);
       document.removeEventListener("mousedown", handleClickOutside);
       document.removeEventListener("keydown", handleEscape);
     };
-  }, [onClose, triggerRef]);
+  }, [onClose]);
   const [step, setStep] = useState<"email" | "otp">(
     existingEmail ? "otp" : "email",
   );
@@ -218,9 +157,12 @@ export const EmailAddPopover = ({
     <PopoverContainer
       ref={popoverRef}
       style={{
-        top: `${position.top}px`,
-        left: `${position.left}px`,
-        visibility: position.top > 0 ? "visible" : "hidden",
+        top: position?.top !== undefined ? `${position.top}px` : undefined,
+        bottom: position?.bottom !== undefined ? `${position.bottom}px` : undefined,
+        left: position?.left !== undefined ? `${position.left}px` : undefined,
+        right: position?.right !== undefined ? `${position.right}px` : undefined,
+        maxHeight: position?.maxHeight ? `${position.maxHeight}px` : undefined,
+        visibility: position ? "visible" : "hidden",
       }}
       onClick={(e) => e.stopPropagation()}
     >
@@ -246,14 +188,14 @@ export const EmailAddPopover = ({
             <Button
               $outline
               onClick={onClose}
-              style={{ width: 'auto', padding: '0 var(--space-md)' }}
+              style={{ width: 'auto', padding: '0 var(--space-6u)' }}
             >
               Cancel
             </Button>
             <Button
               onClick={handleEmailSubmit}
               disabled={!email || loading}
-              style={{ width: 'auto', padding: '0 var(--space-md)' }}
+              style={{ width: 'auto', padding: '0 var(--space-6u)' }}
             >
               {loading ? "Adding..." : "Continue"}
             </Button>
@@ -264,9 +206,9 @@ export const EmailAddPopover = ({
           <Title>Verify your email</Title>
           <div
             style={{
-              fontSize: "14px",
+              fontSize: "var(--font-size-lg)",
               color: "var(--color-muted)",
-              marginBottom: "16px",
+              marginBottom: "var(--space-8u)",
             }}
           >
             Enter the 6-digit code sent to {email}
@@ -281,14 +223,14 @@ export const EmailAddPopover = ({
             <Button
               $outline
               onClick={() => setStep("email")}
-              style={{ width: 'auto', padding: '0 var(--space-md)' }}
+              style={{ width: 'auto', padding: '0 var(--space-6u)' }}
             >
               Back
             </Button>
             <Button
               onClick={handleOTPSubmit}
               disabled={otp.length < 6 || loading}
-              style={{ width: 'auto', padding: '0 var(--space-md)' }}
+              style={{ width: 'auto', padding: '0 var(--space-6u)' }}
             >
               {loading ? "Verifying..." : "Verify"}
             </Button>

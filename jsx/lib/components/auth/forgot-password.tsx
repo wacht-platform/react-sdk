@@ -16,64 +16,64 @@ interface ForgotPasswordProps {
 }
 
 const Container = styled.div`
-  max-width: 380px;
-  width: 380px;
-  padding: var(--space-3xl);
+  max-width: calc(var(--space-10u) * 19);
+  width: calc(var(--space-10u) * 19);
+  padding: var(--space-14u);
   background: var(--color-background);
   border-radius: var(--radius-lg);
-  box-shadow: 0 4px 12px var(--color-shadow);
+  box-shadow: var(--shadow-md);
 `;
 
 const Header = styled.div`
   text-align: center;
-  margin-bottom: var(--space-lg);
+  margin-bottom: var(--space-8u);
 `;
 
 const Title = styled.h1`
-  font-size: var(--font-lg);
+  font-size: var(--font-size-2xl);
   color: var(--color-foreground);
-  margin: 0 0 var(--space-xs) 0;
+  margin: 0 0 var(--space-2u) 0;
 `;
 
 const Message = styled.p`
-  font-size: var(--font-sm);
+  font-size: var(--font-size-lg);
   color: var(--color-muted);
   margin: 0;
 `;
 
 const ErrorMessage = styled.p`
-  font-size: var(--font-2xs);
+  font-size: var(--font-size-xs);
   color: var(--color-error);
   margin: 0;
-  margin-top: var(--space-2xs);
+  margin-top: var(--space-1u);
 `;
 
 const ResetButton = styled(Button)`
   width: 100%;
-  margin-bottom: var(--space-lg);
+  margin-bottom: var(--space-8u);
 `;
 
 const Divider = styled.div`
   display: flex;
   align-items: center;
   text-align: center;
-  margin: var(--space-lg) 0;
+  margin: var(--space-8u) 0;
   color: var(--color-muted);
-  font-size: var(--font-xs);
+  font-size: var(--font-size-md);
 
   &::before,
   &::after {
     content: "";
     flex: 1;
-    border-bottom: 1px solid var(--color-border);
+    border-bottom: var(--border-width-thin) solid var(--color-border);
   }
 
   &::before {
-    margin-right: var(--space-sm);
+    margin-right: var(--space-4u);
   }
 
   &::after {
-    margin-left: var(--space-sm);
+    margin-left: var(--space-4u);
   }
 `;
 
@@ -83,11 +83,11 @@ const DividerText = styled.span`
 
 const Footer = styled.div`
   text-align: center;
-  margin-top: var(--space-lg);
+  margin-top: var(--space-8u);
 `;
 
 const FooterText = styled.p`
-  font-size: var(--font-sm);
+  font-size: var(--font-size-lg);
   color: var(--color-muted);
   margin: 0;
 `;
@@ -227,7 +227,7 @@ export function ForgotPassword({ onBack }: ForgotPasswordProps) {
         <FooterText>
           Unable to reset password? <Link href="/contact">Get help</Link>
         </FooterText>
-        <FooterText style={{ marginTop: "var(--space-sm)" }}>
+        <FooterText style={{ marginTop: "var(--space-4u)" }}>
           <Link onClick={onBack} style={{ cursor: "pointer" }}>
             Back to login
           </Link>
@@ -270,15 +270,14 @@ export function ForgotPassword({ onBack }: ForgotPasswordProps) {
               <Button
                 type="submit"
                 $fullWidth
-                $size="sm"
                 disabled={loading}
-                style={{ marginTop: "var(--space-md)" }}
+                style={{ marginTop: "var(--space-6u)" }}
               >
                 {loading ? "Sending..." : "Send Code"}
               </Button>
             </Form>
             <Footer>
-              <FooterText style={{ marginTop: "var(--space-sm)" }}>
+              <FooterText style={{ marginTop: "var(--space-4u)" }}>
                 <Link onClick={onBack} style={{ cursor: "pointer" }}>
                   Back to login
                 </Link>
@@ -312,15 +311,14 @@ export function ForgotPassword({ onBack }: ForgotPasswordProps) {
               <Button
                 type="submit"
                 $fullWidth
-                $size="sm"
                 disabled={loading || otp.length !== 6}
-                style={{ marginTop: "var(--space-md)" }}
+                style={{ marginTop: "var(--space-6u)" }}
               >
                 {loading ? "Verifying..." : "Verify"}
               </Button>
             </Form>
             <Footer>
-              <FooterText style={{ marginTop: "var(--space-sm)" }}>
+              <FooterText style={{ marginTop: "var(--space-4u)" }}>
                 <Link onClick={onBack} style={{ cursor: "pointer" }}>
                   Back to login
                 </Link>
@@ -366,15 +364,14 @@ export function ForgotPassword({ onBack }: ForgotPasswordProps) {
               <Button
                 type="submit"
                 $fullWidth
-                $size="sm"
                 disabled={loading}
-                style={{ marginTop: "var(--space-md)" }}
+                style={{ marginTop: "var(--space-6u)" }}
               >
                 {loading ? "Resetting..." : "Reset Password"}
               </Button>
             </Form>
             <Footer>
-              <FooterText style={{ marginTop: "var(--space-sm)" }}>
+              <FooterText style={{ marginTop: "var(--space-4u)" }}>
                 <Link onClick={onBack} style={{ cursor: "pointer" }}>
                   Back to login
                 </Link>

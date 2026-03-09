@@ -6,32 +6,32 @@ const PopoverContainer = styled.div`
   text-align: left;
   position: fixed;
   background: var(--color-background);
-  border-radius: 8px;
-  box-shadow: 0 4px 12px var(--color-shadow);
-  border: 1px solid var(--color-border);
-  padding: 16px;
-  width: 320px;
+  border-radius: var(--radius-md);
+  box-shadow: var(--shadow-md);
+  border: var(--border-width-thin) solid var(--color-border);
+  padding: var(--space-8u);
+  width: calc(calc(var(--size-50u) * 3) + var(--space-10u));
   z-index: 1000;
 `;
 
 const Title = styled.div`
-  font-size: 14px;
+  font-size: var(--font-size-lg);
   font-weight: 500;
   color: var(--color-foreground);
-  margin-bottom: 4px;
+  margin-bottom: var(--space-2u);
   line-height: 1.4;
 `;
 
 const Description = styled.div`
-  font-size: 12px;
+  font-size: var(--font-size-sm);
   color: var(--color-secondary-text);
-  margin-bottom: 16px;
+  margin-bottom: var(--space-8u);
   line-height: 1.4;
 `;
 
 const ButtonGroup = styled.div`
   display: flex;
-  gap: 8px;
+  gap: var(--space-4u);
   justify-content: flex-end;
 `;
 
@@ -72,7 +72,7 @@ export const ConfirmationPopover = ({
     <PopoverContainer
       ref={popoverRef}
       style={{
-        right: "70px",
+        right: "calc(var(--size-32u) + var(--space-3u))",
         ...style,
       }}
     >
@@ -82,10 +82,10 @@ export const ConfirmationPopover = ({
         <Button
           onClick={onCancel}
           style={{
-            fontSize: "14px",
-            padding: "6px 16px",
+            fontSize: "var(--font-size-lg)",
+            padding: "var(--space-3u) var(--space-8u)",
             background: "transparent",
-            border: "1px solid var(--color-border)",
+            border: "var(--border-width-thin) solid var(--color-border)",
             color: "var(--color-foreground)",
           }}
         >
@@ -94,11 +94,11 @@ export const ConfirmationPopover = ({
         <Button
           onClick={onConfirm}
           style={{
-            fontSize: "14px",
-            padding: "6px 16px",
+            fontSize: "var(--font-size-lg)",
+            padding: "var(--space-3u) var(--space-8u)",
             background: "var(--color-error)",
-            border: "1px solid var(--color-error)",
-            color: "white",
+            border: "var(--border-width-thin) solid var(--color-error)",
+            color: "var(--color-foreground-inverse)",
           }}
         >
           Confirm

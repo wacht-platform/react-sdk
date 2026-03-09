@@ -35,16 +35,17 @@ import {
     ConnectionLeft,
 } from "./shared";
 const AvatarPlaceholder = styled.div`
-  width: 40px;
-  height: 40px;
+  width: var(--size-20u);
+  height: var(--size-20u);
   border-radius: 50%;
   background: var(--color-input-background);
+  border: var(--border-width-thin) solid var(--color-border);
   display: flex;
   align-items: center;
   justify-content: center;
   color: var(--color-muted);
   font-weight: 400;
-  font-size: 14px;
+  font-size: var(--font-size-lg);
   overflow: hidden;
 `;
 
@@ -131,14 +132,13 @@ export const MembersSection = () => {
                         placeholder="Search members..."
                     />
                 </div>
-                <div style={{ display: "flex", gap: "12px", alignItems: "center" }}>
+                <div style={{ display: "flex", gap: "var(--space-6u)", alignItems: "center" }}>
                     {meta.total > 0 && (
-                        <div style={{ fontSize: "14px", color: "var(--color-muted)" }}>
+                        <div style={{ fontSize: "var(--font-size-lg)", color: "var(--color-muted)" }}>
                             {meta.total} member{meta.total !== 1 ? "s" : ""}
                         </div>
                     )}
                     <Button
-                        $size="sm"
                         ref={inviteMemberButtonRef}
                         onClick={() => setIsInviting(true)}
                     >
@@ -220,9 +220,9 @@ export const MembersSection = () => {
             )}
 
             {totalPages > 1 && (
-                <div style={{ display: "flex", justifyContent: "center", alignItems: "center", gap: "16px", marginTop: "24px" }}>
+                <div style={{ display: "flex", justifyContent: "center", alignItems: "center", gap: "var(--space-8u)", marginTop: "var(--space-12u)" }}>
                     <Button onClick={() => setPage(p => Math.max(1, p - 1))} disabled={page === 1} $size="sm">Previous</Button>
-                    <span style={{ fontSize: "13px" }}>{page} / {totalPages}</span>
+                    <span style={{ fontSize: "var(--font-size-md)" }}>{page} / {totalPages}</span>
                     <Button onClick={() => setPage(p => Math.min(totalPages, p + 1))} disabled={page === totalPages} $size="sm">Next</Button>
                 </div>
             )}
@@ -237,7 +237,7 @@ const UserIdentity = ({ member, session, subtitle }: any) => {
     const getInitials = (f = "", l = "") => `${f[0] || ""}${l[0] || ""} `.toUpperCase();
 
     return (
-        <div style={{ display: "flex", alignItems: "center", gap: "12px" }}>
+        <div style={{ display: "flex", alignItems: "center", gap: "var(--space-6u)" }}>
             <AvatarPlaceholder>
                 {userData?.profile_picture_url ? (
                     <img src={userData.profile_picture_url} alt="Avatar" style={{ width: "100%", height: "100%", objectFit: "cover" }} />
@@ -246,15 +246,15 @@ const UserIdentity = ({ member, session, subtitle }: any) => {
                 )}
             </AvatarPlaceholder>
             <div>
-                <div style={{ display: "flex", alignItems: "center", gap: "8px" }}>
-                    <span style={{ fontSize: "14px", fontWeight: "400" }}>
+                <div style={{ display: "flex", alignItems: "center", gap: "var(--space-4u)" }}>
+                    <span style={{ fontSize: "var(--font-size-lg)", fontWeight: "400" }}>
                         {userData ? `${userData.first_name || ""} ${userData.last_name || ""} `.trim() || userData.primary_email_address?.email : "Unknown"}
                     </span>
                     {isCurrentUser && (
-                        <span style={{ fontSize: "10px", padding: "1px 4px", background: "var(--color-background-alt)", color: "var(--color-muted)", borderRadius: "3px", fontWeight: "400" }}>You</span>
+                        <span style={{ fontSize: "var(--font-size-2xs)", padding: "var(--space-1u) var(--space-2u)", background: "var(--color-background-subtle)", color: "var(--color-muted)", borderRadius: "calc(var(--radius-2xs) - var(--border-width-thin))", fontWeight: "400" }}>You</span>
                     )}
                 </div>
-                <div style={{ fontSize: "11px", color: "var(--color-secondary-text)", fontWeight: "400", display: "flex", flexWrap: "wrap", gap: "4px 8px" }}>
+                <div style={{ fontSize: "var(--font-size-xs)", color: "var(--color-secondary-text)", fontWeight: "400", display: "flex", flexWrap: "wrap", gap: "var(--space-2u) var(--space-4u)" }}>
                     <span>{userData?.primary_email_address?.email}</span>
                     {subtitle && <span style={{ color: "var(--color-muted)" }}>• {subtitle}</span>}
                 </div>
@@ -266,20 +266,28 @@ const UserIdentity = ({ member, session, subtitle }: any) => {
 const RoleSelector = ({ member, roles, onToggle, onRemove }: any) => {
     const memberRoles = member.roles || [];
     const memberHasRole = (roleId: string) => memberRoles.some((r: any) => r.id === roleId);
+    const roleSelectorWidth = "calc(var(--size-50u) + var(--size-40u))";
 
     return (
         <Dropdown>
             <DropdownTrigger>
-                <Button $outline $size="sm" style={{ color: "var(--color-foreground)" }}>
-                    {memberRoles.length > 0 ? memberRoles[0].name : "No role"} <ChevronDown size={14} style={{ marginLeft: "4px" }} />
+                <Button
+                    $outline
+                    style={{
+                        color: "var(--color-foreground)",
+                        minWidth: roleSelectorWidth,
+                        justifyContent: "space-between",
+                    }}
+                >
+                    {memberRoles.length > 0 ? memberRoles[0].name : "No role"} <ChevronDown size={14} style={{ marginLeft: "var(--space-2u)" }} />
                 </Button>
             </DropdownTrigger>
-            <DropdownItems>
+            <DropdownItems style={{ minWidth: roleSelectorWidth }}>
                 {roles.map((role: any) => {
                     const active = memberHasRole(role.id);
                     return (
                         <DropdownItem key={role.id} onClick={() => onToggle(role.id, active)}>
-                            <div style={{ display: "flex", justifyContent: "space-between", width: "100%", gap: "12px" }}>
+                            <div style={{ display: "flex", justifyContent: "space-between", width: "100%", gap: "var(--space-6u)" }}>
                                 <span>{role.name}</span>
                                 {active && <Check size={14} color="var(--color-success)" />}
                             </div>
@@ -288,7 +296,7 @@ const RoleSelector = ({ member, roles, onToggle, onRemove }: any) => {
                 })}
                 <DropdownDivider />
                 <DropdownItem $destructive onClick={onRemove}>
-                    <div style={{ display: "flex", alignItems: "center", gap: "8px" }}>
+                    <div style={{ display: "flex", alignItems: "center", gap: "var(--space-4u)" }}>
                         <Trash2 size={14} /> Remove Member
                     </div>
                 </DropdownItem>

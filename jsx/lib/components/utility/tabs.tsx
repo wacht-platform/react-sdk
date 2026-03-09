@@ -39,31 +39,24 @@ const StyledTabList = styled.div<{ $orientation?: "horizontal" | "vertical" }>`
   display: flex;
   flex-direction: ${(props) =>
     props.$orientation === "vertical" ? "column" : "row"};
-  border-bottom: ${(props) =>
-    props.$orientation === "vertical" ? "none" : "2px solid var(--color-border)"};
-  border-right: ${(props) =>
-    props.$orientation === "vertical" ? "2px solid var(--color-border)" : "none"};
+  border-bottom: ${(props) => props.$orientation === "vertical" ? "none" : "var(--border-width-regular) solid var(--color-border)"};
+  border-right: ${(props) => props.$orientation === "vertical" ? "var(--border-width-regular) solid var(--color-border)" : "none"};
   background: ${(props) =>
     props.$orientation === "vertical"
       ? "var(--color-background)"
       : "linear-gradient(to bottom, var(--color-background), var(--color-background-subtle))"};
-  gap: ${(props) => (props.$orientation === "vertical" ? "6px" : "0")};
-  padding: ${(props) => (props.$orientation === "vertical" ? "12px" : "0 8px")};
-  min-width: ${(props) => (props.$orientation === "vertical" ? "220px" : "auto")};
-  border-radius: ${(props) =>
-    props.$orientation === "vertical" ? "12px 0 0 12px" : "0"};
-  box-shadow: ${(props) =>
-    props.$orientation === "vertical"
-      ? "inset -1px 0 0 var(--color-border)"
-      : "inset 0 -1px 0 var(--color-border)"};
+  gap: ${(props) => (props.$orientation === "vertical" ? "var(--space-3u)" : "0")};
+  padding: ${(props) => (props.$orientation === "vertical" ? "var(--space-6u)" : "0 var(--space-4u)")};
+  min-width: ${(props) => (props.$orientation === "vertical" ? "calc(calc(var(--size-50u) * 2) + var(--size-10u))" : "auto")};
+  border-radius: ${(props) => props.$orientation === "vertical" ? "var(--radius-lg) 0 0 var(--radius-lg)" : "0"};
+  box-shadow: ${(props) => props.$orientation === "vertical" ? "inset calc(var(--border-width-thin) * -1) 0 0 var(--color-border)" : "inset 0 calc(var(--border-width-thin) * -1) 0 var(--color-border)"};
 `;
 
 const StyledTab = styled.button<{
   $active: boolean;
   $orientation?: "horizontal" | "vertical";
 }>`
-  padding: ${(props) =>
-    props.$orientation === "vertical" ? "14px 18px" : "14px 24px"};
+  padding: ${(props) => props.$orientation === "vertical" ? "var(--space-7u) calc(var(--space-1u) * 9)" : "var(--space-7u) var(--space-12u)"};
   border: none;
   background: ${(props) =>
     props.$active
@@ -73,18 +66,17 @@ const StyledTab = styled.button<{
       : "transparent"};
   color: ${(props) =>
     props.$active ? "var(--color-primary)" : "var(--color-muted)"};
-  font-size: 15px;
+  font-size: calc(var(--font-size-lg) + var(--border-width-thin));
   font-weight: ${(props) => (props.$active ? "600" : "500")};
   cursor: pointer;
   transition: all 0.25s ease;
-  border-radius: ${(props) =>
-    props.$orientation === "vertical" ? "10px" : "0"};
+  border-radius: ${(props) => props.$orientation === "vertical" ? "var(--space-5u)" : "0"};
   border-bottom: ${(props) =>
     props.$orientation === "vertical"
       ? "none"
       : props.$active
-      ? "3px solid var(--color-primary)"
-      : "3px solid transparent"};
+      ? "var(--border-width-regular) solid var(--color-primary)"
+      : "var(--border-width-regular) solid transparent"};
   white-space: nowrap;
   text-align: left;
   width: ${(props) => (props.$orientation === "vertical" ? "100%" : "auto")};
@@ -106,13 +98,13 @@ const StyledTab = styled.button<{
         ? "var(--color-background)"
         : "var(--color-primary-background)"};
     transform: ${(props) =>
-      props.$orientation === "vertical" ? "none" : "translateY(-1px)"};
+      props.$orientation === "vertical" ? "none" : "translateY(calc(var(--border-width-thin) * -1))"};
   }
 
   &:focus {
-    outline: 2px solid var(--color-primary);
-    outline-offset: -2px;
-    border-radius: 8px;
+    outline: var(--border-width-regular) solid var(--color-primary);
+    outline-offset: calc(var(--border-width-regular) * -1);
+    border-radius: var(--radius-md);
   }
 
   &:disabled {
@@ -128,8 +120,8 @@ const StyledTab = styled.button<{
 
 const StyledTabPanels = styled.div<{ $orientation?: "horizontal" | "vertical" }>`
   flex: 1;
-  padding: ${(props) => (props.$orientation === "vertical" ? "0 0 0 32px" : "32px 0 0 0")};
-  min-height: 400px;
+  padding: ${(props) => (props.$orientation === "vertical" ? "0 0 0 var(--space-16u)" : "var(--space-16u) 0 0 0")};
+  min-height: calc(var(--size-50u) * 4);
 `;
 
 const StyledTabPanel = styled.div<{ $active: boolean }>`
@@ -139,7 +131,7 @@ const StyledTabPanel = styled.div<{ $active: boolean }>`
   @keyframes fadeInUp {
     from {
       opacity: 0;
-      transform: translateY(12px);
+      transform: translateY(var(--space-6u));
     }
     to {
       opacity: 1;

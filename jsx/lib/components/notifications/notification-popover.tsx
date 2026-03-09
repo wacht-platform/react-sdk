@@ -20,13 +20,13 @@ const Popover = styled.div<{
     props.$position?.right !== undefined
       ? `right: ${props.$position.right}px;`
       : ""}
-  width: 450px;
-  max-width: calc(100vw - 24px);
-  max-height: ${(props) => props.$position?.maxHeight ? `${props.$position.maxHeight}px` : '700px'};
+  width: calc(var(--space-10u) * 22.5);
+  max-width: calc(100vw - var(--space-12u));
+  max-height: ${(props) => props.$position?.maxHeight ? `${props.$position.maxHeight}px` : 'calc(var(--size-50u) * 7)'};
   background: var(--color-background);
-  border: 1px solid var(--color-border);
-  border-radius: 12px;
-  box-shadow: 0 10px 40px -10px rgba(0, 0, 0, 0.1), 0 0 1px rgba(0, 0, 0, 0.1);
+  border: var(--border-width-thin) solid var(--color-border);
+  border-radius: var(--radius-lg);
+  box-shadow: var(--shadow-xl);
   overflow: hidden;
   z-index: 99999;
   display: flex;
@@ -35,12 +35,12 @@ const Popover = styled.div<{
   max-height: 90vh;
 
   @keyframes fadeIn {
-    from { opacity: 0; transform: translateY(2px); }
+    from { opacity: 0; transform: translateY(var(--space-1u)); }
     to { opacity: 1; transform: translateY(0); }
   }
 
   @media(max-width: 480px) {
-    border-radius: 8px;
+    border-radius: var(--radius-md);
   }
 `;
 

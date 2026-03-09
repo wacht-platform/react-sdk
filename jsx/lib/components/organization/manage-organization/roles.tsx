@@ -25,6 +25,7 @@ import {
 import { EmptyState } from "@/components/utility/empty-state";
 import { AddRolePopover } from "../add-role-popover";
 import { ConfirmationPopover } from "../../utility/confirmation-popover";
+import { canEditOrganizationRole } from "@/utils/roles";
 import {
     HeaderCTAContainer,
     IconButton,
@@ -33,6 +34,65 @@ import {
     ConnectionItemRow,
     ConnectionLeft,
 } from "./shared";
+import styled from "styled-components";
+
+const MessageBanner = styled.div<{ $type: "success" | "error" }>`
+  margin-bottom: var(--space-10u);
+  padding: var(--space-6u) var(--space-8u);
+  background: ${(props) =>
+    props.$type === "success"
+      ? "var(--color-success-background)"
+      : "var(--color-error-background)"};
+  color: ${(props) =>
+    props.$type === "success" ? "var(--color-success)" : "var(--color-error)"};
+  border-radius: var(--radius-md);
+  display: flex;
+  align-items: center;
+  gap: var(--space-4u);
+  font-size: var(--font-size-lg);
+`;
+
+const RoleName = styled.div`
+  font-weight: 500;
+`;
+
+const RoleNameRow = styled.div`
+  display: flex;
+  align-items: center;
+  gap: var(--space-4u);
+  flex-wrap: wrap;
+`;
+
+const RoleBadge = styled.span`
+  display: inline-flex;
+  align-items: center;
+  padding: var(--space-1u) var(--space-3u);
+  border-radius: var(--radius-full);
+  background: var(--color-secondary);
+  color: var(--color-secondary-foreground);
+  font-size: var(--font-size-sm);
+  line-height: 1;
+`;
+
+const PermissionText = styled.div`
+  color: var(--color-secondary-text);
+`;
+
+const MobileRoleName = styled.div`
+  font-weight: 600;
+  font-size: var(--font-size-lg);
+  margin-bottom: var(--space-2u);
+`;
+
+const MobileRolePermissions = styled.div`
+  font-size: var(--font-size-sm);
+  color: var(--color-secondary-text);
+  line-height: 1.4;
+`;
+
+const MobileRoleActions = styled.div`
+  margin-left: auto;
+`;
 
 export const RolesSection = ({ organization }: { organization: Organization }) => {
     const { getOrganizationRoles: getRoles, removeOrganizationRoles: removeRole } =
@@ -42,6 +102,7 @@ export const RolesSection = ({ organization }: { organization: Organization }) =
     const [rolePopover, setRolePopover] = useState<{
         isOpen: boolean;
         role?: OrganizationRole;
+        triggerElement?: HTMLElement | null;
     }>({ isOpen: false });
 
     const [message, setMessage] = useState<{
@@ -52,6 +113,7 @@ export const RolesSection = ({ organization }: { organization: Organization }) =
     const [searchQuery, setSearchQuery] = useState("");
     const [roleForDeletion, setRoleForDeletion] = useState<string | null>(null);
     const addRoleButtonRef = useRef<HTMLButtonElement>(null);
+    const dropdownButtonRefs = useRef<Map<string, HTMLButtonElement>>(new Map());
 
     const {
         data: roles = [],
@@ -85,9 +147,11 @@ export const RolesSection = ({ organization }: { organization: Organization }) =
 
             setRolePopover({ isOpen: false });
             reloadRoles();
-        } catch (error: any) {
+        } catch (error: unknown) {
+            const message =
+                error instanceof Error ? error.message : "Failed to save role";
             setMessage({
-                text: error.message || "Failed to save role",
+                text: message,
                 type: "error",
             });
         } finally {
@@ -110,22 +174,10 @@ export const RolesSection = ({ organization }: { organization: Organization }) =
     return (
         <>
             {message && (
-                <div
-                    style={{
-                        marginBottom: "20px",
-                        padding: "12px 16px",
-                        background: message.type === "success" ? "var(--color-success-background)" : "var(--color-error-background)",
-                        color: message.type === "success" ? "var(--color-success)" : "var(--color-error)",
-                        borderRadius: "8px",
-                        display: "flex",
-                        alignItems: "center",
-                        gap: "8px",
-                        fontSize: "14px"
-                    }}
-                >
+                <MessageBanner $type={message.type}>
                     {message.type === "success" ? "✓" : <AlertTriangle size={16} />}
                     {message.text}
-                </div>
+                </MessageBanner>
             )}
 
             <HeaderCTAContainer>
@@ -136,9 +188,8 @@ export const RolesSection = ({ organization }: { organization: Organization }) =
                 />
                 {deployment?.b2b_settings?.custom_org_role_enabled && (
                     <Button
-                        $size="sm"
                         ref={addRoleButtonRef}
-                        onClick={() => setRolePopover({ isOpen: true })}
+                        onClick={() => setRolePopover({ isOpen: true, triggerElement: addRoleButtonRef.current })}
                     >
                         Add Role
                     </Button>
@@ -149,7 +200,7 @@ export const RolesSection = ({ organization }: { organization: Organization }) =
                 <AddRolePopover
                     onClose={() => setRolePopover({ isOpen: false })}
                     onSuccess={handleRoleSaved}
-                    triggerRef={addRoleButtonRef}
+                    triggerRef={{ current: rolePopover.triggerElement || addRoleButtonRef.current }}
                 />
             )}
 
@@ -173,16 +224,32 @@ export const RolesSection = ({ organization }: { organization: Organization }) =
                                 {filteredRoles.map((role) => (
                                     <TableRow key={role.id}>
                                         <TableCell>
-                                            <div style={{ fontWeight: 500 }}>{role.name}</div>
+                                            <RoleNameRow>
+                                                <RoleName>{role.name}</RoleName>
+                                                {!canEditOrganizationRole(role) && (
+                                                    <RoleBadge>Default</RoleBadge>
+                                                )}
+                                            </RoleNameRow>
                                         </TableCell>
-                                        <TableCell style={{ color: "var(--color-secondary-text)" }}>
+                                        <TableCell>
+                                          <PermissionText>
                                             {role.permissions.join(", ")}
+                                            {!canEditOrganizationRole(role) &&
+                                                " • Cannot be edited or deleted"}
+                                          </PermissionText>
                                         </TableCell>
                                         <ActionsCell>
                                             <RoleActions
                                                 role={role}
-                                                onEdit={() => setRolePopover({ isOpen: true, role })}
+                                                onEdit={(el) =>
+                                                    setRolePopover({
+                                                        isOpen: true,
+                                                        role,
+                                                        triggerElement: el,
+                                                    })
+                                                }
                                                 onDelete={() => setRoleForDeletion(role.id)}
+                                                dropdownButtonRefs={dropdownButtonRefs}
                                             />
                                         </ActionsCell>
                                     </TableRow>
@@ -196,18 +263,32 @@ export const RolesSection = ({ organization }: { organization: Organization }) =
                             <ConnectionItemRow key={role.id}>
                                 <ConnectionLeft>
                                     <div>
-                                        <div style={{ fontWeight: 600, fontSize: "14px", marginBottom: "4px" }}>{role.name}</div>
-                                        <div style={{ fontSize: "12px", color: "var(--color-secondary-text)", lineHeight: 1.4 }}>
+                                        <RoleNameRow>
+                                            <MobileRoleName>{role.name}</MobileRoleName>
+                                            {!canEditOrganizationRole(role) && (
+                                                <RoleBadge>Default</RoleBadge>
+                                            )}
+                                        </RoleNameRow>
+                                        <MobileRolePermissions>
                                             {role.permissions.join(", ")}
-                                        </div>
+                                            {!canEditOrganizationRole(role) &&
+                                                " • Cannot be edited or deleted"}
+                                        </MobileRolePermissions>
                                     </div>
-                                    <div style={{ marginLeft: "auto" }}>
+                                    <MobileRoleActions>
                                         <RoleActions
                                             role={role}
-                                            onEdit={() => setRolePopover({ isOpen: true, role })}
+                                            onEdit={(el) =>
+                                                setRolePopover({
+                                                    isOpen: true,
+                                                    role,
+                                                    triggerElement: el,
+                                                })
+                                            }
                                             onDelete={() => setRoleForDeletion(role.id)}
+                                            dropdownButtonRefs={dropdownButtonRefs}
                                         />
-                                    </div>
+                                    </MobileRoleActions>
                                 </ConnectionLeft>
                             </ConnectionItemRow>
                         ))}
@@ -232,22 +313,61 @@ export const RolesSection = ({ organization }: { organization: Organization }) =
                     role={rolePopover.role}
                     onClose={() => setRolePopover({ isOpen: false })}
                     onSuccess={handleRoleSaved}
+                    triggerRef={{ current: rolePopover.triggerElement || null }}
                 />
             )}
         </>
     );
 };
 
-const RoleActions = ({ role, onEdit, onDelete }: any) => (
-    <Dropdown>
-        <DropdownTrigger>
-            <IconButton disabled={!role.organization_id}>•••</IconButton>
-        </DropdownTrigger>
-        <DropdownItems>
-            <DropdownItem onClick={onEdit}>Edit Role</DropdownItem>
-            <DropdownItem $destructive onClick={onDelete}>
-                <Trash2 size={16} /> Remove Role
-            </DropdownItem>
-        </DropdownItems>
-    </Dropdown>
-);
+interface OrganizationRoleActionsProps {
+    role: OrganizationRole;
+    onEdit: (triggerElement: HTMLElement | null) => void;
+    onDelete: () => void;
+    dropdownButtonRefs: React.MutableRefObject<Map<string, HTMLButtonElement>>;
+}
+
+const RoleActions = ({
+    role,
+    onEdit,
+    onDelete,
+    dropdownButtonRefs,
+}: OrganizationRoleActionsProps) => {
+    const editable = canEditOrganizationRole(role);
+
+    if (!editable) {
+        return (
+            <IconButton
+                disabled
+                title="Deployment roles cannot be edited"
+                aria-label="Deployment roles cannot be edited"
+            >
+                •••
+            </IconButton>
+        );
+    }
+
+    return (
+        <Dropdown>
+            <DropdownTrigger>
+                <IconButton
+                    ref={(el) => {
+                        if (el) dropdownButtonRefs.current.set(role.id, el);
+                    }}
+                >
+                    •••
+                </IconButton>
+            </DropdownTrigger>
+            <DropdownItems>
+                <DropdownItem
+                    onClick={() => onEdit(dropdownButtonRefs.current.get(role.id) ?? null)}
+                >
+                    Edit Role
+                </DropdownItem>
+                <DropdownItem $destructive onClick={onDelete}>
+                    <Trash2 size={16} /> Remove Role
+                </DropdownItem>
+            </DropdownItems>
+        </Dropdown>
+    );
+};

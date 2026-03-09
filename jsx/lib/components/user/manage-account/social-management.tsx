@@ -16,6 +16,46 @@ import {
     IconWrapper,
     IconButton,
 } from "./shared";
+import styled from "styled-components";
+
+const ProviderInfo = styled.div`
+    display: flex;
+    flex-direction: column;
+    gap: var(--space-3u);
+    min-width: 0;
+`;
+
+const ProviderName = styled.div`
+    font-size: var(--font-size-lg);
+    font-weight: 500;
+    color: var(--color-foreground);
+`;
+
+const ConnectedAccountsRow = styled.div`
+    display: flex;
+    flex-wrap: wrap;
+    gap: var(--space-3u);
+`;
+
+const ConnectedAccountChip = styled.div`
+    display: inline-flex;
+    align-items: center;
+    gap: var(--space-2u);
+    background: var(--color-secondary);
+    border: var(--border-width-thin) solid var(--color-border);
+    border-radius: var(--radius-xs);
+    padding: var(--space-2u) var(--space-4u);
+    font-size: var(--font-size-sm);
+    color: var(--color-secondary-text);
+    min-width: 0;
+`;
+
+const ChipText = styled.span`
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    max-width: calc(var(--size-50u) + var(--size-24u));
+`;
 
 export const SocialManagementSection = () => {
     const { user, disconnectSocialConnection, connectSocialAccount } = useUser();
@@ -57,11 +97,11 @@ export const SocialManagementSection = () => {
 
     return (
         <>
-            <div style={{ marginBottom: "24px" }}>
+            <div style={{ marginBottom: "var(--space-12u)" }}>
                 <h3
                     style={{
-                        fontSize: "16px",
-                        margin: "0 0 6px 0",
+                        fontSize: "var(--font-size-xl)",
+                        margin: "0 0 var(--space-3u) 0",
                         letterSpacing: "-0.01em",
                         color: "var(--color-foreground)",
                     }}
@@ -70,7 +110,7 @@ export const SocialManagementSection = () => {
                 </h3>
                 <p
                     style={{
-                        fontSize: "13px",
+                        fontSize: "var(--font-size-md)",
                         margin: 0,
                         lineHeight: "1.5",
                         color: "var(--color-muted)",
@@ -103,72 +143,52 @@ export const SocialManagementSection = () => {
                             <ConnectionItemRow>
                                 <ConnectionLeft>
                                     <IconWrapper>{providerInfo.icon}</IconWrapper>
-                                    <div
-                                        style={{
-                                            fontSize: "14px",
-                                            fontWeight: 500,
-                                        }}
-                                    >
-                                        {providerInfo.label}
-                                    </div>
-                                    {connectedAccounts.map((account) => (
-                                        <div
-                                            key={account.id}
-                                            style={{
-                                                display: "flex",
-                                                alignItems: "center",
-                                                gap: "6px",
-                                                background: "var(--color-input-background)",
-                                                border: "1px solid var(--color-border)",
-                                                borderRadius: "6px",
-                                                padding: "4px 8px",
-                                                fontSize: "13px",
-                                                color: "var(--color-muted)",
-                                            }}
-                                        >
-                                            <span>{account.email_address}</span>
-                                            <IconButton
-                                                onClick={async () => {
-                                                    await disconnectSocialConnection(
-                                                        account.id.toString(),
-                                                    );
-                                                    user.refetch();
-                                                }}
-                                                style={{ padding: "2px" }}
-                                            >
-                                                <X size={14} />
-                                            </IconButton>
-                                        </div>
-                                    ))}
+                                    <ProviderInfo>
+                                        <ProviderName>{providerInfo.label}</ProviderName>
+                                        {connectedAccounts.length > 0 && (
+                                            <ConnectedAccountsRow>
+                                                {connectedAccounts.map((account) => (
+                                                    <ConnectedAccountChip key={account.id}>
+                                                        <ChipText>{account.email_address}</ChipText>
+                                                        <IconButton
+                                                            onClick={async () => {
+                                                                await disconnectSocialConnection(
+                                                                    account.id.toString(),
+                                                                );
+                                                                user.refetch();
+                                                            }}
+                                                            style={{ padding: "var(--space-1u)" }}
+                                                        >
+                                                            <X size={14} />
+                                                        </IconButton>
+                                                    </ConnectedAccountChip>
+                                                ))}
+                                            </ConnectedAccountsRow>
+                                        )}
+                                    </ProviderInfo>
                                 </ConnectionLeft>
 
                                 <ConnectionRight>
                                     {connectedAccounts.length > 0 ? (
                                         <Button
+                                            $size="sm"
                                             onClick={() => {
                                                 connectSocialAccount({
                                                     provider: provider.provider,
                                                     redirectUri: window.location.href,
                                                 });
-                                            }}
-                                            style={{
-                                                padding: "6px 24px",
-                                                fontSize: "13px",
                                             }}
                                         >
                                             Add
                                         </Button>
                                     ) : (
                                         <Button
+                                            $size="sm"
                                             onClick={() => {
                                                 connectSocialAccount({
                                                     provider: provider.provider,
                                                     redirectUri: window.location.href,
                                                 });
-                                            }}
-                                            style={{
-                                                padding: "6px 14px",
-                                                fontSize: "13px",
                                             }}
                                         >
                                             Connect
@@ -180,7 +200,7 @@ export const SocialManagementSection = () => {
                             {index < enabledProviders.length - 1 && (
                                 <div
                                     style={{
-                                        height: "1px",
+                                        height: "var(--border-width-thin)",
                                         background: "var(--color-border)",
                                     }}
                                 />

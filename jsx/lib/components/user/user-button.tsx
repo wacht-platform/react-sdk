@@ -9,512 +9,608 @@ import { useDialog } from "../utility/use-dialog";
 import { usePopoverPosition } from "@/hooks/use-popover-position";
 
 const Container = styled.div`
-  position: relative;
+    position: relative;
 `;
 
 const AccountButton = styled.button`
-  display: flex;
-  align-items: center;
-  gap: 12px;
-  border: none;
-  background: transparent;
-  cursor: pointer;
-  border-radius: 30px;
-  transition: background-color 0.2s ease;
+    display: flex;
+    align-items: center;
+    gap: var(--space-3u);
+    border: none;
+    background: transparent;
+    cursor: pointer;
+    border-radius: var(--radius-full);
+    padding: var(--space-1u);
+    transition: background-color 0.2s ease;
+
+    &:hover {
+        background: var(--color-accent);
+    }
 `;
 
 const AvatarContainer = styled.div`
-  position: relative;
+    position: relative;
 `;
 
 const Avatar = styled.div`
-  width: 36px;
-  height: 36px;
-  border-radius: 50%;
-  overflow: hidden;
-  background: var(--color-background-hover);
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  font-size: 14px;
-  font-weight: 400;
-  color: var(--color-secondary-text);
-  border: 1px solid var(--color-border);
+    width: calc(var(--size-12u) + var(--space-4u));
+    height: calc(var(--size-12u) + var(--space-4u));
+    border-radius: 50%;
+    overflow: hidden;
+    background: var(--color-background-hover);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: var(--font-size-md);
+    font-weight: 400;
+    color: var(--color-secondary-text);
+    border: var(--border-width-thin) solid var(--color-border);
 
-  img {
-    width: 100%;
-    height: 100%;
-    object-fit: cover;
-  }
+    img {
+        width: 100%;
+        height: 100%;
+        object-fit: cover;
+    }
 `;
 
 const UserName = styled.div`
-  font-size: 14px;
-  font-weight: 400;
-  color: var(--color-foreground);
+    font-size: var(--font-size-md);
+    font-weight: 400;
+    color: var(--color-foreground);
 `;
 
 const AccountName = styled.span`
-  font-size: 14px;
-  font-weight: 400;
-  color: var(--color-foreground);
+    font-size: var(--font-size-md);
+    font-weight: 400;
+    color: var(--color-foreground);
 `;
 
 const AccountEmail = styled.span`
-  font-size: 12px;
-  color: var(--color-secondary-text);
+    font-size: var(--font-size-sm);
+    color: var(--color-secondary-text);
 `;
 
 // Dropdown styled components
 const DropdownContainer = styled.div<{
-  $position?: { top?: number; bottom?: number; left?: number; right?: number };
-  $isOpen: boolean;
-  $maxHeight?: number;
+    $position?: {
+        top?: number;
+        bottom?: number;
+        left?: number;
+        right?: number;
+    };
+    $isOpen: boolean;
+    $maxHeight?: number;
 }>`
-  position: fixed;
+    position: fixed;
+    ${(props) =>
+        props.$position?.top !== undefined
+            ? `top: ${props.$position.top}px;`
+            : ""}
+    ${(props) =>
+        props.$position?.bottom !== undefined
+            ? `bottom: ${props.$position.bottom}px;`
+            : ""}
   ${(props) =>
-    props.$position?.top !== undefined ? `top: ${props.$position.top}px;` : ""}
+        props.$position?.left !== undefined
+            ? `left: ${props.$position.left}px;`
+            : ""}
   ${(props) =>
-    props.$position?.bottom !== undefined
-      ? `bottom: ${props.$position.bottom}px;`
-      : ""}
-  ${(props) =>
-    props.$position?.left !== undefined
-      ? `left: ${props.$position.left}px;`
-      : ""}
-  ${(props) =>
-    props.$position?.right !== undefined
-      ? `right: ${props.$position.right}px;`
-      : ""}
+        props.$position?.right !== undefined
+            ? `right: ${props.$position.right}px;`
+            : ""}
   visibility: ${(props) =>
-    props.$position && props.$isOpen ? "visible" : "hidden"};
-  opacity: ${(props) => (props.$isOpen && props.$position ? 1 : 0)};
-  transition:
-    opacity 0.15s ease,
-    visibility 0s linear ${(props) => (props.$isOpen ? "0s" : "0.15s")};
-  border-radius: var(--radius-md);
-  border: 1px solid var(--color-border);
-  background: var(--color-background);
-  box-shadow: 0 4px 12px var(--color-shadow);
-  z-index: 99999;
-  overflow: hidden;
-  min-width: 380px;
-  max-width: calc(100vw - 24px);
-  max-height: ${(props) =>
-    props.$maxHeight ? `${props.$maxHeight}px` : "calc(100vh - 48px)"};
-  overflow-y: auto;
+        props.$position && props.$isOpen ? "visible" : "hidden"};
+    opacity: ${(props) => (props.$isOpen && props.$position ? 1 : 0)};
+    transition:
+        opacity 0.15s ease,
+        visibility 0s linear ${(props) => (props.$isOpen ? "0s" : "0.15s")};
+    border-radius: var(--radius-md);
+    border: var(--border-width-thin) solid var(--color-border);
+    background: var(--color-background);
+    box-shadow: var(--shadow-md);
+    z-index: 99999;
+    overflow: hidden;
+    min-width: calc(calc(var(--size-50u) * 3) + var(--size-40u));
+    max-width: calc(100vw - var(--space-12u));
+    max-height: ${(props) =>
+        props.$maxHeight ? `${props.$maxHeight}px` : "calc(100vh - 48px)"};
+    overflow-y: auto;
 `;
 
 const AccountSection = styled.div<{
-  $isClickable?: boolean;
+    $isClickable?: boolean;
 }>`
-  padding: 12px;
-  cursor: ${(props) => (props.$isClickable ? "pointer" : "default")};
-  transition: background-color 0.2s ease;
+    padding: var(--space-6u);
+    cursor: ${(props) => (props.$isClickable ? "pointer" : "default")};
+    transition: background-color 0.2s ease;
 
-  &:hover {
-    background: ${(props) =>
-    props.$isClickable ? "var(--color-background-hover)" : "transparent"};
-  }
+    &:hover {
+        background: ${(props) =>
+            props.$isClickable
+                ? "var(--color-background-hover)"
+                : "transparent"};
+    }
 `;
 
 const AccountHeader = styled.div`
-  display: flex;
-  align-items: center;
-  gap: 12px;
+    display: flex;
+    align-items: center;
+    gap: var(--space-6u);
 `;
 
 const AccountDetails = styled.div`
-  display: flex;
-  flex: 1;
-  flex-direction: column;
+    display: flex;
+    flex: 1;
+    flex-direction: column;
 `;
 
 const NameRow = styled.div`
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
 `;
 
 const LargerAvatar = styled(Avatar)`
-  width: 40px;
-  height: 40px;
+    width: var(--size-20u);
+    height: var(--size-20u);
 `;
 
 const ActionRow = styled.div`
-  display: flex;
-  margin-top: 12px;
-  gap: 8px;
+    display: flex;
+    margin-top: var(--space-6u);
+    gap: var(--space-4u);
 `;
 
 const ActionLink = styled.button<{ $destructive?: boolean }>`
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  gap: 6px;
-  background: var(--color-background-hover);
-  border: none;
-  border-radius: var(--radius-sm);
-  padding: 6px;
-  font-size: 12px;
-  color: ${(props) =>
-    props.$destructive ? "var(--color-error)" : "var(--color-secondary-text)"};
-  cursor: pointer;
-  text-align: center;
-  flex: 1;
-
-  &:hover {
-    background: ${(props) =>
-    props.$destructive
-      ? "var(--color-error-background)"
-      : "var(--color-input-background)"};
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: var(--space-3u);
+    background: var(--color-background-hover);
+    border: none;
+    border-radius: var(--radius-2xs);
+    padding: var(--space-3u);
+    font-size: var(--font-size-sm);
     color: ${(props) =>
-    props.$destructive ? "var(--color-error)" : "var(--color-foreground)"};
-  }
+        props.$destructive
+            ? "var(--color-error)"
+            : "var(--color-secondary-text)"};
+    cursor: pointer;
+    text-align: center;
+    flex: 1;
 
-  svg {
-    width: 14px;
-    height: 14px;
-  }
+    &:hover {
+        background: ${(props) =>
+            props.$destructive
+                ? "var(--color-error-background)"
+                : "var(--color-input-background)"};
+        color: ${(props) =>
+            props.$destructive
+                ? "var(--color-error)"
+                : "var(--color-foreground)"};
+    }
+
+    svg {
+        width: var(--space-7u);
+        height: var(--space-7u);
+    }
 `;
 
 const FooterSection = styled.div`
-  background: var(--color-background-hover);
-  padding: 8px 12px;
+    background: var(--color-background-hover);
+    padding: var(--space-4u) var(--space-6u);
 `;
 
 const FooterButton = styled.button`
-  display: flex;
-  width: 100%;
-  align-items: center;
-  gap: 8px;
-  background: transparent;
-  border: none;
-  padding: 6px 8px;
-  font-size: 13px;
-  color: var(--color-secondary-text);
-  cursor: pointer;
-  text-align: left;
+    display: flex;
+    width: 100%;
+    align-items: center;
+    gap: var(--space-4u);
+    background: transparent;
+    border: none;
+    padding: var(--space-3u) var(--space-4u);
+    font-size: var(--font-size-md);
+    color: var(--color-secondary-text);
+    cursor: pointer;
+    text-align: left;
 
-  &:hover {
-    color: var(--color-foreground);
-  }
+    &:hover {
+        color: var(--color-foreground);
+    }
 
-  svg {
-    width: 14px;
-    height: 14px;
-  }
+    svg {
+        width: var(--space-7u);
+        height: var(--space-7u);
+    }
 `;
 
 interface UserButtonProps {
-  showName?: boolean;
+    showName?: boolean;
 }
 
 export const UserButton: React.FC<UserButtonProps> = ({
-  showName = true,
+    showName = true,
 }): JSX.Element => {
-  const [isOpen, setIsOpen] = useState(false);
-  const buttonRef = useRef<HTMLButtonElement>(null);
-  const dropdownRef = useRef<HTMLDivElement>(null);
+    const [isOpen, setIsOpen] = useState(false);
+    const buttonRef = useRef<HTMLButtonElement>(null);
+    const dropdownRef = useRef<HTMLDivElement>(null);
 
-  const dropdownPosition = usePopoverPosition({
-    triggerRef: buttonRef,
-    isOpen,
-    minWidth: 380,
-  });
-  const manageAccountDialog = useDialog(false);
-  const { session, signOut, switchSignIn, refetch } =
-    useSession();
-  const { navigateToSignIn } = useNavigation();
-  const { deployment } = useDeployment();
+    const dropdownPosition = usePopoverPosition({
+        triggerRef: buttonRef,
+        isOpen,
+        minWidth: 380,
+    });
+    const manageAccountDialog = useDialog(false);
+    const { session, signOut, switchSignIn, refetch } = useSession();
+    const { navigateToSignIn } = useNavigation();
+    const { deployment } = useDeployment();
 
-  const selectedAccount = session?.active_signin?.user;
-  const isMultiSessionEnabled =
-    deployment?.auth_settings?.multi_session_support?.enabled ?? false;
-  const hasMultipleAccounts = (session?.signins?.length ?? 0) > 1;
+    const selectedAccount = session?.active_signin?.user;
+    const isMultiSessionEnabled =
+        deployment?.auth_settings?.multi_session_support?.enabled ?? false;
+    const hasMultipleAccounts = (session?.signins?.length ?? 0) > 1;
 
-  useEffect(() => {
-    if (!isOpen) return;
+    useEffect(() => {
+        if (!isOpen) return;
 
-    const timer = setTimeout(() => {
-      const handleClickOutside = (event: MouseEvent) => {
-        const target = event.target as Node;
+        const timer = setTimeout(() => {
+            const handleClickOutside = (event: MouseEvent) => {
+                const target = event.target as Node;
 
-        if (buttonRef.current?.contains(target)) {
-          return;
-        }
+                if (buttonRef.current?.contains(target)) {
+                    return;
+                }
 
-        if (dropdownRef.current?.contains(target)) {
-          return;
-        }
+                if (dropdownRef.current?.contains(target)) {
+                    return;
+                }
 
-        setIsOpen(false);
-      };
+                setIsOpen(false);
+            };
 
-      document.addEventListener("mousedown", handleClickOutside);
+            document.addEventListener("mousedown", handleClickOutside);
 
-      return () => {
-        document.removeEventListener("mousedown", handleClickOutside);
-      };
-    }, 50);
+            return () => {
+                document.removeEventListener("mousedown", handleClickOutside);
+            };
+        }, 50);
 
-    return () => {
-      clearTimeout(timer);
+        return () => {
+            clearTimeout(timer);
+        };
+    }, [isOpen]);
+
+    const toggleDropdown = () => {
+        setIsOpen(!isOpen);
     };
-  }, [isOpen]);
 
+    const getInitials = (name: string) => {
+        return name
+            .split(" ")
+            .filter(Boolean)
+            .map((part) => part[0])
+            .join("")
+            .toUpperCase()
+            .slice(0, 2);
+    };
 
-  const toggleDropdown = () => {
-    setIsOpen(!isOpen);
-  };
+    const handleSignOut = async (signInId: string) => {
+        try {
+            await signOut(signInId);
+            await refetch();
+            setIsOpen(false);
+        } catch (error) {}
+    };
 
-  const getInitials = (name: string) => {
-    return name
-      .split(" ")
-      .map((part) => part[0])
-      .join("")
-      .toUpperCase();
-  };
+    const handleSignOutAll = async () => {
+        try {
+            await signOut();
+            await refetch();
+            setIsOpen(false);
+        } catch (error) {}
+    };
 
-  const handleSignOut = async (signInId: string) => {
-    try {
-      await signOut(signInId);
-      await refetch();
-      setIsOpen(false);
-    } catch (error) { }
-  };
+    const handleSwitchUser = async (signInId: string) => {
+        try {
+            await switchSignIn(signInId);
+            await refetch();
+            setIsOpen(false);
+        } catch (error) {}
+    };
 
-  const handleSignOutAll = async () => {
-    try {
-      await signOut();
-      await refetch();
-      setIsOpen(false);
-    } catch (error) { }
-  };
+    const handleOpenManageAccount = () => {
+        manageAccountDialog.open();
+        setIsOpen(false);
+    };
 
-  const handleSwitchUser = async (signInId: string) => {
-    try {
-      await switchSignIn(signInId);
-      await refetch();
-      setIsOpen(false);
-    } catch (error) { }
-  };
-
-  const handleOpenManageAccount = () => {
-    manageAccountDialog.open();
-    setIsOpen(false);
-  };
-
-  return (
-    <DefaultStylesProvider>
-      <Container>
-        <AccountButton ref={buttonRef} onClick={toggleDropdown}>
-          <AvatarContainer>
-            <Avatar>
-              {selectedAccount?.has_profile_picture ? (
-                <img
-                  src={selectedAccount.profile_picture_url}
-                  alt={selectedAccount.first_name}
-                />
-              ) : (
-                getInitials(
-                  `${selectedAccount?.first_name || ""} ${selectedAccount?.last_name || ""
-                  }`,
-                )
-              )}
-            </Avatar>
-          </AvatarContainer>
-          {showName && (
-            <UserName>
-              {`${selectedAccount?.first_name || ""} ${selectedAccount?.last_name || ""
-                }`}
-            </UserName>
-          )}
-        </AccountButton>
-
-        {typeof window !== "undefined" &&
-          isOpen &&
-          ReactDOM.createPortal(
-            <DefaultStylesProvider>
-              <DropdownContainer
-                ref={dropdownRef}
-                $position={dropdownPosition}
-                $isOpen={isOpen}
-                $maxHeight={dropdownPosition?.maxHeight}
-              >
-                <div>
-                  {isMultiSessionEnabled
-                    ? (() => {
-                      // Sort signins to put active account first
-                      const sortedSignins = [
-                        ...(session?.signins || []),
-                      ].sort((a, b) => {
-                        const aIsActive = a.user.id === selectedAccount?.id;
-                        const bIsActive = b.user.id === selectedAccount?.id;
-                        if (aIsActive && !bIsActive) return -1;
-                        if (!aIsActive && bIsActive) return 1;
-                        return 0;
-                      });
-
-                      return sortedSignins.map(
-                        ({ user: account, id: signInId }, index) => {
-                          const isActive = account.id === selectedAccount?.id;
-                          const isClickable = !isActive;
-
-                          return (
-                            <React.Fragment key={account.id}>
-                              <AccountSection
-                                $isClickable={isClickable}
-                                onClick={
-                                  isClickable
-                                    ? () => handleSwitchUser(signInId)
-                                    : undefined
-                                }
-                              >
-                                <AccountHeader>
-                                  <AvatarContainer>
-                                    <LargerAvatar>
-                                      {account.has_profile_picture ? (
-                                        <img
-                                          src={account.profile_picture_url}
-                                          alt={account.first_name}
-                                        />
-                                      ) : (
-                                        getInitials(
-                                          `${account?.first_name || ""} ${account?.last_name || ""
-                                          }`,
-                                        )
-                                      )}
-                                    </LargerAvatar>
-                                  </AvatarContainer>
-                                  <AccountDetails>
-                                    <NameRow>
-                                      <AccountName>
-                                        {`${account?.first_name || ""} ${account?.last_name || ""
-                                          }`}
-                                      </AccountName>
-                                    </NameRow>
-                                    <AccountEmail>
-                                      {account.primary_email_address.email}
-                                    </AccountEmail>
-                                  </AccountDetails>
-                                </AccountHeader>
-
-                                {isActive && (
-                                  <ActionRow>
-                                    <ActionLink
-                                      onClick={handleOpenManageAccount}
-                                    >
-                                      <Settings />
-                                      Manage account
-                                    </ActionLink>
-                                    <ActionLink
-                                      $destructive
-                                      onClick={() => handleSignOut(signInId)}
-                                    >
-                                      <LogOut />
-                                      Sign out
-                                    </ActionLink>
-                                  </ActionRow>
-                                )}
-                              </AccountSection>
-                              {index === 0 && sortedSignins.length > 1 && (
-                                <div
-                                  style={{
-                                    borderBottom:
-                                      "1px solid var(--color-border)",
-                                    margin: "0",
-                                  }}
-                                />
-                              )}
-                            </React.Fragment>
-                          );
-                        },
-                      );
-                    })()
-                    : selectedAccount && (
-                      <AccountSection $isClickable={false}>
-                        <AccountHeader>
-                          <AvatarContainer>
-                            <LargerAvatar>
-                              {selectedAccount.has_profile_picture ? (
+    return (
+        <DefaultStylesProvider>
+            <Container>
+                <AccountButton ref={buttonRef} onClick={toggleDropdown}>
+                    <AvatarContainer>
+                        <Avatar>
+                            {selectedAccount?.has_profile_picture ? (
                                 <img
-                                  src={selectedAccount.profile_picture_url}
-                                  alt={selectedAccount.first_name}
+                                    src={selectedAccount.profile_picture_url}
+                                    alt={selectedAccount.first_name}
                                 />
-                              ) : (
+                            ) : (
                                 getInitials(
-                                  `${selectedAccount?.first_name || ""} ${selectedAccount?.last_name || ""
-                                  }`,
+                                    `${selectedAccount?.first_name || ""} ${
+                                        selectedAccount?.last_name || ""
+                                    }`,
                                 )
-                              )}
-                            </LargerAvatar>
-                          </AvatarContainer>
-                          <AccountDetails>
-                            <NameRow>
-                              <AccountName>
-                                {`${selectedAccount?.first_name || ""} ${selectedAccount?.last_name || ""
-                                  }`}
-                              </AccountName>
-                            </NameRow>
-                            <AccountEmail>
-                              {selectedAccount.primary_email_address.email}
-                            </AccountEmail>
-                          </AccountDetails>
-                        </AccountHeader>
+                            )}
+                        </Avatar>
+                    </AvatarContainer>
+                    {showName && (
+                        <UserName>
+                            {`${selectedAccount?.first_name || ""} ${
+                                selectedAccount?.last_name || ""
+                            }`}
+                        </UserName>
+                    )}
+                </AccountButton>
 
-                        <ActionRow>
-                          <ActionLink onClick={handleOpenManageAccount}>
-                            <Settings />
-                            Manage account
-                          </ActionLink>
-                          <ActionLink
-                            $destructive
-                            onClick={() =>
-                              handleSignOut(session?.active_signin?.id || "")
-                            }
-                          >
-                            <LogOut />
-                            Sign out
-                          </ActionLink>
-                        </ActionRow>
-                      </AccountSection>
+                {typeof window !== "undefined" &&
+                    isOpen &&
+                    ReactDOM.createPortal(
+                        <DefaultStylesProvider>
+                            <DropdownContainer
+                                ref={dropdownRef}
+                                $position={dropdownPosition}
+                                $isOpen={isOpen}
+                                $maxHeight={dropdownPosition?.maxHeight}
+                            >
+                                <div>
+                                    {isMultiSessionEnabled
+                                        ? (() => {
+                                              // Sort signins to put active account first
+                                              const sortedSignins = [
+                                                  ...(session?.signins || []),
+                                              ].sort((a, b) => {
+                                                  const aIsActive =
+                                                      a.user.id ===
+                                                      selectedAccount?.id;
+                                                  const bIsActive =
+                                                      b.user.id ===
+                                                      selectedAccount?.id;
+                                                  if (aIsActive && !bIsActive)
+                                                      return -1;
+                                                  if (!aIsActive && bIsActive)
+                                                      return 1;
+                                                  return 0;
+                                              });
+
+                                              return sortedSignins.map(
+                                                  (
+                                                      {
+                                                          user: account,
+                                                          id: signInId,
+                                                      },
+                                                      index,
+                                                  ) => {
+                                                      const isActive =
+                                                          account.id ===
+                                                          selectedAccount?.id;
+                                                      const isClickable =
+                                                          !isActive;
+
+                                                      return (
+                                                          <React.Fragment
+                                                              key={account.id}
+                                                          >
+                                                              <AccountSection
+                                                                  $isClickable={
+                                                                      isClickable
+                                                                  }
+                                                                  onClick={
+                                                                      isClickable
+                                                                          ? () =>
+                                                                                handleSwitchUser(
+                                                                                    signInId,
+                                                                                )
+                                                                          : undefined
+                                                                  }
+                                                              >
+                                                                  <AccountHeader>
+                                                                      <AvatarContainer>
+                                                                          <LargerAvatar>
+                                                                              {account.has_profile_picture ? (
+                                                                                  <img
+                                                                                      src={
+                                                                                          account.profile_picture_url
+                                                                                      }
+                                                                                      alt={
+                                                                                          account.first_name
+                                                                                      }
+                                                                                  />
+                                                                              ) : (
+                                                                                  getInitials(
+                                                                                      `${account?.first_name || ""} ${
+                                                                                          account?.last_name ||
+                                                                                          ""
+                                                                                      }`,
+                                                                                  )
+                                                                              )}
+                                                                          </LargerAvatar>
+                                                                      </AvatarContainer>
+                                                                      <AccountDetails>
+                                                                          <NameRow>
+                                                                              <AccountName>
+                                                                                  {`${account?.first_name || ""} ${
+                                                                                      account?.last_name ||
+                                                                                      ""
+                                                                                  }`}
+                                                                              </AccountName>
+                                                                          </NameRow>
+                                                                          <AccountEmail>
+                                                                              {
+                                                                                  account
+                                                                                      .primary_email_address
+                                                                                      .email
+                                                                              }
+                                                                          </AccountEmail>
+                                                                      </AccountDetails>
+                                                                  </AccountHeader>
+
+                                                                  {isActive && (
+                                                                      <ActionRow>
+                                                                          <ActionLink
+                                                                              onClick={
+                                                                                  handleOpenManageAccount
+                                                                              }
+                                                                          >
+                                                                              <Settings />
+                                                                              Manage
+                                                                              account
+                                                                          </ActionLink>
+                                                                          <ActionLink
+                                                                              $destructive
+                                                                              onClick={() =>
+                                                                                  handleSignOut(
+                                                                                      signInId,
+                                                                                  )
+                                                                              }
+                                                                          >
+                                                                              <LogOut />
+                                                                              Sign
+                                                                              out
+                                                                          </ActionLink>
+                                                                      </ActionRow>
+                                                                  )}
+                                                              </AccountSection>
+                                                              {index === 0 &&
+                                                                  sortedSignins.length >
+                                                                      1 && (
+                                                                      <div
+                                                                          style={{
+                                                                              borderBottom:
+                                                                                  "var(--border-width-thin) solid var(--color-border)",
+                                                                              margin: "0",
+                                                                          }}
+                                                                      />
+                                                                  )}
+                                                          </React.Fragment>
+                                                      );
+                                                  },
+                                              );
+                                          })()
+                                        : selectedAccount && (
+                                              <AccountSection
+                                                  $isClickable={false}
+                                              >
+                                                  <AccountHeader>
+                                                      <AvatarContainer>
+                                                          <LargerAvatar>
+                                                              {selectedAccount.has_profile_picture ? (
+                                                                  <img
+                                                                      src={
+                                                                          selectedAccount.profile_picture_url
+                                                                      }
+                                                                      alt={
+                                                                          selectedAccount.first_name
+                                                                      }
+                                                                  />
+                                                              ) : (
+                                                                  getInitials(
+                                                                      `${selectedAccount?.first_name || ""} ${
+                                                                          selectedAccount?.last_name ||
+                                                                          ""
+                                                                      }`,
+                                                                  )
+                                                              )}
+                                                          </LargerAvatar>
+                                                      </AvatarContainer>
+                                                      <AccountDetails>
+                                                          <NameRow>
+                                                              <AccountName>
+                                                                  {`${selectedAccount?.first_name || ""} ${
+                                                                      selectedAccount?.last_name ||
+                                                                      ""
+                                                                  }`}
+                                                              </AccountName>
+                                                          </NameRow>
+                                                          <AccountEmail>
+                                                              {
+                                                                  selectedAccount
+                                                                      .primary_email_address
+                                                                      .email
+                                                              }
+                                                          </AccountEmail>
+                                                      </AccountDetails>
+                                                  </AccountHeader>
+
+                                                  <ActionRow>
+                                                      <ActionLink
+                                                          onClick={
+                                                              handleOpenManageAccount
+                                                          }
+                                                      >
+                                                          <Settings />
+                                                          Manage account
+                                                      </ActionLink>
+                                                      <ActionLink
+                                                          $destructive
+                                                          onClick={() =>
+                                                              handleSignOut(
+                                                                  session
+                                                                      ?.active_signin
+                                                                      ?.id ||
+                                                                      "",
+                                                              )
+                                                          }
+                                                      >
+                                                          <LogOut />
+                                                          Sign out
+                                                      </ActionLink>
+                                                  </ActionRow>
+                                              </AccountSection>
+                                          )}
+
+                                    {isMultiSessionEnabled && (
+                                        <>
+                                            <FooterSection
+                                                style={{
+                                                    borderBottom:
+                                                        "var(--border-width-thin) solid var(--color-border)",
+                                                }}
+                                            >
+                                                <FooterButton
+                                                    onClick={() =>
+                                                        navigateToSignIn()
+                                                    }
+                                                >
+                                                    <Plus />
+                                                    Add new account
+                                                </FooterButton>
+                                            </FooterSection>
+
+                                            {hasMultipleAccounts && (
+                                                <FooterSection>
+                                                    <FooterButton
+                                                        onClick={
+                                                            handleSignOutAll
+                                                        }
+                                                    >
+                                                        <LogOut />
+                                                        Sign out of all accounts
+                                                    </FooterButton>
+                                                </FooterSection>
+                                            )}
+                                        </>
+                                    )}
+                                </div>
+                            </DropdownContainer>
+                        </DefaultStylesProvider>,
+                        document.body,
                     )}
 
-                  {isMultiSessionEnabled && (
-                    <>
-                      <FooterSection
-                        style={{
-                          borderBottom: "1px solid var(--color-border)",
-                        }}
-                      >
-                        <FooterButton onClick={() => navigateToSignIn()}>
-                          <Plus />
-                          Add new account
-                        </FooterButton>
-                      </FooterSection>
-
-                      {hasMultipleAccounts && (
-                        <FooterSection>
-                          <FooterButton onClick={handleSignOutAll}>
-                            <LogOut />
-                            Sign out of all accounts
-                          </FooterButton>
-                        </FooterSection>
-                      )}
-                    </>
-                  )}
-                </div>
-              </DropdownContainer>
-            </DefaultStylesProvider>,
-            document.body,
-          )}
-
-        <ManageAccountDialog
-          isOpen={manageAccountDialog.isOpen}
-          onClose={manageAccountDialog.close}
-        />
-      </Container>
-    </DefaultStylesProvider>
-  );
+                <ManageAccountDialog
+                    isOpen={manageAccountDialog.isOpen}
+                    onClose={manageAccountDialog.close}
+                />
+            </Container>
+        </DefaultStylesProvider>
+    );
 };

@@ -4,47 +4,55 @@ import { OtherAuthOptions } from "@/components/auth/other-auth-options";
 import { AuthFormImage } from "./auth-image";
 
 const Container = styled.div`
-  max-width: 360px;
-  width: 360px;
-  padding: var(--space-2xl);
+  max-width: calc(var(--size-50u) * 3 + var(--space-10u) * 3);
+  width: calc(var(--size-50u) * 3 + var(--space-10u) * 3);
+  padding: var(--space-12u);
   background: var(--color-background);
   border-radius: var(--radius-lg);
-  box-shadow: 0 4px 12px var(--color-shadow);
+  box-shadow: var(--shadow-md);
 `;
 
 const Header = styled.div`
   text-align: center;
-  margin-bottom: var(--space-lg);
+  margin-bottom: var(--space-8u);
   position: relative;
 `;
 
 const Title = styled.h1`
-  font-size: var(--font-lg);
+  font-size: var(--font-size-2xl);
   font-weight: 400;
   color: var(--color-foreground);
-  margin-bottom: var(--space-xs);
+  margin-bottom: var(--space-2u);
   margin-top: 0;
 `;
 
 const Subtitle = styled.p`
   color: var(--color-secondary-text);
-  font-size: var(--font-xs);
+  font-size: var(--font-size-md);
   margin: 0;
 `;
 
 const Footer = styled.div`
   text-align: center;
-  margin-top: var(--space-lg);
+  margin-top: var(--space-8u);
 `;
 
 const FooterText = styled.p`
-  font-size: var(--font-xs);
+  font-size: var(--font-size-md);
   color: var(--color-muted);
 `;
 
 const Link = styled.a`
   color: var(--color-primary);
   text-decoration: none;
+`;
+
+const BackFooterText = styled(FooterText)`
+  margin-top: var(--space-4u);
+`;
+
+const ClickableLink = styled(Link)`
+  cursor: pointer;
 `;
 
 interface OtherSignInOptionsProps {
@@ -65,11 +73,11 @@ export function OtherSignInOptions({ onBack }: OtherSignInOptionsProps) {
           <FooterText>
             Don't have an account? <Link href="/signup">Sign up</Link>
           </FooterText>
-          <FooterText style={{ marginTop: "var(--space-sm)" }}>
-            <Link onClick={onBack} style={{ cursor: "pointer" }}>
+          <BackFooterText>
+            <ClickableLink onClick={onBack}>
               Back to login
-            </Link>
-          </FooterText>
+            </ClickableLink>
+          </BackFooterText>
         </Footer>
       </Container>
     </DefaultStylesProvider>

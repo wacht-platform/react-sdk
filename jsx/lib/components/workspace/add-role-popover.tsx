@@ -9,16 +9,16 @@ import { ComboBoxMulti } from "@/components/utility/combo-box";
 
 const PopoverContainer = styled.div`
   position: fixed;
-  width: 360px;
-  max-width: calc(100vw - 48px);
-  background: var(--color-background);
-  border: 1px solid var(--color-border);
+  width: calc(calc(var(--size-50u) * 4) - var(--space-20u));
+  max-width: calc(100vw - var(--space-24u));
+  background: var(--color-popover);
+  border: var(--border-width-thin) solid var(--color-border);
   border-radius: var(--radius-md);
-  box-shadow: 0 4px 12px var(--color-shadow);
+  box-shadow: var(--shadow-md);
   z-index: 1001;
   
   @media (max-width: 600px) {
-    width: calc(100vw - 48px);
+    width: calc(100vw - var(--space-24u));
   }
 `;
 
@@ -26,45 +26,45 @@ const Header = styled.div`
   display: flex;
   justify-content: space-between;
   align-items: center;
-  padding: var(--space-sm) var(--space-md);
-  border-bottom: 1px solid var(--color-border);
+  padding: var(--space-4u) var(--space-6u);
+  border-bottom: var(--border-width-thin) solid var(--color-border);
 `;
 
 const Title = styled.h3`
   margin: 0;
-  font-size: var(--font-xs);
+  font-size: var(--font-size-md);
   font-weight: 400;
-  color: var(--color-foreground);
+  color: var(--color-popover-foreground);
 `;
 
 const Content = styled.div`
-  padding: var(--space-md);
+  padding: var(--space-6u);
 `;
 
 const ButtonGroup = styled.div`
   display: flex;
-  gap: var(--space-xs);
+  gap: var(--space-2u);
   justify-content: flex-end;
-  padding: var(--space-sm) var(--space-md);
-  border-top: 1px solid var(--color-border);
-  background: var(--color-background-alt);
+  padding: var(--space-4u) var(--space-6u);
+  border-top: var(--border-width-thin) solid var(--color-border);
+  background: var(--color-secondary);
 `;
 
 const CloseButton = styled.button`
   background: none;
   border: none;
-  padding: var(--space-xs);
+  padding: var(--space-2u);
   cursor: pointer;
   color: var(--color-muted);
   transition: all 0.15s ease;
-  border-radius: var(--radius-sm);
+  border-radius: var(--radius-2xs);
   display: flex;
   align-items: center;
   justify-content: center;
   
   &:hover {
-    color: var(--color-foreground);
-    background: var(--color-input-background);
+    color: var(--color-accent-foreground);
+    background: var(--color-accent);
   }
 `;
 
@@ -237,7 +237,7 @@ export const AddWorkspaceRolePopover = ({
       </Header>
 
       <Content>
-        <div style={{ display: "flex", flexDirection: "column", gap: "var(--space-sm)" }}>
+        <div style={{ display: "flex", flexDirection: "column", gap: "var(--space-4u)" }}>
           <FormGroup>
             <Label>Role Name</Label>
             <Input

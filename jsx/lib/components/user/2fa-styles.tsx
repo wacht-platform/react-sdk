@@ -5,11 +5,11 @@ export const TwoFactorCard = styled.button`
   display: flex;
   align-items: center;
   width: 100%;
-  padding: 20px;
+  padding: var(--space-10u);
   background: var(--color-background);
-  border: 1px solid var(--color-border);
-  border-radius: 12px;
-  margin-bottom: 16px;
+  border: var(--border-width-thin) solid var(--color-border);
+  border-radius: var(--radius-lg);
+  margin-bottom: var(--space-8u);
   cursor: pointer;
   transition: all 0.2s ease;
   text-align: left;
@@ -22,7 +22,7 @@ export const TwoFactorCard = styled.button`
     top: 0;
     left: 0;
     right: 0;
-    height: 3px;
+    height: var(--space-1u);
     background: linear-gradient(90deg, var(--color-primary), var(--color-primary-hover));
     transform: translateX(-100%);
     transition: transform 0.3s ease;
@@ -31,8 +31,8 @@ export const TwoFactorCard = styled.button`
   &:hover {
     background: var(--color-background-hover);
     border-color: var(--color-primary);
-    transform: translateY(-2px);
-    box-shadow: 0 4px 12px var(--color-shadow);
+    transform: translateY(calc(var(--space-1u) * -1));
+    box-shadow: var(--shadow-md);
     
     &::before {
       transform: translateX(0);
@@ -45,24 +45,24 @@ export const TwoFactorCard = styled.button`
 `;
 
 export const TwoFactorIcon = styled.div<{ $active?: boolean }>`
-  width: 48px;
-  height: 48px;
-  border-radius: 12px;
+  width: var(--size-24u);
+  height: var(--size-24u);
+  border-radius: var(--radius-lg);
   background: ${props => props.$active
-    ? 'linear-gradient(135deg, var(--color-success), var(--color-success-hover))'
+    ? 'linear-gradient(135deg, var(--color-success), var(--color-success))'
     : 'linear-gradient(135deg, var(--color-background-hover), var(--color-background))'};
   display: flex;
   align-items: center;
   justify-content: center;
-  margin-right: 16px;
+  margin-right: var(--space-8u);
   box-shadow: ${props => props.$active
-    ? '0 2px 8px var(--color-success-shadow)'
-    : '0 2px 4px var(--color-shadow-light)'};
+    ? 'var(--shadow-success)'
+    : 'var(--shadow-sm)'};
   
   svg {
-    width: 24px;
-    height: 24px;
-    color: ${props => props.$active ? 'white' : 'var(--color-foreground)'};
+    width: var(--size-12u);
+    height: var(--size-12u);
+    color: ${props => props.$active ? 'var(--color-foreground-inverse)' : 'var(--color-foreground)'};
   }
 `;
 
@@ -71,26 +71,26 @@ export const TwoFactorContent = styled.div`
 `;
 
 export const TwoFactorTitle = styled.div`
-  font-size: 16px;
+  font-size: var(--font-size-xl);
   font-weight: 600;
   color: var(--color-foreground);
-  margin-bottom: 4px;
+  margin-bottom: var(--space-2u);
   display: flex;
   align-items: center;
-  gap: 8px;
+  gap: var(--space-4u);
 `;
 
 export const TwoFactorDescription = styled.div`
-  font-size: 14px;
+  font-size: var(--font-size-lg);
   color: var(--color-secondary-text);
   line-height: 1.5;
 `;
 
 export const TwoFactorStatus = styled.span<{ $active?: boolean }>`
-  font-size: 12px;
+  font-size: var(--font-size-sm);
   font-weight: 600;
-  padding: 2px 8px;
-  border-radius: 12px;
+  padding: var(--space-1u) var(--space-4u);
+  border-radius: var(--radius-full);
   background: ${props => props.$active
     ? 'var(--color-success-background)'
     : 'var(--color-background-hover)'};
@@ -98,7 +98,7 @@ export const TwoFactorStatus = styled.span<{ $active?: boolean }>`
     ? 'var(--color-success)'
     : 'var(--color-secondary-text)'};
   text-transform: uppercase;
-  letter-spacing: 0.5px;
+  letter-spacing: var(--letter-spacing-tight);
 `;
 
 // Clean QR code display
@@ -106,22 +106,22 @@ export const QRCodeContainer = styled.div`
   display: flex;
   flex-direction: column;
   align-items: center;
-  margin: 32px 0;
+  margin: var(--space-16u) 0;
 `;
 
 export const QRCodeWrapper = styled.div`
   background: var(--color-background);
-  padding: 24px;
-  border-radius: 16px;
-  box-shadow: 0 4px 16px var(--color-shadow);
+  padding: var(--space-12u);
+  border-radius: var(--radius-xl);
+  box-shadow: var(--shadow-lg);
   position: relative;
   
   &::before {
     content: '';
     position: absolute;
     inset: -2px;
-    border-radius: 16px;
-    padding: 2px;
+    border-radius: var(--radius-xl);
+    padding: var(--space-1u);
     background: linear-gradient(45deg, var(--color-primary), var(--color-primary-hover));
     -webkit-mask: linear-gradient(#fff 0 0) content-box, linear-gradient(#fff 0 0);
     -webkit-mask-composite: xor;
@@ -132,10 +132,10 @@ export const QRCodeWrapper = styled.div`
 // Modern backup codes grid
 export const BackupCodesContainer = styled.div`
   background: linear-gradient(135deg, var(--color-background-hover), var(--color-background));
-  border: 1px solid var(--color-border);
-  border-radius: 12px;
-  padding: 24px;
-  margin-top: 24px;
+  border: var(--border-width-thin) solid var(--color-border);
+  border-radius: var(--radius-lg);
+  padding: var(--space-12u);
+  margin-top: var(--space-12u);
   position: relative;
   overflow: hidden;
   
@@ -156,11 +156,11 @@ export const BackupCodesHeader = styled.div`
   display: flex;
   justify-content: space-between;
   align-items: center;
-  margin-bottom: 16px;
+  margin-bottom: var(--space-8u);
 `;
 
 export const BackupCodesTitle = styled.h4`
-  font-size: 16px;
+  font-size: var(--font-size-xl);
   font-weight: 600;
   color: var(--color-foreground);
   margin: 0;
@@ -168,13 +168,13 @@ export const BackupCodesTitle = styled.h4`
 
 export const BackupCodesActions = styled.div`
   display: flex;
-  gap: 8px;
+  gap: var(--space-4u);
 `;
 
 export const BackupCodeGrid = styled.div`
   display: grid;
-  grid-template-columns: repeat(auto-fill, minmax(120px, 1fr));
-  gap: 8px;
+  grid-template-columns: repeat(auto-fill, minmax(calc(var(--space-10u) * 6), 1fr));
+  gap: var(--space-4u);
 `;
 
 // Alias for compatibility
@@ -184,13 +184,13 @@ export const BackupCodeItem = styled.button<{ $used?: boolean }>`
   background: ${props => props.$used
     ? 'var(--color-background-hover)'
     : 'var(--color-background)'};
-  border: 1px solid ${props => props.$used
+  border: var(--border-width-thin) solid ${props => props.$used
     ? 'var(--color-border)'
     : 'var(--color-border)'};
-  border-radius: 8px;
-  padding: 12px 16px;
+  border-radius: var(--radius-md);
+  padding: var(--space-6u) var(--space-8u);
   font-family: 'SF Mono', 'Monaco', 'Inconsolata', 'Fira Code', monospace;
-  font-size: 14px;
+  font-size: var(--font-size-lg);
   font-weight: 600;
   color: ${props => props.$used
     ? 'var(--color-secondary-text)'
@@ -205,8 +205,8 @@ export const BackupCodeItem = styled.button<{ $used?: boolean }>`
     ${props => !props.$used && `
       border-color: var(--color-primary);
       background: var(--color-primary-background);
-      transform: translateY(-1px);
-      box-shadow: 0 2px 4px var(--color-shadow-light);
+      transform: translateY(calc(var(--space-1u) * -0.5));
+      box-shadow: var(--shadow-sm);
     `}
   }
   
@@ -224,24 +224,24 @@ export const Message = styled.div<{ $type?: 'success' | 'error' | 'info' }>`
       default: return 'var(--color-background-hover)';
     }
   }};
-  border: 1px solid ${props => {
+  border: var(--border-width-thin) solid ${props => {
     switch (props.$type) {
       case 'success': return 'var(--color-success-border)';
       case 'error': return 'var(--color-error-border)';
       default: return 'var(--color-border)';
     }
   }};
-  border-radius: 6px;
-  padding: 12px 16px;
-  margin-bottom: 16px;
-  font-size: 14px;
+  border-radius: var(--radius-xs);
+  padding: var(--space-6u) var(--space-8u);
+  margin-bottom: var(--space-8u);
+  font-size: var(--font-size-lg);
   display: flex;
   align-items: flex-start;
-  gap: 12px;
+  gap: var(--space-6u);
   
   svg {
     flex-shrink: 0;
-    margin-top: 2px;
+    margin-top: var(--space-1u);
     color: ${props => {
     switch (props.$type) {
       case 'success': return 'var(--color-success)';
@@ -255,15 +255,15 @@ export const Message = styled.div<{ $type?: 'success' | 'error' | 'info' }>`
 // Empty state
 export const EmptyState = styled.div`
   text-align: center;
-  padding: 48px 24px;
+  padding: var(--space-24u) var(--space-12u);
 `;
 
 export const EmptyStateIcon = styled.div`
-  width: 72px;
-  height: 72px;
-  margin: 0 auto 20px;
+  width: var(--size-36u);
+  height: var(--size-36u);
+  margin: 0 auto var(--space-10u);
   background: linear-gradient(135deg, var(--color-background-hover), var(--color-background));
-  border: 2px solid var(--color-border);
+  border: var(--border-width-regular) solid var(--color-border);
   border-radius: 50%;
   display: flex;
   align-items: center;
@@ -273,82 +273,82 @@ export const EmptyStateIcon = styled.div`
   &::after {
     content: '';
     position: absolute;
-    inset: -8px;
+    inset: calc(var(--space-4u) * -1);
     border-radius: 50%;
-    border: 1px dashed var(--color-border);
+    border: var(--border-width-thin) dashed var(--color-border);
     opacity: 0.5;
   }
   
   svg {
-    width: 36px;
-    height: 36px;
+    width: var(--size-18u);
+    height: var(--size-18u);
     color: var(--color-secondary-text);
   }
 `;
 
 export const EmptyStateTitle = styled.h3`
-  font-size: 18px;
+  font-size: var(--font-size-2xl);
   font-weight: 600;
   color: var(--color-foreground);
-  margin: 0 0 8px 0;
+  margin: 0 0 var(--space-4u) 0;
 `;
 
 export const EmptyStateDescription = styled.p`
-  font-size: 14px;
+  font-size: var(--font-size-lg);
   color: var(--color-secondary-text);
-  margin: 0 0 24px 0;
-  max-width: 320px;
+  margin: 0 0 var(--space-12u) 0;
+  max-width: calc(var(--size-50u) * 3 + var(--space-10u));
   margin-left: auto;
   margin-right: auto;
 `;
 
 // Setup flow
 export const SetupContainer = styled.div`
-  max-width: 480px;
+  max-width: calc(var(--size-50u) * 4 + var(--space-10u) * 4);
   margin: 0 auto;
 `;
 
 export const SetupStep = styled.div`
   text-align: center;
-  padding: 24px;
+  padding: var(--space-12u);
 `;
 
 export const SetupStepTitle = styled.h3`
-  font-size: 20px;
+  font-size: var(--font-size-3xl);
   font-weight: 600;
   color: var(--color-foreground);
-  margin: 0 0 8px 0;
+  margin: 0 0 var(--space-4u) 0;
 `;
 
 export const SetupStepDescription = styled.p`
-  font-size: 14px;
+  font-size: var(--font-size-lg);
   color: var(--color-secondary-text);
-  margin: 0 0 32px 0;
+  margin: 0 0 var(--space-16u) 0;
 `;
 
 export const CodeInputContainer = styled.div`
-  max-width: 300px;
+  max-width: calc(var(--size-50u) * 3);
   margin: 0 auto;
 `;
 
 export const CodeInputLabel = styled.label`
   display: block;
-  font-size: 13px;
+  font-size: var(--font-size-md);
   font-weight: 400;
   color: var(--color-secondary-text);
-  margin-bottom: 8px;
+  margin-bottom: var(--space-4u);
   text-align: left;
 `;
 
 export const CodeInput = styled.input`
   width: 100%;
-  padding: 12px 16px;
-  font-size: 20px;
+  padding: var(--space-6u) var(--space-8u);
+  font-size: var(--font-size-3xl);
   font-family: 'SF Mono', 'Monaco', 'Inconsolata', 'Fira Code', monospace;
   text-align: center;
-  letter-spacing: 8px;
-  border: 1px solid var(--color-border);
-  border-radius: 6px;
+  letter-spacing: var(--space-4u);
+  border: var(--border-width-thin) solid var(--color-border);
+  border-radius: var(--radius-xs);
   background: var(--color-background);
   color: var(--color-foreground);
   transition: all 0.15s ease;
@@ -356,7 +356,7 @@ export const CodeInput = styled.input`
   &:focus {
     outline: none;
     border-color: var(--color-primary);
-    box-shadow: 0 0 0 3px var(--color-primary-background);
+    box-shadow: var(--ring-primary);
   }
   
   &:disabled {
@@ -367,21 +367,21 @@ export const CodeInput = styled.input`
 
 export const ButtonGroup = styled.div`
   display: flex;
-  gap: 12px;
+  gap: var(--space-6u);
   justify-content: center;
-  margin-top: 24px;
+  margin-top: var(--space-12u);
 `;
 
 // Active authenticator display
 export const ActiveAuthenticator = styled.div`
   background: linear-gradient(135deg, var(--color-success-background), var(--color-success-background-light));
-  border: 1px solid var(--color-success-border);
-  border-radius: 12px;
-  padding: 20px;
+  border: var(--border-width-thin) solid var(--color-success-border);
+  border-radius: var(--radius-lg);
+  padding: var(--space-10u);
   display: flex;
   align-items: center;
   justify-content: space-between;
-  margin-bottom: 24px;
+  margin-bottom: var(--space-12u);
   position: relative;
   overflow: hidden;
   
@@ -391,42 +391,42 @@ export const ActiveAuthenticator = styled.div`
     top: 0;
     left: 0;
     right: 0;
-    height: 3px;
-    background: linear-gradient(90deg, var(--color-success), var(--color-success-hover));
+    height: var(--space-1u);
+    background: linear-gradient(90deg, var(--color-success), var(--color-success));
   }
 `;
 
 export const ActiveAuthenticatorInfo = styled.div`
   display: flex;
   align-items: center;
-  gap: 12px;
+  gap: var(--space-6u);
 `;
 
 export const ActiveAuthenticatorIcon = styled.div`
-  width: 40px;
-  height: 40px;
+  width: var(--size-20u);
+  height: var(--size-20u);
   background: var(--color-success);
-  border-radius: 8px;
+  border-radius: var(--radius-md);
   display: flex;
   align-items: center;
   justify-content: center;
   
   svg {
-    color: white;
+    color: var(--color-foreground-inverse);
   }
 `;
 
 export const ActiveAuthenticatorContent = styled.div``;
 
 export const ActiveAuthenticatorTitle = styled.div`
-  font-size: 14px;
+  font-size: var(--font-size-lg);
   font-weight: 400;
   color: var(--color-foreground);
-  margin-bottom: 2px;
+  margin-bottom: var(--space-1u);
 `;
 
 export const ActiveAuthenticatorDate = styled.div`
-  font-size: 13px;
+  font-size: var(--font-size-md);
   color: var(--color-secondary-text);
 `;
 
@@ -434,14 +434,14 @@ export const ActiveAuthenticatorDate = styled.div`
 export const SetupSteps = styled.div`
   display: flex;
   justify-content: center;
-  margin-bottom: 32px;
-  gap: 8px;
+  margin-bottom: var(--space-16u);
+  gap: var(--space-4u);
 `;
 
 export const SetupStepIndicator = styled.div<{ $active?: boolean; $completed?: boolean }>`
-  width: ${props => props.$active ? '32px' : '8px'};
-  height: 8px;
-  border-radius: 4px;
+  width: ${props => props.$active ? 'var(--size-16u)' : 'var(--space-4u)'};
+  height: var(--space-4u);
+  border-radius: var(--radius-2xs);
   background: ${props => {
     if (props.$completed) return 'var(--color-success)';
     if (props.$active) return 'var(--color-primary)';
@@ -455,11 +455,11 @@ export const SuccessAnimation = styled.div`
   display: flex;
   flex-direction: column;
   align-items: center;
-  padding: 48px;
+  padding: var(--space-24u);
   
   svg {
-    width: 64px;
-    height: 64px;
+    width: var(--size-32u);
+    height: var(--size-32u);
     color: var(--color-success);
     animation: successPulse 0.6s ease;
   }
@@ -472,14 +472,14 @@ export const SuccessAnimation = styled.div`
 `;
 
 export const SuccessTitle = styled.h3`
-  font-size: 20px;
+  font-size: var(--font-size-3xl);
   font-weight: 600;
   color: var(--color-foreground);
-  margin: 16px 0 8px 0;
+  margin: var(--space-8u) 0 var(--space-4u) 0;
 `;
 
 export const SuccessDescription = styled.p`
-  font-size: 14px;
+  font-size: var(--font-size-lg);
   color: var(--color-secondary-text);
   margin: 0;
   text-align: center;
@@ -487,12 +487,12 @@ export const SuccessDescription = styled.p`
 
 // Improved button styles
 export const PrimaryButton = styled.button`
-  padding: 10px 20px;
+  padding: var(--space-5u) var(--space-10u);
   background: linear-gradient(135deg, var(--color-primary), var(--color-primary-hover));
-  color: white;
+  color: var(--color-foreground-inverse);
   border: none;
-  border-radius: 8px;
-  font-size: 14px;
+  border-radius: var(--radius-md);
+  font-size: var(--font-size-lg);
   font-weight: 600;
   cursor: pointer;
   transition: all 0.2s ease;
@@ -513,16 +513,16 @@ export const PrimaryButton = styled.button`
   }
   
   &:hover:not(:disabled) {
-    transform: translateY(-1px);
-    box-shadow: 0 4px 12px var(--color-shadow-medium);
+    transform: translateY(calc(var(--space-1u) * -0.5));
+    box-shadow: var(--shadow-md);
   }
   
   &:active:not(:disabled) {
     transform: translateY(0);
     
     &::before {
-      width: 300px;
-      height: 300px;
+      width: calc(var(--size-50u) * 3);
+      height: calc(var(--size-50u) * 3);
     }
   }
   
@@ -533,12 +533,12 @@ export const PrimaryButton = styled.button`
 `;
 
 export const SecondaryButton = styled.button`
-  padding: 10px 20px;
+  padding: var(--space-5u) var(--space-10u);
   background: transparent;
   color: var(--color-foreground);
-  border: 1px solid var(--color-border);
-  border-radius: 8px;
-  font-size: 14px;
+  border: var(--border-width-thin) solid var(--color-border);
+  border-radius: var(--radius-md);
+  font-size: var(--font-size-lg);
   font-weight: 600;
   cursor: pointer;
   transition: all 0.2s ease;
@@ -546,7 +546,7 @@ export const SecondaryButton = styled.button`
   &:hover:not(:disabled) {
     background: var(--color-background-hover);
     border-color: var(--color-primary);
-    transform: translateY(-1px);
+    transform: translateY(calc(var(--space-1u) * -0.5));
   }
   
   &:active:not(:disabled) {
@@ -560,19 +560,19 @@ export const SecondaryButton = styled.button`
 `;
 
 export const DangerButton = styled.button`
-  padding: 10px 20px;
+  padding: var(--space-5u) var(--space-10u);
   background: transparent;
   color: var(--color-error);
-  border: 1px solid var(--color-error);
-  border-radius: 8px;
-  font-size: 14px;
+  border: var(--border-width-thin) solid var(--color-error);
+  border-radius: var(--radius-md);
+  font-size: var(--font-size-lg);
   font-weight: 600;
   cursor: pointer;
   transition: all 0.2s ease;
   
   &:hover:not(:disabled) {
     background: var(--color-error-background);
-    transform: translateY(-1px);
+    transform: translateY(calc(var(--space-1u) * -0.5));
   }
   
   &:active:not(:disabled) {
@@ -586,9 +586,9 @@ export const DangerButton = styled.button`
 `;
 
 export const ActionButton = styled.button<{ $variant?: 'primary' | 'secondary' | 'danger' }>`
-  padding: 8px 16px;
-  border-radius: 6px;
-  font-size: 14px;
+  padding: var(--space-4u) var(--space-8u);
+  border-radius: var(--radius-xs);
+  font-size: var(--font-size-lg);
   font-weight: 400;
   cursor: pointer;
   transition: all 0.2s ease;
@@ -599,7 +599,7 @@ export const ActionButton = styled.button<{ $variant?: 'primary' | 'secondary' |
       case 'primary':
         return `
           background: var(--color-primary);
-          color: white;
+          color: var(--color-foreground-inverse);
           &:hover:not(:disabled) {
             background: var(--color-primary-hover);
           }
@@ -607,16 +607,16 @@ export const ActionButton = styled.button<{ $variant?: 'primary' | 'secondary' |
       case 'danger':
         return `
           background: var(--color-error);
-          color: white;
+          color: var(--color-foreground-inverse);
           &:hover:not(:disabled) {
-            background: var(--color-error-hover);
+            background: var(--color-error);
           }
         `;
       default:
         return `
           background: var(--color-background);
           color: var(--color-foreground);
-          border: 1px solid var(--color-border);
+          border: var(--border-width-thin) solid var(--color-border);
           &:hover:not(:disabled) {
             background: var(--color-background-hover);
           }

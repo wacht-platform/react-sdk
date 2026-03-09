@@ -91,7 +91,7 @@ export const EmailManagementSection = () => {
     return (
         <>
             <ResponsiveHeaderContainer>
-                <div style={{ flex: 1, minWidth: "200px" }}>
+                <div style={{ flex: 1, minWidth: "calc(var(--size-50u) * 2)" }}>
                     <SearchInput
                         value={searchQuery}
                         onChange={setSearchQuery}
@@ -103,11 +103,11 @@ export const EmailManagementSection = () => {
                         ref={emailButtonRef}
                         onClick={() => setIsAddingEmail(true)}
                         style={{
-                            padding: "8px 16px",
-                            borderRadius: "6px",
-                            fontSize: "14px",
+                            padding: "var(--space-4u) var(--space-8u)",
+                            borderRadius: "var(--radius-xs)",
+                            fontSize: "var(--font-size-lg)",
                             fontWeight: 500,
-                            height: "36px",
+                            height: "var(--size-18u)",
                             width: "100%",
                         }}
                     >
@@ -250,18 +250,18 @@ export const EmailManagementSection = () => {
                             <div key={email.id}>
                                 <ConnectionItemRow>
                                     <ConnectionLeft>
-                                        <div style={{ fontWeight: 500, fontSize: "14px", color: "var(--color-foreground)" }}>
+                                        <div style={{ fontWeight: 500, fontSize: "var(--font-size-lg)", color: "var(--color-foreground)" }}>
                                             {email.email}
                                         </div>
 
                                         <div
                                             style={{
-                                                fontSize: "13px",
+                                                fontSize: "var(--font-size-md)",
                                                 color: "var(--color-muted)",
                                                 background: "var(--color-input-background)",
-                                                padding: "2px 8px",
-                                                borderRadius: "4px",
-                                                border: "1px solid var(--color-border)",
+                                                padding: "var(--space-1u) var(--space-4u)",
+                                                borderRadius: "var(--radius-2xs)",
+                                                border: "var(--border-width-thin) solid var(--color-border)",
                                             }}
                                         >
                                             {email.id === user?.primary_email_address_id
@@ -345,7 +345,7 @@ export const EmailManagementSection = () => {
                                 {index < filteredEmails.length - 1 && (
                                     <div
                                         style={{
-                                            height: "1px",
+                                            height: "var(--border-width-thin)",
                                             background: "var(--color-border)",
                                         }}
                                     />

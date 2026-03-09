@@ -13,7 +13,7 @@
             "require": "./dist/index.cjs"
         },
         "./server": {
-            "types": "./dist/server.d.ts",
+            "types": "./dist/server/index.d.ts",
             "import": "./dist/server.js",
             "require": "./dist/server.cjs"
         }

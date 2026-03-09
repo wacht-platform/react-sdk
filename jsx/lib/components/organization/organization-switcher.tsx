@@ -4,7 +4,6 @@ import React, { useState, useRef, useEffect, useMemo } from "react";
 import ReactDOM from "react-dom";
 import styled from "styled-components";
 import {
-  ChevronsUpDown,
   ChevronDown,
   ChevronRight,
   Plus,
@@ -32,28 +31,34 @@ import { canManageOrganization, canManageWorkspace } from "@/utils/permissions";
 
 const Container = styled.div`
   position: relative;
-  display: inline-block;
+  display: block;
   width: 100%;
-  max-width: 300px;
 `;
 
 const SwitcherButton = styled.button`
   display: flex;
   align-items: center;
   justify-content: space-between;
-  gap: 8px;
-  padding: 8px 10px;
-  font-size: 14px;
+  gap: var(--space-2u);
+  padding: var(--space-2u) var(--space-3u);
+  font-size: var(--font-size-sm);
   font-weight: 400;
   cursor: pointer;
-  border: 1px solid var(--color-border);
-  border-radius: 6px;
-  background: var(--color-background);
+  border: var(--border-width-thin) solid var(--color-border);
+  border-radius: var(--radius-md);
+  background: var(--color-card);
   color: var(--color-foreground);
-  transition: background 0.1s ease;
-  min-width: 200px;
-  min-height: 42px;
+  transition:
+    background 0.1s ease,
+    border-color 0.1s ease;
+  min-width: calc(var(--size-50u) + var(--size-32u));
+  min-height: var(--size-18u);
   width: 100%;
+
+  &:hover:not(:disabled) {
+    background: var(--color-accent);
+    border-color: var(--color-border-hover);
+  }
 
   &:disabled {
     cursor: not-allowed;
@@ -62,16 +67,17 @@ const SwitcherButton = styled.button`
 `;
 
 const Avatar = styled.div`
-  width: 20px;
-  height: 20px;
+  width: var(--size-8u);
+  height: var(--size-8u);
   border-radius: 50%;
   overflow: hidden;
   display: flex;
   align-items: center;
   justify-content: center;
-  background: var(--color-primary);
-  color: white;
-  font-size: 11px;
+  background: var(--color-secondary);
+  color: var(--color-secondary-foreground);
+  border: var(--border-width-thin) solid var(--color-border);
+  font-size: var(--font-size-2xs);
   font-weight: 600;
   flex-shrink: 0;
 `;
@@ -85,16 +91,23 @@ const AvatarImage = styled.img`
 const ButtonContent = styled.div`
   display: flex;
   align-items: center;
-  gap: 8px;
+  gap: var(--space-2u);
+  min-width: 0;
 `;
 
 const OrgName = styled.span`
   font-weight: 400;
-  font-size: 14px;
+  font-size: var(--font-size-sm);
   overflow: hidden;
   text-overflow: ellipsis;
   white-space: nowrap;
   color: var(--color-foreground);
+`;
+
+const TriggerChevron = styled(ChevronDown)<{ $isOpen: boolean }>`
+  color: var(--color-secondary-text);
+  transition: transform 0.15s ease;
+  transform: ${(props) => (props.$isOpen ? "rotate(180deg)" : "rotate(0deg)")};
 `;
 
 const Dropdown = styled.div<{
@@ -106,21 +119,19 @@ const Dropdown = styled.div<{
   ${(props) => (props.$position?.bottom !== undefined ? `bottom: ${props.$position.bottom}px;` : "")}
   ${(props) => (props.$position?.left !== undefined ? `left: ${props.$position.left}px;` : "")}
   ${(props) => (props.$position?.right !== undefined ? `right: ${props.$position.right}px;` : "")}
-  width: 300px;
-  max-height: ${(props) => (props.$position?.maxHeight ? `${props.$position.maxHeight}px` : "400px")};
-  background: var(--color-background);
-  border-radius: 8px;
-  border: 1px solid var(--color-border);
-  box-shadow:
-    0 2px 8px var(--color-shadow),
-    0 0 0 1px rgba(0, 0, 0, 0.02);
+  width: calc(var(--size-50u) * 3);
+  max-height: ${(props) => (props.$position?.maxHeight ? `${props.$position.maxHeight}px` : "calc(var(--size-50u) * 4)")};
+  background: var(--color-popover);
+  border-radius: var(--radius-lg);
+  border: var(--border-width-thin) solid var(--color-border);
+  box-shadow: var(--shadow-md);
   z-index: 99999;
   overflow-y: auto;
   visibility: ${(props) =>
     props.$position && props.$isOpen ? "visible" : "hidden"};
   opacity: ${(props) => (props.$isOpen && props.$position ? 1 : 0)};
   transform: ${(props) =>
-    props.$isOpen ? "translateY(0)" : "translateY(-8px)"};
+    props.$isOpen ? "translateY(0)" : "translateY(calc(var(--space-4u) * -1))"};
   pointer-events: ${(props) => (props.$isOpen ? "auto" : "none")};
   transition:
     opacity 0.15s ease,
@@ -133,18 +144,18 @@ const MenuItem = styled.div<{ $isActive?: boolean; as?: React.ElementType }>`
   align-items: center;
   justify-content: space-between;
   width: 100%;
-  padding: 10px 12px 10px 22px;
+  padding: var(--space-4u) var(--space-5u) var(--space-4u) calc(var(--space-8u) + var(--space-1u));
   text-align: left;
-  font-size: 13px;
+  font-size: var(--font-size-sm);
   border: none;
   background: transparent;
   cursor: pointer;
-  color: var(--color-foreground);
+  color: var(--color-popover-foreground);
   transition: background 0.1s ease;
   position: relative;
 
   &:hover {
-    background: var(--color-background-hover);
+    background: var(--color-accent);
 
     .hover-arrow {
       opacity: 1;
@@ -164,28 +175,29 @@ const HoverArrow = styled(ChevronRight)`
 `;
 
 const Separator = styled.div`
-  height: 1px;
+  height: var(--border-width-thin);
   background: var(--color-border);
 `;
 
 const MenuItemContent = styled.div`
   display: flex;
   align-items: center;
-  gap: 8px;
+  gap: var(--space-3u);
   flex: 1;
 `;
 
 const MenuItemAvatar = styled.div`
-  width: 20px;
-  height: 20px;
+  width: var(--size-10u);
+  height: var(--size-10u);
   border-radius: 50%;
   overflow: hidden;
   display: flex;
   align-items: center;
   justify-content: center;
-  background: var(--color-primary);
-  color: white;
-  font-size: 10px;
+  background: var(--color-secondary);
+  color: var(--color-secondary-foreground);
+  border: var(--border-width-thin) solid var(--color-border);
+  font-size: var(--font-size-2xs);
   font-weight: 600;
   flex-shrink: 0;
 `;
@@ -199,25 +211,25 @@ const MenuItemAvatarImage = styled.img`
 const MenuItemInfo = styled.div`
   display: flex;
   flex-direction: column;
-  gap: 2px;
+  gap: var(--space-1u);
   overflow: hidden;
   flex: 1;
 `;
 
 const MenuItemName = styled.span`
   font-weight: 400;
-  font-size: 13px;
+  font-size: var(--font-size-sm);
   overflow: hidden;
   text-overflow: ellipsis;
   white-space: nowrap;
-  color: var(--color-foreground);
+  color: var(--color-popover-foreground);
 `;
 
 
 const ManageButton = styled.button`
-  padding: 3px;
-  border-radius: 4px;
-  border: 1px solid var(--color-border);
+  padding: calc(var(--space-1u) + var(--border-width-thin));
+  border-radius: var(--radius-2xs);
+  border: var(--border-width-thin) solid var(--color-border);
   background: transparent;
   color: var(--color-secondary-text);
   cursor: pointer;
@@ -225,12 +237,12 @@ const ManageButton = styled.button`
   display: flex;
   align-items: center;
   justify-content: center;
-  width: 20px;
-  height: 20px;
+  width: var(--size-10u);
+  height: var(--size-10u);
 
   &:hover {
-    background: var(--color-background-hover);
-    color: var(--color-foreground);
+    background: var(--color-accent);
+    color: var(--color-accent-foreground);
   }
 `;
 
@@ -252,9 +264,9 @@ const CreateOrgButton = styled.button`
   align-items: center;
   justify-content: space-between;
   width: 100%;
-  padding: 10px 12px;
+  padding: var(--space-4u) var(--space-5u);
   text-align: left;
-  font-size: 13px;
+  font-size: var(--font-size-sm);
   border: none;
   background: transparent;
   cursor: pointer;
@@ -263,7 +275,7 @@ const CreateOrgButton = styled.button`
   position: relative;
 
   &:hover {
-    background: var(--color-background-hover);
+    background: var(--color-accent);
   }
 
   &:disabled {
@@ -273,33 +285,34 @@ const CreateOrgButton = styled.button`
 `;
 
 const PlusIcon = styled.div`
-  width: 20px;
-  height: 20px;
+  width: var(--size-10u);
+  height: var(--size-10u);
   border-radius: 50%;
-  border: 1px dashed var(--color-border);
+  border: var(--border-width-thin) dashed var(--color-border);
   display: flex;
   align-items: center;
   justify-content: center;
   color: var(--color-secondary-text);
-  background: var(--color-background-hover);
+  background: var(--color-secondary);
 `;
 
 const ActiveIndicator = styled.div`
-  width: 8px;
-  height: 8px;
+  width: var(--space-4u);
+  height: var(--space-4u);
   border-radius: 50%;
   background: var(--color-primary);
   position: absolute;
-  left: 8px;
+  left: var(--space-4u);
   top: 50%;
   transform: translateY(-50%);
 `;
 
 const PersonalIcon = styled.div`
-  width: 20px;
-  height: 20px;
+  width: var(--size-10u);
+  height: var(--size-10u);
   border-radius: 50%;
-  background: var(--color-background-hover);
+  background: var(--color-secondary);
+  border: var(--border-width-thin) solid var(--color-border);
   display: flex;
   align-items: center;
   justify-content: center;
@@ -314,47 +327,48 @@ const PersonalAvatar = styled.img`
 `;
 
 const WorkspaceItem = styled(MenuItem)`
-  padding-left: 40px;
-  font-size: 11px;
+  padding-left: calc(var(--size-18u) + var(--space-6u));
+  font-size: var(--font-size-xs);
 `;
 
 const WorkspaceAvatar = styled.div`
-  width: 16px;
-  height: 16px;
+  width: var(--size-8u);
+  height: var(--size-8u);
   border-radius: 50%;
   overflow: hidden;
   display: flex;
   align-items: center;
   justify-content: center;
-  background: var(--color-border);
+  background: var(--color-secondary);
+  border: var(--border-width-thin) solid var(--color-border);
   color: var(--color-secondary-text);
-  font-size: 9px;
+  font-size: calc(var(--font-size-2xs) - var(--border-width-thin));
   font-weight: 600;
   flex-shrink: 0;
 `;
 
 const StatusMessage = styled.div<{ $isError?: boolean }>`
-  padding: 8px 10px;
-  border-radius: 4px;
-  font-size: 10px;
+  padding: var(--space-4u) var(--space-5u);
+  border-radius: var(--radius-2xs);
+  font-size: var(--font-size-2xs);
   background: ${(props) =>
     props.$isError
       ? "var(--color-error-background)"
       : "var(--color-primary-background)"};
   color: ${(props) =>
     props.$isError ? "var(--color-error)" : "var(--color-primary)"};
-  border: 1px solid
+  border: var(--border-width-thin) solid
     ${(props) =>
     props.$isError ? "var(--color-error)" : "var(--color-primary)"};
   display: flex;
   align-items: center;
-  gap: 6px;
+  gap: var(--space-3u);
 `;
 
 const Spinner = styled.div`
-  width: 12px;
-  height: 12px;
-  border: 2px solid transparent;
+  width: var(--size-6u);
+  height: var(--size-6u);
+  border: var(--border-width-regular) solid transparent;
   border-top-color: currentColor;
   border-radius: 50%;
   animation: spin 0.8s linear infinite;
@@ -367,14 +381,14 @@ const Spinner = styled.div`
 `;
 
 const ShimmerWrapper = styled.div`
-  padding: 8px 0;
+  padding: var(--space-4u) 0;
 `;
 
 const ShimmerItem = styled.div`
   display: flex;
   align-items: center;
-  gap: 6px;
-  padding: 4px 10px 4px 8px;
+  gap: var(--space-3u);
+  padding: var(--space-2u) var(--space-5u) var(--space-2u) var(--space-4u);
   animation: shimmer 1.5s ease-in-out infinite;
 
   @keyframes shimmer {
@@ -391,8 +405,8 @@ const ShimmerItem = styled.div`
 `;
 
 const ShimmerAvatar = styled.div`
-  width: 18px;
-  height: 18px;
+  width: calc(var(--size-8u) + var(--space-1u));
+  height: calc(var(--size-8u) + var(--space-1u));
   border-radius: 50%;
   background: var(--color-border);
 `;
@@ -401,20 +415,20 @@ const ShimmerContent = styled.div`
   flex: 1;
   display: flex;
   flex-direction: column;
-  gap: 4px;
+  gap: var(--space-2u);
 `;
 
 const ShimmerLine = styled.div<{ width?: string }>`
-  height: 12px;
+  height: var(--size-6u);
   background: var(--color-border);
-  border-radius: 4px;
+  border-radius: var(--radius-2xs);
   width: ${(props) => props.width || "100%"};
 `;
 
 const ShimmerSmallLine = styled.div<{ width?: string }>`
-  height: 10px;
+  height: var(--size-5u);
   background: var(--color-border);
-  border-radius: 4px;
+  border-radius: var(--radius-2xs);
   width: ${(props) => props.width || "60%"};
 `;
 
@@ -422,13 +436,13 @@ const SkeletonButton = styled.div`
   display: flex;
   align-items: center;
   justify-content: space-between;
-  gap: 8px;
-  padding: 8px 10px;
-  border: 1px solid var(--color-border);
-  border-radius: 6px;
-  background: var(--color-background);
-  min-width: 200px;
-  min-height: 42px;
+  gap: var(--space-2u);
+  padding: var(--space-2u) var(--space-3u);
+  border: var(--border-width-thin) solid var(--color-border);
+  border-radius: var(--radius-md);
+  background: var(--color-card);
+  min-width: calc(var(--size-50u) + var(--size-32u));
+  min-height: var(--size-18u);
   width: 100%;
   animation: pulse 1.5s ease-in-out infinite;
 
@@ -444,24 +458,24 @@ const SkeletonButton = styled.div`
 `;
 
 const SkeletonAvatar = styled.div`
-  width: 20px;
-  height: 20px;
+  width: var(--size-8u);
+  height: var(--size-8u);
   border-radius: 50%;
   background: var(--color-border);
 `;
 
 const SkeletonText = styled.div`
-  height: 14px;
-  width: 120px;
+  height: var(--space-7u);
+  width: calc(var(--size-50u) + var(--size-10u));
   background: var(--color-border);
-  border-radius: 4px;
+  border-radius: var(--radius-2xs);
 `;
 
 const SkeletonIcon = styled.div`
-  width: 16px;
-  height: 16px;
+  width: var(--size-8u);
+  height: var(--size-8u);
   background: var(--color-border);
-  border-radius: 2px;
+  border-radius: calc(var(--radius-2xs) - var(--border-width-regular));
 `;
 
 interface OrganizationSwitcherProps {
@@ -701,7 +715,7 @@ export const OrganizationSwitcher = ({
             </Avatar>
             <OrgName>{currentDisplay.name}</OrgName>
           </ButtonContent>
-          <div style={{ display: "flex", alignItems: "center", gap: "6px" }}>
+          <div style={{ display: "flex", alignItems: "center", gap: "var(--space-3u)" }}>
             {((activeOrgMembership?.eligibility_restriction?.type && activeOrgMembership?.eligibility_restriction?.type !== "none") ||
               (activeWsMembership?.eligibility_restriction?.type && activeWsMembership?.eligibility_restriction?.type !== "none")) && (
                 <div
@@ -714,7 +728,7 @@ export const OrganizationSwitcher = ({
                   <AlertCircle size={14} color="var(--color-error)" />
                 </div>
               )}
-            <ChevronsUpDown size={16} />
+            <TriggerChevron $isOpen={open} size={14} />
           </div>
         </SwitcherButton>
 
@@ -732,8 +746,8 @@ export const OrganizationSwitcher = ({
                     <ShimmerItem>
                       <ShimmerAvatar />
                       <ShimmerContent>
-                        <ShimmerLine width="120px" />
-                        <ShimmerSmallLine width="80px" />
+                        <ShimmerLine width="calc(var(--size-50u) + var(--size-10u))" />
+                        <ShimmerSmallLine width="var(--size-40u)" />
                       </ShimmerContent>
                     </ShimmerItem>
                     <Separator />
@@ -742,7 +756,7 @@ export const OrganizationSwitcher = ({
                     <ShimmerItem>
                       <ShimmerAvatar />
                       <ShimmerContent>
-                        <ShimmerLine width="100px" />
+                        <ShimmerLine width="var(--size-50u)" />
                       </ShimmerContent>
                     </ShimmerItem>
                     <Separator />
@@ -750,8 +764,8 @@ export const OrganizationSwitcher = ({
                     <ShimmerItem>
                       <ShimmerAvatar />
                       <ShimmerContent>
-                        <ShimmerLine width="140px" />
-                        <ShimmerSmallLine width="60px" />
+                        <ShimmerLine width="calc(var(--size-50u) + var(--size-20u))" />
+                        <ShimmerSmallLine width="calc(var(--size-20u) + var(--size-10u))" />
                       </ShimmerContent>
                     </ShimmerItem>
                     <Separator />
@@ -759,7 +773,7 @@ export const OrganizationSwitcher = ({
                     <ShimmerItem>
                       <ShimmerAvatar />
                       <ShimmerContent>
-                        <ShimmerLine width="110px" />
+                        <ShimmerLine width="calc(var(--size-50u) + var(--space-5u))" />
                       </ShimmerContent>
                     </ShimmerItem>
                   </ShimmerWrapper>
@@ -839,7 +853,7 @@ export const OrganizationSwitcher = ({
                             <ChevronDown
                               size={12}
                               style={{
-                                marginRight: "4px",
+                                marginRight: "var(--space-2u)",
                                 transform: expandedOrgs.has(
                                   activeOrganization.id,
                                 )
@@ -870,7 +884,7 @@ export const OrganizationSwitcher = ({
                           style={{
                             display: "flex",
                             alignItems: "center",
-                            gap: "8px",
+                            gap: "var(--space-4u)",
                           }}
                         >
                           {activeOrgMembership?.eligibility_restriction?.type && activeOrgMembership?.eligibility_restriction?.type !== "none" && (
@@ -1002,7 +1016,7 @@ export const OrganizationSwitcher = ({
                                     style={{
                                       display: "flex",
                                       alignItems: "center",
-                                      gap: "8px",
+                                      gap: "var(--space-4u)",
                                     }}
                                   >
                                     {((workspace.eligibility_restriction?.type && workspace.eligibility_restriction?.type !== "none") ||
@@ -1025,7 +1039,7 @@ export const OrganizationSwitcher = ({
                                         style={{
                                           display: "flex",
                                           alignItems: "center",
-                                          gap: "8px",
+                                          gap: "var(--space-4u)",
                                         }}
                                       >
                                         {activeWsMembership?.eligibility_restriction?.type === "none" &&
@@ -1081,7 +1095,7 @@ export const OrganizationSwitcher = ({
                             >
                               <MenuItemContent>
                                 <PlusIcon
-                                  style={{ width: "14px", height: "14px" }}
+                                  style={{ width: "var(--space-7u)", height: "var(--space-7u)" }}
                                 >
                                   <Plus size={12} />
                                 </PlusIcon>
@@ -1159,7 +1173,7 @@ export const OrganizationSwitcher = ({
                                         <ChevronDown
                                           size={12}
                                           style={{
-                                            marginRight: "4px",
+                                            marginRight: "var(--space-2u)",
                                             transform: isExpanded
                                               ? "rotate(0deg)"
                                               : "rotate(-90deg)",
@@ -1187,7 +1201,7 @@ export const OrganizationSwitcher = ({
                                       style={{
                                         display: "flex",
                                         alignItems: "center",
-                                        gap: "8px",
+                                        gap: "var(--space-4u)",
                                       }}
                                     >
                                       {membership.eligibility_restriction?.type && membership.eligibility_restriction?.type !== "none" && (
@@ -1301,7 +1315,7 @@ export const OrganizationSwitcher = ({
                                                 style={{
                                                   display: "flex",
                                                   alignItems: "center",
-                                                  gap: "8px",
+                                                  gap: "var(--space-4u)",
                                                 }}
                                               >
                                                 {((workspace.eligibility_restriction?.type && workspace.eligibility_restriction?.type !== "none") ||
@@ -1324,7 +1338,7 @@ export const OrganizationSwitcher = ({
                                                     style={{
                                                       display: "flex",
                                                       alignItems: "center",
-                                                      gap: "8px",
+                                                      gap: "var(--space-4u)",
                                                     }}
                                                   >
                                                     {canManageWorkspace(activeWsMembership) && (
@@ -1384,8 +1398,8 @@ export const OrganizationSwitcher = ({
                                             <MenuItemContent>
                                               <PlusIcon
                                                 style={{
-                                                  width: "14px",
-                                                  height: "14px",
+                                                  width: "var(--space-7u)",
+                                                  height: "var(--space-7u)",
                                                 }}
                                               >
                                                 <Plus size={10} />

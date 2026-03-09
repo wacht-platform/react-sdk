@@ -17,55 +17,55 @@ import { Input } from "../utility/input";
 import { getStoredDevSession } from "@/utils/dev-session";
 
 const Container = styled.div`
-  max-width: 380px;
-  width: 380px;
-  padding: var(--space-3xl);
+  max-width: calc(var(--space-10u) * 19);
+  width: calc(var(--space-10u) * 19);
+  padding: var(--space-14u);
   background: var(--color-background);
   border-radius: var(--radius-lg);
-  box-shadow: 0 4px 12px var(--color-shadow);
+  box-shadow: var(--shadow-md);
 `;
 
 const Header = styled.div`
   text-align: center;
-  margin-bottom: var(--space-lg);
+  margin-bottom: var(--space-8u);
   position: relative;
 `;
 
 const Title = styled.h1`
-  font-size: var(--font-lg);
+  font-size: var(--font-size-2xl);
   font-weight: 400;
   color: var(--color-foreground);
-  margin-bottom: var(--space-xs);
+  margin-bottom: var(--space-2u);
   margin-top: 0;
 `;
 
 const Subtitle = styled.p`
   color: var(--color-secondary-text);
-  font-size: var(--font-xs);
+  font-size: var(--font-size-md);
 `;
 
 const NameFields = styled.div<{ $isBothEnabled: boolean }>`
   display: grid;
   grid-template-columns: ${(props) =>
     props.$isBothEnabled ? "1fr 1fr" : "1fr"};
-  gap: var(--space-sm);
+  gap: var(--space-4u);
 `;
 
 const ErrorMessage = styled.p`
-  font-size: var(--font-2xs);
+  font-size: var(--font-size-xs);
   color: var(--color-error);
   margin: 0;
-  margin-top: var(--space-2xs);
+  margin-top: var(--space-1u);
 `;
 
 const SubmitButton = styled(Button)`
-  margin-top: var(--space-sm);
+  margin-top: var(--space-4u);
 `;
 
 const Footer = styled.div`
-  margin-top: var(--space-lg);
+  margin-top: var(--space-8u);
   text-align: center;
-  font-size: var(--font-xs);
+  font-size: var(--font-size-md);
   color: var(--color-secondary-text);
 `;
 
@@ -362,7 +362,7 @@ export function ProfileCompletion({
             />
 
             {displayError && (
-              <ErrorMessage style={{ marginBottom: "var(--space-md)" }}>
+              <ErrorMessage style={{ marginBottom: "var(--space-6u)" }}>
                 {displayError.message}
               </ErrorMessage>
             )}
@@ -377,7 +377,7 @@ export function ProfileCompletion({
                 Back to profile completion
               </Link>
             </div>
-            <div style={{ marginTop: "var(--space-sm)" }}>
+            <div style={{ marginTop: "var(--space-4u)" }}>
               Having trouble?{" "}
               <Link>
                 <NavigationLink
@@ -532,7 +532,7 @@ export function ProfileCompletion({
             )}
 
           {displayError && (
-            <ErrorMessage style={{ marginBottom: "var(--space-md)" }}>
+            <ErrorMessage style={{ marginBottom: "var(--space-6u)" }}>
               {displayError.message}
             </ErrorMessage>
           )}
@@ -550,7 +550,7 @@ export function ProfileCompletion({
               </Link>
             </div>
           )}
-          <div style={{ marginTop: "var(--space-sm)" }}>
+          <div style={{ marginTop: "var(--space-4u)" }}>
             Having trouble?{" "}
             <Link>
               <NavigationLink

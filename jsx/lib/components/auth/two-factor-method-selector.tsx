@@ -3,31 +3,31 @@ import { AuthFormImage } from "./auth-image";
 import { DefaultStylesProvider } from "../utility/root";
 
 const Container = styled.div`
-  max-width: 380px;
-  width: 380px;
-  padding: var(--space-2xl);
+  max-width: calc(var(--space-10u) * 19);
+  width: calc(var(--space-10u) * 19);
+  padding: var(--space-12u);
   background: var(--color-background);
   border-radius: var(--radius-lg);
-  box-shadow: 0 4px 12px var(--color-shadow);
+  box-shadow: var(--shadow-md);
 `;
 
 const Header = styled.div`
   text-align: center;
-  margin-bottom: var(--space-lg);
+  margin-bottom: var(--space-8u);
   position: relative;
 `;
 
 const Title = styled.h1`
-  font-size: var(--font-md);
+  font-size: var(--font-size-xl);
   font-weight: 400;
   color: var(--color-foreground);
-  margin-bottom: var(--space-xs);
+  margin-bottom: var(--space-2u);
   margin-top: 0;
 `;
 
 const Subtitle = styled.p`
   color: var(--color-secondary-text);
-  font-size: var(--font-xs);
+  font-size: var(--font-size-md);
 `;
 
 
@@ -41,10 +41,10 @@ const MethodList = styled.div`
 const MethodButton = styled.button`
   display: flex;
   align-items: center;
-  gap: var(--space-md);
-  padding: var(--space-md);
+  gap: var(--space-6u);
+  padding: var(--space-6u);
   width: 100%;
-  border: 1px solid var(--color-border);
+  border: var(--border-width-thin) solid var(--color-border);
   background: var(--color-background);
   cursor: pointer;
   text-align: left;
@@ -77,8 +77,8 @@ const MethodButton = styled.button`
   }
 
   svg {
-    width: 20px;
-    height: 20px;
+    width: var(--size-10u);
+    height: var(--size-10u);
     flex-shrink: 0;
     color: var(--color-primary);
   }
@@ -88,25 +88,25 @@ const MethodContent = styled.div`
   flex: 1;
   display: flex;
   flex-direction: column;
-  gap: var(--space-2xs);
+  gap: var(--space-1u);
 `;
 
 const MethodName = styled.div`
   font-weight: 400;
-  font-size: var(--font-sm);
+  font-size: var(--font-size-lg);
   color: var(--color-foreground);
 `;
 
 const MethodDescription = styled.div`
-  font-size: var(--font-xs);
+  font-size: var(--font-size-md);
   color: var(--color-secondary-text);
   line-height: 1.4;
 `;
 
 const Footer = styled.div`
-  margin-top: var(--space-lg);
+  margin-top: var(--space-8u);
   text-align: center;
-  font-size: var(--font-xs);
+  font-size: var(--font-size-md);
   color: var(--color-secondary-text);
 `;
 

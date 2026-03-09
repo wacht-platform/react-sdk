@@ -146,12 +146,112 @@ export interface LightModeSettings {
   primary_color: string;
   background_color: string;
   text_color: string;
+  token_overrides?: UITokenOverrides;
 }
 
 export interface DarkModeSettings {
   primary_color: string;
   background_color: string;
   text_color: string;
+  token_overrides?: UITokenOverrides;
+}
+
+export interface UITokenOverrides {
+  space_unit?: string;
+  card?: string;
+  card_foreground?: string;
+  popover?: string;
+  popover_foreground?: string;
+  primary_foreground?: string;
+  secondary?: string;
+  secondary_foreground?: string;
+  accent?: string;
+  accent_foreground?: string;
+  ring?: string;
+  foreground?: string;
+  foreground_inverse?: string;
+  secondary_text?: string;
+  muted?: string;
+  border?: string;
+  border_hover?: string;
+  divider?: string;
+  input_background?: string;
+  input_border?: string;
+  input_focus_border?: string;
+  background_subtle?: string;
+  background_hover?: string;
+  primary_hover?: string;
+  error?: string;
+  error_background?: string;
+  error_border?: string;
+  warning?: string;
+  warning_background?: string;
+  warning_border?: string;
+  warning_text?: string;
+  success?: string;
+  success_background?: string;
+  success_border?: string;
+  info?: string;
+  info_background?: string;
+  radius_md?: string;
+  radius_lg?: string;
+  radius_xl?: string;
+  radius_2xl?: string;
+  radius_2xs?: string;
+  radius_xs?: string;
+  radius_full?: string;
+  border_width_thin?: string;
+  border_width_regular?: string;
+  scrollbar_track?: string;
+  scrollbar_thumb?: string;
+  scrollbar_thumb_hover?: string;
+  shadow_color?: string;
+  shadow_light_color?: string;
+  shadow_medium_color?: string;
+  success_shadow?: string;
+  success_background_light?: string;
+  button_ripple?: string;
+  dialog_backdrop?: string;
+  space_0u?: string;
+  space_1u?: string;
+  space_2u?: string;
+  space_3u?: string;
+  space_4u?: string;
+  space_5u?: string;
+  space_6u?: string;
+  space_7u?: string;
+  space_8u?: string;
+  space_10u?: string;
+  space_12u?: string;
+  space_14u?: string;
+  space_16u?: string;
+  space_24u?: string;
+  font_size_2xs?: string;
+  font_size_xs?: string;
+  font_size_sm?: string;
+  font_size_md?: string;
+  font_size_lg?: string;
+  font_size_xl?: string;
+  font_size_2xl?: string;
+  font_size_3xl?: string;
+  size_8u?: string;
+  size_10u?: string;
+  size_12u?: string;
+  size_18u?: string;
+  size_20u?: string;
+  size_24u?: string;
+  size_32u?: string;
+  size_36u?: string;
+  size_40u?: string;
+  size_45u?: string;
+  size_50u?: string;
+  shadow_sm?: string;
+  shadow_md?: string;
+  shadow_lg?: string;
+  shadow_xl?: string;
+  shadow_success?: string;
+  ring_primary?: string;
+  letter_spacing_tight?: string;
 }
 
 export interface DeploymentUISettings {
@@ -205,4 +305,3 @@ export interface Deployment {
   project_id: number;
   mode: "production" | "staging";
 }
-

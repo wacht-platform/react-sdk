@@ -346,11 +346,17 @@ export const SecurityManagementSection = () => {
         return (
             <>
                 <HeaderCTAContainer>
-                    <div style={{ display: "flex", alignItems: "center", gap: "8px" }}>
+                    <div
+                        style={{
+                            display: "flex",
+                            alignItems: "center",
+                            gap: "var(--space-4u)",
+                        }}
+                    >
                         <Shield size={16} />
                         <span
                             style={{
-                                fontSize: "14px",
+                                fontSize: "var(--font-size-lg)",
                                 fontWeight: 500,
                                 color: "var(--color-foreground)",
                             }}
@@ -364,10 +370,10 @@ export const SecurityManagementSection = () => {
                     <Button
                         onClick={() => setSetupStep("table")}
                         style={{
-                            padding: "8px 16px",
-                            fontSize: "14px",
+                            padding: "var(--space-4u) var(--space-8u)",
+                            fontSize: "var(--font-size-lg)",
                             background: "var(--color-background)",
-                            border: "1px solid var(--color-border)",
+                            border: "var(--border-width-thin) solid var(--color-border)",
                             borderRadius: "var(--radius-md)",
                             color: "var(--color-foreground)",
                             fontWeight: "500",
@@ -381,10 +387,10 @@ export const SecurityManagementSection = () => {
 
                 <div
                     style={{
-                        maxWidth: "500px",
+                        maxWidth: "calc(var(--size-50u) * 5)",
                         margin: "0 auto",
                         textAlign: "center",
-                        padding: "24px",
+                        padding: "var(--space-12u)",
                     }}
                 >
                     {setupStep === "qr" && (
@@ -392,7 +398,7 @@ export const SecurityManagementSection = () => {
                             <p
                                 style={{
                                     color: "var(--color-secondary-text)",
-                                    marginBottom: "24px",
+                                    marginBottom: "var(--space-12u)",
                                 }}
                             >
                                 Scan this QR code with your authenticator app (Google
@@ -403,15 +409,15 @@ export const SecurityManagementSection = () => {
                                 style={{
                                     display: "flex",
                                     justifyContent: "center",
-                                    marginBottom: "24px",
+                                    marginBottom: "var(--space-12u)",
                                 }}
                             >
                                 {isLoadingQR ? (
                                     <div
                                         style={{
-                                            width: "200px",
-                                            height: "200px",
-                                            border: "1px solid var(--color-border)",
+                                            width: "calc(var(--size-50u) * 2)",
+                                            height: "calc(var(--size-50u) * 2)",
+                                            border: "var(--border-width-thin) solid var(--color-border)",
                                             borderRadius: "var(--radius-md)",
                                             display: "flex",
                                             alignItems: "center",
@@ -422,18 +428,18 @@ export const SecurityManagementSection = () => {
                                         <div style={{ textAlign: "center" }}>
                                             <div
                                                 style={{
-                                                    width: "24px",
-                                                    height: "24px",
-                                                    border: "2px solid var(--color-border)",
-                                                    borderTop: "2px solid var(--color-primary)",
+                                                    width: "var(--size-12u)",
+                                                    height: "var(--size-12u)",
+                                                    border: "var(--border-width-regular) solid var(--color-border)",
+                                                    borderTop: "var(--border-width-regular) solid var(--color-primary)",
                                                     borderRadius: "50%",
                                                     animation: `${spin} 1s linear infinite`,
-                                                    margin: "0 auto 8px",
+                                                    margin: "0 auto var(--space-4u)",
                                                 }}
                                             ></div>
                                             <div
                                                 style={{
-                                                    fontSize: "12px",
+                                                    fontSize: "var(--font-size-sm)",
                                                     color: "var(--color-secondary-text)",
                                                 }}
                                             >
@@ -444,10 +450,10 @@ export const SecurityManagementSection = () => {
                                 ) : qrCodeUrl ? (
                                     <div
                                         style={{
-                                            border: "1px solid var(--color-border)",
+                                            border: "var(--border-width-thin) solid var(--color-border)",
                                             borderRadius: "var(--radius-md)",
-                                            padding: "16px",
-                                            background: "white",
+                                            padding: "var(--space-8u)",
+                                            background: "var(--color-background)",
                                         }}
                                     >
                                         <QRCodeSVG
@@ -460,16 +466,16 @@ export const SecurityManagementSection = () => {
                                 ) : (
                                     <div
                                         style={{
-                                            width: "200px",
-                                            height: "200px",
-                                            border: "1px solid var(--color-border)",
+                                            width: "calc(var(--size-50u) * 2)",
+                                            height: "calc(var(--size-50u) * 2)",
+                                            border: "var(--border-width-thin) solid var(--color-border)",
                                             borderRadius: "var(--radius-md)",
                                             display: "flex",
                                             alignItems: "center",
                                             justifyContent: "center",
                                             background: "var(--color-input-background)",
                                             color: "var(--color-error)",
-                                            fontSize: "14px",
+                                            fontSize: "var(--font-size-lg)",
                                             textAlign: "center",
                                         }}
                                     >
@@ -481,17 +487,17 @@ export const SecurityManagementSection = () => {
                             <div
                                 style={{
                                     background: "var(--color-input-background)",
-                                    border: "1px solid var(--color-border)",
+                                    border: "var(--border-width-thin) solid var(--color-border)",
                                     borderRadius: "var(--radius-md)",
-                                    padding: "12px",
-                                    marginBottom: "24px",
+                                    padding: "var(--space-6u)",
+                                    marginBottom: "var(--space-12u)",
                                 }}
                             >
                                 <p
                                     style={{
-                                        fontSize: "14px",
+                                        fontSize: "var(--font-size-lg)",
                                         color: "var(--color-secondary-text)",
-                                        margin: "0 0 8px 0",
+                                        margin: "0 0 var(--space-4u) 0",
                                     }}
                                 >
                                     Or enter this code manually:
@@ -499,7 +505,7 @@ export const SecurityManagementSection = () => {
                                 <code
                                     style={{
                                         fontFamily: "monospace",
-                                        fontSize: "14px",
+                                        fontSize: "var(--font-size-lg)",
                                         wordBreak: "break-all",
                                     }}
                                 >
@@ -511,7 +517,7 @@ export const SecurityManagementSection = () => {
                                 onClick={() => setSetupStep("verify")}
                                 disabled={!qrCodeUrl || !secretKey}
                                 style={{
-                                    padding: "10px 20px",
+                                    padding: "var(--space-5u) var(--space-10u)",
                                     background:
                                         !qrCodeUrl || !secretKey
                                             ? "var(--color-border)"
@@ -519,8 +525,8 @@ export const SecurityManagementSection = () => {
                                     color:
                                         !qrCodeUrl || !secretKey
                                             ? "var(--color-secondary-text)"
-                                            : "white",
-                                    border: `1px solid ${!qrCodeUrl || !secretKey ? "var(--color-border)" : "var(--color-primary)"}`,
+                                            : "var(--color-background)",
+                                    border: `var(--border-width-thin) solid ${!qrCodeUrl || !secretKey ? "var(--color-border)" : "var(--color-primary)"}`,
                                     cursor: !qrCodeUrl || !secretKey ? "not-allowed" : "pointer",
                                 }}
                             >
@@ -534,7 +540,7 @@ export const SecurityManagementSection = () => {
                             <p
                                 style={{
                                     color: "var(--color-secondary-text)",
-                                    marginBottom: "24px",
+                                    marginBottom: "var(--space-12u)",
                                 }}
                             >
                                 Enter two consecutive codes from your authenticator app to
@@ -544,9 +550,9 @@ export const SecurityManagementSection = () => {
                             <div
                                 style={{
                                     display: "flex",
-                                    gap: "12px",
+                                    gap: "var(--space-6u)",
                                     justifyContent: "center",
-                                    marginBottom: "24px",
+                                    marginBottom: "var(--space-12u)",
                                 }}
                             >
                                 <Input
@@ -561,7 +567,7 @@ export const SecurityManagementSection = () => {
                                     }}
                                     maxLength={6}
                                     style={{
-                                        width: "100px",
+                                        width: "var(--size-50u)",
                                         textAlign: "center",
                                         fontFamily: "monospace",
                                     }}
@@ -578,7 +584,7 @@ export const SecurityManagementSection = () => {
                                     }}
                                     maxLength={6}
                                     style={{
-                                        width: "100px",
+                                        width: "var(--size-50u)",
                                         textAlign: "center",
                                         fontFamily: "monospace",
                                     }}
@@ -588,16 +594,16 @@ export const SecurityManagementSection = () => {
                             <div
                                 style={{
                                     display: "flex",
-                                    gap: "12px",
+                                    gap: "var(--space-6u)",
                                     justifyContent: "center",
                                 }}
                             >
                                 <Button
                                     onClick={() => setSetupStep("qr")}
                                     style={{
-                                        padding: "8px 16px",
+                                        padding: "var(--space-4u) var(--space-8u)",
                                         background: "var(--color-background)",
-                                        border: "1px solid var(--color-border)",
+                                        border: "var(--border-width-thin) solid var(--color-border)",
                                     }}
                                 >
                                     Back
@@ -609,10 +615,10 @@ export const SecurityManagementSection = () => {
                                         verificationCodes.some((code) => code.length !== 6)
                                     }
                                     style={{
-                                        padding: "8px 16px",
+                                        padding: "var(--space-4u) var(--space-8u)",
                                         background: "var(--color-primary)",
-                                        color: "white",
-                                        border: "1px solid var(--color-primary)",
+                                        color: "var(--color-foreground-inverse)",
+                                        border: "var(--border-width-thin) solid var(--color-primary)",
                                     }}
                                 >
                                     {isVerifying ? "Verifying..." : "Verify & Continue"}
@@ -626,27 +632,35 @@ export const SecurityManagementSection = () => {
                             <div
                                 style={{
                                     background: "var(--color-warning-background)",
-                                    border: "1px solid var(--color-warning-border)",
+                                    border: "var(--border-width-thin) solid var(--color-warning-border)",
                                     borderRadius: "var(--radius-md)",
-                                    padding: "16px",
-                                    marginBottom: "24px",
+                                    padding: "var(--space-8u)",
+                                    marginBottom: "var(--space-12u)",
                                     display: "flex",
                                     alignItems: "flex-start",
-                                    gap: "12px",
+                                    gap: "var(--space-6u)",
                                     textAlign: "left",
                                 }}
                             >
                                 <AlertTriangle
                                     size={16}
-                                    style={{ color: "var(--color-warning)", marginTop: "2px" }}
+                                    style={{
+                                        color: "var(--color-warning)",
+                                        marginTop: "var(--space-1u)",
+                                    }}
                                 />
                                 <div>
-                                    <div style={{ fontWeight: 500, marginBottom: "4px" }}>
+                                    <div
+                                        style={{
+                                            fontWeight: 500,
+                                            marginBottom: "var(--space-2u)",
+                                        }}
+                                    >
                                         Important!
                                     </div>
                                     <div
                                         style={{
-                                            fontSize: "14px",
+                                            fontSize: "var(--font-size-lg)",
                                             color: "var(--color-secondary-text)",
                                         }}
                                     >
@@ -660,10 +674,10 @@ export const SecurityManagementSection = () => {
                                 style={{
                                     display: "grid",
                                     gridTemplateColumns: "repeat(2, 1fr)",
-                                    gap: "8px",
-                                    marginBottom: "24px",
-                                    maxWidth: "300px",
-                                    margin: "0 auto 24px auto",
+                                    gap: "var(--space-4u)",
+                                    marginBottom: "var(--space-12u)",
+                                    maxWidth: "calc(var(--size-50u) * 3)",
+                                    margin: "0 auto var(--space-12u) auto",
                                 }}
                             >
                                 {backupCodes.map((code, index) => (
@@ -671,11 +685,11 @@ export const SecurityManagementSection = () => {
                                         key={index}
                                         style={{
                                             background: "var(--color-input-background)",
-                                            border: "1px solid var(--color-border)",
+                                            border: "var(--border-width-thin) solid var(--color-border)",
                                             borderRadius: "var(--radius-md)",
-                                            padding: "8px",
+                                            padding: "var(--space-4u)",
                                             fontFamily: "monospace",
-                                            fontSize: "12px",
+                                            fontSize: "var(--font-size-sm)",
                                             textAlign: "center",
                                             cursor: "pointer",
                                         }}
@@ -689,18 +703,18 @@ export const SecurityManagementSection = () => {
                             <div
                                 style={{
                                     display: "flex",
-                                    gap: "12px",
+                                    gap: "var(--space-6u)",
                                     justifyContent: "center",
-                                    marginBottom: "24px",
+                                    marginBottom: "var(--space-12u)",
                                 }}
                             >
                                 <Button
                                     onClick={copyBackupCodes}
                                     style={{
-                                        padding: "8px 16px",
-                                        fontSize: "14px",
+                                        padding: "var(--space-4u) var(--space-8u)",
+                                        fontSize: "var(--font-size-lg)",
                                         background: "var(--color-background)",
-                                        border: "1px solid var(--color-border)",
+                                        border: "var(--border-width-thin) solid var(--color-border)",
                                     }}
                                 >
                                     Copy All
@@ -708,13 +722,16 @@ export const SecurityManagementSection = () => {
                                 <Button
                                     onClick={downloadBackupCodes}
                                     style={{
-                                        padding: "8px 16px",
-                                        fontSize: "14px",
+                                        padding: "var(--space-4u) var(--space-8u)",
+                                        fontSize: "var(--font-size-lg)",
                                         background: "var(--color-background)",
-                                        border: "1px solid var(--color-border)",
+                                        border: "var(--border-width-thin) solid var(--color-border)",
                                     }}
                                 >
-                                    <Download size={16} style={{ marginRight: "4px" }} />
+                                    <Download
+                                        size={16}
+                                        style={{ marginRight: "var(--space-2u)" }}
+                                    />
                                     Download
                                 </Button>
                             </div>
@@ -722,10 +739,10 @@ export const SecurityManagementSection = () => {
                             <Button
                                 onClick={handleCompleteSetup}
                                 style={{
-                                    padding: "10px 20px",
+                                    padding: "var(--space-5u) var(--space-10u)",
                                     background: "var(--color-primary)",
-                                    color: "white",
-                                    border: "1px solid var(--color-primary)",
+                                    color: "var(--color-foreground-inverse)",
+                                    border: "var(--border-width-thin) solid var(--color-primary)",
                                 }}
                             >
                                 Complete Setup
@@ -735,26 +752,26 @@ export const SecurityManagementSection = () => {
 
                     {setupStep === "success" && (
                         <>
-                            <div style={{ marginBottom: "24px" }}>
+                            <div style={{ marginBottom: "var(--space-12u)" }}>
                                 <Check
                                     size={48}
                                     style={{
                                         color: "var(--color-success)",
-                                        marginBottom: "16px",
+                                        marginBottom: "var(--space-8u)",
                                     }}
                                 />
                                 <h3
                                     style={{
-                                        fontSize: "18px",
+                                        fontSize: "var(--font-size-2xl)",
                                         fontWeight: 600,
-                                        margin: "0 0 8px 0",
+                                        margin: "0 0 var(--space-4u) 0",
                                     }}
                                 >
                                     All Set!
                                 </h3>
                                 <p
                                     style={{
-                                        fontSize: "14px",
+                                        fontSize: "var(--font-size-lg)",
                                         color: "var(--color-secondary-text)",
                                         margin: 0,
                                     }}
@@ -766,10 +783,10 @@ export const SecurityManagementSection = () => {
                             <Button
                                 onClick={handleCompleteSetup}
                                 style={{
-                                    padding: "10px 20px",
+                                    padding: "var(--space-5u) var(--space-10u)",
                                     background: "var(--color-primary)",
-                                    color: "white",
-                                    border: "1px solid var(--color-primary)",
+                                    color: "var(--color-foreground-inverse)",
+                                    border: "var(--border-width-thin) solid var(--color-primary)",
                                 }}
                             >
                                 Continue to Security
@@ -784,10 +801,10 @@ export const SecurityManagementSection = () => {
     return (
         <>
             <HeaderCTAContainer>
-                <div style={{ display: "flex", alignItems: "center", gap: "8px" }}>
+                <div style={{ display: "flex", alignItems: "center", gap: "var(--space-4u)" }}>
                     <span
                         style={{
-                            fontSize: "14px",
+                            fontSize: "var(--font-size-lg)",
                             fontWeight: 400,
                             color: "var(--color-foreground)",
                         }}
@@ -818,7 +835,7 @@ export const SecurityManagementSection = () => {
                                     </div>
                                     <div
                                         style={{
-                                            fontSize: "13px",
+                                            fontSize: "var(--font-size-md)",
                                             color: "var(--color-secondary-text)",
                                         }}
                                     >
@@ -832,23 +849,15 @@ export const SecurityManagementSection = () => {
                                         {item.id === "password" && (
                                             <>
                                                 {user?.has_password ? (
-                                                    <div style={{ display: "flex", gap: "8px" }}>
-                                                        <div style={{ position: "relative" }}>
-                                                            <Button
-                                                                ref={passwordButtonRef}
-                                                                onClick={() => setShowPasswordPopover(true)}
-                                                                style={{
-                                                                    padding: "6px 12px",
-                                                                    fontSize: "12px",
-                                                                    background: "var(--color-primary)",
-                                                                    color: "white",
-                                                                    border: "1px solid var(--color-primary)",
-                                                                    borderRadius: "var(--radius-md)",
-                                                                    fontWeight: "400",
-                                                                }}
-                                                            >
-                                                                Change
-                                                            </Button>
+                                                    <div style={{ display: "flex", gap: "var(--space-4u)" }}>
+                                                    <div style={{ position: "relative" }}>
+                                                        <Button
+                                                            $size="sm"
+                                                            ref={passwordButtonRef}
+                                                            onClick={() => setShowPasswordPopover(true)}
+                                                        >
+                                                            Change
+                                                        </Button>
 
                                                             {showPasswordPopover && (
                                                                 <ChangePasswordPopover
@@ -862,19 +871,12 @@ export const SecurityManagementSection = () => {
                                                         {canRemovePassword() && (
                                                             <div style={{ position: "relative" }}>
                                                                 <Button
+                                                                    $destructive
+                                                                    $size="sm"
                                                                     ref={removePasswordButtonRef}
                                                                     onClick={() =>
                                                                         setShowRemovePasswordPopover(true)
                                                                     }
-                                                                    style={{
-                                                                        padding: "6px 12px",
-                                                                        fontSize: "12px",
-                                                                        background: "transparent",
-                                                                        color: "var(--color-error)",
-                                                                        border: "1px solid var(--color-error)",
-                                                                        borderRadius: "var(--radius-md)",
-                                                                        fontWeight: "400",
-                                                                    }}
                                                                 >
                                                                     Remove
                                                                 </Button>
@@ -894,17 +896,9 @@ export const SecurityManagementSection = () => {
                                                 ) : (
                                                     <div style={{ position: "relative" }}>
                                                         <Button
+                                                            $size="sm"
                                                             ref={passwordButtonRef}
                                                             onClick={() => setShowPasswordPopover(true)}
-                                                            style={{
-                                                                padding: "6px 12px",
-                                                                fontSize: "12px",
-                                                                background: "var(--color-primary)",
-                                                                color: "white",
-                                                                border: "1px solid var(--color-primary)",
-                                                                borderRadius: "var(--radius-md)",
-                                                                fontWeight: "400",
-                                                            }}
                                                         >
                                                             Setup
                                                         </Button>
@@ -927,18 +921,10 @@ export const SecurityManagementSection = () => {
                                                 <>
                                                     <div style={{ position: "relative" }}>
                                                         <Button
+                                                            $size="sm"
                                                             ref={totpButtonRef}
                                                             onClick={() => setShowTOTPPopover(true)}
                                                             disabled={isLoadingQR}
-                                                            style={{
-                                                                padding: "6px 12px",
-                                                                fontSize: "12px",
-                                                                background: "var(--color-primary)",
-                                                                color: "white",
-                                                                border: "1px solid var(--color-primary)",
-                                                                borderRadius: "var(--radius-md)",
-                                                                fontWeight: "400",
-                                                            }}
                                                         >
                                                             {isLoadingQR ? "Setting up..." : "Setup"}
                                                         </Button>
@@ -973,14 +959,10 @@ export const SecurityManagementSection = () => {
                                             user?.user_authenticator && (
                                                 <div style={{ position: "relative" }}>
                                                     <Button
+                                                        $destructive
                                                         onClick={() => setShowDeleteAuthPopover(true)}
                                                         disabled={isRemovingAuth}
                                                         style={{
-                                                            padding: "6px 16px",
-                                                            fontSize: "13px",
-                                                            background: "var(--color-error)",
-                                                            border: "1px solid var(--color-error)",
-                                                            color: "white",
                                                             cursor: isRemovingAuth ? "not-allowed" : "pointer",
                                                             opacity: isRemovingAuth ? 0.6 : 1,
                                                         }}
@@ -1001,18 +983,10 @@ export const SecurityManagementSection = () => {
                                             <>
                                                 <div style={{ position: "relative" }}>
                                                     <Button
+                                                        $size="sm"
                                                         ref={backupCodesButtonRef}
                                                         onClick={handleGenerateNewBackupCodes}
                                                         disabled={isGeneratingCodes}
-                                                        style={{
-                                                            padding: "6px 12px",
-                                                            fontSize: "12px",
-                                                            background: "var(--color-primary)",
-                                                            color: "white",
-                                                            border: "1px solid var(--color-primary)",
-                                                            borderRadius: "var(--radius-md)",
-                                                            fontWeight: "400",
-                                                        }}
                                                     >
                                                         {isGeneratingCodes
                                                             ? "Generating..."
@@ -1046,26 +1020,22 @@ export const SecurityManagementSection = () => {
                                         )}
 
                                         {item.id === "passkey" && (
-                                            <div style={{ display: "flex", gap: "8px", alignItems: "center" }}>
+                                            <div style={{ display: "flex", gap: "var(--space-4u)", alignItems: "center" }}>
                                                 <Button
+                                                    $outline
+                                                    $size="sm"
                                                     onClick={() => setIsPasskeyExpanded(!isPasskeyExpanded)}
                                                     style={{
-                                                        padding: "6px 12px",
-                                                        fontSize: "12px",
-                                                        background: "var(--color-background)",
-                                                        border: "1px solid var(--color-border)",
-                                                        borderRadius: "var(--radius-md)",
-                                                        fontWeight: "400",
                                                         color: "var(--color-foreground)",
                                                         cursor: "pointer",
                                                         display: "flex",
                                                         alignItems: "center",
                                                         justifyContent: "center",
-                                                        gap: "6px",
+                                                        gap: "var(--space-3u)",
                                                         whiteSpace: "nowrap",
                                                         flexShrink: 0,
-                                                        width: "110px",
-                                                        height: "36px",
+                                                        width: "calc(var(--size-50u) + var(--space-5u))",
+                                                        height: "var(--size-18u)",
                                                     }}
                                                 >
                                                     {isPasskeyExpanded ? "Hide" : "Manage"} ({passkeys.length})
@@ -1079,23 +1049,17 @@ export const SecurityManagementSection = () => {
                                                 </Button>
                                                 <div style={{ position: "relative" }}>
                                                     <Button
+                                                        $size="sm"
                                                         ref={addPasskeyButtonRef}
                                                         onClick={() => setShowAddPasskeyPopover(true)}
                                                         disabled={isRegisteringPasskey}
                                                         style={{
-                                                            padding: "6px 12px",
-                                                            fontSize: "12px",
-                                                            background: "var(--color-primary)",
-                                                            color: "white",
-                                                            border: "1px solid var(--color-primary)",
-                                                            borderRadius: "var(--radius-md)",
-                                                            fontWeight: "400",
                                                             cursor: isRegisteringPasskey ? "not-allowed" : "pointer",
                                                             opacity: isRegisteringPasskey ? 0.7 : 1,
                                                             whiteSpace: "nowrap",
-                                                            minWidth: "80px",
+                                                            minWidth: "var(--size-40u)",
                                                             width: "auto",
-                                                            height: "36px",
+                                                            height: "var(--size-18u)",
                                                         }}
                                                     >
                                                         {isRegisteringPasskey ? "Adding..." : "Add"}
@@ -1120,28 +1084,28 @@ export const SecurityManagementSection = () => {
                                 item.id === "passkey" && isPasskeyExpanded && (
                                     <div
                                         style={{
-                                            padding: "12px 0",
-                                            borderTop: "1px solid var(--color-border)",
-                                            marginTop: "8px",
+                                            padding: "var(--space-6u) 0",
+                                            borderTop: "var(--border-width-thin) solid var(--color-border)",
+                                            marginTop: "var(--space-4u)",
                                         }}
                                     >
                                         {isLoadingPasskeys ? (
-                                            <div style={{ display: "flex", justifyContent: "center", padding: "16px" }}>
+                                            <div style={{ display: "flex", justifyContent: "center", padding: "var(--space-8u)" }}>
                                                 <Spinner />
                                             </div>
                                         ) : passkeys.length === 0 ? (
                                             <div
                                                 style={{
                                                     textAlign: "center",
-                                                    padding: "16px",
+                                                    padding: "var(--space-8u)",
                                                     color: "var(--color-secondary-text)",
-                                                    fontSize: "13px",
+                                                    fontSize: "var(--font-size-md)",
                                                 }}
                                             >
                                                 No passkeys registered yet
                                             </div>
                                         ) : (
-                                            <div style={{ display: "flex", flexDirection: "column", gap: "8px" }}>
+                                            <div style={{ display: "flex", flexDirection: "column", gap: "var(--space-4u)" }}>
                                                 {passkeys.map((passkey: any) => (
                                                     <div
                                                         key={passkey.id}
@@ -1149,17 +1113,17 @@ export const SecurityManagementSection = () => {
                                                             display: "flex",
                                                             justifyContent: "space-between",
                                                             alignItems: "center",
-                                                            padding: "10px 12px",
+                                                            padding: "var(--space-5u) var(--space-6u)",
                                                             background: "var(--color-input-background)",
                                                             borderRadius: "var(--radius-md)",
-                                                            border: "1px solid var(--color-border)",
+                                                            border: "var(--border-width-thin) solid var(--color-border)",
                                                         }}
                                                     >
-                                                        <div style={{ display: "flex", flexDirection: "column", gap: "2px" }}>
+                                                        <div style={{ display: "flex", flexDirection: "column", gap: "var(--space-1u)" }}>
                                                             <span
                                                                 style={{
                                                                     fontWeight: 500,
-                                                                    fontSize: "13px",
+                                                                    fontSize: "var(--font-size-md)",
                                                                     color: "var(--color-foreground)",
                                                                 }}
                                                             >
@@ -1167,7 +1131,7 @@ export const SecurityManagementSection = () => {
                                                             </span>
                                                             <span
                                                                 style={{
-                                                                    fontSize: "11px",
+                                                                    fontSize: "var(--font-size-xs)",
                                                                     color: "var(--color-secondary-text)",
                                                                 }}
                                                             >
@@ -1177,18 +1141,10 @@ export const SecurityManagementSection = () => {
                                                         </div>
                                                         <div style={{ position: "relative" }}>
                                                             <Button
+                                                                $destructive
+                                                                $size="sm"
                                                                 onClick={() => setPasskeyToDelete(passkey.id)}
-                                                                style={{
-                                                                    padding: "4px 10px",
-                                                                    fontSize: "12px",
-                                                                    background: "transparent",
-                                                                    border: "1px solid var(--color-error)",
-                                                                    borderRadius: "var(--radius-md)",
-                                                                    color: "var(--color-error)",
-                                                                    cursor: "pointer",
-                                                                    flexShrink: 0,
-                                                                    width: "auto",
-                                                                }}
+                                                                style={{ flexShrink: 0, width: "auto" }}
                                                             >
                                                                 Remove
                                                             </Button>
@@ -1216,7 +1172,7 @@ export const SecurityManagementSection = () => {
                                 index < securityItems.length - 1 && (
                                     <div
                                         style={{
-                                            height: "1px",
+                                            height: "var(--border-width-thin)",
                                             background: "var(--color-border)",
                                             margin: "0",
                                         }}

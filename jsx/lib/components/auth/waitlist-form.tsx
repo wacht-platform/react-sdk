@@ -11,54 +11,54 @@ import { useWaitlist, type WaitlistParams } from "@/hooks/use-waitlist";
 import { AuthFormImage } from "./auth-image";
 
 const Container = styled.div`
-  max-width: 380px;
-  width: 380px;
-  padding: var(--space-3xl);
+  max-width: calc(calc(var(--size-50u) * 4) - var(--size-10u));
+  width: calc(calc(var(--size-50u) * 4) - var(--size-10u));
+  padding: var(--space-14u);
   background: var(--color-background);
   border-radius: var(--radius-lg);
-  box-shadow: 0 4px 12px var(--color-shadow);
+  box-shadow: var(--shadow-md);
 `;
 
 const Header = styled.div`
   text-align: center;
-  margin-bottom: var(--space-lg);
+  margin-bottom: var(--space-8u);
 `;
 
 const Title = styled.h1`
-  font-size: var(--font-lg);
+  font-size: var(--font-size-2xl);
   font-weight: 400;
   color: var(--color-foreground);
-  margin-bottom: var(--space-xs);
+  margin-bottom: var(--space-2u);
   margin-top: 0;
 `;
 
 const Subtitle = styled.p`
   color: var(--color-secondary-text);
-  font-size: var(--font-xs);
+  font-size: var(--font-size-md);
   margin: 0;
 `;
 
 const Form = styled.form`
   display: flex;
   flex-direction: column;
-  gap: var(--space-md);
+  gap: var(--space-6u);
 `;
 
 const FormGroup = styled.div`
   display: flex;
   flex-direction: column;
-  gap: var(--space-xs);
+  gap: var(--space-2u);
 `;
 
 const NameFields = styled.div<{ $isBothEnabled: boolean }>`
   display: grid;
   grid-template-columns: ${(props) =>
     props.$isBothEnabled ? "1fr 1fr" : "1fr"};
-  gap: var(--space-md);
+  gap: var(--space-6u);
 `;
 
 const Label = styled.label`
-  font-size: var(--font-xs);
+  font-size: var(--font-size-md);
   font-weight: 400;
   color: var(--color-foreground);
   text-align: left;
@@ -66,42 +66,42 @@ const Label = styled.label`
 
 const RequiredAsterisk = styled.span`
   color: var(--color-error);
-  margin-left: var(--space-2xs);
+  margin-left: var(--space-1u);
 `;
 
 const ErrorMessage = styled.div`
   color: var(--color-error);
-  font-size: var(--font-2xs);
-  margin-top: var(--space-2xs);
+  font-size: var(--font-size-xs);
+  margin-top: var(--space-1u);
 `;
 
 const SuccessContainer = styled.div`
   display: flex;
   flex-direction: column;
   align-items: center;
-  gap: var(--space-md);
+  gap: var(--space-6u);
   text-align: center;
 `;
 
 const SuccessIcon = styled.div`
-  width: 48px;
-  height: 48px;
+  width: var(--size-24u);
+  height: var(--size-24u);
   background: var(--color-success);
   border-radius: 50%;
   display: flex;
   align-items: center;
   justify-content: center;
-  color: white;
+  color: var(--color-foreground-inverse);
 `;
 
 const SuccessTitle = styled.h2`
-  font-size: var(--font-lg);
+  font-size: var(--font-size-2xl);
   color: var(--color-foreground);
   margin: 0;
 `;
 
 const SuccessMessage = styled.p`
-  font-size: var(--font-xs);
+  font-size: var(--font-size-md);
   color: var(--color-secondary-text);
   margin: 0;
   line-height: 1.5;
@@ -109,11 +109,11 @@ const SuccessMessage = styled.p`
 
 const Footer = styled.div`
   text-align: center;
-  margin-top: var(--space-lg);
+  margin-top: var(--space-8u);
 `;
 
 const FooterText = styled.p`
-  font-size: var(--font-xs);
+  font-size: var(--font-size-md);
   color: var(--color-muted);
   margin: 0;
 `;
@@ -286,7 +286,7 @@ export function WaitlistForm() {
             <ErrorMessage>{getErrorMessage()}</ErrorMessage>
           )}
 
-          <Button type="submit" $primary $fullWidth $size="sm" disabled={isSubmitting || loading}>
+          <Button type="submit" $primary $fullWidth disabled={isSubmitting || loading}>
             {isSubmitting || loading ? "Joining waitlist..." : "Join waitlist"}
           </Button>
         </Form>

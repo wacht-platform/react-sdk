@@ -32,8 +32,8 @@ const NotificationButton = styled.button<{ $hasUnread: boolean }>`
     border: none;
     background: transparent;
     cursor: pointer;
-    padding: 8px;
-    border-radius: 8px;
+    padding: var(--space-4u);
+    border-radius: var(--radius-md);
     transition: all 0.2s ease;
     color: var(--color-foreground);
 
@@ -53,32 +53,32 @@ const NotificationButton = styled.button<{ $hasUnread: boolean }>`
 
     &:focus {
         outline: none;
-        box-shadow: 0 0 0 2px var(--color-primary);
+        box-shadow: 0 0 0 var(--border-width-regular) var(--color-primary);
     }
 
     svg {
-        width: 20px;
-        height: 20px;
+        width: var(--size-10u);
+        height: var(--size-10u);
     }
 `;
 
 const Badge = styled.span<{ $dotOnly?: boolean }>`
     position: absolute;
-    top: ${(props) => (props.$dotOnly ? "6px" : "4px")};
-    right: ${(props) => (props.$dotOnly ? "6px" : "4px")};
+    top: ${(props) => (props.$dotOnly ? "var(--space-3u)" : "var(--space-2u)")};
+    right: ${(props) => (props.$dotOnly ? "var(--space-3u)" : "var(--space-2u)")};
     background: var(--color-error);
-    color: white;
-    border-radius: 10px;
-    min-width: ${(props) => (props.$dotOnly ? "8px" : "16px")};
-    height: ${(props) => (props.$dotOnly ? "8px" : "16px")};
-    padding: ${(props) => (props.$dotOnly ? "0" : "0 4px")};
-    font-size: 9px;
+    color: var(--color-foreground-inverse);
+    border-radius: var(--space-5u);
+    min-width: ${(props) => (props.$dotOnly ? "var(--space-4u)" : "var(--size-8u)")};
+    height: ${(props) => (props.$dotOnly ? "var(--space-4u)" : "var(--size-8u)")};
+    padding: ${(props) => (props.$dotOnly ? "0" : "0 var(--space-2u)")};
+    font-size: calc(var(--font-size-2xs) - var(--border-width-thin));
     font-weight: 600;
     display: flex;
     align-items: center;
     justify-content: center;
-    border: 1.5px solid var(--color-background);
-    box-shadow: 0 0 1px rgba(0, 0, 0, 0.1);
+    border: var(--border-width-regular) solid var(--color-background);
+    box-shadow: var(--shadow-sm);
     line-height: 1;
     transition: all 0.2s ease;
 `;

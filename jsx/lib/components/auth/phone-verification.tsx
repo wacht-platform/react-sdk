@@ -9,7 +9,7 @@ import { AuthFormImage } from "./auth-image";
 const Container = styled.div`
   max-width: 380px;
   width: 380px;
-  padding: var(--space-2xl);
+  padding: var(--space-12u);
   background: var(--color-background);
   border-radius: var(--radius-lg);
   box-shadow: 0 4px 12px var(--color-shadow);
@@ -17,39 +17,39 @@ const Container = styled.div`
 
 const Header = styled.div`
   text-align: center;
-  margin-bottom: var(--space-lg);
+  margin-bottom: var(--space-8u);
   position: relative;
 `;
 
 const Title = styled.h1`
-  font-size: var(--font-md);
+  font-size: var(--font-size-xl);
   font-weight: 400;
   color: var(--color-foreground);
-  margin-bottom: var(--space-xs);
+  margin-bottom: var(--space-2u);
   margin-top: 0;
 `;
 
 const Subtitle = styled.p`
   color: var(--color-secondary-text);
-  font-size: var(--font-xs);
+  font-size: var(--font-size-md);
 `;
 
 const ErrorMessage = styled.p`
-  font-size: var(--font-2xs);
+  font-size: var(--font-size-xs);
   color: var(--color-error);
   margin: 0;
-  margin-top: var(--space-2xs);
+  margin-top: var(--space-1u);
 `;
 
 const SubmitButton = styled(Button)`
-  margin-top: var(--space-sm);
+  margin-top: var(--space-4u);
   width: 100%;
 `;
 
 const Footer = styled.div`
-  margin-top: var(--space-lg);
+  margin-top: var(--space-8u);
   text-align: center;
-  font-size: var(--font-xs);
+  font-size: var(--font-size-md);
   color: var(--color-secondary-text);
 `;
 
@@ -66,7 +66,7 @@ const Link = styled.span`
 `;
 
 const LastDigitsInput = styled(Input)`
-  padding: var(--space-sm) var(--space-md);
+  padding: var(--space-4u) var(--space-6u);
 `;
 
 interface PhoneVerificationProps {

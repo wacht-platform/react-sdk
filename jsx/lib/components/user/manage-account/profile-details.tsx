@@ -126,7 +126,7 @@ export const ProfileDetailsManagementSection = () => {
                 style={{
                     display: "flex",
                     justifyContent: "center",
-                    padding: "40px 0",
+                    padding: "var(--size-20u) 0",
                 }}
             >
                 <Spinner />
@@ -157,7 +157,7 @@ export const ProfileDetailsManagementSection = () => {
                 style={{
                     display: "flex",
                     flexDirection: "column",
-                    gap: "var(--space-2xl)",
+                    gap: "var(--space-12u)",
                 }}
             >
                 {/* Profile Picture Section - Two Column Layout */}
@@ -166,10 +166,10 @@ export const ProfileDetailsManagementSection = () => {
                     <ProfileImageContainer>
                         <div
                             style={{
-                                width: "90px",
-                                height: "90px",
+                                width: "calc(var(--size-40u) + var(--space-5u))",
+                                height: "calc(var(--size-40u) + var(--space-5u))",
                                 borderRadius: "50%",
-                                border: "2px dashed var(--color-border)",
+                                border: "var(--border-width-regular) dashed var(--color-border)",
                                 background: previewUrl
                                     ? "transparent"
                                     : "var(--color-input-background)",
@@ -217,19 +217,19 @@ export const ProfileDetailsManagementSection = () => {
 
                     {/* Right Column - Content and Controls */}
                     <div style={{ flex: 1 }}>
-                        <div style={{ marginBottom: "var(--space-lg)" }}>
+                        <div style={{ marginBottom: "var(--space-8u)" }}>
                             <h3
                                 style={{
-                                    fontSize: "var(--font-sm)",
+                                    fontSize: "var(--font-size-lg)",
                                     color: "var(--color-foreground)",
-                                    margin: "0 0 var(--space-2xs) 0",
+                                    margin: "0 0 var(--space-1u) 0",
                                 }}
                             >
                                 Profile Picture
                             </h3>
                             <p
                                 style={{
-                                    fontSize: "var(--font-xs)",
+                                    fontSize: "var(--font-size-md)",
                                     color: "var(--color-secondary-text)",
                                     margin: 0,
                                 }}
@@ -240,7 +240,7 @@ export const ProfileDetailsManagementSection = () => {
 
                         <ButtonActions
                             style={{
-                                marginBottom: "var(--space-sm)",
+                                marginBottom: "var(--space-4u)",
                             }}
                         >
                             <Button
@@ -274,7 +274,7 @@ export const ProfileDetailsManagementSection = () => {
                                     }
                                 }}
                             >
-                                <Trash2 size={14} style={{ marginRight: "4px" }} />
+                                <Trash2 size={14} style={{ marginRight: "var(--space-2u)" }} />
                                 Remove
                             </Button>
                         </ButtonActions>
@@ -285,7 +285,7 @@ export const ProfileDetailsManagementSection = () => {
                 <div
                     style={{
                         position: "relative",
-                        height: "1px",
+                        height: "var(--border-width-thin)",
                         background: "var(--color-divider)",
                         margin: "0",
                     }}
@@ -293,19 +293,19 @@ export const ProfileDetailsManagementSection = () => {
 
                 {/* Profile Details */}
                 <div>
-                    <div style={{ marginBottom: "var(--space-md)" }}>
+                    <div style={{ marginBottom: "var(--space-6u)" }}>
                         <h3
                             style={{
-                                fontSize: "var(--font-sm)",
+                                fontSize: "var(--font-size-lg)",
                                 color: "var(--color-foreground)",
-                                margin: "0 0 var(--space-2xs) 0",
+                                margin: "0 0 var(--space-1u) 0",
                             }}
                         >
                             Profile Details
                         </h3>
                         <p
                             style={{
-                                fontSize: "var(--font-xs)",
+                                fontSize: "var(--font-size-md)",
                                 color: "var(--color-secondary-text)",
                                 margin: 0,
                             }}
@@ -318,7 +318,7 @@ export const ProfileDetailsManagementSection = () => {
                         style={{
                             display: "flex",
                             flexDirection: "column",
-                            gap: "var(--space-lg)",
+                            gap: "var(--space-8u)",
                         }}
                     >
                         {/* First Name and Last Name in same row */}
@@ -371,7 +371,7 @@ export const ProfileDetailsManagementSection = () => {
                 <div
                     style={{
                         position: "relative",
-                        height: "1px",
+                        height: "var(--border-width-thin)",
                         background: "var(--color-divider)",
                         margin: "0",
                     }}
@@ -379,19 +379,19 @@ export const ProfileDetailsManagementSection = () => {
 
                 {/* Danger Zone */}
                 <div>
-                    <div style={{ marginBottom: "16px" }}>
+                    <div style={{ marginBottom: "var(--space-8u)" }}>
                         <h3
                             style={{
-                                fontSize: "16px",
+                                fontSize: "var(--font-size-xl)",
                                 color: "var(--color-foreground)",
-                                margin: "0 0 4px 0",
+                                margin: "0 0 var(--space-2u) 0",
                             }}
                         >
                             Danger Zone
                         </h3>
                         <p
                             style={{
-                                fontSize: "14px",
+                                fontSize: "var(--font-size-lg)",
                                 color: "var(--color-muted)",
                                 margin: 0,
                             }}
@@ -402,9 +402,9 @@ export const ProfileDetailsManagementSection = () => {
 
                     <div
                         style={{
-                            padding: "20px",
-                            border: "1px solid var(--color-error)",
-                            borderRadius: "8px",
+                            padding: "var(--space-10u)",
+                            border: "var(--border-width-thin) solid var(--color-error)",
+                            borderRadius: "var(--radius-md)",
                         }}
                     >
                         <div
@@ -412,15 +412,15 @@ export const ProfileDetailsManagementSection = () => {
                                 display: "flex",
                                 alignItems: "center",
                                 justifyContent: "space-between",
-                                marginBottom: showDeleteConfirm ? "20px" : "0",
+                                marginBottom: showDeleteConfirm ? "var(--space-10u)" : "0",
                             }}
                         >
                             <div>
                                 <div
                                     style={{
-                                        fontSize: "14px",
+                                        fontSize: "var(--font-size-lg)",
                                         color: "var(--color-foreground)",
-                                        marginBottom: "4px",
+                                        marginBottom: "var(--space-2u)",
                                         fontWeight: "500",
                                     }}
                                 >
@@ -428,7 +428,7 @@ export const ProfileDetailsManagementSection = () => {
                                 </div>
                                 <div
                                     style={{
-                                        fontSize: "13px",
+                                        fontSize: "var(--font-size-md)",
                                         color: "var(--color-muted)",
                                     }}
                                 >
@@ -447,11 +447,11 @@ export const ProfileDetailsManagementSection = () => {
                                 }}
                                 style={{
                                     background: "var(--color-error)",
-                                    color: "white",
+                                    color: "var(--color-foreground-inverse)",
                                     border: "none",
-                                    padding: "6px 12px",
-                                    fontSize: "13px",
-                                    height: "32px",
+                                    padding: "var(--space-3u) var(--space-6u)",
+                                    fontSize: "var(--font-size-md)",
+                                    height: "var(--size-16u)",
                                     width: "auto",
                                 }}
                             >
@@ -460,7 +460,7 @@ export const ProfileDetailsManagementSection = () => {
                         </div>
 
                         {showDeleteConfirm && (
-                            <div style={{ width: "100%", marginTop: "16px" }}>
+                            <div style={{ width: "100%", marginTop: "var(--space-8u)" }}>
                                 <FormGroup>
                                     <Label htmlFor="confirm_username">
                                         Type "delete this account" to confirm
@@ -488,18 +488,18 @@ export const ProfileDetailsManagementSection = () => {
                                                 : "transparent",
                                         color:
                                             confirmName === "delete this account"
-                                                ? "white"
+                                                ? "var(--color-foreground-inverse)"
                                                 : "var(--color-muted)",
-                                        border: "1px solid var(--color-border)",
-                                        padding: "8px 16px",
-                                        fontSize: "14px",
-                                        height: "36px",
+                                        border: "var(--border-width-thin) solid var(--color-border)",
+                                        padding: "var(--space-4u) var(--space-8u)",
+                                        fontSize: "var(--font-size-lg)",
+                                        height: "var(--size-18u)",
                                         cursor:
                                             confirmName === "delete this account"
                                                 ? "pointer"
                                                 : "not-allowed",
                                         opacity: confirmName === "delete this account" ? 1 : 0.6,
-                                        marginTop: "12px",
+                                        marginTop: "var(--space-6u)",
                                         width: "100%",
                                     }}
                                 >

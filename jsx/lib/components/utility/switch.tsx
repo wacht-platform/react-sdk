@@ -17,26 +17,29 @@ const SwitchInput = styled.input`
 
 const SwitchSlider = styled.span<{ checked: boolean }>`
   position: relative;
-  width: 40px;
-  height: 24px;
-  border-radius: 12px;
+  width: var(--size-20u);
+  height: var(--size-12u);
+  border-radius: var(--radius-lg);
   background-color: ${(props) =>
     props.checked ? "var(--color-primary)" : "var(--color-border)"};
   transition: background-color 0.2s ease;
-  border: 1px solid
+  border: var(--border-width-thin) solid
     ${(props) =>
       props.checked ? "var(--color-primary)" : "var(--color-border)"};
 
   &::before {
     content: "";
     position: absolute;
-    width: 18px;
-    height: 18px;
-    border-radius: 50%;
+    width: calc(var(--space-1u) * 9);
+    height: calc(var(--space-1u) * 9);
+    border-radius: var(--radius-full);
     background-color: ${(props) =>
-      props.checked ? "white" : "var(--color-muted)"};
-    top: 2px;
-    left: ${(props) => (props.checked ? "20px" : "2px")};
+      props.checked
+        ? "var(--color-foreground-inverse)"
+        : "var(--color-muted)"};
+    top: var(--space-1u);
+    left: ${(props) =>
+      props.checked ? "var(--space-10u)" : "var(--space-1u)"};
     transition: left 0.2s ease;
   }
 `;

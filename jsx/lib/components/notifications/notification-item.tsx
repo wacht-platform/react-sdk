@@ -4,13 +4,13 @@ import { Archive, Star, RotateCcw, Circle } from "lucide-react";
 import type { Notification } from "@/types";
 
 const Item = styled.div<{ $unread: boolean; $expanded: boolean }>`
-  padding: 12px 16px;
+  padding: var(--space-6u) var(--space-8u);
   background: ${props => props.$unread ? "var(--color-background-hover)" : "transparent"};
   transition: background-color 0.2s ease;
   cursor: pointer;
   display: flex;
-  gap: 12px;
-  border-bottom: 1px solid var(--color-border);
+  gap: var(--space-6u);
+  border-bottom: var(--border-width-thin) solid var(--color-border);
 
   &:hover {
     background: var(--color-background-hover);
@@ -30,17 +30,17 @@ const ContentContainer = styled.div`
 `;
 
 const Title = styled.h4`
-  font-size: 14px;
+  font-size: var(--font-size-lg);
   font-weight: 400;
   color: var(--color-foreground);
-  margin: 0 0 2px 0;
+  margin: 0 0 var(--space-1u) 0;
   white-space: nowrap;
   overflow: hidden;
   text-overflow: ellipsis;
 `;
 
 const Body = styled.p<{ $expanded: boolean }>`
-  font-size: 13px;
+  font-size: var(--font-size-md);
   color: var(--color-secondary-text);
   margin: 0;
   line-height: 1.4;
@@ -58,19 +58,19 @@ const MetaContainer = styled.div`
   display: flex;
   flex-direction: column;
   align-items: flex-end;
-  gap: 6px;
-  min-width: 40px;
+  gap: var(--space-3u);
+  min-width: var(--size-20u);
 `;
 
 const Time = styled.span`
-  font-size: 11px;
+  font-size: var(--font-size-xs);
   color: var(--color-muted);
   white-space: nowrap;
 `;
 
 const UnreadDot = styled.div`
-  width: 8px;
-  height: 8px;
+  width: var(--space-4u);
+  height: var(--space-4u);
   border-radius: 50%;
   background: var(--color-primary);
 `;
@@ -135,7 +135,7 @@ export function NotificationItem({
 
 
         <ContentContainer>
-          <div style={{ display: 'flex', alignItems: 'center', gap: '8px', marginBottom: '2px' }}>
+          <div style={{ display: 'flex', alignItems: 'center', gap: 'var(--space-4u)', marginBottom: 'var(--space-1u)' }}>
             {!notification.is_read && <UnreadDot />}
             <Title>{notification.title}</Title>
           </div>
@@ -147,8 +147,8 @@ export function NotificationItem({
             <div
               style={{
                 display: 'flex',
-                gap: '8px',
-                marginTop: '10px',
+                gap: 'var(--space-4u)',
+                marginTop: 'var(--space-5u)',
                 flexWrap: 'wrap',
               }}
             >
@@ -160,16 +160,16 @@ export function NotificationItem({
                     display: 'inline-flex',
                     alignItems: 'center',
                     justifyContent: 'center',
-                    padding: '5px 12px',
-                    fontSize: '12px',
+                    padding: 'calc(var(--space-2u) + var(--border-width-thin)) var(--space-6u)',
+                    fontSize: 'var(--font-size-sm)',
                     fontWeight: 500,
-                    borderRadius: '6px',
+                    borderRadius: 'var(--radius-xs)',
                     cursor: 'pointer',
                     transition: 'all 0.2s cubic-bezier(0.4, 0, 0.2, 1)',
-                    border: '1px solid var(--color-border)',
+                    border: 'var(--border-width-thin) solid var(--color-border)',
                     background: 'var(--color-background)',
                     color: 'var(--color-foreground)',
-                    boxShadow: '0 1px 2px rgba(0,0,0,0.05)',
+                    boxShadow: 'var(--shadow-sm)',
                   }}
                   onMouseOver={(e) => {
                     e.currentTarget.style.background = 'var(--color-background-hover)';
@@ -190,7 +190,7 @@ export function NotificationItem({
         </ContentContainer>
 
         <MetaContainer>
-          <div style={{ display: 'flex', gap: '8px', alignItems: 'center' }}>
+          <div style={{ display: 'flex', gap: 'var(--space-4u)', alignItems: 'center' }}>
             {notification.is_read && (
               <button
                 onClick={(e) => {
@@ -203,9 +203,9 @@ export function NotificationItem({
                   border: 'none',
                   cursor: 'pointer',
                   color: 'var(--color-muted)',
-                  padding: '4px 0',
+                  padding: 'var(--space-2u) 0',
                   display: 'flex',
-                  transition: 'color 0.2s',
+                  transition: 'color 0.2s ease',
                 }}
                 onMouseOver={(e) => e.currentTarget.style.color = 'var(--color-foreground)'}
                 onMouseOut={(e) => e.currentTarget.style.color = 'var(--color-muted)'}
@@ -224,9 +224,9 @@ export function NotificationItem({
                 border: 'none',
                 cursor: 'pointer',
                 color: notification.is_starred ? 'var(--color-warning)' : 'var(--color-muted)',
-                padding: '4px 0',
+                padding: 'var(--space-2u) 0',
                 display: 'flex',
-                transition: 'color 0.2s',
+                transition: 'color 0.2s ease',
               }}
               onMouseOver={(e) => e.currentTarget.style.color = notification.is_starred ? 'var(--color-warning)' : 'var(--color-foreground)'}
               onMouseOut={(e) => e.currentTarget.style.color = notification.is_starred ? 'var(--color-warning)' : 'var(--color-muted)'}
@@ -244,9 +244,9 @@ export function NotificationItem({
                 border: 'none',
                 cursor: 'pointer',
                 color: 'var(--color-muted)',
-                padding: '4px 0',
+                padding: 'var(--space-2u) 0',
                 display: 'flex',
-                transition: 'color 0.2s',
+                transition: 'color 0.2s ease',
               }}
               onMouseOver={(e) => e.currentTarget.style.color = 'var(--color-foreground)'}
               onMouseOut={(e) => e.currentTarget.style.color = 'var(--color-muted)'}

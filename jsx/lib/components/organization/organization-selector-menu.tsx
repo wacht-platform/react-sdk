@@ -24,11 +24,11 @@ type ViewMode = "orgList" | "workspaceList" | "createOrg" | "createWorkspace";
 
 const Container = styled.div`
   width: 100%;
-  max-width: 1000px;
-  height: 600px;
+  max-width: calc(var(--size-50u) * 5);
+  height: calc(calc(var(--size-50u) * 4) + calc(var(--size-50u) * 2));
   background: var(--color-background);
   display: grid;
-  grid-template-columns: 280px 1fr;
+  grid-template-columns: calc(calc(var(--size-50u) * 2) + var(--size-40u)) 1fr;
   border-radius: var(--radius-lg);
   overflow: hidden;
 
@@ -43,17 +43,17 @@ const Container = styled.div`
 
 const LeftColumn = styled.div`
   background: var(--color-background-hover);
-  padding: 32px 24px;
+  padding: var(--space-16u) var(--space-12u);
   display: flex;
   flex-direction: column;
   justify-content: space-between;
-  border-right: 1px solid var(--color-border);
+  border-right: var(--border-width-thin) solid var(--color-border);
 
   @media (max-width: 768px) {
     border-right: none;
-    border-bottom: 1px solid var(--color-border);
-    padding: 24px;
-    gap: 24px;
+    border-bottom: var(--border-width-thin) solid var(--color-border);
+    padding: var(--space-12u);
+    gap: var(--space-12u);
     align-items: center;
     text-align: center;
   }
@@ -69,14 +69,14 @@ const LeftColumnContent = styled.div`
 `;
 
 const RightColumn = styled.div`
-  padding: 32px 24px;
+  padding: var(--space-16u) var(--space-12u);
   display: flex;
   flex-direction: column;
   overflow: hidden;
 
   @media (max-width: 768px) {
-    padding: 24px;
-    min-height: 400px;
+    padding: var(--space-12u);
+    min-height: calc(var(--size-50u) * 4);
   }
 `;
 
@@ -85,18 +85,18 @@ const ListSection = styled.div`
   display: flex;
   flex-direction: column;
   overflow: hidden;
-  margin-bottom: 24px;
+  margin-bottom: var(--space-12u);
 `;
 
 const ListHeaderContainer = styled.div`
   display: flex;
   align-items: center;
   justify-content: space-between;
-  margin-bottom: 8px;
+  margin-bottom: var(--space-4u);
 `;
 
 const ListHeader = styled.h2`
-  font-size: 14px;
+  font-size: var(--font-size-lg);
   font-weight: 400;
   color: var(--color-secondary-text);
   margin: 0;
@@ -105,11 +105,11 @@ const ListHeader = styled.h2`
 const BackLink = styled.button`
   display: flex;
   align-items: center;
-  gap: 4px;
+  gap: var(--space-2u);
   background: none;
   border: none;
-  padding: 4px 8px;
-  font-size: 13px;
+  padding: var(--space-2u) var(--space-4u);
+  font-size: var(--font-size-md);
   color: var(--color-primary);
   cursor: pointer;
   transition: opacity 0.2s;
@@ -120,8 +120,8 @@ const BackLink = styled.button`
   }
 
   svg {
-    width: 14px;
-    height: 14px;
+    width: var(--space-7u);
+    height: var(--space-7u);
   }
 `;
 
@@ -129,7 +129,7 @@ const TitleSection = styled.div`
   display: flex;
   flex-direction: column;
   align-items: flex-start;
-  gap: 4px;
+  gap: var(--space-2u);
   flex: 1;
 
   @media (max-width: 768px) {
@@ -139,7 +139,7 @@ const TitleSection = styled.div`
 `;
 
 const Title = styled.h1`
-  font-size: 16px;
+  font-size: var(--font-size-xl);
   font-weight: 400;
   color: var(--color-foreground);
   margin: 0;
@@ -148,7 +148,7 @@ const Title = styled.h1`
 
 const Subtitle = styled.p`
   color: var(--color-secondary-text);
-  font-size: var(--font-sm);
+  font-size: var(--font-size-lg);
   margin: 0;
   font-weight: 400;
 `;
@@ -159,10 +159,10 @@ const ListContainer = styled.div`
   display: flex;
   flex-direction: column;
   gap: 0;
-  padding-right: 8px;
+  padding-right: var(--space-4u);
 
   &::-webkit-scrollbar {
-    width: 4px;
+    width: var(--space-2u);
   }
 
   &::-webkit-scrollbar-track {
@@ -171,7 +171,7 @@ const ListContainer = styled.div`
 
   &::-webkit-scrollbar-thumb {
     background: var(--color-border);
-    border-radius: 2px;
+    border-radius: var(--space-1u);
   }
 `;
 
@@ -179,17 +179,17 @@ const ListItem = styled.button`
   display: grid;
   grid-template-columns: auto 1fr auto;
   align-items: center;
-  gap: var(--space-md);
+  gap: var(--space-6u);
   width: 100%;
-  padding: 12px 0px;
+  padding: var(--space-6u) 0;
   text-align: left;
   border: none;
-  border-bottom: 1px solid var(--color-border);
+  border-bottom: var(--border-width-thin) solid var(--color-border);
   background: transparent;
   cursor: pointer;
   color: var(--color-foreground);
   transition: background-color 0.2s ease;
-  font-size: var(--font-sm);
+  font-size: var(--font-size-lg);
   position: relative;
 
   &:last-child {
@@ -212,17 +212,17 @@ const ListItemWarningPopover = styled.div`
   opacity: 0;
   position: absolute;
   top: 50%;
-  right: 50px;
+  right: var(--size-50u);
   transform: translateY(-50%);
   background: var(--color-background);
-  border: 1px solid var(--color-border);
-  border-radius: var(--radius-sm);
-  padding: 6px 10px;
-  box-shadow: 0 4px 12px var(--color-shadow);
+  border: var(--border-width-thin) solid var(--color-border);
+  border-radius: var(--radius-2xs);
+  padding: var(--space-3u) var(--space-5u);
+  box-shadow: var(--shadow-md);
   z-index: 100;
   width: max-content;
-  max-width: 300px;
-  font-size: 11px;
+  max-width: calc(var(--size-50u) * 3);
+  font-size: var(--font-size-xs);
   line-height: 1.4;
   color: var(--color-warning);
   pointer-events: none;
@@ -233,25 +233,25 @@ const ListItemWarningPopover = styled.div`
     position: absolute;
     top: 50%;
     left: 100%;
-    margin-top: -5px;
-    border-width: 5px;
+    margin-top: calc(var(--space-5u) * -1);
+    border-width: var(--space-5u);
     border-style: solid;
     border-color: transparent transparent transparent var(--color-border);
   }
 `;
 
 const Avatar = styled.div`
-  width: 40px;
-  height: 40px;
+  width: var(--size-20u);
+  height: var(--size-20u);
   border-radius: var(--radius-md);
   overflow: hidden;
   display: flex;
   align-items: center;
   justify-content: center;
   background: var(--color-background-hover);
-  border: 1px solid var(--color-border);
+  border: var(--border-width-thin) solid var(--color-border);
   color: var(--color-secondary-text);
-  font-size: 14px;
+  font-size: var(--font-size-lg);
   font-weight: 400;
   flex-shrink: 0;
 `;
@@ -268,7 +268,7 @@ const ItemContent = styled.div`
 `;
 
 const ItemName = styled.div`
-  font-size: 15px;
+  font-size: var(--font-size-lg);
   font-weight: 400;
   color: var(--color-foreground);
   overflow: hidden;
@@ -279,15 +279,15 @@ const ItemName = styled.div`
 const ItemMeta = styled.div`
   display: flex;
   align-items: center;
-  gap: var(--space-xs);
-  margin-top: 2px;
-  font-size: 12px;
+  gap: var(--space-2u);
+  margin-top: var(--space-1u);
+  font-size: var(--font-size-sm);
   color: var(--color-secondary-text);
   font-weight: 400;
 
   svg {
-    width: 12px;
-    height: 12px;
+    width: var(--size-6u);
+    height: var(--size-6u);
   }
 `;
 
@@ -297,8 +297,8 @@ const ItemArrow = styled.div`
   align-items: center;
 
   svg {
-    width: 16px;
-    height: 16px;
+    width: var(--size-8u);
+    height: var(--size-8u);
   }
 `;
 
@@ -306,7 +306,7 @@ const ItemArrow = styled.div`
 
 const EmptyState = styled.div`
   text-align: center;
-  padding: 32px 16px;
+  padding: var(--space-16u) var(--space-8u);
   display: flex;
   flex-direction: column;
   margin-top: auto;
@@ -317,24 +317,24 @@ const EmptyState = styled.div`
 `;
 
 const EmptyStateTitle = styled.div`
-  font-size: 14px;
+  font-size: var(--font-size-lg);
   font-weight: 400;
   color: var(--color-foreground);
-  margin-bottom: 4px;
+  margin-bottom: var(--space-2u);
 `;
 
 const EmptyStateText = styled.div`
-  font-size: 13px;
+  font-size: var(--font-size-md);
   color: var(--color-secondary-text);
-  margin-bottom: 16px;
+  margin-bottom: var(--space-8u);
   line-height: 1.5;
 `;
 
 const EmptyStateCTA = styled(Button)`
   width: auto;
   margin: 0 auto;
-  padding: 6px 16px;
-  font-size: 13px;
+  padding: var(--space-3u) var(--space-8u);
+  font-size: var(--font-size-md);
 `;
 
 export const OrganizationSelectorMenu = () => {
@@ -693,7 +693,7 @@ export const OrganizationSelectorMenu = () => {
             <Button
               $outline
               style={{
-                marginTop: workspacesEnabled ? "8px" : "var(--space-md)",
+                marginTop: workspacesEnabled ? "var(--space-4u)" : "var(--space-6u)",
               }}
               onClick={() => setViewMode("createOrg")}
               disabled={switching !== null}

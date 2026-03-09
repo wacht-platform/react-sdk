@@ -34,18 +34,18 @@ const MarkdownContainer = styled.div`
   h4, h5, h6 { font-size: 1em; }
 
   code {
-    background: var(--color-background-subtle, rgba(0, 0, 0, 0.05));
+    background: var(--color-background-subtle);
     padding: 0.15em 0.4em;
-    border-radius: 4px;
+    border-radius: var(--radius-2xs);
     font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, monospace;
     font-size: 0.9em;
   }
 
   pre {
-    background: var(--color-background-subtle, #1a1a1a);
-    color: var(--color-foreground, #e0e0e0);
-    padding: 12px 16px;
-    border-radius: 8px;
+    background: var(--color-background-subtle);
+    color: var(--color-foreground);
+    padding: var(--space-6u) var(--space-8u);
+    border-radius: var(--radius-md);
     overflow-x: auto;
     margin: 0.75em 0;
     font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, monospace;
@@ -60,7 +60,7 @@ const MarkdownContainer = styled.div`
   }
 
   a {
-    color: var(--color-primary, #3b82f6);
+    color: var(--color-primary);
     text-decoration: none;
 
     &:hover {
@@ -86,15 +86,15 @@ const MarkdownContainer = styled.div`
   }
 
   blockquote {
-    border-left: 3px solid var(--color-border, #e0e0e0);
+    border-left: var(--border-width-regular) solid var(--color-border);
     margin: 0.75em 0;
     padding-left: 1em;
-    color: var(--color-secondary-text, #666);
+    color: var(--color-secondary-text);
   }
 
   hr {
     border: none;
-    border-top: 1px solid var(--color-border, #e0e0e0);
+    border-top: var(--border-width-thin) solid var(--color-border);
     margin: 1em 0;
   }
 
@@ -106,13 +106,13 @@ const MarkdownContainer = styled.div`
   }
 
   th, td {
-    border: 1px solid var(--color-border, #e0e0e0);
-    padding: 8px 12px;
+    border: var(--border-width-thin) solid var(--color-border);
+    padding: var(--space-4u) var(--space-6u);
     text-align: left;
   }
 
   th {
-    background: var(--color-background-subtle, rgba(0, 0, 0, 0.05));
+    background: var(--color-background-subtle);
     font-weight: 600;
   }
 `;

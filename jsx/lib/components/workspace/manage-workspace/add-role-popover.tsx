@@ -8,6 +8,7 @@ import { WorkspaceRole } from "@/types";
 import { useDeployment } from "@/hooks/use-deployment";
 import { ComboBoxMulti } from "../../utility/combo-box";
 import { useScreenContext } from "../../organization/context";
+import { usePopoverPosition } from "@/hooks/use-popover-position";
 
 interface CreateRoleData {
     id?: string;
@@ -17,18 +18,18 @@ interface CreateRoleData {
 
 const PopoverContainer = styled.div<{ $isInTable?: boolean }>`
   position: fixed;
-  width: 400px;
-  max-width: calc(100vw - 48px);
+  width: calc(var(--space-10u) * 20);
+  max-width: calc(100vw - var(--space-24u));
   background: var(--color-background);
-  border: 1px solid var(--color-border);
+  border: var(--border-width-thin) solid var(--color-border);
   border-radius: var(--radius-md);
-  box-shadow: 0 4px 12px var(--color-shadow);
+  box-shadow: var(--shadow-md);
   z-index: 1001;
-  max-height: calc(100vh - 100px);
+  max-height: calc(100vh - var(--size-50u));
   overflow-y: auto;
   
   @media (max-width: 600px) {
-    width: calc(100vw - 48px);
+    width: calc(100vw - var(--space-24u));
   }
 `;
 
@@ -36,38 +37,38 @@ const Header = styled.div`
   display: flex;
   justify-content: space-between;
   align-items: center;
-  padding: var(--space-sm) var(--space-md);
+  padding: var(--space-4u) var(--space-6u);
   border-bottom: 1px solid var(--color-border);
 `;
 
 const Title = styled.h3`
   margin: 0;
-  font-size: var(--font-xs);
+  font-size: var(--font-size-md);
   font-weight: 400;
   color: var(--color-foreground);
 `;
 
 const Content = styled.div`
-  padding: var(--space-md);
+  padding: var(--space-6u);
 `;
 
 const ButtonGroup = styled.div`
   display: flex;
-  gap: var(--space-xs);
+  gap: var(--space-2u);
   justify-content: flex-end;
-  padding: var(--space-sm) var(--space-md);
+  padding: var(--space-4u) var(--space-6u);
   border-top: 1px solid var(--color-border);
-  background: var(--color-background-alt);
+  background: var(--color-background-subtle);
 `;
 
 const CloseButton = styled.button`
   background: none;
   border: none;
-  padding: var(--space-xs);
+  padding: var(--space-2u);
   cursor: pointer;
   color: var(--color-muted);
   transition: all 0.15s ease;
-  border-radius: var(--radius-sm);
+  border-radius: var(--radius-2xs);
   display: flex;
   align-items: center;
   justify-content: center;
@@ -99,9 +100,14 @@ export const AddWorkspaceRolePopover = ({
 
     const [loading, setLoading] = useState(false);
     const [mounted, setMounted] = useState(false);
-    const [position, setPosition] = useState({ top: 0, left: 0 });
     const { deployment } = useDeployment();
     const { toast } = useScreenContext();
+    const position = usePopoverPosition({
+        triggerRef: triggerRef ?? { current: null },
+        isOpen: mounted,
+        minWidth: 400,
+        defaultMaxHeight: 500,
+    });
 
     const isEditing = !!role;
 
@@ -118,53 +124,6 @@ export const AddWorkspaceRolePopover = ({
 
     useEffect(() => {
         setMounted(true);
-
-        // Calculate position after a short delay
-        const timer = setTimeout(() => {
-            if (!popoverRef.current) return;
-
-            // Use triggerRef if available, otherwise fall back to existing logic
-            let triggerButton: HTMLElement | null = null;
-
-            if (triggerRef?.current) {
-                triggerButton = triggerRef.current;
-            } else if (isEditing) {
-                // For edit popover, find the button with the role's data attribute (heuristic)
-                // ... (Keep heuristic or rely on triggerRef passed from parent)
-                // Parent roles.tsx passes triggerRef, so we should rely on that.
-            } else {
-                // ...
-            }
-
-            // If triggerRef is missing, we might have issue. But standard usage supplies it.
-            if (triggerRef?.current) {
-                triggerButton = triggerRef.current;
-            }
-
-            if (triggerButton) {
-                const rect = triggerButton.getBoundingClientRect();
-                const popoverWidth = 400;
-
-                // Position below and aligned to right edge of trigger
-                let top = rect.bottom + 8;
-                let left = rect.right - popoverWidth;
-
-                // Ensure it doesn't go off screen
-                if (left < 10) {
-                    left = rect.left;
-                }
-
-                // If not enough space below, position above
-                if (top + 300 > window.innerHeight) {
-                    top = rect.top - 300 - 8;
-                }
-
-                setPosition({ top, left });
-            } else {
-                // Fallback center if no trigger
-                setPosition({ top: window.innerHeight / 2 - 200, left: window.innerWidth / 2 - 200 });
-            }
-        }, 10);
 
         // Add click outside listener
         const handleClickOutside = (event: MouseEvent) => {
@@ -187,12 +146,11 @@ export const AddWorkspaceRolePopover = ({
         }, 100);
 
         return () => {
-            clearTimeout(timer);
             clearTimeout(listenerTimer);
             document.removeEventListener('mousedown', handleClickOutside);
             document.removeEventListener('keydown', handleEscape);
         };
-    }, [onClose, isEditing, triggerRef]);
+    }, [onClose]);
 
     const sanitizeRoleName = (name: string): string => {
         return name.trim().replace(/[<>\"'&]/g, ''); // Remove potentially dangerous characters
@@ -245,9 +203,12 @@ export const AddWorkspaceRolePopover = ({
             ref={popoverRef}
             $isInTable={isEditing}
             style={{
-                top: `${position.top}px`,
-                left: `${position.left}px`,
-                visibility: position.top > 0 ? 'visible' : 'hidden'
+                top: position?.top !== undefined ? `${position.top}px` : undefined,
+                bottom: position?.bottom !== undefined ? `${position.bottom}px` : undefined,
+                left: position?.left !== undefined ? `${position.left}px` : undefined,
+                right: position?.right !== undefined ? `${position.right}px` : undefined,
+                maxHeight: position?.maxHeight ? `${position.maxHeight}px` : undefined,
+                visibility: position ? "visible" : "hidden"
             }}
             onClick={(e) => e.stopPropagation()}
             role="dialog"
@@ -262,7 +223,7 @@ export const AddWorkspaceRolePopover = ({
             </Header>
 
             <Content>
-                <div style={{ display: "flex", flexDirection: "column", gap: "var(--space-sm)" }}>
+                <div style={{ display: "flex", flexDirection: "column", gap: "var(--space-4u)" }}>
                     <FormGroup>
                         <Label>Role Name</Label>
                         <Input

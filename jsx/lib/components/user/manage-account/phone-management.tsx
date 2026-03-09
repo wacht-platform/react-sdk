@@ -72,7 +72,7 @@ export const PhoneManagementSection = () => {
     return (
         <>
             <ResponsiveHeaderContainer>
-                <div style={{ flex: 1, minWidth: "200px" }}>
+                <div style={{ flex: 1, minWidth: "calc(var(--size-50u) * 2)" }}>
                     <SearchInput
                         value={searchQuery}
                         onChange={setSearchQuery}
@@ -84,11 +84,11 @@ export const PhoneManagementSection = () => {
                         ref={phoneButtonRef}
                         onClick={() => setIsAddingPhone(true)}
                         style={{
-                            padding: "8px 16px",
-                            borderRadius: "6px",
-                            fontSize: "14px",
+                            padding: "var(--space-4u) var(--space-8u)",
+                            borderRadius: "var(--radius-xs)",
+                            fontSize: "var(--font-size-lg)",
                             fontWeight: 500,
-                            height: "36px",
+                            height: "var(--size-18u)",
                             width: "100%", // Needs media query for full width on mobile? Or handled by container wrapping?
                         }}
                     >
@@ -170,10 +170,10 @@ export const PhoneManagementSection = () => {
                                                 style={{
                                                     display: "flex",
                                                     alignItems: "center",
-                                                    gap: "8px",
+                                                    gap: "var(--space-4u)",
                                                 }}
                                             >
-                                                <span style={{ fontSize: "18px" }}>
+                                                <span style={{ fontSize: "var(--font-size-3xl)" }}>
                                                     {getCountryFlag(phone.country_code)}
                                                 </span>
                                                 <span>{phone.country_code}</span>
@@ -250,20 +250,20 @@ export const PhoneManagementSection = () => {
                             <div key={phone.id}>
                                 <ConnectionItemRow>
                                     <ConnectionLeft>
-                                        <span style={{ fontSize: "18px" }}>
+                                        <span style={{ fontSize: "var(--font-size-3xl)" }}>
                                             {getCountryFlag(phone.country_code)}
                                         </span>
-                                        <div style={{ fontWeight: 500, fontSize: "14px", color: "var(--color-foreground)" }}>
+                                        <div style={{ fontWeight: 500, fontSize: "var(--font-size-lg)", color: "var(--color-foreground)" }}>
                                             {phone.country_code} {phone.phone_number}
                                         </div>
                                         <div
                                             style={{
-                                                fontSize: "13px",
+                                                fontSize: "var(--font-size-md)",
                                                 color: "var(--color-muted)",
                                                 background: "var(--color-input-background)",
-                                                padding: "2px 8px",
-                                                borderRadius: "4px",
-                                                border: "1px solid var(--color-border)",
+                                                padding: "var(--space-1u) var(--space-4u)",
+                                                borderRadius: "var(--radius-2xs)",
+                                                border: "var(--border-width-thin) solid var(--color-border)",
                                             }}
                                         >
                                             {phone.id === user?.primary_phone_number_id
@@ -329,7 +329,7 @@ export const PhoneManagementSection = () => {
                                 {index < filteredPhones.length - 1 && (
                                     <div
                                         style={{
-                                            height: "1px",
+                                            height: "var(--border-width-thin)",
                                             background: "var(--color-border)",
                                         }}
                                     />

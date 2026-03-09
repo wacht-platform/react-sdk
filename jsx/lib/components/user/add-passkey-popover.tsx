@@ -1,75 +1,50 @@
 import { useState, useRef, useEffect } from "react";
 import styled from "styled-components";
 import { Input } from "@/components/utility/input";
+import { Button } from "@/components/utility/button";
+import { usePopoverPosition } from "@/hooks/use-popover-position";
 
 const PopoverContainer = styled.div`
   position: fixed;
-  background: var(--color-background);
+  background: var(--color-popover);
   border-radius: var(--radius-md);
-  box-shadow: 0 4px 12px var(--color-shadow);
-  border: 1px solid var(--color-border);
-  padding: 16px;
-  width: 320px;
-  max-width: calc(100vw - 48px);
+  box-shadow: var(--shadow-md);
+  border: var(--border-width-thin) solid var(--color-border);
+  padding: var(--space-8u);
+  width: calc(calc(var(--size-50u) * 3) + var(--space-10u));
+  max-width: calc(100vw - var(--space-24u));
   z-index: 1001;
   
   @media (max-width: 600px) {
-    width: calc(100vw - 48px);
-  }
-`;
-
-const Button = styled.button<{ $primary?: boolean }>`
-  padding: 8px 16px;
-  background: ${(props) =>
-        props.$primary ? "var(--color-primary)" : "var(--color-background)"};
-  color: ${(props) =>
-        props.$primary ? "white" : "var(--color-secondary-text)"};
-  border: 1px solid
-    ${(props) =>
-        props.$primary ? "var(--color-primary)" : "var(--color-border)"};
-  border-radius: var(--radius-md);
-  font-size: 14px;
-  cursor: pointer;
-  transition: all 0.2s ease;
-
-  &:hover {
-    background: ${(props) =>
-        props.$primary
-            ? "var(--color-primary-hover)"
-            : "var(--color-input-background)"};
-  }
-
-  &:disabled {
-    opacity: 0.5;
-    cursor: not-allowed;
+    width: calc(100vw - var(--space-24u));
   }
 `;
 
 const ButtonGroup = styled.div`
   display: flex;
-  gap: 8px;
+  gap: var(--space-4u);
   justify-content: flex-end;
-  margin-top: 16px;
+  margin-top: var(--space-8u);
 `;
 
 const Title = styled.div`
-  font-size: 14px;
+  font-size: var(--font-size-lg);
   font-weight: 400;
-  color: var(--color-foreground);
-  margin-bottom: 8px;
+  color: var(--color-popover-foreground);
+  margin-bottom: var(--space-4u);
 `;
 
 const StyledFormGroup = styled.div`
   display: flex;
   flex-direction: column;
-  gap: 4px;
-  margin-bottom: 12px;
+  gap: var(--space-2u);
+  margin-bottom: var(--space-6u);
 `;
 
 const ErrorMessage = styled.div`
   color: var(--color-error);
-  font-size: 12px;
-  margin-top: 4px;
+  font-size: var(--font-size-sm);
+  margin-top: var(--space-2u);
 `;
 
 interface AddPasskeyPopoverProps {
@@ -85,63 +60,18 @@ export const AddPasskeyPopover = ({
 }: AddPasskeyPopoverProps) => {
     const popoverRef = useRef<HTMLDivElement>(null);
     const [mounted, setMounted] = useState(false);
-    const [position, setPosition] = useState({ top: 0, left: 0 });
     const [name, setName] = useState("");
     const [loading, setLoading] = useState(false);
     const [error, setError] = useState("");
+    const position = usePopoverPosition({
+        triggerRef: triggerRef ?? { current: null },
+        isOpen: mounted,
+        minWidth: 320,
+        defaultMaxHeight: 260,
+    });
 
     useEffect(() => {
         setMounted(true);
-
-        // Calculate position after a short delay
-        const timer = setTimeout(() => {
-            if (!popoverRef.current || !triggerRef?.current) return;
-
-            const triggerButton = triggerRef.current;
-
-            if (triggerButton) {
-                const rect = triggerButton.getBoundingClientRect();
-                const popoverWidth = 320;
-                const popoverHeight = 180;
-                const spacing = 8;
-
-                let top = 0;
-                let left = 0;
-
-                const spaceBottom = window.innerHeight - rect.bottom;
-                const spaceTop = rect.top;
-
-                if (spaceBottom >= popoverHeight + spacing) {
-                    top = rect.bottom + spacing;
-                    left = rect.right - popoverWidth;
-
-                    if (left < spacing) {
-                        left = rect.left;
-                        if (left + popoverWidth > window.innerWidth - spacing) {
-                            left = (window.innerWidth - popoverWidth) / 2;
-                        }
-                    }
-                } else if (spaceTop >= popoverHeight + spacing) {
-                    top = rect.top - popoverHeight - spacing;
-                    left = rect.right - popoverWidth;
-
-                    if (left < spacing) {
-                        left = rect.left;
-                        if (left + popoverWidth > window.innerWidth - spacing) {
-                            left = (window.innerWidth - popoverWidth) / 2;
-                        }
-                    }
-                } else {
-                    top = rect.bottom + spacing;
-                    left = rect.right - popoverWidth;
-                    if (left < spacing) {
-                        left = rect.left;
-                    }
-                }
-
-                setPosition({ top, left });
-            }
-        }, 10);
 
         const handleClickOutside = (event: MouseEvent) => {
             if (popoverRef.current && !popoverRef.current.contains(event.target as Node)) {
@@ -159,11 +89,10 @@ export const AddPasskeyPopover = ({
         document.addEventListener("keydown", handleEscape);
 
         return () => {
-            clearTimeout(timer);
             document.removeEventListener("mousedown", handleClickOutside);
             document.removeEventListener("keydown", handleEscape);
         };
-    }, [onClose, triggerRef]);
+    }, [onClose]);
 
     const handleSubmit = async () => {
         if (loading) return;
@@ -187,9 +116,12 @@ export const AddPasskeyPopover = ({
         <PopoverContainer
             ref={popoverRef}
             style={{
-                top: `${position.top}px`,
-                left: `${position.left}px`,
-                visibility: position.top > 0 ? 'visible' : 'hidden'
+                top: position?.top !== undefined ? `${position.top}px` : undefined,
+                bottom: position?.bottom !== undefined ? `${position.bottom}px` : undefined,
+                left: position?.left !== undefined ? `${position.left}px` : undefined,
+                right: position?.right !== undefined ? `${position.right}px` : undefined,
+                maxHeight: position?.maxHeight ? `${position.maxHeight}px` : undefined,
+                visibility: position ? "visible" : "hidden"
             }}
             onClick={(e) => e.stopPropagation()}
         >
@@ -208,9 +140,8 @@ export const AddPasskeyPopover = ({
             {error && <ErrorMessage>{error}</ErrorMessage>}
 
             <ButtonGroup>
-                <Button onClick={onClose}>Cancel</Button>
+                <Button $outline onClick={onClose}>Cancel</Button>
                 <Button
-                    $primary
                     onClick={handleSubmit}
                     disabled={loading}
                 >

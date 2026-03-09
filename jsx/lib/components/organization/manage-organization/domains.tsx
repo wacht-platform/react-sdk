@@ -36,42 +36,42 @@ import styled from "styled-components";
 const Badge = styled.span<{ $type: "success" | "warning" }>`
   background: ${props => props.$type === "success" ? "var(--color-primary-background)" : "var(--color-warning-background)"};
   color: ${props => props.$type === "success" ? "var(--color-primary)" : "var(--color-warning)"};
-  padding: 4px 8px;
-  border-radius: 4px;
-  font-size: 12px;
+  padding: var(--space-2u) var(--space-4u);
+  border-radius: var(--radius-2xs);
+  font-size: var(--font-size-sm);
   font-weight: 400;
   display: flex;
   align-items: center;
-  gap: 4px;
+  gap: var(--space-2u);
   max-width: max-content;
 `;
 
 const InfoCard = styled.div`
-  padding: 16px;
-  background: var(--color-background-alt);
-  border-radius: 12px;
-  margin-bottom: 24px;
-  border: 1px solid var(--color-border);
+  padding: var(--space-8u);
+  background: var(--color-background-subtle);
+  border-radius: var(--radius-lg);
+  margin-bottom: var(--space-12u);
+  border: var(--border-width-thin) solid var(--color-border);
   display: flex;
-  gap: 12px;
+  gap: var(--space-6u);
   align-items: flex-start;
 `;
 
 const InfoContent = styled.div`
   flex: 1;
-  font-size: 13px;
+  font-size: var(--font-size-md);
   line-height: 1.5;
   color: var(--color-secondary-text);
 `;
 
 const MobileDomainCard = styled.div`
-  padding: 16px;
+  padding: var(--space-8u);
   background: var(--color-input-background);
-  border: 1px solid var(--color-border);
-  border-radius: 12px;
+  border: var(--border-width-thin) solid var(--color-border);
+  border-radius: var(--radius-lg);
   display: flex;
   flex-direction: column;
-  gap: 12px;
+  gap: var(--space-6u);
 `;
 
 export const DomainsSection = ({ organization }: { organization: Organization }) => {
@@ -126,7 +126,6 @@ export const DomainsSection = ({ organization }: { organization: Organization })
                     placeholder="Search domains..."
                 />
                 <Button
-                    $size="sm"
                     ref={addDomainButtonRef}
                     onClick={() => setIsAddingDomain(true)}
                 >
@@ -145,7 +144,7 @@ export const DomainsSection = ({ organization }: { organization: Organization })
 
             {filteredDomains?.length > 0 && (
                 <InfoCard>
-                    <Info size={18} color="var(--color-primary)" style={{ flexShrink: 0, marginTop: "2px" }} />
+                    <Info size={18} color="var(--color-primary)" style={{ flexShrink: 0, marginTop: "var(--space-1u)" }} />
                     <InfoContent>
                         Users with verified domain emails automatically join this organization
                         {organization?.auto_assigned_workspace_id &&
@@ -209,8 +208,8 @@ export const DomainsSection = ({ organization }: { organization: Organization })
                             <MobileDomainCard key={domain.id}>
                                 <div style={{ display: "flex", justifyContent: "space-between", alignItems: "flex-start" }}>
                                     <div>
-                                        <div style={{ fontWeight: 400, fontSize: "14px", marginBottom: "4px" }}>{domain.fqdn}</div>
-                                        <div style={{ fontSize: "12px", color: "var(--color-muted)" }}>
+                                        <div style={{ fontWeight: 400, fontSize: "var(--font-size-lg)", marginBottom: "var(--space-2u)" }}>{domain.fqdn}</div>
+                                        <div style={{ fontSize: "var(--font-size-sm)", color: "var(--color-muted)" }}>
                                             Added on {new Date(domain.created_at).toLocaleDateString()}
                                         </div>
                                     </div>

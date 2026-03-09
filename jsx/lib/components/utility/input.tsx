@@ -8,39 +8,39 @@ const breakpoints = {
 };
 
 export const Input = styled.input`
-  padding: var(--space-sm) var(--space-md);
+  padding: var(--space-4u) var(--space-6u);
   width: 100%;
-  height: 36px;
-  border: 1px solid var(--color-border);
+  height: var(--size-18u);
+  border: var(--border-width-thin) solid var(--color-border);
   border-radius: var(--radius-md);
-  font-size: var(--font-xs);
+  font-size: var(--font-size-md);
   color: var(--color-foreground);
-  background: var(--color-input-background);
+  background: transparent;
   transition: all 0.2s;
 
   &:not(:placeholder-shown):invalid {
     outline: none;
     border: 0.0625rem solid var(--color-error);
-    background: var(--color-background);
+    background: transparent;
   }
 
   &:not(:placeholder-shown):valid {
     outline: none;
-    background: var(--color-background);
+    background: transparent;
   }
 
   &:focus:valid {
     outline: none;
     border-color: var(--color-success);
     box-shadow: 0 0 0 0.1875rem var(--color-success-background);
-    background: var(--color-background);
+    background: transparent;
   }
 
   &:focus:invalid {
     outline: none;
     border-color: var(--color-primary);
     box-shadow: 0 0 0 0.1875rem var(--color-input-focus-border);
-    background: var(--color-background);
+    background: transparent;
   }
 
   &::placeholder {
@@ -48,8 +48,8 @@ export const Input = styled.input`
   }
 
   @media (max-width: ${breakpoints.sm}) {
-    height: 32px;
-    font-size: var(--font-2xs);
-    padding: var(--space-xs) var(--space-sm);
+    height: var(--size-16u);
+    font-size: var(--font-size-xs);
+    padding: var(--space-2u) var(--space-4u);
   }
 `;

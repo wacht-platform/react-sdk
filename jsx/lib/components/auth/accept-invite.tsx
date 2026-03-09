@@ -7,86 +7,86 @@ import { DefaultStylesProvider } from "../utility/root";
 import { Button } from "../utility";
 
 const Container = styled.div`
-  max-width: 380px;
-  width: 380px;
-  padding: var(--space-3xl);
+  max-width: calc(var(--space-10u) * 19);
+  width: calc(var(--space-10u) * 19);
+  padding: var(--space-14u);
   background: var(--color-background);
   border-radius: var(--radius-lg);
-  box-shadow: 0 4px 12px var(--color-shadow);
+  box-shadow: var(--shadow-md);
 `;
 
 const Header = styled.div`
   text-align: center;
-  margin-bottom: var(--space-lg);
+  margin-bottom: var(--space-8u);
   position: relative;
 `;
 
 const Title = styled.h1`
-  font-size: var(--font-lg);
+  font-size: var(--font-size-2xl);
   font-weight: 400;
   color: var(--color-foreground);
-  margin-bottom: var(--space-xs);
+  margin-bottom: var(--space-2u);
   margin-top: 0;
 `;
 
 const Subtitle = styled.p`
   color: var(--color-secondary-text);
-  font-size: var(--font-xs);
+  font-size: var(--font-size-md);
   margin: 0;
 `;
 
 const StatusContainer = styled.div`
-  padding-top: var(--space-xl);
+  padding-top: var(--space-10u);
   text-align: center;
 `;
 
 const SuccessIcon = styled.div`
-  width: calc(var(--space-3xl) * 2);
-  height: calc(var(--space-3xl) * 2);
+  width: calc(var(--space-14u) * 2);
+  height: calc(var(--space-14u) * 2);
   border-radius: 50%;
   background: var(--color-success-background);
   display: flex;
   align-items: center;
   justify-content: center;
-  margin: 0 auto var(--space-lg) auto;
+  margin: 0 auto var(--space-8u) auto;
   color: var(--color-success);
-  font-size: var(--font-xl);
+  font-size: var(--font-size-3xl);
 `;
 
 const ErrorIcon = styled.div`
-  width: calc(var(--space-3xl) * 2);
-  height: calc(var(--space-3xl) * 2);
+  width: calc(var(--space-14u) * 2);
+  height: calc(var(--space-14u) * 2);
   border-radius: 50%;
   background: var(--color-error-background);
   display: flex;
   align-items: center;
   justify-content: center;
-  margin: 0 auto var(--space-lg) auto;
+  margin: 0 auto var(--space-8u) auto;
   color: var(--color-error);
-  font-size: var(--font-xl);
+  font-size: var(--font-size-3xl);
 `;
 
 const InfoIcon = styled.div`
-  width: calc(var(--space-3xl) * 2);
-  height: calc(var(--space-3xl) * 2);
+  width: calc(var(--space-14u) * 2);
+  height: calc(var(--space-14u) * 2);
   border-radius: 50%;
   background: var(--color-info-background);
   display: flex;
   align-items: center;
   justify-content: center;
-  margin: 0 auto var(--space-lg) auto;
+  margin: 0 auto var(--space-8u) auto;
   color: var(--color-info);
-  font-size: var(--font-xl);
+  font-size: var(--font-size-3xl);
 `;
 
 const LoadingSpinner = styled.div`
-  width: calc(var(--space-3xl) * 2);
-  height: calc(var(--space-3xl) * 2);
-  border: 3px solid var(--color-border);
-  border-top: 3px solid var(--color-primary);
+  width: calc(var(--space-14u) * 2);
+  height: calc(var(--space-14u) * 2);
+  border: var(--border-width-regular) solid var(--color-border);
+  border-top: var(--border-width-regular) solid var(--color-primary);
   border-radius: 50%;
   animation: spin 1s linear infinite;
-  margin: 0 auto var(--space-lg) auto;
+  margin: 0 auto var(--space-8u) auto;
 
   @keyframes spin {
     0% {
@@ -99,15 +99,15 @@ const LoadingSpinner = styled.div`
 `;
 
 const Message = styled.p`
-  font-size: var(--font-sm);
+  font-size: var(--font-size-lg);
   color: var(--color-foreground);
-  margin-bottom: var(--space-xs);
+  margin-bottom: var(--space-2u);
 `;
 
 const SubMessage = styled.p`
-  font-size: var(--font-xs);
+  font-size: var(--font-size-md);
   color: var(--color-secondary-text);
-  margin-bottom: var(--space-lg);
+  margin-bottom: var(--space-8u);
 `;
 
 const EmailHighlight = styled.span`
@@ -116,9 +116,9 @@ const EmailHighlight = styled.span`
 `;
 
 const Footer = styled.div`
-  margin-top: var(--space-xl);
+  margin-top: var(--space-10u);
   text-align: center;
-  font-size: var(--font-xs);
+  font-size: var(--font-size-md);
   color: var(--color-secondary-text);
 `;
 
@@ -238,7 +238,7 @@ export function AcceptInvite({
             <SubMessage>
               The invitation link appears to be invalid or incomplete.
             </SubMessage>
-            <Button onClick={() => navigate("/")} $fullWidth $size="sm" style={{ marginTop: "var(--space-lg)" }}>
+            <Button onClick={() => navigate("/")} $fullWidth style={{ marginTop: "var(--space-8u)" }}>
               Go to Home
             </Button>
           </StatusContainer>
@@ -281,7 +281,7 @@ export function AcceptInvite({
             {invitationData.workspace && (
               <SubMessage>You've been added to the {invitationData.workspace.name} workspace.</SubMessage>
             )}
-            <Button onClick={handleContinue} $fullWidth $size="sm" style={{ marginTop: "var(--space-lg)" }}>
+            <Button onClick={handleContinue} $fullWidth style={{ marginTop: "var(--space-8u)" }}>
               Continue to Application
             </Button>
           </StatusContainer>
@@ -303,7 +303,7 @@ export function AcceptInvite({
             <InfoIcon>ℹ</InfoIcon>
             <Message>You're already a member of {invitationData.organization?.name || "this organization"}</Message>
             <SubMessage>No action needed - you already have access.</SubMessage>
-            <Button onClick={handleContinue} $fullWidth $size="sm" style={{ marginTop: "var(--space-lg)" }}>
+            <Button onClick={handleContinue} $fullWidth style={{ marginTop: "var(--space-8u)" }}>
               Continue to Application
             </Button>
           </StatusContainer>
@@ -335,7 +335,7 @@ export function AcceptInvite({
                   ? "You're currently signed in with a different account. Please sign in with the invited email."
                   : "Please sign in to accept this invitation."}
             </SubMessage>
-            <Button onClick={handleGoToAuth} $fullWidth $size="sm" style={{ marginTop: "var(--space-lg)" }}>
+            <Button onClick={handleGoToAuth} $fullWidth style={{ marginTop: "var(--space-8u)" }}>
               {isSignup ? "Sign Up to Accept" : "Sign In to Accept"}
             </Button>
           </StatusContainer>
@@ -380,11 +380,11 @@ export function AcceptInvite({
             <ErrorIcon>✗</ErrorIcon>
             <Message>Something went wrong</Message>
             <SubMessage>{invitationData?.message || error || "Failed to accept invitation"}</SubMessage>
-            <Button onClick={handleRetry} $fullWidth $size="sm" style={{ marginTop: "var(--space-lg)" }}>
+            <Button onClick={handleRetry} $fullWidth style={{ marginTop: "var(--space-8u)" }}>
               Try Again
             </Button>
             <Footer>
-              <div style={{ marginTop: "var(--space-md)" }}>
+              <div style={{ marginTop: "var(--space-6u)" }}>
                 Having trouble?{" "}
                 <Link onClick={handleGoToAuth}>
                   Sign in manually

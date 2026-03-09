@@ -3,9 +3,9 @@ import styled from "styled-components";
 export const TwoFactorContainer = styled.div`
   display: flex;
   gap: 0;
-  margin-top: 16px;
+  margin-top: var(--space-8u);
   position: relative;
-  min-height: 200px;
+  min-height: calc(var(--size-50u) * 2);
 
   @media (max-width: 768px) {
     flex-direction: column;
@@ -20,21 +20,21 @@ export const SectionHeader = styled.div`
   display: flex;
   align-items: center;
   justify-content: space-between;
-  margin-bottom: 16px;
+  margin-bottom: var(--space-8u);
 `;
 
 export const SectionTitle = styled.h3`
-  font-size: 15px;
+  font-size: calc(var(--font-size-lg) + var(--border-width-thin));
   font-weight: 400;
   color: var(--color-foreground);
   margin: 0;
 `;
 
 export const StatusBadge = styled.span<{ $active?: boolean }>`
-  font-size: 11px;
+  font-size: var(--font-size-xs);
   font-weight: 400;
-  padding: 2px 6px;
-  border-radius: 4px;
+  padding: var(--space-1u) var(--space-3u);
+  border-radius: var(--radius-2xs);
   background: ${(props) =>
     props.$active
       ? "var(--color-success-background)"
@@ -46,24 +46,24 @@ export const StatusBadge = styled.span<{ $active?: boolean }>`
 export const QRCodeWrapper = styled.div`
   display: flex;
   justify-content: center;
-  margin: 16px 0;
-  padding: 16px;
+  margin: var(--space-8u) 0;
+  padding: var(--space-8u);
   background: var(--color-background);
-  border-radius: 8px;
-  border: 1px solid var(--color-border);
+  border-radius: var(--radius-md);
+  border: var(--border-width-thin) solid var(--color-border);
 `;
 
 export const CodeInput = styled.input`
   width: 100%;
-  padding: 6px 8px;
-  font-size: 14px;
+  padding: var(--space-3u) var(--space-4u);
+  font-size: var(--font-size-lg);
   font-family: monospace;
   text-align: center;
-  letter-spacing: 2px;
-  border: 1px solid var(--color-border);
-  border-radius: 6px;
+  letter-spacing: var(--space-1u);
+  border: var(--border-width-thin) solid var(--color-border);
+  border-radius: var(--radius-xs);
   background: var(--color-background);
-  margin-bottom: 12px;
+  margin-bottom: var(--space-6u);
 
   &:focus {
     outline: none;
@@ -74,18 +74,18 @@ export const CodeInput = styled.input`
 export const BackupCodesGrid = styled.div`
   display: grid;
   grid-template-columns: repeat(2, 1fr);
-  gap: 8px;
-  margin: 16px 0;
+  gap: var(--space-4u);
+  margin: var(--space-8u) 0;
 `;
 
 export const BackupCode = styled.button<{ $used?: boolean }>`
-  padding: 8px 12px;
+  padding: var(--space-4u) var(--space-6u);
   font-family: monospace;
-  font-size: 13px;
+  font-size: var(--font-size-md);
   background: ${(props) =>
     props.$used ? "var(--color-background-hover)" : "var(--color-background)"};
-  border: 1px solid var(--color-border);
-  border-radius: 4px;
+  border: var(--border-width-thin) solid var(--color-border);
+  border-radius: var(--radius-2xs);
   cursor: ${(props) => (props.$used ? "default" : "pointer")};
   color: ${(props) =>
     props.$used ? "var(--color-secondary-text)" : "var(--color-foreground)"};
@@ -105,13 +105,13 @@ export const BackupCode = styled.button<{ $used?: boolean }>`
 export const ActionButton = styled.button<{
   $variant?: "primary" | "secondary" | "danger";
 }>`
-  padding: 8px 16px;
-  font-size: 13px;
+  padding: var(--space-4u) var(--space-8u);
+  font-size: var(--font-size-md);
   font-weight: 400;
-  border-radius: 6px;
+  border-radius: var(--radius-xs);
   cursor: pointer;
   transition: all 0.15s ease;
-  border: 1px solid;
+  border: var(--border-width-thin) solid;
   flex: 1;
 
   ${(props) => {
@@ -119,7 +119,7 @@ export const ActionButton = styled.button<{
       case "primary":
         return `
           background: var(--color-primary);
-          color: white;
+          color: var(--color-foreground-inverse);
           border-color: var(--color-primary);
           &:hover { background: var(--color-primary-hover); }
         `;
@@ -148,27 +148,27 @@ export const ActionButton = styled.button<{
 
 export const ButtonGroup = styled.div`
   display: flex;
-  gap: 8px;
-  margin-top: 12px;
+  gap: var(--space-4u);
+  margin-top: var(--space-6u);
 `;
 
 export const InfoText = styled.p`
-  font-size: 13px;
+  font-size: var(--font-size-md);
   font-weight: 400;
   color: var(--color-secondary-text);
-  margin: 10px 0;
+  margin: var(--space-5u) 0;
   line-height: 1.5;
 `;
 
 export const EmptyState = styled.div`
   text-align: center;
-  padding: 24px 0;
+  padding: var(--space-12u) 0;
 `;
 
 export const EmptyStateText = styled.p`
-  font-size: 13px;
+  font-size: var(--font-size-md);
   font-weight: 400;
   color: var(--color-secondary-text);
-  margin: 0 0 12px 0;
+  margin: 0 0 var(--space-6u) 0;
   line-height: 1.5;
 `;

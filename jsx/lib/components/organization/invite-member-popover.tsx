@@ -8,19 +8,20 @@ import { Button, Spinner } from "../utility";
 import { ComboBox, ComboBoxOption } from "../utility/combo-box";
 import { OrganizationRole } from "@/types";
 import { useScreenContext } from "./context";
+import { usePopoverPosition } from "@/hooks/use-popover-position";
 
 const PopoverContainer = styled.div`
   position: fixed;
-  width: 360px;
-  max-width: calc(100vw - 48px);
-  background: var(--color-background);
-  border: 1px solid var(--color-border);
+  width: calc(calc(var(--size-50u) * 4) - var(--space-20u));
+  max-width: calc(100vw - var(--space-24u));
+  background: var(--color-popover);
+  border: var(--border-width-thin) solid var(--color-border);
   border-radius: var(--radius-md);
-  box-shadow: 0 4px 12px var(--color-shadow);
+  box-shadow: var(--shadow-md);
   z-index: 1001;
   
   @media (max-width: 600px) {
-    width: calc(100vw - 48px);
+    width: calc(100vw - var(--space-24u));
   }
 `;
 
@@ -28,45 +29,45 @@ const Header = styled.div`
   display: flex;
   justify-content: space-between;
   align-items: center;
-  padding: var(--space-sm) var(--space-md);
-  border-bottom: 1px solid var(--color-border);
+  padding: var(--space-4u) var(--space-6u);
+  border-bottom: var(--border-width-thin) solid var(--color-border);
 `;
 
 const Title = styled.h3`
   margin: 0;
-  font-size: var(--font-xs);
+  font-size: var(--font-size-md);
   font-weight: 400;
-  color: var(--color-foreground);
+  color: var(--color-popover-foreground);
 `;
 
 const Content = styled.div`
-  padding: var(--space-md);
+  padding: var(--space-6u);
 `;
 
 const ButtonGroup = styled.div`
   display: flex;
-  gap: var(--space-xs);
+  gap: var(--space-2u);
   justify-content: flex-end;
-  padding: var(--space-sm) var(--space-md);
-  border-top: 1px solid var(--color-border);
-  background: var(--color-background-alt);
+  padding: var(--space-4u) var(--space-6u);
+  border-top: var(--border-width-thin) solid var(--color-border);
+  background: var(--color-secondary);
 `;
 
 const CloseButton = styled.button`
   background: none;
   border: none;
-  padding: var(--space-xs);
+  padding: var(--space-2u);
   cursor: pointer;
   color: var(--color-muted);
   transition: all 0.15s ease;
-  border-radius: var(--radius-sm);
+  border-radius: var(--radius-2xs);
   display: flex;
   align-items: center;
   justify-content: center;
   
   &:hover {
-    color: var(--color-foreground);
-    background: var(--color-input-background);
+    color: var(--color-accent-foreground);
+    background: var(--color-accent);
   }
 `;
 
@@ -90,9 +91,14 @@ export const InviteMemberPopover = ({
   );
   const [loading, setLoading] = useState(false);
   const [mounted, setMounted] = useState(false);
-  const [position, setPosition] = useState({ top: 0, left: 0 });
   const { inviteMember } = useActiveOrganization();
   const { toast } = useScreenContext();
+  const position = usePopoverPosition({
+    triggerRef: triggerRef ?? { current: null },
+    isOpen: mounted,
+    minWidth: 360,
+    defaultMaxHeight: 320,
+  });
 
   const roleOptions: ComboBoxOption[] = roles.map((role) => ({
     value: role.id,
@@ -137,72 +143,6 @@ export const InviteMemberPopover = ({
   useEffect(() => {
     setMounted(true);
 
-    // Calculate position after a short delay
-    const timer = setTimeout(() => {
-      if (!popoverRef.current || !triggerRef?.current) return;
-
-      const triggerButton = triggerRef.current;
-
-      if (triggerButton) {
-        const rect = triggerButton.getBoundingClientRect();
-        const popoverWidth = 360;
-        const popoverHeight = 250; // Approximate height
-        const spacing = 8;
-
-        let top = 0;
-        let left = 0;
-
-        // Check available space
-        const spaceBottom = window.innerHeight - rect.bottom;
-        const spaceTop = rect.top;
-
-        // Prefer to open below if there's space
-        if (spaceBottom >= popoverHeight + spacing) {
-          top = rect.bottom + spacing;
-          // Align to right edge of button (bottom-right)
-          left = rect.right - popoverWidth;
-
-          // If it goes off left edge, align to left edge of button instead (bottom-left)
-          if (left < spacing) {
-            left = rect.left;
-
-            // If that also goes off right edge, center it on screen
-            if (left + popoverWidth > window.innerWidth - spacing) {
-              left = (window.innerWidth - popoverWidth) / 2;
-            }
-          }
-        }
-        // Otherwise open above
-        else if (spaceTop >= popoverHeight + spacing) {
-          top = rect.top - popoverHeight - spacing;
-          // Align to right edge of button (top-right)
-          left = rect.right - popoverWidth;
-
-          // If it goes off left edge, align to left edge of button instead (top-left)
-          if (left < spacing) {
-            left = rect.left;
-
-            // If that also goes off right edge, center it on screen
-            if (left + popoverWidth > window.innerWidth - spacing) {
-              left = (window.innerWidth - popoverWidth) / 2;
-            }
-          }
-        }
-        // If no space above or below, position it at the best available spot
-        else {
-          // Position at bottom with scrolling if needed
-          top = rect.bottom + spacing;
-          left = rect.right - popoverWidth;
-
-          if (left < spacing) {
-            left = rect.left;
-          }
-        }
-
-        setPosition({ top, left });
-      }
-    }, 10);
-
     // Add click outside listener
     const handleClickOutside = (event: MouseEvent) => {
       if (popoverRef.current && !popoverRef.current.contains(event.target as Node)) {
@@ -221,11 +161,10 @@ export const InviteMemberPopover = ({
     document.addEventListener("keydown", handleEscape);
 
     return () => {
-      clearTimeout(timer);
       document.removeEventListener("mousedown", handleClickOutside);
       document.removeEventListener("keydown", handleEscape);
     };
-  }, [onClose, triggerRef]);
+  }, [onClose]);
 
   if (!mounted) {
     return null;
@@ -235,9 +174,12 @@ export const InviteMemberPopover = ({
     <PopoverContainer
       ref={popoverRef}
       style={{
-        top: `${position.top}px`,
-        left: `${position.left}px`,
-        visibility: position.top > 0 ? 'visible' : 'hidden'
+        top: position?.top !== undefined ? `${position.top}px` : undefined,
+        bottom: position?.bottom !== undefined ? `${position.bottom}px` : undefined,
+        left: position?.left !== undefined ? `${position.left}px` : undefined,
+        right: position?.right !== undefined ? `${position.right}px` : undefined,
+        maxHeight: position?.maxHeight ? `${position.maxHeight}px` : undefined,
+        visibility: position ? "visible" : "hidden",
       }}
       onClick={(e) => e.stopPropagation()}
       role="dialog"
@@ -252,7 +194,7 @@ export const InviteMemberPopover = ({
       </Header>
 
       <Content>
-        <div style={{ display: "flex", flexDirection: "column", gap: "var(--space-sm)" }}>
+        <div style={{ display: "flex", flexDirection: "column", gap: "var(--space-4u)" }}>
           <FormGroup>
             <Label>Email Address</Label>
             <Input

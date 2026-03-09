@@ -9,7 +9,7 @@ import { DefaultStylesProvider } from "../utility";
 const Container = styled.div`
   display: flex;
   height: 100%;
-  min-height: 400px;
+  min-height: calc(var(--size-50u) * 4);
 
   @media (max-width: 768px) {
     flex-direction: column;
@@ -20,45 +20,45 @@ const Container = styled.div`
 const LeftPanel = styled.div`
   width: 35%;
   background: var(--color-background-hover);
-  padding: 32px;
+  padding: var(--space-16u);
   display: flex;
   flex-direction: column;
   align-items: center;
   justify-content: center;
   text-align: center;
-  border-right: 1px solid var(--color-border);
+  border-right: var(--border-width-thin) solid var(--color-border);
 
   @media (max-width: 768px) {
     width: 100%;
     border-right: none;
-    border-bottom: 1px solid var(--color-border);
-    padding: 24px;
+    border-bottom: var(--border-width-thin) solid var(--color-border);
+    padding: var(--space-12u);
   }
 `;
 
 const RightPanel = styled.div`
   flex: 1;
-  padding: 32px;
+  padding: var(--space-16u);
   display: flex;
   flex-direction: column;
 
   @media (max-width: 768px) {
-    padding: 24px;
+    padding: var(--space-12u);
   }
 `;
 
 const AvatarContainer = styled.div<{ hasImage: boolean }>`
-  width: 80px;
-  height: 80px;
-  border-radius: 16px;
+  width: var(--size-40u);
+  height: var(--size-40u);
+  border-radius: var(--radius-xl);
   overflow: hidden;
   background: ${(props) =>
     props.hasImage ? "transparent" : "var(--color-background)"};
-  border: 2px solid var(--color-border);
+  border: var(--border-width-regular) solid var(--color-border);
   display: flex;
   align-items: center;
   justify-content: center;
-  margin-bottom: 16px;
+  margin-bottom: var(--space-8u);
   cursor: pointer;
   transition: all 0.2s ease;
   position: relative;
@@ -76,7 +76,7 @@ const AvatarImage = styled.img`
 `;
 
 const AvatarPlaceholder = styled.div`
-  font-size: 32px;
+  font-size: calc(var(--font-size-3xl) + var(--font-size-3xl));
   font-weight: 600;
   color: var(--color-muted);
   background: var(--color-border);
@@ -88,32 +88,32 @@ const AvatarPlaceholder = styled.div`
 `;
 
 const Title = styled.h2`
-  font-size: 16px;
+  font-size: var(--font-size-xl);
   font-weight: 400;
   color: var(--color-foreground);
-  margin-bottom: 8px;
+  margin-bottom: var(--space-4u);
 `;
 
 const Description = styled.p`
-  font-size: 13px;
+  font-size: var(--font-size-md);
   color: var(--color-secondary-text);
   line-height: 1.4;
-  max-width: 200px;
+  max-width: calc(var(--size-50u) * 2);
 `;
 
 const FormHeader = styled.div`
-  margin-bottom: 24px;
+  margin-bottom: var(--space-12u);
 `;
 
 const FormTitle = styled.h3`
-  font-size: 16px;
+  font-size: var(--font-size-xl);
   font-weight: 400;
   color: var(--color-foreground);
-  margin-bottom: 6px;
+  margin-bottom: var(--space-3u);
 `;
 
 const FormDescription = styled.p`
-  font-size: 13px;
+  font-size: var(--font-size-md);
   color: var(--color-secondary-text);
   line-height: 1.4;
 `;
@@ -123,23 +123,23 @@ const FormContent = styled.div`
 `;
 
 const FormGroup = styled.div`
-  margin-bottom: 20px;
+  margin-bottom: var(--space-10u);
 `;
 
 const Label = styled.label`
   display: block;
-  margin-bottom: 6px;
-  font-size: 13px;
+  margin-bottom: var(--space-3u);
+  font-size: var(--font-size-md);
   font-weight: 400;
   color: var(--color-foreground);
 `;
 
 const Input = styled.input`
   width: 100%;
-  padding: 8px 12px;
-  border: 1px solid var(--color-border);
-  border-radius: 6px;
-  font-size: 14px;
+  padding: var(--space-4u) var(--space-6u);
+  border: var(--border-width-thin) solid var(--color-border);
+  border-radius: var(--radius-xs);
+  font-size: var(--font-size-lg);
   outline: none;
   background: var(--color-background);
   color: var(--color-foreground);
@@ -148,7 +148,7 @@ const Input = styled.input`
 
   &:focus {
     border-color: var(--color-primary);
-    box-shadow: 0 0 0 3px var(--color-primary-background);
+    box-shadow: var(--ring-primary);
   }
 
   &::placeholder {
@@ -158,13 +158,13 @@ const Input = styled.input`
 
 const TextArea = styled.textarea`
   width: 100%;
-  padding: 8px 12px;
-  border: 1px solid var(--color-border);
-  border-radius: 6px;
-  font-size: 14px;
+  padding: var(--space-4u) var(--space-6u);
+  border: var(--border-width-thin) solid var(--color-border);
+  border-radius: var(--radius-xs);
+  font-size: var(--font-size-lg);
   outline: none;
   resize: vertical;
-  min-height: 80px;
+  min-height: var(--size-40u);
   background: var(--color-background);
   color: var(--color-foreground);
   transition: all 0.2s ease;
@@ -173,7 +173,7 @@ const TextArea = styled.textarea`
 
   &:focus {
     border-color: var(--color-primary);
-    box-shadow: 0 0 0 3px var(--color-primary-background);
+    box-shadow: var(--ring-primary);
   }
 
   &::placeholder {
@@ -186,17 +186,17 @@ const ButtonGroup = styled.div`
   justify-content: space-between;
   align-items: center;
   margin-top: auto;
-  padding-top: 24px;
+  padding-top: var(--space-12u);
 `;
 
 const BackButton = styled.button`
   display: flex;
   align-items: center;
-  gap: 6px;
-  padding: 8px 12px;
+  gap: var(--space-3u);
+  padding: var(--space-4u) var(--space-6u);
   background: transparent;
   border: none;
-  font-size: 13px;
+  font-size: var(--font-size-md);
   font-weight: 400;
   color: var(--color-secondary-text);
   cursor: pointer;
@@ -208,20 +208,20 @@ const BackButton = styled.button`
 `;
 
 const SubmitButton = styled.button`
-  padding: 8px 20px;
-  border-radius: 6px;
-  font-size: 14px;
+  padding: var(--space-4u) var(--space-10u);
+  border-radius: var(--radius-xs);
+  font-size: var(--font-size-lg);
   font-weight: 400;
   cursor: pointer;
   transition: all 0.2s ease;
   background: var(--color-primary);
-  color: white;
+  color: var(--color-foreground-inverse);
   border: none;
 
   &:hover:not(:disabled) {
     background: var(--color-primary-hover);
-    transform: translateY(-1px);
-    box-shadow: 0 4px 12px var(--color-primary-shadow);
+    transform: translateY(calc(var(--border-width-thin) * -1));
+    box-shadow: var(--shadow-md);
   }
 
   &:disabled {
@@ -251,8 +251,8 @@ const UploadOverlay = styled.div`
 `;
 
 const UploadText = styled.div`
-  color: white;
-  font-size: 12px;
+  color: var(--color-foreground-inverse);
+  font-size: var(--font-size-sm);
   font-weight: 400;
 `;
 

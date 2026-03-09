@@ -12,13 +12,14 @@ import styled from "styled-components";
 
 const DropdownItemsContainer = styled.div`
   position: fixed;
-  background: var(--color-background);
-  border-radius: 8px;
-  box-shadow: 0 4px 12px var(--color-shadow);
-  border: 1px solid var(--color-border);
+  background: var(--color-popover);
+  color: var(--color-popover-foreground);
+  border-radius: var(--radius-md);
+  box-shadow: var(--shadow-md);
+  border: var(--border-width-thin) solid var(--color-border);
   overflow: hidden;
   z-index: 1000;
-  min-width: 140px;
+  min-width: calc(var(--size-50u) + var(--space-20u));
   display: grid;
 `;
 
@@ -169,9 +170,9 @@ export const DropdownItems = ({
         ...style,
         top: `${position.top}px`,
         left: `${position.left}px`,
-        visibility: isPositioned ? 'visible' : 'hidden',
+        visibility: isPositioned ? "visible" : "hidden",
         opacity: isPositioned ? 1 : 0,
-        transition: isPositioned ? 'opacity 0.15s ease-in-out' : 'none'
+        transition: isPositioned ? "opacity 0.15s ease-in-out" : "none",
       }}
     >
       {children}
@@ -188,7 +189,7 @@ export const DropdownTrigger = ({ children }: { children: ReactNode }) => {
 
   return (
     <div
-      style={{ position: "relative" }}
+      style={{ position: "relative", display: "inline-flex" }}
       onClick={toggleDropdown}
       data-dropdown-trigger
     >
@@ -199,16 +200,16 @@ export const DropdownTrigger = ({ children }: { children: ReactNode }) => {
 
 export const DropdownItem = styled.button<{ $destructive?: boolean }>`
   width: 100%;
-  padding: 8px 12px;
+  padding: var(--space-4u) var(--space-6u);
   background: none;
   border: none;
   text-align: left;
   cursor: pointer;
-  font-size: 14px;
-  width: 200px;
+  font-size: var(--font-size-lg);
+  width: calc(var(--size-50u) * 2);
   display: flex;
   align-items: center;
-  gap: 8px;
+  gap: var(--space-4u);
   color: ${(props) =>
     props.$destructive ? "var(--color-error)" : "var(--color-text)"};
 
@@ -216,12 +217,16 @@ export const DropdownItem = styled.button<{ $destructive?: boolean }>`
     background: ${(props) =>
     props.$destructive
       ? "var(--color-error-background)"
-      : "var(--color-background-hover)"};
+      : "var(--color-accent)"};
+    color: ${(props) =>
+      props.$destructive
+        ? "var(--color-error)"
+        : "var(--color-accent-foreground)"};
   }
 `;
 
 export const DropdownDivider = styled.div`
-  height: 1px;
+  height: var(--border-width-thin);
   background-color: var(--color-border);
   width: 100%;
 `;

@@ -17,6 +17,7 @@ import {
   TabIcon,
   TabContent,
 } from "./manage-organization/shared";
+import styled from "styled-components";
 
 import { GeneralSettingsSection } from "./manage-organization/general-settings";
 import { DomainsSection } from "./manage-organization/domains";
@@ -41,6 +42,65 @@ const useStickyActiveOrganization = () => {
 
 type TabType = "general" | "domains" | "members" | "invitations" | "roles" | "sso";
 
+const LoadingState = styled(Container)`
+  display: flex;
+  justify-content: center;
+  align-items: center;
+`;
+
+const EmptyState = styled.div`
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  height: 100%;
+  padding: var(--size-20u) var(--space-12u);
+  text-align: center;
+`;
+
+const EmptyStateIcon = styled.div`
+  width: var(--size-40u);
+  height: var(--size-40u);
+  border-radius: var(--radius-full);
+  background: var(--color-input-background);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  margin-bottom: var(--space-12u);
+  border: var(--border-width-regular) dashed var(--color-border);
+`;
+
+const EmptyStateTitle = styled.h3`
+  font-size: var(--font-size-2xl);
+  font-weight: 600;
+  color: var(--color-foreground);
+  margin: 0 0 var(--space-4u) 0;
+`;
+
+const Toast = styled.div`
+  position: absolute;
+  bottom: var(--space-10u);
+  right: var(--space-10u);
+  background: var(--color-input-background);
+  border: var(--border-width-thin) solid var(--color-border);
+  border-radius: var(--radius-md);
+  padding: var(--space-6u) var(--space-8u);
+  box-shadow: var(--shadow-md);
+  animation: slideDown 0.3s ease-out;
+  z-index: 100;
+`;
+
+const ToastContent = styled.div`
+  display: flex;
+  align-items: center;
+  gap: var(--space-4u);
+`;
+
+const ToastText = styled.span`
+  font-size: var(--font-size-lg);
+  color: var(--color-foreground);
+`;
+
 export const ManageOrganization = () => {
   const { loading, activeOrganization } = useStickyActiveOrganization();
   const { deployment } = useDeployment();
@@ -60,9 +120,9 @@ export const ManageOrganization = () => {
   if (loading && !activeOrganization) {
     return (
       <DefaultStylesProvider>
-        <Container style={{ display: "flex", justifyContent: "center", alignItems: "center" }}>
+        <LoadingState>
           <Spinner />
-        </Container>
+        </LoadingState>
       </DefaultStylesProvider>
     );
   }
@@ -72,13 +132,13 @@ export const ManageOrganization = () => {
       <DefaultStylesProvider>
         <TypographyProvider>
           <Container>
-            <div style={{ display: "flex", flexDirection: "column", alignItems: "center", justifyContent: "center", height: "100%", padding: "40px 24px", textAlign: "center" }}>
-              <div style={{ width: "80px", height: "80px", borderRadius: "50%", background: "var(--color-input-background)", display: "flex", alignItems: "center", justifyContent: "center", marginBottom: "24px", border: "2px dashed var(--color-border)" }}>
+            <EmptyState>
+              <EmptyStateIcon>
                 <Building size={32} color="var(--color-muted)" />
-              </div>
-              <h3 style={{ fontSize: "18px", fontWeight: 600, color: "var(--color-foreground)", margin: "0 0 8px 0" }}>No Organization Selected</h3>
+              </EmptyStateIcon>
+              <EmptyStateTitle>No Organization Selected</EmptyStateTitle>
               <OrganizationSwitcher />
-            </div>
+            </EmptyState>
           </Container>
         </TypographyProvider>
       </DefaultStylesProvider>
@@ -127,12 +187,12 @@ export const ManageOrganization = () => {
             </TabContent>
 
             {toastMessage && (
-              <div style={{ position: "absolute", bottom: "20px", right: "20px", background: "var(--color-input-background)", border: "1px solid var(--color-border)", borderRadius: "8px", padding: "12px 16px", boxShadow: "0 4px 12px var(--color-shadow)", animation: "slideDown 0.3s ease-out", zIndex: 100 }}>
-                <div style={{ display: "flex", alignItems: "center", gap: "8px" }}>
+              <Toast>
+                <ToastContent>
                   {toastLevel === "error" ? <AlertTriangle size={16} color="var(--color-error)" /> : <Check size={16} color="var(--color-success)" />}
-                  <span style={{ fontSize: "14px", color: "var(--color-foreground)" }}>{toastMessage}</span>
-                </div>
-              </div>
+                  <ToastText>{toastMessage}</ToastText>
+                </ToastContent>
+              </Toast>
             )}
           </Container>
         </ScreenContext.Provider>

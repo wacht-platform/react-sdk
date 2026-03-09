@@ -7,10 +7,10 @@ import { useNotifications } from "@/hooks/use-notifications";
 import type { NotificationListParams } from "@/types";
 
 const PanelContainer = styled.div<{ $fullWidth?: boolean; $maxHeight?: string }>`
-  width: ${props => props.$fullWidth ? '100%' : '450px'};
+  width: ${props => props.$fullWidth ? '100%' : 'calc(calc(var(--size-50u) * 4) + var(--space-10u) + var(--space-5u))'};
   max-width: 100%;
   height: 100%;
-  max-height: ${props => props.$maxHeight || '700px'};
+  max-height: ${props => props.$maxHeight || 'calc(var(--size-50u) * 5)'};
   display: flex;
   flex-direction: column;
   background: var(--color-background);
@@ -18,8 +18,8 @@ const PanelContainer = styled.div<{ $fullWidth?: boolean; $maxHeight?: string }>
 `;
 
 const Header = styled.div`
-  padding: 12px 16px;
-  border-bottom: 1px solid var(--color-border);
+  padding: var(--space-6u) var(--space-8u);
+  border-bottom: var(--border-width-thin) solid var(--color-border);
   display: flex;
   align-items: center;
   justify-content: space-between;
@@ -27,29 +27,29 @@ const Header = styled.div`
   flex-shrink: 0;
 
   @media(max-width: 400px) {
-    padding: 10px 12px;
+    padding: var(--space-5u) var(--space-6u);
   }
 `;
 
 const TabsContainer = styled.div`
   display: flex;
-  gap: 16px;
+  gap: var(--space-8u);
   margin-right: auto;
 
   @media(max-width: 400px) {
-    gap: 12px;
+    gap: var(--space-6u);
   }
 `;
 
 const TabButton = styled.button<{ $active: boolean }>`
   background: transparent;
   border: none;
-  font-size: 14px;
+  font-size: var(--font-size-lg);
   font-weight: 500;
   color: ${props => props.$active ? 'var(--color-foreground)' : 'var(--color-secondary-text)'};
   cursor: pointer;
-  padding: 0 0 4px 0;
-  border-bottom: 2px solid ${props => props.$active ? 'var(--color-primary)' : 'transparent'};
+  padding: 0 0 var(--space-2u) 0;
+  border-bottom: var(--border-width-regular) solid ${props => props.$active ? 'var(--color-primary)' : 'transparent'};
   transition: all 0.2s ease;
 
   &:hover {
@@ -62,8 +62,8 @@ const IconButton = styled.button`
   border: none;
   color: var(--color-secondary-text);
   cursor: pointer;
-  padding: 6px;
-  border-radius: 4px;
+  padding: var(--space-3u);
+  border-radius: var(--radius-2xs);
   display: flex;
   align-items: center;
   justify-content: center;
@@ -82,14 +82,14 @@ const IconButton = styled.button`
 
 const SettingsMenu = styled.div`
   position: absolute;
-  top: 45px;
-  right: 12px;
+  top: calc(var(--size-20u) + var(--space-2u) + var(--border-width-thin));
+  right: var(--space-6u);
   background: var(--color-background);
-  border: 1px solid var(--color-border);
-  border-radius: 8px;
-  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
-  width: 220px;
-  padding: 4px;
+  border: var(--border-width-thin) solid var(--color-border);
+  border-radius: var(--radius-md);
+  box-shadow: var(--shadow-md);
+  width: calc(calc(var(--size-50u) * 2) + var(--size-10u));
+  padding: var(--space-2u);
   z-index: 100000;
   display: flex;
   flex-direction: column;
@@ -99,14 +99,14 @@ const MenuItem = styled.button`
   background: transparent;
   border: none;
   text-align: left;
-  padding: 8px 12px;
-  font-size: 13px;
+  padding: var(--space-4u) var(--space-6u);
+  font-size: var(--font-size-md);
   color: var(--color-foreground);
   cursor: pointer;
-  border-radius: 4px;
+  border-radius: var(--radius-2xs);
   display: flex;
   align-items: center;
-  gap: 8px;
+  gap: var(--space-4u);
   transition: background-color 0.2s;
 
   &:hover {
@@ -114,8 +114,8 @@ const MenuItem = styled.button`
   }
   
   svg {
-    width: 14px;
-    height: 14px;
+    width: var(--space-7u);
+    height: var(--space-7u);
     color: var(--color-secondary-text);
   }
 `;
@@ -123,10 +123,10 @@ const MenuItem = styled.button`
 const ToggleContainer = styled.div`
   display: flex;
   align-items: center;
-  gap: 8px;
-  margin-left: 8px;
-  padding: 4px 8px;
-  border-radius: 6px;
+  gap: var(--space-4u);
+  margin-left: var(--space-4u);
+  padding: var(--space-2u) var(--space-4u);
+  border-radius: var(--radius-xs);
   cursor: pointer;
   transition: background-color 0.2s;
 
@@ -136,28 +136,28 @@ const ToggleContainer = styled.div`
 `;
 
 const ToggleSwitch = styled.div<{ $active: boolean }>`
-  width: 28px;
-  height: 16px;
+  width: var(--space-14u);
+  height: var(--size-8u);
   background: ${props => props.$active ? 'var(--color-primary)' : 'var(--color-border)'};
-  border-radius: 10px;
+  border-radius: var(--space-5u);
   position: relative;
   transition: all 0.2s ease;
 
   &::after {
     content: '';
     position: absolute;
-    top: 2px;
-    left: ${props => props.$active ? '14px' : '2px'};
-    width: 12px;
-    height: 12px;
-    background: white;
+    top: var(--space-1u);
+    left: ${props => props.$active ? 'var(--space-7u)' : 'var(--space-1u)'};
+    width: var(--space-6u);
+    height: var(--space-6u);
+    background: var(--color-foreground-inverse);
     border-radius: 50%;
     transition: all 0.2s ease;
   }
 `;
 
 const ToggleLabel = styled.span`
-  font-size: 12px;
+  font-size: var(--font-size-sm);
   color: var(--color-secondary-text);
   font-weight: 500;
   user-select: none;
@@ -173,7 +173,7 @@ const Content = styled.div`
   background: var(--color-background);
 
   &::-webkit-scrollbar {
-    width: 6px;
+    width: var(--space-3u);
   }
   
   &::-webkit-scrollbar-track {
@@ -182,7 +182,7 @@ const Content = styled.div`
   
   &::-webkit-scrollbar-thumb {
     background: var(--color-border);
-    border-radius: 3px;
+    border-radius: calc(var(--radius-2xs) - var(--border-width-thin));
   }
 `;
 
@@ -190,11 +190,11 @@ const LoadingContainer = styled.div`
   display: flex;
   align-items: center;
   justify-content: center;
-  padding: 40px;
+  padding: var(--size-20u);
 `;
 
 const EmptyStateContainer = styled.div`
-  padding: 60px 20px;
+  padding: calc(var(--size-20u) + var(--space-10u)) var(--space-10u);
   display: flex;
   flex-direction: column;
   align-items: center;
@@ -203,26 +203,26 @@ const EmptyStateContainer = styled.div`
 `;
 
 const EmptyIcon = styled.div`
-  width: 48px;
-  height: 48px;
+  width: var(--size-24u);
+  height: var(--size-24u);
   border-radius: 50%;
   background: var(--color-background-hover);
   display: flex;
   align-items: center;
   justify-content: center;
-  margin-bottom: 16px;
+  margin-bottom: var(--space-8u);
   color: var(--color-muted);
 `;
 
 const EmptyTitle = styled.h3`
-  font-size: 14px;
+  font-size: var(--font-size-lg);
   font-weight: 400;
   color: var(--color-foreground);
-  margin: 0 0 4px 0;
+  margin: 0 0 var(--space-2u) 0;
 `;
 
 const EmptyDescription = styled.p`
-  font-size: 13px;
+  font-size: var(--font-size-md);
   color: var(--color-secondary-text);
   margin: 0;
   line-height: 1.4;
@@ -331,12 +331,12 @@ export const NotificationPanel = forwardRef<HTMLDivElement, NotificationPanelPro
                         <ToggleLabel>Unread Only</ToggleLabel>
                     </ToggleContainer>
 
-                    <IconButton onClick={() => setShowMenu(!showMenu)} style={{ padding: '4px' }}>
+                    <IconButton onClick={() => setShowMenu(!showMenu)} style={{ padding: 'var(--space-2u)' }}>
                         <MoreHorizontal size={16} />
                     </IconButton>
 
                     {showMenu && (
-                        <SettingsMenu ref={menuRef} style={{ top: '36px', right: '12px' }}>
+                        <SettingsMenu ref={menuRef} style={{ top: 'var(--size-18u)', right: 'var(--space-6u)' }}>
                             {activeTab === 'inbox' && (
                                 <MenuItem onClick={handleMarkAllRead}>
                                     <CheckCheck /> Mark all as read
@@ -380,8 +380,8 @@ export const NotificationPanel = forwardRef<HTMLDivElement, NotificationPanelPro
                                 />
                             ))}
                             {hasMore && (
-                                <div style={{ padding: '12px', display: 'flex', justifyContent: 'center' }}>
-                                    <TabButton $active={false} onClick={loadMore} style={{ fontSize: '12px' }}>
+                                <div style={{ padding: 'var(--space-6u)', display: 'flex', justifyContent: 'center' }}>
+                                    <TabButton $active={false} onClick={loadMore} style={{ fontSize: 'var(--font-size-sm)' }}>
                                         Load more
                                     </TabButton>
                                 </div>

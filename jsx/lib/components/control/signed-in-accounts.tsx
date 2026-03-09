@@ -9,10 +9,10 @@ import { getStoredDevSession } from "@/utils/dev-session";
 
 const shimmer = keyframes`
   0% {
-    background-position: -1000px 0;
+    background-position: calc(var(--size-50u) * -10) 0;
   }
   100% {
-    background-position: 1000px 0;
+    background-position: calc(var(--size-50u) * 10) 0;
   }
 `;
 
@@ -26,65 +26,68 @@ const spin = keyframes`
 `;
 
 const Container = styled.div`
-    width: 400px;
+    width: calc(var(--size-50u) * 4);
     max-width: 100vw;
-    padding: var(--space-3xl) var(--space-sm);
-    background: var(--color-background);
+    padding: var(--space-14u) 0px;
+    background: var(--color-card);
     border-radius: var(--radius-lg);
-    box-shadow: 0 4px 12px var(--color-shadow);
+    box-shadow: var(--shadow-md);
+    border: var(--border-width-thin) solid var(--color-border);
 `;
 
 const AccountsWrapper = styled.div`
-    margin: var(--space-lg) 0;
-    border-top: 1px solid var(--color-border);
-    border-bottom: 1px solid var(--color-border);
+    margin: var(--space-8u) 0;
+    border-top: var(--border-width-thin) solid var(--color-border);
+    border-bottom: var(--border-width-thin) solid var(--color-border);
     overflow: hidden;
 `;
 
 const Header = styled.div`
     text-align: center;
-    margin-bottom: var(--space-xl);
+    margin-bottom: var(--space-10u);
 `;
 
 const Title = styled.h1`
-    font-size: var(--font-lg);
+    font-size: var(--font-size-2xl);
     font-weight: 400;
-    color: var(--color-foreground);
-    margin-bottom: var(--space-xs);
+    color: var(--color-card-foreground);
+    margin-bottom: var(--space-2u);
     margin-top: 0;
 `;
 
 const Subtitle = styled.p`
     color: var(--color-secondary-text);
-    font-size: var(--font-xs);
+    font-size: var(--font-size-md);
 `;
 
 const AccountItem = styled.div<{ $isActive?: boolean; $isSwitching?: boolean }>`
     display: flex;
     align-items: center;
-    gap: var(--space-md);
-    padding: var(--space-md);
+    gap: var(--space-6u);
+    padding: var(--space-6u);
     cursor: pointer;
     transition: all 0.2s ease;
     position: relative;
-    border-bottom: 1px solid var(--color-border);
+    border-bottom: var(--border-width-thin) solid var(--color-border);
 
     &:last-of-type {
         border-bottom: none;
     }
 
     &:hover {
-        background: var(--color-background-hover);
+        background: var(--color-accent);
     }
 
     ${(props) =>
         props.$isActive &&
         `
-    background: var(--color-background-hover);
+    background: var(--color-secondary);
+    border-left: var(--border-width-regular) solid var(--color-primary);
+    border-bottom: none;
     cursor: default;
 
     &:hover {
-      background: var(--color-background-hover);
+      background: var(--color-secondary);
     }
   `}
 
@@ -92,12 +95,12 @@ const AccountItem = styled.div<{ $isActive?: boolean; $isSwitching?: boolean }>`
         props.$isSwitching &&
         `
     cursor: wait;
-    background: var(--color-background-hover);
+    background: var(--color-accent);
     pointer-events: none;
     overflow: hidden;
 
     &:hover {
-      background: var(--color-background-hover);
+      background: var(--color-accent);
     }
 
     &::before {
@@ -106,7 +109,7 @@ const AccountItem = styled.div<{ $isActive?: boolean; $isSwitching?: boolean }>`
       left: 0;
       top: 0;
       bottom: 0;
-      width: 3px;
+      width: var(--space-1u);
       background: var(--color-primary);
       animation: pulse 1.5s ease-in-out infinite;
     }
@@ -119,18 +122,19 @@ const AccountItem = styled.div<{ $isActive?: boolean; $isSwitching?: boolean }>`
 `;
 
 const Avatar = styled.div`
-    width: 40px;
-    height: 40px;
+    width: var(--size-20u);
+    height: var(--size-20u);
     border-radius: 50%;
     overflow: hidden;
-    background: var(--color-input-background);
+    background: var(--color-secondary);
     display: flex;
     align-items: center;
     justify-content: center;
-    font-size: var(--font-sm);
+    font-size: var(--font-size-lg);
     font-weight: 400;
     color: var(--color-secondary-text);
     flex-shrink: 0;
+    border: var(--border-width-thin) solid var(--color-border);
 
     img {
         width: 100%;
@@ -144,40 +148,62 @@ const AccountDetails = styled.div`
     min-width: 0;
 `;
 
+const AccountMeta = styled.div`
+    display: flex;
+    align-items: center;
+    gap: var(--space-3u);
+    min-width: 0;
+    margin-bottom: var(--space-1u);
+`;
+
 const AccountName = styled.div`
-    font-size: var(--font-sm);
+    font-size: var(--font-size-lg);
     font-weight: 400;
-    color: var(--color-foreground);
-    margin-bottom: var(--space-2xs);
+    color: var(--color-card-foreground);
     white-space: nowrap;
     overflow: hidden;
     text-overflow: ellipsis;
 `;
 
 const AccountEmail = styled.div`
-    font-size: var(--font-xs);
+    font-size: var(--font-size-md);
     color: var(--color-secondary-text);
     white-space: nowrap;
     overflow: hidden;
     text-overflow: ellipsis;
 `;
 
+const ActiveBadge = styled.span`
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    flex-shrink: 0;
+    padding: 0 var(--space-3u);
+    min-height: var(--size-8u);
+    border-radius: var(--radius-full);
+    background: var(--color-primary-background);
+    color: var(--color-primary);
+    font-size: var(--font-size-2xs);
+    font-weight: 500;
+    letter-spacing: var(--letter-spacing-tight);
+`;
+
 const SignOutButton = styled.button<{ $isLoading?: boolean }>`
     display: flex;
     align-items: center;
-    gap: var(--space-xs);
-    padding: var(--space-xs) var(--space-sm);
+    gap: var(--space-2u);
+    padding: var(--space-2u) var(--space-4u);
     background: transparent;
-    border: 1px solid var(--color-border);
-    border-radius: var(--radius-sm);
+    border: var(--border-width-thin) solid var(--color-border);
+    border-radius: var(--radius-2xs);
     color: var(--color-secondary-text);
-    font-size: var(--font-2xs);
+    font-size: var(--font-size-xs);
     cursor: ${(props) => (props.$isLoading ? "not-allowed" : "pointer")};
     transition: all 0.2s ease;
     opacity: ${(props) => (props.$isLoading ? 0.7 : 1)};
 
     &:hover:not(:disabled) {
-        background: var(--color-background-hover);
+        background: var(--color-accent);
         border-color: var(--color-border-hover);
     }
 
@@ -191,35 +217,35 @@ const AddAccountButton = styled.button`
     display: flex;
     align-items: center;
     justify-content: center;
-    gap: var(--space-sm);
-    margin-top: var(--space-lg);
+    gap: var(--space-4u);
+    margin-top: var(--space-8u);
     width: 100%;
-    padding: var(--space-lg);
+    padding: var(--space-8u);
     background: transparent;
     border: none;
-    border-top: 1px solid var(--color-border);
+    border-top: var(--border-width-thin) solid var(--color-border);
     color: var(--color-primary);
-    font-size: var(--font-xs);
+    font-size: var(--font-size-md);
     font-weight: 400;
     cursor: pointer;
     transition: background-color 0.2s ease;
 
     &:hover {
-        background: var(--color-background-hover);
+        background: var(--color-accent);
     }
 
     svg {
-        width: 16px;
-        height: 16px;
+        width: var(--size-8u);
+        height: var(--size-8u);
     }
 `;
 
 const SkeletonItem = styled.div`
     display: flex;
     align-items: center;
-    gap: var(--space-md);
-    padding: var(--space-md);
-    border-bottom: 1px solid var(--color-border);
+    gap: var(--space-6u);
+    padding: var(--space-6u);
+    border-bottom: var(--border-width-thin) solid var(--color-border);
 
     &:last-child {
         border-bottom: none;
@@ -227,16 +253,16 @@ const SkeletonItem = styled.div`
 `;
 
 const SkeletonAvatar = styled.div`
-    width: 40px;
-    height: 40px;
+    width: var(--size-20u);
+    height: var(--size-20u);
     border-radius: 50%;
     background: linear-gradient(
         90deg,
-        var(--color-background-hover) 0%,
-        var(--color-input-background) 50%,
-        var(--color-background-hover) 100%
+        var(--color-accent) 0%,
+        var(--color-secondary) 50%,
+        var(--color-accent) 100%
     );
-    background-size: 1000px 100%;
+    background-size: calc(var(--size-50u) * 10) 100%;
     animation: ${shimmer} 2s infinite linear;
 `;
 
@@ -244,27 +270,28 @@ const SkeletonTextWrapper = styled.div`
     flex: 1;
     display: flex;
     flex-direction: column;
-    gap: var(--space-xs);
+    gap: var(--space-2u);
 `;
 
 const SkeletonText = styled.div<{ $width?: string }>`
-    height: ${(props) => (props.$width === "small" ? "12px" : "14px")};
+    height: ${(props) =>
+        props.$width === "small" ? "var(--space-6u)" : "var(--space-7u)"};
     width: ${(props) => (props.$width === "small" ? "60%" : "40%")};
-    border-radius: var(--radius-xs);
+    border-radius: var(--radius-2xs);
     background: linear-gradient(
         90deg,
-        var(--color-background-hover) 0%,
-        var(--color-input-background) 50%,
-        var(--color-background-hover) 100%
+        var(--color-accent) 0%,
+        var(--color-secondary) 50%,
+        var(--color-accent) 100%
     );
-    background-size: 1000px 100%;
+    background-size: calc(var(--size-50u) * 10) 100%;
     animation: ${shimmer} 2s infinite linear;
 `;
 
 const Footer = styled.p`
-    margin-top: var(--space-lg);
+    margin-top: var(--space-8u);
     text-align: center;
-    font-size: var(--font-xs);
+    font-size: var(--font-size-md);
     color: var(--color-secondary-text);
 `;
 
@@ -464,15 +491,20 @@ export const SignedInAccounts: React.FC<SignedInAccountsProps> = ({
                                 </Avatar>
 
                                 <AccountDetails>
-                                    <AccountName>
-                                        {fullName ||
-                                            account.primary_email_address
-                                                ?.email ||
-                                            account.primary_phone_number
-                                                ?.phone_number ||
-                                            account.username ||
-                                            "User"}
-                                    </AccountName>
+                                    <AccountMeta>
+                                        <AccountName>
+                                            {fullName ||
+                                                account.primary_email_address
+                                                    ?.email ||
+                                                account.primary_phone_number
+                                                    ?.phone_number ||
+                                                account.username ||
+                                                "User"}
+                                        </AccountName>
+                                        {isActive && (
+                                            <ActiveBadge>Current</ActiveBadge>
+                                        )}
+                                    </AccountMeta>
                                     <AccountEmail>
                                         {account.primary_email_address?.email ||
                                             account.username}

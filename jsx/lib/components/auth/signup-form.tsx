@@ -3,8 +3,8 @@ import styled, { keyframes } from "styled-components";
 import { useSignUp } from "../../hooks/use-signup";
 import { Loader2 } from "lucide-react";
 import {
-  useSignInWithStrategy,
-  type OAuthProvider,
+    useSignInWithStrategy,
+    type OAuthProvider,
 } from "../../hooks/use-signin";
 import { useDeployment } from "../../hooks/use-deployment";
 import { useNavigation } from "../../hooks/use-navigation";
@@ -31,915 +31,988 @@ const spin = keyframes`
 `;
 
 const breakpoints = {
-  sm: "36rem",
-  md: "48rem",
-  lg: "62rem",
-  xl: "75rem",
+    sm: "36rem",
+    md: "48rem",
+    lg: "62rem",
+    xl: "75rem",
 };
 
 const Container = styled.div`
-  max-width: 380px;
-  width: 380px;
-  padding: var(--space-3xl);
-  background: var(--color-background);
-  border-radius: var(--radius-lg);
-  box-shadow: 0 4px 12px var(--color-shadow);
+    max-width: calc(var(--space-10u) * 19);
+    width: calc(var(--space-10u) * 19);
+    padding: var(--space-12u);
+    background: var(--color-card);
+    color: var(--color-card-foreground);
+    border-radius: var(--radius-lg);
+    box-shadow: var(--shadow-md);
+    border: var(--border-width-thin) solid var(--color-border);
 
-  @media (max-width: ${breakpoints.sm}) {
-    max-width: 100%;
-    padding: var(--space-lg);
-    border-radius: 0;
-  }
+    @media (max-width: ${breakpoints.sm}) {
+        max-width: 100%;
+        padding: var(--space-8u);
+        border-radius: 0;
+    }
 `;
 
 const LoadingContainer = styled.div`
-  display: flex;
-  justify-content: center;
-  align-items: center;
-  min-height: 200px;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    min-height: 200px;
 
-  svg {
-    animation: ${spin} 1s linear infinite;
-    color: var(--color-primary);
-  }
+    svg {
+        animation: ${spin} 1s linear infinite;
+        color: var(--color-primary);
+    }
 `;
 
 const Header = styled.div`
-  text-align: center;
-  margin-bottom: var(--space-2xl);
-  position: relative;
+    text-align: center;
+    margin-bottom: var(--space-12u);
+    position: relative;
 
-  @media (max-width: ${breakpoints.sm}) {
-    margin-bottom: var(--space-md);
-  }
+    @media (max-width: ${breakpoints.sm}) {
+        margin-bottom: var(--space-6u);
+    }
 `;
 
 const Title = styled.h1`
-  font-size: var(--font-lg);
-  font-weight: 400;
-  color: var(--color-foreground);
-  margin-bottom: var(--space-xs);
-  margin-top: 0;
+    font-size: var(--font-size-2xl);
+    font-weight: 400;
+    color: var(--color-card-foreground);
+    margin-bottom: var(--space-2u);
+    margin-top: 0;
 
-  @media (max-width: ${breakpoints.sm}) {
-    font-size: var(--font-md);
-  }
+    @media (max-width: ${breakpoints.sm}) {
+        font-size: var(--font-size-xl);
+    }
 `;
 
 const Subtitle = styled.p`
-  color: var(--color-secondary-text);
-  font-size: var(--font-xs);
-  margin: 0;
+    color: var(--color-secondary-text);
+    font-size: var(--font-size-md);
+    margin: 0;
 
-  @media (max-width: ${breakpoints.sm}) {
-    font-size: var(--font-2xs);
-  }
+    @media (max-width: ${breakpoints.sm}) {
+        font-size: var(--font-size-xs);
+    }
 `;
 
 const Divider = styled.div`
-  position: relative;
-  text-align: center;
-  margin: var(--space-lg) 0;
+    position: relative;
+    text-align: center;
+    margin: var(--space-8u) 0;
 
-  &::before {
-    content: "";
-    position: absolute;
-    top: 50%;
-    left: 0;
-    right: 0;
-    height: 1px;
-    background: var(--color-divider);
-  }
+    &::before {
+        content: "";
+        position: absolute;
+        top: 50%;
+        left: 0;
+        right: 0;
+        height: 1px;
+        background: var(--color-divider);
+    }
 
-  @media (max-width: ${breakpoints.sm}) {
-    margin: var(--space-md) 0;
-  }
+    @media (max-width: ${breakpoints.sm}) {
+        margin: var(--space-6u) 0;
+    }
 `;
 
 const DividerText = styled.span`
-  position: relative;
-  background: var(--color-background);
-  padding: 0 var(--space-sm);
-  color: var(--color-secondary-text);
-  font-size: var(--font-xs);
+    position: relative;
+    background: var(--color-card);
+    padding: 0 var(--space-4u);
+    color: var(--color-secondary-text);
+    font-size: var(--font-size-md);
 `;
 
 const Form = styled.form`
-  display: flex;
-  flex-direction: column;
-  gap: var(--space-lg);
+    display: flex;
+    flex-direction: column;
+    gap: var(--space-8u);
 
-  @media (max-width: ${breakpoints.sm}) {
-    gap: 1rem;
-  }
+    @media (max-width: ${breakpoints.sm}) {
+        gap: var(--space-8u);
+    }
 `;
 
 const NameFields = styled.div<{ $isBothEnabled: boolean }>`
-  display: grid;
-  grid-template-columns: ${(props) =>
-    props.$isBothEnabled ? "1fr 1fr" : "1fr"};
-  gap: var(--space-sm);
+    display: grid;
+    grid-template-columns: ${(props) =>
+        props.$isBothEnabled ? "1fr 1fr" : "1fr"};
+    gap: var(--space-4u);
 
-  @media (max-width: ${breakpoints.sm}) {
-    grid-template-columns: 1fr;
-    gap: 0.5rem;
-  }
+    @media (max-width: ${breakpoints.sm}) {
+        grid-template-columns: 1fr;
+        gap: var(--space-4u);
+    }
 `;
 
 const FormGroup = styled.div`
-  display: flex;
-  flex-direction: column;
-  gap: var(--space-xs);
+    display: flex;
+    flex-direction: column;
+    gap: var(--space-2u);
 `;
 
 const Label = styled.label`
-  font-size: var(--font-xs);
-  text-align: left;
-  font-weight: 400;
-  color: var(--color-foreground);
+    font-size: var(--font-size-md);
+    text-align: left;
+    font-weight: 400;
+    color: var(--color-foreground);
 
-  @media (max-width: ${breakpoints.sm}) {
-    font-size: 0.75rem;
-  }
+    @media (max-width: ${breakpoints.sm}) {
+        font-size: var(--font-size-sm);
+    }
 `;
 
 const PasswordGroup = styled.div`
-  position: relative;
+    position: relative;
 `;
 
 const ErrorMessage = styled.p`
-  font-size: var(--font-2xs);
-  color: var(--color-error);
-  margin: 0;
-  margin-top: var(--space-2xs);
+    font-size: var(--font-size-xs);
+    color: var(--color-error);
+    margin: 0;
+    margin-top: var(--space-1u);
 `;
 
 const SubmitButton = styled.button`
-  width: 100%;
-  padding: 0.5625rem 1rem;
-  background: var(--color-primary);
-  color: white;
-  border: none;
-  border-radius: var(--radius-md);
-  font-weight: 400;
-  font-size: var(--font-xs);
-  cursor: pointer;
-  transition: background-color 0.2s;
-  margin-top: var(--space-lg);
+    width: 100%;
+    padding: 0 var(--space-8u);
+    background: var(--color-primary);
+    color: var(--color-primary-foreground);
+    border: var(--border-width-thin) solid var(--color-primary);
+    border-radius: var(--radius-md);
+    font-weight: 400;
+    font-size: var(--font-size-md);
+    cursor: pointer;
+    transition:
+        background-color 0.2s,
+        border-color 0.2s,
+        color 0.2s;
+    margin-top: var(--space-8u);
+    min-height: var(--size-18u);
+    height: var(--size-18u);
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    line-height: 1;
 
-  &:hover:not(:disabled) {
-    background: var(--color-primary-hover);
-  }
+    &:hover:not(:disabled) {
+        background: var(--color-primary-hover);
+        border-color: var(--color-primary-hover);
+    }
 
-  &:disabled {
-    opacity: 0.7;
-    cursor: not-allowed;
-  }
+    &:disabled {
+        opacity: 0.7;
+        cursor: not-allowed;
+    }
 
-  @media (max-width: ${breakpoints.sm}) {
-    padding: 0.5rem 0.875rem;
-    font-size: 0.8125rem;
-  }
+    @media (max-width: ${breakpoints.sm}) {
+        font-size: var(--font-size-md);
+    }
 `;
 
 const Footer = styled.div`
-  margin-top: var(--space-lg);
-  text-align: center;
-  font-size: var(--font-xs);
-  color: var(--color-secondary-text);
+    margin-top: var(--space-8u);
+    text-align: center;
+    font-size: var(--font-size-md);
+    color: var(--color-secondary-text);
 
-  @media (max-width: ${breakpoints.sm}) {
-    margin-top: 1rem;
-    font-size: 0.75rem;
-  }
+    @media (max-width: ${breakpoints.sm}) {
+        margin-top: var(--space-8u);
+        font-size: var(--font-size-sm);
+    }
 `;
 
 const Link = styled.span`
-  color: var(--color-primary);
-  text-decoration: none;
-  font-weight: 400;
-  transition: color 0.2s;
+    color: var(--color-primary);
+    text-decoration: none;
+    font-weight: 400;
+    transition: color 0.2s;
 
-  &:hover {
-    color: var(--color-primary-hover);
-  }
+    &:hover {
+        color: var(--color-primary-hover);
+    }
 `;
 
 const RestrictedMessage = styled.div`
-  text-align: center;
-  padding: var(--space-xl);
-  margin-bottom: var(--space-lg);
+    text-align: center;
+    padding: var(--space-10u);
+    margin-bottom: var(--space-8u);
+    background: var(--color-secondary);
+    border: var(--border-width-thin) solid var(--color-border);
+    border-radius: var(--radius-md);
 `;
 
 const RestrictedText = styled.p`
-  font-size: var(--font-size-md);
-  color: var(--color-text-secondary);
-  margin: 0 0 var(--space-sm) 0;
-  line-height: 1.5;
+    font-size: var(--font-size-xl);
+    color: var(--color-secondary-text);
+    margin: 0 0 var(--space-4u) 0;
+    line-height: 1.5;
 `;
 
 const RestrictedFooter = styled.div`
-  text-align: center;
-  margin-top: var(--space-lg);
+    text-align: center;
+    margin-top: var(--space-8u);
 `;
 
 const RestrictedFooterText = styled.p`
-  font-size: var(--font-xs);
-  color: var(--color-muted);
-  margin: 0;
+    font-size: var(--font-size-md);
+    color: var(--color-muted);
+    margin: 0;
 `;
 
 const RestrictedLink = styled.a`
-  color: var(--color-primary);
-  text-decoration: none;
-  cursor: pointer;
+    color: var(--color-primary);
+    text-decoration: none;
+    cursor: pointer;
 `;
 
 const RequiredAsterisk = styled.span`
-  color: var(--color-danger);
-  margin-left: 2px;
+    color: var(--color-error);
+    margin-left: var(--space-1u);
 `;
 
 export function SignUpForm() {
-  const { loading, signUp, signupAttempt, discardSignupAttempt } = useSignUp();
-  const { signIn: oauthSignIn } = useSignInWithStrategy("oauth");
-  const { deployment } = useDeployment();
-  const { navigate } = useNavigation();
-  const {
-    session,
-    refetch: refetchSession,
-    loading: sessionLoading,
-  } = useSession();
-  const [formData, setFormData] = useState<SignUpParams>({
-    first_name: "",
-    last_name: "",
-    email: "",
-    password: "",
-    username: "",
-    phone_number: "",
-  });
-  const [errors, setErrors] = useState<Record<string, string>>({});
-  const [isSubmitting, setIsSubmitting] = useState(false);
-  const [countryCode, setCountryCode] = useState<string | undefined>(undefined);
-  const [inviteData, setInviteData] = useState<{
-    valid: boolean;
-    first_name?: string;
-    last_name?: string;
-    email?: string;
-    message?: string;
-  } | null>(null);
-  const [inviteToken, setInviteToken] = useState<string | null>(null);
-  const [isRedirecting, setIsRedirecting] = useState(false);
-
-  const isSignupRestricted =
-    deployment?.restrictions?.sign_up_mode === "restricted";
-  const isWaitlistMode = deployment?.restrictions?.sign_up_mode === "waitlist";
-  const isMultiSessionEnabled =
-    deployment?.auth_settings?.multi_session_support?.enabled ?? false;
-
-  useEffect(() => {
-    if (
-      !sessionLoading &&
-      session?.active_signin &&
-      !isMultiSessionEnabled &&
-      !isRedirecting
-    ) {
-      setIsRedirecting(true);
-      let redirectUri = new URLSearchParams(window.location.search).get(
-        "redirect_uri",
-      );
-
-      if (!redirectUri) {
-        redirectUri =
-          deployment?.ui_settings?.after_signin_redirect_url || null;
-      }
-
-      if (!redirectUri && deployment?.frontend_host) {
-        redirectUri = `https://${deployment.frontend_host}`;
-      }
-
-      if (!redirectUri && deployment?.frontend_host) {
-        redirectUri = `https://${deployment.frontend_host}`;
-      }
-
-      if (redirectUri) {
-        navigate(redirectUri);
-      }
-    }
-  }, [
-    session,
-    sessionLoading,
-    isMultiSessionEnabled,
-    deployment,
-    navigate,
-    isRedirecting,
-  ]);
-
-  useEffect(() => {
-    if (!deployment) return;
-
-    const params = new URLSearchParams(window.location.search);
-    const invitation_token = params.get("invite_token");
-
-    if (isWaitlistMode && !invitation_token) {
-      setIsRedirecting(true);
-      const waitlistUrl =
-        deployment.ui_settings?.waitlist_page_url ||
-        `https://${deployment.frontend_host}/waitlist`;
-      navigate(waitlistUrl);
-      return;
-    }
-
-    if (invitation_token && !inviteData && signUp) {
-      setInviteToken(invitation_token);
-      signUp
-        .validateDeploymentInvitation(invitation_token)
-        .then((data) => {
-          setInviteData(data);
-          if (data.valid) {
-            setFormData((prev) => ({
-              ...prev,
-              first_name: data.first_name || prev.first_name,
-              last_name: data.last_name || prev.last_name,
-              email: data.email || prev.email,
-            }));
-          }
-        })
-        .catch((err) => {
-          console.error("Failed to validate invitation:", err);
-        });
-    }
-  }, [deployment, isWaitlistMode, navigate, inviteData, signUp]);
-
-  const [otpSent, setOtpSent] = useState(false);
-  const [otpCode, setOtpCode] = useState("");
-
-  const handleInputChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-    let { name, value } = e.target;
-    if (name === "phone_number") {
-      value = value.replace(/[^0-9-]/g, "");
-    } else if (name === "email") {
-      value = value.toLowerCase();
-    }
-    setFormData((prev) => ({ ...prev, [name]: value }));
-    setErrors((prev) => ({ ...prev, [name]: "" }));
-  };
-
-  const resetFormData = () => {
-    setFormData({
-      first_name: "",
-      last_name: "",
-      email: "",
-      password: "",
-      username: "",
-      phone_number: "",
+    const { loading, signUp, signupAttempt, discardSignupAttempt } =
+        useSignUp();
+    const { signIn: oauthSignIn } = useSignInWithStrategy("oauth");
+    const { deployment } = useDeployment();
+    const { navigate } = useNavigation();
+    const {
+        session,
+        refetch: refetchSession,
+        loading: sessionLoading,
+    } = useSession();
+    const [formData, setFormData] = useState<SignUpParams>({
+        first_name: "",
+        last_name: "",
+        email: "",
+        password: "",
+        username: "",
+        phone_number: "",
     });
-    setErrors({});
-    setOtpSent(false);
-    setOtpCode("");
-    discardSignupAttempt();
-  };
+    const [errors, setErrors] = useState<Record<string, string>>({});
+    const [isSubmitting, setIsSubmitting] = useState(false);
+    const [countryCode, setCountryCode] = useState<string | undefined>(
+        undefined,
+    );
+    const [inviteData, setInviteData] = useState<{
+        valid: boolean;
+        first_name?: string;
+        last_name?: string;
+        email?: string;
+        message?: string;
+    } | null>(null);
+    const [inviteToken, setInviteToken] = useState<string | null>(null);
+    const [isRedirecting, setIsRedirecting] = useState(false);
 
-  const handleSubmit = async (e: React.FormEvent) => {
-    e.preventDefault();
-    if (loading || isSubmitting) return;
+    const isSignupRestricted =
+        deployment?.restrictions?.sign_up_mode === "restricted";
+    const isWaitlistMode =
+        deployment?.restrictions?.sign_up_mode === "waitlist";
+    const isMultiSessionEnabled =
+        deployment?.auth_settings?.multi_session_support?.enabled ?? false;
 
-    const newErrors: Record<string, string> = {};
+    useEffect(() => {
+        if (
+            !sessionLoading &&
+            session?.active_signin &&
+            !isMultiSessionEnabled &&
+            !isRedirecting
+        ) {
+            setIsRedirecting(true);
+            let redirectUri = new URLSearchParams(window.location.search).get(
+                "redirect_uri",
+            );
 
-    const namePattern = /^[a-zA-Z]{3,30}$/;
-    const usernamePattern = /^[a-zA-Z][a-zA-Z0-9_.]{2,29}$/;
-    const emailPattern = /^[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}$/;
-    const phonePattern = /^\d{7,15}$/;
-    const passwordPattern =
-      /^(?=.*[a-z])(?=.*[A-Z])(?=.*\d)(?=.*[@$!%*?&])[A-Za-z\d@$!%*?&]{8,125}$/;
+            if (!redirectUri) {
+                redirectUri =
+                    deployment?.ui_settings?.after_signin_redirect_url || null;
+            }
 
-    // Only validate first_name if it's enabled
-    if (authSettings?.first_name.enabled) {
-      if (authSettings?.first_name.required && !formData.first_name) {
-        newErrors.first_name = "First name is required";
-      } else if (
-        formData.first_name &&
-        !namePattern.test(formData.first_name)
-      ) {
-        newErrors.first_name = "Invalid name";
-      }
-    }
+            if (!redirectUri && deployment?.frontend_host) {
+                redirectUri = `https://${deployment.frontend_host}`;
+            }
 
-    // Only validate last_name if it's enabled
-    if (authSettings?.last_name.enabled) {
-      if (authSettings?.last_name.required && !formData.last_name) {
-        newErrors.last_name = "Last name is required";
-      } else if (formData.last_name && !namePattern.test(formData.last_name)) {
-        newErrors.last_name = "Invalid last name";
-      }
-    }
+            if (!redirectUri && deployment?.frontend_host) {
+                redirectUri = `https://${deployment.frontend_host}`;
+            }
 
-    if (authSettings?.username.enabled) {
-      if (authSettings?.username.required && !formData.username) {
-        newErrors.username = "Username is required";
-      } else if (
-        formData.username &&
-        !usernamePattern.test(formData.username)
-      ) {
-        newErrors.username = "Username must be 3-20 characters";
-      }
-    }
+            if (redirectUri) {
+                navigate(redirectUri);
+            }
+        }
+    }, [
+        session,
+        sessionLoading,
+        isMultiSessionEnabled,
+        deployment,
+        navigate,
+        isRedirecting,
+    ]);
 
-    if (authSettings?.email_address.enabled) {
-      if (authSettings?.email_address.required && !formData.email) {
-        newErrors.email = "Email address is required";
-      } else if (formData.email && !emailPattern.test(formData.email)) {
-        newErrors.email = "Invalid email address";
-      }
-    }
+    useEffect(() => {
+        if (!deployment) return;
 
-    if (authSettings?.phone_number.enabled) {
-      if (authSettings?.phone_number.required && !formData.phone_number) {
-        newErrors.phone_number = "Phone number is required";
-      } else if (
-        formData.phone_number &&
-        !phonePattern.test(formData.phone_number)
-      ) {
-        newErrors.phone_number = "Phone number must contain 7-15 digits";
-      }
-    }
+        const params = new URLSearchParams(window.location.search);
+        const invitation_token = params.get("invite_token");
 
-    if (authSettings?.password.enabled) {
-      if (!formData.password) {
-        newErrors.password = "Password is required";
-      } else if (!passwordPattern.test(formData.password)) {
-        newErrors.password =
-          "Password must be 8-125 characters and include uppercase, lowercase, number, and special character";
-      }
-    }
+        if (isWaitlistMode && !invitation_token) {
+            setIsRedirecting(true);
+            const waitlistUrl =
+                deployment.ui_settings?.waitlist_page_url ||
+                `https://${deployment.frontend_host}/waitlist`;
+            navigate(waitlistUrl);
+            return;
+        }
 
-    setErrors(newErrors);
+        if (invitation_token && !inviteData && signUp) {
+            setInviteToken(invitation_token);
+            signUp
+                .validateDeploymentInvitation(invitation_token)
+                .then((data) => {
+                    setInviteData(data);
+                    if (data.valid) {
+                        setFormData((prev) => ({
+                            ...prev,
+                            first_name: data.first_name || prev.first_name,
+                            last_name: data.last_name || prev.last_name,
+                            email: data.email || prev.email,
+                        }));
+                    }
+                })
+                .catch((err) => {
+                    console.error("Failed to validate invitation:", err);
+                });
+        }
+    }, [deployment, isWaitlistMode, navigate, inviteData, signUp]);
 
-    if (Object.keys(newErrors).length > 0) {
-      return;
-    }
+    const [otpSent, setOtpSent] = useState(false);
+    const [otpCode, setOtpCode] = useState("");
 
+    const handleInputChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+        let { name, value } = e.target;
+        if (name === "phone_number") {
+            value = value.replace(/[^0-9-]/g, "");
+        } else if (name === "email") {
+            value = value.toLowerCase();
+        }
+        setFormData((prev) => ({ ...prev, [name]: value }));
+        setErrors((prev) => ({ ...prev, [name]: "" }));
+    };
 
-    setIsSubmitting(true);
-    try {
-      const submitData: any = { ...formData };
-      if (formData.phone_number && countryCode) {
-        submitData.phone_country_code = countryCode;
-      }
-      if (inviteToken) {
-        submitData.invite_token = inviteToken;
-      }
-      await signUp.create(submitData);
-    } catch (err) {
-      setErrors({ submit: (err as Error).message });
-    } finally {
-      setIsSubmitting(false);
-    }
-  };
+    const resetFormData = () => {
+        setFormData({
+            first_name: "",
+            last_name: "",
+            email: "",
+            password: "",
+            username: "",
+            phone_number: "",
+        });
+        setErrors({});
+        setOtpSent(false);
+        setOtpCode("");
+        discardSignupAttempt();
+    };
 
-  const handleSocialSignIn = async (connection: DeploymentSocialConnection) => {
-    if (loading || isSubmitting) return;
+    const handleSubmit = async (e: React.FormEvent) => {
+        e.preventDefault();
+        if (loading || isSubmitting) return;
 
-    setIsSubmitting(true);
-    try {
-      const searchParams = new URLSearchParams(window.location.search);
-      const redirectUri = searchParams.get("redirect_uri") || undefined;
+        const newErrors: Record<string, string> = {};
 
-      const { data } = await oauthSignIn.create({
-        provider: connection.provider as OAuthProvider,
-        redirectUri,
-      });
-      if (data && typeof data === "object" && "oauth_url" in data) {
-        window.location.href = data.oauth_url as string;
-      }
-    } catch (err) {
-      setErrors({ submit: (err as Error).message });
-    } finally {
-      setIsSubmitting(false);
-    }
-  };
+        const namePattern = /^[a-zA-Z]{3,30}$/;
+        const usernamePattern = /^[a-zA-Z][a-zA-Z0-9_.]{2,29}$/;
+        const emailPattern = /^[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}$/;
+        const phonePattern = /^\d{7,15}$/;
+        const passwordPattern =
+            /^(?=.*[a-z])(?=.*[A-Z])(?=.*\d)(?=.*[@$!%*?&])[A-Za-z\d@$!%*?&]{8,125}$/;
 
-  const enabledSocialProviders =
-    deployment?.social_connections.filter((conn) => conn.enabled) || [];
+        // Only validate first_name if it's enabled
+        if (authSettings?.first_name.enabled) {
+            if (authSettings?.first_name.required && !formData.first_name) {
+                newErrors.first_name = "First name is required";
+            } else if (
+                formData.first_name &&
+                !namePattern.test(formData.first_name)
+            ) {
+                newErrors.first_name = "Invalid name";
+            }
+        }
 
-  const authSettings = deployment?.auth_settings;
+        // Only validate last_name if it's enabled
+        if (authSettings?.last_name.enabled) {
+            if (authSettings?.last_name.required && !formData.last_name) {
+                newErrors.last_name = "Last name is required";
+            } else if (
+                formData.last_name &&
+                !namePattern.test(formData.last_name)
+            ) {
+                newErrors.last_name = "Invalid last name";
+            }
+        }
 
-  const isBothNamesEnabled = Boolean(
-    authSettings?.first_name?.enabled && authSettings?.last_name?.enabled,
-  );
+        if (authSettings?.username.enabled) {
+            if (authSettings?.username.required && !formData.username) {
+                newErrors.username = "Username is required";
+            } else if (
+                formData.username &&
+                !usernamePattern.test(formData.username)
+            ) {
+                newErrors.username = "Username must be 3-20 characters";
+            }
+        }
 
-  const completeVerification = async (e: React.FormEvent) => {
-    e.preventDefault();
-    if (loading || isSubmitting) return;
-    setIsSubmitting(true);
-    const newErrors: Record<string, string> = {};
-    if (!otpCode) {
-      newErrors.otp = "OTP code is required";
-      setErrors(newErrors);
-      setIsSubmitting(false);
-      return;
-    }
-    setErrors(newErrors);
+        if (authSettings?.email_address.enabled) {
+            if (authSettings?.email_address.required && !formData.email) {
+                newErrors.email = "Email address is required";
+            } else if (formData.email && !emailPattern.test(formData.email)) {
+                newErrors.email = "Invalid email address";
+            }
+        }
 
-    try {
-      const result = await signUp.completeVerification(otpCode);
-      if ("data" in result && result.data?.active_signin) {
-        await refetchSession();
-      }
-    } catch (error) {
-      console.error("Verification failed:", error);
-    } finally {
-      setIsSubmitting(false);
-    }
-  };
+        if (authSettings?.phone_number.enabled) {
+            if (authSettings?.phone_number.required && !formData.phone_number) {
+                newErrors.phone_number = "Phone number is required";
+            } else if (
+                formData.phone_number &&
+                !phonePattern.test(formData.phone_number)
+            ) {
+                newErrors.phone_number =
+                    "Phone number must contain 7-15 digits";
+            }
+        }
 
-  useEffect(() => {
-    if (!signupAttempt) return;
+        if (authSettings?.password.enabled) {
+            if (!formData.password) {
+                newErrors.password = "Password is required";
+            } else if (!passwordPattern.test(formData.password)) {
+                newErrors.password =
+                    "Password must be 8-125 characters and include uppercase, lowercase, number, and special character";
+            }
+        }
 
-    if (signupAttempt.completed) {
-      let redirectUri: string | null = new URLSearchParams(
-        window.location.search,
-      ).get("redirect_uri");
-      if (!redirectUri) {
-        redirectUri =
-          deployment?.ui_settings?.after_signup_redirect_url || null;
-      }
-      if (!redirectUri && deployment?.frontend_host) {
-        redirectUri = `https://${deployment.frontend_host}`;
-      }
-      if (redirectUri) {
-        let uri: URL;
+        setErrors(newErrors);
+
+        if (Object.keys(newErrors).length > 0) {
+            return;
+        }
+
+        setIsSubmitting(true);
         try {
-          uri = new URL(redirectUri);
-        } catch {
-          uri = new URL(redirectUri, window.location.origin);
+            const submitData: any = { ...formData };
+            if (formData.phone_number && countryCode) {
+                submitData.phone_country_code = countryCode;
+            }
+            if (inviteToken) {
+                submitData.invite_token = inviteToken;
+            }
+            await signUp.create(submitData);
+        } catch (err) {
+            setErrors({ submit: (err as Error).message });
+        } finally {
+            setIsSubmitting(false);
         }
-        if (deployment?.mode === "staging") {
-          uri.searchParams.set(
-            "__dev_session__",
-            getStoredDevSession() || "",
-          );
+    };
+
+    const handleSocialSignIn = async (
+        connection: DeploymentSocialConnection,
+    ) => {
+        if (loading || isSubmitting) return;
+
+        setIsSubmitting(true);
+        try {
+            const searchParams = new URLSearchParams(window.location.search);
+            const redirectUri = searchParams.get("redirect_uri") || undefined;
+
+            const { data } = await oauthSignIn.create({
+                provider: connection.provider as OAuthProvider,
+                redirectUri,
+            });
+            if (data && typeof data === "object" && "oauth_url" in data) {
+                window.location.href = data.oauth_url as string;
+            }
+        } catch (err) {
+            setErrors({ submit: (err as Error).message });
+        } finally {
+            setIsSubmitting(false);
         }
-        navigate(uri.toString());
-      }
-      return;
-    }
+    };
 
-    if (otpSent) {
-      return;
-    }
+    const enabledSocialProviders =
+        deployment?.social_connections.filter((conn) => conn.enabled) || [];
 
-    switch (signupAttempt.current_step) {
-      case "verify_email":
-        signUp.prepareVerification({ strategy: "email_otp" });
-        break;
-      case "verify_phone":
-        signUp.prepareVerification({ strategy: "phone_otp" });
-        break;
-    }
+    const authSettings = deployment?.auth_settings;
 
-    setOtpSent(true);
-  }, [signupAttempt, signUp, otpSent, deployment, session, navigate]);
-
-  if (sessionLoading) {
-    return (
-      <DefaultStylesProvider>
-        <Container>
-          <AuthFormImage />
-          <LoadingContainer>
-            <Loader2 size={32} />
-          </LoadingContainer>
-        </Container>
-      </DefaultStylesProvider>
+    const isBothNamesEnabled = Boolean(
+        authSettings?.first_name?.enabled && authSettings?.last_name?.enabled,
     );
-  }
 
-  if (isRedirecting) {
-    return (
-      <DefaultStylesProvider>
-        <Container>
-          <AuthFormImage />
-          <LoadingContainer>
-            <Loader2 size={32} />
-          </LoadingContainer>
-        </Container>
-      </DefaultStylesProvider>
-    );
-  }
+    const completeVerification = async (e: React.FormEvent) => {
+        e.preventDefault();
+        if (loading || isSubmitting) return;
+        setIsSubmitting(true);
+        const newErrors: Record<string, string> = {};
+        if (!otpCode) {
+            newErrors.otp = "OTP code is required";
+            setErrors(newErrors);
+            setIsSubmitting(false);
+            return;
+        }
+        setErrors(newErrors);
 
-  // Show restricted message if signup is restricted
-  if (isSignupRestricted) {
-    return (
-      <DefaultStylesProvider>
-        <Container>
-          <AuthFormImage />
+        try {
+            const result = await signUp.completeVerification(otpCode);
+            if ("data" in result && result.data?.active_signin) {
+                await refetchSession();
+            }
+        } catch (error) {
+            console.error("Verification failed:", error);
+        } finally {
+            setIsSubmitting(false);
+        }
+    };
 
-          <Header>
-            <Title>Sign up Restricted!</Title>
-          </Header>
+    useEffect(() => {
+        if (!signupAttempt) return;
 
-          <RestrictedMessage>
-            <RestrictedText>
-              New account registration is currently restricted. Please check
-              back later.
-            </RestrictedText>
-          </RestrictedMessage>
-
-          <RestrictedFooter>
-            <RestrictedFooterText>
-              Need assistance?{" "}
-              <RestrictedLink
-                href={
-                  deployment?.ui_settings?.sign_in_page_url
-                    ? `${deployment.ui_settings.sign_in_page_url}?help=true`
-                    : "/contact"
+        if (signupAttempt.completed) {
+            let redirectUri: string | null = new URLSearchParams(
+                window.location.search,
+            ).get("redirect_uri");
+            if (!redirectUri) {
+                redirectUri =
+                    deployment?.ui_settings?.after_signup_redirect_url || null;
+            }
+            if (!redirectUri && deployment?.frontend_host) {
+                redirectUri = `https://${deployment.frontend_host}`;
+            }
+            if (redirectUri) {
+                let uri: URL;
+                try {
+                    uri = new URL(redirectUri);
+                } catch {
+                    uri = new URL(redirectUri, window.location.origin);
                 }
-              >
-                Get help
-              </RestrictedLink>
-            </RestrictedFooterText>
-          </RestrictedFooter>
-        </Container>
-      </DefaultStylesProvider>
-    );
-  }
+                if (deployment?.mode === "staging") {
+                    uri.searchParams.set(
+                        "__dev_session__",
+                        getStoredDevSession() || "",
+                    );
+                }
+                navigate(uri.toString());
+            }
+            return;
+        }
 
-  return (
-    <DefaultStylesProvider>
-      <Container>
-        {otpSent ? (
-          <>
-            <Header>
-              <Title>
-                Check your{" "}
-                {signupAttempt?.current_step === "verify_email"
-                  ? "email"
-                  : "phone"}
-              </Title>
-              <Subtitle>
-                {signupAttempt?.current_step === "verify_email"
-                  ? `${formData.email} to continue to ${deployment?.ui_settings?.app_name}`
-                  : `${formData.phone_number} to continue to ${deployment?.ui_settings?.app_name}`}
-              </Subtitle>
-            </Header>
-            <Form
-              style={{ gap: "15px" }}
-              onSubmit={completeVerification}
-              noValidate
-            >
-              <OTPInput
-                onComplete={async (code) => {
-                  setOtpCode(code);
-                }}
-                onResend={async () => {
-                  const strategy =
-                    signupAttempt?.current_step === "verify_email"
-                      ? "email_otp"
-                      : "phone_otp";
-                  await signUp.prepareVerification({ strategy });
-                }}
-                error={errors.otp}
-                isSubmitting={isSubmitting}
-              />
+        if (otpSent) {
+            return;
+        }
 
-              <SubmitButton
-                type="submit"
-                disabled={isSubmitting || loading || !otpCode}
-              >
-                {isSubmitting
-                  ? "Verifying..."
-                  : `Continue to ${deployment?.ui_settings?.app_name}`}
-              </SubmitButton>
-            </Form>
-            <Footer>
-              Having trouble?{" "}
-              <Link>
-                <NavigationLink to={deployment!.ui_settings.support_page_url}>
-                  Contact support
-                </NavigationLink>
-              </Link>
-              <div style={{ marginTop: "var(--space-sm)" }}>
-                <Link
-                  onClick={() => {
-                    resetFormData();
-                  }}
-                  style={{ cursor: "pointer" }}
-                >
-                  Use other method
-                </Link>
-              </div>
-            </Footer>
-          </>
-        ) : (
-          <>
-            <AuthFormImage />
+        switch (signupAttempt.current_step) {
+            case "verify_email":
+                signUp.prepareVerification({ strategy: "email_otp" });
+                break;
+            case "verify_phone":
+                signUp.prepareVerification({ strategy: "phone_otp" });
+                break;
+        }
 
-            <Header>
-              <Title>Create your account</Title>
-              <Subtitle>
-                {inviteData?.valid
-                  ? "You've been invited! Complete your registration below."
-                  : "Welcome! Please fill in the details to get started."}
-              </Subtitle>
-            </Header>
+        setOtpSent(true);
+    }, [signupAttempt, signUp, otpSent, deployment, session, navigate]);
 
-            {enabledSocialProviders.length > 0 && (
-              <>
-                <SocialAuthButtons
-                  connections={enabledSocialProviders}
-                  callback={handleSocialSignIn}
-                />
+    if (sessionLoading) {
+        return (
+            <DefaultStylesProvider>
+                <Container>
+                    <AuthFormImage />
+                    <LoadingContainer>
+                        <Loader2 size={32} />
+                    </LoadingContainer>
+                </Container>
+            </DefaultStylesProvider>
+        );
+    }
 
-                <Divider>
-                  <DividerText>or</DividerText>
-                </Divider>
-              </>
-            )}
+    if (isRedirecting) {
+        return (
+            <DefaultStylesProvider>
+                <Container>
+                    <AuthFormImage />
+                    <LoadingContainer>
+                        <Loader2 size={32} />
+                    </LoadingContainer>
+                </Container>
+            </DefaultStylesProvider>
+        );
+    }
 
-            <Form onSubmit={handleSubmit} noValidate>
-              {(authSettings?.first_name?.enabled ||
-                authSettings?.last_name?.enabled) && (
-                  <NameFields $isBothEnabled={isBothNamesEnabled}>
-                    {authSettings?.first_name?.enabled && (
-                      <FormGroup>
-                        <Label htmlFor="first_name">
-                          First name
-                          {authSettings?.first_name?.required && (
-                            <RequiredAsterisk>*</RequiredAsterisk>
-                          )}
-                        </Label>
-                        <Input
-                          type="text"
-                          id="first_name"
-                          name="first_name"
-                          required
-                          minLength={3}
-                          maxLength={30}
-                          value={formData.first_name}
-                          onChange={handleInputChange}
-                          placeholder="First name"
-                          aria-invalid={!!errors.first_name}
-                          pattern="^[a-zA-Z]{3,30}$"
-                        />
-                        {errors.first_name && (
-                          <ErrorMessage>{errors.first_name}</ErrorMessage>
+    // Show restricted message if signup is restricted
+    if (isSignupRestricted) {
+        return (
+            <DefaultStylesProvider>
+                <Container>
+                    <AuthFormImage />
+
+                    <Header>
+                        <Title>Sign up Restricted!</Title>
+                    </Header>
+
+                    <RestrictedMessage>
+                        <RestrictedText>
+                            New account registration is currently restricted.
+                            Please check back later.
+                        </RestrictedText>
+                    </RestrictedMessage>
+
+                    <RestrictedFooter>
+                        <RestrictedFooterText>
+                            Need assistance?{" "}
+                            <RestrictedLink
+                                href={
+                                    deployment?.ui_settings?.sign_in_page_url
+                                        ? `${deployment.ui_settings.sign_in_page_url}?help=true`
+                                        : "/contact"
+                                }
+                            >
+                                Get help
+                            </RestrictedLink>
+                        </RestrictedFooterText>
+                    </RestrictedFooter>
+                </Container>
+            </DefaultStylesProvider>
+        );
+    }
+
+    return (
+        <DefaultStylesProvider>
+            <Container>
+                {otpSent ? (
+                    <>
+                        <Header>
+                            <Title>
+                                Check your{" "}
+                                {signupAttempt?.current_step === "verify_email"
+                                    ? "email"
+                                    : "phone"}
+                            </Title>
+                            <Subtitle>
+                                {signupAttempt?.current_step === "verify_email"
+                                    ? `${formData.email} to continue to ${deployment?.ui_settings?.app_name}`
+                                    : `${formData.phone_number} to continue to ${deployment?.ui_settings?.app_name}`}
+                            </Subtitle>
+                        </Header>
+                        <Form
+                            style={{ gap: "15px" }}
+                            onSubmit={completeVerification}
+                            noValidate
+                        >
+                            <OTPInput
+                                onComplete={async (code) => {
+                                    setOtpCode(code);
+                                }}
+                                onResend={async () => {
+                                    const strategy =
+                                        signupAttempt?.current_step ===
+                                        "verify_email"
+                                            ? "email_otp"
+                                            : "phone_otp";
+                                    await signUp.prepareVerification({
+                                        strategy,
+                                    });
+                                }}
+                                error={errors.otp}
+                                isSubmitting={isSubmitting}
+                            />
+
+                            <SubmitButton
+                                type="submit"
+                                disabled={isSubmitting || loading || !otpCode}
+                            >
+                                {isSubmitting
+                                    ? "Verifying..."
+                                    : `Continue to ${deployment?.ui_settings?.app_name}`}
+                            </SubmitButton>
+                        </Form>
+                        <Footer>
+                            Having trouble?{" "}
+                            <Link>
+                                <NavigationLink
+                                    to={
+                                        deployment!.ui_settings.support_page_url
+                                    }
+                                >
+                                    Contact support
+                                </NavigationLink>
+                            </Link>
+                            <div style={{ marginTop: "var(--space-4u)" }}>
+                                <Link
+                                    onClick={() => {
+                                        resetFormData();
+                                    }}
+                                    style={{ cursor: "pointer" }}
+                                >
+                                    Use other method
+                                </Link>
+                            </div>
+                        </Footer>
+                    </>
+                ) : (
+                    <>
+                        <AuthFormImage />
+
+                        <Header>
+                            <Title>Create your account</Title>
+                            <Subtitle>
+                                {inviteData?.valid
+                                    ? "You've been invited! Complete your registration below."
+                                    : "Welcome! Please fill in the details to get started."}
+                            </Subtitle>
+                        </Header>
+
+                        {enabledSocialProviders.length > 0 && (
+                            <>
+                                <SocialAuthButtons
+                                    connections={enabledSocialProviders}
+                                    callback={handleSocialSignIn}
+                                />
+
+                                <Divider>
+                                    <DividerText>or</DividerText>
+                                </Divider>
+                            </>
                         )}
-                      </FormGroup>
-                    )}
-                    {authSettings?.last_name?.enabled && (
-                      <FormGroup>
-                        <Label htmlFor="last_name">
-                          Last name
-                          {authSettings?.last_name?.required && (
-                            <RequiredAsterisk>*</RequiredAsterisk>
-                          )}
-                        </Label>
-                        <Input
-                          type="text"
-                          id="last_name"
-                          name="last_name"
-                          required
-                          minLength={3}
-                          maxLength={30}
-                          value={formData.last_name}
-                          onChange={handleInputChange}
-                          placeholder="Last name"
-                          aria-invalid={!!errors.last_name}
-                          pattern="^[a-zA-Z]{3,30}$"
-                        />
-                        {errors.last_name && (
-                          <ErrorMessage>{errors.last_name}</ErrorMessage>
-                        )}
-                      </FormGroup>
-                    )}
-                  </NameFields>
+
+                        <Form onSubmit={handleSubmit} noValidate>
+                            {(authSettings?.first_name?.enabled ||
+                                authSettings?.last_name?.enabled) && (
+                                <NameFields $isBothEnabled={isBothNamesEnabled}>
+                                    {authSettings?.first_name?.enabled && (
+                                        <FormGroup>
+                                            <Label htmlFor="first_name">
+                                                First name
+                                                {authSettings?.first_name
+                                                    ?.required && (
+                                                    <RequiredAsterisk>
+                                                        *
+                                                    </RequiredAsterisk>
+                                                )}
+                                            </Label>
+                                            <Input
+                                                type="text"
+                                                id="first_name"
+                                                name="first_name"
+                                                required
+                                                minLength={3}
+                                                maxLength={30}
+                                                value={formData.first_name}
+                                                onChange={handleInputChange}
+                                                placeholder="First name"
+                                                aria-invalid={
+                                                    !!errors.first_name
+                                                }
+                                                pattern="^[a-zA-Z]{3,30}$"
+                                            />
+                                            {errors.first_name && (
+                                                <ErrorMessage>
+                                                    {errors.first_name}
+                                                </ErrorMessage>
+                                            )}
+                                        </FormGroup>
+                                    )}
+                                    {authSettings?.last_name?.enabled && (
+                                        <FormGroup>
+                                            <Label htmlFor="last_name">
+                                                Last name
+                                                {authSettings?.last_name
+                                                    ?.required && (
+                                                    <RequiredAsterisk>
+                                                        *
+                                                    </RequiredAsterisk>
+                                                )}
+                                            </Label>
+                                            <Input
+                                                type="text"
+                                                id="last_name"
+                                                name="last_name"
+                                                required
+                                                minLength={3}
+                                                maxLength={30}
+                                                value={formData.last_name}
+                                                onChange={handleInputChange}
+                                                placeholder="Last name"
+                                                aria-invalid={
+                                                    !!errors.last_name
+                                                }
+                                                pattern="^[a-zA-Z]{3,30}$"
+                                            />
+                                            {errors.last_name && (
+                                                <ErrorMessage>
+                                                    {errors.last_name}
+                                                </ErrorMessage>
+                                            )}
+                                        </FormGroup>
+                                    )}
+                                </NameFields>
+                            )}
+
+                            {authSettings?.username.enabled && (
+                                <FormGroup>
+                                    <Label htmlFor="username">
+                                        Username
+                                        {authSettings.username.required && (
+                                            <RequiredAsterisk>
+                                                *
+                                            </RequiredAsterisk>
+                                        )}
+                                    </Label>
+                                    <Input
+                                        type="text"
+                                        id="username"
+                                        name="username"
+                                        minLength={3}
+                                        maxLength={20}
+                                        value={formData.username}
+                                        onChange={handleInputChange}
+                                        placeholder="Choose a username"
+                                        aria-invalid={!!errors.username}
+                                        required
+                                        pattern="^[a-zA-Z][a-zA-Z0-9_.]{2,29}$"
+                                    />
+
+                                    {errors.username && (
+                                        <ErrorMessage>
+                                            {errors.username}
+                                        </ErrorMessage>
+                                    )}
+                                </FormGroup>
+                            )}
+
+                            {authSettings?.email_address.enabled && (
+                                <FormGroup>
+                                    <Label htmlFor="email">
+                                        Email address
+                                        {authSettings.email_address
+                                            .required && (
+                                            <RequiredAsterisk>
+                                                *
+                                            </RequiredAsterisk>
+                                        )}
+                                    </Label>
+                                    <Input
+                                        type="email"
+                                        id="email"
+                                        name="email"
+                                        maxLength={320}
+                                        value={formData.email}
+                                        onChange={handleInputChange}
+                                        placeholder="Enter your email address"
+                                        aria-invalid={!!errors.email}
+                                        required
+                                        readOnly={
+                                            inviteData?.valid &&
+                                            !!inviteData?.email
+                                        }
+                                        pattern="^[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}$"
+                                    />
+                                    {errors.email && (
+                                        <ErrorMessage>
+                                            {errors.email}
+                                        </ErrorMessage>
+                                    )}
+                                </FormGroup>
+                            )}
+
+                            {authSettings?.phone_number.enabled && (
+                                <FormGroup>
+                                    <Label htmlFor="phone_number">
+                                        Phone number
+                                        {authSettings.phone_number.required && (
+                                            <RequiredAsterisk>
+                                                *
+                                            </RequiredAsterisk>
+                                        )}
+                                    </Label>
+
+                                    <PhoneNumberInput
+                                        value={formData.phone_number}
+                                        onChange={handleInputChange}
+                                        error={errors.phone_number}
+                                        countryCode={countryCode}
+                                        setCountryCode={setCountryCode}
+                                    />
+
+                                    {errors.phone_number && (
+                                        <ErrorMessage>
+                                            {errors.phone_number}
+                                        </ErrorMessage>
+                                    )}
+                                </FormGroup>
+                            )}
+
+                            {authSettings?.password.enabled && (
+                                <FormGroup>
+                                    <Label htmlFor="password">
+                                        Password
+                                        {authSettings.password.required && (
+                                            <RequiredAsterisk>
+                                                *
+                                            </RequiredAsterisk>
+                                        )}
+                                    </Label>
+                                    <PasswordGroup>
+                                        <Input
+                                            type="password"
+                                            id="password"
+                                            name="password"
+                                            value={formData.password}
+                                            onChange={handleInputChange}
+                                            placeholder="Enter your password"
+                                            aria-invalid={!!errors.password}
+                                            required
+                                            minLength={8}
+                                            maxLength={128}
+                                            pattern="^(?=.*[a-z])(?=.*[A-Z])(?=.*\d)(?=.*[@$!%*?&])[A-Za-z\d@$!%*?&]{8,125}$"
+                                        />
+                                    </PasswordGroup>
+                                    {errors.password && (
+                                        <ErrorMessage>
+                                            {errors.password}
+                                        </ErrorMessage>
+                                    )}
+                                </FormGroup>
+                            )}
+
+                            {errors.submit && (
+                                <ErrorMessage>{errors.submit}</ErrorMessage>
+                            )}
+
+                            <SubmitButton
+                                type="submit"
+                                disabled={isSubmitting || loading}
+                            >
+                                {isSubmitting
+                                    ? "Creating account..."
+                                    : "Continue"}
+                            </SubmitButton>
+                        </Form>
+
+                        <Footer>
+                            Already have an account?{" "}
+                            <Link>
+                                <NavigationLink
+                                    to={`${deployment!.ui_settings?.sign_in_page_url}${window.location.search}`}
+                                >
+                                    Sign in
+                                </NavigationLink>
+                            </Link>
+                        </Footer>
+                    </>
                 )}
-
-              {authSettings?.username.enabled && (
-                <FormGroup>
-                  <Label htmlFor="username">
-                    Username
-                    {authSettings.username.required && (
-                      <RequiredAsterisk>*</RequiredAsterisk>
-                    )}
-                  </Label>
-                  <Input
-                    type="text"
-                    id="username"
-                    name="username"
-                    minLength={3}
-                    maxLength={20}
-                    value={formData.username}
-                    onChange={handleInputChange}
-                    placeholder="Choose a username"
-                    aria-invalid={!!errors.username}
-                    required
-                    pattern="^[a-zA-Z][a-zA-Z0-9_.]{2,29}$"
-                  />
-
-                  {errors.username && (
-                    <ErrorMessage>{errors.username}</ErrorMessage>
-                  )}
-                </FormGroup>
-              )}
-
-              {authSettings?.email_address.enabled && (
-                <FormGroup>
-                  <Label htmlFor="email">
-                    Email address
-                    {authSettings.email_address.required && (
-                      <RequiredAsterisk>*</RequiredAsterisk>
-                    )}
-                  </Label>
-                  <Input
-                    type="email"
-                    id="email"
-                    name="email"
-                    maxLength={320}
-                    value={formData.email}
-                    onChange={handleInputChange}
-                    placeholder="Enter your email address"
-                    aria-invalid={!!errors.email}
-                    required
-                    readOnly={inviteData?.valid && !!inviteData?.email}
-                    pattern="^[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}$"
-                  />
-                  {errors.email && <ErrorMessage>{errors.email}</ErrorMessage>}
-                </FormGroup>
-              )}
-
-              {authSettings?.phone_number.enabled && (
-                <FormGroup>
-                  <Label htmlFor="phone_number">
-                    Phone number
-                    {authSettings.phone_number.required && (
-                      <RequiredAsterisk>*</RequiredAsterisk>
-                    )}
-                  </Label>
-
-                  <PhoneNumberInput
-                    value={formData.phone_number}
-                    onChange={handleInputChange}
-                    error={errors.phone_number}
-                    countryCode={countryCode}
-                    setCountryCode={setCountryCode}
-                  />
-
-                  {errors.phone_number && (
-                    <ErrorMessage>{errors.phone_number}</ErrorMessage>
-                  )}
-                </FormGroup>
-              )}
-
-              {authSettings?.password.enabled && (
-                <FormGroup>
-                  <Label htmlFor="password">
-                    Password
-                    {authSettings.password.required && (
-                      <RequiredAsterisk>*</RequiredAsterisk>
-                    )}
-                  </Label>
-                  <PasswordGroup>
-                    <Input
-                      type="password"
-                      id="password"
-                      name="password"
-                      value={formData.password}
-                      onChange={handleInputChange}
-                      placeholder="Enter your password"
-                      aria-invalid={!!errors.password}
-                      required
-                      minLength={8}
-                      maxLength={128}
-                      pattern="^(?=.*[a-z])(?=.*[A-Z])(?=.*\d)(?=.*[@$!%*?&])[A-Za-z\d@$!%*?&]{8,125}$"
-                    />
-                  </PasswordGroup>
-                  {errors.password && (
-                    <ErrorMessage>{errors.password}</ErrorMessage>
-                  )}
-                </FormGroup>
-              )}
-
-              {errors.submit && <ErrorMessage>{errors.submit}</ErrorMessage>}
-
-              <SubmitButton type="submit" disabled={isSubmitting || loading}>
-                {isSubmitting ? "Creating account..." : "Continue"}
-              </SubmitButton>
-            </Form>
-
-            <Footer>
-              Already have an account?{" "}
-              <Link>
-                <NavigationLink
-                  to={`${deployment!.ui_settings?.sign_in_page_url}${window.location.search}`}
-                >
-                  Sign in
-                </NavigationLink>
-              </Link>
-            </Footer>
-          </>
-        )}
-      </Container>
-    </DefaultStylesProvider>
-  );
+            </Container>
+        </DefaultStylesProvider>
+    );
 }

@@ -7,36 +7,36 @@ import { Button } from "../utility/button";
 
 const Header = styled.div`
   text-align: center;
-  margin-bottom: var(--space-2xl);
+  margin-bottom: var(--space-12u);
 `;
 
 const IconContainer = styled.div`
-  width: 64px;
-  height: 64px;
+  width: var(--size-32u);
+  height: var(--size-32u);
   border-radius: 50%;
   background: linear-gradient(135deg, var(--color-primary), var(--color-primary-hover));
   display: flex;
   align-items: center;
   justify-content: center;
-  margin: 0 auto var(--space-lg);
+  margin: 0 auto var(--space-8u);
   
   svg {
-    width: 32px;
-    height: 32px;
-    color: white;
+    width: var(--size-16u);
+    height: var(--size-16u);
+    color: var(--color-foreground-inverse);
   }
 `;
 
 const Title = styled.h1`
-  font-size: var(--font-lg);
+  font-size: var(--font-size-2xl);
   font-weight: 400;
   color: var(--color-foreground);
-  margin: 0 0 var(--space-xs);
+  margin: 0 0 var(--space-2u);
 `;
 
 const Subtitle = styled.p`
   color: var(--color-secondary-text);
-  font-size: var(--font-xs);
+  font-size: var(--font-size-md);
   margin: 0;
   line-height: 1.5;
 `;
@@ -44,8 +44,8 @@ const Subtitle = styled.p`
 const ButtonGroup = styled.div`
   display: flex;
   flex-direction: column;
-  gap: var(--space-sm);
-  margin-top: var(--space-xl);
+  gap: var(--space-4u);
+  margin-top: var(--space-10u);
 `;
 
 const spin = keyframes`
@@ -58,10 +58,10 @@ const Spinner = styled(Loader2)`
 `;
 
 const ErrorMessage = styled.p`
-  font-size: var(--font-xs);
+  font-size: var(--font-size-md);
   color: var(--color-error);
   text-align: center;
-  margin: var(--space-sm) 0 0;
+  margin: var(--space-4u) 0 0;
 `;
 
 interface PasskeyPromptProps {
@@ -105,7 +105,7 @@ export function PasskeyPrompt({ onComplete, onSkip }: PasskeyPromptProps) {
             </Header>
 
             <ButtonGroup>
-                <Button $fullWidth $size="sm" onClick={handleRegister} disabled={isRegistering}>
+                <Button $fullWidth onClick={handleRegister} disabled={isRegistering}>
                     {isRegistering ? (
                         <>
                             <Spinner size={16} />
@@ -118,7 +118,7 @@ export function PasskeyPrompt({ onComplete, onSkip }: PasskeyPromptProps) {
                         </>
                     )}
                 </Button>
-                <Button $fullWidth $size="sm" $outline onClick={onSkip}>
+                <Button $fullWidth $outline onClick={onSkip}>
                     Maybe Later
                 </Button>
             </ButtonGroup>

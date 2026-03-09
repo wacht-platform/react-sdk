@@ -98,7 +98,6 @@ export const InvitationsSection = ({ organization }: { organization: Organizatio
                     />
                 </div>
                 <Button
-                    $size="sm"
                     ref={inviteMemberButtonRef}
                     onClick={() => setIsInviting(true)}
                 >

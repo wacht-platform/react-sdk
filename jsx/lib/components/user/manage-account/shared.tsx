@@ -16,11 +16,11 @@ export const TypographyProvider = styled.div`
     from {
       opacity: 0;
       max-height: 0;
-      transform: translateY(-10px);
+      transform: translateY(calc(var(--space-5u) * -1));
     }
     to {
       opacity: 1;
-      max-height: 1000px;
+      max-height: calc(var(--size-50u) * 5);
       transform: translateY(0);
     }
   }
@@ -28,20 +28,20 @@ export const TypographyProvider = styled.div`
 
 export const Container = styled.div`
   width: 100%;
-  height: 600px;
-  background: var(--color-background);
-  border-radius: 20px;
-  box-shadow: 0 8px 30px var(--color-shadow);
+  height: calc(calc(var(--size-50u) * 4) + calc(var(--size-50u) * 2));
+  background: var(--color-card);
+  border-radius: var(--radius-2xl);
+  box-shadow: var(--shadow-xl);
   transition: all 0.3s ease;
   overflow: hidden;
   display: flex;
   flex-direction: column;
-  padding-bottom: 24px;
+  padding-bottom: var(--space-12u);
   position: relative;
 
   @media (max-width: 768px) {
-    border-radius: 16px;
-    padding-bottom: 20px;
+    border-radius: var(--radius-xl);
+    padding-bottom: var(--space-10u);
   }
 
   /* Blur effect at the bottom */
@@ -51,11 +51,11 @@ export const Container = styled.div`
     bottom: 0;
     left: 0;
     right: 0;
-    height: 40px;
+    height: var(--size-20u);
     background: linear-gradient(
       to bottom,
       transparent 0%,
-      var(--color-background) 70%
+      var(--color-card) 70%
     );
     pointer-events: none;
     z-index: 1;
@@ -63,18 +63,18 @@ export const Container = styled.div`
 `;
 
 export const TabsContainer = styled.div`
-  padding: 0 24px;
-  border-bottom: 1px solid var(--color-border);
+  padding: 0 var(--space-12u);
+  border-bottom: var(--border-width-thin) solid var(--color-border);
 
   @media (max-width: 768px) {
-    padding: 0 20px;
+    padding: 0 var(--space-10u);
   }
 `;
 
 export const TabsList = styled.div`
   display: flex;
   align-items: center;
-  gap: 20px;
+  gap: var(--space-10u);
   overflow-x: auto;
   overflow-y: hidden;
 
@@ -84,10 +84,10 @@ export const TabsList = styled.div`
 `;
 
 export const Tab = styled.button<{ $isActive: boolean }>`
-  padding: 12px 12px;
+  padding: var(--space-6u) var(--space-6u);
   border: none;
   background: none;
-  font-size: 14px;
+  font-size: var(--font-size-lg);
   font-weight: 400;
   color: ${(props) =>
     props.$isActive ? "var(--color-foreground)" : "var(--color-muted)"};
@@ -104,10 +104,10 @@ export const Tab = styled.button<{ $isActive: boolean }>`
   &::after {
     content: "";
     position: absolute;
-    bottom: -1px;
+    bottom: calc(var(--border-width-thin) * -1);
     left: 0;
     right: 0;
-    height: 2px;
+    height: var(--border-width-regular);
     background: var(--color-primary);
     opacity: ${(props) => (props.$isActive ? 1 : 0)};
     transition: opacity 0.15s ease;
@@ -117,35 +117,35 @@ export const Tab = styled.button<{ $isActive: boolean }>`
 export const TabIcon = styled.span`
   display: inline-flex;
   align-items: center;
-  gap: 6px;
+  gap: var(--space-3u);
 `;
 
 export const TabContent = styled.div`
   flex: 1;
-  padding: 24px 24px 0 24px;
+  padding: var(--space-12u) var(--space-12u) 0 var(--space-12u);
   overflow-y: auto;
   position: relative;
 
   @media (max-width: 768px) {
-    padding: 20px 20px 0 20px;
+    padding: var(--space-10u) var(--space-10u) 0 var(--space-10u);
   }
 `;
 
 export const IconButton = styled.button`
   background: none;
   border: none;
-  padding: 4px;
+  padding: var(--space-2u);
   cursor: pointer;
   color: var(--color-secondary-text);
-  border-radius: var(--radius-xs);
+  border-radius: var(--radius-2xs);
   display: flex;
   align-items: center;
   justify-content: center;
   transition: all 0.2s ease;
 
   &:hover {
-    background: var(--color-input-background);
-    color: var(--color-foreground);
+    background: var(--color-accent);
+    color: var(--color-accent-foreground);
   }
 `;
 
@@ -153,19 +153,19 @@ export const HeaderCTAContainer = styled.div`
   display: flex;
   align-items: center;
   flex-wrap: wrap;
-  gap: 12px;
+  gap: var(--space-6u);
   margin-bottom: 0;
 `;
 
 export const ProfileSectionLayout = styled.div`
   display: flex;
-  gap: var(--space-2xl);
+  gap: var(--space-12u);
   align-items: flex-start;
 
   @media (max-width: 768px) {
     flex-direction: column;
     align-items: center;
-    gap: var(--space-lg);
+    gap: var(--space-8u);
     text-align: center;
   }
 `;
@@ -174,7 +174,7 @@ export const ProfileImageContainer = styled.div`
   flex-shrink: 0;
   
   @media (max-width: 768px) {
-    margin-bottom: var(--space-md);
+    margin-bottom: var(--space-6u);
   }
 `;
 
@@ -182,13 +182,13 @@ export const SecurityItemRow = styled.div`
   display: flex;
   align-items: center;
   justify-content: space-between;
-  padding: 16px 0;
-  gap: 16px;
+  padding: var(--space-8u) 0;
+  gap: var(--space-8u);
 
   @media (max-width: 600px) {
     flex-direction: column;
     align-items: flex-start;
-    gap: 12px;
+    gap: var(--space-6u);
   }
 `;
 
@@ -204,7 +204,7 @@ export const SecurityItemContent = styled.div`
 export const SecurityItemActions = styled.div`
   display: flex;
   align-items: center;
-  gap: 12px;
+  gap: var(--space-6u);
 
   @media (max-width: 600px) {
     width: 100%;
@@ -214,15 +214,15 @@ export const SecurityItemActions = styled.div`
 
 export const ResponsiveHeaderContainer = styled.div`
   display: flex;
-  gap: 12px;
+  gap: var(--space-6u);
   flex-wrap: wrap;
   align-items: center;
-  margin-bottom: 20px;
+  margin-bottom: var(--space-10u);
 
   @media (max-width: 600px) {
     flex-direction: column;
     align-items: stretch;
-    gap: 16px;
+    gap: var(--space-8u);
   }
 `;
 
@@ -243,11 +243,11 @@ export const MobileListContainer = styled.div`
 
 export const FormRow = styled.div`
   display: flex;
-  gap: var(--space-md);
+  gap: var(--space-6u);
   
   @media (max-width: 768px) {
     flex-direction: column;
-    gap: var(--space-lg);
+    gap: var(--space-8u);
   }
 `;
 
@@ -255,14 +255,14 @@ export const ConnectionItemRow = styled.div`
   display: flex;
   align-items: center;
   justify-content: space-between;
-  padding: 12px 0;
-  min-height: 58px;
-  gap: 16px;
+  padding: var(--space-6u) 0;
+  min-height: calc(var(--size-50u) + var(--space-4u));
+  gap: var(--space-8u);
 
   @media (max-width: 600px) {
     flex-direction: column;
     align-items: flex-start;
-    gap: 8px; /* Reduced gap */
+    gap: var(--space-4u);
     min-height: auto; /* Allow shrinking */
   }
 `;
@@ -270,7 +270,7 @@ export const ConnectionItemRow = styled.div`
 export const ConnectionLeft = styled.div`
   display: flex;
   align-items: center;
-  gap: 12px;
+  gap: var(--space-6u);
   color: var(--color-foreground);
   flex-shrink: 0;
   flex-wrap: wrap;
@@ -285,7 +285,7 @@ export const ConnectionRight = styled.div`
   flex-direction: row;
   align-items: center;
   justify-content: flex-end;
-  gap: 8px;
+  gap: var(--space-4u);
   flex-wrap: wrap;
   
   @media (max-width: 600px) {
@@ -295,9 +295,9 @@ export const ConnectionRight = styled.div`
 `;
 
 export const IconWrapper = styled.div`
-  width: 20px;
-  height: 20px;
-  min-width: 20px;
+  width: var(--size-10u);
+  height: var(--size-10u);
+  min-width: var(--size-10u);
   flex-shrink: 0;
   display: flex;
   align-items: center;
@@ -305,8 +305,8 @@ export const IconWrapper = styled.div`
   overflow: hidden;
   
   svg {
-    width: 20px;
-    height: 20px;
+    width: var(--size-10u);
+    height: var(--size-10u);
     flex-shrink: 0;
     display: block;
   }
@@ -314,7 +314,7 @@ export const IconWrapper = styled.div`
 
 export const ButtonActions = styled.div`
   display: flex;
-  gap: var(--space-sm);
+  gap: var(--space-4u);
   flex-wrap: wrap;
   
   @media (max-width: 768px) {

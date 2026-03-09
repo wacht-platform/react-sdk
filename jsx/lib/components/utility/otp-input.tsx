@@ -5,21 +5,21 @@ const Container = styled.div`
   width: 100%;
   display: flex;
   flex-direction: column;
-  gap: var(--space-xs);
+  gap: var(--space-2u);
 `;
 
 const InputGroup = styled.div`
   display: flex;
-  gap: var(--space-xs);
+  gap: var(--space-2u);
   justify-content: center;
 `;
 
 const InputBox = styled.input`
-  width: 40px;
-  height: 40px;
-  border: 1px solid var(--color-border);
+  width: var(--size-20u);
+  height: var(--size-20u);
+  border: var(--border-width-thin) solid var(--color-border);
   border-radius: var(--radius-md);
-  font-size: var(--font-md);
+  font-size: var(--font-size-xl);
   color: var(--color-foreground);
   background: var(--color-input-background);
   text-align: center;
@@ -38,10 +38,10 @@ const InputBox = styled.input`
 `;
 
 const ErrorMessage = styled.p`
-  font-size: var(--font-2xs);
+  font-size: var(--font-size-xs);
   color: var(--color-error);
   margin: 0;
-  margin-top: var(--space-2xs);
+  margin-top: var(--space-1u);
   text-align: center;
 `;
 
@@ -49,11 +49,11 @@ const ResendButton = styled.button`
   background: none;
   border: none;
   color: var(--color-primary);
-  font-size: var(--font-xs);
+  font-size: var(--font-size-md);
   font-weight: 400;
   cursor: pointer;
   padding: 0;
-  margin-top: var(--space-2xs);
+  margin-top: var(--space-1u);
   text-align: center;
   width: 100%;
 
@@ -69,7 +69,7 @@ const ResendButton = styled.button`
 
 const Timer = styled.span`
   color: var(--color-secondary-text);
-  font-size: var(--font-xs);
+  font-size: var(--font-size-md);
   display: block;
   text-align: center;
 `;
