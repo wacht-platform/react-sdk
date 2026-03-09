@@ -82,7 +82,6 @@ const AccountItem = styled.div<{ $isActive?: boolean; $isSwitching?: boolean }>`
         props.$isActive &&
         `
     background: var(--color-secondary);
-    border-left: var(--border-width-regular) solid var(--color-primary);
     border-bottom: none;
     cursor: default;
 
@@ -502,7 +501,7 @@ export const SignedInAccounts: React.FC<SignedInAccountsProps> = ({
                                                 "User"}
                                         </AccountName>
                                         {isActive && (
-                                            <ActiveBadge>Current</ActiveBadge>
+                                            <ActiveBadge>Active</ActiveBadge>
                                         )}
                                     </AccountMeta>
                                     <AccountEmail>
