@@ -18,7 +18,7 @@ const EmailButton = styled(Button).withConfig({
   gap: var(--space-4u);
   padding-top: 0;
   padding-bottom: 0;
-  color: var(--color-foreground);
+  color: var(--color-card-foreground);
   text-align: left;
   height: var(--size-18u);
   min-height: var(--size-18u);

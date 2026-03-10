@@ -10,18 +10,14 @@ import { DefaultStylesProvider } from "../utility/root";
 import { AuthFormImage } from "./auth-image";
 import { useDeployment } from "@/hooks/use-deployment";
 import { useNavigation } from "@/hooks/use-navigation";
+import { standaloneAuthShell } from "./auth-shell";
 
 interface ForgotPasswordProps {
   onBack: () => void;
 }
 
 const Container = styled.div`
-  max-width: calc(var(--space-10u) * 19);
-  width: calc(var(--space-10u) * 19);
-  padding: var(--space-14u);
-  background: var(--color-background);
-  border-radius: var(--radius-lg);
-  box-shadow: var(--shadow-md);
+  ${standaloneAuthShell}
 `;
 
 const Header = styled.div`
@@ -31,7 +27,7 @@ const Header = styled.div`
 
 const Title = styled.h1`
   font-size: var(--font-size-2xl);
-  color: var(--color-foreground);
+  color: var(--color-card-foreground);
   margin: 0 0 var(--space-2u) 0;
 `;
 
@@ -79,6 +75,8 @@ const Divider = styled.div`
 
 const DividerText = styled.span`
   white-space: nowrap;
+  background: var(--color-card);
+  padding: 0 var(--space-4u);
 `;
 
 const Footer = styled.div`

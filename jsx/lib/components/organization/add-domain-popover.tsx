@@ -12,7 +12,7 @@ const PopoverContainer = styled.div`
   position: fixed;
   width: calc(var(--space-10u) * 18);
   max-width: calc(100vw - var(--space-24u));
-  background: var(--color-background);
+  background: var(--color-popover);
   border: var(--border-width-thin) solid var(--color-border);
   border-radius: var(--radius-md);
   box-shadow: var(--shadow-md);
@@ -35,7 +35,7 @@ const Title = styled.h3`
   margin: 0;
   font-size: var(--font-size-md);
   font-weight: 400;
-  color: var(--color-foreground);
+  color: var(--color-popover-foreground);
 `;
 
 const Content = styled.div`
@@ -64,8 +64,8 @@ const CloseButton = styled.button`
   justify-content: center;
   
   &:hover {
-    color: var(--color-foreground);
-    background: var(--color-input-background);
+    color: var(--color-accent-foreground);
+    background: var(--color-accent);
   }
 `;
 

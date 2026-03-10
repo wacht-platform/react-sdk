@@ -47,7 +47,7 @@ const CardHeader = styled.div`
 const CardTitle = styled.h3`
     font-size: var(--font-size-lg);
     font-weight: 500;
-    color: var(--color-foreground);
+    color: var(--color-card-foreground);
     margin: 0;
     display: flex;
     align-items: center;
@@ -78,7 +78,7 @@ const IconButton = styled.button`
 
     &:hover {
         background: var(--color-input-background);
-        color: var(--color-foreground);
+        color: var(--color-card-foreground);
     }
 `;
 
@@ -99,7 +99,7 @@ const Textarea = styled.textarea`
     border-radius: var(--radius-xs);
     font-size: var(--font-size-lg);
     background: var(--color-input-background);
-    color: var(--color-foreground);
+    color: var(--color-card-foreground);
     min-height: var(--size-50u);
     resize: vertical;
     font-family: monospace;
@@ -366,7 +366,7 @@ const TemplateCard = styled.button<{ $selected?: boolean }>`
     background: ${(props) =>
         props.$selected
             ? "var(--color-primary-background)"
-            : "var(--color-background)"};
+            : "var(--color-input-background)"};
     cursor: pointer;
     transition: all 0.15s ease;
     position: relative;
@@ -381,7 +381,7 @@ const TemplateLogo = styled.img`
     height: var(--size-12u);
     width: var(--size-12u);
     object-fit: contain;
-    background: var(--color-background);
+    background: var(--color-input-background);
     border-radius: var(--radius-2xs);
     padding: var(--space-1u);
 `;
@@ -389,7 +389,7 @@ const TemplateLogo = styled.img`
 const TemplateName = styled.span`
     font-size: var(--font-size-xs);
     font-weight: 500;
-    color: var(--color-foreground);
+    color: var(--color-card-foreground);
     text-align: center;
 `;
 
@@ -400,7 +400,7 @@ const Select = styled.select`
     border-radius: var(--radius-xs);
     font-size: var(--font-size-lg);
     background: var(--color-input-background);
-    color: var(--color-foreground);
+    color: var(--color-card-foreground);
     cursor: pointer;
 
     &:focus {
@@ -621,7 +621,7 @@ const SCIMSection = styled.div`
 const SCIMHeader = styled.div`
     font-size: var(--font-size-sm);
     font-weight: 500;
-    color: var(--color-foreground);
+    color: var(--color-card-foreground);
     margin-bottom: var(--space-6u);
     display: flex;
     align-items: center;
@@ -1101,7 +1101,7 @@ const SectionTitle = styled.h3`
     margin: 0 0 var(--space-6u) 0;
     font-size: var(--font-size-md);
     font-weight: 600;
-    color: var(--color-foreground);
+    color: var(--color-card-foreground);
     text-transform: uppercase;
     letter-spacing: var(--letter-spacing-tight);
 `;

@@ -28,6 +28,7 @@ import { Button } from "@/components/utility";
 import { AuthFormImage } from "./auth-image";
 import { ChevronRight, Fingerprint, Users } from "lucide-react";
 import { getStoredDevSession } from "@/utils/dev-session";
+import { standaloneAuthShell } from "./auth-shell";
 
 const spin = keyframes`
   from {
@@ -39,14 +40,7 @@ const spin = keyframes`
 `;
 
 const Container = styled.div`
-    max-width: calc(calc(var(--size-50u) * 4) - var(--size-10u));
-    width: calc(calc(var(--size-50u) * 4) - var(--size-10u));
-    padding: var(--space-12u);
-    background: var(--color-card);
-    color: var(--color-card-foreground);
-    border-radius: var(--radius-lg);
-    box-shadow: var(--shadow-md);
-    border: var(--border-width-thin) solid var(--color-border);
+    ${standaloneAuthShell}
 `;
 
 const LoadingContainer = styled.div`
@@ -146,7 +140,7 @@ const PasskeyButton = styled(Button).withConfig({
     padding-top: 0;
     padding-bottom: 0;
     line-height: 1;
-    color: var(--color-foreground);
+    color: var(--color-card-foreground);
 
     svg {
         color: var(--color-primary);

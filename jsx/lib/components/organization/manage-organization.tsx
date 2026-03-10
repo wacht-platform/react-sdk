@@ -62,7 +62,7 @@ const EmptyStateIcon = styled.div`
   width: var(--size-40u);
   height: var(--size-40u);
   border-radius: var(--radius-full);
-  background: var(--color-input-background);
+  background: var(--color-secondary);
   display: flex;
   align-items: center;
   justify-content: center;
@@ -73,7 +73,7 @@ const EmptyStateIcon = styled.div`
 const EmptyStateTitle = styled.h3`
   font-size: var(--font-size-2xl);
   font-weight: 600;
-  color: var(--color-foreground);
+  color: var(--color-card-foreground);
   margin: 0 0 var(--space-4u) 0;
 `;
 
@@ -81,7 +81,7 @@ const Toast = styled.div`
   position: absolute;
   bottom: var(--space-10u);
   right: var(--space-10u);
-  background: var(--color-input-background);
+  background: var(--color-popover);
   border: var(--border-width-thin) solid var(--color-border);
   border-radius: var(--radius-md);
   padding: var(--space-6u) var(--space-8u);
@@ -98,7 +98,7 @@ const ToastContent = styled.div`
 
 const ToastText = styled.span`
   font-size: var(--font-size-lg);
-  color: var(--color-foreground);
+  color: var(--color-popover-foreground);
 `;
 
 export const ManageOrganization = () => {

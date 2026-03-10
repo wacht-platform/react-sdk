@@ -52,7 +52,7 @@ const Toast = styled.div`
   position: absolute;
   bottom: var(--space-10u);
   right: var(--space-10u);
-  background: var(--color-input-background);
+  background: var(--color-popover);
   border: var(--border-width-thin) solid var(--color-border);
   border-radius: var(--radius-md);
   padding: var(--space-6u) var(--space-8u);
@@ -68,7 +68,7 @@ const ToastContent = styled.div`
 
 const ToastText = styled.span`
   font-size: var(--font-size-lg);
-  color: var(--color-foreground);
+  color: var(--color-popover-foreground);
 `;
 
 export const ManageAccount = () => {

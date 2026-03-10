@@ -5,14 +5,10 @@ import { useNavigation } from "@/hooks/use-navigation";
 import { useDeployment } from "@/hooks/use-deployment";
 import { DefaultStylesProvider } from "../utility/root";
 import { Button } from "../utility";
+import { standaloneAuthShell } from "./auth-shell";
 
 const Container = styled.div`
-  max-width: calc(var(--space-10u) * 19);
-  width: calc(var(--space-10u) * 19);
-  padding: var(--space-14u);
-  background: var(--color-background);
-  border-radius: var(--radius-lg);
-  box-shadow: var(--shadow-md);
+  ${standaloneAuthShell}
 `;
 
 const Header = styled.div`
@@ -24,7 +20,7 @@ const Header = styled.div`
 const Title = styled.h1`
   font-size: var(--font-size-2xl);
   font-weight: 400;
-  color: var(--color-foreground);
+  color: var(--color-card-foreground);
   margin-bottom: var(--space-2u);
   margin-top: 0;
 `;
@@ -100,7 +96,7 @@ const LoadingSpinner = styled.div`
 
 const Message = styled.p`
   font-size: var(--font-size-lg);
-  color: var(--color-foreground);
+  color: var(--color-card-foreground);
   margin-bottom: var(--space-2u);
 `;
 

@@ -53,12 +53,12 @@ const CodeItem = styled.div`
   font-family: 'SF Mono', Monaco, 'Cascadia Code', 'Roboto Mono', monospace;
   font-size: var(--font-size-sm);
   text-align: center;
-  color: var(--color-foreground);
+  color: var(--color-popover-foreground);
   cursor: pointer;
   transition: all 0.2s ease;
   
   &:hover {
-    background: var(--color-background-hover);
+    background: var(--color-accent);
     border-color: var(--color-primary);
   }
 `;

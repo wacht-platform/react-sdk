@@ -26,7 +26,7 @@ const Container = styled.div`
   width: 100%;
   max-width: calc(var(--size-50u) * 5);
   height: calc(calc(var(--size-50u) * 4) + calc(var(--size-50u) * 2));
-  background: var(--color-background);
+  background: var(--color-card);
   display: grid;
   grid-template-columns: calc(calc(var(--size-50u) * 2) + var(--size-40u)) 1fr;
   border-radius: var(--radius-lg);
@@ -42,7 +42,7 @@ const Container = styled.div`
 `;
 
 const LeftColumn = styled.div`
-  background: var(--color-background-hover);
+  background: var(--color-secondary);
   padding: var(--space-16u) var(--space-12u);
   display: flex;
   flex-direction: column;
@@ -141,7 +141,7 @@ const TitleSection = styled.div`
 const Title = styled.h1`
   font-size: var(--font-size-xl);
   font-weight: 400;
-  color: var(--color-foreground);
+  color: var(--color-card-foreground);
   margin: 0;
   line-height: 1.2;
 `;
@@ -187,7 +187,7 @@ const ListItem = styled.button`
   border-bottom: var(--border-width-thin) solid var(--color-border);
   background: transparent;
   cursor: pointer;
-  color: var(--color-foreground);
+  color: var(--color-card-foreground);
   transition: background-color 0.2s ease;
   font-size: var(--font-size-lg);
   position: relative;
@@ -214,7 +214,7 @@ const ListItemWarningPopover = styled.div`
   top: 50%;
   right: var(--size-50u);
   transform: translateY(-50%);
-  background: var(--color-background);
+  background: var(--color-popover);
   border: var(--border-width-thin) solid var(--color-border);
   border-radius: var(--radius-2xs);
   padding: var(--space-3u) var(--space-5u);
@@ -248,7 +248,7 @@ const Avatar = styled.div`
   display: flex;
   align-items: center;
   justify-content: center;
-  background: var(--color-background-hover);
+  background: var(--color-secondary);
   border: var(--border-width-thin) solid var(--color-border);
   color: var(--color-secondary-text);
   font-size: var(--font-size-lg);
@@ -270,7 +270,7 @@ const ItemContent = styled.div`
 const ItemName = styled.div`
   font-size: var(--font-size-lg);
   font-weight: 400;
-  color: var(--color-foreground);
+  color: var(--color-card-foreground);
   overflow: hidden;
   text-overflow: ellipsis;
   white-space: nowrap;
@@ -319,7 +319,7 @@ const EmptyState = styled.div`
 const EmptyStateTitle = styled.div`
   font-size: var(--font-size-lg);
   font-weight: 400;
-  color: var(--color-foreground);
+  color: var(--color-card-foreground);
   margin-bottom: var(--space-2u);
 `;
 

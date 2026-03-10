@@ -20,6 +20,7 @@ import type { SignUpParams } from "@/types";
 import type { DeploymentSocialConnection } from "@/types";
 import { AuthFormImage } from "./auth-image";
 import { getStoredDevSession } from "@/utils/dev-session";
+import { standaloneAuthShell } from "./auth-shell";
 
 const spin = keyframes`
   from {
@@ -38,20 +39,7 @@ const breakpoints = {
 };
 
 const Container = styled.div`
-    max-width: calc(var(--space-10u) * 19);
-    width: calc(var(--space-10u) * 19);
-    padding: var(--space-12u);
-    background: var(--color-card);
-    color: var(--color-card-foreground);
-    border-radius: var(--radius-lg);
-    box-shadow: var(--shadow-md);
-    border: var(--border-width-thin) solid var(--color-border);
-
-    @media (max-width: ${breakpoints.sm}) {
-        max-width: 100%;
-        padding: var(--space-8u);
-        border-radius: 0;
-    }
+    ${standaloneAuthShell}
 `;
 
 const LoadingContainer = styled.div`
@@ -158,7 +146,7 @@ const Label = styled.label`
     font-size: var(--font-size-md);
     text-align: left;
     font-weight: 400;
-    color: var(--color-foreground);
+    color: var(--color-card-foreground);
 
     @media (max-width: ${breakpoints.sm}) {
         font-size: var(--font-size-sm);
@@ -781,7 +769,7 @@ export function SignUpForm() {
                                 />
 
                                 <Divider>
-                                    <DividerText>or</DividerText>
+                                    <DividerText>OR</DividerText>
                                 </Divider>
                             </>
                         )}

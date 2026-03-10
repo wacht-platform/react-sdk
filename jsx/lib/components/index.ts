@@ -14,3 +14,4 @@ export * from "./utility/otp-input";
 export * from "./utility/phone";
 export * from "./utility/spinner";
 export * from "./utility/switch";
+export * from "./utility/root";

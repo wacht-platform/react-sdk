@@ -7,6 +7,7 @@ export {
 } from "@wacht/jsx";
 export { UserButton, UserControls, ManageAccount } from "@wacht/jsx";
 export { DeploymentInitialized, DeploymentInitializing } from "@wacht/jsx";
+export { DefaultStylesProvider } from "@wacht/jsx";
 export {
     SignedIn,
     SignedOut,

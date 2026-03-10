@@ -58,7 +58,7 @@ const PasswordInput = styled.div`
     color: var(--color-secondary-text);
     
     &:hover {
-      color: var(--color-foreground);
+      color: var(--color-popover-foreground);
     }
   }
 `;

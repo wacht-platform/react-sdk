@@ -15,14 +15,10 @@ import { Button } from "../utility/button";
 import { Form, FormGroup, Label } from "../utility/form";
 import { Input } from "../utility/input";
 import { getStoredDevSession } from "@/utils/dev-session";
+import { standaloneAuthShell } from "./auth-shell";
 
 const Container = styled.div`
-  max-width: calc(var(--space-10u) * 19);
-  width: calc(var(--space-10u) * 19);
-  padding: var(--space-14u);
-  background: var(--color-background);
-  border-radius: var(--radius-lg);
-  box-shadow: var(--shadow-md);
+  ${standaloneAuthShell}
 `;
 
 const Header = styled.div`
@@ -34,7 +30,7 @@ const Header = styled.div`
 const Title = styled.h1`
   font-size: var(--font-size-2xl);
   font-weight: 400;
-  color: var(--color-foreground);
+  color: var(--color-card-foreground);
   margin-bottom: var(--space-2u);
   margin-top: 0;
 `;

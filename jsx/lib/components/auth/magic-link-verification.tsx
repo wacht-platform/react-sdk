@@ -9,14 +9,10 @@ import { Button } from "../utility";
 import { useNavigation } from "../../hooks/use-navigation";
 import { useDeployment } from "../../hooks/use-deployment";
 import { getStoredDevSession } from "@/utils/dev-session";
+import { standaloneAuthShell } from "./auth-shell";
 
 const Container = styled.div`
-  max-width: calc(calc(var(--size-50u) * 4) - var(--size-10u));
-  width: calc(calc(var(--size-50u) * 4) - var(--size-10u));
-  padding: var(--space-14u);
-  background: var(--color-background);
-  border-radius: var(--radius-lg);
-  box-shadow: var(--shadow-md);
+  ${standaloneAuthShell}
 `;
 
 const Header = styled.div`
@@ -27,7 +23,7 @@ const Header = styled.div`
 const Title = styled.h1`
   font-size: var(--font-size-2xl);
   font-weight: 400;
-  color: var(--color-foreground);
+  color: var(--color-card-foreground);
   margin-bottom: var(--space-2u);
   margin-top: 0;
 `;

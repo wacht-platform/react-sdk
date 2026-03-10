@@ -23,7 +23,7 @@ const Popover = styled.div<{
   width: calc(var(--space-10u) * 22.5);
   max-width: calc(100vw - var(--space-12u));
   max-height: ${(props) => props.$position?.maxHeight ? `${props.$position.maxHeight}px` : 'calc(var(--size-50u) * 7)'};
-  background: var(--color-background);
+  background: var(--color-popover);
   border: var(--border-width-thin) solid var(--color-border);
   border-radius: var(--radius-lg);
   box-shadow: var(--shadow-xl);

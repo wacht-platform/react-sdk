@@ -28,7 +28,7 @@ const ProviderInfo = styled.div`
 const ProviderName = styled.div`
     font-size: var(--font-size-lg);
     font-weight: 500;
-    color: var(--color-foreground);
+    color: var(--color-card-foreground);
 `;
 
 const ConnectedAccountsRow = styled.div`

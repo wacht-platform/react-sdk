@@ -90,7 +90,7 @@ export const Tab = styled.button<{ $isActive: boolean }>`
   font-size: var(--font-size-lg);
   font-weight: 400;
   color: ${(props) =>
-    props.$isActive ? "var(--color-foreground)" : "var(--color-muted)"};
+    props.$isActive ? "var(--color-card-foreground)" : "var(--color-muted)"};
   cursor: pointer;
   position: relative;
   transition: color 0.15s ease;
@@ -98,7 +98,7 @@ export const Tab = styled.button<{ $isActive: boolean }>`
   min-width: fit-content;
 
   &:hover {
-    color: var(--color-foreground);
+    color: var(--color-card-foreground);
   }
 
   &::after {
@@ -271,7 +271,7 @@ export const ConnectionLeft = styled.div`
   display: flex;
   align-items: center;
   gap: var(--space-6u);
-  color: var(--color-foreground);
+  color: var(--color-card-foreground);
   flex-shrink: 0;
   flex-wrap: wrap;
 

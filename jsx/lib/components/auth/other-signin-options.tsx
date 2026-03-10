@@ -2,14 +2,10 @@ import styled from "styled-components";
 import { DefaultStylesProvider } from "@/components/utility/root";
 import { OtherAuthOptions } from "@/components/auth/other-auth-options";
 import { AuthFormImage } from "./auth-image";
+import { standaloneAuthShell } from "./auth-shell";
 
 const Container = styled.div`
-  max-width: calc(var(--size-50u) * 3 + var(--space-10u) * 3);
-  width: calc(var(--size-50u) * 3 + var(--space-10u) * 3);
-  padding: var(--space-12u);
-  background: var(--color-background);
-  border-radius: var(--radius-lg);
-  box-shadow: var(--shadow-md);
+  ${standaloneAuthShell}
 `;
 
 const Header = styled.div`
@@ -21,7 +17,7 @@ const Header = styled.div`
 const Title = styled.h1`
   font-size: var(--font-size-2xl);
   font-weight: 400;
-  color: var(--color-foreground);
+  color: var(--color-card-foreground);
   margin-bottom: var(--space-2u);
   margin-top: 0;
 `;

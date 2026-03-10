@@ -37,7 +37,7 @@ const Avatar = styled.div`
     height: calc(var(--size-12u) + var(--space-4u));
     border-radius: 50%;
     overflow: hidden;
-    background: var(--color-background-hover);
+    background: var(--color-secondary);
     display: flex;
     align-items: center;
     justify-content: center;
@@ -56,13 +56,13 @@ const Avatar = styled.div`
 const UserName = styled.div`
     font-size: var(--font-size-md);
     font-weight: 400;
-    color: var(--color-foreground);
+    color: var(--color-secondary-text);
 `;
 
 const AccountName = styled.span`
     font-size: var(--font-size-md);
     font-weight: 400;
-    color: var(--color-foreground);
+    color: var(--color-popover-foreground);
 `;
 
 const AccountEmail = styled.span`
@@ -106,7 +106,7 @@ const DropdownContainer = styled.div<{
         visibility 0s linear ${(props) => (props.$isOpen ? "0s" : "0.15s")};
     border-radius: var(--radius-md);
     border: var(--border-width-thin) solid var(--color-border);
-    background: var(--color-background);
+    background: var(--color-popover);
     box-shadow: var(--shadow-md);
     z-index: 99999;
     overflow: hidden;
@@ -127,7 +127,7 @@ const AccountSection = styled.div<{
     &:hover {
         background: ${(props) =>
             props.$isClickable
-                ? "var(--color-background-hover)"
+                ? "var(--color-accent)"
                 : "transparent"};
     }
 `;
@@ -166,7 +166,7 @@ const ActionLink = styled.button<{ $destructive?: boolean }>`
     align-items: center;
     justify-content: center;
     gap: var(--space-3u);
-    background: var(--color-background-hover);
+    background: var(--color-secondary);
     border: none;
     border-radius: var(--radius-2xs);
     padding: var(--space-3u);
@@ -183,11 +183,11 @@ const ActionLink = styled.button<{ $destructive?: boolean }>`
         background: ${(props) =>
             props.$destructive
                 ? "var(--color-error-background)"
-                : "var(--color-input-background)"};
+                : "var(--color-accent)"};
         color: ${(props) =>
             props.$destructive
                 ? "var(--color-error)"
-                : "var(--color-foreground)"};
+                : "var(--color-accent-foreground)"};
     }
 
     svg {
@@ -197,7 +197,7 @@ const ActionLink = styled.button<{ $destructive?: boolean }>`
 `;
 
 const FooterSection = styled.div`
-    background: var(--color-background-hover);
+    background: var(--color-secondary);
     padding: var(--space-4u) var(--space-6u);
 `;
 
@@ -215,7 +215,7 @@ const FooterButton = styled.button`
     text-align: left;
 
     &:hover {
-        color: var(--color-foreground);
+        color: var(--color-popover-foreground);
     }
 
     svg {

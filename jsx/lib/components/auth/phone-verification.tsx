@@ -5,14 +5,10 @@ import { Input } from "@/components/utility/input";
 import { Form, FormGroup, Label } from "../utility/form";
 import { DefaultStylesProvider } from "../utility/root";
 import { AuthFormImage } from "./auth-image";
+import { standaloneAuthShell } from "./auth-shell";
 
 const Container = styled.div`
-  max-width: 380px;
-  width: 380px;
-  padding: var(--space-12u);
-  background: var(--color-background);
-  border-radius: var(--radius-lg);
-  box-shadow: 0 4px 12px var(--color-shadow);
+  ${standaloneAuthShell}
 `;
 
 const Header = styled.div`
@@ -24,7 +20,7 @@ const Header = styled.div`
 const Title = styled.h1`
   font-size: var(--font-size-xl);
   font-weight: 400;
-  color: var(--color-foreground);
+  color: var(--color-card-foreground);
   margin-bottom: var(--space-2u);
   margin-top: 0;
 `;

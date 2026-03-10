@@ -30,7 +30,7 @@ const IconContainer = styled.div`
 const Title = styled.h1`
   font-size: var(--font-size-2xl);
   font-weight: 400;
-  color: var(--color-foreground);
+  color: var(--color-card-foreground);
   margin: 0 0 var(--space-2u);
 `;
 

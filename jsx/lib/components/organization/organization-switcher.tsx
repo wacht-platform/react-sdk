@@ -47,7 +47,7 @@ const SwitcherButton = styled.button`
   border: var(--border-width-thin) solid var(--color-border);
   border-radius: var(--radius-md);
   background: var(--color-card);
-  color: var(--color-foreground);
+  color: var(--color-card-foreground);
   transition:
     background 0.1s ease,
     border-color 0.1s ease;
@@ -101,7 +101,7 @@ const OrgName = styled.span`
   overflow: hidden;
   text-overflow: ellipsis;
   white-space: nowrap;
-  color: var(--color-foreground);
+  color: var(--color-card-foreground);
 `;
 
 const TriggerChevron = styled(ChevronDown)<{ $isOpen: boolean }>`
@@ -270,7 +270,7 @@ const CreateOrgButton = styled.button`
   border: none;
   background: transparent;
   cursor: pointer;
-  color: var(--color-foreground);
+  color: var(--color-popover-foreground);
   transition: background 0.1s ease;
   position: relative;
 

@@ -26,7 +26,7 @@ export const SectionHeader = styled.div`
 export const SectionTitle = styled.h3`
   font-size: calc(var(--font-size-lg) + var(--border-width-thin));
   font-weight: 400;
-  color: var(--color-foreground);
+  color: var(--color-card-foreground);
   margin: 0;
 `;
 
@@ -48,7 +48,7 @@ export const QRCodeWrapper = styled.div`
   justify-content: center;
   margin: var(--space-8u) 0;
   padding: var(--space-8u);
-  background: var(--color-background);
+  background: var(--color-secondary);
   border-radius: var(--radius-md);
   border: var(--border-width-thin) solid var(--color-border);
 `;
@@ -62,7 +62,7 @@ export const CodeInput = styled.input`
   letter-spacing: var(--space-1u);
   border: var(--border-width-thin) solid var(--color-border);
   border-radius: var(--radius-xs);
-  background: var(--color-background);
+  background: var(--color-input-background);
   margin-bottom: var(--space-6u);
 
   &:focus {
@@ -133,9 +133,9 @@ export const ActionButton = styled.button<{
       default:
         return `
           background: transparent;
-          color: var(--color-foreground);
+          color: var(--color-card-foreground);
           border-color: var(--color-border);
-          &:hover { background: var(--color-background-hover); }
+          &:hover { background: var(--color-accent); }
         `;
     }
   }}

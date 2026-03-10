@@ -6,7 +6,7 @@ export const TwoFactorCard = styled.button`
   align-items: center;
   width: 100%;
   padding: var(--space-10u);
-  background: var(--color-background);
+  background: var(--color-secondary);
   border: var(--border-width-thin) solid var(--color-border);
   border-radius: var(--radius-lg);
   margin-bottom: var(--space-8u);
@@ -29,7 +29,7 @@ export const TwoFactorCard = styled.button`
   }
   
   &:hover {
-    background: var(--color-background-hover);
+    background: var(--color-accent);
     border-color: var(--color-primary);
     transform: translateY(calc(var(--space-1u) * -1));
     box-shadow: var(--shadow-md);
@@ -50,7 +50,7 @@ export const TwoFactorIcon = styled.div<{ $active?: boolean }>`
   border-radius: var(--radius-lg);
   background: ${props => props.$active
     ? 'linear-gradient(135deg, var(--color-success), var(--color-success))'
-    : 'linear-gradient(135deg, var(--color-background-hover), var(--color-background))'};
+    : 'linear-gradient(135deg, var(--color-secondary), var(--color-input-background))'};
   display: flex;
   align-items: center;
   justify-content: center;
@@ -62,7 +62,7 @@ export const TwoFactorIcon = styled.div<{ $active?: boolean }>`
   svg {
     width: var(--size-12u);
     height: var(--size-12u);
-    color: ${props => props.$active ? 'var(--color-foreground-inverse)' : 'var(--color-foreground)'};
+    color: ${props => props.$active ? 'var(--color-foreground-inverse)' : 'var(--color-card-foreground)'};
   }
 `;
 
@@ -73,7 +73,7 @@ export const TwoFactorContent = styled.div`
 export const TwoFactorTitle = styled.div`
   font-size: var(--font-size-xl);
   font-weight: 600;
-  color: var(--color-foreground);
+  color: var(--color-card-foreground);
   margin-bottom: var(--space-2u);
   display: flex;
   align-items: center;
@@ -93,7 +93,7 @@ export const TwoFactorStatus = styled.span<{ $active?: boolean }>`
   border-radius: var(--radius-full);
   background: ${props => props.$active
     ? 'var(--color-success-background)'
-    : 'var(--color-background-hover)'};
+    : 'var(--color-secondary)'};
   color: ${props => props.$active
     ? 'var(--color-success)'
     : 'var(--color-secondary-text)'};
@@ -110,7 +110,7 @@ export const QRCodeContainer = styled.div`
 `;
 
 export const QRCodeWrapper = styled.div`
-  background: var(--color-background);
+  background: var(--color-input-background);
   padding: var(--space-12u);
   border-radius: var(--radius-xl);
   box-shadow: var(--shadow-lg);
@@ -131,7 +131,7 @@ export const QRCodeWrapper = styled.div`
 
 // Modern backup codes grid
 export const BackupCodesContainer = styled.div`
-  background: linear-gradient(135deg, var(--color-background-hover), var(--color-background));
+  background: linear-gradient(135deg, var(--color-secondary), var(--color-input-background));
   border: var(--border-width-thin) solid var(--color-border);
   border-radius: var(--radius-lg);
   padding: var(--space-12u);
@@ -162,7 +162,7 @@ export const BackupCodesHeader = styled.div`
 export const BackupCodesTitle = styled.h4`
   font-size: var(--font-size-xl);
   font-weight: 600;
-  color: var(--color-foreground);
+  color: var(--color-card-foreground);
   margin: 0;
 `;
 
@@ -182,8 +182,8 @@ export const BackupCodesGrid = BackupCodeGrid;
 
 export const BackupCodeItem = styled.button<{ $used?: boolean }>`
   background: ${props => props.$used
-    ? 'var(--color-background-hover)'
-    : 'var(--color-background)'};
+    ? 'var(--color-secondary)'
+    : 'var(--color-input-background)'};
   border: var(--border-width-thin) solid ${props => props.$used
     ? 'var(--color-border)'
     : 'var(--color-border)'};
@@ -194,7 +194,7 @@ export const BackupCodeItem = styled.button<{ $used?: boolean }>`
   font-weight: 600;
   color: ${props => props.$used
     ? 'var(--color-secondary-text)'
-    : 'var(--color-foreground)'};
+    : 'var(--color-card-foreground)'};
   cursor: ${props => props.$used ? 'default' : 'pointer'};
   transition: all 0.2s ease;
   position: relative;
@@ -221,7 +221,7 @@ export const Message = styled.div<{ $type?: 'success' | 'error' | 'info' }>`
     switch (props.$type) {
       case 'success': return 'var(--color-success-background)';
       case 'error': return 'var(--color-error-background)';
-      default: return 'var(--color-background-hover)';
+      default: return 'var(--color-accent)';
     }
   }};
   border: var(--border-width-thin) solid ${props => {
@@ -246,7 +246,7 @@ export const Message = styled.div<{ $type?: 'success' | 'error' | 'info' }>`
     switch (props.$type) {
       case 'success': return 'var(--color-success)';
       case 'error': return 'var(--color-error)';
-      default: return 'var(--color-foreground)';
+      default: return 'var(--color-card-foreground)';
     }
   }};
   }
@@ -262,7 +262,7 @@ export const EmptyStateIcon = styled.div`
   width: var(--size-36u);
   height: var(--size-36u);
   margin: 0 auto var(--space-10u);
-  background: linear-gradient(135deg, var(--color-background-hover), var(--color-background));
+  background: linear-gradient(135deg, var(--color-secondary), var(--color-input-background));
   border: var(--border-width-regular) solid var(--color-border);
   border-radius: 50%;
   display: flex;
@@ -289,7 +289,7 @@ export const EmptyStateIcon = styled.div`
 export const EmptyStateTitle = styled.h3`
   font-size: var(--font-size-2xl);
   font-weight: 600;
-  color: var(--color-foreground);
+  color: var(--color-card-foreground);
   margin: 0 0 var(--space-4u) 0;
 `;
 
@@ -316,7 +316,7 @@ export const SetupStep = styled.div`
 export const SetupStepTitle = styled.h3`
   font-size: var(--font-size-3xl);
   font-weight: 600;
-  color: var(--color-foreground);
+  color: var(--color-card-foreground);
   margin: 0 0 var(--space-4u) 0;
 `;
 
@@ -349,8 +349,8 @@ export const CodeInput = styled.input`
   letter-spacing: var(--space-4u);
   border: var(--border-width-thin) solid var(--color-border);
   border-radius: var(--radius-xs);
-  background: var(--color-background);
-  color: var(--color-foreground);
+  background: var(--color-input-background);
+  color: var(--color-card-foreground);
   transition: all 0.15s ease;
   
   &:focus {
@@ -360,7 +360,7 @@ export const CodeInput = styled.input`
   }
   
   &:disabled {
-    background: var(--color-background-hover);
+    background: var(--color-secondary);
     cursor: not-allowed;
   }
 `;
@@ -421,7 +421,7 @@ export const ActiveAuthenticatorContent = styled.div``;
 export const ActiveAuthenticatorTitle = styled.div`
   font-size: var(--font-size-lg);
   font-weight: 400;
-  color: var(--color-foreground);
+  color: var(--color-card-foreground);
   margin-bottom: var(--space-1u);
 `;
 
@@ -474,7 +474,7 @@ export const SuccessAnimation = styled.div`
 export const SuccessTitle = styled.h3`
   font-size: var(--font-size-3xl);
   font-weight: 600;
-  color: var(--color-foreground);
+  color: var(--color-card-foreground);
   margin: var(--space-8u) 0 var(--space-4u) 0;
 `;
 
@@ -535,7 +535,7 @@ export const PrimaryButton = styled.button`
 export const SecondaryButton = styled.button`
   padding: var(--space-5u) var(--space-10u);
   background: transparent;
-  color: var(--color-foreground);
+  color: var(--color-card-foreground);
   border: var(--border-width-thin) solid var(--color-border);
   border-radius: var(--radius-md);
   font-size: var(--font-size-lg);
@@ -544,7 +544,7 @@ export const SecondaryButton = styled.button`
   transition: all 0.2s ease;
   
   &:hover:not(:disabled) {
-    background: var(--color-background-hover);
+    background: var(--color-accent);
     border-color: var(--color-primary);
     transform: translateY(calc(var(--space-1u) * -0.5));
   }
@@ -614,11 +614,11 @@ export const ActionButton = styled.button<{ $variant?: 'primary' | 'secondary' |
         `;
       default:
         return `
-          background: var(--color-background);
-          color: var(--color-foreground);
+          background: var(--color-input-background);
+          color: var(--color-card-foreground);
           border: var(--border-width-thin) solid var(--color-border);
           &:hover:not(:disabled) {
-            background: var(--color-background-hover);
+            background: var(--color-accent);
           }
         `;
     }

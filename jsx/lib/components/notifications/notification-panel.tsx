@@ -13,7 +13,7 @@ const PanelContainer = styled.div<{ $fullWidth?: boolean; $maxHeight?: string }>
   max-height: ${props => props.$maxHeight || 'calc(var(--size-50u) * 5)'};
   display: flex;
   flex-direction: column;
-  background: var(--color-background);
+  background: var(--color-popover);
   overflow: hidden;
 `;
 
@@ -23,7 +23,7 @@ const Header = styled.div`
   display: flex;
   align-items: center;
   justify-content: space-between;
-  background: var(--color-background);
+  background: var(--color-popover);
   flex-shrink: 0;
 
   @media(max-width: 400px) {
@@ -46,14 +46,14 @@ const TabButton = styled.button<{ $active: boolean }>`
   border: none;
   font-size: var(--font-size-lg);
   font-weight: 500;
-  color: ${props => props.$active ? 'var(--color-foreground)' : 'var(--color-secondary-text)'};
+  color: ${props => props.$active ? 'var(--color-popover-foreground)' : 'var(--color-secondary-text)'};
   cursor: pointer;
   padding: 0 0 var(--space-2u) 0;
   border-bottom: var(--border-width-regular) solid ${props => props.$active ? 'var(--color-primary)' : 'transparent'};
   transition: all 0.2s ease;
 
   &:hover {
-    color: var(--color-foreground);
+    color: var(--color-popover-foreground);
   }
 `;
 
@@ -70,13 +70,13 @@ const IconButton = styled.button`
   transition: all 0.2s ease;
 
   &:hover {
-    background: var(--color-background-hover);
-    color: var(--color-foreground);
+    background: var(--color-accent);
+    color: var(--color-accent-foreground);
   }
 
   &:focus {
     outline: none;
-    background: var(--color-background-hover);
+    background: var(--color-accent);
   }
 `;
 
@@ -84,7 +84,7 @@ const SettingsMenu = styled.div`
   position: absolute;
   top: calc(var(--size-20u) + var(--space-2u) + var(--border-width-thin));
   right: var(--space-6u);
-  background: var(--color-background);
+  background: var(--color-popover);
   border: var(--border-width-thin) solid var(--color-border);
   border-radius: var(--radius-md);
   box-shadow: var(--shadow-md);
@@ -101,7 +101,7 @@ const MenuItem = styled.button`
   text-align: left;
   padding: var(--space-4u) var(--space-6u);
   font-size: var(--font-size-md);
-  color: var(--color-foreground);
+  color: var(--color-popover-foreground);
   cursor: pointer;
   border-radius: var(--radius-2xs);
   display: flex;
@@ -110,7 +110,7 @@ const MenuItem = styled.button`
   transition: background-color 0.2s;
 
   &:hover {
-    background: var(--color-background-hover);
+    background: var(--color-accent);
   }
   
   svg {
@@ -131,7 +131,7 @@ const ToggleContainer = styled.div`
   transition: background-color 0.2s;
 
   &:hover {
-    background: var(--color-background-hover);
+    background: var(--color-accent);
   }
 `;
 
@@ -170,7 +170,7 @@ const ToggleLabel = styled.span`
 const Content = styled.div`
   flex: 1;
   overflow-y: auto;
-  background: var(--color-background);
+  background: var(--color-popover);
 
   &::-webkit-scrollbar {
     width: var(--space-3u);
@@ -206,7 +206,7 @@ const EmptyIcon = styled.div`
   width: var(--size-24u);
   height: var(--size-24u);
   border-radius: 50%;
-  background: var(--color-background-hover);
+  background: var(--color-secondary);
   display: flex;
   align-items: center;
   justify-content: center;
@@ -217,7 +217,7 @@ const EmptyIcon = styled.div`
 const EmptyTitle = styled.h3`
   font-size: var(--font-size-lg);
   font-weight: 400;
-  color: var(--color-foreground);
+  color: var(--color-popover-foreground);
   margin: 0 0 var(--space-2u) 0;
 `;
 

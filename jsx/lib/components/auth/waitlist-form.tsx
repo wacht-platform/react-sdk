@@ -9,14 +9,10 @@ import { Button } from "../utility/button";
 import { useDeployment } from "@/hooks/use-deployment";
 import { useWaitlist, type WaitlistParams } from "@/hooks/use-waitlist";
 import { AuthFormImage } from "./auth-image";
+import { standaloneAuthShell } from "./auth-shell";
 
 const Container = styled.div`
-  max-width: calc(calc(var(--size-50u) * 4) - var(--size-10u));
-  width: calc(calc(var(--size-50u) * 4) - var(--size-10u));
-  padding: var(--space-14u);
-  background: var(--color-background);
-  border-radius: var(--radius-lg);
-  box-shadow: var(--shadow-md);
+  ${standaloneAuthShell}
 `;
 
 const Header = styled.div`
@@ -27,7 +23,7 @@ const Header = styled.div`
 const Title = styled.h1`
   font-size: var(--font-size-2xl);
   font-weight: 400;
-  color: var(--color-foreground);
+  color: var(--color-card-foreground);
   margin-bottom: var(--space-2u);
   margin-top: 0;
 `;
@@ -60,7 +56,7 @@ const NameFields = styled.div<{ $isBothEnabled: boolean }>`
 const Label = styled.label`
   font-size: var(--font-size-md);
   font-weight: 400;
-  color: var(--color-foreground);
+  color: var(--color-card-foreground);
   text-align: left;
 `;
 
@@ -96,7 +92,7 @@ const SuccessIcon = styled.div`
 
 const SuccessTitle = styled.h2`
   font-size: var(--font-size-2xl);
-  color: var(--color-foreground);
+  color: var(--color-card-foreground);
   margin: 0;
 `;
 

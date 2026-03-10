@@ -1,14 +1,10 @@
 import styled from "styled-components";
 import { AuthFormImage } from "./auth-image";
 import { DefaultStylesProvider } from "../utility/root";
+import { standaloneAuthShell } from "./auth-shell";
 
 const Container = styled.div`
-  max-width: calc(var(--space-10u) * 19);
-  width: calc(var(--space-10u) * 19);
-  padding: var(--space-12u);
-  background: var(--color-background);
-  border-radius: var(--radius-lg);
-  box-shadow: var(--shadow-md);
+  ${standaloneAuthShell}
 `;
 
 const Header = styled.div`
@@ -20,7 +16,7 @@ const Header = styled.div`
 const Title = styled.h1`
   font-size: var(--font-size-xl);
   font-weight: 400;
-  color: var(--color-foreground);
+  color: var(--color-card-foreground);
   margin-bottom: var(--space-2u);
   margin-top: 0;
 `;
@@ -45,7 +41,7 @@ const MethodButton = styled.button`
   padding: var(--space-6u);
   width: 100%;
   border: var(--border-width-thin) solid var(--color-border);
-  background: var(--color-background);
+  background: var(--color-card);
   cursor: pointer;
   text-align: left;
   transition: all 0.2s ease;
@@ -66,8 +62,8 @@ const MethodButton = styled.button`
   }
 
   &:hover:not(:disabled) {
-    background-color: var(--color-background-hover);
-    border-color: var(--color-primary);
+    background-color: var(--color-accent);
+    border-color: var(--color-border-hover);
     z-index: 1;
   }
 
@@ -94,7 +90,7 @@ const MethodContent = styled.div`
 const MethodName = styled.div`
   font-weight: 400;
   font-size: var(--font-size-lg);
-  color: var(--color-foreground);
+  color: var(--color-card-foreground);
 `;
 
 const MethodDescription = styled.div`

@@ -5,7 +5,7 @@ import type { Notification } from "@/types";
 
 const Item = styled.div<{ $unread: boolean; $expanded: boolean }>`
   padding: var(--space-6u) var(--space-8u);
-  background: ${props => props.$unread ? "var(--color-background-hover)" : "transparent"};
+  background: ${props => props.$unread ? "var(--color-accent)" : "transparent"};
   transition: background-color 0.2s ease;
   cursor: pointer;
   display: flex;
@@ -13,7 +13,7 @@ const Item = styled.div<{ $unread: boolean; $expanded: boolean }>`
   border-bottom: var(--border-width-thin) solid var(--color-border);
 
   &:hover {
-    background: var(--color-background-hover);
+    background: var(--color-accent);
   }
 
   &:last-child {
@@ -32,7 +32,7 @@ const ContentContainer = styled.div`
 const Title = styled.h4`
   font-size: var(--font-size-lg);
   font-weight: 400;
-  color: var(--color-foreground);
+  color: var(--color-popover-foreground);
   margin: 0 0 var(--space-1u) 0;
   white-space: nowrap;
   overflow: hidden;
@@ -167,16 +167,16 @@ export function NotificationItem({
                     cursor: 'pointer',
                     transition: 'all 0.2s cubic-bezier(0.4, 0, 0.2, 1)',
                     border: 'var(--border-width-thin) solid var(--color-border)',
-                    background: 'var(--color-background)',
-                    color: 'var(--color-foreground)',
+                    background: 'var(--color-secondary)',
+                    color: 'var(--color-secondary-foreground)',
                     boxShadow: 'var(--shadow-sm)',
                   }}
                   onMouseOver={(e) => {
-                    e.currentTarget.style.background = 'var(--color-background-hover)';
-                    e.currentTarget.style.borderColor = 'var(--color-primary)';
+                    e.currentTarget.style.background = 'var(--color-accent)';
+                    e.currentTarget.style.borderColor = 'var(--color-border-hover)';
                   }}
                   onMouseOut={(e) => {
-                    e.currentTarget.style.background = 'var(--color-background)';
+                    e.currentTarget.style.background = 'var(--color-secondary)';
                     e.currentTarget.style.borderColor = 'var(--color-border)';
                   }}
                 >
@@ -207,7 +207,7 @@ export function NotificationItem({
                   display: 'flex',
                   transition: 'color 0.2s ease',
                 }}
-                onMouseOver={(e) => e.currentTarget.style.color = 'var(--color-foreground)'}
+                onMouseOver={(e) => e.currentTarget.style.color = 'var(--color-popover-foreground)'}
                 onMouseOut={(e) => e.currentTarget.style.color = 'var(--color-muted)'}
               >
                 <Circle size={14} />
@@ -228,7 +228,7 @@ export function NotificationItem({
                 display: 'flex',
                 transition: 'color 0.2s ease',
               }}
-              onMouseOver={(e) => e.currentTarget.style.color = notification.is_starred ? 'var(--color-warning)' : 'var(--color-foreground)'}
+              onMouseOver={(e) => e.currentTarget.style.color = notification.is_starred ? 'var(--color-warning)' : 'var(--color-popover-foreground)'}
               onMouseOut={(e) => e.currentTarget.style.color = notification.is_starred ? 'var(--color-warning)' : 'var(--color-muted)'}
             >
               <Star size={14} fill={notification.is_starred ? "currentColor" : "none"} />
@@ -248,7 +248,7 @@ export function NotificationItem({
                 display: 'flex',
                 transition: 'color 0.2s ease',
               }}
-              onMouseOver={(e) => e.currentTarget.style.color = 'var(--color-foreground)'}
+              onMouseOver={(e) => e.currentTarget.style.color = 'var(--color-popover-foreground)'}
               onMouseOut={(e) => e.currentTarget.style.color = 'var(--color-muted)'}
             >
               {notification.is_archived ? <RotateCcw size={14} /> : <Archive size={14} />}

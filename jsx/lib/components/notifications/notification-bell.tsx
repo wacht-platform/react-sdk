@@ -35,11 +35,11 @@ const NotificationButton = styled.button<{ $hasUnread: boolean }>`
     padding: var(--space-4u);
     border-radius: var(--radius-md);
     transition: all 0.2s ease;
-    color: var(--color-foreground);
+    color: var(--color-secondary-text);
 
     &:hover {
-        background: var(--color-background-hover);
-        color: var(--color-primary);
+        background: var(--color-accent);
+        color: var(--color-accent-foreground);
     }
 
     &:hover svg {

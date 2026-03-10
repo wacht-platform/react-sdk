@@ -5,7 +5,7 @@ import { Button } from "./button";
 const PopoverContainer = styled.div`
   text-align: left;
   position: fixed;
-  background: var(--color-background);
+  background: var(--color-popover);
   border-radius: var(--radius-md);
   box-shadow: var(--shadow-md);
   border: var(--border-width-thin) solid var(--color-border);
@@ -17,7 +17,7 @@ const PopoverContainer = styled.div`
 const Title = styled.div`
   font-size: var(--font-size-lg);
   font-weight: 500;
-  color: var(--color-foreground);
+  color: var(--color-popover-foreground);
   margin-bottom: var(--space-2u);
   line-height: 1.4;
 `;
@@ -86,7 +86,7 @@ export const ConfirmationPopover = ({
             padding: "var(--space-3u) var(--space-8u)",
             background: "transparent",
             border: "var(--border-width-thin) solid var(--color-border)",
-            color: "var(--color-foreground)",
+            color: "var(--color-popover-foreground)",
           }}
         >
           Cancel

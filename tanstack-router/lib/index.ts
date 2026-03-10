@@ -13,6 +13,7 @@ export {
   ManageOrganization,
   CreateWorkspaceForm,
   CreateOrganizationForm,
+  DefaultStylesProvider,
 } from "@wacht/jsx";
 export { DeploymentInitialized, DeploymentInitializing } from "@wacht/jsx";
 export {

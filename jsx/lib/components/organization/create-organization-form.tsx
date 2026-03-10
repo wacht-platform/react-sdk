@@ -19,7 +19,7 @@ const Container = styled.div`
 
 const LeftPanel = styled.div`
   width: 35%;
-  background: var(--color-background-hover);
+  background: var(--color-secondary);
   padding: var(--space-16u);
   display: flex;
   flex-direction: column;
@@ -53,7 +53,7 @@ const AvatarContainer = styled.div<{ hasImage: boolean }>`
   border-radius: var(--radius-xl);
   overflow: hidden;
   background: ${(props) =>
-    props.hasImage ? "transparent" : "var(--color-background)"};
+    props.hasImage ? "transparent" : "var(--color-input-background)"};
   border: var(--border-width-regular) solid var(--color-border);
   display: flex;
   align-items: center;
@@ -90,7 +90,7 @@ const AvatarPlaceholder = styled.div`
 const Title = styled.h2`
   font-size: var(--font-size-xl);
   font-weight: 400;
-  color: var(--color-foreground);
+  color: var(--color-card-foreground);
   margin-bottom: var(--space-4u);
 `;
 
@@ -108,7 +108,7 @@ const FormHeader = styled.div`
 const FormTitle = styled.h3`
   font-size: var(--font-size-xl);
   font-weight: 400;
-  color: var(--color-foreground);
+  color: var(--color-card-foreground);
   margin-bottom: var(--space-3u);
 `;
 
@@ -131,7 +131,7 @@ const Label = styled.label`
   margin-bottom: var(--space-3u);
   font-size: var(--font-size-md);
   font-weight: 400;
-  color: var(--color-foreground);
+  color: var(--color-card-foreground);
 `;
 
 const Input = styled.input`
@@ -141,8 +141,8 @@ const Input = styled.input`
   border-radius: var(--radius-xs);
   font-size: var(--font-size-lg);
   outline: none;
-  background: var(--color-background);
-  color: var(--color-foreground);
+  background: var(--color-input-background);
+  color: var(--color-card-foreground);
   transition: all 0.2s ease;
   box-sizing: border-box;
 
@@ -165,8 +165,8 @@ const TextArea = styled.textarea`
   outline: none;
   resize: vertical;
   min-height: var(--size-40u);
-  background: var(--color-background);
-  color: var(--color-foreground);
+  background: var(--color-input-background);
+  color: var(--color-card-foreground);
   transition: all 0.2s ease;
   font-family: inherit;
   box-sizing: border-box;
@@ -203,7 +203,7 @@ const BackButton = styled.button`
   transition: all 0.2s ease;
 
   &:hover {
-    color: var(--color-foreground);
+    color: var(--color-card-foreground);
   }
 `;
 

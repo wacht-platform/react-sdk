@@ -20,14 +20,10 @@ import { ProfileCompletionProps } from "@wacht/types";
 import { useNavigation } from "@/hooks";
 import { Loader2 } from "lucide-react";
 import { getStoredDevSession } from "@/utils/dev-session";
+import { standaloneAuthShell } from "./auth-shell";
 
 const Container = styled.div`
-    max-width: calc(var(--space-10u) * 19);
-    width: calc(var(--space-10u) * 19);
-    padding: var(--space-12u);
-    background: var(--color-background);
-    border-radius: var(--radius-lg);
-    box-shadow: var(--shadow-md);
+    ${standaloneAuthShell}
 `;
 
 const spin = keyframes`
@@ -60,7 +56,7 @@ const Header = styled.div`
 const Title = styled.h1`
     font-size: var(--font-size-xl);
     font-weight: 400;
-    color: var(--color-foreground);
+    color: var(--color-card-foreground);
     margin-bottom: var(--space-2u);
     margin-top: 0;
 `;

@@ -82,10 +82,10 @@ export const ManageWorkspace = () => {
             </TabContent>
 
             {toastMessage && (
-              <div style={{ position: "absolute", bottom: "20px", right: "20px", background: "var(--color-input-background)", border: "1px solid var(--color-border)", borderRadius: "8px", padding: "12px 16px", boxShadow: "0 4px 12px var(--color-shadow)", animation: "slideDown 0.3s ease-out", zIndex: 100 }}>
+              <div style={{ position: "absolute", bottom: "20px", right: "20px", background: "var(--color-popover)", border: "1px solid var(--color-border)", borderRadius: "8px", padding: "12px 16px", boxShadow: "var(--shadow-md)", animation: "slideDown 0.3s ease-out", zIndex: 100 }}>
                 <div style={{ display: "flex", alignItems: "center", gap: "8px" }}>
                   {toastLevel === "error" ? <AlertTriangle size={16} color="var(--color-error)" /> : <Check size={16} color="var(--color-success)" />}
-                  <span style={{ fontSize: "14px", color: "var(--color-foreground)" }}>{toastMessage}</span>
+                  <span style={{ fontSize: "14px", color: "var(--color-popover-foreground)" }}>{toastMessage}</span>
                 </div>
               </div>
             )}
