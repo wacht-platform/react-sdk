@@ -58,7 +58,8 @@ const ChipText = styled.span`
 `;
 
 export const SocialManagementSection = () => {
-    const { user, disconnectSocialConnection, connectSocialAccount } = useUser();
+    const { user, disconnectSocialConnection, connectSocialAccount } =
+        useUser();
     const { deployment } = useDeployment();
 
     const socialAuthProviders = {
@@ -97,7 +98,7 @@ export const SocialManagementSection = () => {
 
     return (
         <>
-            <div style={{ marginBottom: "var(--space-12u)" }}>
+            <div style={{ marginBottom: "var(--space-6u)" }}>
                 <h3
                     style={{
                         fontSize: "var(--font-size-xl)",
@@ -132,37 +133,51 @@ export const SocialManagementSection = () => {
                         ) || [];
                     const providerInfo =
                         socialAuthProviders[
-                        provider.provider as keyof typeof socialAuthProviders
+                            provider.provider as keyof typeof socialAuthProviders
                         ];
 
                     if (!providerInfo) return null;
 
                     return (
                         <div key={provider.provider}>
-
                             <ConnectionItemRow>
                                 <ConnectionLeft>
-                                    <IconWrapper>{providerInfo.icon}</IconWrapper>
+                                    <IconWrapper>
+                                        {providerInfo.icon}
+                                    </IconWrapper>
                                     <ProviderInfo>
-                                        <ProviderName>{providerInfo.label}</ProviderName>
+                                        <ProviderName>
+                                            {providerInfo.label}
+                                        </ProviderName>
                                         {connectedAccounts.length > 0 && (
                                             <ConnectedAccountsRow>
-                                                {connectedAccounts.map((account) => (
-                                                    <ConnectedAccountChip key={account.id}>
-                                                        <ChipText>{account.email_address}</ChipText>
-                                                        <IconButton
-                                                            onClick={async () => {
-                                                                await disconnectSocialConnection(
-                                                                    account.id.toString(),
-                                                                );
-                                                                user.refetch();
-                                                            }}
-                                                            style={{ padding: "var(--space-1u)" }}
+                                                {connectedAccounts.map(
+                                                    (account) => (
+                                                        <ConnectedAccountChip
+                                                            key={account.id}
                                                         >
-                                                            <X size={14} />
-                                                        </IconButton>
-                                                    </ConnectedAccountChip>
-                                                ))}
+                                                            <ChipText>
+                                                                {
+                                                                    account.email_address
+                                                                }
+                                                            </ChipText>
+                                                            <IconButton
+                                                                onClick={async () => {
+                                                                    await disconnectSocialConnection(
+                                                                        account.id.toString(),
+                                                                    );
+                                                                    user.refetch();
+                                                                }}
+                                                                style={{
+                                                                    padding:
+                                                                        "var(--space-1u)",
+                                                                }}
+                                                            >
+                                                                <X size={14} />
+                                                            </IconButton>
+                                                        </ConnectedAccountChip>
+                                                    ),
+                                                )}
                                             </ConnectedAccountsRow>
                                         )}
                                     </ProviderInfo>
@@ -175,7 +190,8 @@ export const SocialManagementSection = () => {
                                             onClick={() => {
                                                 connectSocialAccount({
                                                     provider: provider.provider,
-                                                    redirectUri: window.location.href,
+                                                    redirectUri:
+                                                        window.location.href,
                                                 });
                                             }}
                                         >
@@ -187,7 +203,8 @@ export const SocialManagementSection = () => {
                                             onClick={() => {
                                                 connectSocialAccount({
                                                     provider: provider.provider,
-                                                    redirectUri: window.location.href,
+                                                    redirectUri:
+                                                        window.location.href,
                                                 });
                                             }}
                                         >

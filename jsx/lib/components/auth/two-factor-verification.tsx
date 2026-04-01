@@ -253,7 +253,7 @@ export function TwoFactorVerification({
                 if (deployment?.mode === "staging") {
                     uri.searchParams.set(
                         "__dev_session__",
-                        getStoredDevSession() || "",
+                        getStoredDevSession(deployment.backend_host) || "",
                     );
                 }
 

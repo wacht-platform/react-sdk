@@ -2,6 +2,13 @@ const DEV_SESSION_COOKIE = "__dev_session__";
 const DEV_SESSION_UPDATED_AT_COOKIE = "__dev_session_updated_at";
 const DEV_SESSION_UPDATED_AT_STORAGE_KEY = "__dev_session_updated_at";
 
+type DevSessionKeys = {
+  cookie: string;
+  updatedAtCookie: string;
+  storage: string;
+  updatedAtStorage: string;
+};
+
 function isBrowser(): boolean {
   return typeof window !== "undefined" && typeof document !== "undefined";
 }
@@ -46,22 +53,57 @@ function parseUpdatedAt(value: string | null): number {
   return Number.isFinite(parsed) ? parsed : 0;
 }
 
-function syncStorageFromCookie(): string | null {
-  const cookieValue = readCookie(DEV_SESSION_COOKIE);
+function normalizeScope(scope?: string | null): string | null {
+  const value = scope?.trim();
+  if (!value) return null;
+
+  try {
+    const parsed = new URL(value.includes("://") ? value : `https://${value}`);
+    return parsed.host.toLowerCase();
+  } catch {
+    return value.toLowerCase().replace(/\/+$/, "");
+  }
+}
+
+function getScopeSuffix(scope?: string | null): string {
+  const normalized = normalizeScope(scope);
+  if (!normalized) return "";
+
+  const sanitized = normalized
+    .replace(/[^a-z0-9]+/g, "_")
+    .replace(/^_+|_+$/g, "")
+    .slice(0, 64);
+
+  return sanitized ? `_${sanitized}` : "";
+}
+
+function getDevSessionKeys(scope?: string | null): DevSessionKeys {
+  const suffix = getScopeSuffix(scope);
+
+  return {
+    cookie: `${DEV_SESSION_COOKIE}${suffix}`,
+    updatedAtCookie: `${DEV_SESSION_UPDATED_AT_COOKIE}${suffix}`,
+    storage: `${DEV_SESSION_COOKIE}${suffix}`,
+    updatedAtStorage: `${DEV_SESSION_UPDATED_AT_STORAGE_KEY}${suffix}`,
+  };
+}
+
+function syncStorageFromCookie(keys: DevSessionKeys): string | null {
+  const cookieValue = readCookie(keys.cookie);
   if (!cookieValue) return null;
 
-  const cookieUpdatedAt = parseUpdatedAt(readCookie(DEV_SESSION_UPDATED_AT_COOKIE));
-  const storageValue = readStorage(DEV_SESSION_COOKIE);
-  const storageUpdatedAt = parseUpdatedAt(readStorage(DEV_SESSION_UPDATED_AT_STORAGE_KEY));
+  const cookieUpdatedAt = parseUpdatedAt(readCookie(keys.updatedAtCookie));
+  const storageValue = readStorage(keys.storage);
+  const storageUpdatedAt = parseUpdatedAt(readStorage(keys.updatedAtStorage));
 
   const cookieLooksNewer =
     cookieUpdatedAt > storageUpdatedAt ||
     (cookieUpdatedAt === 0 && cookieValue !== storageValue);
 
   if (!storageValue || cookieLooksNewer) {
-    writeStorage(DEV_SESSION_COOKIE, cookieValue);
+    writeStorage(keys.storage, cookieValue);
     writeStorage(
-      DEV_SESSION_UPDATED_AT_STORAGE_KEY,
+      keys.updatedAtStorage,
       String(cookieUpdatedAt || Date.now()),
     );
   }
@@ -69,20 +111,24 @@ function syncStorageFromCookie(): string | null {
   return cookieValue;
 }
 
-export function getStoredDevSession(): string | null {
+export function getStoredDevSession(scope?: string | null): string | null {
   if (!isBrowser()) return null;
-  const cookieValue = syncStorageFromCookie();
+  const keys = getDevSessionKeys(scope);
+  const cookieValue = syncStorageFromCookie(keys);
   if (cookieValue) return cookieValue;
-  return readStorage(DEV_SESSION_COOKIE);
+  return readStorage(keys.storage);
 }
 
-export function persistDevSession(value: string | null | undefined): void {
+export function persistDevSession(
+  value: string | null | undefined,
+  scope?: string | null,
+): void {
   if (!isBrowser() || !value) return;
 
+  const keys = getDevSessionKeys(scope);
   const now = Date.now();
-  writeCookie(DEV_SESSION_COOKIE, value);
-  writeCookie(DEV_SESSION_UPDATED_AT_COOKIE, String(now));
-  writeStorage(DEV_SESSION_COOKIE, value);
-  writeStorage(DEV_SESSION_UPDATED_AT_STORAGE_KEY, String(now));
+  writeCookie(keys.cookie, value);
+  writeCookie(keys.updatedAtCookie, String(now));
+  writeStorage(keys.storage, value);
+  writeStorage(keys.updatedAtStorage, String(now));
 }
-

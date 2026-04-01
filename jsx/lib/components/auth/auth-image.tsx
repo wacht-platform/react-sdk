@@ -11,14 +11,10 @@ const LogoWrapper = styled.div`
     display: flex;
     align-items: center;
     justify-content: center;
-    width: var(--size-40u);
-    height: var(--size-40u);
+    max-width: var(--size-32u);
+    max-height: var(--size-32u);
     border-radius: 50%;
-    padding: var(--space-6u);
-
-    @media (prefers-color-scheme: dark) {
-        background: var(--color-background-subtle);
-    }
+    margin-bottom: var(--space-6u);
 `;
 
 const LogoImage = styled.img`
@@ -29,7 +25,11 @@ const LogoImage = styled.img`
     object-fit: contain;
 `;
 
-export function AuthFormImage() {
+export function AuthFormImage({
+    placement = "center",
+}: {
+    placement?: "center" | "left" | "right";
+}) {
     const { deployment } = useDeployment();
     const [imageError, setImageError] = useState(false);
 
@@ -39,8 +39,19 @@ export function AuthFormImage() {
         return null;
     }
 
+    const justifyContent =
+        placement === "left"
+            ? "flex-start"
+            : placement === "right"
+              ? "flex-end"
+              : "center";
+
     return (
-        <ImageContainer>
+        <ImageContainer
+            style={{
+                justifyContent,
+            }}
+        >
             <LogoWrapper>
                 <LogoImage
                     src={logoUrl}

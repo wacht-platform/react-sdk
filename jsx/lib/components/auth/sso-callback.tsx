@@ -185,7 +185,7 @@ export function SSOCallback() {
         if (deployment?.mode === "staging") {
           redirectUrl.searchParams.set(
             "__dev_session__",
-            getStoredDevSession() || "",
+            getStoredDevSession(deployment.backend_host) || "",
           );
         }
 

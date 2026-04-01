@@ -35,7 +35,7 @@ export const useNavigation = () => {
     params.set("redirect_uri", targetRedirectUri);
 
     if (deployment?.mode === "staging") {
-      params.set("__dev_session__", getStoredDevSession() ?? "");
+      params.set("__dev_session__", getStoredDevSession(deployment.backend_host) ?? "");
     }
 
     navigate(
@@ -52,7 +52,7 @@ export const useNavigation = () => {
     params.set("redirect_uri", targetRedirectUri);
 
     if (deployment?.mode === "staging") {
-      params.set("__dev_session__", getStoredDevSession() ?? "");
+      params.set("__dev_session__", getStoredDevSession(deployment.backend_host) ?? "");
     }
 
     navigate(
@@ -69,7 +69,7 @@ export const useNavigation = () => {
     params.set("redirect_uri", targetRedirectUri);
 
     if (deployment?.mode === "staging") {
-      params.set("__dev_session__", getStoredDevSession() ?? "");
+      params.set("__dev_session__", getStoredDevSession(deployment.backend_host) ?? "");
     }
 
     navigate(

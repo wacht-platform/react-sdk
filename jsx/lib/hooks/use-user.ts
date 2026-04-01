@@ -533,38 +533,38 @@ export function useActiveTenancy() {
   const { loading: useWorkspaceMembershipsLoading, workspaceMemberships } =
     useWorkspaceMemberships();
 
-  if (
-    sessionLoading ||
-    organizationMembershipsLoading ||
-    useWorkspaceMembershipsLoading
-  )
-    return {
-      loading: true,
-      orgMembership: null,
-      workspaceMembership: null,
-    };
-
   const activeOrganizationMembership = useMemo(() => {
-    if (!session || !session.signins || session.signins.length === 0)
+    if (!session || !session.signins || session.signins.length === 0) {
       return null;
-    return organizationMemberships?.find(
-      (membership) =>
-        membership.id ===
-        session.active_signin?.active_organization_membership_id,
+    }
+
+    return (
+      organizationMemberships?.find(
+        (membership) =>
+          membership.id ===
+          session.active_signin?.active_organization_membership_id,
+      ) || null
     );
-  }, [session]);
+  }, [organizationMemberships, session]);
 
   const activeWorkspaceMembership = useMemo(() => {
-    if (!session || !session.signins || session.signins.length === 0)
+    if (!session || !session.signins || session.signins.length === 0) {
       return null;
-    return workspaceMemberships?.find(
-      (membership) =>
-        membership.id === session.active_signin?.active_workspace_membership_id,
+    }
+
+    return (
+      workspaceMemberships?.find(
+        (membership) =>
+          membership.id === session.active_signin?.active_workspace_membership_id,
+      ) || null
     );
-  }, [session]);
+  }, [workspaceMemberships, session]);
 
   return {
-    loading: false,
+    loading:
+      sessionLoading ||
+      organizationMembershipsLoading ||
+      useWorkspaceMembershipsLoading,
     orgMembership: activeOrganizationMembership,
     workspaceMembership: activeWorkspaceMembership,
   };

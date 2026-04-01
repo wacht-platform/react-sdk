@@ -78,6 +78,13 @@ const DEFAULT_DEV_SESSION_UPDATED_AT_COOKIE = "__dev_session_updated_at";
 const DEFAULT_AUTH_COOKIE = "__auth";
 const DEV_SESSION_HEADER = "x-development-session";
 
+type CookieNames = {
+    authCookieName: string;
+    sessionCookieName: string;
+    devSessionCookieName: string;
+    devSessionUpdatedAtCookieName: string;
+};
+
 function isApiLikeRequest(
     request: NextRequest,
     options: WachtMiddlewareOptions,
@@ -138,6 +145,34 @@ function getFrontendApiUrl(options: WachtMiddlewareOptions): string {
     }
 
     return parsed;
+}
+
+function sanitizeCookieScope(value: string): string {
+    const sanitized = value
+        .toLowerCase()
+        .replace(/[^a-z0-9]+/g, "_")
+        .replace(/^_+|_+$/g, "")
+        .slice(0, 64);
+
+    return sanitized || "default";
+}
+
+function resolveCookieNames(options: WachtMiddlewareOptions): CookieNames {
+    const sessionCookieName =
+        options.sessionCookieName || DEFAULT_SESSION_COOKIE;
+    const frontendApiHost = new URL(getFrontendApiUrl(options)).host;
+    const scope = sanitizeCookieScope(frontendApiHost);
+    const devSessionCookieName =
+        options.devSessionCookieName ||
+        `${DEFAULT_DEV_SESSION_COOKIE}_${scope}`;
+
+    return {
+        authCookieName:
+            options.authCookieName || `${DEFAULT_AUTH_COOKIE}_${scope}`,
+        sessionCookieName,
+        devSessionCookieName,
+        devSessionUpdatedAtCookieName: `${DEFAULT_DEV_SESSION_UPDATED_AT_COOKIE}_${scope}`,
+    };
 }
 
 function deriveAccountPortalSignInBaseUrl(frontendApiUrl: string): string {
@@ -632,12 +667,12 @@ async function authenticateRequestWithHandshake(
     options: WachtMiddlewareOptions = {},
 ): Promise<{ auth: NextWachtAuth; headers: Headers }> {
     const headers = new Headers();
-    const authCookieName = options.authCookieName || DEFAULT_AUTH_COOKIE;
-    const sessionCookieName =
-        options.sessionCookieName || DEFAULT_SESSION_COOKIE;
-    const devSessionCookieName =
-        options.devSessionCookieName || DEFAULT_DEV_SESSION_COOKIE;
-    const devSessionUpdatedAtCookieName = DEFAULT_DEV_SESSION_UPDATED_AT_COOKIE;
+    const {
+        authCookieName,
+        sessionCookieName,
+        devSessionCookieName,
+        devSessionUpdatedAtCookieName,
+    } = resolveCookieNames(options);
 
     const bearerToken = request.headers
         .get("authorization")
@@ -746,9 +781,11 @@ async function normalizeDevSessionQuery(
     if (!devSessionFromQuery) return null;
 
     const headers = new Headers();
-    const authCookieName = options.authCookieName || DEFAULT_AUTH_COOKIE;
-    const devSessionCookieName =
-        options.devSessionCookieName || DEFAULT_DEV_SESSION_COOKIE;
+    const {
+        authCookieName,
+        devSessionCookieName,
+        devSessionUpdatedAtCookieName,
+    } = resolveCookieNames(options);
 
     const exchanged = await exchangeSessionForAuthToken(
         options,
@@ -780,7 +817,7 @@ async function normalizeDevSessionQuery(
         appendSetCookie(
             headers,
             buildCookie(
-                DEFAULT_DEV_SESSION_UPDATED_AT_COOKIE,
+                devSessionUpdatedAtCookieName,
                 String(Date.now()),
                 false,
             ),
@@ -805,7 +842,7 @@ export async function getAuth(
     request: Request,
     options: WachtMiddlewareOptions = {},
 ): Promise<NextWachtAuth> {
-    const authCookieName = options.authCookieName || DEFAULT_AUTH_COOKIE;
+    const { authCookieName } = resolveCookieNames(options);
     const bearerToken = request.headers
         .get("authorization")
         ?.startsWith("Bearer ")

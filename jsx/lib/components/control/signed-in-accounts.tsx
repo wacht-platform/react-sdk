@@ -372,7 +372,7 @@ export const SignedInAccounts: React.FC<SignedInAccountsProps> = ({
                     if (deployment?.mode === "staging") {
                         uri.searchParams.set(
                             "__dev_session__",
-                            getStoredDevSession() ?? "",
+                            getStoredDevSession(deployment.backend_host) ?? "",
                         );
                     }
                     navigate(uri.toString());

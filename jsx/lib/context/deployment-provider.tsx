@@ -45,6 +45,7 @@ function DeploymentProvider({
 
                 let baseUrl = atob(baseUrlBase64);
                 let staging = mode === "test";
+                const devSessionScope = baseUrl;
 
                 let devSession = null;
                 if (
@@ -55,14 +56,14 @@ function DeploymentProvider({
                     devSession = new URLSearchParams(
                         window.location.search,
                     ).get("__dev_session__");
-                    persistDevSession(devSession);
+                    persistDevSession(devSession, devSessionScope);
                     const newUrl = new URL(window.location.href);
                     newUrl.searchParams.delete("__dev_session__");
                     window.history.replaceState({}, "", newUrl.toString());
                 } else {
-                    devSession = getStoredDevSession();
+                    devSession = getStoredDevSession(devSessionScope);
                     if (devSession) {
-                        persistDevSession(devSession);
+                        persistDevSession(devSession, devSessionScope);
                     }
                 }
 
@@ -107,6 +108,7 @@ function DeploymentProvider({
                 ) {
                     persistDevSession(
                         deployment.headers.get("x-development-session"),
+                        devSessionScope,
                     );
                 }
 

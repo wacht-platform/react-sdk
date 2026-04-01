@@ -18,6 +18,13 @@ const DEFAULT_DEV_SESSION_UPDATED_AT_COOKIE = "__dev_session_updated_at";
 const DEFAULT_AUTH_COOKIE = "__auth";
 const DEV_SESSION_HEADER = "x-development-session";
 
+type CookieNames = {
+  authCookieName: string;
+  sessionCookieName: string;
+  devSessionCookieName: string;
+  devSessionUpdatedAtCookieName: string;
+};
+
 function readCookie(request: Request, cookieName: string): string | null {
   const cookieHeader = request.headers.get("cookie");
   if (!cookieHeader) return null;
@@ -54,6 +61,31 @@ function getFrontendApiUrl(options: WachtServerOptions): string {
   }
 
   return parsed;
+}
+
+function sanitizeCookieScope(value: string): string {
+  const sanitized = value
+    .toLowerCase()
+    .replace(/[^a-z0-9]+/g, "_")
+    .replace(/^_+|_+$/g, "")
+    .slice(0, 64);
+
+  return sanitized || "default";
+}
+
+function resolveCookieNames(options: WachtServerOptions): CookieNames {
+  const sessionCookieName = options.sessionCookieName || DEFAULT_SESSION_COOKIE;
+  const frontendApiHost = new URL(getFrontendApiUrl(options)).host;
+  const scope = sanitizeCookieScope(frontendApiHost);
+  const devSessionCookieName =
+    options.devSessionCookieName || `${DEFAULT_DEV_SESSION_COOKIE}_${scope}`;
+
+  return {
+    authCookieName: options.authCookieName || `${DEFAULT_AUTH_COOKIE}_${scope}`,
+    sessionCookieName,
+    devSessionCookieName,
+    devSessionUpdatedAtCookieName: `${DEFAULT_DEV_SESSION_UPDATED_AT_COOKIE}_${scope}`,
+  };
 }
 
 async function exchangeSessionForAuthToken(
@@ -116,7 +148,7 @@ export async function getAuth(
   request: Request,
   options: WachtServerOptions = {},
 ): Promise<WachtAuth> {
-  const authCookieName = options.authCookieName || DEFAULT_AUTH_COOKIE;
+  const { authCookieName } = resolveCookieNames(options);
   const bearerToken = request.headers.get("authorization")?.startsWith("Bearer ")
     ? request.headers.get("authorization")!.slice(7).trim()
     : null;
@@ -144,9 +176,12 @@ export async function authenticateRequest(
   options: WachtServerOptions = {},
 ): Promise<{ auth: WachtAuth; headers: Headers }> {
   const headers = new Headers();
-  const authCookieName = options.authCookieName || DEFAULT_AUTH_COOKIE;
-  const sessionCookieName = options.sessionCookieName || DEFAULT_SESSION_COOKIE;
-  const devSessionCookieName = options.devSessionCookieName || DEFAULT_DEV_SESSION_COOKIE;
+  const {
+    authCookieName,
+    sessionCookieName,
+    devSessionCookieName,
+    devSessionUpdatedAtCookieName,
+  } = resolveCookieNames(options);
 
   const bearerToken = request.headers.get("authorization")?.startsWith("Bearer ")
     ? request.headers.get("authorization")!.slice(7).trim()
@@ -185,7 +220,7 @@ export async function authenticateRequest(
     appendSetCookie(headers, buildCookie(devSessionCookieName, exchanged.nextDevSession, false));
     appendSetCookie(
       headers,
-      buildCookie(DEFAULT_DEV_SESSION_UPDATED_AT_COOKIE, String(Date.now()), false),
+      buildCookie(devSessionUpdatedAtCookieName, String(Date.now()), false),
     );
   }
 

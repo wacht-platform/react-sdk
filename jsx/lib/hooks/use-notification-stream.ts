@@ -102,7 +102,7 @@ export function useNotificationStream({
 
     // Add session token for development environments (like frontend API)
     if (deployment.mode === "staging") {
-      const devSession = getStoredDevSession();
+      const devSession = getStoredDevSession(deployment.backend_host);
       if (devSession) {
         wsUrl.searchParams.set('__dev_session__', devSession);
       }
