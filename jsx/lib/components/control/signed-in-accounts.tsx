@@ -380,8 +380,7 @@ export const SignedInAccounts: React.FC<SignedInAccountsProps> = ({
                     setSwitchingToAccount(null);
                 }
             }
-        } catch (error) {
-            console.error("Failed to switch account:", error);
+        } catch {
             setSwitchingToAccount(null);
         }
     };
@@ -391,8 +390,7 @@ export const SignedInAccounts: React.FC<SignedInAccountsProps> = ({
         setLoadingSignOut(signInId);
         try {
             await signOut(signInId);
-        } catch (error) {
-            console.error("Failed to sign out:", error);
+        } catch {
         } finally {
             setLoadingSignOut(null);
         }

@@ -14,7 +14,6 @@ const useNavigateAdapter = () => {
   
   return (to: string, options?: NavigateOptions) => {
     if (!isSafeUrl(to)) {
-      console.error(`Navigation blocked: Dangerous URL detected - ${to}`);
       return;
     }
 

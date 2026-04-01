@@ -31,8 +31,6 @@ export const WS_MESSAGE_TYPES = {
   EXECUTION_ERROR: "execution_error",
   CLOSE_CONNECTION: "close_connection",
   PLATFORM_EVENT: "platform_event",
-  PLATFORM_FUNCTION: "platform_function",
-  PLATFORM_FUNCTION_RESULT: "platform_function_result",
   AGENT_MESSAGE: "agent_message",
   CONVERSATION_MESSAGE: "conversation_message",
   USER_INPUT_REQUEST: "user_input_request",

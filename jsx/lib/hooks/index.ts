@@ -14,12 +14,21 @@ export * from "./use-forgot-password";
 export * from "./use-notifications";
 export * from "./use-notification-stream";
 export {
-    useAgentContext,
-    useAgentIntegrations,
-    useAgentMcpServers,
+    useAgentThreadConversation,
     useAgentSession,
 } from "./use-agent";
-export { useAgentContexts } from "./use-agent-contexts";
+export {
+    useActors,
+    useActorProjects,
+    useAgentThread,
+    useAgentThreadFilesystem,
+    useAgentThreadEvents,
+    useAgentThreadAssignments,
+    useAgentThreadTaskGraphs,
+    useProjectThreads,
+    useProjectTasks,
+    useProjectTaskBoardItem,
+} from "./use-agent-threads";
 export { useWebhookAppSession } from "./use-webhook-app";
 export { useWebhookStats } from "./use-webhook-stats";
 export { useWebhookEndpoints } from "./use-webhook-endpoints";

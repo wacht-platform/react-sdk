@@ -921,8 +921,7 @@ function SignInFormContent() {
             try {
                 await signIn.prepareVerification({ strategy });
                 setOtpSent(true);
-            } catch (err) {
-                console.error("Failed to prepare verification:", err);
+            } catch {
                 setErrors({
                     submit: "Failed to send verification. Please try again.",
                 });

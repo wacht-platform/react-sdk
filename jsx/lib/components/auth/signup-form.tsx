@@ -371,8 +371,11 @@ export function SignUpForm() {
                         }));
                     }
                 })
-                .catch((err) => {
-                    console.error("Failed to validate invitation:", err);
+                .catch(() => {
+                    setErrors((prev) => ({
+                        ...prev,
+                        submit: "Failed to validate invitation.",
+                    }));
                 });
         }
     }, [deployment, isWaitlistMode, navigate, inviteData, signUp]);
@@ -557,8 +560,11 @@ export function SignUpForm() {
             if ("data" in result && result.data?.active_signin) {
                 await refetchSession();
             }
-        } catch (error) {
-            console.error("Verification failed:", error);
+        } catch {
+            setErrors((prev) => ({
+                ...prev,
+                submit: "Verification failed. Please try again.",
+            }));
         } finally {
             setIsSubmitting(false);
         }

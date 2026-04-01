@@ -12,49 +12,37 @@ import { useClient } from "./use-client";
 import { responseMapper } from "../utils/response-mapper";
 import { getStoredDevSession } from "../utils/dev-session";
 import type {
-    AgentIntegration,
-    AgentMcpServer,
-    ConsentURLResponse,
-    McpConnectResponse,
+    Actor,
+    ToolApprovalDecision,
     ConversationMessage,
     ListMessagesResponse,
     FileData,
-    UserInputRequestContent,
-    AgentWithIntegrations,
-    AgentContext,
-    CreateContextRequest,
-    ListContextsOptions,
-    ListContextsResponse,
+    Agent,
+    AgentThread,
+    ExecuteAgentResponse,
 } from "@wacht/types";
 
-interface UseAgentContextProps {
-    contextId: string;
-    agentName: string;
+const EXECUTION_STATE_GRACE_MS = 5000;
+const THREAD_STATUS_POLL_INTERVAL_MS = 5000;
+
+interface UseAgentThreadConversationProps {
+    threadId: string;
     platformAdapter?: {
         onPlatformEvent?: (eventName: string, eventData: unknown) => void;
-        onPlatformFunction?: (
-            functionName: string,
-            parameters: unknown,
-            executionId: string,
-        ) => Promise<unknown>;
     };
-    onUserInputRequest?: (request: UserInputRequestContent) => Promise<string>;
 }
 
-export function useAgentContext({
-    contextId,
-    agentName,
+export function useAgentThreadConversation({
+    threadId,
     platformAdapter,
-}: UseAgentContextProps) {
+}: UseAgentThreadConversationProps) {
     const { deployment } = useDeployment();
     const { client } = useClient();
 
     const [messages, setMessages] = useState<ConversationMessage[]>([]);
-    const [quickQuestions, setQuickQuestions] = useState<string[]>([]);
     const [pendingMessage, setPendingMessage] = useState<string | null>(null);
     const [pendingFiles, setPendingFiles] = useState<File[] | null>(null);
-    const [isConnected, setIsConnected] = useState(false);
-    const [isExecuting, setIsExecuting] = useState(false);
+    const [threadState, setThreadState] = useState<AgentThread | null>(null);
     const [executionStatus, setExecutionStatus] = useState<FrontendStatus>(
         FRONTEND_STATUS.IDLE,
     );
@@ -63,112 +51,191 @@ export function useAgentContext({
     }>({ status: CONNECTION_STATES.DISCONNECTED });
     const [hasMoreMessages, setHasMoreMessages] = useState(true);
     const [isLoadingMore, setIsLoadingMore] = useState(false);
+    const [messagesLoading, setMessagesLoading] = useState(false);
+    const [messagesError, setMessagesError] = useState<Error | null>(null);
     const oldestMessageIdRef = useRef<string | null>(null);
+    const activeThreadIdRef = useRef(threadId);
 
-    const streamingMessageRef = useRef<{ id: number; content: string } | null>(
-        null,
-    );
-    const fetchedContextRef = useRef<string | null>(null);
-    const seenMessageIdsRef = useRef<Set<string | number>>(new Set());
+    const optimisticExecutionDeadlineRef = useRef(0);
+    const executionStatusRef = useRef<FrontendStatus>(FRONTEND_STATUS.IDLE);
 
-    const handleConversationMessage = useCallback((data: any) => {
-        const { id, content } = data;
-        const message_type =
-            data.message_type || data.metadata?.message_type || content?.type;
+    const upsertMessage = useCallback((message: ConversationMessage) => {
+        setMessages((prev) => {
+            const next = [...prev];
+            const existingIndex = next.findIndex(
+                (item) => String(item.id) === String(message.id),
+            );
 
-        let role: "user" | "assistant" = "assistant";
-        if (message_type === "user_message") {
-            role = "user";
-        }
-
-        const message = {
-            ...data,
-            role,
-            metadata: { ...(data.metadata || {}), message_type },
-        } as ConversationMessage;
-
-        if (
-            message_type === "system_decision" ||
-            message_type === "action_execution_result" ||
-            message_type === "context_results"
-        ) {
-            setPendingMessage(null);
-            setPendingFiles(null);
-
-            if (seenMessageIdsRef.current.has(id)) return;
-            seenMessageIdsRef.current.add(id);
-
-            setMessages((prev) => {
-                return [...prev, message];
-            });
-            return;
-        }
-
-        if (message_type === "user_message") {
-            setPendingMessage(null);
-            setPendingFiles(null);
-
-            if (seenMessageIdsRef.current.has(id)) return;
-            seenMessageIdsRef.current.add(id);
-
-            setMessages((prev) => {
-                return [...prev, message];
-            });
-            return;
-        }
-
-        if (message_type === "assistant_acknowledgment") {
-            setPendingMessage(null);
-            setPendingFiles(null);
-
-            if (seenMessageIdsRef.current.has(id)) return;
-            seenMessageIdsRef.current.add(id);
-
-            setMessages((prev) => {
-                return [...prev, message];
-            });
-
-            if (!data.further_action_required) {
-                setIsExecuting(false);
-                setExecutionStatus(FRONTEND_STATUS.IDLE);
-                streamingMessageRef.current = null;
+            if (existingIndex >= 0) {
+                next[existingIndex] = message;
+            } else {
+                next.push(message);
             }
-            return;
-        }
 
-        if (message_type === "agent_response") {
-            if (seenMessageIdsRef.current.has(id)) return;
-            seenMessageIdsRef.current.add(id);
-
-            setMessages((prev) => {
-                return [...prev, message];
-            });
-
-            setIsExecuting(false);
-            setExecutionStatus(FRONTEND_STATUS.IDLE);
-            streamingMessageRef.current = null;
-            return;
-        }
-
-        if (message_type === "user_input_request") {
-            if (seenMessageIdsRef.current.has(id)) return;
-            seenMessageIdsRef.current.add(id);
-
-            setExecutionStatus(FRONTEND_STATUS.WAITING_FOR_INPUT);
-            setMessages((prev) => {
-                return [...prev, message];
-            });
-            return;
-        }
-
-        if (message_type === "execution_status") {
-            // @ts-ignore
-            const newStatus = mapBackendToFrontendStatus(content.status);
-            setExecutionStatus(newStatus);
-            setIsExecuting(isExecutionActive(newStatus));
-            return;
-        }
+            next.sort(
+                (a, b) =>
+                    new Date(a.timestamp).getTime() -
+                    new Date(b.timestamp).getTime(),
+            );
+            return next;
+        });
     }, []);
+
+    const applyExecutionState = useCallback((nextStatus: FrontendStatus) => {
+        executionStatusRef.current = nextStatus;
+        setExecutionStatus(nextStatus);
+    }, []);
+
+    const markRunRequested = useCallback(
+        (nextStatus: FrontendStatus) => {
+            optimisticExecutionDeadlineRef.current =
+                Date.now() + EXECUTION_STATE_GRACE_MS;
+            applyExecutionState(nextStatus);
+        },
+        [applyExecutionState],
+    );
+
+    const applyTerminalExecutionState = useCallback(() => {
+        if (
+            optimisticExecutionDeadlineRef.current > Date.now() &&
+            isExecutionActive(executionStatusRef.current)
+        ) {
+            return;
+        }
+
+        applyExecutionState(FRONTEND_STATUS.IDLE);
+    }, [applyExecutionState]);
+
+    const applyAuthoritativeThreadStatus = useCallback(
+        (backendStatus: string) => {
+            const nextStatus = mapBackendToFrontendStatus(backendStatus);
+            const nextIsExecuting = isExecutionActive(nextStatus);
+
+            if (
+                !nextIsExecuting &&
+                optimisticExecutionDeadlineRef.current > Date.now() &&
+                isExecutionActive(executionStatusRef.current)
+            ) {
+                return;
+            }
+
+            if (nextIsExecuting) {
+                optimisticExecutionDeadlineRef.current = 0;
+            }
+
+            applyExecutionState(nextStatus);
+        },
+        [applyExecutionState],
+    );
+
+    const clearPendingSubmission = useCallback(() => {
+        setPendingMessage(null);
+        setPendingFiles(null);
+    }, []);
+
+    const insertConfirmedUserMessage = useCallback(
+        (conversationId: string, message: string) => {
+            const confirmedMessage: ConversationMessage = {
+                id: conversationId,
+                timestamp: new Date().toISOString(),
+                content: {
+                    type: "user_message",
+                    message,
+                },
+                metadata: {
+                    message_type: "user_message",
+                },
+            };
+
+            upsertMessage(confirmedMessage);
+            clearPendingSubmission();
+        },
+        [clearPendingSubmission, upsertMessage],
+    );
+
+    const handleConversationMessage = useCallback(
+        (data: any) => {
+            const { content } = data;
+            const message_type =
+                data.message_type ||
+                data.metadata?.message_type ||
+                content?.type;
+
+            const message = {
+                ...data,
+                metadata: { ...(data.metadata || {}), message_type },
+            } as ConversationMessage;
+
+            if (
+                message_type === "system_decision" ||
+                message_type === "context_results" ||
+                message_type === "execution_summary" ||
+                message_type === "tool_result"
+            ) {
+                upsertMessage(message);
+
+                const step = content?.step;
+                if (
+                    message_type === "system_decision" &&
+                    (step === "complete" ||
+                        step === "execution_cancelled" ||
+                        step === "abort")
+                ) {
+                    applyTerminalExecutionState();
+                }
+                return;
+            }
+
+            if (message_type === "user_message") {
+                upsertMessage(message);
+                return;
+            }
+
+            if (message_type === "agent_reply") {
+                upsertMessage(message);
+
+                if (!content?.continue_processing) {
+                    applyTerminalExecutionState();
+                }
+                return;
+            }
+
+            if (message_type === "user_input_request") {
+                optimisticExecutionDeadlineRef.current = 0;
+                applyExecutionState(FRONTEND_STATUS.WAITING_FOR_INPUT);
+                upsertMessage(message);
+                return;
+            }
+
+            if (message_type === "approval_request") {
+                optimisticExecutionDeadlineRef.current = 0;
+                applyExecutionState(FRONTEND_STATUS.WAITING_FOR_INPUT);
+                upsertMessage(message);
+                return;
+            }
+
+            if (message_type === "approval_response") {
+                upsertMessage(message);
+                markRunRequested(FRONTEND_STATUS.RUNNING);
+                return;
+            }
+
+            if (message_type === "execution_status") {
+                // @ts-ignore
+                applyAuthoritativeThreadStatus(content.status);
+                return;
+            }
+
+            upsertMessage(message);
+        },
+        [
+            applyAuthoritativeThreadStatus,
+            applyTerminalExecutionState,
+            applyExecutionState,
+            markRunRequested,
+            upsertMessage,
+        ],
+    );
 
     const handlePlatformEvent = useCallback(
         (eventName: string, eventData: unknown) => {
@@ -189,6 +256,10 @@ export function useAgentContext({
         deploymentRef.current = deployment;
     });
 
+    useEffect(() => {
+        activeThreadIdRef.current = threadId;
+    }, [threadId]);
+
     const eventSourceRef = useRef<EventSource | null>(null);
     const reconnectTimeoutRef = useRef<NodeJS.Timeout | null>(null);
     const reconnectAttemptsRef = useRef(0);
@@ -196,24 +267,34 @@ export function useAgentContext({
 
     const fetchMessages = useCallback(
         async (beforeId?: string) => {
-            if (!contextId) return;
+            if (!threadId) return;
+            const requestThreadId = threadId;
+
+            if (beforeId) {
+                setIsLoadingMore(true);
+            } else {
+                setMessagesLoading(true);
+            }
+            setMessagesError(null);
 
             try {
                 const params = new URLSearchParams({ limit: "100" });
                 if (beforeId) {
                     params.append("before_id", beforeId);
-                    setIsLoadingMore(true);
                 }
 
                 const response = await client(
-                    `/agent/contexts/${contextId}/messages?${params}`,
+                    `/ai/threads/${threadId}/messages?${params}`,
                     { method: "GET" },
                 );
 
                 const result =
                     await responseMapper<ListMessagesResponse>(response);
 
-                if (result.data) {
+                if (
+                    result.data &&
+                    activeThreadIdRef.current === requestThreadId
+                ) {
                     const messages = [...result.data.data].sort((a, b) => {
                         const timeA = new Date(a.timestamp).getTime();
                         const timeB = new Date(b.timestamp).getTime();
@@ -224,10 +305,6 @@ export function useAgentContext({
                         oldestMessageIdRef.current = messages[0].id;
                     }
 
-                    messages.forEach((msg) => {
-                        seenMessageIdsRef.current.add(msg.id);
-                    });
-
                     setMessages((prev) => {
                         if (beforeId) {
                             return [...messages, ...prev];
@@ -236,19 +313,31 @@ export function useAgentContext({
                     });
 
                     setHasMoreMessages(result.data.has_more || false);
-                    setIsLoadingMore(false);
                 }
             } catch (error) {
-                console.error("Failed to fetch messages:", error);
-                setIsLoadingMore(false);
+                if (activeThreadIdRef.current === requestThreadId) {
+                    setMessagesError(
+                        error instanceof Error
+                            ? error
+                            : new Error("Failed to fetch messages"),
+                    );
+                }
+            } finally {
+                if (activeThreadIdRef.current === requestThreadId) {
+                    if (beforeId) {
+                        setIsLoadingMore(false);
+                    } else {
+                        setMessagesLoading(false);
+                    }
+                }
             }
         },
-        [contextId, client],
+        [threadId, client],
     );
 
     useEffect(() => {
         const deployment = deploymentRef.current;
-        if (!deployment || !contextId) return;
+        if (!deployment || !threadId) return;
 
         const connect = () => {
             if (eventSourceRef.current) {
@@ -256,12 +345,12 @@ export function useAgentContext({
                 eventSourceRef.current = null;
             }
 
-            const backendHost = deployment.backend_host.replace(/\/$/, "");
-            const sseUrl = new URL(`${backendHost}/realtime/agent/stream`);
-            sseUrl.searchParams.append("context_id", contextId);
+            const sseUrl = new URL(
+                `${deployment.backend_host}/ai/threads/${encodeURIComponent(threadId)}/stream`,
+            );
 
             if (deployment.mode === "staging") {
-                const devSession = getStoredDevSession();
+                const devSession = getStoredDevSession(deployment.backend_host);
                 if (devSession) {
                     sseUrl.searchParams.append("__dev_session__", devSession);
                 }
@@ -273,13 +362,13 @@ export function useAgentContext({
             eventSourceRef.current = eventSource;
 
             eventSource.onopen = () => {
-                setIsConnected(true);
                 setConnectionState({ status: CONNECTION_STATES.CONNECTED });
 
                 if (reconnectAttemptsRef.current > 0) {
+                    const reconnectThreadId = threadId;
                     setTimeout(() => {
                         client(
-                            `/agent/contexts/${contextId}/messages?limit=100`,
+                            `/ai/threads/${reconnectThreadId}/messages?limit=100`,
                             { method: "GET" },
                         )
                             .then(async (response) => {
@@ -287,7 +376,11 @@ export function useAgentContext({
                                     await responseMapper<ListMessagesResponse>(
                                         response,
                                     );
-                                if (result.data) {
+                                if (
+                                    result.data &&
+                                    activeThreadIdRef.current ===
+                                        reconnectThreadId
+                                ) {
                                     const messages = [...result.data.data].sort(
                                         (a, b) =>
                                             new Date(a.timestamp).getTime() -
@@ -296,20 +389,13 @@ export function useAgentContext({
                                     setMessages(messages);
                                 }
                             })
-                            .catch((err) =>
-                                console.error(
-                                    "Failed to refetch messages:",
-                                    err,
-                                ),
-                            );
+                            .catch(() => {});
                     }, 100);
                 }
                 reconnectAttemptsRef.current = 0;
             };
 
-            eventSource.onerror = (e) => {
-                console.error("SSE error:", e);
-                setIsConnected(false);
+            eventSource.onerror = () => {
                 setConnectionState({ status: CONNECTION_STATES.ERROR });
 
                 eventSource.close();
@@ -325,7 +411,6 @@ export function useAgentContext({
                         connect();
                     }, delay);
                 } else {
-                    console.error("SSE: Max reconnection attempts reached");
                     setConnectionState({
                         status: CONNECTION_STATES.DISCONNECTED,
                     });
@@ -335,43 +420,29 @@ export function useAgentContext({
             eventSource.addEventListener("conversation_message", (event) => {
                 try {
                     const data = JSON.parse(event.data);
-                    if (data.ConversationMessage) {
-                        handleConversationMessageRef.current(
-                            data.ConversationMessage,
-                        );
+                    const conversation =
+                        data?.ConversationMessage ?? data ?? null;
+                    if (conversation) {
+                        handleConversationMessageRef.current(conversation);
                     }
-                } catch (err) {
-                    console.error("Failed to parse conversation event:", err);
-                }
+                } catch {}
             });
 
             eventSource.addEventListener("platform_event", (event) => {
                 try {
                     const data = JSON.parse(event.data);
-                    if (data.PlatformEvent) {
+                    if (data?.PlatformEvent) {
                         handlePlatformEventRef.current(
                             data.PlatformEvent[0],
                             data.PlatformEvent[1],
                         );
+                    } else if (data?.event_label) {
+                        handlePlatformEventRef.current(
+                            data.event_label,
+                            data.event_data,
+                        );
                     }
-                } catch (err) {
-                    console.error("Failed to parse platform event:", err);
-                }
-            });
-
-            eventSource.addEventListener("user_input_request", (event) => {
-                try {
-                    const data = JSON.parse(event.data);
-                    if (data.UserInputRequest) {
-                        handleConversationMessage({
-                            id: `input-${Date.now()}`,
-                            content: data.UserInputRequest,
-                            metadata: { message_type: "user_input_request" },
-                        });
-                    }
-                } catch (err) {
-                    console.error("Failed to parse user input request:", err);
-                }
+                } catch {}
             });
         };
 
@@ -386,18 +457,65 @@ export function useAgentContext({
                 eventSourceRef.current.close();
                 eventSourceRef.current = null;
             }
-            setIsConnected(false);
         };
         // eslint-disable-next-line react-hooks/exhaustive-deps
-    }, [contextId]);
+    }, [threadId]);
+
+    const refreshThreadStatus = useCallback(async () => {
+        if (!threadId) return;
+        const requestThreadId = threadId;
+
+        try {
+            const response = await client(`/ai/threads/${requestThreadId}`, {
+                method: "GET",
+            });
+            if (!response.ok) return;
+
+            const result = await responseMapper<AgentThread>(response);
+            if (result.data && activeThreadIdRef.current === requestThreadId) {
+                setThreadState(result.data);
+                applyAuthoritativeThreadStatus(result.data.status);
+            }
+        } catch {}
+    }, [threadId, client, applyAuthoritativeThreadStatus]);
+
+    useEffect(() => {
+        if (!threadId) return;
+
+        void refreshThreadStatus();
+        const interval = window.setInterval(() => {
+            if (
+                !isExecutionActive(executionStatusRef.current) &&
+                optimisticExecutionDeadlineRef.current <= Date.now()
+            ) {
+                return;
+            }
+            void refreshThreadStatus();
+        }, THREAD_STATUS_POLL_INTERVAL_MS);
+
+        return () => {
+            window.clearInterval(interval);
+        };
+    }, [threadId, refreshThreadStatus]);
+
+    useEffect(() => {
+        setMessages([]);
+        setThreadState(null);
+        setHasMoreMessages(true);
+        setIsLoadingMore(false);
+        setMessagesError(null);
+        setMessagesLoading(Boolean(threadId));
+        setConnectionState({ status: CONNECTION_STATES.DISCONNECTED });
+        oldestMessageIdRef.current = null;
+        optimisticExecutionDeadlineRef.current = 0;
+        executionStatusRef.current = FRONTEND_STATUS.IDLE;
+        clearPendingSubmission();
+    }, [threadId, clearPendingSubmission]);
 
     // Send message
     const sendMessage = useCallback(
-        async (
-            message: string,
-            files?: File[],
-        ) => {
-            if (!contextId || !deployment) return;
+        async (message: string, files?: File[]) => {
+            if (!threadId || !deployment) return;
 
             setPendingMessage(message);
             if (files && files.length > 0) {
@@ -406,7 +524,6 @@ export function useAgentContext({
 
             try {
                 const formData = new FormData();
-                formData.append("agent_name", agentName);
                 formData.append("message", message);
                 if (files && files.length > 0) {
                     files.forEach((file) => {
@@ -414,60 +531,77 @@ export function useAgentContext({
                     });
                 }
 
-                const response = await client(
-                    `/agent/contexts/${contextId}/execute`,
-                    {
-                        method: "POST",
-                        body: formData,
-                    },
-                );
+                const response = await client(`/ai/threads/${threadId}/run`, {
+                    method: "POST",
+                    body: formData,
+                });
 
                 if (response.ok) {
-                    setIsExecuting(true);
-                    setExecutionStatus(FRONTEND_STATUS.RUNNING);
+                    const result =
+                        await responseMapper<ExecuteAgentResponse>(response);
+                    const conversationId = result.data?.conversation_id ?? null;
+                    if (conversationId) {
+                        insertConfirmedUserMessage(conversationId, message);
+                    } else {
+                        clearPendingSubmission();
+                    }
+                    markRunRequested(FRONTEND_STATUS.RUNNING);
                 } else {
-                    setPendingMessage(null);
-                    setPendingFiles(null);
+                    clearPendingSubmission();
                 }
             } catch (err) {
-                setPendingMessage(null);
-                setPendingFiles(null);
+                clearPendingSubmission();
             }
         },
-        [contextId, agentName, deployment, client, fetchMessages],
+        [
+            threadId,
+            deployment,
+            client,
+            markRunRequested,
+            clearPendingSubmission,
+            insertConfirmedUserMessage,
+        ],
     );
 
     // Submit user input
     const submitUserInput = useCallback(
-        async (input: string) => {
+        async (input: string): Promise<boolean> => {
             if (
-                !contextId ||
+                !threadId ||
                 executionStatus !== FRONTEND_STATUS.WAITING_FOR_INPUT
-            )
-                return;
+            ) {
+                return false;
+            }
 
             try {
                 const formData = new FormData();
-                formData.append("agent_name", agentName);
                 formData.append("user_input", input);
-                await client(`/agent/contexts/${contextId}/execute`, {
+                const response = await client(`/ai/threads/${threadId}/run`, {
                     method: "POST",
                     body: formData,
                 });
-                setExecutionStatus(FRONTEND_STATUS.RUNNING);
-            } catch (err) {
-                console.error("Failed to submit user input:", err);
+
+                if (!response.ok) {
+                    return false;
+                }
+
+                markRunRequested(FRONTEND_STATUS.RUNNING);
+                return true;
+            } catch {
+                return false;
             }
         },
-        [contextId, agentName, executionStatus, client],
+        [threadId, executionStatus, client, markRunRequested],
     );
 
     useEffect(() => {
-        if (contextId && fetchedContextRef.current !== contextId) {
-            fetchedContextRef.current = contextId;
-            fetchMessages();
-        }
-    }, [contextId]);
+        if (!threadId) return;
+        void fetchMessages();
+    }, [threadId, fetchMessages]);
+
+    const refreshMessages = useCallback(async () => {
+        await fetchMessages();
+    }, [fetchMessages]);
 
     const loadMoreMessages = useCallback(async () => {
         if (isLoadingMore || !hasMoreMessages || !oldestMessageIdRef.current)
@@ -483,32 +617,60 @@ export function useAgentContext({
 
     const clearMessages = useCallback(() => {
         setMessages([]);
-        setQuickQuestions([]);
-        setPendingMessage(null);
-        setPendingFiles(null);
-    }, []);
+        clearPendingSubmission();
+    }, [clearPendingSubmission]);
+
+    const submitApprovalResponse = useCallback(
+        async (
+            requestMessageId: string,
+            approvals: ToolApprovalDecision[],
+        ): Promise<boolean> => {
+            if (!threadId) return false;
+
+            try {
+                const formData = new FormData();
+                formData.append("request_message_id", requestMessageId);
+                approvals.forEach((approval) => {
+                    formData.append("approval_tool_name", approval.tool_name);
+                    formData.append("approval_mode", approval.mode);
+                });
+
+                const response = await client(`/ai/threads/${threadId}/run`, {
+                    method: "POST",
+                    body: formData,
+                });
+
+                if (!response.ok) {
+                    return false;
+                }
+
+                markRunRequested(FRONTEND_STATUS.RUNNING);
+                return true;
+            } catch {
+                return false;
+            }
+        },
+        [threadId, client, markRunRequested],
+    );
 
     const cancelExecution = useCallback(async () => {
-        if (!contextId || !isExecuting) return;
+        if (!threadId || !isExecutionActive(executionStatus)) return;
 
         try {
             const formData = new FormData();
-            formData.append("agent_name", agentName);
             formData.append("cancel", "true");
-            await client(`/agent/contexts/${contextId}/execute`, {
+            await client(`/ai/threads/${threadId}/run`, {
                 method: "POST",
                 body: formData,
             });
-            setIsExecuting(false);
-            setExecutionStatus(FRONTEND_STATUS.IDLE);
-        } catch (err) {
-            console.error("Failed to cancel execution:", err);
-        }
-    }, [contextId, isExecuting, agentName, client]);
+            optimisticExecutionDeadlineRef.current = 0;
+            applyExecutionState(FRONTEND_STATUS.IDLE);
+        } catch {}
+    }, [threadId, executionStatus, client, applyExecutionState]);
 
     const resolveMessageFileUrl = useCallback(
         (file: FileData | null | undefined): string | null => {
-            if (!deployment || !contextId || !file) return null;
+            if (!deployment || !threadId || !file) return null;
 
             const raw = file.url || file.filename;
             if (!raw) return null;
@@ -521,11 +683,11 @@ export function useAgentContext({
 
             const backendHost = deployment.backend_host.replace(/\/$/, "");
             const fileUrl = new URL(
-                `${backendHost}/agent/contexts/${encodeURIComponent(contextId)}/files/${encodeURIComponent(filename)}`,
+                `${backendHost}/ai/threads/${encodeURIComponent(threadId)}/files/${encodeURIComponent(filename)}`,
             );
 
             if (deployment.mode === "staging") {
-                const devSession = getStoredDevSession();
+                const devSession = getStoredDevSession(deployment.backend_host);
                 if (devSession) {
                     fileUrl.searchParams.set("__dev_session__", devSession);
                 }
@@ -533,7 +695,7 @@ export function useAgentContext({
 
             return fileUrl.toString();
         },
-        [contextId, deployment],
+        [threadId, deployment],
     );
 
     const downloadMessageFile = useCallback(
@@ -552,21 +714,35 @@ export function useAgentContext({
         [resolveMessageFileUrl],
     );
 
+    const pendingApprovalRequest =
+        threadState?.execution_state?.pending_approval_request ?? null;
+    const activeApprovalRequestId =
+        pendingApprovalRequest?.request_message_id ?? null;
+
     return {
+        threadState,
         messages,
-        quickQuestions,
         pendingMessage,
         pendingFiles,
         connectionState,
-        isConnected,
-        isExecuting,
+        isConnected: connectionState.status === CONNECTION_STATES.CONNECTED,
+        hasActiveRun: isExecutionActive(executionStatus),
+        isRunning:
+            executionStatus === FRONTEND_STATUS.STARTING ||
+            executionStatus === FRONTEND_STATUS.RUNNING,
         executionStatus,
         isWaitingForInput:
             executionStatus === FRONTEND_STATUS.WAITING_FOR_INPUT,
+        pendingApprovalRequest,
+        activeApprovalRequestId,
         hasMoreMessages,
         isLoadingMore,
+        messagesLoading,
+        messagesError,
+        refreshMessages,
         sendMessage,
         submitUserInput,
+        submitApprovalResponse,
         clearMessages,
         loadMoreMessages,
         cancelExecution,
@@ -575,269 +751,10 @@ export function useAgentContext({
     };
 }
 
-type UseAgentIntegrationsReturnType = {
-    integrations: AgentIntegration[];
-    loading: boolean;
-    error: Error | null;
-    generateConsentURL: (
-        integrationId: string,
-        redirectUrl?: string,
-    ) => Promise<ConsentURLResponse>;
-    removeIntegration: (integrationId: string) => Promise<void>;
-    refetch: () => Promise<void>;
-};
-
-type UseAgentMcpServersReturnType = {
-    mcpServers: AgentMcpServer[];
-    loading: boolean;
-    error: Error | null;
-    connect: (mcpServerId: string) => Promise<McpConnectResponse>;
-    disconnect: (mcpServerId: string) => Promise<void>;
-    refetch: () => Promise<void>;
-};
-
-export function useAgentIntegrations(
-    agentName: string | null,
-): UseAgentIntegrationsReturnType {
-    const { client } = useClient();
-
-    const fetcher = useCallback(async () => {
-        if (!agentName) return [];
-        const query = new URLSearchParams({ agent_name: agentName });
-        const response = await client(
-            `/agent/integrations?${query.toString()}`,
-            {
-                method: "GET",
-            },
-        );
-        const parsed = await responseMapper<AgentIntegration[]>(response);
-        return parsed.data;
-    }, [client, agentName]);
-
-    const { data, error, mutate } = useSWR(
-        agentName ? `wacht-agent-integrations:${agentName}` : null,
-        fetcher,
-        { revalidateOnFocus: false },
-    );
-
-    const generateConsentURL = useCallback(
-        async (integrationId: string): Promise<ConsentURLResponse> => {
-            const url = `/agent/integrations/${integrationId}/consent-url`;
-
-            const response = await client(url, { method: "POST" });
-            const parsed = await responseMapper<ConsentURLResponse>(response);
-            return parsed.data;
-        },
-        [client],
-    );
-
-    const removeIntegration = useCallback(
-        async (integrationId: string): Promise<void> => {
-            await client(`/agent/integrations/${integrationId}/remove`, {
-                method: "POST",
-            });
-
-            await mutate((current) => {
-                if (!current) return current;
-                return current.filter(
-                    (integration) => integration.id !== integrationId,
-                );
-            });
-        },
-        [client, mutate],
-    );
-
-    return {
-        integrations: data || [],
-        loading: !data && !error,
-        error,
-        generateConsentURL,
-        removeIntegration,
-        refetch: async () => {
-            await mutate();
-        },
-    };
-}
-
-export function useAgentMcpServers(
-    agentName: string | null,
-): UseAgentMcpServersReturnType {
-    const { client } = useClient();
-
-    const fetcher = useCallback(async () => {
-        if (!agentName) return [];
-
-        const query = new URLSearchParams({ agent_name: agentName });
-        const response = await client(
-            `/agent/mcp-servers?${query.toString()}`,
-            {
-                method: "GET",
-            },
-        );
-        const parsed = await responseMapper<AgentMcpServer[]>(response);
-        return parsed.data;
-    }, [client, agentName]);
-
-    const { data, error, mutate } = useSWR(
-        agentName ? `wacht-agent-mcp-servers:${agentName}` : null,
-        fetcher,
-        { revalidateOnFocus: false },
-    );
-
-    const connect = useCallback(
-        async (mcpServerId: string): Promise<McpConnectResponse> => {
-            if (!agentName) throw new Error("Agent name required");
-
-            const query = new URLSearchParams({ agent_name: agentName });
-            const response = await client(
-                `/agent/mcp-servers/${mcpServerId}/connect?${query.toString()}`,
-                {
-                    method: "POST",
-                },
-            );
-            const parsed = await responseMapper<McpConnectResponse>(response);
-
-            await mutate();
-            return parsed.data;
-        },
-        [client, agentName, mutate],
-    );
-
-    const disconnect = useCallback(
-        async (mcpServerId: string): Promise<void> => {
-            if (!agentName) throw new Error("Agent name required");
-
-            const query = new URLSearchParams({ agent_name: agentName });
-            await client(
-                `/agent/mcp-servers/${mcpServerId}/disconnect?${query.toString()}`,
-                {
-                    method: "POST",
-                },
-            );
-
-            await mutate();
-        },
-        [client, agentName, mutate],
-    );
-
-    return {
-        mcpServers: data || [],
-        loading: !data && !error,
-        error,
-        connect,
-        disconnect,
-        refetch: async () => {
-            await mutate();
-        },
-    };
-}
-
-type UseAgentContextsReturnType = {
-    contexts: AgentContext[];
-    loading: boolean;
-    error: Error | null;
-    hasMore: boolean;
-    createContext: (request: CreateContextRequest) => Promise<AgentContext>;
-    deleteContext: (id: string) => Promise<void>;
-    refetch: () => Promise<void>;
-};
-
-export function useAgentContexts(
-    options: ListContextsOptions = {},
-): UseAgentContextsReturnType {
-    const { client } = useClient();
-    const { limit = 20, offset = 0, status, search } = options;
-
-    const fetcher = useCallback(async () => {
-        const params = new URLSearchParams({
-            limit: String(limit),
-            offset: String(offset),
-        });
-        if (status) params.append("status", status);
-        if (search) params.append("search", search);
-
-        const response = await client(
-            `/agent/contexts?${params.toString()}`,
-            {
-                method: "GET",
-            },
-        );
-        const parsed = await responseMapper<ListContextsResponse>(response);
-        return parsed.data;
-    }, [client, limit, offset, status, search]);
-
-    const { data, error, mutate } = useSWR(
-        `wacht-agent-contexts:${limit}:${offset}:${status}:${search}`,
-        fetcher,
-        { revalidateOnFocus: false },
-    );
-
-    const createContext = useCallback(
-        async (request: CreateContextRequest): Promise<AgentContext> => {
-            const formData = new FormData();
-            formData.append("title", request.title);
-            if (request.system_instructions) {
-                formData.append(
-                    "system_instructions",
-                    request.system_instructions,
-                );
-            }
-            const response = await client("/agent/contexts", {
-                method: "POST",
-                body: formData,
-            });
-
-            const parsed = await responseMapper<AgentContext>(response);
-
-            await mutate((current: ListContextsResponse | undefined) => {
-                if (!current) return current;
-                return {
-                    ...current,
-                    data: [parsed.data, ...current.data],
-                };
-            });
-
-            return parsed.data;
-        },
-        [client, mutate],
-    );
-
-    const deleteContext = useCallback(
-        async (id: string): Promise<void> => {
-            await client(`/agent/contexts/${id}/delete`, {
-                method: "POST",
-            });
-
-            await mutate((current: ListContextsResponse | undefined) => {
-                if (!current) return current;
-                return {
-                    ...current,
-                    data: current.data.filter(
-                        (ctx: AgentContext) => ctx.id !== id,
-                    ),
-                };
-            });
-        },
-        [client, mutate],
-    );
-
-    return {
-        contexts: data?.data || [],
-        loading: !data && !error,
-        error,
-        hasMore: data?.has_more || false,
-        createContext,
-        deleteContext,
-        refetch: async () => {
-            await mutate();
-        },
-    };
-}
-
 interface UseAgentSessionData {
     session_id: string;
-    context_group: string;
-    agents: AgentWithIntegrations[];
+    actor: Actor;
+    agents: Agent[];
 }
 
 interface UseAgentSessionResult {
@@ -845,11 +762,9 @@ interface UseAgentSessionResult {
     sessionLoading: boolean;
     sessionError: Error | null;
     sessionId: string | null;
-    contextGroup: string | null;
+    actor: Actor | null;
 
-    agents: AgentWithIntegrations[];
-    activeAgent: AgentWithIntegrations | null;
-    setActiveAgent: (agent: AgentWithIntegrations) => void;
+    agents: Agent[];
 
     ticketExchanged: boolean;
     ticketLoading: boolean;
@@ -867,13 +782,10 @@ export function useAgentSession(ticket?: string | null): UseAgentSessionResult {
     const exchangingRef = useRef(false);
     const attemptedTicketRef = useRef<string | null>(null);
 
-    const [activeAgent, setActiveAgent] =
-        useState<AgentWithIntegrations | null>(null);
-
     const shouldFetch = ticketExchanged;
 
     const fetcher = useCallback(async () => {
-        const response = await client("/agent/session", {
+        const response = await client("/ai/session", {
             method: "GET",
         });
 
@@ -935,24 +847,10 @@ export function useAgentSession(ticket?: string | null): UseAgentSessionResult {
         exchange();
     }, [ticket, client]);
 
-    useEffect(() => {
-        if (!activeAgent && data?.agents && data.agents.length > 0) {
-            setActiveAgent(data.agents[0]);
-        }
-    }, [data, activeAgent]);
-
-    useEffect(() => {
-        if (data?.agents && activeAgent) {
-            const stillExists = data.agents.some(
-                (a: AgentWithIntegrations) => a.id === activeAgent.id,
-            );
-            if (!stillExists && data.agents.length > 0) {
-                setActiveAgent(data.agents[0]);
-            }
-        }
-    }, [data, activeAgent]);
-
-    const hasSession = !fetchError || fetchError.message !== "NO_SESSION";
+    const hasSession =
+        !ticketError &&
+        (ticket ? ticketExchanged : true) &&
+        (!fetchError || fetchError.message !== "NO_SESSION");
     const sessionError =
         ticketError ||
         (fetchError && fetchError.message !== "NO_SESSION" ? fetchError : null);
@@ -963,10 +861,8 @@ export function useAgentSession(ticket?: string | null): UseAgentSessionResult {
         sessionLoading,
         sessionError,
         sessionId: data?.session_id || null,
-        contextGroup: data?.context_group || null,
+        actor: data?.actor || null,
         agents: data?.agents || [],
-        activeAgent,
-        setActiveAgent,
         ticketExchanged,
         ticketLoading,
         refetch: async () => {

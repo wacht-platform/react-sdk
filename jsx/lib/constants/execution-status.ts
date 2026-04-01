@@ -4,89 +4,104 @@
 
 // Frontend status values
 export const FRONTEND_STATUS = {
-  IDLE: 'idle',
-  STARTING: 'starting', 
-  RUNNING: 'running',
-  WAITING_FOR_INPUT: 'waiting_for_input',
-  COMPLETED: 'completed',
-  FAILED: 'failed'
+    IDLE: "idle",
+    STARTING: "starting",
+    RUNNING: "running",
+    WAITING_FOR_INPUT: "waiting_for_input",
+    COMPLETED: "completed",
+    FAILED: "failed",
 } as const;
 
 // Backend status values
 export const BACKEND_STATUS = {
-  IDLE: 'Idle',
-  STARTING: 'Starting',
-  RUNNING: 'Running',
-  WAITING_FOR_INPUT: 'WaitingForInput',
-  COMPLETED: 'Completed',
-  FAILED: 'Failed',
-  CANCELLED: 'Cancelled'
+    IDLE: "Idle",
+    STARTING: "Starting",
+    RUNNING: "Running",
+    WAITING_FOR_INPUT: "WaitingForInput",
+    COMPLETED: "Completed",
+    FAILED: "Failed",
+    CANCELLED: "Cancelled",
 } as const;
 
-export type FrontendStatus = typeof FRONTEND_STATUS[keyof typeof FRONTEND_STATUS];
-export type BackendStatus = typeof BACKEND_STATUS[keyof typeof BACKEND_STATUS];
+export type FrontendStatus =
+    (typeof FRONTEND_STATUS)[keyof typeof FRONTEND_STATUS];
+export type BackendStatus =
+    (typeof BACKEND_STATUS)[keyof typeof BACKEND_STATUS];
 
 /**
  * Map backend status to frontend status
  */
-export function mapBackendToFrontendStatus(backendStatus: string): FrontendStatus {
-  switch (backendStatus) {
-    case BACKEND_STATUS.IDLE:
-      return FRONTEND_STATUS.IDLE;
-    case BACKEND_STATUS.STARTING:
-      return FRONTEND_STATUS.STARTING;
-    case BACKEND_STATUS.RUNNING:
-      return FRONTEND_STATUS.RUNNING;
-    case BACKEND_STATUS.WAITING_FOR_INPUT:
-      return FRONTEND_STATUS.WAITING_FOR_INPUT;
-    case BACKEND_STATUS.COMPLETED:
-      return FRONTEND_STATUS.COMPLETED;
-    case BACKEND_STATUS.FAILED:
-    case BACKEND_STATUS.CANCELLED:
-      return FRONTEND_STATUS.FAILED;
-    default:
-      // Unknown backend status
-      return FRONTEND_STATUS.IDLE;
-  }
+export function mapBackendToFrontendStatus(
+    backendStatus: string,
+): FrontendStatus {
+    switch (backendStatus.trim()) {
+        case BACKEND_STATUS.IDLE:
+            return FRONTEND_STATUS.IDLE;
+        case BACKEND_STATUS.STARTING:
+        case "starting":
+            return FRONTEND_STATUS.STARTING;
+        case BACKEND_STATUS.RUNNING:
+        case "running":
+            return FRONTEND_STATUS.RUNNING;
+        case BACKEND_STATUS.WAITING_FOR_INPUT:
+        case "waiting_for_input":
+            return FRONTEND_STATUS.WAITING_FOR_INPUT;
+        case BACKEND_STATUS.COMPLETED:
+        case "completed":
+            return FRONTEND_STATUS.COMPLETED;
+        case BACKEND_STATUS.FAILED:
+        case BACKEND_STATUS.CANCELLED:
+        case "failed":
+        case "cancelled":
+            return FRONTEND_STATUS.FAILED;
+        default:
+            return FRONTEND_STATUS.IDLE;
+    }
 }
 
 /**
  * Map frontend status to backend status
  */
-export function mapFrontendToBackendStatus(frontendStatus: FrontendStatus): BackendStatus {
-  switch (frontendStatus) {
-    case FRONTEND_STATUS.IDLE:
-      return BACKEND_STATUS.IDLE;
-    case FRONTEND_STATUS.STARTING:
-      return BACKEND_STATUS.STARTING;
-    case FRONTEND_STATUS.RUNNING:
-      return BACKEND_STATUS.RUNNING;
-    case FRONTEND_STATUS.WAITING_FOR_INPUT:
-      return BACKEND_STATUS.WAITING_FOR_INPUT;
-    case FRONTEND_STATUS.COMPLETED:
-      return BACKEND_STATUS.COMPLETED;
-    case FRONTEND_STATUS.FAILED:
-      return BACKEND_STATUS.FAILED;
-    default:
-      // Unknown frontend status
-      return BACKEND_STATUS.IDLE;
-  }
+export function mapFrontendToBackendStatus(
+    frontendStatus: FrontendStatus,
+): BackendStatus {
+    switch (frontendStatus) {
+        case FRONTEND_STATUS.IDLE:
+            return BACKEND_STATUS.IDLE;
+        case FRONTEND_STATUS.STARTING:
+            return BACKEND_STATUS.STARTING;
+        case FRONTEND_STATUS.RUNNING:
+            return BACKEND_STATUS.RUNNING;
+        case FRONTEND_STATUS.WAITING_FOR_INPUT:
+            return BACKEND_STATUS.WAITING_FOR_INPUT;
+        case FRONTEND_STATUS.COMPLETED:
+            return BACKEND_STATUS.COMPLETED;
+        case FRONTEND_STATUS.FAILED:
+            return BACKEND_STATUS.FAILED;
+        default:
+            // Unknown frontend status
+            return BACKEND_STATUS.IDLE;
+    }
 }
 
 /**
  * Check if status indicates execution is active
  */
 export function isExecutionActive(status: FrontendStatus): boolean {
-  return status === FRONTEND_STATUS.STARTING || 
-         status === FRONTEND_STATUS.RUNNING || 
-         status === FRONTEND_STATUS.WAITING_FOR_INPUT;
+    return (
+        status === FRONTEND_STATUS.STARTING ||
+        status === FRONTEND_STATUS.RUNNING ||
+        status === FRONTEND_STATUS.WAITING_FOR_INPUT
+    );
 }
 
 /**
  * Check if status indicates execution has ended
  */
 export function isExecutionEnded(status: FrontendStatus): boolean {
-  return status === FRONTEND_STATUS.COMPLETED || 
-         status === FRONTEND_STATUS.FAILED ||
-         status === FRONTEND_STATUS.IDLE;
+    return (
+        status === FRONTEND_STATUS.COMPLETED ||
+        status === FRONTEND_STATUS.FAILED ||
+        status === FRONTEND_STATUS.IDLE
+    );
 }

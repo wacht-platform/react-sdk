@@ -253,8 +253,8 @@ export const SecurityManagementSection = () => {
             setIsLoadingPasskeys(true);
             const result = await getPasskeys();
             setPasskeys(result.data || []);
-        } catch (error) {
-            console.error("Failed to load passkeys:", error);
+        } catch {
+            toast("Failed to load passkeys", "error");
         } finally {
             setIsLoadingPasskeys(false);
         }

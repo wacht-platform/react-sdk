@@ -113,8 +113,8 @@ function DeploymentProvider({
                 }
 
                 setLoading(false);
-            } catch (error) {
-                console.error("Failed to initialize deployment:", error);
+            } catch {
+                setLoading(false);
             }
         }
 

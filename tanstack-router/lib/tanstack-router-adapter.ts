@@ -10,7 +10,6 @@ const useNavigateAdapter = () => {
 
     return (to: string, options?: NavigateOptions) => {
       if (!isSafeUrl(to)) {
-        console.error(`Navigation blocked: Dangerous URL detected - ${to}`);
         return;
       }
 
@@ -44,7 +43,6 @@ const useNavigateAdapter = () => {
     // If useNavigate hook is not available (outside router context), fallback to window.location
     return (to: string, options?: NavigateOptions) => {
       if (!isSafeUrl(to)) {
-        console.error(`Navigation blocked: Dangerous URL detected - ${to}`);
         return;
       }
 
