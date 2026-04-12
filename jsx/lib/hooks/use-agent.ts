@@ -168,7 +168,6 @@ export function useAgentThreadConversation({
 
             if (
                 message_type === "system_decision" ||
-                message_type === "context_results" ||
                 message_type === "execution_summary" ||
                 message_type === "tool_result"
             ) {
@@ -177,8 +176,7 @@ export function useAgentThreadConversation({
                 const step = content?.step;
                 if (
                     message_type === "system_decision" &&
-                    (step === "complete" ||
-                        step === "execution_cancelled" ||
+                    (step === "execution_cancelled" ||
                         step === "abort")
                 ) {
                     applyTerminalExecutionState();
@@ -191,19 +189,12 @@ export function useAgentThreadConversation({
                 return;
             }
 
-            if (message_type === "agent_reply") {
+            if (message_type === "steer") {
                 upsertMessage(message);
 
-                if (!content?.continue_processing) {
+                if (!content?.further_actions_required) {
                     applyTerminalExecutionState();
                 }
-                return;
-            }
-
-            if (message_type === "user_input_request") {
-                optimisticExecutionDeadlineRef.current = 0;
-                applyExecutionState(FRONTEND_STATUS.WAITING_FOR_INPUT);
-                upsertMessage(message);
                 return;
             }
 
@@ -563,37 +554,6 @@ export function useAgentThreadConversation({
         ],
     );
 
-    // Submit user input
-    const submitUserInput = useCallback(
-        async (input: string): Promise<boolean> => {
-            if (
-                !threadId ||
-                executionStatus !== FRONTEND_STATUS.WAITING_FOR_INPUT
-            ) {
-                return false;
-            }
-
-            try {
-                const formData = new FormData();
-                formData.append("user_input", input);
-                const response = await client(`/ai/threads/${threadId}/run`, {
-                    method: "POST",
-                    body: formData,
-                });
-
-                if (!response.ok) {
-                    return false;
-                }
-
-                markRunRequested(FRONTEND_STATUS.RUNNING);
-                return true;
-            } catch {
-                return false;
-            }
-        },
-        [threadId, executionStatus, client, markRunRequested],
-    );
-
     useEffect(() => {
         if (!threadId) return;
         void fetchMessages();
@@ -676,15 +636,24 @@ export function useAgentThreadConversation({
             if (!raw) return null;
             if (/^https?:\/\//i.test(raw)) return raw;
 
-            const filename = raw.startsWith("/uploads/")
-                ? (raw.split("/").pop() ?? "")
-                : raw;
-            if (!filename) return null;
-
             const backendHost = deployment.backend_host.replace(/\/$/, "");
-            const fileUrl = new URL(
-                `${backendHost}/ai/threads/${encodeURIComponent(threadId)}/files/${encodeURIComponent(filename)}`,
-            );
+            let fileUrl: URL;
+
+            if (raw.startsWith("/ai/threads/")) {
+                fileUrl = new URL(raw, `${backendHost}/`);
+            } else {
+                const filename = raw.startsWith("/uploads/")
+                    ? (raw.split("/").pop() ?? "")
+                    : raw.includes("/")
+                      ? (raw.split("/").pop() ?? "")
+                      : raw;
+                if (!filename) return null;
+
+                fileUrl = new URL(
+                    `/ai/threads/${encodeURIComponent(threadId)}/files/${encodeURIComponent(filename)}`,
+                    `${backendHost}/`,
+                );
+            }
 
             if (deployment.mode === "staging") {
                 const devSession = getStoredDevSession(deployment.backend_host);
@@ -741,7 +710,6 @@ export function useAgentThreadConversation({
         messagesError,
         refreshMessages,
         sendMessage,
-        submitUserInput,
         submitApprovalResponse,
         clearMessages,
         loadMoreMessages,

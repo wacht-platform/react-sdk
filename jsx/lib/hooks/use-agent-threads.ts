@@ -6,6 +6,7 @@ import { responseMapper } from "../utils/response-mapper";
 import type {
   Actor,
   ActorProject,
+  ActorProjectsResponse,
   AgentThread,
   AppendProjectTaskBoardItemJournalRequest,
   CreateProjectTaskBoardItemRequest,
@@ -22,6 +23,7 @@ import type {
   ThreadTaskGraphsResponse,
   UpdateAgentThreadRequest,
   UpdateProjectTaskBoardItemRequest,
+  ProjectThreadsResponse,
 } from "@wacht/types";
 
 const EMPTY_WORKSPACE_LISTING: ProjectTaskWorkspaceListing = {
@@ -31,6 +33,27 @@ const EMPTY_WORKSPACE_LISTING: ProjectTaskWorkspaceListing = {
 
 type AgentThreadHookOptions = {
   enabled?: boolean;
+  limit?: number;
+};
+
+type AgentSearchOptions = {
+  enabled?: boolean;
+  query?: string;
+  limit?: number;
+};
+
+type ThreadEventsPage = {
+  data: ThreadEvent[];
+  limit: number;
+  has_more: boolean;
+  next_cursor?: string;
+};
+
+type ThreadAssignmentsPage = {
+  data: ProjectTaskBoardItemAssignment[];
+  limit: number;
+  has_more: boolean;
+  next_cursor?: string;
 };
 
 function buildBoolQuery(key: string, value?: boolean): string {
@@ -58,10 +81,93 @@ function buildDirectoryQuery(path?: string, includeArchived?: boolean): string {
   return query ? `?${query}` : "";
 }
 
-function isTextResponseMimeType(mimeType: string): boolean {
+function fileExtension(path: string): string {
+  const name = path.split("/").pop() || path;
+  const dot = name.lastIndexOf(".");
+  if (dot < 0 || dot === name.length - 1) return "";
+  return name.slice(dot + 1).toLowerCase();
+}
+
+function isTextResponseMimeType(mimeType: string, path: string): boolean {
+  const ext = fileExtension(path);
+  const nonTextExtensions = new Set([
+    "doc",
+    "docx",
+    "ppt",
+    "pptx",
+    "xls",
+    "xlsx",
+    "pdf",
+    "zip",
+    "gz",
+    "tar",
+    "7z",
+    "rar",
+    "jar",
+    "war",
+    "bin",
+  ]);
+  const textExtensions = new Set([
+    "txt",
+    "md",
+    "mdx",
+    "markdown",
+    "json",
+    "jsonc",
+    "js",
+    "jsx",
+    "ts",
+    "tsx",
+    "mts",
+    "cts",
+    "mjs",
+    "cjs",
+    "py",
+    "rb",
+    "php",
+    "java",
+    "kt",
+    "kts",
+    "go",
+    "rs",
+    "c",
+    "cc",
+    "cpp",
+    "cxx",
+    "h",
+    "hpp",
+    "swift",
+    "sh",
+    "bash",
+    "zsh",
+    "fish",
+    "ps1",
+    "sql",
+    "html",
+    "htm",
+    "css",
+    "scss",
+    "less",
+    "xml",
+    "svg",
+    "yaml",
+    "yml",
+    "toml",
+    "ini",
+    "cfg",
+    "conf",
+    "env",
+    "log",
+  ]);
+
+  if (nonTextExtensions.has(ext)) return false;
+  if (textExtensions.has(ext)) return true;
+
   return mimeType.startsWith("text/") ||
     mimeType.includes("json") ||
     mimeType.includes("javascript") ||
+    mimeType.includes("typescript") ||
+    mimeType.includes("python") ||
     mimeType.includes("xml") ||
     mimeType.includes("yaml");
 }
@@ -133,6 +239,12 @@ function buildTaskBoardItemFormData(
   appendFormValue(formData, "description", request.description);
   appendFormValue(formData, "status", request.status);
   appendFormValue(formData, "priority", request.priority);
+  appendFormValue(formData, "schedule_kind", request.schedule_kind);
+  appendFormValue(formData, "next_run_at", request.next_run_at);
+  appendFormValue(formData, "interval_seconds", request.interval_seconds);
+  if ("clear_schedule" in request) {
+    appendFormValue(formData, "clear_schedule", request.clear_schedule);
+  }
   for (const file of files) {
     formData.append("files", file);
   }
@@ -162,35 +274,53 @@ export function useActors(options: { includeArchived?: boolean; enabled?: boolea
   };
 }
 
-export function useActorProjects(actorId?: string, options: { includeArchived?: boolean; enabled?: boolean } = {}) {
+export function useActorProjects(options: { includeArchived?: boolean; enabled?: boolean } = {}) {
   const { client } = useClient();
   const { includeArchived = false, enabled = true } = options;
-  const key = enabled && actorId ? `wacht-ai-actor-projects:${actorId}:${includeArchived}` : null;
+  const key = enabled ? `wacht-ai-actor-projects:${includeArchived}` : null;
 
   const fetcher = useCallback(async () => {
-    if (!actorId) return [] as ActorProject[];
-    const response = await client(`/ai/actors/${actorId}/projects${buildBoolQuery("include_archived", includeArchived)}`);
+    const response = await client(`/ai/projects${buildBoolQuery("include_archived", includeArchived)}`);
     const parsed = await responseMapper<ActorProject[]>(response);
     return parsed.data;
-  }, [actorId, client, includeArchived]);
+  }, [client, includeArchived]);
 
   const { data, error, mutate } = useSWR(key, fetcher, { revalidateOnFocus: false });
 
   const createProject = useCallback(async (request: CreateActorProjectRequest) => {
-    if (!actorId) throw new Error("actorId is required");
-    const response = await client(`/ai/actors/${actorId}/projects`, {
+    const response = await client(`/ai/projects`, {
       method: "POST",
       body: buildActorProjectFormData(request),
     });
     const parsed = await responseMapper<ActorProject>(response);
     await mutate();
     return parsed.data;
-  }, [actorId, client, mutate]);
+  }, [client, mutate]);
 
   const updateProject = useCallback(async (projectId: string, request: UpdateActorProjectRequest) => {
     const response = await client(`/ai/projects/${projectId}/update`, {
       method: "POST",
       body: buildActorProjectFormData(request),
+    });
+    const parsed = await responseMapper<ActorProject>(response);
+    await mutate();
+    return parsed.data;
+  }, [client, mutate]);
+
+  const archiveProject = useCallback(async (projectId: string) => {
+    const response = await client(`/ai/projects/${projectId}/archive`, {
+      method: "POST",
+      body: new URLSearchParams(),
+    });
+    const parsed = await responseMapper<ActorProject>(response);
+    await mutate();
+    return parsed.data;
+  }, [client, mutate]);
+
+  const unarchiveProject = useCallback(async (projectId: string) => {
+    const response = await client(`/ai/projects/${projectId}/unarchive`, {
+      method: "POST",
+      body: new URLSearchParams(),
     });
     const parsed = await responseMapper<ActorProject>(response);
     await mutate();
@@ -203,6 +333,46 @@ export function useActorProjects(actorId?: string, options: { includeArchived?: 
     error,
     createProject,
     updateProject,
+    archiveProject,
+    unarchiveProject,
+    refetch: async () => {
+      await mutate();
+    },
+  };
+}
+
+export function useActorProjectSearch(
+  options: AgentSearchOptions = {},
+) {
+  const { client } = useClient();
+  const {
+    enabled = true,
+    query = "",
+    limit = 12,
+  } = options;
+  const normalizedQuery = query.trim();
+  const key = enabled
+    ? `wacht-ai-actor-project-search:${normalizedQuery}:${limit}`
+    : null;
+
+  const fetcher = useCallback(async () => {
+    const params = new URLSearchParams({ limit: String(limit) });
+    if (normalizedQuery) {
+      params.set("q", normalizedQuery);
+    }
+    const response = await client(`/ai/projects/search?${params.toString()}`);
+    const parsed = await responseMapper<ActorProjectsResponse>(response);
+    return parsed.data;
+  }, [client, limit, normalizedQuery]);
+
+  const { data, error, mutate } = useSWR(key, fetcher, { revalidateOnFocus: false });
+
+  return {
+    projects: data?.data || [],
+    loading: !data && !error,
+    error,
+    hasMore: data?.has_more || false,
+    nextCursor: data?.next_cursor,
     refetch: async () => {
       await mutate();
     },
@@ -279,6 +449,120 @@ export function useProjectThreads(projectId?: string, options: { includeArchived
     updateThread,
     archiveThread,
     unarchiveThread,
+    refetch: async () => {
+      await mutate();
+    },
+  };
+}
+
+export function useProjectThreadFeed(
+  projectId?: string,
+  options: { includeArchived?: boolean; archivedOnly?: boolean; enabled?: boolean; query?: string; limit?: number } = {},
+) {
+  const { client } = useClient();
+  const {
+    includeArchived = false,
+    archivedOnly = false,
+    enabled = true,
+    query = "",
+    limit = 10,
+  } = options;
+  const normalizedQuery = query.trim();
+
+  const pages = useSWRInfinite(
+    (index, previousPageData: ProjectThreadsResponse | null) => {
+      if (!enabled || !projectId) return null;
+      if (index > 0 && previousPageData && !previousPageData.has_more) {
+        return null;
+      }
+      const cursor = index === 0 ? undefined : previousPageData?.next_cursor;
+      return [
+        "wacht-ai-project-thread-feed",
+        projectId,
+        archivedOnly
+          ? "archived-only"
+          : includeArchived
+            ? "with-archived"
+            : "active-only",
+        normalizedQuery,
+        limit,
+        cursor || "",
+      ];
+    },
+    async ([, currentProjectId, includeArchivedKey, currentQuery, currentLimit, cursor]) => {
+      const params = new URLSearchParams({ limit: String(currentLimit) });
+      if (includeArchivedKey === "with-archived") {
+        params.set("include_archived", "true");
+      } else if (includeArchivedKey === "archived-only") {
+        params.set("include_archived", "true");
+        params.set("archived_only", "true");
+      }
+      if (currentQuery) {
+        params.set("q", String(currentQuery));
+      }
+      if (cursor) {
+        params.set("cursor", String(cursor));
+      }
+      const response = await client(`/ai/projects/${currentProjectId}/threads/page?${params.toString()}`);
+      const parsed = await responseMapper<ProjectThreadsResponse>(response);
+      return parsed.data;
+    },
+    { revalidateOnFocus: false, revalidateFirstPage: true, persistSize: true },
+  );
+
+  const threads = useMemo(
+    () => pages.data?.flatMap((page) => page.data || []) || [],
+    [pages.data],
+  );
+  const hasMore = pages.data ? pages.data[pages.data.length - 1]?.has_more || false : false;
+  const loadingMore = pages.isValidating && !!pages.data && pages.size > (pages.data?.length || 0);
+
+  return {
+    threads,
+    loading: !pages.data && !pages.error,
+    error: pages.error || null,
+    hasMore,
+    loadingMore,
+    loadMore: async () => {
+      if (!hasMore || loadingMore) return;
+      await pages.setSize((size) => size + 1);
+    },
+    refetch: async () => {
+      await pages.mutate();
+    },
+  };
+}
+
+export function useActorThreadSearch(options: AgentSearchOptions = {}) {
+  const { client } = useClient();
+  const {
+    enabled = true,
+    query = "",
+    limit = 16,
+  } = options;
+  const normalizedQuery = query.trim();
+  const key = enabled
+    ? `wacht-ai-actor-thread-search:${normalizedQuery}:${limit}`
+    : null;
+
+  const fetcher = useCallback(async () => {
+    const params = new URLSearchParams({ limit: String(limit) });
+    if (normalizedQuery) {
+      params.set("q", normalizedQuery);
+    }
+    const response = await client(`/ai/threads/search?${params.toString()}`);
+    const parsed = await responseMapper<ProjectThreadsResponse>(response);
+    return parsed.data;
+  }, [client, limit, normalizedQuery]);
+
+  const { data, error, mutate } = useSWR(key, fetcher, { revalidateOnFocus: false });
+
+  return {
+    threads: data?.data || [],
+    loading: !data && !error,
+    error,
+    hasMore: data?.has_more || false,
+    nextCursor: data?.next_cursor,
     refetch: async () => {
       await mutate();
     },
@@ -362,7 +646,7 @@ export function useAgentThreadFilesystem(threadId?: string, enabled = true) {
       .split(";")[0]
       .trim()
       .toLowerCase();
-    const isText = isTextResponseMimeType(mimeType);
+    const isText = isTextResponseMimeType(mimeType, path);
 
     let content: string | undefined;
     if (isText) {
@@ -406,20 +690,44 @@ export function useAgentThreadFilesystem(threadId?: string, enabled = true) {
 
 export function useAgentThreadEvents(threadId?: string, options: AgentThreadHookOptions = {}) {
   const { client } = useClient();
-  const { enabled = true } = options;
-  const key = enabled && threadId ? `wacht-ai-thread-events:${threadId}` : null;
+  const { enabled = true, limit = 40 } = options;
 
-  const events = useSWR(key, async () => {
-    if (!threadId) return [] as ThreadEvent[];
-    const response = await client(`/ai/threads/${threadId}/events`);
-    const parsed = await responseMapper<ThreadEvent[]>(response);
-    return parsed.data;
-  }, { revalidateOnFocus: false, refreshInterval: 5000 });
+  const events = useSWRInfinite(
+    (index, previousPageData: ThreadEventsPage | null) => {
+      if (!enabled || !threadId) return null;
+      if (index > 0 && previousPageData && !previousPageData.has_more) {
+        return null;
+      }
+      const cursor = index === 0 ? undefined : previousPageData?.next_cursor;
+      return ["wacht-ai-thread-events", threadId, limit, cursor || ""];
+    },
+    async ([, currentThreadId, currentLimit, cursor]) => {
+      const params = new URLSearchParams({ limit: String(currentLimit) });
+      if (cursor) params.set("cursor", String(cursor));
+      const response = await client(`/ai/threads/${currentThreadId}/events?${params.toString()}`);
+      const parsed = await responseMapper<ThreadEventsPage>(response);
+      return parsed.data;
+    },
+    { revalidateOnFocus: false, revalidateFirstPage: true, persistSize: true, refreshInterval: 5000 },
+  );
+
+  const data = useMemo(
+    () => events.data?.flatMap((page) => page.data || []) || [],
+    [events.data],
+  );
+  const hasMore = events.data ? events.data[events.data.length - 1]?.has_more || false : false;
+  const loadingMore = events.isValidating && !!events.data && events.size > (events.data?.length || 0);
 
   return {
-    events: events.data || [],
+    events: data,
     loading: !events.data && !events.error,
     error: events.error || null,
+    hasMore,
+    loadingMore,
+    loadMore: async () => {
+      if (!hasMore || loadingMore) return;
+      await events.setSize((size) => size + 1);
+    },
     refetch: async () => {
       await events.mutate();
     },
@@ -428,20 +736,44 @@ export function useAgentThreadEvents(threadId?: string, options: AgentThreadHook
 
 export function useAgentThreadAssignments(threadId?: string, options: AgentThreadHookOptions = {}) {
   const { client } = useClient();
-  const { enabled = true } = options;
-  const key = enabled && threadId ? `wacht-ai-thread-assignments:${threadId}` : null;
+  const { enabled = true, limit = 40 } = options;
 
-  const assignments = useSWR(key, async () => {
-    if (!threadId) return [] as ProjectTaskBoardItemAssignment[];
-    const response = await client(`/ai/threads/${threadId}/assignments`);
-    const parsed = await responseMapper<ProjectTaskBoardItemAssignment[]>(response);
-    return parsed.data;
-  }, { revalidateOnFocus: false, refreshInterval: 5000 });
+  const assignments = useSWRInfinite(
+    (index, previousPageData: ThreadAssignmentsPage | null) => {
+      if (!enabled || !threadId) return null;
+      if (index > 0 && previousPageData && !previousPageData.has_more) {
+        return null;
+      }
+      const cursor = index === 0 ? undefined : previousPageData?.next_cursor;
+      return ["wacht-ai-thread-assignments", threadId, limit, cursor || ""];
+    },
+    async ([, currentThreadId, currentLimit, cursor]) => {
+      const params = new URLSearchParams({ limit: String(currentLimit) });
+      if (cursor) params.set("cursor", String(cursor));
+      const response = await client(`/ai/threads/${currentThreadId}/assignments?${params.toString()}`);
+      const parsed = await responseMapper<ThreadAssignmentsPage>(response);
+      return parsed.data;
+    },
+    { revalidateOnFocus: false, revalidateFirstPage: true, persistSize: true, refreshInterval: 5000 },
+  );
+
+  const data = useMemo(
+    () => assignments.data?.flatMap((page) => page.data || []) || [],
+    [assignments.data],
+  );
+  const hasMore = assignments.data ? assignments.data[assignments.data.length - 1]?.has_more || false : false;
+  const loadingMore = assignments.isValidating && !!assignments.data && assignments.size > (assignments.data?.length || 0);
 
   return {
-    assignments: assignments.data || [],
+    assignments: data,
     loading: !assignments.data && !assignments.error,
     error: assignments.error || null,
+    hasMore,
+    loadingMore,
+    loadMore: async () => {
+      if (!hasMore || loadingMore) return;
+      await assignments.setSize((size) => size + 1);
+    },
     refetch: async () => {
       await assignments.mutate();
     },
@@ -451,9 +783,18 @@ export function useAgentThreadAssignments(threadId?: string, options: AgentThrea
 type ProjectTaskListOptions = {
   statuses?: string[];
   includeArchived?: boolean;
+  archivedOnly?: boolean;
+  limit?: number;
 };
 
-function buildTaskListQuery(options: ProjectTaskListOptions = {}) {
+type ProjectTaskListPage = {
+  data: ProjectTaskBoardItem[];
+  limit: number;
+  has_more: boolean;
+  next_cursor?: string;
+};
+
+function buildTaskListQuery(options: ProjectTaskListOptions = {}, cursor?: string) {
   const params = new URLSearchParams();
   if (options.statuses && options.statuses.length > 0) {
     params.set("status", options.statuses.join(","));
@@ -461,23 +802,64 @@ function buildTaskListQuery(options: ProjectTaskListOptions = {}) {
   if (options.includeArchived) {
     params.set("include_archived", "true");
   }
+  if (options.archivedOnly) {
+    params.set("archived_only", "true");
+  }
+  if (options.limit) {
+    params.set("limit", String(options.limit));
+  }
+  if (cursor) {
+    params.set("cursor", cursor);
+  }
   const query = params.toString();
   return query ? `?${query}` : "";
 }
 export function useProjectTasks(projectId?: string, enabled = true, options: ProjectTaskListOptions = {}) {
   const { client } = useClient();
   const statusKey = options.statuses?.join(",") || "all";
-  const archiveKey = options.includeArchived ? "with-archived" : "active-only";
-  const itemsKey = enabled && projectId ? `wacht-ai-project-tasks:${projectId}:${statusKey}:${archiveKey}` : null;
+  const archiveKey = options.archivedOnly
+    ? "archived-only"
+    : options.includeArchived
+      ? "with-archived"
+      : "active-only";
+  const limitKey = options.limit || 60;
 
-  const itemsFetcher = useCallback(async () => {
-    if (!projectId) return [] as ProjectTaskBoardItem[];
-    const response = await client(`/ai/projects/${projectId}/board/items${buildTaskListQuery(options)}`);
-    const parsed = await responseMapper<ProjectTaskBoardItem[]>(response);
-    return parsed.data;
-  }, [projectId, client, statusKey, archiveKey]);
+  const items = useSWRInfinite(
+    (index, previousPageData: ProjectTaskListPage | null) => {
+      if (!enabled || !projectId) return null;
+      if (index > 0 && previousPageData && !previousPageData.has_more) {
+        return null;
+      }
+      const cursor = index === 0 ? undefined : previousPageData?.next_cursor;
+      return [
+        "wacht-ai-project-tasks",
+        projectId,
+        statusKey,
+        archiveKey,
+        limitKey,
+        cursor || "",
+      ];
+    },
+    async ([, currentProjectId, , , , cursor]) => {
+      const response = await client(
+        `/ai/projects/${currentProjectId}/board/items${buildTaskListQuery(options, cursor || undefined)}`,
+      );
+      const parsed = await responseMapper<ProjectTaskListPage>(response);
+      return parsed.data;
+    },
+    {
+      revalidateOnFocus: false,
+      revalidateFirstPage: true,
+      persistSize: true,
+    },
+  );
 
-  const items = useSWR(itemsKey, itemsFetcher, { revalidateOnFocus: false, refreshInterval: 5000 });
+  const tasks = useMemo(
+    () => items.data?.flatMap((page) => page.data || []) || [],
+    [items.data],
+  );
+  const hasMore = items.data ? items.data[items.data.length - 1]?.has_more || false : false;
+  const loadingMore = items.isValidating && !!items.data && items.size > (items.data?.length || 0);
 
   const createTask = useCallback(async (request: CreateProjectTaskBoardItemRequest, files: File[] = []) => {
     if (!projectId) throw new Error("projectId is required");
@@ -511,9 +893,15 @@ export function useProjectTasks(projectId?: string, enabled = true, options: Pro
   }, [client, items]);
 
   return {
-    tasks: items.data || [],
+    tasks,
     loading: !items.data && !items.error,
     error: items.error || null,
+    hasMore,
+    loadingMore,
+    loadMore: async () => {
+      if (!hasMore || loadingMore) return;
+      await items.setSize((size) => size + 1);
+    },
     createTask,
     archiveTask,
     unarchiveTask,

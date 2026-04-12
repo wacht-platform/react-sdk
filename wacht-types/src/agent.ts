@@ -24,10 +24,10 @@ export interface UserMessageContent {
     files?: FileData[];
 }
 
-export interface AgentReplyContent {
-    type: "agent_reply";
+export interface SteerContent {
+    type: "steer";
     message: string;
-    continue_processing: boolean;
+    further_actions_required: boolean;
     reasoning: string;
     attachments?: ConversationAttachment[];
     thought_signature?: string;
@@ -36,7 +36,6 @@ export interface AgentReplyContent {
 export interface ToolResultContent {
     type: "tool_result";
     tool_name: string;
-    purpose: string;
     status: string;
     input: any;
     output?: any;
@@ -49,30 +48,6 @@ export interface SystemDecisionContent {
     reasoning: string;
     confidence: number;
     thought_signature?: string;
-}
-
-export interface ContextResultsContent {
-    type: "context_results";
-    query: string;
-    results: any;
-    result_count: number;
-    timestamp: string;
-}
-
-export interface UserInputRequestContent {
-    type: "user_input_request";
-    question: string;
-    context: string;
-    input_type:
-        | "text"
-        | "number"
-        | "select"
-        | "multiselect"
-        | "boolean"
-        | "date";
-    options?: string[];
-    default_value?: string;
-    placeholder?: string;
 }
 
 export interface RequestedToolApproval {
@@ -107,11 +82,9 @@ export interface ExecutionSummaryContent {
 
 export type ConversationContent =
     | UserMessageContent
-    | AgentReplyContent
+    | SteerContent
     | ToolResultContent
     | SystemDecisionContent
-    | ContextResultsContent
-    | UserInputRequestContent
     | ApprovalRequestContent
     | ApprovalResponseContent
     | ExecutionSummaryContent;
@@ -168,6 +141,13 @@ export interface ActorProject {
     archived_at?: string;
 }
 
+export interface ActorProjectsResponse {
+    data: ActorProject[];
+    limit: number;
+    has_more: boolean;
+    next_cursor?: string;
+}
+
 export interface CreateActorProjectRequest {
     name: string;
     agent_id: string;
@@ -186,6 +166,7 @@ export interface AgentThread {
     deployment_id: string;
     actor_id: string;
     project_id: string;
+    project_name?: string;
     agent_id?: string;
     title: string;
     thread_kind?: string;
@@ -213,6 +194,13 @@ export interface AgentThread {
     archived_at?: string;
 }
 
+export interface ProjectThreadsResponse {
+    data: AgentThread[];
+    limit: number;
+    has_more: boolean;
+    next_cursor?: string;
+}
+
 export interface CreateAgentThreadRequest {
     title: string;
     agent_id: string;
@@ -237,22 +225,6 @@ export interface RequestedToolApprovalState {
     tool_description?: string;
 }
 
-export interface ThreadPendingInputRequestState {
-    question: string;
-    context: string;
-    input_type:
-        | "text"
-        | "number"
-        | "select"
-        | "multiselect"
-        | "boolean"
-        | "date"
-        | string;
-    options?: string[];
-    default_value?: string;
-    placeholder?: string;
-}
-
 export interface ThreadPendingApprovalRequestState {
     request_message_id?: string;
     description: string;
@@ -263,14 +235,12 @@ export interface ThreadExecutionState {
     deep_think_mode_active?: boolean;
     deep_think_used?: number;
     approved_once_tool_ids?: string[];
-    pending_input_request?: ThreadPendingInputRequestState;
     pending_approval_request?: ThreadPendingApprovalRequestState;
 }
 
 export interface ThreadPendingState {
-    kind: "approval" | "user_input" | null;
+    kind: "approval" | null;
     request_message_id?: string;
-    input_request?: ThreadPendingInputRequestState;
     approval_request?: ThreadPendingApprovalRequestState;
 }
 
@@ -285,6 +255,9 @@ export interface CreateProjectTaskBoardItemRequest {
     description?: string;
     status?: string;
     priority?: "urgent" | "high" | "neutral" | "low";
+    schedule_kind?: "once" | "interval";
+    next_run_at?: string;
+    interval_seconds?: number;
 }
 
 export interface UpdateProjectTaskBoardItemRequest {
@@ -292,6 +265,22 @@ export interface UpdateProjectTaskBoardItemRequest {
     description?: string;
     status?: string;
     priority?: "urgent" | "high" | "neutral" | "low";
+    schedule_kind?: "once" | "interval";
+    next_run_at?: string;
+    interval_seconds?: number;
+    clear_schedule?: boolean;
+}
+
+export interface ProjectTaskSchedule {
+    id: string;
+    template_board_item_id: string;
+    status: string;
+    schedule_kind: "once" | "interval" | string;
+    interval_seconds?: number;
+    next_run_at: string;
+    last_enqueued_at?: string;
+    created_at: string;
+    updated_at: string;
 }
 
 export interface ProjectTaskBoardItem {
@@ -304,10 +293,18 @@ export interface ProjectTaskBoardItem {
     priority: "urgent" | "high" | "neutral" | "low" | string;
     assigned_thread_id?: string;
     metadata?: Record<string, unknown>;
+    schedule?: ProjectTaskSchedule;
     completed_at?: string;
     archived_at?: string;
     created_at: string;
     updated_at: string;
+}
+
+export interface ProjectTaskBoardItemsResponse {
+    data: ProjectTaskBoardItem[];
+    limit: number;
+    has_more: boolean;
+    next_cursor?: string;
 }
 
 export interface ProjectTaskBoardItemEvent {
@@ -378,6 +375,7 @@ export interface ProjectTaskWorkspaceFileContent {
     size_bytes: number;
     truncated: boolean;
     content?: string;
+    content_base64?: string;
 }
 
 export interface ProjectTaskDetail {

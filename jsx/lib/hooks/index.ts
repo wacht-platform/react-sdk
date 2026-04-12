@@ -20,15 +20,20 @@ export {
 export {
     useActors,
     useActorProjects,
+    useActorProjectSearch,
+    useActorThreadSearch,
     useAgentThread,
     useAgentThreadFilesystem,
     useAgentThreadEvents,
     useAgentThreadAssignments,
     useAgentThreadTaskGraphs,
+    useProjectThreadFeed,
     useProjectThreads,
     useProjectTasks,
     useProjectTaskBoardItem,
 } from "./use-agent-threads";
+export { useActorMcpServers } from "./use-actor-mcp-servers";
+export type { ActorMcpServerSummary } from "./use-actor-mcp-servers";
 export { useWebhookAppSession } from "./use-webhook-app";
 export { useWebhookStats } from "./use-webhook-stats";
 export { useWebhookEndpoints } from "./use-webhook-endpoints";
