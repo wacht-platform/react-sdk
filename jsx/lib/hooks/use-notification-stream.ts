@@ -98,7 +98,7 @@ export function useNotificationStream({
     // Parse the backend host URL and construct WebSocket URL
     const backendUrl = new URL(deployment.backend_host);
     const wsProtocol = backendUrl.protocol === 'https:' ? 'wss:' : 'ws:';
-    const wsUrl = new URL(`/realtime/notifications`, `${wsProtocol}//${backendUrl.host}`);
+    const wsUrl = new URL(`/notifications/stream`, `${wsProtocol}//${backendUrl.host}`);
 
     // Add session token for development environments (like frontend API)
     if (deployment.mode === "staging") {
@@ -110,13 +110,13 @@ export function useNotificationStream({
 
     // Add channel parameters if provided
     if (channelsRef.current && channelsRef.current.length > 0) {
-      channelsRef.current.forEach(channel => wsUrl.searchParams.append('channels', channel));
+      wsUrl.searchParams.set('channels', channelsRef.current.join(','));
     }
     if (organizationIdsRef.current && organizationIdsRef.current.length > 0) {
-      organizationIdsRef.current.forEach(id => wsUrl.searchParams.append('organization_ids', id.toString()));
+      wsUrl.searchParams.set('organization_ids', organizationIdsRef.current.join(','));
     }
     if (workspaceIdsRef.current && workspaceIdsRef.current.length > 0) {
-      workspaceIdsRef.current.forEach(id => wsUrl.searchParams.append('workspace_ids', id.toString()));
+      wsUrl.searchParams.set('workspace_ids', workspaceIdsRef.current.join(','));
     }
 
     try {
