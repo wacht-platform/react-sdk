@@ -18,7 +18,6 @@ export {
     useAgentSession,
 } from "./use-agent";
 export {
-    useActors,
     useActorProjects,
     useActorProjectSearch,
     useActorThreadSearch,

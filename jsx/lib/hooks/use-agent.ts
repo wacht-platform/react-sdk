@@ -641,18 +641,26 @@ export function useAgentThreadConversation({
 
             if (raw.startsWith("/ai/threads/")) {
                 fileUrl = new URL(raw, `${backendHost}/`);
-            } else {
-                const filename = raw.startsWith("/uploads/")
-                    ? (raw.split("/").pop() ?? "")
-                    : raw.includes("/")
-                      ? (raw.split("/").pop() ?? "")
-                      : raw;
+            } else if (raw.startsWith("/uploads/")) {
+                const filename = raw.split("/").pop() ?? "";
                 if (!filename) return null;
 
                 fileUrl = new URL(
-                    `/ai/threads/${encodeURIComponent(threadId)}/files/${encodeURIComponent(filename)}`,
+                    `/ai/threads/${encodeURIComponent(threadId)}/filesystem/file`,
                     `${backendHost}/`,
                 );
+                fileUrl.searchParams.set("path", `uploads/${filename}`);
+            } else {
+                const filename = raw.includes("/")
+                    ? (raw.split("/").pop() ?? "")
+                    : raw;
+                if (!filename) return null;
+
+                fileUrl = new URL(
+                    `/ai/threads/${encodeURIComponent(threadId)}/filesystem/file`,
+                    `${backendHost}/`,
+                );
+                fileUrl.searchParams.set("path", `uploads/${filename}`);
             }
 
             if (deployment.mode === "staging") {

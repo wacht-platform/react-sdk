@@ -116,11 +116,7 @@ const StyledDefaultStylesProvider = styled.div`
   --color-border: var(--theme-light-border, oklch(0.922 0 0));
   --color-input-background: var(--theme-light-input-background, oklch(1 0 0));
   --color-input-border: var(--theme-light-input-border, oklch(0.922 0 0));
-  --color-input-focus-border: var(--theme-light-input-focus-border, color-mix(
-    in srgb,
-    var(--theme-light-primary, oklch(0.205 0 0)) 45%,
-    transparent
-  ));
+  --color-input-focus-border: var(--theme-light-input-focus-border, oklch(0.708 0 0));
   --color-primary: var(--theme-light-primary, oklch(0.205 0 0));
   --color-primary-foreground: var(--theme-light-primary-foreground, oklch(0.985 0 0));
   --color-primary-hover: var(--theme-light-primary-hover, oklch(0.205 0 0));
@@ -244,13 +240,9 @@ const StyledDefaultStylesProvider = styled.div`
     --color-accent: var(--theme-dark-accent, oklch(0.371 0 0));
     --color-accent-foreground: var(--theme-dark-accent-foreground, oklch(0.985 0 0));
     --color-border: var(--theme-dark-border, oklch(1 0 0 / 10%));
-    --color-input-background: var(--theme-dark-input-background, oklch(0.24 0 0));
-    --color-input-border: var(--theme-dark-input-border, oklch(1 0 0 / 15%));
-    --color-input-focus-border: var(--theme-dark-input-focus-border, color-mix(
-      in srgb,
-      var(--theme-dark-primary, oklch(0.87 0 0)) 45%,
-      transparent
-    ));
+  --color-input-background: var(--theme-dark-input-background, oklch(0.24 0 0));
+  --color-input-border: var(--theme-dark-input-border, oklch(1 0 0 / 15%));
+  --color-input-focus-border: var(--theme-dark-input-focus-border, oklch(0.556 0 0));
     --color-primary: var(--theme-dark-primary, oklch(0.87 0 0));
     --color-primary-foreground: var(--theme-dark-primary-foreground, oklch(0.205 0 0));
     --color-primary-hover: var(--theme-dark-primary-hover, oklch(0.87 0 0));
@@ -336,6 +328,19 @@ function isSafeLength(value?: string | null): value is string {
   return /^(0|\d+(\.\d+)?(px|rem|em|%)?)$/i.test(value.trim());
 }
 
+function isSafeCssVarValue(value?: string | null): value is string {
+  if (!value) {
+    return false;
+  }
+
+  const normalized = value.trim();
+  if (!normalized || /[;{}<>]/.test(normalized)) {
+    return false;
+  }
+
+  return /^(?!.*(?:url|expression)\s*\()[\w\s.,%#()\-+/]*$/i.test(normalized);
+}
+
 function applyColorVar(style: ThemeVars, key: string, value?: string | null) {
   if (isSafeColor(value)) {
     style[key as `--${string}`] = value.trim();
@@ -344,6 +349,12 @@ function applyColorVar(style: ThemeVars, key: string, value?: string | null) {
 
 function applyLengthVar(style: ThemeVars, key: string, value?: string | null) {
   if (isSafeLength(value)) {
+    style[key as `--${string}`] = value.trim();
+  }
+}
+
+function applyCssVar(style: ThemeVars, key: string, value?: string | null) {
+  if (isSafeCssVarValue(value)) {
     style[key as `--${string}`] = value.trim();
   }
 }
@@ -410,11 +421,11 @@ function applyGlobalThemeStyle(style: ThemeVars, tokenOverrides?: UITokenOverrid
   applyLengthVar(style, "--theme-global-size-40u", tokenOverrides.size_40u);
   applyLengthVar(style, "--theme-global-size-45u", tokenOverrides.size_45u);
   applyLengthVar(style, "--theme-global-size-50u", tokenOverrides.size_50u);
-  applyColorVar(style, "--theme-global-shadow-sm", tokenOverrides.shadow_sm);
-  applyColorVar(style, "--theme-global-shadow-md", tokenOverrides.shadow_md);
-  applyColorVar(style, "--theme-global-shadow-lg", tokenOverrides.shadow_lg);
-  applyColorVar(style, "--theme-global-shadow-xl", tokenOverrides.shadow_xl);
-  applyColorVar(style, "--theme-global-ring-primary", tokenOverrides.ring_primary);
+  applyCssVar(style, "--theme-global-shadow-sm", tokenOverrides.shadow_sm);
+  applyCssVar(style, "--theme-global-shadow-md", tokenOverrides.shadow_md);
+  applyCssVar(style, "--theme-global-shadow-lg", tokenOverrides.shadow_lg);
+  applyCssVar(style, "--theme-global-shadow-xl", tokenOverrides.shadow_xl);
+  applyCssVar(style, "--theme-global-ring-primary", tokenOverrides.ring_primary);
   applyLengthVar(
     style,
     "--theme-global-letter-spacing-tight",

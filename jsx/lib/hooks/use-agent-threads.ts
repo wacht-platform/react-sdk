@@ -4,7 +4,6 @@ import useSWRInfinite from "swr/infinite";
 import { useClient } from "./use-client";
 import { responseMapper } from "../utils/response-mapper";
 import type {
-  Actor,
   ActorProject,
   ActorProjectsResponse,
   AgentThread,
@@ -16,7 +15,6 @@ import type {
   ProjectTaskBoardItem,
   ProjectTaskBoardItemAssignment,
   ProjectTaskBoardItemEvent,
-  ProjectTaskDetail,
   ProjectTaskWorkspaceFileContent,
   ProjectTaskWorkspaceListing,
   ThreadEvent,
@@ -50,6 +48,20 @@ type ThreadEventsPage = {
 };
 
 type ThreadAssignmentsPage = {
+  data: ProjectTaskBoardItemAssignment[];
+  limit: number;
+  has_more: boolean;
+  next_cursor?: string;
+};
+
+type BoardItemEventsPage = {
+  data: ProjectTaskBoardItemEvent[];
+  limit: number;
+  has_more: boolean;
+  next_cursor?: string;
+};
+
+type BoardItemAssignmentsPage = {
   data: ProjectTaskBoardItemAssignment[];
   limit: number;
   has_more: boolean;
@@ -251,29 +263,6 @@ function buildTaskBoardItemFormData(
   return formData;
 }
 
-export function useActors(options: { includeArchived?: boolean; enabled?: boolean } = {}) {
-  const { client } = useClient();
-  const { includeArchived = false, enabled = true } = options;
-  const key = enabled ? `wacht-ai-actors:${includeArchived}` : null;
-
-  const fetcher = useCallback(async () => {
-    const response = await client(`/ai/actors${buildBoolQuery("include_archived", includeArchived)}`);
-    const parsed = await responseMapper<Actor[]>(response);
-    return parsed.data;
-  }, [client, includeArchived]);
-
-  const { data, error, mutate } = useSWR(key, fetcher, { revalidateOnFocus: false });
-
-  return {
-    actors: data || [],
-    loading: !data && !error,
-    error,
-    refetch: async () => {
-      await mutate();
-    },
-  };
-}
-
 export function useActorProjects(options: { includeArchived?: boolean; enabled?: boolean } = {}) {
   const { client } = useClient();
   const { includeArchived = false, enabled = true } = options;
@@ -385,9 +374,13 @@ export function useProjectThreads(projectId?: string, options: { includeArchived
   const key = enabled && projectId ? `wacht-ai-threads:${projectId}:${includeArchived}` : null;
 
   const fetcher = useCallback(async () => {
-    if (!projectId) return [] as AgentThread[];
-    const response = await client(`/ai/projects/${projectId}/threads${buildBoolQuery("include_archived", includeArchived)}`);
-    const parsed = await responseMapper<AgentThread[]>(response);
+    if (!projectId) return { data: [] as AgentThread[], has_more: false, next_cursor: "" };
+    const params = new URLSearchParams({ limit: "100" });
+    if (includeArchived) {
+      params.set("include_archived", "true");
+    }
+    const response = await client(`/ai/projects/${projectId}/threads?${params.toString()}`);
+    const parsed = await responseMapper<ProjectThreadsResponse>(response);
     return parsed.data;
   }, [projectId, client, includeArchived]);
 
@@ -441,9 +434,11 @@ export function useProjectThreads(projectId?: string, options: { includeArchived
   }, [client, mutate]);
 
   return {
-    threads: data || [],
+    threads: data?.data || [],
     loading: !data && !error,
     error,
+    hasMore: data?.has_more || false,
+    nextCursor: data?.next_cursor || "",
     createThread,
     createThreadForProject,
     updateThread,
@@ -503,7 +498,7 @@ export function useProjectThreadFeed(
       if (cursor) {
         params.set("cursor", String(cursor));
       }
-      const response = await client(`/ai/projects/${currentProjectId}/threads/page?${params.toString()}`);
+      const response = await client(`/ai/projects/${currentProjectId}/threads?${params.toString()}`);
       const parsed = await responseMapper<ProjectThreadsResponse>(response);
       return parsed.data;
     },
@@ -873,24 +868,26 @@ export function useProjectTasks(projectId?: string, enabled = true, options: Pro
   }, [projectId, client, items]);
 
   const archiveTask = useCallback(async (itemId: string) => {
-    const response = await client(`/ai/board-items/${itemId}/archive`, {
+    if (!projectId) throw new Error("projectId is required");
+    const response = await client(`/ai/projects/${projectId}/board/items/${itemId}/archive`, {
       method: "POST",
       body: new URLSearchParams(),
     });
     const parsed = await responseMapper<ProjectTaskBoardItem>(response);
     await items.mutate();
     return parsed.data;
-  }, [client, items]);
+  }, [projectId, client, items]);
 
   const unarchiveTask = useCallback(async (itemId: string) => {
-    const response = await client(`/ai/board-items/${itemId}/unarchive`, {
+    if (!projectId) throw new Error("projectId is required");
+    const response = await client(`/ai/projects/${projectId}/board/items/${itemId}/unarchive`, {
       method: "POST",
       body: new URLSearchParams(),
     });
     const parsed = await responseMapper<ProjectTaskBoardItem>(response);
     await items.mutate();
     return parsed.data;
-  }, [client, items]);
+  }, [projectId, client, items]);
 
   return {
     tasks,
@@ -913,90 +910,138 @@ type ProjectTaskDetailOptions = {
   includeArchived?: boolean;
 };
 
-export function useProjectTaskBoardItem(itemId?: string, enabled = true, options: ProjectTaskDetailOptions = {}) {
+export function useProjectTaskBoardItem(projectId?: string, itemId?: string, enabled = true, options: ProjectTaskDetailOptions = {}) {
   const { client } = useClient();
   const archiveKey = options.includeArchived ? "with-archived" : "active-only";
   const detailQuery = options.includeArchived ? "?include_archived=true" : "";
-  const detailKey = enabled && itemId ? `wacht-ai-board-item-detail:${itemId}:${archiveKey}` : null;
-  const workspaceKey = enabled && itemId ? `wacht-ai-board-item-workspace:${itemId}:${archiveKey}` : null;
+  const itemKey = enabled && projectId && itemId ? `wacht-ai-board-item:${projectId}:${itemId}:${archiveKey}` : null;
+  const workspaceKey = enabled && projectId && itemId ? `wacht-ai-board-item-workspace:${projectId}:${itemId}:${archiveKey}` : null;
 
-  const detailFetcher = useCallback(async () => {
-    if (!itemId) return null;
-    const response = await client(`/ai/board-items/${itemId}/detail${detailQuery}`);
-    const parsed = await responseMapper<ProjectTaskDetail>(response);
+  const itemFetcher = useCallback(async () => {
+    if (!projectId || !itemId) return null;
+    const response = await client(`/ai/projects/${projectId}/board/items/${itemId}${detailQuery}`);
+    const parsed = await responseMapper<ProjectTaskBoardItem>(response);
     return parsed.data;
-  }, [itemId, client, detailQuery]);
+  }, [projectId, itemId, client, detailQuery]);
 
-  const detail = useSWR(detailKey, detailFetcher, { revalidateOnFocus: false, refreshInterval: 5000 });
+  const item = useSWR(itemKey, itemFetcher, { revalidateOnFocus: false, refreshInterval: 5000 });
+
+  const events = useSWRInfinite(
+    (index, previousPageData: BoardItemEventsPage | null) => {
+      if (!enabled || !projectId || !itemId) return null;
+      if (index > 0 && previousPageData && !previousPageData.has_more) {
+        return null;
+      }
+      const cursor = index === 0 ? undefined : previousPageData?.next_cursor;
+      return ["wacht-ai-board-item-events", projectId, itemId, archiveKey, cursor || ""];
+    },
+    async ([, currentProjectId, currentItemId, , cursor]) => {
+      const params = new URLSearchParams({ limit: "40" });
+      if (options.includeArchived) {
+        params.set("include_archived", "true");
+      }
+      if (cursor) {
+        params.set("cursor", String(cursor));
+      }
+      const response = await client(`/ai/projects/${currentProjectId}/board/items/${currentItemId}/events?${params.toString()}`);
+      const parsed = await responseMapper<BoardItemEventsPage>(response);
+      return parsed.data;
+    },
+    { revalidateOnFocus: false, revalidateFirstPage: true, persistSize: true, refreshInterval: 5000 },
+  );
+
+  const assignments = useSWRInfinite(
+    (index, previousPageData: BoardItemAssignmentsPage | null) => {
+      if (!enabled || !projectId || !itemId) return null;
+      if (index > 0 && previousPageData && !previousPageData.has_more) {
+        return null;
+      }
+      const cursor = index === 0 ? undefined : previousPageData?.next_cursor;
+      return ["wacht-ai-board-item-assignments", projectId, itemId, archiveKey, cursor || ""];
+    },
+    async ([, currentProjectId, currentItemId, , cursor]) => {
+      const params = new URLSearchParams({ limit: "40" });
+      if (options.includeArchived) {
+        params.set("include_archived", "true");
+      }
+      if (cursor) {
+        params.set("cursor", String(cursor));
+      }
+      const response = await client(`/ai/projects/${currentProjectId}/board/items/${currentItemId}/assignments?${params.toString()}`);
+      const parsed = await responseMapper<BoardItemAssignmentsPage>(response);
+      return parsed.data;
+    },
+    { revalidateOnFocus: false, revalidateFirstPage: true, persistSize: true, refreshInterval: 5000 },
+  );
 
   const workspaceFetcher = useCallback(async () => {
-    if (!itemId) return { exists: false, files: [] } as ProjectTaskWorkspaceListing;
-    const response = await client(`/ai/board-items/${itemId}/task-workspace${detailQuery}`);
+    if (!projectId || !itemId) return { exists: false, files: [] } as ProjectTaskWorkspaceListing;
+    const response = await client(`/ai/projects/${projectId}/board/items/${itemId}/filesystem${detailQuery}`);
     const parsed = await responseMapper<ProjectTaskWorkspaceListing>(response);
     return parsed.data;
-  }, [itemId, client, detailQuery]);
+  }, [projectId, itemId, client, detailQuery]);
 
   const workspace = useSWR(workspaceKey, workspaceFetcher, { revalidateOnFocus: false, refreshInterval: 5000 });
 
   const updateItem = useCallback(async (request: UpdateProjectTaskBoardItemRequest, files: File[] = []) => {
-    if (!itemId) throw new Error("itemId is required");
-    const response = await client(`/ai/board-items/${itemId}/update`, {
+    if (!projectId || !itemId) throw new Error("projectId and itemId are required");
+    const response = await client(`/ai/projects/${projectId}/board/items/${itemId}/update`, {
       method: "POST",
       body: buildTaskBoardItemFormData(request, files),
     });
     const parsed = await responseMapper<ProjectTaskBoardItem>(response);
-    await detail.mutate();
+    await item.mutate();
     await workspace.mutate();
     return parsed.data;
-  }, [itemId, client, detail, workspace]);
+  }, [projectId, itemId, client, item, workspace]);
 
   const archiveItem = useCallback(async () => {
-    if (!itemId) throw new Error("itemId is required");
-    const response = await client(`/ai/board-items/${itemId}/archive`, {
+    if (!projectId || !itemId) throw new Error("projectId and itemId are required");
+    const response = await client(`/ai/projects/${projectId}/board/items/${itemId}/archive`, {
       method: "POST",
       body: new URLSearchParams(),
     });
     const parsed = await responseMapper<ProjectTaskBoardItem>(response);
-    await detail.mutate();
+    await item.mutate();
     return parsed.data;
-  }, [itemId, client, detail]);
+  }, [projectId, itemId, client, item]);
 
   const unarchiveItem = useCallback(async () => {
-    if (!itemId) throw new Error("itemId is required");
-    const response = await client(`/ai/board-items/${itemId}/unarchive`, {
+    if (!projectId || !itemId) throw new Error("projectId and itemId are required");
+    const response = await client(`/ai/projects/${projectId}/board/items/${itemId}/unarchive`, {
       method: "POST",
       body: new URLSearchParams(),
     });
     const parsed = await responseMapper<ProjectTaskBoardItem>(response);
-    await detail.mutate();
+    await item.mutate();
     return parsed.data;
-  }, [itemId, client, detail]);
+  }, [projectId, itemId, client, item]);
 
   const getTaskWorkspaceFile = useCallback(async (path: string) => {
-    if (!itemId) throw new Error("itemId is required");
+    if (!projectId || !itemId) throw new Error("projectId and itemId are required");
     const response = await client(
-      `/ai/board-items/${itemId}/task-workspace/file${buildTaskWorkspaceFileQuery(path, options.includeArchived)}`,
+      `/ai/projects/${projectId}/board/items/${itemId}/filesystem/file${buildTaskWorkspaceFileQuery(path, options.includeArchived)}`,
     );
     const parsed = await responseMapper<ProjectTaskWorkspaceFileContent>(response);
     return parsed.data;
-  }, [itemId, client, options.includeArchived]);
+  }, [projectId, itemId, client, options.includeArchived]);
 
   const listTaskWorkspaceDirectory = useCallback(async (path?: string) => {
-    if (!itemId) throw new Error("itemId is required");
+    if (!projectId || !itemId) throw new Error("projectId and itemId are required");
     const response = await client(
-      `/ai/board-items/${itemId}/task-workspace${buildDirectoryQuery(path, options.includeArchived)}`,
+      `/ai/projects/${projectId}/board/items/${itemId}/filesystem${buildDirectoryQuery(path, options.includeArchived)}`,
     );
     const parsed = await responseMapper<ProjectTaskWorkspaceListing>(response);
     return parsed.data;
-  }, [itemId, client, options.includeArchived]);
+  }, [projectId, itemId, client, options.includeArchived]);
 
   const appendJournal = useCallback(async (
     request: AppendProjectTaskBoardItemJournalRequest,
     files: File[] = [],
   ) => {
-    if (!itemId) throw new Error("itemId is required");
+    if (!projectId || !itemId) throw new Error("projectId and itemId are required");
 
-    const response = await client(`/ai/board-items/${itemId}/journal`, {
+    const response = await client(`/ai/projects/${projectId}/board/items/${itemId}/journal`, {
       method: "POST",
       body: (() => {
         const formData = new FormData();
@@ -1014,20 +1059,48 @@ export function useProjectTaskBoardItem(itemId?: string, enabled = true, options
       })(),
     });
     const parsed = await responseMapper<ProjectTaskBoardItemEvent>(response);
-    await detail.mutate();
+    await events.mutate();
     await workspace.mutate();
     return parsed.data;
-  }, [itemId, client, detail, workspace]);
+  }, [projectId, itemId, client, events, workspace]);
+
+  const flattenedEvents = useMemo(
+    () => events.data?.flatMap((page) => page.data || []) || [],
+    [events.data],
+  );
+
+  const flattenedAssignments = useMemo(
+    () => assignments.data?.flatMap((page) => page.data || []) || [],
+    [assignments.data],
+  );
+
+  const eventsHasMore = events.data ? events.data[events.data.length - 1]?.has_more || false : false;
+  const eventsLoadingMore = events.isValidating && !!events.data && events.size > (events.data?.length || 0);
+  const assignmentsHasMore = assignments.data ? assignments.data[assignments.data.length - 1]?.has_more || false : false;
+  const assignmentsLoadingMore =
+    assignments.isValidating && !!assignments.data && assignments.size > (assignments.data?.length || 0);
 
   return {
-    item: detail.data?.item || null,
-    events: detail.data?.events || [],
-    assignments: detail.data?.assignments || [],
+    item: item.data || null,
+    events: flattenedEvents,
+    assignments: flattenedAssignments,
+    eventsHasMore,
+    eventsLoadingMore,
+    loadMoreEvents: async () => {
+      if (!eventsHasMore || eventsLoadingMore) return;
+      await events.setSize((size) => size + 1);
+    },
+    assignmentsHasMore,
+    assignmentsLoadingMore,
+    loadMoreAssignments: async () => {
+      if (!assignmentsHasMore || assignmentsLoadingMore) return;
+      await assignments.setSize((size) => size + 1);
+    },
     taskWorkspace: workspace.data || { exists: false, files: [] },
     taskWorkspaceLoading: !workspace.data && !workspace.error,
     taskWorkspaceError: workspace.error || null,
-    loading: !detail.data && !detail.error,
-    error: detail.error || null,
+    loading: (!item.data && !item.error) || (!events.data && !events.error) || (!assignments.data && !assignments.error),
+    error: item.error || events.error || assignments.error || null,
     updateItem,
     archiveItem,
     unarchiveItem,
@@ -1035,8 +1108,16 @@ export function useProjectTaskBoardItem(itemId?: string, enabled = true, options
     listTaskWorkspaceDirectory,
     appendJournal,
     refetch: async () => {
-      await detail.mutate();
+      await item.mutate();
+      await events.mutate();
+      await assignments.mutate();
       await workspace.mutate();
+    },
+    refetchEvents: async () => {
+      await events.mutate();
+    },
+    refetchAssignments: async () => {
+      await assignments.mutate();
     },
     refetchTaskWorkspace: async () => {
       await workspace.mutate();

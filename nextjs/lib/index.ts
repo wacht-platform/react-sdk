@@ -45,7 +45,6 @@ export {
     useUserSignins,
     useMagicLinkVerification,
     useAgentThreadConversation,
-    useActors,
     useActorMcpServers,
     useActorProjects,
     useActorProjectSearch,

@@ -378,12 +378,6 @@ export interface ProjectTaskWorkspaceFileContent {
     content_base64?: string;
 }
 
-export interface ProjectTaskDetail {
-    item: ProjectTaskBoardItem;
-    events: ProjectTaskBoardItemEvent[];
-    assignments: ProjectTaskBoardItemAssignment[];
-}
-
 export interface ThreadEvent {
     id: string;
     deployment_id: string;
