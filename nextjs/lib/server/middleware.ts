@@ -64,7 +64,6 @@ export interface WachtMiddlewareOptions extends WachtServerOptions {
     apiRoutePrefixes?: string[];
     isApiRoute?: (request: NextRequest) => boolean;
     gatewayUrl?: string;
-    debugAuth?: boolean;
 }
 
 export interface AuthenticatedRequest extends NextRequest {
@@ -124,25 +123,20 @@ export function wachtMiddleware(
                 options,
             );
             const authState = context.auth;
-            const debugAuth = options.debugAuth || process.env.WACHT_DEBUG_AUTH === "1";
 
             if (context.shouldRefreshRequest && !isApiLikeRequest(request, options)) {
                 const response = NextResponse.redirect(request.nextUrl);
                 applyAuthHeaders(request, response, context.headers);
-                if (debugAuth) {
-                    context.debug["response_mode"] = "refresh_redirect";
-                    applyDebugHeaders(response, context.debug);
-                }
+                context.debug["response_mode"] = "refresh_redirect";
+                applyDebugHeaders(response, context.debug);
                 return response;
             }
 
             if (!handler) {
                 const response = NextResponse.next();
                 applyAuthHeaders(request, response, context.headers);
-                if (debugAuth) {
-                    context.debug["response_mode"] = "next";
-                    applyDebugHeaders(response, context.debug);
-                }
+                context.debug["response_mode"] = "next";
+                applyDebugHeaders(response, context.debug);
                 return response;
             }
 
@@ -207,21 +201,17 @@ export function wachtMiddleware(
                             { status: error.status },
                         );
                     }
-                    if (debugAuth) {
-                        context.debug["auth_error_code"] = error.code;
-                        context.debug["auth_error_status"] = String(error.status);
-                    }
+                    context.debug["auth_error_code"] = error.code;
+                    context.debug["auth_error_status"] = String(error.status);
                 } else {
                     throw error;
                 }
             }
 
             applyAuthHeaders(request, response, context.headers);
-            if (debugAuth) {
-                context.debug["response_mode"] =
-                    String(response.status).startsWith("3") ? "redirect" : "handled";
-                applyDebugHeaders(response, context.debug);
-            }
+            context.debug["response_mode"] =
+                String(response.status).startsWith("3") ? "redirect" : "handled";
+            applyDebugHeaders(response, context.debug);
             return response;
         } catch {
             return NextResponse.next();
