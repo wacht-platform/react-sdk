@@ -65,10 +65,11 @@ async function authenticateBearerThroughGateway(
 export async function authenticateRequestWithHandshake(
   request: NextRequest,
   options: WachtMiddlewareOptions = {},
-): Promise<{ auth: NextWachtAuth; headers: Headers }> {
+): Promise<{ auth: NextWachtAuth; headers: Headers; shouldRefreshRequest: boolean }> {
   const headers = new Headers();
   const {
     authCookieName,
+    authRefreshCookieName,
     sessionCookieName,
     devSessionCookieName,
     devSessionUpdatedAtCookieName,
@@ -87,13 +88,13 @@ export async function authenticateRequestWithHandshake(
         const gatewayAuth = await authenticateBearerThroughGateway(request, token, options);
         if (gatewayAuth) {
           setSerializedAuthHeader(headers, gatewayAuth);
-          return { auth: gatewayAuth, headers };
+          return { auth: gatewayAuth, headers, shouldRefreshRequest: false };
         }
       }
       continue;
     }
     setSerializedAuthHeader(headers, auth);
-    return { auth, headers };
+    return { auth, headers, shouldRefreshRequest: false };
   }
 
   const sessionToken = readCookie(request, sessionCookieName);
@@ -104,7 +105,7 @@ export async function authenticateRequestWithHandshake(
   if (!transportToken) {
     const auth = decorateAuth(await sdkGetAuth(request, options), request, options);
     setSerializedAuthHeader(headers, auth);
-    return { auth, headers };
+    return { auth, headers, shouldRefreshRequest: false };
   }
 
   const exchanged = await exchangeSessionForAuthToken(transportToken, options, isDevSession);
@@ -115,9 +116,18 @@ export async function authenticateRequestWithHandshake(
     request,
     options,
   );
+  const refreshAttempted = readCookie(request, authRefreshCookieName) === '1';
+  const shouldRefreshRequest =
+    !!exchanged.authToken && !!auth.userId && !authCookieToken && !refreshAttempted;
 
   if (exchanged.authToken && auth.userId) {
     appendSetCookie(headers, buildCookie(authCookieName, exchanged.authToken, true));
+  }
+
+  if (shouldRefreshRequest) {
+    appendSetCookie(headers, buildCookie(authRefreshCookieName, '1', false, { maxAge: 15 }));
+  } else if (refreshAttempted) {
+    appendSetCookie(headers, buildCookie(authRefreshCookieName, '', false, { maxAge: 0 }));
   }
 
   if (exchanged.nextDevSession) {
@@ -132,11 +142,11 @@ export async function authenticateRequestWithHandshake(
   if (!auth.userId && !exchanged.authToken) {
     const unauth = decorateAuth(await sdkGetAuth(request, options), request, options);
     setSerializedAuthHeader(headers, unauth);
-    return { auth: unauth, headers };
+    return { auth: unauth, headers, shouldRefreshRequest: false };
   }
 
   setSerializedAuthHeader(headers, auth);
-  return { auth, headers };
+  return { auth, headers, shouldRefreshRequest };
 }
 
 export async function normalizeDevSessionQuery(

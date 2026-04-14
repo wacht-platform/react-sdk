@@ -124,6 +124,12 @@ export function wachtMiddleware(
             );
             const authState = context.auth;
 
+            if (context.shouldRefreshRequest && !isApiLikeRequest(request, options)) {
+                const response = NextResponse.redirect(request.nextUrl);
+                applyAuthHeaders(request, response, context.headers);
+                return response;
+            }
+
             if (!handler) {
                 const response = NextResponse.next();
                 applyAuthHeaders(request, response, context.headers);

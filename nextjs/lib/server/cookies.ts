@@ -13,6 +13,7 @@ export type CookieNames = {
   sessionCookieName: string;
   devSessionCookieName: string;
   devSessionUpdatedAtCookieName: string;
+  authRefreshCookieName: string;
 };
 
 export function readCookie(request: Request, cookieName: string): string | null {
@@ -32,9 +33,16 @@ export function appendSetCookie(headers: Headers, value: string): void {
   headers.append('Set-Cookie', value);
 }
 
-export function buildCookie(name: string, value: string, httpOnly: boolean): string {
+export function buildCookie(
+  name: string,
+  value: string,
+  httpOnly: boolean,
+  options?: { maxAge?: number },
+): string {
   const encoded = encodeURIComponent(value);
-  return `${name}=${encoded}; Path=/; Secure; SameSite=Lax${httpOnly ? '; HttpOnly' : ''}`;
+  const maxAge =
+    typeof options?.maxAge === 'number' ? `; Max-Age=${Math.trunc(options.maxAge)}` : '';
+  return `${name}=${encoded}; Path=/; Secure; SameSite=Lax${httpOnly ? '; HttpOnly' : ''}${maxAge}`;
 }
 
 export function getFrontendApiUrl(options: WachtMiddlewareOptions): string {
@@ -75,5 +83,6 @@ export function resolveCookieNames(options: WachtMiddlewareOptions): CookieNames
     sessionCookieName,
     devSessionCookieName,
     devSessionUpdatedAtCookieName: `${DEFAULT_DEV_SESSION_UPDATED_AT_COOKIE}_${scope}`,
+    authRefreshCookieName: `__auth_refresh_${scope}`,
   };
 }
