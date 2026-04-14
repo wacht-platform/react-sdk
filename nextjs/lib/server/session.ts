@@ -65,7 +65,12 @@ async function authenticateBearerThroughGateway(
 export async function authenticateRequestWithHandshake(
   request: NextRequest,
   options: WachtMiddlewareOptions = {},
-): Promise<{ auth: NextWachtAuth; headers: Headers; shouldRefreshRequest: boolean }> {
+): Promise<{
+  auth: NextWachtAuth;
+  headers: Headers;
+  shouldRefreshRequest: boolean;
+  debug: Record<string, string>;
+}> {
   const headers = new Headers();
   const {
     authCookieName,
@@ -74,41 +79,54 @@ export async function authenticateRequestWithHandshake(
     devSessionCookieName,
     devSessionUpdatedAtCookieName,
   } = resolveCookieNames(options);
+  const debug: Record<string, string> = {};
 
   const bearerToken = request.headers.get('authorization')?.startsWith('Bearer ')
     ? request.headers.get('authorization')!.slice(7).trim()
     : null;
   const authCookieToken = readCookie(request, authCookieName);
+  debug['has_bearer_token'] = bearerToken ? '1' : '0';
+  debug['has_auth_cookie'] = authCookieToken ? '1' : '0';
 
   for (const token of [bearerToken, authCookieToken]) {
     if (!token) continue;
     const auth = decorateAuth(await sdkGetAuthFromToken(token, options), request, options);
+    debug['token_source'] = token === bearerToken ? 'bearer' : 'auth_cookie';
+    debug['verified_user'] = auth.userId ? '1' : '0';
     if (!auth.userId) {
       if (token === bearerToken) {
         const gatewayAuth = await authenticateBearerThroughGateway(request, token, options);
         if (gatewayAuth) {
           setSerializedAuthHeader(headers, gatewayAuth);
-          return { auth: gatewayAuth, headers, shouldRefreshRequest: false };
+          debug['gateway_fallback'] = '1';
+          return { auth: gatewayAuth, headers, shouldRefreshRequest: false, debug };
         }
       }
       continue;
     }
     setSerializedAuthHeader(headers, auth);
-    return { auth, headers, shouldRefreshRequest: false };
+    return { auth, headers, shouldRefreshRequest: false, debug };
   }
 
   const sessionToken = readCookie(request, sessionCookieName);
   const devSessionToken = readCookie(request, devSessionCookieName);
   const isDevSession = !sessionToken && !!devSessionToken;
   const transportToken = sessionToken || devSessionToken;
+  debug['has_session_cookie'] = sessionToken ? '1' : '0';
+  debug['has_dev_session_cookie'] = devSessionToken ? '1' : '0';
+  debug['transport_token_source'] = sessionToken ? 'session' : devSessionToken ? 'dev_session' : 'none';
 
   if (!transportToken) {
     const auth = decorateAuth(await sdkGetAuth(request, options), request, options);
     setSerializedAuthHeader(headers, auth);
-    return { auth, headers, shouldRefreshRequest: false };
+    debug['verified_user'] = auth.userId ? '1' : '0';
+    return { auth, headers, shouldRefreshRequest: false, debug };
   }
 
   const exchanged = await exchangeSessionForAuthToken(transportToken, options, isDevSession);
+  debug['exchanged_auth_token'] = exchanged.authToken ? '1' : '0';
+  debug['has_upstream_session_set_cookie'] = exchanged.upstreamSessionSetCookie ? '1' : '0';
+  debug['has_next_dev_session'] = exchanged.nextDevSession ? '1' : '0';
   const auth = decorateAuth(
     exchanged.authToken
       ? await sdkGetAuthFromToken(exchanged.authToken, options)
@@ -119,6 +137,9 @@ export async function authenticateRequestWithHandshake(
   const refreshAttempted = readCookie(request, authRefreshCookieName) === '1';
   const shouldRefreshRequest =
     !!exchanged.authToken && !!auth.userId && !authCookieToken && !refreshAttempted;
+  debug['verified_user'] = auth.userId ? '1' : '0';
+  debug['refresh_attempted'] = refreshAttempted ? '1' : '0';
+  debug['should_refresh_request'] = shouldRefreshRequest ? '1' : '0';
 
   if (exchanged.authToken && auth.userId) {
     appendSetCookie(headers, buildCookie(authCookieName, exchanged.authToken, true));
@@ -142,11 +163,13 @@ export async function authenticateRequestWithHandshake(
   if (!auth.userId && !exchanged.authToken) {
     const unauth = decorateAuth(await sdkGetAuth(request, options), request, options);
     setSerializedAuthHeader(headers, unauth);
-    return { auth: unauth, headers, shouldRefreshRequest: false };
+    debug['fallback_auth_lookup'] = '1';
+    debug['verified_user'] = unauth.userId ? '1' : '0';
+    return { auth: unauth, headers, shouldRefreshRequest: false, debug };
   }
 
   setSerializedAuthHeader(headers, auth);
-  return { auth, headers, shouldRefreshRequest };
+  return { auth, headers, shouldRefreshRequest, debug };
 }
 
 export async function normalizeDevSessionQuery(
