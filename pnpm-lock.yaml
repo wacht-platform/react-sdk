@@ -106,8 +106,8 @@ importers:
   nextjs:
     dependencies:
       '@wacht/backend':
-        specifier: ^1.0.0-beta.12
-        version: 1.0.0-beta.12
+        specifier: ^1.0.0-beta.13
+        version: 1.0.0-beta.13
       '@wacht/jsx':
         specifier: ^1.0.0-beta.11
         version: link:../jsx
@@ -690,6 +690,14 @@ packages:
     cpu: [x64]
     os: [win32]
 
+  '@noble/curves@2.2.0':
+    resolution: {integrity: sha512-T/BoHgFXirb0ENSPBquzX0rcjXeM6Lo892a2jlYJkqk83LqZx0l1Of7DzlKJ6jkpvMrkHSnAcgb5JegL8SeIkQ==}
+    engines: {node: '>= 20.19.0'}
+
+  '@noble/hashes@2.2.0':
+    resolution: {integrity: sha512-IYqDGiTXab6FniAgnSdZwgWbomxpy9FtYvLKs7wCUs2a8RkITG+DFGO1DM9cr+E3/RgADRpFjrKVaJ1z6sjtEg==}
+    engines: {node: '>= 20.19.0'}
+
   '@rolldown/pluginutils@1.0.0-beta.27':
     resolution: {integrity: sha512-+d0F4MKMCbeVUJwG96uQ4SgAznZNSq93I3V+9NHA4OpvqG8mRCpGdKmK8l/dl02h2CCDHwW2FqilnTyDcAnqjA==}
 
@@ -951,8 +959,9 @@ packages:
   '@vue/shared@3.5.29':
     resolution: {integrity: sha512-w7SR0A5zyRByL9XUkCfdLs7t9XOHUyJ67qPGQjOou3p6GvBeBW+AVjUUmlxtZ4PIYaRvE+1LmK44O4uajlZwcg==}
 
-  '@wacht/backend@1.0.0-beta.12':
-    resolution: {integrity: sha512-Jh84a0KvQqb2/5j7OduN5lzxlGXRQXJTn/b9TymqxnxNvfZ1lNMxbL9DuLtAqo1QaCaU1/6AEjEt4H3NPb82Zg==}
+  '@wacht/backend@1.0.0-beta.13':
+    resolution: {integrity: sha512-phTbl1egICbbIl7xil8VZXARoll5nCHZU+kkeeVQ4hB1DYVrka/UzaLRzsXKotWNf5+0ajaV8lgsKsRpKkyK2A==}
+    engines: {node: '>=20'}
 
   '@wacht/backend@1.0.0-beta.6':
     resolution: {integrity: sha512-zVBylBcX6Hg9AvIt3NcAm7DeK5PFizgXlRusWsBdJC7k8yqs0HpWmagMBSCzkWR9gxiMCHsss11RcWDcVBlmng==}
@@ -1920,6 +1929,12 @@ snapshots:
   '@next/swc-win32-x64-msvc@16.1.6':
     optional: true
 
+  '@noble/curves@2.2.0':
+    dependencies:
+      '@noble/hashes': 2.2.0
+
+  '@noble/hashes@2.2.0': {}
+
   '@rolldown/pluginutils@1.0.0-beta.27': {}
 
   '@rollup/pluginutils@5.3.0(rollup@4.59.0)':
@@ -2176,8 +2191,9 @@ snapshots:
 
   '@vue/shared@3.5.29': {}
 
-  '@wacht/backend@1.0.0-beta.12':
+  '@wacht/backend@1.0.0-beta.13':
     dependencies:
+      '@noble/curves': 2.2.0
       jose: 4.15.9
 
   '@wacht/backend@1.0.0-beta.6':
