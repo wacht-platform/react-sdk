@@ -4,6 +4,7 @@ import {
   gateway as backendGateway,
   getAuth as sdkGetAuth,
   getAuthFromToken as sdkGetAuthFromToken,
+  getAuthFromTokenDetailed as sdkGetAuthFromTokenDetailed,
 } from '@wacht/backend';
 import {
   appendSetCookie,
@@ -129,11 +130,15 @@ export async function authenticateRequestWithHandshake(
   debug['has_next_dev_session'] = exchanged.nextDevSession ? '1' : '0';
   const auth = decorateAuth(
     exchanged.authToken
-      ? await sdkGetAuthFromToken(exchanged.authToken, options)
+      ? (await sdkGetAuthFromTokenDetailed(exchanged.authToken, options)).auth
       : await sdkGetAuth(request, options),
     request,
     options,
   );
+  if (exchanged.authToken) {
+    const detailed = await sdkGetAuthFromTokenDetailed(exchanged.authToken, options);
+    debug['verify_reason'] = detailed.verifyReason || 'none';
+  }
   const refreshAttempted = readCookie(request, authRefreshCookieName) === '1';
   const shouldRefreshRequest =
     !!exchanged.authToken && !!auth.userId && !authCookieToken && !refreshAttempted;

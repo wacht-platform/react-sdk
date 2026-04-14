@@ -106,8 +106,8 @@ importers:
   nextjs:
     dependencies:
       '@wacht/backend':
-        specifier: ^1.0.0-beta.7
-        version: 1.0.0-beta.7
+        specifier: ^1.0.0-beta.8
+        version: 1.0.0-beta.8
       '@wacht/jsx':
         specifier: ^1.0.0-beta.11
         version: link:../jsx
@@ -955,8 +955,8 @@ packages:
     resolution: {integrity: sha512-zVBylBcX6Hg9AvIt3NcAm7DeK5PFizgXlRusWsBdJC7k8yqs0HpWmagMBSCzkWR9gxiMCHsss11RcWDcVBlmng==}
     engines: {node: '>=16.0.0'}
 
-  '@wacht/backend@1.0.0-beta.7':
-    resolution: {integrity: sha512-59HXPdOVBY4w2HK6KsOy0c6gPNayGufGaQQSEquQL8Y7N3kBHW3H+WpygVUPZroIufjjiGSjUqQAC9K37+xgag==}
+  '@wacht/backend@1.0.0-beta.8':
+    resolution: {integrity: sha512-nC7QN3efs9/g6kFUjQpICPcsE1IvHI4OUQR2L2lkHetkVX1rbDgyAavu65DAF4PkV08uhnBNKvjHxy+PDOb3cQ==}
     engines: {node: '>=16.0.0'}
 
   acorn@8.16.0:
@@ -2181,7 +2181,7 @@ snapshots:
     dependencies:
       jose: 4.15.9
 
-  '@wacht/backend@1.0.0-beta.7':
+  '@wacht/backend@1.0.0-beta.8':
     dependencies:
       jose: 4.15.9
 
