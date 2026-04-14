@@ -106,8 +106,8 @@ importers:
   nextjs:
     dependencies:
       '@wacht/backend':
-        specifier: ^1.0.0-beta.13
-        version: 1.0.0-beta.13
+        specifier: ^1.0.0-beta.14
+        version: 1.0.0-beta.14
       '@wacht/jsx':
         specifier: ^1.0.0-beta.11
         version: link:../jsx
@@ -959,8 +959,8 @@ packages:
   '@vue/shared@3.5.29':
     resolution: {integrity: sha512-w7SR0A5zyRByL9XUkCfdLs7t9XOHUyJ67qPGQjOou3p6GvBeBW+AVjUUmlxtZ4PIYaRvE+1LmK44O4uajlZwcg==}
 
-  '@wacht/backend@1.0.0-beta.13':
-    resolution: {integrity: sha512-phTbl1egICbbIl7xil8VZXARoll5nCHZU+kkeeVQ4hB1DYVrka/UzaLRzsXKotWNf5+0ajaV8lgsKsRpKkyK2A==}
+  '@wacht/backend@1.0.0-beta.14':
+    resolution: {integrity: sha512-LLjY1TSkAAjPd9Z5M5u+2tzRbK8/UXxxCaQDPCPeYJ50DQYy0klYY3i6z8/xG4FJKJAFWX4SRHgKNbrfrbU58g==}
     engines: {node: '>=20'}
 
   '@wacht/backend@1.0.0-beta.6':
@@ -2191,7 +2191,7 @@ snapshots:
 
   '@vue/shared@3.5.29': {}
 
-  '@wacht/backend@1.0.0-beta.13':
+  '@wacht/backend@1.0.0-beta.14':
     dependencies:
       '@noble/curves': 2.2.0
       jose: 4.15.9

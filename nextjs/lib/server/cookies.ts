@@ -13,7 +13,6 @@ export type CookieNames = {
   sessionCookieName: string;
   devSessionCookieName: string;
   devSessionUpdatedAtCookieName: string;
-  authRefreshCookieName: string;
 };
 
 export function readCookie(request: Request, cookieName: string): string | null {
@@ -83,6 +82,5 @@ export function resolveCookieNames(options: WachtMiddlewareOptions): CookieNames
     sessionCookieName,
     devSessionCookieName,
     devSessionUpdatedAtCookieName: `${DEFAULT_DEV_SESSION_UPDATED_AT_COOKIE}_${scope}`,
-    authRefreshCookieName: `__auth_refresh_${scope}`,
   };
 }

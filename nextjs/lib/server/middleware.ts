@@ -124,19 +124,9 @@ export function wachtMiddleware(
             );
             const authState = context.auth;
 
-            if (context.shouldRefreshRequest && !isApiLikeRequest(request, options)) {
-                const response = NextResponse.redirect(request.nextUrl);
-                applyAuthHeaders(request, response, context.headers);
-                context.debug["response_mode"] = "refresh_redirect";
-                applyDebugHeaders(response, context.debug);
-                return response;
-            }
-
             if (!handler) {
                 const response = NextResponse.next();
                 applyAuthHeaders(request, response, context.headers);
-                context.debug["response_mode"] = "next";
-                applyDebugHeaders(response, context.debug);
                 return response;
             }
 
@@ -201,31 +191,17 @@ export function wachtMiddleware(
                             { status: error.status },
                         );
                     }
-                    context.debug["auth_error_code"] = error.code;
-                    context.debug["auth_error_status"] = String(error.status);
                 } else {
                     throw error;
                 }
             }
 
             applyAuthHeaders(request, response, context.headers);
-            context.debug["response_mode"] =
-                String(response.status).startsWith("3") ? "redirect" : "handled";
-            applyDebugHeaders(response, context.debug);
             return response;
         } catch {
             return NextResponse.next();
         }
     };
-}
-
-function applyDebugHeaders(
-    response: NextResponse,
-    debug: Record<string, string>,
-): void {
-    for (const [key, value] of Object.entries(debug)) {
-        response.headers.set(`x-wacht-debug-${key}`, value);
-    }
 }
 
 export function createRouteMatcher(

@@ -4,7 +4,6 @@ import {
   gateway as backendGateway,
   getAuth as sdkGetAuth,
   getAuthFromToken as sdkGetAuthFromToken,
-  getAuthFromTokenDetailed as sdkGetAuthFromTokenDetailed,
 } from '@wacht/backend';
 import {
   appendSetCookie,
@@ -18,15 +17,6 @@ import {
   setSerializedAuthHeader,
 } from './auth-state';
 import type { NextWachtAuth, WachtMiddlewareOptions, WachtTokenType } from './middleware';
-
-type DetailedAuthResult = Awaited<ReturnType<typeof sdkGetAuthFromTokenDetailed>> & {
-  verifyDetail?: string | null;
-  verifyVerifier?: string | null;
-  verifyTokenIssuer?: string | null;
-  verifyExpectedIssuer?: string | null;
-  verifyTokenAlgorithm?: string | null;
-  verifyFrontendApiUrl?: string | null;
-};
 
 async function authenticateBearerThroughGateway(
   request: Request | NextRequest,
@@ -78,97 +68,59 @@ export async function authenticateRequestWithHandshake(
 ): Promise<{
   auth: NextWachtAuth;
   headers: Headers;
-  shouldRefreshRequest: boolean;
-  debug: Record<string, string>;
 }> {
   const headers = new Headers();
   const {
     authCookieName,
-    authRefreshCookieName,
     sessionCookieName,
     devSessionCookieName,
     devSessionUpdatedAtCookieName,
   } = resolveCookieNames(options);
-  const debug: Record<string, string> = {};
 
   const bearerToken = request.headers.get('authorization')?.startsWith('Bearer ')
     ? request.headers.get('authorization')!.slice(7).trim()
     : null;
   const authCookieToken = readCookie(request, authCookieName);
-  debug['has_bearer_token'] = bearerToken ? '1' : '0';
-  debug['has_auth_cookie'] = authCookieToken ? '1' : '0';
 
   for (const token of [bearerToken, authCookieToken]) {
     if (!token) continue;
     const auth = decorateAuth(await sdkGetAuthFromToken(token, options), request, options);
-    debug['token_source'] = token === bearerToken ? 'bearer' : 'auth_cookie';
-    debug['verified_user'] = auth.userId ? '1' : '0';
     if (!auth.userId) {
       if (token === bearerToken) {
         const gatewayAuth = await authenticateBearerThroughGateway(request, token, options);
         if (gatewayAuth) {
           setSerializedAuthHeader(headers, gatewayAuth);
-          debug['gateway_fallback'] = '1';
-          return { auth: gatewayAuth, headers, shouldRefreshRequest: false, debug };
+          return { auth: gatewayAuth, headers };
         }
       }
       continue;
     }
     setSerializedAuthHeader(headers, auth);
-    return { auth, headers, shouldRefreshRequest: false, debug };
+    return { auth, headers };
   }
 
   const sessionToken = readCookie(request, sessionCookieName);
   const devSessionToken = readCookie(request, devSessionCookieName);
   const isDevSession = !sessionToken && !!devSessionToken;
   const transportToken = sessionToken || devSessionToken;
-  debug['has_session_cookie'] = sessionToken ? '1' : '0';
-  debug['has_dev_session_cookie'] = devSessionToken ? '1' : '0';
-  debug['transport_token_source'] = sessionToken ? 'session' : devSessionToken ? 'dev_session' : 'none';
 
   if (!transportToken) {
     const auth = decorateAuth(await sdkGetAuth(request, options), request, options);
     setSerializedAuthHeader(headers, auth);
-    debug['verified_user'] = auth.userId ? '1' : '0';
-    return { auth, headers, shouldRefreshRequest: false, debug };
+    return { auth, headers };
   }
 
   const exchanged = await exchangeSessionForAuthToken(transportToken, options, isDevSession);
-  debug['exchanged_auth_token'] = exchanged.authToken ? '1' : '0';
-  debug['has_upstream_session_set_cookie'] = exchanged.upstreamSessionSetCookie ? '1' : '0';
-  debug['has_next_dev_session'] = exchanged.nextDevSession ? '1' : '0';
-  const detailed: DetailedAuthResult | null = exchanged.authToken
-    ? ((await sdkGetAuthFromTokenDetailed(exchanged.authToken, options)) as DetailedAuthResult)
-    : null;
   const auth = decorateAuth(
-    detailed ? detailed.auth : await sdkGetAuth(request, options),
+    exchanged.authToken
+      ? await sdkGetAuthFromToken(exchanged.authToken, options)
+      : await sdkGetAuth(request, options),
     request,
     options,
   );
-  if (detailed) {
-    debug['verify_reason'] = detailed.verifyReason || 'none';
-    debug['verify_detail'] = detailed.verifyDetail || 'none';
-    debug['verify_verifier'] = detailed.verifyVerifier || 'none';
-    debug['verify_token_issuer'] = detailed.verifyTokenIssuer || 'none';
-    debug['verify_expected_issuer'] = detailed.verifyExpectedIssuer || 'none';
-    debug['verify_token_alg'] = detailed.verifyTokenAlgorithm || 'none';
-    debug['verify_frontend_api_url'] = detailed.verifyFrontendApiUrl || 'none';
-  }
-  const refreshAttempted = readCookie(request, authRefreshCookieName) === '1';
-  const shouldRefreshRequest =
-    !!exchanged.authToken && !!auth.userId && !authCookieToken && !refreshAttempted;
-  debug['verified_user'] = auth.userId ? '1' : '0';
-  debug['refresh_attempted'] = refreshAttempted ? '1' : '0';
-  debug['should_refresh_request'] = shouldRefreshRequest ? '1' : '0';
 
   if (exchanged.authToken && auth.userId) {
     appendSetCookie(headers, buildCookie(authCookieName, exchanged.authToken, true));
-  }
-
-  if (shouldRefreshRequest) {
-    appendSetCookie(headers, buildCookie(authRefreshCookieName, '1', false, { maxAge: 15 }));
-  } else if (refreshAttempted) {
-    appendSetCookie(headers, buildCookie(authRefreshCookieName, '', false, { maxAge: 0 }));
   }
 
   if (exchanged.nextDevSession) {
@@ -183,13 +135,11 @@ export async function authenticateRequestWithHandshake(
   if (!auth.userId && !exchanged.authToken) {
     const unauth = decorateAuth(await sdkGetAuth(request, options), request, options);
     setSerializedAuthHeader(headers, unauth);
-    debug['fallback_auth_lookup'] = '1';
-    debug['verified_user'] = unauth.userId ? '1' : '0';
-    return { auth: unauth, headers, shouldRefreshRequest: false, debug };
+    return { auth: unauth, headers };
   }
 
   setSerializedAuthHeader(headers, auth);
-  return { auth, headers, shouldRefreshRequest, debug };
+  return { auth, headers };
 }
 
 export async function normalizeDevSessionQuery(
