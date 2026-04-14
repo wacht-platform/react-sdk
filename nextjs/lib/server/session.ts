@@ -1,5 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server';
 import {
+  exchangeSessionForAuthToken,
   gateway as backendGateway,
   getAuth as sdkGetAuth,
   getAuthFromToken as sdkGetAuthFromToken,
@@ -7,9 +8,6 @@ import {
 import {
   appendSetCookie,
   buildCookie,
-  DEV_SESSION_HEADER,
-  DEFAULT_SESSION_COOKIE,
-  getFrontendApiUrl,
   readCookie,
   resolveCookieNames,
 } from './cookies';
@@ -19,48 +17,6 @@ import {
   setSerializedAuthHeader,
 } from './auth-state';
 import type { NextWachtAuth, WachtMiddlewareOptions, WachtTokenType } from './middleware';
-
-async function exchangeSessionForAuthToken(
-  options: WachtMiddlewareOptions,
-  sessionToken: string,
-  isDevSession: boolean,
-): Promise<{
-  authToken: string | null;
-  nextDevSession: string | null;
-  upstreamSessionSetCookie: string | null;
-}> {
-  const frontendApiUrl = getFrontendApiUrl(options);
-  const endpoint = new URL(`${frontendApiUrl}/session/token`);
-  const headers = new Headers({ Accept: 'application/json' });
-
-  if (isDevSession) {
-    endpoint.searchParams.set('__dev_session__', sessionToken);
-  } else {
-    const sessionCookieName = options.sessionCookieName || DEFAULT_SESSION_COOKIE;
-    headers.set('Cookie', `${sessionCookieName}=${encodeURIComponent(sessionToken)}`);
-  }
-
-  const response = await fetch(endpoint.toString(), {
-    method: 'GET',
-    headers,
-    credentials: 'omit',
-  });
-
-  if (!response.ok) {
-    return {
-      authToken: null,
-      nextDevSession: null,
-      upstreamSessionSetCookie: response.headers.get('set-cookie'),
-    };
-  }
-
-  const json = (await response.json()) as { data?: { token?: string } };
-  return {
-    authToken: json?.data?.token || null,
-    nextDevSession: response.headers.get(DEV_SESSION_HEADER),
-    upstreamSessionSetCookie: response.headers.get('set-cookie'),
-  };
-}
 
 async function authenticateBearerThroughGateway(
   request: Request | NextRequest,
@@ -151,7 +107,7 @@ export async function authenticateRequestWithHandshake(
     return { auth, headers };
   }
 
-  const exchanged = await exchangeSessionForAuthToken(options, transportToken, isDevSession);
+  const exchanged = await exchangeSessionForAuthToken(transportToken, options, isDevSession);
   const auth = decorateAuth(
     exchanged.authToken
       ? await sdkGetAuthFromToken(exchanged.authToken, options)
@@ -194,7 +150,7 @@ export async function normalizeDevSessionQuery(
   const { authCookieName, devSessionCookieName, devSessionUpdatedAtCookieName } =
     resolveCookieNames(options);
 
-  const exchanged = await exchangeSessionForAuthToken(options, devSessionFromQuery, true);
+  const exchanged = await exchangeSessionForAuthToken(devSessionFromQuery, options, true);
   const auth = exchanged.authToken
     ? decorateAuth(await sdkGetAuthFromToken(exchanged.authToken, options), request, options)
     : null;

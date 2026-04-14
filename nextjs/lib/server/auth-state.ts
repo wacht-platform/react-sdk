@@ -1,7 +1,6 @@
 import {
   WachtAuthError,
   type PermissionCheck,
-  type ProtectOptions,
   type ResolvedAuthzIdentity,
   type SessionPrincipalIdentity,
   type SessionPrincipalMetadata,

@@ -27,9 +27,6 @@
     "paths": {
       "@/*": [
         "./lib/*"
-      ],
-      "@wacht/backend": [
-        "../../node/dist/index.d.ts"
       ]
     }
   },

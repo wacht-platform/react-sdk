@@ -106,8 +106,8 @@ importers:
   nextjs:
     dependencies:
       '@wacht/backend':
-        specifier: latest
-        version: 1.0.0-beta.0
+        specifier: ^1.0.0-beta.6
+        version: 1.0.0-beta.6
       '@wacht/jsx':
         specifier: '*'
         version: link:../jsx
@@ -143,8 +143,8 @@ importers:
   react-router:
     dependencies:
       '@wacht/backend':
-        specifier: latest
-        version: 1.0.0-beta.0
+        specifier: ^1.0.0-beta.6
+        version: 1.0.0-beta.6
       '@wacht/jsx':
         specifier: '*'
         version: link:../jsx
@@ -183,8 +183,8 @@ importers:
         specifier: ^1.0.0
         version: 1.163.3(react-dom@19.2.4(react@19.2.4))(react@19.2.4)
       '@wacht/backend':
-        specifier: latest
-        version: 1.0.0-beta.0
+        specifier: ^1.0.0-beta.6
+        version: 1.0.0-beta.6
       '@wacht/jsx':
         specifier: '*'
         version: link:../jsx
@@ -951,8 +951,8 @@ packages:
   '@vue/shared@3.5.29':
     resolution: {integrity: sha512-w7SR0A5zyRByL9XUkCfdLs7t9XOHUyJ67qPGQjOou3p6GvBeBW+AVjUUmlxtZ4PIYaRvE+1LmK44O4uajlZwcg==}
 
-  '@wacht/backend@1.0.0-beta.0':
-    resolution: {integrity: sha512-eF+2Q8GvHcC3CdVtLPDqwxJaFW5kPWsYgJ5QQwcRAxgi670I1gF9Kh7Jo5taGLMDEMIwtabZlhbGmu6CfWuOYA==}
+  '@wacht/backend@1.0.0-beta.6':
+    resolution: {integrity: sha512-zVBylBcX6Hg9AvIt3NcAm7DeK5PFizgXlRusWsBdJC7k8yqs0HpWmagMBSCzkWR9gxiMCHsss11RcWDcVBlmng==}
     engines: {node: '>=16.0.0'}
 
   acorn@8.16.0:
@@ -2173,7 +2173,7 @@ snapshots:
 
   '@vue/shared@3.5.29': {}
 
-  '@wacht/backend@1.0.0-beta.0':
+  '@wacht/backend@1.0.0-beta.6':
     dependencies:
       jose: 4.15.9
 
