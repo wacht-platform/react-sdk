@@ -1,6 +1,6 @@
 {
     "name": "@wacht/react-router",
-    "version": "1.0.0-beta.10",
+    "version": "1.0.0-beta.11",
     "description": "React Router adapter for Wacht authentication library",
     "type": "module",
     "main": "dist/index.cjs.js",
@@ -39,8 +39,8 @@
         "vite-plugin-dts": "^4.4.0"
     },
     "peerDependencies": {
-        "@wacht/jsx": "*",
-        "@wacht/types": "*",
+        "@wacht/jsx": "^1.0.0-beta.11",
+        "@wacht/types": "^1.0.0-beta.11",
         "react": "catalog:",
         "react-dom": "catalog:",
         "react-router": "catalog:"

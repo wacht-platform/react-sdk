@@ -126,7 +126,7 @@ export function wachtMiddleware(
 
             if (!handler) {
                 const response = NextResponse.next();
-                applyAuthHeaders(response, context.headers);
+                applyAuthHeaders(request, response, context.headers);
                 return response;
             }
 
@@ -196,7 +196,7 @@ export function wachtMiddleware(
                 }
             }
 
-            applyAuthHeaders(response, context.headers);
+            applyAuthHeaders(request, response, context.headers);
             return response;
         } catch {
             return NextResponse.next();

@@ -1,5 +1,5 @@
 import { NextRequest, NextResponse } from 'next/server';
-import { getFrontendApiUrl } from './cookies';
+import { AUTH_HEADER, getFrontendApiUrl } from './cookies';
 import type { WachtMiddlewareOptions } from './middleware';
 
 export function isApiLikeRequest(
@@ -18,9 +18,37 @@ export function isApiLikeRequest(
   return options.apiRoutePrefixes.some((prefix) => pathname.startsWith(prefix));
 }
 
-export function applyAuthHeaders(response: NextResponse, headers: Headers): void {
+export function applyAuthHeaders(
+  request: NextRequest,
+  response: NextResponse,
+  headers: Headers,
+): void {
+  const requestHeaders = new Headers(request.headers);
+
   headers.forEach((value, key) => {
+    const normalizedKey = key.toLowerCase();
+
+    if (normalizedKey === AUTH_HEADER) {
+      requestHeaders.set(key, value);
+      return;
+    }
+
     response.headers.append(key, value);
+  });
+
+  const forwarded = NextResponse.next({
+    request: {
+      headers: requestHeaders,
+    },
+  });
+
+  forwarded.headers.forEach((value, key) => {
+    if (
+      key === 'x-middleware-override-headers' ||
+      key.startsWith('x-middleware-request-')
+    ) {
+      response.headers.set(key, value);
+    }
   });
 }
 
