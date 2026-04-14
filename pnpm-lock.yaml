@@ -106,8 +106,8 @@ importers:
   nextjs:
     dependencies:
       '@wacht/backend':
-        specifier: ^1.0.0-beta.11
-        version: 1.0.0-beta.11
+        specifier: ^1.0.0-beta.12
+        version: 1.0.0-beta.12
       '@wacht/jsx':
         specifier: ^1.0.0-beta.11
         version: link:../jsx
@@ -951,8 +951,8 @@ packages:
   '@vue/shared@3.5.29':
     resolution: {integrity: sha512-w7SR0A5zyRByL9XUkCfdLs7t9XOHUyJ67qPGQjOou3p6GvBeBW+AVjUUmlxtZ4PIYaRvE+1LmK44O4uajlZwcg==}
 
-  '@wacht/backend@1.0.0-beta.11':
-    resolution: {integrity: sha512-mjSa/D2BVuFnQ3ex6bQgvDmmR042vt37BU/VmzKpPAwERrKiX+6tIMyPhk5EH48LHnKikTZa60GirVrTz9W0yw==}
+  '@wacht/backend@1.0.0-beta.12':
+    resolution: {integrity: sha512-Jh84a0KvQqb2/5j7OduN5lzxlGXRQXJTn/b9TymqxnxNvfZ1lNMxbL9DuLtAqo1QaCaU1/6AEjEt4H3NPb82Zg==}
 
   '@wacht/backend@1.0.0-beta.6':
     resolution: {integrity: sha512-zVBylBcX6Hg9AvIt3NcAm7DeK5PFizgXlRusWsBdJC7k8yqs0HpWmagMBSCzkWR9gxiMCHsss11RcWDcVBlmng==}
@@ -2176,7 +2176,7 @@ snapshots:
 
   '@vue/shared@3.5.29': {}
 
-  '@wacht/backend@1.0.0-beta.11':
+  '@wacht/backend@1.0.0-beta.12':
     dependencies:
       jose: 4.15.9
 

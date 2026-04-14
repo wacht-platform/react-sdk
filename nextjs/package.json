@@ -1,6 +1,6 @@
 {
     "name": "@wacht/nextjs",
-    "version": "1.0.0-beta.19",
+    "version": "1.0.0-beta.20",
     "description": "Next.js adapter for Wacht authentication library",
     "type": "module",
     "main": "dist/index.cjs.js",
@@ -47,6 +47,6 @@
     },
     "dependencies": {
         "rollup-plugin-preserve-use-client": "^3.0.1",
-        "@wacht/backend": "^1.0.0-beta.11"
+        "@wacht/backend": "^1.0.0-beta.12"
     }
 }
