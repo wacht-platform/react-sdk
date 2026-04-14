@@ -106,8 +106,8 @@ importers:
   nextjs:
     dependencies:
       '@wacht/backend':
-        specifier: ^1.0.0-beta.9
-        version: 1.0.0-beta.9
+        specifier: ^1.0.0-beta.10
+        version: 1.0.0-beta.10
       '@wacht/jsx':
         specifier: ^1.0.0-beta.11
         version: link:../jsx
@@ -951,12 +951,12 @@ packages:
   '@vue/shared@3.5.29':
     resolution: {integrity: sha512-w7SR0A5zyRByL9XUkCfdLs7t9XOHUyJ67qPGQjOou3p6GvBeBW+AVjUUmlxtZ4PIYaRvE+1LmK44O4uajlZwcg==}
 
+  '@wacht/backend@1.0.0-beta.10':
+    resolution: {integrity: sha512-DbXCakGD7OQK9YCgxTd5u56yMu5GL6InI4M5w3j8xYPNfunsSRskbXX4dPg8Gztg8ohsqWyG+/c/tlpjb4p3IA==}
+
   '@wacht/backend@1.0.0-beta.6':
     resolution: {integrity: sha512-zVBylBcX6Hg9AvIt3NcAm7DeK5PFizgXlRusWsBdJC7k8yqs0HpWmagMBSCzkWR9gxiMCHsss11RcWDcVBlmng==}
     engines: {node: '>=16.0.0'}
-
-  '@wacht/backend@1.0.0-beta.9':
-    resolution: {integrity: sha512-KC1zBxI6ISLHHkCcCmvawC9xGmny9ynund5c+OA4aQqeVaJrF8decgpRxQdVY/PwS4KHBK5lcVGGOhT8mGRlTQ==}
 
   acorn@8.16.0:
     resolution: {integrity: sha512-UVJyE9MttOsBQIDKw1skb9nAwQuR5wuGD3+82K6JgJlm/Y+KI92oNsMNGZCYdDsVtRHSak0pcV5Dno5+4jh9sw==}
@@ -2176,11 +2176,11 @@ snapshots:
 
   '@vue/shared@3.5.29': {}
 
-  '@wacht/backend@1.0.0-beta.6':
+  '@wacht/backend@1.0.0-beta.10':
     dependencies:
       jose: 4.15.9
 
-  '@wacht/backend@1.0.0-beta.9':
+  '@wacht/backend@1.0.0-beta.6':
     dependencies:
       jose: 4.15.9
 

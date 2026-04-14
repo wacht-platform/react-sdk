@@ -19,6 +19,15 @@ import {
 } from './auth-state';
 import type { NextWachtAuth, WachtMiddlewareOptions, WachtTokenType } from './middleware';
 
+type DetailedAuthResult = Awaited<ReturnType<typeof sdkGetAuthFromTokenDetailed>> & {
+  verifyDetail?: string | null;
+  verifyVerifier?: string | null;
+  verifyTokenIssuer?: string | null;
+  verifyExpectedIssuer?: string | null;
+  verifyTokenAlgorithm?: string | null;
+  verifyFrontendApiUrl?: string | null;
+};
+
 async function authenticateBearerThroughGateway(
   request: Request | NextRequest,
   token: string,
@@ -128,16 +137,22 @@ export async function authenticateRequestWithHandshake(
   debug['exchanged_auth_token'] = exchanged.authToken ? '1' : '0';
   debug['has_upstream_session_set_cookie'] = exchanged.upstreamSessionSetCookie ? '1' : '0';
   debug['has_next_dev_session'] = exchanged.nextDevSession ? '1' : '0';
+  const detailed: DetailedAuthResult | null = exchanged.authToken
+    ? ((await sdkGetAuthFromTokenDetailed(exchanged.authToken, options)) as DetailedAuthResult)
+    : null;
   const auth = decorateAuth(
-    exchanged.authToken
-      ? (await sdkGetAuthFromTokenDetailed(exchanged.authToken, options)).auth
-      : await sdkGetAuth(request, options),
+    detailed ? detailed.auth : await sdkGetAuth(request, options),
     request,
     options,
   );
-  if (exchanged.authToken) {
-    const detailed = await sdkGetAuthFromTokenDetailed(exchanged.authToken, options);
+  if (detailed) {
     debug['verify_reason'] = detailed.verifyReason || 'none';
+    debug['verify_detail'] = detailed.verifyDetail || 'none';
+    debug['verify_verifier'] = detailed.verifyVerifier || 'none';
+    debug['verify_token_issuer'] = detailed.verifyTokenIssuer || 'none';
+    debug['verify_expected_issuer'] = detailed.verifyExpectedIssuer || 'none';
+    debug['verify_token_alg'] = detailed.verifyTokenAlgorithm || 'none';
+    debug['verify_frontend_api_url'] = detailed.verifyFrontendApiUrl || 'none';
   }
   const refreshAttempted = readCookie(request, authRefreshCookieName) === '1';
   const shouldRefreshRequest =
