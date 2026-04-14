@@ -1,6 +1,6 @@
 {
     "name": "@wacht/react-router",
-    "version": "1.0.0-beta.9",
+    "version": "1.0.0-beta.10",
     "description": "React Router adapter for Wacht authentication library",
     "type": "module",
     "main": "dist/index.cjs.js",

@@ -19,7 +19,10 @@ import {
 } from "@wacht/backend";
 
 export type { WachtAuth, ProtectOptions, PermissionCheck, JWTPayload };
-export type { SessionPrincipalIdentity, SessionPrincipalMetadata } from "@wacht/backend";
+export type {
+    SessionPrincipalIdentity,
+    SessionPrincipalMetadata,
+} from "@wacht/backend";
 
 export interface RedirectToSignInOptions {
     returnBackUrl?: string | URL;
@@ -31,10 +34,7 @@ export type WachtTokenType =
     | "machine_token"
     | "api_key";
 
-export type WachtAcceptedTokenType =
-    | WachtTokenType
-    | "any"
-    | WachtTokenType[];
+export type WachtAcceptedTokenType = WachtTokenType | "any" | WachtTokenType[];
 
 export type WachtPrincipalIdentity =
     | SessionPrincipalIdentity
@@ -184,7 +184,9 @@ function deriveAccountPortalSignInBaseUrl(frontendApiUrl: string): string {
     }
 
     const portalLabels = [...labels];
-    if (portalLabels[1] === "fapi") {
+    if (portalLabels[0] === "frontend") {
+        portalLabels[0] = "accounts";
+    } else if (portalLabels[1] === "fapi") {
         portalLabels[1] = "accounts";
     } else {
         portalLabels.splice(1, 0, "accounts");
@@ -221,7 +223,10 @@ function normalizePortForProtocol(
     protocol: string,
 ): string {
     if (!port) return "";
-    if ((protocol === "https" && port === "443") || (protocol === "http" && port === "80")) {
+    if (
+        (protocol === "https" && port === "443") ||
+        (protocol === "http" && port === "80")
+    ) {
         return "";
     }
 
@@ -237,7 +242,10 @@ function resolvePublicRequestUrl(request: Request | NextRequest): string {
     const forwardedProto =
         pickForwardedHeader(request.headers, "x-forwarded-proto") ||
         url.protocol.replace(":", "");
-    const forwardedPort = pickForwardedHeader(request.headers, "x-forwarded-port");
+    const forwardedPort = pickForwardedHeader(
+        request.headers,
+        "x-forwarded-port",
+    );
 
     if (forwardedHost) {
         url.protocol = `${forwardedProto}:`;
@@ -329,7 +337,9 @@ function decorateAuth(
     options: WachtMiddlewareOptions = {},
 ): NextWachtAuth {
     const redirectToSignIn = createRedirectToSignIn(request, options);
-    const tokenType: WachtTokenType | null = auth.userId ? "session_token" : null;
+    const tokenType: WachtTokenType | null = auth.userId
+        ? "session_token"
+        : null;
     const identity = toSessionPrincipalIdentity(auth);
     const metadata = toSessionPrincipalMetadata(auth);
 
@@ -406,7 +416,8 @@ function decorateGatewayAuth(
     const has = (check: PermissionCheck): boolean => {
         if (check.organizationId && check.organizationId !== organizationId)
             return false;
-        if (check.workspaceId && check.workspaceId !== workspaceId) return false;
+        if (check.workspaceId && check.workspaceId !== workspaceId)
+            return false;
         if (!check.permission) return true;
         const required = Array.isArray(check.permission)
             ? check.permission
@@ -433,17 +444,9 @@ function decorateGatewayAuth(
 
             if (authz.allowed === false) {
                 if (authz.reason === "rate_limited") {
-                    throw new WachtAuthError(
-                        "forbidden",
-                        429,
-                        "Rate limited",
-                    );
+                    throw new WachtAuthError("forbidden", 429, "Rate limited");
                 }
-                throw new WachtAuthError(
-                    "forbidden",
-                    403,
-                    "Forbidden",
-                );
+                throw new WachtAuthError("forbidden", 403, "Forbidden");
             }
 
             const allowed = has(protectOptions || {});
@@ -504,7 +507,8 @@ async function authenticateBearerThroughGateway(
                     metadata: principalContext.metadata,
                     permissions: principalContext.permissions,
                     ownerUserId: principalContext.ownerUserId || undefined,
-                    organizationId: principalContext.organizationId || undefined,
+                    organizationId:
+                        principalContext.organizationId || undefined,
                     workspaceId: principalContext.workspaceId || undefined,
                     allowed: authz.allowed,
                     reason: authz.reason,
@@ -608,7 +612,10 @@ function authFromSerializedHeader(parsed: SerializedNextAuth): NextWachtAuth {
 
     const has = (check: PermissionCheck): boolean => {
         if (!isAuthenticated) return false;
-        if (check.organizationId && check.organizationId !== parsed.organizationId) {
+        if (
+            check.organizationId &&
+            check.organizationId !== parsed.organizationId
+        ) {
             return false;
         }
         if (check.workspaceId && check.workspaceId !== parsed.workspaceId) {
@@ -642,7 +649,11 @@ function authFromSerializedHeader(parsed: SerializedNextAuth): NextWachtAuth {
             ensureAcceptedTokenType(parsed.tokenType, protectOptions?.token);
 
             if (!isAuthenticated) {
-                throw new WachtAuthError("unauthenticated", 401, "Authentication required");
+                throw new WachtAuthError(
+                    "unauthenticated",
+                    401,
+                    "Authentication required",
+                );
             }
 
             if (!has(protectOptions || {})) {
@@ -712,7 +723,11 @@ async function authenticateRequestWithHandshake(
     const transportToken = sessionToken || devSessionToken;
 
     if (!transportToken) {
-        const auth = decorateAuth(await sdkGetAuth(request, options), request, options);
+        const auth = decorateAuth(
+            await sdkGetAuth(request, options),
+            request,
+            options,
+        );
         setSerializedAuthHeader(headers, auth);
         return { auth, headers };
     }
@@ -939,7 +954,10 @@ export function wachtMiddleware(
                         error.redirectUrl &&
                         !isApiLikeRequest(request, options)
                     ) {
-                        const redirectUrl = new URL(error.redirectUrl, request.url);
+                        const redirectUrl = new URL(
+                            error.redirectUrl,
+                            request.url,
+                        );
                         response = NextResponse.redirect(redirectUrl);
                     } else if (
                         error.code === "unauthenticated" &&
