@@ -1,6 +1,7 @@
 import { useCallback } from "react";
 import useSWR from "swr";
 import { useClient } from "./use-client";
+import { responseMapper } from "../utils/response-mapper";
 
 export interface ActorMcpServerSummary {
     id: string;
@@ -17,26 +18,14 @@ interface ActorMcpServerConnectResponse {
     auth_url: string;
 }
 
-interface ApiEnvelope<T> {
-    data: T;
-    message?: string;
-}
-
-async function parseResponse<T>(response: Response): Promise<T> {
-    const payload = (await response.json()) as ApiEnvelope<T>;
-    if (!response.ok) {
-        throw new Error(payload.message || "Request failed");
-    }
-    return payload.data;
-}
-
 export function useActorMcpServers(enabled = true) {
     const { client } = useClient();
     const key = enabled ? "wacht-ai-actor-mcp-servers" : null;
 
     const fetcher = useCallback(async () => {
         const response = await client(`/ai/mcp-servers`);
-        return parseResponse<ActorMcpServerSummary[]>(response);
+        const parsed = await responseMapper<ActorMcpServerSummary[]>(response);
+        return parsed.data;
     }, [client]);
 
     const { data, error, mutate, isLoading } = useSWR(key, fetcher, {
@@ -49,7 +38,7 @@ export function useActorMcpServers(enabled = true) {
                 method: "POST",
                 body: new URLSearchParams(),
             });
-            return parseResponse<ActorMcpServerConnectResponse>(response);
+            return responseMapper<ActorMcpServerConnectResponse>(response);
         },
         [client],
     );
@@ -60,8 +49,9 @@ export function useActorMcpServers(enabled = true) {
                 method: "POST",
                 body: new URLSearchParams(),
             });
-            await parseResponse<{ success: boolean }>(response);
+            const parsed = await responseMapper<{ success: boolean }>(response);
             await mutate();
+            return parsed;
         },
         [client, mutate],
     );

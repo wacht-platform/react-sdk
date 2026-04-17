@@ -283,7 +283,7 @@ export function useActorProjects(options: { includeArchived?: boolean; enabled?:
     });
     const parsed = await responseMapper<ActorProject>(response);
     await mutate();
-    return parsed.data;
+    return parsed;
   }, [client, mutate]);
 
   const updateProject = useCallback(async (projectId: string, request: UpdateActorProjectRequest) => {
@@ -293,7 +293,7 @@ export function useActorProjects(options: { includeArchived?: boolean; enabled?:
     });
     const parsed = await responseMapper<ActorProject>(response);
     await mutate();
-    return parsed.data;
+    return parsed;
   }, [client, mutate]);
 
   const archiveProject = useCallback(async (projectId: string) => {
@@ -303,7 +303,7 @@ export function useActorProjects(options: { includeArchived?: boolean; enabled?:
     });
     const parsed = await responseMapper<ActorProject>(response);
     await mutate();
-    return parsed.data;
+    return parsed;
   }, [client, mutate]);
 
   const unarchiveProject = useCallback(async (projectId: string) => {
@@ -313,7 +313,7 @@ export function useActorProjects(options: { includeArchived?: boolean; enabled?:
     });
     const parsed = await responseMapper<ActorProject>(response);
     await mutate();
-    return parsed.data;
+    return parsed;
   }, [client, mutate]);
 
   return {
@@ -395,7 +395,7 @@ export function useProjectThreads(projectId?: string, options: { includeArchived
     if (targetProjectId === projectId) {
       await mutate();
     }
-    return parsed.data;
+    return parsed;
   }, [projectId, client, mutate]);
 
   const createThread = useCallback(async (request: CreateAgentThreadRequest) => {
@@ -410,7 +410,7 @@ export function useProjectThreads(projectId?: string, options: { includeArchived
     });
     const parsed = await responseMapper<AgentThread>(response);
     await mutate();
-    return parsed.data;
+    return parsed;
   }, [client, mutate]);
 
   const archiveThread = useCallback(async (threadId: string) => {
@@ -420,7 +420,7 @@ export function useProjectThreads(projectId?: string, options: { includeArchived
     });
     const parsed = await responseMapper<AgentThread>(response);
     await mutate();
-    return parsed.data;
+    return parsed;
   }, [client, mutate]);
 
   const unarchiveThread = useCallback(async (threadId: string) => {
@@ -430,7 +430,7 @@ export function useProjectThreads(projectId?: string, options: { includeArchived
     });
     const parsed = await responseMapper<AgentThread>(response);
     await mutate();
-    return parsed.data;
+    return parsed;
   }, [client, mutate]);
 
   return {
@@ -585,7 +585,7 @@ export function useAgentThread(threadId?: string, enabled = true) {
     });
     const parsed = await responseMapper<AgentThread>(response);
     await thread.mutate();
-    return parsed.data;
+    return parsed;
   }, [threadId, client, thread]);
 
   const archiveThread = useCallback(async () => {
@@ -596,7 +596,7 @@ export function useAgentThread(threadId?: string, enabled = true) {
     });
     const parsed = await responseMapper<AgentThread>(response);
     await thread.mutate();
-    return parsed.data;
+    return parsed;
   }, [threadId, client, thread]);
 
   const unarchiveThread = useCallback(async () => {
@@ -607,7 +607,7 @@ export function useAgentThread(threadId?: string, enabled = true) {
     });
     const parsed = await responseMapper<AgentThread>(response);
     await thread.mutate();
-    return parsed.data;
+    return parsed;
   }, [threadId, client, thread]);
 
   return {
@@ -864,7 +864,7 @@ export function useProjectTasks(projectId?: string, enabled = true, options: Pro
     });
     const parsed = await responseMapper<ProjectTaskBoardItem>(response);
     await items.mutate();
-    return parsed.data;
+    return parsed;
   }, [projectId, client, items]);
 
   const archiveTask = useCallback(async (itemId: string) => {
@@ -875,7 +875,7 @@ export function useProjectTasks(projectId?: string, enabled = true, options: Pro
     });
     const parsed = await responseMapper<ProjectTaskBoardItem>(response);
     await items.mutate();
-    return parsed.data;
+    return parsed;
   }, [projectId, client, items]);
 
   const unarchiveTask = useCallback(async (itemId: string) => {
@@ -886,7 +886,7 @@ export function useProjectTasks(projectId?: string, enabled = true, options: Pro
     });
     const parsed = await responseMapper<ProjectTaskBoardItem>(response);
     await items.mutate();
-    return parsed.data;
+    return parsed;
   }, [projectId, client, items]);
 
   return {
@@ -992,7 +992,7 @@ export function useProjectTaskBoardItem(projectId?: string, itemId?: string, ena
     const parsed = await responseMapper<ProjectTaskBoardItem>(response);
     await item.mutate();
     await workspace.mutate();
-    return parsed.data;
+    return parsed;
   }, [projectId, itemId, client, item, workspace]);
 
   const archiveItem = useCallback(async () => {
@@ -1003,7 +1003,7 @@ export function useProjectTaskBoardItem(projectId?: string, itemId?: string, ena
     });
     const parsed = await responseMapper<ProjectTaskBoardItem>(response);
     await item.mutate();
-    return parsed.data;
+    return parsed;
   }, [projectId, itemId, client, item]);
 
   const unarchiveItem = useCallback(async () => {
@@ -1014,7 +1014,7 @@ export function useProjectTaskBoardItem(projectId?: string, itemId?: string, ena
     });
     const parsed = await responseMapper<ProjectTaskBoardItem>(response);
     await item.mutate();
-    return parsed.data;
+    return parsed;
   }, [projectId, itemId, client, item]);
 
   const getTaskWorkspaceFile = useCallback(async (path: string) => {
@@ -1023,7 +1023,7 @@ export function useProjectTaskBoardItem(projectId?: string, itemId?: string, ena
       `/ai/projects/${projectId}/board/items/${itemId}/filesystem/file${buildTaskWorkspaceFileQuery(path, options.includeArchived)}`,
     );
     const parsed = await responseMapper<ProjectTaskWorkspaceFileContent>(response);
-    return parsed.data;
+    return parsed;
   }, [projectId, itemId, client, options.includeArchived]);
 
   const listTaskWorkspaceDirectory = useCallback(async (path?: string) => {
@@ -1032,7 +1032,7 @@ export function useProjectTaskBoardItem(projectId?: string, itemId?: string, ena
       `/ai/projects/${projectId}/board/items/${itemId}/filesystem${buildDirectoryQuery(path, options.includeArchived)}`,
     );
     const parsed = await responseMapper<ProjectTaskWorkspaceListing>(response);
-    return parsed.data;
+    return parsed;
   }, [projectId, itemId, client, options.includeArchived]);
 
   const appendJournal = useCallback(async (
@@ -1061,7 +1061,7 @@ export function useProjectTaskBoardItem(projectId?: string, itemId?: string, ena
     const parsed = await responseMapper<ProjectTaskBoardItemEvent>(response);
     await events.mutate();
     await workspace.mutate();
-    return parsed.data;
+    return parsed;
   }, [projectId, itemId, client, events, workspace]);
 
   const flattenedEvents = useMemo(

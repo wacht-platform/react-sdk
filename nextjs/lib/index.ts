@@ -5,7 +5,7 @@ export {
     SSOCallback,
     MagicLinkVerification,
 } from "@wacht/jsx";
-export { UserButton, UserControls, ManageAccount } from "@wacht/jsx";
+export { UserButton, UserControls, ManageAccount, ManageWorkspace } from "@wacht/jsx";
 export { DeploymentInitialized, DeploymentInitializing } from "@wacht/jsx";
 export { DefaultStylesProvider } from "@wacht/jsx";
 export {
@@ -34,7 +34,7 @@ export {
     useForgotPassword,
     useNotifications,
     useNotificationStream,
-    useScopeUnread,
+    useNotificationUnreadCount,
     useActiveOrganization,
     useActiveTenancy,
     useWorkspaceList,

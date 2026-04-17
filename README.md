@@ -1,45 +1,59 @@
-<h1 align="center">
-  <a href="https://wacht.dev" style="text-decoration:none;">Wacht React SDK Workspace</a>
-</h1>
+# Wacht React SDK
 
-<p align="center">Official React packages for integrating Wacht across frontend and framework server boundaries.</p>
+Official React packages for adding Wacht to Next.js, React Router, TanStack Router, or a shared React UI layer.
 
-<p align="center">
-  <a href="https://docs.wacht.dev">Documentation</a> |
-  <a href="https://github.com/wacht-platform">GitHub</a>
-</p>
+- Docs: https://docs.wacht.dev
+- npm: https://www.npmjs.com/org/wacht
 
 ## Packages
 
-- `@wacht/types` - shared TypeScript contracts
-- `@wacht/jsx` - framework-agnostic React components and hooks
-- `@wacht/nextjs` - Next.js adapter (`/server` exports included)
-- `@wacht/react-router` - React Router adapter (`/server` exports included)
-- `@wacht/tanstack-router` - TanStack Router adapter (`/server` exports included)
+- `@wacht/types`
+  Shared TypeScript contracts used across the SDK.
 
-## How this workspace is organized
+- `@wacht/jsx`
+  Shared React components and hooks. This is the core client layer for authentication, account management, multi-tenancy, notifications, agents, webhooks, and API identity.
 
-- `wacht-types/` - type package consumed by all adapters
-- `jsx/` - core UI and hook layer
-- `nextjs/`, `react-router/`, `tanstack-router/` - framework bindings
+- `@wacht/nextjs`
+  Next.js adapter. Re-exports the shared React layer and adds the Next.js provider, navigation adapter, and server helpers.
 
-Each framework package re-exports JSX-level primitives and adds framework-specific provider + server helpers.
+- `@wacht/react-router`
+  React Router adapter. Re-exports the shared React layer and adds the React Router provider, navigation adapter, and server helpers.
 
-## Build
+- `@wacht/tanstack-router`
+  TanStack Router adapter. Re-exports the shared React layer and adds the TanStack Router provider, navigation adapter, and server helpers.
 
-Install dependencies:
+## Workspace layout
+
+- `wacht-types/`
+  Shared type definitions.
+
+- `jsx/`
+  Shared React components, hooks, providers, and utilities.
+
+- `nextjs/`
+  Next.js bindings.
+
+- `react-router/`
+  React Router bindings.
+
+- `tanstack-router/`
+  TanStack Router bindings.
+
+## Install dependencies
 
 ```bash
 pnpm install
 ```
 
-Build all packages:
+## Build
+
+Build the full workspace:
 
 ```bash
 pnpm build
 ```
 
-Build individual packages:
+Build a single package:
 
 ```bash
 pnpm build:types
@@ -49,9 +63,9 @@ pnpm build:react-router
 pnpm build:tanstack-router
 ```
 
-## Release notes
+## Publish notes
 
-All publishable packages ship from `dist/` and are versioned independently.
+Each package ships from its own `dist/` output and is versioned independently.
 
 ## License
 

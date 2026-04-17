@@ -1,5 +1,6 @@
 import { responseMapper } from "../utils/response-mapper";
 import type {
+    ApiResult,
     CancelReplayTaskResponse,
     DeleteEndpointResponse,
     EndpointWithSubscriptions,
@@ -35,12 +36,12 @@ const URLENCODED_HEADERS = {
     "Content-Type": "application/x-www-form-urlencoded",
 };
 
-async function parseResponseData<T>(response: Response, errorMessage: string): Promise<T> {
+async function parseResponseData<T>(response: Response, errorMessage: string): Promise<ApiResult<T>> {
     const parsed = await responseMapper<T>(response);
     if (!parsed || !("data" in parsed)) {
         throw new Error(errorMessage);
     }
-    return parsed.data;
+    return parsed;
 }
 
 export async function fetchWebhookAppSession(client: HttpClient): Promise<WebhookAppSessionData> {
@@ -51,10 +52,11 @@ export async function fetchWebhookAppSession(client: HttpClient): Promise<Webhoo
         }
         throw new Error("Failed to fetch webhook app session");
     }
-    return parseResponseData<WebhookAppSessionData>(
+    const parsed = await parseResponseData<WebhookAppSessionData>(
         response,
         "Failed to fetch webhook app session",
     );
+    return parsed.data;
 }
 
 export async function exchangeWebhookTicket(
@@ -73,7 +75,7 @@ export async function exchangeWebhookTicket(
 export async function createWebhookEndpoint(
     client: HttpClient,
     options: CreateEndpointOptions,
-): Promise<EndpointWithSubscriptions> {
+): Promise<ApiResult<EndpointWithSubscriptions>> {
     const formData = buildCreateEndpointFormData(options);
     const response = await client("/webhook/endpoints", {
         method: "POST",
@@ -90,7 +92,7 @@ export async function updateWebhookEndpoint(
     client: HttpClient,
     endpointId: string,
     options: UpdateEndpointOptions,
-): Promise<EndpointWithSubscriptions> {
+): Promise<ApiResult<EndpointWithSubscriptions>> {
     const formData = buildUpdateEndpointFormData(options);
     const response = await client(`/webhook/endpoints/${endpointId}`, {
         method: "PUT",
@@ -106,7 +108,7 @@ export async function updateWebhookEndpoint(
 export async function deleteWebhookEndpoint(
     client: HttpClient,
     endpointId: string,
-): Promise<DeleteEndpointResponse> {
+): Promise<ApiResult<DeleteEndpointResponse>> {
     const response = await client(`/webhook/endpoints/${endpointId}`, {
         method: "DELETE",
     });
@@ -120,7 +122,7 @@ export async function testWebhookEndpoint(
     client: HttpClient,
     endpointId: string,
     options: TestEndpointOptions,
-): Promise<TestEndpointResponse> {
+): Promise<ApiResult<TestEndpointResponse>> {
     const formData = buildTestEndpointFormData(options);
     const response = await client(`/webhook/endpoints/${endpointId}/test`, {
         method: "POST",
@@ -133,7 +135,7 @@ export async function testWebhookEndpoint(
     );
 }
 
-export async function rotateWebhookSecret(client: HttpClient): Promise<WebhookAppInfo> {
+export async function rotateWebhookSecret(client: HttpClient): Promise<ApiResult<WebhookAppInfo>> {
     const response = await client("/webhook/rotate-secret", { method: "POST" });
     return parseResponseData<WebhookAppInfo>(
         response,
@@ -144,7 +146,7 @@ export async function rotateWebhookSecret(client: HttpClient): Promise<WebhookAp
 export async function updateWebhookSettings(
     client: HttpClient,
     options: UpdateWebhookSettingsOptions,
-): Promise<WebhookSettingsResponse> {
+): Promise<ApiResult<WebhookSettingsResponse>> {
     const params = new URLSearchParams();
     for (const email of options.failure_notification_emails) {
         params.append("failure_notification_emails", email);
@@ -164,7 +166,7 @@ export async function updateWebhookSettings(
 export async function replayWebhookDelivery(
     client: HttpClient,
     options: ReplayWebhookDeliveryOptions,
-): Promise<ReplayWebhookDeliveryResponse> {
+): Promise<ApiResult<ReplayWebhookDeliveryResponse>> {
     const formData = buildReplayFormData(options);
     const response = await client("/webhook/deliveries/replay", {
         method: "POST",
@@ -180,7 +182,7 @@ export async function replayWebhookDelivery(
 export async function fetchWebhookDeliveryDetail(
     client: HttpClient,
     deliveryId: string,
-): Promise<WebhookDeliveryDetail[]> {
+): Promise<ApiResult<WebhookDeliveryDetail[]>> {
     const response = await client(`/webhook/deliveries/${deliveryId}`, {
         method: "GET",
     });
@@ -193,7 +195,7 @@ export async function fetchWebhookDeliveryDetail(
 export async function fetchWebhookReplayTaskStatus(
     client: HttpClient,
     { taskId }: ReplayTaskStatusOptions,
-): Promise<ReplayTaskStatusResponse> {
+): Promise<ApiResult<ReplayTaskStatusResponse>> {
     const response = await client(`/webhook/deliveries/replay/${taskId}`, {
         method: "GET",
     });
@@ -206,7 +208,7 @@ export async function fetchWebhookReplayTaskStatus(
 export async function fetchWebhookReplayTasks(
     client: HttpClient,
     options?: ReplayTaskListOptions,
-): Promise<ReplayTaskListResponse> {
+): Promise<ApiResult<ReplayTaskListResponse>> {
     const limit = options?.limit ?? 50;
     const offset = options?.offset ?? 0;
     const response = await client(
@@ -224,7 +226,7 @@ export async function fetchWebhookReplayTasks(
 export async function cancelWebhookReplayTask(
     client: HttpClient,
     { taskId }: CancelReplayTaskOptions,
-): Promise<CancelReplayTaskResponse> {
+): Promise<ApiResult<CancelReplayTaskResponse>> {
     const response = await client(`/webhook/deliveries/replay/${taskId}/cancel`, {
         method: "POST",
     });

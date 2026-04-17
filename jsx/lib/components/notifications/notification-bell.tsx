@@ -3,7 +3,7 @@ import ReactDOM from "react-dom";
 import styled, { keyframes, css } from "styled-components";
 import { Bell } from "lucide-react";
 import { DefaultStylesProvider } from "../utility/root";
-import { useScopeUnread } from "@/hooks/use-notifications";
+import { useNotificationUnreadCount } from "@/hooks/use-notifications";
 import { NotificationPopover } from "./notification-popover";
 import { usePopoverPosition } from "@/hooks/use-popover-position";
 import type { NotificationListParams } from "@/types";
@@ -101,7 +101,7 @@ export function NotificationBell({
     const popoverRef = useRef<HTMLDivElement>(null);
     const buttonRef = useRef<HTMLButtonElement>(null);
 
-    const { count: unreadCount, refetch: refetchUnread } = useScopeUnread({
+    const { count: unreadCount, refetch: refetchUnread } = useNotificationUnreadCount({
         scope,
     });
 

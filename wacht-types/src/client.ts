@@ -9,11 +9,6 @@ export type ClinetReponse<T> = {
   data: T;
 };
 
-export type ErrorInterface = {
-  message: string;
-  code: ErrorCode;
-};
-
 export const ErrorCode = {
   Unknown: "unknown",
   UserNotFound: "USER_NOT_FOUND",
@@ -49,7 +44,7 @@ export const ErrorCode = {
 
 export type ErrorCode = typeof ErrorCode[keyof typeof ErrorCode];
 
-export type ResultInterface<T, E> =
+export type ResultInterface<T> =
   | {
     data: never;
   }
@@ -57,4 +52,4 @@ export type ResultInterface<T, E> =
     data: T;
   };
 
-export type ApiResult<T, E = ErrorInterface> = ResultInterface<T, E>;
+export type ApiResult<T> = ResultInterface<T>;

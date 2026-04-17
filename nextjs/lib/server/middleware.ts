@@ -1,8 +1,10 @@
 import { NextRequest, NextResponse } from "next/server";
 import type { NextMiddlewareResult } from "next/dist/server/web/types";
 import {
+    exchangeSessionForAuthToken,
     getAuth as sdkGetAuth,
     getAuthFromToken as sdkGetAuthFromToken,
+    verifyAuthToken,
     WachtAuthError,
     type ResolvedAuthzIdentity,
     type JWTPayload,
@@ -102,6 +104,50 @@ export async function requireAuth(
     const auth = await getAuth(request, options);
     await auth.protect();
     return auth;
+}
+
+export async function getVerifiedJwtClaims(
+    request: Request,
+    options: WachtMiddlewareOptions = {},
+): Promise<JWTPayload | null> {
+    const { authCookieName, sessionCookieName, devSessionCookieName } =
+        resolveCookieNames(options);
+
+    const bearerToken = request.headers
+        .get("authorization")
+        ?.startsWith("Bearer ")
+        ? request.headers.get("authorization")!.slice(7).trim()
+        : null;
+    const authCookieToken = readCookie(request, authCookieName);
+
+    for (const token of [bearerToken, authCookieToken]) {
+        if (!token) continue;
+        const payload = await verifyAuthToken(token, options);
+        if (payload) {
+            return payload;
+        }
+    }
+
+    const sessionToken = readCookie(request, sessionCookieName);
+    const devSessionToken = readCookie(request, devSessionCookieName);
+    const isDevSession = !sessionToken && !!devSessionToken;
+    const transportToken = sessionToken || devSessionToken;
+
+    if (!transportToken) {
+        return null;
+    }
+
+    const exchanged = await exchangeSessionForAuthToken(
+        transportToken,
+        options,
+        isDevSession,
+    );
+
+    if (!exchanged.authToken) {
+        return null;
+    }
+
+    return verifyAuthToken(exchanged.authToken, options);
 }
 
 export function wachtMiddleware(

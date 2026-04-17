@@ -1,5 +1,4 @@
 import { ApiResult, Client } from "@/types";
-import { ErrorInterface } from "@/types";
 import { responseMapper } from "../utils/response-mapper";
 import { useClient } from "./use-client";
 import { useState } from "react";
@@ -16,7 +15,7 @@ export interface DeploymentInvitationData {
 }
 
 export type SignUpFunction = {
-  create: (params: SignUpParams) => Promise<ApiResult<unknown, ErrorInterface>>;
+  create: (params: SignUpParams) => Promise<ApiResult<unknown>>;
   prepareVerification: (
     params: SignupVerificationParams,
   ) => Promise<ApiResult<PrepareVerificationResponse>>;

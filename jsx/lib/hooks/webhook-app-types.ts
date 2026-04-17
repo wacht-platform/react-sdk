@@ -1,4 +1,5 @@
 import type {
+    ApiResult,
     CancelReplayTaskOptions,
     CancelReplayTaskResponse,
     CreateEndpointOptions,
@@ -30,31 +31,31 @@ export interface UseWebhookAppSessionResult {
     refetch: () => Promise<void>;
     createEndpoint: (
         options: CreateEndpointOptions,
-    ) => Promise<EndpointWithSubscriptions>;
+    ) => Promise<ApiResult<EndpointWithSubscriptions>>;
     updateEndpoint: (
         endpointId: string,
         options: UpdateEndpointOptions,
-    ) => Promise<EndpointWithSubscriptions>;
-    deleteEndpoint: (endpointId: string) => Promise<DeleteEndpointResponse>;
+    ) => Promise<ApiResult<EndpointWithSubscriptions>>;
+    deleteEndpoint: (endpointId: string) => Promise<ApiResult<DeleteEndpointResponse>>;
     testEndpoint: (
         endpointId: string,
         options: TestEndpointOptions,
-    ) => Promise<TestEndpointResponse>;
-    rotateSecret: () => Promise<WebhookAppInfo>;
+    ) => Promise<ApiResult<TestEndpointResponse>>;
+    rotateSecret: () => Promise<ApiResult<WebhookAppInfo>>;
     updateSettings: (
         options: UpdateWebhookSettingsOptions,
-    ) => Promise<WebhookSettingsResponse>;
+    ) => Promise<ApiResult<WebhookSettingsResponse>>;
     replayDelivery: (
         options: ReplayWebhookDeliveryOptions,
-    ) => Promise<ReplayWebhookDeliveryResponse>;
+    ) => Promise<ApiResult<ReplayWebhookDeliveryResponse>>;
     fetchReplayTaskStatus: (
         options: ReplayTaskStatusOptions,
-    ) => Promise<ReplayTaskStatusResponse>;
+    ) => Promise<ApiResult<ReplayTaskStatusResponse>>;
     fetchReplayTasks: (
         options?: ReplayTaskListOptions,
-    ) => Promise<ReplayTaskListResponse>;
+    ) => Promise<ApiResult<ReplayTaskListResponse>>;
     cancelReplayTask: (
         options: CancelReplayTaskOptions,
-    ) => Promise<CancelReplayTaskResponse>;
-    fetchDeliveryDetail: (deliveryId: string) => Promise<WebhookDeliveryDetail[]>;
+    ) => Promise<ApiResult<CancelReplayTaskResponse>>;
+    fetchDeliveryDetail: (deliveryId: string) => Promise<ApiResult<WebhookDeliveryDetail[]>>;
 }

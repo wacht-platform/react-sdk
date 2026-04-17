@@ -1,13 +1,13 @@
 import { useClient } from "./use-client";
 import { responseMapper } from "../utils/response-mapper";
-import { ApiResult, ErrorInterface, Session } from "@/types";
+import { ApiResult, Session } from "@/types";
 
 export function useForgotPassword() {
   const { client, loading } = useClient();
 
   const forgotPassword = async (
     email: string
-  ): Promise<ApiResult<{}, ErrorInterface>> => {
+  ): Promise<ApiResult<{}>> => {
     const form = new FormData();
     form.append("email", email);
 
@@ -22,7 +22,7 @@ export function useForgotPassword() {
   const verifyOtp = async (
     email: string,
     otp: string
-  ): Promise<ApiResult<{ token: string }, ErrorInterface>> => {
+  ): Promise<ApiResult<{ token: string }>> => {
     const form = new FormData();
     form.append("email", email);
     form.append("otp", otp);
@@ -38,7 +38,7 @@ export function useForgotPassword() {
   const resetPassword = async (
     token: string,
     password: string
-  ): Promise<ApiResult<Session, ErrorInterface>> => {
+  ): Promise<ApiResult<Session>> => {
     const form = new FormData();
     form.append("token", token);
     form.append("password", password);

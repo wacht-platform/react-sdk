@@ -3,6 +3,7 @@ import useSWR from "swr";
 import { useClient } from "./use-client";
 import { responseMapper } from "../utils/response-mapper";
 import type {
+	ApiResult,
 	ApiKey,
 	ApiKeyWithSecret,
 	CreateApiAuthKeyInput,
@@ -13,9 +14,9 @@ import type {
 
 export interface UseApiAuthKeysReturn {
 	keys: ApiKey[];
-	createKey: (input: CreateApiAuthKeyInput) => Promise<ApiKeyWithSecret>;
-	rotateKey: (input: RotateApiAuthKeyInput) => Promise<ApiKeyWithSecret>;
-	revokeKey: (input: RevokeApiAuthKeyInput) => Promise<void>;
+	createKey: (input: CreateApiAuthKeyInput) => Promise<ApiResult<ApiKeyWithSecret>>;
+	rotateKey: (input: RotateApiAuthKeyInput) => Promise<ApiResult<ApiKeyWithSecret>>;
+	revokeKey: (input: RevokeApiAuthKeyInput) => Promise<ApiResult<void>>;
 	loading: boolean;
 	error: unknown;
 	refetch: () => void;
@@ -47,7 +48,7 @@ export function useApiAuthKeys(filters: UseApiAuthKeysFilters = {}): UseApiAuthK
 		}
 	);
 
-	const createKey = useCallback(async (input: CreateApiAuthKeyInput): Promise<ApiKeyWithSecret> => {
+	const createKey = useCallback(async (input: CreateApiAuthKeyInput): Promise<ApiResult<ApiKeyWithSecret>> => {
 		const formData = new URLSearchParams();
 		formData.set("name", input.name);
 		if (input.expires_at) {
@@ -61,31 +62,33 @@ export function useApiAuthKeys(filters: UseApiAuthKeysFilters = {}): UseApiAuthK
 
 		const parsed = await responseMapper<ApiKeyWithSecret>(response);
 		await mutate();
-		return parsed.data;
+		return parsed;
 	}, [client, mutate]);
 
-	const rotateKey = useCallback(async (input: RotateApiAuthKeyInput): Promise<ApiKeyWithSecret> => {
+	const rotateKey = useCallback(async (input: RotateApiAuthKeyInput): Promise<ApiResult<ApiKeyWithSecret>> => {
 		const response = await client(`/api-auth/keys/${input.key_id}/rotate`, {
 			method: "POST",
 		});
 
 		const parsed = await responseMapper<ApiKeyWithSecret>(response);
 		await mutate();
-		return parsed.data;
+		return parsed;
 	}, [client, mutate]);
 
-	const revokeKey = useCallback(async (input: RevokeApiAuthKeyInput): Promise<void> => {
+	const revokeKey = useCallback(async (input: RevokeApiAuthKeyInput): Promise<ApiResult<void>> => {
 		const formData = new URLSearchParams();
 		if (input.reason) {
 			formData.set("reason", input.reason);
 		}
 
-		await client(`/api-auth/keys/${input.key_id}/revoke`, {
+		const response = await client(`/api-auth/keys/${input.key_id}/revoke`, {
 			method: "POST",
 			body: formData,
 		});
 
+		const parsed = await responseMapper<void>(response);
 		await mutate();
+		return parsed;
 	}, [client, mutate]);
 
 	return {

@@ -1,4 +1,4 @@
-export * from "./use-signin";
+export { useSignIn, OAuthProvider } from "./use-signin";
 export * from "./use-signup";
 export * from "./use-session";
 export * from "./use-client";
@@ -8,7 +8,7 @@ export * from "./use-waitlist";
 export * from "./use-organization";
 export * from "./use-workspace";
 export * from "./use-sso-callback";
-export * from "./use-magic-link";
+export { useMagicLinkVerification } from "./use-magic-link";
 export * from "./use-navigation";
 export * from "./use-forgot-password";
 export * from "./use-notifications";

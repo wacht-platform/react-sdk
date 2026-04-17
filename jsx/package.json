@@ -1,6 +1,6 @@
 {
     "name": "@wacht/jsx",
-    "version": "1.0.0-beta.11",
+    "version": "1.0.0-beta.23",
     "description": "",
     "type": "module",
     "main": "dist/index.cjs.js",
@@ -22,7 +22,7 @@
         "vite-plugin-dts": "^4.4.0"
     },
     "peerDependencies": {
-        "@wacht/types": "^1.0.0-beta.11",
+        "@wacht/types": "^1.0.0-beta.23",
         "react": "catalog:",
         "react-dom": "catalog:"
     },

@@ -1,6 +1,6 @@
 {
     "name": "@wacht/tanstack-router",
-    "version": "1.0.0-beta.11",
+    "version": "1.0.0-beta.23",
     "description": "TanStack Router adapter for Wacht authentication library",
     "type": "module",
     "main": "dist/index.cjs.js",
@@ -39,8 +39,8 @@
         "vite-plugin-dts": "^4.4.0"
     },
     "peerDependencies": {
-        "@wacht/jsx": "^1.0.0-beta.11",
-        "@wacht/types": "^1.0.0-beta.11",
+        "@wacht/jsx": "^1.0.0-beta.23",
+        "@wacht/types": "^1.0.0-beta.23",
         "@tanstack/react-router": "^1.0.0",
         "react": "catalog:",
         "react-dom": "catalog:"

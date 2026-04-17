@@ -1,7 +1,7 @@
 import { useState, useEffect } from "react";
 import { useClient } from "./use-client";
 import { responseMapper } from "../utils/response-mapper";
-import { ApiResult, ErrorInterface } from "@/types";
+import { ApiResult } from "@/types";
 
 export interface MagicLinkParams {
   token?: string;
@@ -11,7 +11,7 @@ export interface MagicLinkParams {
 
 export interface UseMagicLinkVerificationReturnType {
   loading: boolean;
-  verifyMagicLink: (params: MagicLinkParams) => Promise<ApiResult<{}, ErrorInterface>>;
+  verifyMagicLink: (params: MagicLinkParams) => Promise<ApiResult<{}>>;
   success: boolean | null;
 }
 
@@ -20,7 +20,7 @@ export function useMagicLinkVerification(): UseMagicLinkVerificationReturnType {
   const [verificationLoading, setVerificationLoading] = useState(false);
   const [verificationSuccess, setVerificationSuccess] = useState<boolean | null>(null);
 
-  const verifyMagicLink = async (params: MagicLinkParams): Promise<ApiResult<{}, ErrorInterface>> => {
+  const verifyMagicLink = async (params: MagicLinkParams): Promise<ApiResult<{}>> => {
     if (!params.token || !params.attempt) {
       throw new Error("Invalid magic link parameters");
     }

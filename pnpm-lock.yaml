@@ -46,7 +46,7 @@ importers:
         version: 19.2.3(@types/react@19.2.14)
       next:
         specifier: 'catalog:'
-        version: 16.1.6(react-dom@19.2.4(react@19.2.4))(react@19.2.4)
+        version: 16.1.6(@babel/core@7.29.0)(react-dom@19.2.4(react@19.2.4))(react@19.2.4)
       react:
         specifier: 'catalog:'
         version: 19.2.4
@@ -63,7 +63,7 @@ importers:
   jsx:
     dependencies:
       '@wacht/types':
-        specifier: ^1.0.0-beta.11
+        specifier: ^1.0.0-beta.23
         version: link:../wacht-types
       lucide-react:
         specifier: ^0.474.0
@@ -109,14 +109,14 @@ importers:
         specifier: ^1.0.0-beta.14
         version: 1.0.0-beta.14
       '@wacht/jsx':
-        specifier: ^1.0.0-beta.11
+        specifier: ^1.0.0-beta.23
         version: link:../jsx
       '@wacht/types':
-        specifier: ^1.0.0-beta.11
+        specifier: ^1.0.0-beta.23
         version: link:../wacht-types
       next:
         specifier: 'catalog:'
-        version: 16.1.6(react-dom@19.2.4(react@19.2.4))(react@19.2.4)
+        version: 16.1.6(@babel/core@7.29.0)(react-dom@19.2.4(react@19.2.4))(react@19.2.4)
       react:
         specifier: 'catalog:'
         version: 19.2.4
@@ -146,10 +146,10 @@ importers:
         specifier: ^1.0.0-beta.6
         version: 1.0.0-beta.6
       '@wacht/jsx':
-        specifier: ^1.0.0-beta.11
+        specifier: ^1.0.0-beta.23
         version: link:../jsx
       '@wacht/types':
-        specifier: ^1.0.0-beta.11
+        specifier: ^1.0.0-beta.23
         version: link:../wacht-types
       react:
         specifier: 'catalog:'
@@ -186,10 +186,10 @@ importers:
         specifier: ^1.0.0-beta.6
         version: 1.0.0-beta.6
       '@wacht/jsx':
-        specifier: ^1.0.0-beta.11
+        specifier: ^1.0.0-beta.23
         version: link:../jsx
       '@wacht/types':
-        specifier: ^1.0.0-beta.11
+        specifier: ^1.0.0-beta.23
         version: link:../wacht-types
       react:
         specifier: 'catalog:'
@@ -2429,7 +2429,7 @@ snapshots:
 
   nanoid@3.3.11: {}
 
-  next@16.1.6(react-dom@19.2.4(react@19.2.4))(react@19.2.4):
+  next@16.1.6(@babel/core@7.29.0)(react-dom@19.2.4(react@19.2.4))(react@19.2.4):
     dependencies:
       '@next/env': 16.1.6
       '@swc/helpers': 0.5.15
@@ -2438,7 +2438,7 @@ snapshots:
       postcss: 8.4.31
       react: 19.2.4
       react-dom: 19.2.4(react@19.2.4)
-      styled-jsx: 5.1.6(react@19.2.4)
+      styled-jsx: 5.1.6(@babel/core@7.29.0)(react@19.2.4)
     optionalDependencies:
       '@next/swc-darwin-arm64': 16.1.6
       '@next/swc-darwin-x64': 16.1.6
@@ -2641,10 +2641,12 @@ snapshots:
     optionalDependencies:
       react-dom: 19.2.4(react@19.2.4)
 
-  styled-jsx@5.1.6(react@19.2.4):
+  styled-jsx@5.1.6(@babel/core@7.29.0)(react@19.2.4):
     dependencies:
       client-only: 0.0.1
       react: 19.2.4
+    optionalDependencies:
+      '@babel/core': 7.29.0
 
   stylis@4.3.6: {}
 

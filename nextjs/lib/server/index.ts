@@ -3,6 +3,7 @@ export {
   createRouteMatcher,
   auth,
   getAuth,
+  getVerifiedJwtClaims,
   requireAuth,
   type WachtAuth,
   type NextWachtAuth,

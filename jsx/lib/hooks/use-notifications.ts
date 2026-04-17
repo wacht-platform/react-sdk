@@ -452,7 +452,7 @@ type UseScopeUnreadReturnType =
     refetch: () => Promise<void>;
   };
 
-export function useScopeUnread(params?: NotificationListParams): UseScopeUnreadReturnType {
+export function useNotificationUnreadCount(params?: NotificationListParams): UseScopeUnreadReturnType {
   const { client, loading: clientLoading } = useClient();
 
   const {

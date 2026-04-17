@@ -1,7 +1,7 @@
 import { useState } from "react";
 import { useClient } from "./use-client";
 import { responseMapper } from "../utils/response-mapper";
-import { type ApiResult, type ErrorInterface } from "@/types";
+import { type ApiResult } from "@/types";
 
 export interface WaitlistParams {
 	first_name: string;
@@ -30,7 +30,7 @@ export function useWaitlist() {
 
 	const joinWaitlist = async (
 		params: WaitlistParams,
-	): Promise<ApiResult<WaitlistResponse, ErrorInterface>> => {
+	): Promise<ApiResult<WaitlistResponse>> => {
 		setLoading(true);
 
 		try {

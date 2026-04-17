@@ -1,10 +1,11 @@
 import { useCallback } from "react";
 import { useClient } from "./use-client";
 import { responseMapper } from "../utils/response-mapper";
-import type { CreateEndpointOptions, EndpointWithSubscriptions } from "@wacht/types";
+import { buildCreateEndpointFormData } from "./webhook-app-form-data";
+import type { ApiResult, CreateEndpointOptions, EndpointWithSubscriptions } from "@wacht/types";
 
 interface UseCreateWebhookEndpointReturn {
-	createEndpoint: (options: CreateEndpointOptions) => Promise<EndpointWithSubscriptions>;
+	createEndpoint: (options: CreateEndpointOptions) => Promise<ApiResult<EndpointWithSubscriptions>>;
 	loading: boolean;
 	error: unknown;
 }
@@ -12,17 +13,9 @@ interface UseCreateWebhookEndpointReturn {
 export function useCreateWebhookEndpoint(): UseCreateWebhookEndpointReturn {
 	const { client } = useClient();
 
-	const createEndpoint = useCallback(async (options: CreateEndpointOptions): Promise<EndpointWithSubscriptions> => {
-		// Use form data to avoid CORS preflight
-		const formData = new URLSearchParams();
-		formData.append("url", options.url);
-		if (options.description) {
-			formData.append("description", options.description);
-		}
-		// Send each event as a separate form field
-		options.subscribed_events.forEach((event) => {
-			formData.append("subscribed_events", event);
-		});
+	const createEndpoint = useCallback(async (options: CreateEndpointOptions): Promise<ApiResult<EndpointWithSubscriptions>> => {
+		// Use form data to avoid CORS preflight.
+		const formData = buildCreateEndpointFormData(options);
 
 		const response = await client("/webhook/endpoints", {
 			method: "POST",
@@ -33,7 +26,7 @@ export function useCreateWebhookEndpoint(): UseCreateWebhookEndpointReturn {
 		});
 
 		const parsed = await responseMapper<EndpointWithSubscriptions>(response);
-		return parsed.data;
+		return parsed;
 	}, [client]);
 
 	return {
