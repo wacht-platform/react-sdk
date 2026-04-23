@@ -66,7 +66,7 @@ importers:
         specifier: ^2.1.10
         version: 2.1.10(react-dom@19.2.4(react@19.2.4))(react@19.2.4)
       '@wacht/types':
-        specifier: ^1.0.0-beta.23
+        specifier: ^1.0.0-beta.24
         version: link:../wacht-types
       qrcode.react:
         specifier: ^4.2.0
@@ -109,10 +109,10 @@ importers:
         specifier: ^1.0.0-beta.14
         version: 1.0.0-beta.14
       '@wacht/jsx':
-        specifier: ^1.0.0-beta.23
+        specifier: ^1.0.0-beta.24
         version: link:../jsx
       '@wacht/types':
-        specifier: ^1.0.0-beta.23
+        specifier: ^1.0.0-beta.24
         version: link:../wacht-types
       next:
         specifier: 'catalog:'
@@ -146,10 +146,10 @@ importers:
         specifier: ^1.0.0-beta.6
         version: 1.0.0-beta.6
       '@wacht/jsx':
-        specifier: ^1.0.0-beta.23
+        specifier: ^1.0.0-beta.24
         version: link:../jsx
       '@wacht/types':
-        specifier: ^1.0.0-beta.23
+        specifier: ^1.0.0-beta.24
         version: link:../wacht-types
       react:
         specifier: 'catalog:'
@@ -186,10 +186,10 @@ importers:
         specifier: ^1.0.0-beta.6
         version: 1.0.0-beta.6
       '@wacht/jsx':
-        specifier: ^1.0.0-beta.23
+        specifier: ^1.0.0-beta.24
         version: link:../jsx
       '@wacht/types':
-        specifier: ^1.0.0-beta.23
+        specifier: ^1.0.0-beta.24
         version: link:../wacht-types
       react:
         specifier: 'catalog:'
