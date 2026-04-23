@@ -2,15 +2,16 @@
 
 import React, { useState, useRef, useEffect, useMemo } from "react";
 import ReactDOM from "react-dom";
-import styled from "styled-components";
+import styled, { css } from "styled-components";
 import {
     CaretDown,
-    CaretRight,
+    CaretUpDown,
     Plus,
     User,
     GearSix,
     SignOut,
     WarningCircle,
+    Check,
 } from "@phosphor-icons/react";
 import { DefaultStylesProvider } from "../utility/root";
 import {
@@ -29,6 +30,8 @@ import { useScreenContext } from "./context";
 import { usePopoverPosition } from "@/hooks/use-popover-position";
 import { canManageOrganization, canManageWorkspace } from "@/utils/permissions";
 
+// ─── Trigger ──────────────────────────────────────────────────────────────────
+
 const Container = styled.div`
     position: relative;
     display: block;
@@ -38,528 +41,374 @@ const Container = styled.div`
 const SwitcherButton = styled.button`
     display: flex;
     align-items: center;
-    justify-content: space-between;
-    gap: var(--space-2u);
-    padding: var(--space-2u) var(--space-3u);
-    font-size: var(--font-size-sm);
+    gap: 10px;
+    padding: 6px 10px;
+    width: 100%;
+    height: 36px;
+    font-size: 13px;
     font-weight: 400;
     cursor: pointer;
-    border: var(--border-width-thin) solid var(--color-border);
-    border-radius: var(--radius-md);
+    border: 1px solid var(--color-border);
+    border-radius: 8px;
     background: var(--color-card);
     color: var(--color-card-foreground);
-    transition:
-        background 0.1s ease,
-        border-color 0.1s ease;
-    min-width: calc(var(--size-50u) + var(--size-32u));
-    min-height: var(--size-18u);
-    width: 100%;
-
-    &:hover:not(:disabled) {
-        background: var(--color-accent);
-        border-color: var(--color-border-hover);
-    }
-
-    &:disabled {
-        cursor: not-allowed;
-        opacity: 0.7;
-    }
+    transition: background 0.1s ease, border-color 0.1s ease;
+    &:hover:not(:disabled) { background: var(--color-accent); border-color: var(--color-border-hover); }
+    &:disabled { cursor: not-allowed; opacity: 0.7; }
 `;
 
-const Avatar = styled.div`
-    width: var(--size-8u);
-    height: var(--size-8u);
-    border-radius: 50%;
+const TriggerAvatar = styled.div<{ $personal?: boolean }>`
+    width: 20px;
+    height: 20px;
+    min-width: 20px;
+    border-radius: ${(p) => p.$personal ? "50%" : "5px"};
     overflow: hidden;
     display: flex;
     align-items: center;
     justify-content: center;
     background: var(--color-secondary);
-    color: var(--color-secondary-foreground);
-    border: var(--border-width-thin) solid var(--color-border);
-    font-size: var(--font-size-2xs);
+    color: var(--color-secondary-text);
+    font-size: 10px;
     font-weight: 600;
     flex-shrink: 0;
+    img { width: 100%; height: 100%; object-fit: cover; }
 `;
 
-const AvatarImage = styled.img`
-    width: 100%;
-    height: 100%;
-    object-fit: cover;
-`;
-
-const ButtonContent = styled.div`
-    display: flex;
-    align-items: center;
-    gap: var(--space-2u);
+const TriggerText = styled.span`
+    flex: 1;
     min-width: 0;
-`;
-
-const OrgName = styled.span`
-    font-weight: 400;
-    font-size: var(--font-size-sm);
+    font-size: 13px;
+    color: var(--color-card-foreground);
     overflow: hidden;
     text-overflow: ellipsis;
     white-space: nowrap;
-    color: var(--color-card-foreground);
+    text-align: left;
 `;
 
-const TriggerChevron = styled(CaretDown)<{ $isOpen: boolean }>`
-    color: var(--color-secondary-text);
-    transition: transform 0.15s ease;
-    transform: ${(props) =>
-        props.$isOpen ? "rotate(180deg)" : "rotate(0deg)"};
-`;
+// ─── Dropdown ─────────────────────────────────────────────────────────────────
 
 const Dropdown = styled.div<{
     $isOpen: boolean;
-    $position?: {
-        top?: number;
-        bottom?: number;
-        left?: number;
-        right?: number;
-        maxHeight?: number;
-    };
+    $position?: { top?: number; bottom?: number; left?: number; right?: number; maxHeight?: number };
 }>`
     position: fixed;
-    ${(props) =>
-        props.$position?.top !== undefined
-            ? `top: ${props.$position.top}px;`
-            : ""}
-    ${(props) =>
-        props.$position?.bottom !== undefined
-            ? `bottom: ${props.$position.bottom}px;`
-            : ""}
-  ${(props) =>
-        props.$position?.left !== undefined
-            ? `left: ${props.$position.left}px;`
-            : ""}
-  ${(props) =>
-        props.$position?.right !== undefined
-            ? `right: ${props.$position.right}px;`
-            : ""}
-  width: calc(var(--size-50u) * 3);
-    max-height: ${(props) =>
-        props.$position?.maxHeight
-            ? `${props.$position.maxHeight}px`
-            : "calc(var(--size-50u) * 4)"};
+    ${(p) => p.$position?.top !== undefined ? `top: ${p.$position.top}px;` : ""}
+    ${(p) => p.$position?.bottom !== undefined ? `bottom: ${p.$position.bottom}px;` : ""}
+    ${(p) => p.$position?.left !== undefined ? `left: ${p.$position.left}px;` : ""}
+    ${(p) => p.$position?.right !== undefined ? `right: ${p.$position.right}px;` : ""}
+    width: 280px;
+    max-width: calc(100vw - 16px);
+    max-height: ${(p) => p.$position?.maxHeight ? `${p.$position.maxHeight}px` : "420px"};
     background: var(--color-popover);
-    border-radius: var(--radius-lg);
-    border: var(--border-width-thin) solid var(--color-border);
+    border-radius: 10px;
+    border: 1px solid var(--color-border);
     box-shadow: var(--shadow-md);
     z-index: 99999;
-    overflow-y: auto;
-    visibility: ${(props) =>
-        props.$position && props.$isOpen ? "visible" : "hidden"};
-    opacity: ${(props) => (props.$isOpen && props.$position ? 1 : 0)};
-    transform: ${(props) =>
-        props.$isOpen
-            ? "translateY(0)"
-            : "translateY(calc(var(--space-4u) * -1))"};
-    pointer-events: ${(props) => (props.$isOpen ? "auto" : "none")};
+    overflow: hidden;
+    display: flex;
+    flex-direction: column;
+    visibility: ${(p) => p.$position && p.$isOpen ? "visible" : "hidden"};
+    opacity: ${(p) => p.$isOpen && p.$position ? 1 : 0};
+    transform: ${(p) => p.$isOpen ? "translateY(0)" : "translateY(-4px)"};
+    pointer-events: ${(p) => p.$isOpen ? "auto" : "none"};
     transition:
         opacity 0.15s ease,
         transform 0.15s ease,
-        visibility 0s linear ${(props) => (props.$isOpen ? "0s" : "0.15s")};
+        visibility 0s linear ${(p) => p.$isOpen ? "0s" : "0.15s"};
 `;
 
-const MenuItem = styled.div<{ $isActive?: boolean; as?: React.ElementType }>`
+const List = styled.div`
+    flex: 1;
+    overflow-y: auto;
+    padding: 6px;
+`;
+
+// ─── Rows ─────────────────────────────────────────────────────────────────────
+
+const rowBase = css<{ $active?: boolean }>`
     display: flex;
     align-items: center;
-    justify-content: space-between;
+    gap: 10px;
     width: 100%;
-    padding: var(--space-4u) var(--space-5u) var(--space-4u)
-        calc(var(--space-8u) + var(--space-1u));
-    text-align: left;
-    font-size: var(--font-size-sm);
-    border: none;
+    height: 36px;
+    padding: 0 8px;
     background: transparent;
+    border: none;
+    border-radius: 6px;
     cursor: pointer;
     color: var(--color-popover-foreground);
-    transition: background 0.1s ease;
-    position: relative;
+    font-size: 13px;
+    font-weight: 400;
+    text-align: left;
+    transition: background 0.12s ease;
 
-    &:hover {
-        background: var(--color-accent);
+    .row-actions { display: none; }
+    .row-check { display: inline-flex; }
 
-        .hover-arrow {
-            opacity: 1;
+    &:hover:not(:disabled) {
+        background: color-mix(in srgb, var(--color-popover-foreground) 6%, transparent);
+    }
+
+    ${(p) => p.$active && css`
+        font-weight: 500;
+        &:hover:not(:disabled) {
+            background: color-mix(in srgb, var(--color-popover-foreground) 4%, transparent);
+            .row-actions { display: inline-flex; }
+            .row-check { display: none; }
         }
+    `}
+
+    &:disabled { cursor: default; }
+`;
+
+const Row = styled.button<{ $active?: boolean }>`${rowBase}`;
+
+const WorkspaceRow = styled.button<{ $active?: boolean }>`
+    ${rowBase}
+    height: 36px;
+    padding-left: 34px;
+    position: relative;
+    &::before {
+        content: "";
+        position: absolute;
+        left: 20px;
+        top: 0;
+        bottom: 0;
+        width: 1px;
+        background: var(--color-border);
     }
-
-    &:disabled {
-        cursor: not-allowed;
-        opacity: 0.7;
-    }
 `;
 
-const HoverArrow = styled(CaretRight)`
-    opacity: 0;
-    transition: opacity 0.1s ease;
-    color: var(--color-secondary-text);
-`;
+// ─── Row internals ────────────────────────────────────────────────────────────
 
-const Separator = styled.div`
-    height: var(--border-width-thin);
-    background: var(--color-border);
-`;
-
-const MenuItemContent = styled.div`
-    display: flex;
-    align-items: center;
-    gap: var(--space-3u);
-    flex: 1;
-`;
-
-const MenuItemAvatar = styled.div`
-    width: var(--size-10u);
-    height: var(--size-10u);
-    border-radius: 50%;
+const OrgAvatar = styled.div<{ $personal?: boolean }>`
+    width: 24px;
+    height: 24px;
+    min-width: 24px;
+    border-radius: ${(p) => p.$personal ? "50%" : "6px"};
     overflow: hidden;
     display: flex;
     align-items: center;
     justify-content: center;
     background: var(--color-secondary);
-    color: var(--color-secondary-foreground);
-    border: var(--border-width-thin) solid var(--color-border);
-    font-size: var(--font-size-2xs);
+    color: var(--color-secondary-text);
+    font-size: 11px;
     font-weight: 600;
     flex-shrink: 0;
+    img { width: 100%; height: 100%; object-fit: cover; }
 `;
 
-const MenuItemAvatarImage = styled.img`
-    width: 100%;
-    height: 100%;
-    object-fit: cover;
-`;
-
-const MenuItemInfo = styled.div`
-    display: flex;
-    flex-direction: column;
-    gap: var(--space-1u);
+const WsAvatar = styled.div`
+    width: 22px;
+    height: 22px;
+    min-width: 22px;
+    border-radius: 5px;
     overflow: hidden;
-    flex: 1;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    background: var(--color-secondary);
+    color: var(--color-secondary-text);
+    font-size: 10px;
+    font-weight: 600;
+    flex-shrink: 0;
+    img { width: 100%; height: 100%; object-fit: cover; }
 `;
 
-const MenuItemName = styled.span`
-    font-weight: 400;
-    font-size: var(--font-size-sm);
+const RowName = styled.span`
+    flex: 1;
+    min-width: 0;
+    font-size: 13px;
+    color: var(--color-popover-foreground);
     overflow: hidden;
     text-overflow: ellipsis;
     white-space: nowrap;
-    color: var(--color-popover-foreground);
 `;
 
-const ManageButton = styled.button`
-    padding: calc(var(--space-1u) + var(--border-width-thin));
-    border-radius: var(--radius-2xs);
-    border: var(--border-width-thin) solid var(--color-border);
-    background: transparent;
-    color: var(--color-secondary-text);
-    cursor: pointer;
-    transition: all 0.1s ease;
+const WsName = styled(RowName)`
+    font-size: 12px;
+`;
+
+const RowRight = styled.div`
     display: flex;
     align-items: center;
-    justify-content: center;
-    width: var(--size-10u);
-    height: var(--size-10u);
-
-    &:hover {
-        background: var(--color-accent);
-        color: var(--color-accent-foreground);
-    }
-`;
-
-const LogoutButton = styled(ManageButton)`
-    &:hover:not(:disabled) {
-        background: var(--color-error-background);
-        color: var(--color-error);
-        border-color: var(--color-error);
-    }
-
-    &:disabled {
-        opacity: 0.5;
-        cursor: not-allowed;
-    }
-`;
-
-const CreateOrgButton = styled.button`
-    display: flex;
-    align-items: center;
-    justify-content: space-between;
-    width: 100%;
-    padding: var(--space-4u) var(--space-5u);
-    text-align: left;
-    font-size: var(--font-size-sm);
-    border: none;
-    background: transparent;
-    cursor: pointer;
-    color: var(--color-popover-foreground);
-    transition: background 0.1s ease;
-    position: relative;
-
-    &:hover {
-        background: var(--color-accent);
-    }
-
-    &:disabled {
-        cursor: not-allowed;
-        opacity: 0.7;
-    }
-`;
-
-const PlusIcon = styled.div`
-    width: var(--size-10u);
-    height: var(--size-10u);
-    border-radius: 50%;
-    border: var(--border-width-thin) dashed var(--color-border);
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    color: var(--color-secondary-text);
-    background: var(--color-secondary);
-`;
-
-const ActiveIndicator = styled.div`
-    width: var(--space-4u);
-    height: var(--space-4u);
-    border-radius: 50%;
-    background: var(--color-primary);
-    position: absolute;
-    left: var(--space-4u);
-    top: 50%;
-    transform: translateY(-50%);
-`;
-
-const PersonalIcon = styled.div`
-    width: var(--size-10u);
-    height: var(--size-10u);
-    border-radius: 50%;
-    background: var(--color-secondary);
-    border: var(--border-width-thin) solid var(--color-border);
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    color: var(--color-secondary-text);
-    overflow: hidden;
-`;
-
-const PersonalAvatar = styled.img`
-    width: 100%;
-    height: 100%;
-    object-fit: cover;
-`;
-
-const WorkspaceItem = styled(MenuItem)`
-    padding-left: calc(var(--size-18u) + var(--space-6u));
-    font-size: var(--font-size-xs);
-`;
-
-const WorkspaceAvatar = styled.div`
-    width: var(--size-8u);
-    height: var(--size-8u);
-    border-radius: 50%;
-    overflow: hidden;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    background: var(--color-secondary);
-    border: var(--border-width-thin) solid var(--color-border);
-    color: var(--color-secondary-text);
-    font-size: calc(var(--font-size-2xs) - var(--border-width-thin));
-    font-weight: 600;
+    gap: 4px;
     flex-shrink: 0;
 `;
 
-const StatusMessage = styled.div<{ $isError?: boolean }>`
-    padding: var(--space-4u) var(--space-5u);
-    border-radius: var(--radius-2xs);
-    font-size: var(--font-size-2xs);
-    background: ${(props) =>
-        props.$isError
-            ? "var(--color-error-background)"
-            : "var(--color-primary-background)"};
-    color: ${(props) =>
-        props.$isError ? "var(--color-error)" : "var(--color-primary)"};
-    border: var(--border-width-thin) solid
-        ${(props) =>
-            props.$isError ? "var(--color-error)" : "var(--color-primary)"};
+const ExpandCaret = styled(CaretDown)<{ $open: boolean }>`
+    color: var(--color-secondary-text);
+    flex-shrink: 0;
+    transition: transform 0.2s ease;
+    transform: ${(p) => p.$open ? "rotate(0deg)" : "rotate(-90deg)"};
+`;
+
+const CheckMark = styled(Check)`
+    color: var(--color-primary);
+    flex-shrink: 0;
+`;
+
+// ─── Action buttons ───────────────────────────────────────────────────────────
+
+const IconBtn = styled.button`
+    width: 22px;
+    height: 22px;
+    min-width: 22px;
+    border-radius: 4px;
+    border: none;
+    background: transparent;
+    color: var(--color-secondary-text);
+    cursor: pointer;
     display: flex;
     align-items: center;
-    gap: var(--space-3u);
+    justify-content: center;
+    flex-shrink: 0;
+    transition: all 0.1s ease;
+    &:hover { background: color-mix(in srgb, var(--color-popover-foreground) 10%, transparent); color: var(--color-popover-foreground); }
 `;
 
-const Spinner = styled.div`
-    width: var(--size-8u);
-    height: var(--size-8u);
-    border: var(--border-width-regular) solid transparent;
-    border-top-color: currentColor;
-    border-radius: 50%;
-    animation: spin 0.8s linear infinite;
-
-    @keyframes spin {
-        to {
-            transform: rotate(360deg);
-        }
+const LeaveBtn = styled(IconBtn)`
+    &:hover:not(:disabled) {
+        background: var(--color-error-background);
+        color: var(--color-error);
     }
+    &:disabled { opacity: 0.5; cursor: not-allowed; }
 `;
 
-const ShimmerWrapper = styled.div`
-    padding: var(--space-4u) 0;
+// ─── Footer create button ─────────────────────────────────────────────────────
+
+const Footer = styled.div`
+    border-top: 1px solid var(--color-border);
+    padding: 6px;
+    flex-shrink: 0;
 `;
 
-const ShimmerItem = styled.div`
+const CreateRow = styled.button`
     display: flex;
     align-items: center;
-    gap: var(--space-3u);
-    padding: var(--space-2u) var(--space-5u) var(--space-2u) var(--space-4u);
-    animation: shimmer 1.5s ease-in-out infinite;
-
-    @keyframes shimmer {
-        0% {
-            opacity: 0.5;
-        }
-        50% {
-            opacity: 1;
-        }
-        100% {
-            opacity: 0.5;
-        }
-    }
+    gap: 10px;
+    width: 100%;
+    height: 32px;
+    padding: 0 8px;
+    background: transparent;
+    border: none;
+    border-radius: 6px;
+    cursor: pointer;
+    color: var(--color-secondary-text);
+    font-size: 13px;
+    font-weight: 400;
+    text-align: left;
+    transition: background 0.1s ease, color 0.1s ease;
+    &:hover:not(:disabled) { background: var(--color-accent); color: var(--color-popover-foreground); }
+    &:disabled { cursor: not-allowed; opacity: 0.6; }
 `;
 
-const ShimmerAvatar = styled.div`
-    width: calc(var(--size-8u) + var(--space-1u));
-    height: calc(var(--size-8u) + var(--space-1u));
-    border-radius: 50%;
-    background: var(--color-border);
-`;
-
-const ShimmerContent = styled.div`
-    flex: 1;
+const CreateIcon = styled.div`
+    width: 22px;
+    height: 22px;
+    min-width: 22px;
+    border-radius: 5px;
+    border: 1px dashed var(--color-border);
     display: flex;
-    flex-direction: column;
-    gap: var(--space-2u);
+    align-items: center;
+    justify-content: center;
+    flex-shrink: 0;
 `;
 
-const ShimmerLine = styled.div<{ width?: string }>`
-    height: var(--size-8u);
-    background: var(--color-border);
-    border-radius: var(--radius-2xs);
-    width: ${(props) => props.width || "100%"};
-`;
-
-const ShimmerSmallLine = styled.div<{ width?: string }>`
-    height: var(--size-5u);
-    background: var(--color-border);
-    border-radius: var(--radius-2xs);
-    width: ${(props) => props.width || "60%"};
-`;
+// ─── Skeleton / status ────────────────────────────────────────────────────────
 
 const SkeletonButton = styled.div`
     display: flex;
     align-items: center;
-    justify-content: space-between;
-    gap: var(--space-2u);
-    padding: var(--space-2u) var(--space-3u);
-    border: var(--border-width-thin) solid var(--color-border);
-    border-radius: var(--radius-md);
+    gap: 10px;
+    padding: 6px 10px;
+    height: 36px;
+    border: 1px solid var(--color-border);
+    border-radius: 8px;
     background: var(--color-card);
-    min-width: calc(var(--size-50u) + var(--size-32u));
-    min-height: var(--size-18u);
     width: 100%;
     animation: pulse 1.5s ease-in-out infinite;
-
-    @keyframes pulse {
-        0%,
-        100% {
-            opacity: 1;
-        }
-        50% {
-            opacity: 0.5;
-        }
-    }
+    @keyframes pulse { 0%, 100% { opacity: 1; } 50% { opacity: 0.5; } }
 `;
 
-const SkeletonAvatar = styled.div`
-    width: var(--size-8u);
-    height: var(--size-8u);
+const SkeletonBlock = styled.div<{ w?: string; h?: string; r?: string }>`
+    width: ${(p) => p.w || "100%"};
+    height: ${(p) => p.h || "14px"};
+    border-radius: ${(p) => p.r || "4px"};
+    background: var(--color-border);
+`;
+
+const Shimmer = styled.div`
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    padding: 0 8px;
+    height: 34px;
+    animation: shimmer 1.5s ease-in-out infinite;
+    @keyframes shimmer { 0%, 100% { opacity: 0.5; } 50% { opacity: 1; } }
+`;
+
+const ErrorBar = styled.div`
+    margin: 0 6px 6px;
+    padding: 8px 10px;
+    font-size: 12px;
+    background: var(--color-error-background);
+    color: var(--color-error);
+    border: 1px solid var(--color-error);
+    border-radius: 6px;
+    display: flex;
+    align-items: center;
+    gap: 8px;
+`;
+
+const Spinner = styled.div`
+    width: 11px;
+    height: 11px;
+    border: 1.5px solid transparent;
+    border-top-color: currentColor;
     border-radius: 50%;
-    background: var(--color-border);
+    animation: spin 0.8s linear infinite;
+    flex-shrink: 0;
+    @keyframes spin { to { transform: rotate(360deg); } }
 `;
 
-const SkeletonText = styled.div`
-    height: var(--space-7u);
-    width: calc(var(--size-50u) + var(--size-10u));
-    background: var(--color-border);
-    border-radius: var(--radius-2xs);
-`;
-
-const SkeletonIcon = styled.div`
-    width: var(--size-8u);
-    height: var(--size-8u);
-    background: var(--color-border);
-    border-radius: calc(var(--radius-2xs) - var(--border-width-regular));
-`;
+// ─── Component ────────────────────────────────────────────────────────────────
 
 interface OrganizationSwitcherProps {
     showPersonal?: boolean;
 }
 
-export const OrganizationSwitcher = ({
-    showPersonal = true,
-}: OrganizationSwitcherProps) => {
+export const OrganizationSwitcher = ({ showPersonal = true }: OrganizationSwitcherProps) => {
     const [open, setOpen] = useState(false);
     const [isSwitching, setIsSwitching] = useState(false);
     const [expandedOrgs, setExpandedOrgs] = useState<Set<string>>(new Set());
     const buttonRef = useRef<HTMLButtonElement>(null);
     const dropdownRef = useRef<HTMLDivElement>(null);
 
-    const dropdownPosition = usePopoverPosition({
-        triggerRef: buttonRef,
-        isOpen: open,
-        minWidth: 300,
-    });
+    const dropdownPosition = usePopoverPosition({ triggerRef: buttonRef, isOpen: open, minWidth: 280 });
 
     const createOrgDialog = useDialog(false);
     const manageOrgDialog = useDialog(false);
     const createWorkspaceDialog = useDialog(false);
     const manageWorkspaceDialog = useDialog(false);
-    const [selectedOrgForWorkspace, setSelectedOrgForWorkspace] = useState<
-        string | null
-    >(null);
+    const [selectedOrgForWorkspace, setSelectedOrgForWorkspace] = useState<string | null>(null);
     const [leavingOrg, setLeavingOrg] = useState(false);
     const [leaveError, setLeaveError] = useState<string | null>(null);
 
-    const {
-        organizationMemberships,
-        loading: organizationLoading,
-        refetch: refetchOrganizations,
-    } = useOrganizationMemberships();
-    const {
-        activeOrganization,
-        activeMembership: activeOrgMembership,
-        leave: leaveOrganization,
-    } = useActiveOrganization();
-    const {
-        activeWorkspace,
-        activeMembership: activeWsMembership,
-        leave: leaveWorkspace,
-    } = useActiveWorkspace();
-    const { workspaces: workspaceList, loading: workspacesLoading } =
-        useWorkspaceList();
+    const { organizationMemberships, loading: organizationLoading, refetch: refetchOrganizations } = useOrganizationMemberships();
+    const { activeOrganization, activeMembership: activeOrgMembership, leave: leaveOrganization } = useActiveOrganization();
+    const { activeWorkspace, activeMembership: activeWsMembership, leave: leaveWorkspace } = useActiveWorkspace();
+    const { workspaces: workspaceList, loading: workspacesLoading } = useWorkspaceList();
     const { session, switchOrganization, switchWorkspace } = useSession();
     const { deployment } = useDeployment();
     const { toast } = useScreenContext();
 
     const organizationsEnabled = deployment?.b2b_settings.organizations_enabled;
     const workspacesEnabled = deployment?.b2b_settings.workspaces_enabled;
-    const allowUsersToCreateOrgs =
-        deployment?.b2b_settings.allow_users_to_create_orgs;
-
+    const allowUsersToCreateOrgs = deployment?.b2b_settings.allow_users_to_create_orgs;
     const isPersonalActive = !activeOrgMembership;
 
-    const currentDisplay = useMemo(() => {
+    const triggerDisplay = useMemo(() => {
         if (isPersonalActive) {
             return {
                 name: "Personal account",
@@ -567,150 +416,86 @@ export const OrganizationSwitcher = ({
                 isPersonal: true,
             };
         }
-
-        let displayName = activeOrganization?.name || "";
-        if (workspacesEnabled && activeWorkspace) {
-            displayName = `${activeOrganization?.name} / ${activeWorkspace.name}`;
-        }
-
+        const name = workspacesEnabled && activeWorkspace
+            ? `${activeOrganization?.name} / ${activeWorkspace.name}`
+            : activeOrganization?.name || "";
         return {
-            name: displayName,
+            name,
             image_url: activeOrganization?.image_url,
             isPersonal: false,
         };
-    }, [
-        isPersonalActive,
-        activeOrganization,
-        activeWorkspace,
-        session,
-        workspacesEnabled,
-    ]);
+    }, [isPersonalActive, activeOrganization, activeWorkspace, session, workspacesEnabled]);
+
+    useEffect(() => {
+        if (activeOrganization && workspacesEnabled) {
+            setExpandedOrgs((prev) => {
+                if (prev.has(activeOrganization.id)) return prev;
+                const next = new Set(prev);
+                next.add(activeOrganization.id);
+                return next;
+            });
+        }
+    }, [activeOrganization, workspacesEnabled]);
 
     useEffect(() => {
         if (!open) return;
-
-        let cleanupFn: (() => void) | null = null;
-
+        let cleanup: (() => void) | null = null;
         const timer = setTimeout(() => {
-            const handleClickOutside = (event: MouseEvent) => {
-                const target = event.target as Node;
-
-                if (buttonRef.current?.contains(target)) {
-                    return;
-                }
-
-                if (dropdownRef.current?.contains(target)) {
-                    return;
-                }
-
+            const handler = (e: MouseEvent) => {
+                const t = e.target as Node;
+                if (buttonRef.current?.contains(t) || dropdownRef.current?.contains(t)) return;
                 setOpen(false);
                 setLeaveError(null);
             };
-
-            document.addEventListener("mousedown", handleClickOutside);
-
-            cleanupFn = () => {
-                document.removeEventListener("mousedown", handleClickOutside);
-            };
+            document.addEventListener("mousedown", handler);
+            cleanup = () => document.removeEventListener("mousedown", handler);
         }, 50);
-
-        return () => {
-            clearTimeout(timer);
-            cleanupFn?.();
-        };
+        return () => { clearTimeout(timer); cleanup?.(); };
     }, [open]);
 
     useEffect(() => {
-        if (leaveError) {
-            const timer = setTimeout(() => {
-                setLeaveError(null);
-            }, 5000);
-            return () => clearTimeout(timer);
-        }
+        if (!leaveError) return;
+        const t = setTimeout(() => setLeaveError(null), 5000);
+        return () => clearTimeout(t);
     }, [leaveError]);
 
-    const handleOrganizationCreated = () => {
-        refetchOrganizations();
-    };
+    if (!organizationsEnabled) return null;
 
-    if (!organizationsEnabled) {
-        return null;
-    }
+    const getInitials = (name: string) =>
+        name.split(" ").map((n) => n[0]).join("").toUpperCase().slice(0, 2);
 
     const handleSwitchOrganization = (orgId?: string) => {
         setIsSwitching(true);
-        switchOrganization(orgId).finally(() => {
-            setIsSwitching(false);
-        });
+        switchOrganization(orgId).finally(() => setIsSwitching(false));
     };
 
     const handleSwitchWorkspace = (workspaceId: string) => {
         setIsSwitching(true);
-        switchWorkspace(workspaceId).finally(() => {
-            setIsSwitching(false);
-        });
+        switchWorkspace(workspaceId).finally(() => setIsSwitching(false));
     };
 
     const toggleOrgExpanded = (orgId: string) => {
-        const newExpanded = new Set(expandedOrgs);
-        if (newExpanded.has(orgId)) {
-            newExpanded.delete(orgId);
-        } else {
-            newExpanded.add(orgId);
-        }
-        setExpandedOrgs(newExpanded);
+        setExpandedOrgs((prev) => {
+            const next = new Set(prev);
+            next.has(orgId) ? next.delete(orgId) : next.add(orgId);
+            return next;
+        });
     };
 
-    const getInitials = (name: string) => {
-        return name
-            .split(" ")
-            .map((n) => n[0])
-            .join("")
-            .toUpperCase()
-            .slice(0, 2);
-    };
+    const orgRestricted = (activeOrgMembership as any)?.eligibility_restriction?.type &&
+        (activeOrgMembership as any)?.eligibility_restriction?.type !== "none";
 
     const isSessionReady = !!session;
-    const showSkeleton =
-        !isSessionReady ||
-        organizationLoading ||
-        (workspacesEnabled && workspacesLoading);
+    const showSkeleton = !isSessionReady || organizationLoading || (workspacesEnabled && workspacesLoading);
 
     if (showSkeleton) {
         return (
             <DefaultStylesProvider>
                 <Container>
                     <SkeletonButton>
-                        <ButtonContent>
-                            <SkeletonAvatar />
-                            <SkeletonText />
-                        </ButtonContent>
-                        <SkeletonIcon />
+                        <SkeletonBlock w="20px" h="20px" r="5px" />
+                        <SkeletonBlock w="120px" h="12px" />
                     </SkeletonButton>
-
-                    {organizationsEnabled && allowUsersToCreateOrgs && (
-                        <CreateOrganizationDialog
-                            isOpen={createOrgDialog.isOpen}
-                            onClose={createOrgDialog.close}
-                            onCreated={handleOrganizationCreated}
-                        />
-                    )}
-                    <ManageOrganizationDialog
-                        isOpen={manageOrgDialog.isOpen}
-                        onClose={manageOrgDialog.close}
-                    />
-                    <ManageWorkspaceDialog
-                        isOpen={manageWorkspaceDialog.isOpen}
-                        onClose={manageWorkspaceDialog.close}
-                    />
-                    <CreateWorkspaceDialog
-                        isOpen={createWorkspaceDialog.isOpen}
-                        onClose={() => {
-                            createWorkspaceDialog.close();
-                            setSelectedOrgForWorkspace(null);
-                        }}
-                        organizationId={selectedOrgForWorkspace || undefined}
-                    />
                 </Container>
             </DefaultStylesProvider>
         );
@@ -721,1201 +506,303 @@ export const OrganizationSwitcher = ({
             <Container>
                 <SwitcherButton
                     ref={buttonRef}
-                    onClick={() => {
-                        setOpen(!open);
-                        if (!open) {
-                            setLeaveError(null);
-                        }
-                    }}
+                    onClick={() => { setOpen(!open); if (!open) setLeaveError(null); }}
                     disabled={isSwitching}
                 >
-                    <ButtonContent>
-                        <Avatar>
-                            {currentDisplay.image_url ? (
-                                <AvatarImage
-                                    src={currentDisplay.image_url}
-                                    alt={currentDisplay.name}
-                                />
-                            ) : currentDisplay.isPersonal ? (
-                                <User size={12} />
-                            ) : (
-                                getInitials(currentDisplay.name)
-                            )}
-                        </Avatar>
-                        <OrgName>{currentDisplay.name}</OrgName>
-                    </ButtonContent>
-                    <div
-                        style={{
-                            display: "flex",
-                            alignItems: "center",
-                            gap: "var(--space-3u)",
-                        }}
-                    >
-                        {((activeOrgMembership?.eligibility_restriction?.type &&
-                            activeOrgMembership?.eligibility_restriction
-                                ?.type !== "none") ||
-                            (activeWsMembership?.eligibility_restriction
-                                ?.type &&
-                                activeWsMembership?.eligibility_restriction
-                                    ?.type !== "none")) && (
-                            <div
-                                title={
-                                    activeWsMembership?.eligibility_restriction
-                                        ?.message ||
-                                    activeOrgMembership?.eligibility_restriction
-                                        ?.message
-                                }
-                                style={{
-                                    display: "flex",
-                                    alignItems: "center",
-                                }}
-                            >
-                                <WarningCircle
-                                    size={14}
-                                    color="var(--color-error)"
-                                />
-                            </div>
-                        )}
-                        <TriggerChevron $isOpen={open} size={14} />
-                    </div>
+                    <TriggerAvatar $personal={triggerDisplay.isPersonal}>
+                        {triggerDisplay.image_url
+                            ? <img src={triggerDisplay.image_url} alt={triggerDisplay.name} />
+                            : triggerDisplay.isPersonal
+                                ? <User size={11} />
+                                : getInitials(triggerDisplay.name)
+                        }
+                    </TriggerAvatar>
+                    <TriggerText>{triggerDisplay.name}</TriggerText>
+                    <CaretUpDown size={13} color="var(--color-secondary-text)" />
                 </SwitcherButton>
 
-                {typeof window !== "undefined" &&
-                    ReactDOM.createPortal(
-                        <DefaultStylesProvider>
-                            <Dropdown
-                                ref={dropdownRef}
-                                $isOpen={open}
-                                $position={dropdownPosition}
-                            >
+                {typeof window !== "undefined" && ReactDOM.createPortal(
+                    <DefaultStylesProvider>
+                        <Dropdown ref={dropdownRef} $isOpen={open} $position={dropdownPosition}>
+                            {leaveError && (
+                                <ErrorBar>
+                                    <WarningCircle size={13} />
+                                    {leaveError}
+                                </ErrorBar>
+                            )}
+
+                            <List>
                                 {organizationLoading || workspacesLoading ? (
-                                    <ShimmerWrapper>
-                                        {/* Show current active item shimmer */}
-                                        <ShimmerItem>
-                                            <ShimmerAvatar />
-                                            <ShimmerContent>
-                                                <ShimmerLine width="calc(var(--size-50u) + var(--size-10u))" />
-                                                <ShimmerSmallLine width="var(--size-40u)" />
-                                            </ShimmerContent>
-                                        </ShimmerItem>
-                                        <Separator />
-
-                                        {/* Show 2-3 organization shimmers */}
-                                        <ShimmerItem>
-                                            <ShimmerAvatar />
-                                            <ShimmerContent>
-                                                <ShimmerLine width="var(--size-50u)" />
-                                            </ShimmerContent>
-                                        </ShimmerItem>
-                                        <Separator />
-
-                                        <ShimmerItem>
-                                            <ShimmerAvatar />
-                                            <ShimmerContent>
-                                                <ShimmerLine width="calc(var(--size-50u) + var(--size-20u))" />
-                                                <ShimmerSmallLine width="calc(var(--size-20u) + var(--size-10u))" />
-                                            </ShimmerContent>
-                                        </ShimmerItem>
-                                        <Separator />
-
-                                        <ShimmerItem>
-                                            <ShimmerAvatar />
-                                            <ShimmerContent>
-                                                <ShimmerLine width="calc(var(--size-50u) + var(--space-5u))" />
-                                            </ShimmerContent>
-                                        </ShimmerItem>
-                                    </ShimmerWrapper>
+                                    <>
+                                        {[1, 2, 3].map((i) => (
+                                            <Shimmer key={i}>
+                                                <SkeletonBlock w="22px" h="22px" r="5px" />
+                                                <SkeletonBlock w={i === 2 ? "60%" : "80%"} h="11px" />
+                                            </Shimmer>
+                                        ))}
+                                    </>
                                 ) : (
-                                    <div>
-                                        {/* Show personal account first if enabled */}
+                                    <>
+                                        {/* Personal */}
                                         {showPersonal && (
-                                            <>
-                                                <MenuItem
-                                                    as="button"
-                                                    $isActive={isPersonalActive}
-                                                    onClick={(e) => {
-                                                        e.stopPropagation();
-                                                        if (!isPersonalActive) {
-                                                            handleSwitchOrganization();
-                                                        }
-                                                    }}
-                                                    disabled={
-                                                        isSwitching ||
-                                                        isPersonalActive
+                                            <Row
+                                                $active={isPersonalActive}
+                                                onClick={() => { if (!isPersonalActive) handleSwitchOrganization(); }}
+                                                disabled={isSwitching || isPersonalActive}
+                                            >
+                                                <OrgAvatar $personal>
+                                                    {session?.active_signin?.user?.profile_picture_url
+                                                        ? <img src={session.active_signin.user.profile_picture_url} alt="Personal" />
+                                                        : <User size={12} />
                                                     }
-                                                >
-                                                    {isPersonalActive && (
-                                                        <ActiveIndicator />
-                                                    )}
-                                                    <MenuItemContent>
-                                                        <PersonalIcon>
-                                                            {session
-                                                                ?.active_signin
-                                                                ?.user
-                                                                ?.profile_picture_url ? (
-                                                                <PersonalAvatar
-                                                                    src={
-                                                                        session
-                                                                            .active_signin
-                                                                            .user
-                                                                            .profile_picture_url
-                                                                    }
-                                                                    alt="Personal account"
-                                                                />
-                                                            ) : (
-                                                                <User
-                                                                    size={12}
-                                                                />
-                                                            )}
-                                                        </PersonalIcon>
-                                                        <MenuItemInfo>
-                                                            <MenuItemName>
-                                                                Personal account
-                                                            </MenuItemName>
-                                                        </MenuItemInfo>
-                                                    </MenuItemContent>
-                                                    {!isPersonalActive && (
-                                                        <HoverArrow
-                                                            className="hover-arrow"
-                                                            size={14}
-                                                        />
-                                                    )}
-                                                </MenuItem>
-
-                                                {/* Show separator after personal account if we're going to show an active organization */}
-                                                {!isPersonalActive &&
-                                                    activeOrganization && (
-                                                        <Separator />
-                                                    )}
-                                            </>
+                                                </OrgAvatar>
+                                                <RowName>Personal account</RowName>
+                                                {isPersonalActive && (
+                                                    <RowRight>
+                                                        <span className="row-check" style={{ display: "inline-flex" }}>
+                                                            <CheckMark size={13} />
+                                                        </span>
+                                                    </RowRight>
+                                                )}
+                                            </Row>
                                         )}
 
-                                        {/* Show active organization if not personal */}
-                                        {!isPersonalActive &&
-                                            activeOrganization && (
-                                                <MenuItem
-                                                    $isActive={true}
-                                                    onClick={() => {
-                                                        if (workspacesEnabled) {
-                                                            toggleOrgExpanded(
-                                                                activeOrganization.id,
-                                                            );
-                                                        }
-                                                    }}
-                                                    style={{
-                                                        ...(isSwitching
-                                                            ? {
-                                                                  pointerEvents:
-                                                                      "none",
-                                                                  opacity: 0.7,
-                                                              }
-                                                            : {}),
-                                                        ...(activeOrgMembership
-                                                            ?.eligibility_restriction
-                                                            ?.type !== "none"
-                                                            ? {
-                                                                  opacity: 0.6,
-                                                                  cursor: "not-allowed",
-                                                              }
-                                                            : {}),
-                                                    }}
-                                                    title={
-                                                        activeOrgMembership
-                                                            ?.eligibility_restriction
-                                                            ?.message
-                                                    }
-                                                >
-                                                    <ActiveIndicator />
-                                                    <MenuItemContent>
-                                                        {workspacesEnabled && (
-                                                            <CaretDown
-                                                                size={12}
-                                                                style={{
-                                                                    marginRight:
-                                                                        "var(--space-2u)",
-                                                                    transform:
-                                                                        expandedOrgs.has(
-                                                                            activeOrganization.id,
-                                                                        )
-                                                                            ? "rotate(0deg)"
-                                                                            : "rotate(-90deg)",
-                                                                    transition:
-                                                                        "transform 0.2s ease",
-                                                                    color: "var(--color-secondary-text)",
-                                                                }}
-                                                            />
-                                                        )}
-                                                        <MenuItemAvatar>
-                                                            {activeOrganization.image_url ? (
-                                                                <MenuItemAvatarImage
-                                                                    src={
-                                                                        activeOrganization.image_url
-                                                                    }
-                                                                    alt={
-                                                                        activeOrganization.name
-                                                                    }
-                                                                />
-                                                            ) : (
-                                                                getInitials(
-                                                                    activeOrganization.name,
-                                                                )
-                                                            )}
-                                                        </MenuItemAvatar>
-                                                        <MenuItemInfo>
-                                                            <MenuItemName>
-                                                                {
-                                                                    activeOrganization.name
-                                                                }
-                                                            </MenuItemName>
-                                                        </MenuItemInfo>
-                                                    </MenuItemContent>
-                                                    <div
-                                                        style={{
-                                                            display: "flex",
-                                                            alignItems:
-                                                                "center",
-                                                            gap: "var(--space-4u)",
-                                                        }}
-                                                    >
-                                                        {activeOrgMembership
-                                                            ?.eligibility_restriction
-                                                            ?.type &&
-                                                            activeOrgMembership
-                                                                ?.eligibility_restriction
-                                                                ?.type !==
-                                                                "none" && (
-                                                                <div
-                                                                    title={
-                                                                        activeOrgMembership
-                                                                            ?.eligibility_restriction
-                                                                            ?.message
-                                                                    }
-                                                                    style={{
-                                                                        display:
-                                                                            "flex",
-                                                                        alignItems:
-                                                                            "center",
-                                                                    }}
-                                                                >
-                                                                    <WarningCircle
-                                                                        size={
-                                                                            14
-                                                                        }
-                                                                        color="var(--color-error)"
-                                                                    />
-                                                                </div>
-                                                            )}
-                                                        {activeOrgMembership
-                                                            ?.eligibility_restriction
-                                                            ?.type === "none" &&
-                                                            canManageOrganization(
-                                                                activeOrgMembership,
-                                                            ) && (
-                                                                <ManageButton
-                                                                    onClick={(
-                                                                        e,
-                                                                    ) => {
-                                                                        e.stopPropagation();
-                                                                        manageOrgDialog.open();
-                                                                    }}
-                                                                    title="Manage organization"
-                                                                >
-                                                                    <GearSix
-                                                                        size={
-                                                                            12
-                                                                        }
-                                                                    />
-                                                                </ManageButton>
-                                                            )}
-                                                        <LogoutButton
-                                                            onClick={async (
-                                                                e,
-                                                            ) => {
-                                                                e.stopPropagation();
-                                                                setLeavingOrg(
-                                                                    true,
-                                                                );
-                                                                setLeaveError(
-                                                                    null,
-                                                                );
-                                                                try {
-                                                                    await leaveOrganization();
-                                                                    await refetchOrganizations();
-                                                                    setTimeout(
-                                                                        () => {
-                                                                            setLeavingOrg(
-                                                                                false,
-                                                                            );
-                                                                        },
-                                                                        500,
-                                                                    );
-                                                                } catch (error) {
-                                                                    setLeaveError(
-                                                                        error instanceof
-                                                                            Error
-                                                                            ? error.message
-                                                                            : "Failed to leave organization",
-                                                                    );
-                                                                    setLeavingOrg(
-                                                                        false,
-                                                                    );
-                                                                }
-                                                            }}
-                                                            disabled={
-                                                                leavingOrg
-                                                            }
-                                                            title="Leave organization"
-                                                        >
-                                                            <SignOut size={12} />
-                                                        </LogoutButton>
-                                                    </div>
-                                                </MenuItem>
-                                            )}
+                                        {/* All orgs */}
+                                        {organizationMemberships?.map((membership) => {
+                                            const org = membership.organization;
+                                            const isActive = org.id === activeOrganization?.id;
+                                            const isExpanded = expandedOrgs.has(org.id);
+                                            const orgWorkspaces = workspacesEnabled
+                                                ? (workspaceList?.filter((w: WorkspaceWithOrganization) => w.organization.id === org.id) || [])
+                                                : [];
+                                            const memRestricted = (membership as any).eligibility_restriction?.type &&
+                                                (membership as any).eligibility_restriction?.type !== "none";
+                                            const canManage = isActive && !orgRestricted && canManageOrganization(activeOrgMembership);
 
-                                        {/* Show workspaces if active org is expanded */}
-                                        {activeOrganization &&
-                                            workspacesEnabled &&
-                                            expandedOrgs.has(
-                                                activeOrganization.id,
-                                            ) && (
-                                                <>
-                                                    {workspaceList
-                                                        ?.filter(
-                                                            (
-                                                                w: WorkspaceWithOrganization,
-                                                            ) =>
-                                                                w.organization
-                                                                    .id ===
-                                                                activeOrganization.id,
-                                                        )
-                                                        .map(
-                                                            (
-                                                                workspace: WorkspaceWithOrganization,
-                                                            ) => {
-                                                                const isWorkspaceActive =
-                                                                    activeWorkspace?.id ===
-                                                                    workspace.id;
-                                                                return (
-                                                                    <WorkspaceItem
-                                                                        as={
-                                                                            isWorkspaceActive
-                                                                                ? undefined
-                                                                                : "button"
-                                                                        }
-                                                                        key={
-                                                                            workspace.id
-                                                                        }
-                                                                        $isActive={
-                                                                            isWorkspaceActive
-                                                                        }
-                                                                        onClick={
-                                                                            isWorkspaceActive
-                                                                                ? undefined
-                                                                                : () =>
-                                                                                      handleSwitchWorkspace(
-                                                                                          workspace.id,
-                                                                                      )
-                                                                        }
-                                                                        {...(isWorkspaceActive
-                                                                            ? {
-                                                                                  style: isSwitching
-                                                                                      ? {
-                                                                                            pointerEvents:
-                                                                                                "none",
-                                                                                            opacity: 0.7,
-                                                                                        }
-                                                                                      : undefined,
-                                                                              }
-                                                                            : {
-                                                                                  disabled:
-                                                                                      isSwitching,
-                                                                              })}
-                                                                        style={{
-                                                                            ...(workspace
-                                                                                .eligibility_restriction
-                                                                                ?.type !==
-                                                                                "none" ||
-                                                                            activeOrgMembership
-                                                                                ?.eligibility_restriction
-                                                                                ?.type !==
-                                                                                "none"
-                                                                                ? {
-                                                                                      opacity: 0.6,
-                                                                                      cursor: "not-allowed",
-                                                                                  }
-                                                                                : {}),
-                                                                            ...(isWorkspaceActive &&
-                                                                            isSwitching
-                                                                                ? {
-                                                                                      pointerEvents:
-                                                                                          "none",
-                                                                                      opacity: 0.7,
-                                                                                  }
-                                                                                : {}),
-                                                                        }}
-                                                                        title={
-                                                                            workspace
-                                                                                .eligibility_restriction
-                                                                                ?.message ||
-                                                                            activeOrgMembership
-                                                                                ?.eligibility_restriction
-                                                                                ?.message
-                                                                        }
-                                                                    >
-                                                                        {isWorkspaceActive && (
-                                                                            <ActiveIndicator />
+                                            return (
+                                                <React.Fragment key={org.id}>
+                                                    <Row
+                                                        $active={isActive}
+                                                        onClick={() => {
+                                                            if (memRestricted) return;
+                                                            if (workspacesEnabled) toggleOrgExpanded(org.id);
+                                                            else if (!isActive) handleSwitchOrganization(org.id);
+                                                        }}
+                                                        disabled={isSwitching}
+                                                        style={
+                                                            memRestricted
+                                                                ? { opacity: 0.55, cursor: "not-allowed" }
+                                                                : (isActive && !workspacesEnabled)
+                                                                    ? { cursor: "default" }
+                                                                    : undefined
+                                                        }
+                                                        title={(membership as any).eligibility_restriction?.message}
+                                                    >
+                                                        <OrgAvatar>
+                                                            {org.image_url
+                                                                ? <img src={org.image_url} alt={org.name} />
+                                                                : getInitials(org.name)
+                                                            }
+                                                        </OrgAvatar>
+                                                        <RowName>{org.name}</RowName>
+                                                        <RowRight>
+                                                            {memRestricted && <WarningCircle size={12} color="var(--color-error)" />}
+                                                            {isActive && !workspacesEnabled && (
+                                                                <>
+                                                                    <span className="row-actions" style={{ gap: "2px", alignItems: "center" }}>
+                                                                        {canManage && (
+                                                                            <IconBtn
+                                                                                onClick={(e) => { e.stopPropagation(); manageOrgDialog.open(); }}
+                                                                                title="Manage organization"
+                                                                            >
+                                                                                <GearSix size={12} />
+                                                                            </IconBtn>
                                                                         )}
-                                                                        <MenuItemContent>
-                                                                            <WorkspaceAvatar>
-                                                                                {workspace.image_url ? (
-                                                                                    <img
-                                                                                        src={
-                                                                                            workspace.image_url
-                                                                                        }
-                                                                                        alt={
-                                                                                            workspace.name
-                                                                                        }
-                                                                                        style={{
-                                                                                            width: "100%",
-                                                                                            height: "100%",
-                                                                                            objectFit:
-                                                                                                "cover",
-                                                                                        }}
-                                                                                    />
-                                                                                ) : (
-                                                                                    getInitials(
-                                                                                        workspace.name,
-                                                                                    ).charAt(
-                                                                                        0,
-                                                                                    )
-                                                                                )}
-                                                                            </WorkspaceAvatar>
-                                                                            <MenuItemInfo>
-                                                                                <MenuItemName>
-                                                                                    {
-                                                                                        workspace.name
-                                                                                    }
-                                                                                </MenuItemName>
-                                                                            </MenuItemInfo>
-                                                                        </MenuItemContent>
-                                                                        <div
-                                                                            style={{
-                                                                                display:
-                                                                                    "flex",
-                                                                                alignItems:
-                                                                                    "center",
-                                                                                gap: "var(--space-4u)",
+                                                                        <LeaveBtn
+                                                                            onClick={async (e) => {
+                                                                                e.stopPropagation();
+                                                                                setLeavingOrg(true);
+                                                                                setLeaveError(null);
+                                                                                try {
+                                                                                    await leaveOrganization();
+                                                                                    await refetchOrganizations();
+                                                                                    setTimeout(() => setLeavingOrg(false), 500);
+                                                                                } catch (err) {
+                                                                                    setLeaveError(err instanceof Error ? err.message : "Failed to leave organization");
+                                                                                    setLeavingOrg(false);
+                                                                                }
                                                                             }}
+                                                                            disabled={leavingOrg}
+                                                                            title="Leave organization"
                                                                         >
-                                                                            {((workspace
-                                                                                .eligibility_restriction
-                                                                                ?.type &&
-                                                                                workspace
-                                                                                    .eligibility_restriction
-                                                                                    ?.type !==
-                                                                                    "none") ||
-                                                                                (activeOrgMembership
-                                                                                    ?.eligibility_restriction
-                                                                                    ?.type &&
-                                                                                    activeOrgMembership
-                                                                                        ?.eligibility_restriction
-                                                                                        ?.type !==
-                                                                                        "none")) && (
-                                                                                <div
-                                                                                    title={
-                                                                                        workspace
-                                                                                            .eligibility_restriction
-                                                                                            ?.message ||
-                                                                                        activeOrgMembership
-                                                                                            ?.eligibility_restriction
-                                                                                            ?.message
-                                                                                    }
-                                                                                    style={{
-                                                                                        display:
-                                                                                            "flex",
-                                                                                        alignItems:
-                                                                                            "center",
-                                                                                    }}
+                                                                            {leavingOrg ? <Spinner /> : <SignOut size={12} />}
+                                                                        </LeaveBtn>
+                                                                    </span>
+                                                                    <span className="row-check"><CheckMark size={13} /></span>
+                                                                </>
+                                                            )}
+                                                            {workspacesEnabled && (
+                                                                <>
+                                                                    {isActive && (
+                                                                        <span className="row-actions" style={{ gap: "2px", alignItems: "center" }}>
+                                                                            {canManage && (
+                                                                                <IconBtn
+                                                                                    onClick={(e) => { e.stopPropagation(); manageOrgDialog.open(); }}
+                                                                                    title="Manage organization"
                                                                                 >
-                                                                                    <WarningCircle
-                                                                                        size={
-                                                                                            14
-                                                                                        }
-                                                                                        color="var(--color-error)"
-                                                                                    />
-                                                                                </div>
+                                                                                    <GearSix size={12} />
+                                                                                </IconBtn>
                                                                             )}
-                                                                            {isWorkspaceActive ? (
-                                                                                <div
-                                                                                    style={{
-                                                                                        display:
-                                                                                            "flex",
-                                                                                        alignItems:
-                                                                                            "center",
-                                                                                        gap: "var(--space-4u)",
-                                                                                    }}
-                                                                                >
-                                                                                    {activeWsMembership
-                                                                                        ?.eligibility_restriction
-                                                                                        ?.type ===
-                                                                                        "none" &&
-                                                                                        activeOrgMembership
-                                                                                            ?.eligibility_restriction
-                                                                                            ?.type ===
-                                                                                            "none" &&
-                                                                                        canManageWorkspace(
-                                                                                            activeWsMembership,
-                                                                                        ) && (
-                                                                                            <ManageButton
-                                                                                                onClick={(
-                                                                                                    e,
-                                                                                                ) => {
-                                                                                                    e.stopPropagation();
-                                                                                                    manageWorkspaceDialog.open();
-                                                                                                }}
+                                                                            <LeaveBtn
+                                                                                onClick={async (e) => {
+                                                                                    e.stopPropagation();
+                                                                                    setLeavingOrg(true);
+                                                                                    setLeaveError(null);
+                                                                                    try {
+                                                                                        await leaveOrganization();
+                                                                                        await refetchOrganizations();
+                                                                                        setTimeout(() => setLeavingOrg(false), 500);
+                                                                                    } catch (err) {
+                                                                                        setLeaveError(err instanceof Error ? err.message : "Failed to leave organization");
+                                                                                        setLeavingOrg(false);
+                                                                                    }
+                                                                                }}
+                                                                                disabled={leavingOrg}
+                                                                                title="Leave organization"
+                                                                            >
+                                                                                {leavingOrg ? <Spinner /> : <SignOut size={12} />}
+                                                                            </LeaveBtn>
+                                                                        </span>
+                                                                    )}
+                                                                    <ExpandCaret size={11} $open={isExpanded} />
+                                                                </>
+                                                            )}
+                                                        </RowRight>
+                                                    </Row>
+
+                                                    {workspacesEnabled && isExpanded && (
+                                                        <>
+                                                            {orgWorkspaces.map((ws: WorkspaceWithOrganization) => {
+                                                                const isWsActive = isActive && activeWorkspace?.id === ws.id;
+                                                                const wsRestr = ws.eligibility_restriction?.type &&
+                                                                    ws.eligibility_restriction.type !== "none";
+                                                                const canManageWs = isWsActive && !wsRestr && !orgRestricted && canManageWorkspace(activeWsMembership);
+
+                                                                return (
+                                                                    <WorkspaceRow
+                                                                        key={ws.id}
+                                                                        $active={isWsActive}
+                                                                        onClick={() => { if (!isWsActive && !wsRestr) handleSwitchWorkspace(ws.id); }}
+                                                                        disabled={isSwitching}
+                                                                        style={
+                                                                            (wsRestr || memRestricted)
+                                                                                ? { opacity: 0.55, cursor: "not-allowed" }
+                                                                                : isWsActive
+                                                                                    ? { cursor: "default" }
+                                                                                    : undefined
+                                                                        }
+                                                                        title={ws.eligibility_restriction?.message}
+                                                                    >
+                                                                        <WsAvatar>
+                                                                            {ws.image_url
+                                                                                ? <img src={ws.image_url} alt={ws.name} />
+                                                                                : getInitials(ws.name).charAt(0)
+                                                                            }
+                                                                        </WsAvatar>
+                                                                        <WsName>{ws.name}</WsName>
+                                                                        <RowRight>
+                                                                            {wsRestr && <WarningCircle size={12} color="var(--color-error)" />}
+                                                                            {isWsActive && (
+                                                                                <>
+                                                                                    <span className="row-actions" style={{ gap: "2px", alignItems: "center" }}>
+                                                                                        {canManageWs && (
+                                                                                            <IconBtn
+                                                                                                onClick={(e) => { e.stopPropagation(); manageWorkspaceDialog.open(); }}
                                                                                                 title="Manage workspace"
                                                                                             >
-                                                                                                <GearSix
-                                                                                                    size={
-                                                                                                        12
-                                                                                                    }
-                                                                                                />
-                                                                                            </ManageButton>
+                                                                                                <GearSix size={11} />
+                                                                                            </IconBtn>
                                                                                         )}
-                                                                                    <LogoutButton
-                                                                                        onClick={async (
-                                                                                            e,
-                                                                                        ) => {
-                                                                                            e.stopPropagation();
-                                                                                            try {
-                                                                                                if (
-                                                                                                    leaveWorkspace
-                                                                                                ) {
-                                                                                                    await leaveWorkspace();
-                                                                                                }
-                                                                                            } catch (error: any) {
-                                                                                                const errorMessage =
-                                                                                                    error.message ||
-                                                                                                    "Failed to leave workspace. Please try again.";
-                                                                                                toast(
-                                                                                                    errorMessage,
-                                                                                                    "error",
-                                                                                                );
-                                                                                            }
-                                                                                        }}
-                                                                                        title="Leave workspace"
-                                                                                    >
-                                                                                        <SignOut
-                                                                                            size={
-                                                                                                12
-                                                                                            }
-                                                                                        />
-                                                                                    </LogoutButton>
-                                                                                </div>
-                                                                            ) : (
-                                                                                <HoverArrow
-                                                                                    className="hover-arrow"
-                                                                                    size={
-                                                                                        14
-                                                                                    }
-                                                                                />
+                                                                                        <LeaveBtn
+                                                                                            onClick={async (e) => {
+                                                                                                e.stopPropagation();
+                                                                                                try { if (leaveWorkspace) await leaveWorkspace(); }
+                                                                                                catch (err: any) { toast(err.message || "Failed to leave workspace.", "error"); }
+                                                                                            }}
+                                                                                            title="Leave workspace"
+                                                                                        >
+                                                                                            <SignOut size={11} />
+                                                                                        </LeaveBtn>
+                                                                                    </span>
+                                                                                    <span className="row-check"><CheckMark size={12} /></span>
+                                                                                </>
                                                                             )}
-                                                                        </div>
-                                                                    </WorkspaceItem>
+                                                                        </RowRight>
+                                                                    </WorkspaceRow>
                                                                 );
-                                                            },
-                                                        )}
-                                                    {activeOrgMembership
-                                                        ?.eligibility_restriction
-                                                        ?.type === "none" && (
-                                                        <WorkspaceItem
-                                                            as="button"
-                                                            onClick={() => {
-                                                                setSelectedOrgForWorkspace(
-                                                                    activeOrganization.id,
-                                                                );
-                                                                createWorkspaceDialog.open();
-                                                            }}
-                                                            disabled={
-                                                                isSwitching
-                                                            }
-                                                        >
-                                                            <MenuItemContent>
-                                                                <PlusIcon
-                                                                    style={{
-                                                                        width: "var(--space-7u)",
-                                                                        height: "var(--space-7u)",
-                                                                    }}
+                                                            })}
+                                                            {!memRestricted && (
+                                                                <WorkspaceRow
+                                                                    onClick={() => { setSelectedOrgForWorkspace(org.id); createWorkspaceDialog.open(); }}
+                                                                    disabled={isSwitching}
                                                                 >
-                                                                    <Plus
-                                                                        size={
-                                                                            12
-                                                                        }
-                                                                    />
-                                                                </PlusIcon>
-                                                                <MenuItemInfo>
-                                                                    <MenuItemName>
-                                                                        Create
-                                                                        workspace
-                                                                    </MenuItemName>
-                                                                </MenuItemInfo>
-                                                            </MenuItemContent>
-                                                        </WorkspaceItem>
+                                                                    <WsAvatar style={{ background: "transparent", border: "1px dashed var(--color-border)" }}>
+                                                                        <Plus size={10} />
+                                                                    </WsAvatar>
+                                                                    <WsName>New workspace</WsName>
+                                                                </WorkspaceRow>
+                                                            )}
+                                                        </>
                                                     )}
-                                                </>
-                                            )}
-
-                                        {/* Show status messages */}
-                                        {(leavingOrg || leaveError) && (
-                                            <>
-                                                {leavingOrg && (
-                                                    <StatusMessage>
-                                                        <Spinner />
-                                                        Leaving organization...
-                                                    </StatusMessage>
-                                                )}
-                                                {leaveError && (
-                                                    <StatusMessage $isError>
-                                                        <span>⚠️</span>
-                                                        {leaveError}
-                                                    </StatusMessage>
-                                                )}
-                                            </>
-                                        )}
-
-                                        <Separator />
-
-                                        {organizationMemberships &&
-                                            organizationMemberships.length >
-                                                0 && (
-                                                <>
-                                                    {organizationMemberships
-                                                        .filter(
-                                                            (m) =>
-                                                                m.organization
-                                                                    .id !==
-                                                                activeOrganization?.id,
-                                                        )
-                                                        .map((membership) => {
-                                                            const org =
-                                                                membership.organization;
-                                                            const orgWorkspaces =
-                                                                workspaceList?.filter(
-                                                                    (
-                                                                        w: WorkspaceWithOrganization,
-                                                                    ) =>
-                                                                        w
-                                                                            .organization
-                                                                            .id ===
-                                                                        org.id,
-                                                                ) || [];
-                                                            const isExpanded =
-                                                                expandedOrgs.has(
-                                                                    org.id,
-                                                                );
-
-                                                            return (
-                                                                <React.Fragment
-                                                                    key={org.id}
-                                                                >
-                                                                    <MenuItem
-                                                                        as="button"
-                                                                        $isActive={
-                                                                            false
-                                                                        }
-                                                                        onClick={() => {
-                                                                            if (
-                                                                                workspacesEnabled
-                                                                            ) {
-                                                                                toggleOrgExpanded(
-                                                                                    org.id,
-                                                                                );
-                                                                            } else {
-                                                                                handleSwitchOrganization(
-                                                                                    org.id,
-                                                                                );
-                                                                            }
-                                                                        }}
-                                                                        disabled={
-                                                                            isSwitching
-                                                                        }
-                                                                        style={
-                                                                            membership
-                                                                                .eligibility_restriction
-                                                                                ?.type !==
-                                                                            "none"
-                                                                                ? {
-                                                                                      opacity: 0.6,
-                                                                                      cursor: "not-allowed",
-                                                                                  }
-                                                                                : undefined
-                                                                        }
-                                                                        title={
-                                                                            membership
-                                                                                .eligibility_restriction
-                                                                                ?.message
-                                                                        }
-                                                                    >
-                                                                        <MenuItemContent>
-                                                                            {workspacesEnabled && (
-                                                                                <CaretDown
-                                                                                    size={
-                                                                                        12
-                                                                                    }
-                                                                                    style={{
-                                                                                        marginRight:
-                                                                                            "var(--space-2u)",
-                                                                                        transform:
-                                                                                            isExpanded
-                                                                                                ? "rotate(0deg)"
-                                                                                                : "rotate(-90deg)",
-                                                                                        transition:
-                                                                                            "transform 0.2s ease",
-                                                                                        color: "var(--color-secondary-text)",
-                                                                                    }}
-                                                                                />
-                                                                            )}
-                                                                            <MenuItemAvatar>
-                                                                                {org.image_url ? (
-                                                                                    <MenuItemAvatarImage
-                                                                                        src={
-                                                                                            org.image_url
-                                                                                        }
-                                                                                        alt={
-                                                                                            org.name
-                                                                                        }
-                                                                                    />
-                                                                                ) : (
-                                                                                    getInitials(
-                                                                                        org.name,
-                                                                                    )
-                                                                                )}
-                                                                            </MenuItemAvatar>
-                                                                            <MenuItemInfo>
-                                                                                <MenuItemName>
-                                                                                    {
-                                                                                        org.name
-                                                                                    }
-                                                                                </MenuItemName>
-                                                                            </MenuItemInfo>
-                                                                        </MenuItemContent>
-                                                                        <div
-                                                                            style={{
-                                                                                display:
-                                                                                    "flex",
-                                                                                alignItems:
-                                                                                    "center",
-                                                                                gap: "var(--space-4u)",
-                                                                            }}
-                                                                        >
-                                                                            {membership
-                                                                                .eligibility_restriction
-                                                                                ?.type &&
-                                                                                membership
-                                                                                    .eligibility_restriction
-                                                                                    ?.type !==
-                                                                                    "none" && (
-                                                                                    <div
-                                                                                        title={
-                                                                                            membership
-                                                                                                .eligibility_restriction
-                                                                                                ?.message
-                                                                                        }
-                                                                                        style={{
-                                                                                            display:
-                                                                                                "flex",
-                                                                                            alignItems:
-                                                                                                "center",
-                                                                                        }}
-                                                                                    >
-                                                                                        <WarningCircle
-                                                                                            size={
-                                                                                                14
-                                                                                            }
-                                                                                            color="var(--color-error)"
-                                                                                        />
-                                                                                    </div>
-                                                                                )}
-                                                                            <HoverArrow
-                                                                                className="hover-arrow"
-                                                                                size={
-                                                                                    14
-                                                                                }
-                                                                            />
-                                                                        </div>
-                                                                    </MenuItem>
-
-                                                                    {workspacesEnabled &&
-                                                                        isExpanded && (
-                                                                            <>
-                                                                                {orgWorkspaces.map(
-                                                                                    (
-                                                                                        workspace: WorkspaceWithOrganization,
-                                                                                    ) => {
-                                                                                        const isWorkspaceActive =
-                                                                                            activeWorkspace?.id ===
-                                                                                            workspace.id;
-                                                                                        return (
-                                                                                            <WorkspaceItem
-                                                                                                as={
-                                                                                                    isWorkspaceActive
-                                                                                                        ? undefined
-                                                                                                        : "button"
-                                                                                                }
-                                                                                                key={
-                                                                                                    workspace.id
-                                                                                                }
-                                                                                                $isActive={
-                                                                                                    isWorkspaceActive
-                                                                                                }
-                                                                                                onClick={
-                                                                                                    isWorkspaceActive
-                                                                                                        ? undefined
-                                                                                                        : () =>
-                                                                                                              handleSwitchWorkspace(
-                                                                                                                  workspace.id,
-                                                                                                              )
-                                                                                                }
-                                                                                                {...(isWorkspaceActive
-                                                                                                    ? {
-                                                                                                          style: isSwitching
-                                                                                                              ? {
-                                                                                                                    pointerEvents:
-                                                                                                                        "none",
-                                                                                                                    opacity: 0.7,
-                                                                                                                }
-                                                                                                              : undefined,
-                                                                                                      }
-                                                                                                    : {
-                                                                                                          disabled:
-                                                                                                              isSwitching,
-                                                                                                      })}
-                                                                                                style={{
-                                                                                                    ...(workspace
-                                                                                                        .eligibility_restriction
-                                                                                                        ?.type !==
-                                                                                                        "none" ||
-                                                                                                    membership
-                                                                                                        .eligibility_restriction
-                                                                                                        ?.type !==
-                                                                                                        "none"
-                                                                                                        ? {
-                                                                                                              opacity: 0.6,
-                                                                                                              cursor: "not-allowed",
-                                                                                                          }
-                                                                                                        : {}),
-                                                                                                    ...(isWorkspaceActive &&
-                                                                                                    isSwitching
-                                                                                                        ? {
-                                                                                                              pointerEvents:
-                                                                                                                  "none",
-                                                                                                              opacity: 0.7,
-                                                                                                          }
-                                                                                                        : {}),
-                                                                                                }}
-                                                                                                title={
-                                                                                                    workspace
-                                                                                                        .eligibility_restriction
-                                                                                                        ?.message ||
-                                                                                                    membership
-                                                                                                        .eligibility_restriction
-                                                                                                        ?.message
-                                                                                                }
-                                                                                            >
-                                                                                                {isWorkspaceActive && (
-                                                                                                    <ActiveIndicator />
-                                                                                                )}
-                                                                                                <MenuItemContent>
-                                                                                                    <WorkspaceAvatar>
-                                                                                                        {workspace.image_url ? (
-                                                                                                            <img
-                                                                                                                src={
-                                                                                                                    workspace.image_url
-                                                                                                                }
-                                                                                                                alt={
-                                                                                                                    workspace.name
-                                                                                                                }
-                                                                                                                style={{
-                                                                                                                    width: "100%",
-                                                                                                                    height: "100%",
-                                                                                                                    objectFit:
-                                                                                                                        "cover",
-                                                                                                                }}
-                                                                                                            />
-                                                                                                        ) : (
-                                                                                                            getInitials(
-                                                                                                                workspace.name,
-                                                                                                            ).charAt(
-                                                                                                                0,
-                                                                                                            )
-                                                                                                        )}
-                                                                                                    </WorkspaceAvatar>
-                                                                                                    <MenuItemInfo>
-                                                                                                        <MenuItemName>
-                                                                                                            {
-                                                                                                                workspace.name
-                                                                                                            }
-                                                                                                        </MenuItemName>
-                                                                                                    </MenuItemInfo>
-                                                                                                </MenuItemContent>
-                                                                                                <div
-                                                                                                    style={{
-                                                                                                        display:
-                                                                                                            "flex",
-                                                                                                        alignItems:
-                                                                                                            "center",
-                                                                                                        gap: "var(--space-4u)",
-                                                                                                    }}
-                                                                                                >
-                                                                                                    {((workspace
-                                                                                                        .eligibility_restriction
-                                                                                                        ?.type &&
-                                                                                                        workspace
-                                                                                                            .eligibility_restriction
-                                                                                                            ?.type !==
-                                                                                                            "none") ||
-                                                                                                        (membership
-                                                                                                            .eligibility_restriction
-                                                                                                            ?.type &&
-                                                                                                            membership
-                                                                                                                .eligibility_restriction
-                                                                                                                ?.type !==
-                                                                                                                "none")) && (
-                                                                                                        <div
-                                                                                                            title={
-                                                                                                                workspace
-                                                                                                                    .eligibility_restriction
-                                                                                                                    ?.message ||
-                                                                                                                membership
-                                                                                                                    .eligibility_restriction
-                                                                                                                    ?.message
-                                                                                                            }
-                                                                                                            style={{
-                                                                                                                display:
-                                                                                                                    "flex",
-                                                                                                                alignItems:
-                                                                                                                    "center",
-                                                                                                            }}
-                                                                                                        >
-                                                                                                            <WarningCircle
-                                                                                                                size={
-                                                                                                                    14
-                                                                                                                }
-                                                                                                                color="var(--color-error)"
-                                                                                                            />
-                                                                                                        </div>
-                                                                                                    )}
-                                                                                                    {isWorkspaceActive ? (
-                                                                                                        <div
-                                                                                                            style={{
-                                                                                                                display:
-                                                                                                                    "flex",
-                                                                                                                alignItems:
-                                                                                                                    "center",
-                                                                                                                gap: "var(--space-4u)",
-                                                                                                            }}
-                                                                                                        >
-                                                                                                            {canManageWorkspace(
-                                                                                                                activeWsMembership,
-                                                                                                            ) && (
-                                                                                                                <ManageButton
-                                                                                                                    onClick={(
-                                                                                                                        e,
-                                                                                                                    ) => {
-                                                                                                                        e.stopPropagation();
-                                                                                                                        manageWorkspaceDialog.open();
-                                                                                                                    }}
-                                                                                                                    title="Manage workspace"
-                                                                                                                >
-                                                                                                                    <GearSix
-                                                                                                                        size={
-                                                                                                                            12
-                                                                                                                        }
-                                                                                                                    />
-                                                                                                                </ManageButton>
-                                                                                                            )}
-                                                                                                            <LogoutButton
-                                                                                                                onClick={async (
-                                                                                                                    e,
-                                                                                                                ) => {
-                                                                                                                    e.stopPropagation();
-                                                                                                                    try {
-                                                                                                                        if (
-                                                                                                                            leaveWorkspace
-                                                                                                                        ) {
-                                                                                                                            await leaveWorkspace();
-                                                                                                                        }
-                                                                                                                    } catch (error: any) {
-                                                                                                                        const errorMessage =
-                                                                                                                            error.message ||
-                                                                                                                            "Failed to leave workspace. Please try again.";
-                                                                                                                        toast(
-                                                                                                                            errorMessage,
-                                                                                                                            "error",
-                                                                                                                        );
-                                                                                                                    }
-                                                                                                                }}
-                                                                                                                title="Leave workspace"
-                                                                                                            >
-                                                                                                                <SignOut
-                                                                                                                    size={
-                                                                                                                        12
-                                                                                                                    }
-                                                                                                                />
-                                                                                                            </LogoutButton>
-                                                                                                        </div>
-                                                                                                    ) : (
-                                                                                                        <HoverArrow
-                                                                                                            className="hover-arrow"
-                                                                                                            size={
-                                                                                                                16
-                                                                                                            }
-                                                                                                        />
-                                                                                                    )}
-                                                                                                </div>
-                                                                                            </WorkspaceItem>
-                                                                                        );
-                                                                                    },
-                                                                                )}
-                                                                                {membership
-                                                                                    .eligibility_restriction
-                                                                                    ?.type ===
-                                                                                    "none" && (
-                                                                                    <WorkspaceItem
-                                                                                        as="button"
-                                                                                        onClick={() => {
-                                                                                            setSelectedOrgForWorkspace(
-                                                                                                org.id,
-                                                                                            );
-                                                                                            createWorkspaceDialog.open();
-                                                                                        }}
-                                                                                        disabled={
-                                                                                            isSwitching
-                                                                                        }
-                                                                                    >
-                                                                                        <MenuItemContent>
-                                                                                            <PlusIcon
-                                                                                                style={{
-                                                                                                    width: "var(--space-7u)",
-                                                                                                    height: "var(--space-7u)",
-                                                                                                }}
-                                                                                            >
-                                                                                                <Plus
-                                                                                                    size={
-                                                                                                        10
-                                                                                                    }
-                                                                                                />
-                                                                                            </PlusIcon>
-                                                                                            <MenuItemInfo>
-                                                                                                <MenuItemName>
-                                                                                                    Create
-                                                                                                    workspace
-                                                                                                </MenuItemName>
-                                                                                            </MenuItemInfo>
-                                                                                        </MenuItemContent>
-                                                                                    </WorkspaceItem>
-                                                                                )}
-                                                                            </>
-                                                                        )}
-                                                                    <Separator />
-                                                                </React.Fragment>
-                                                            );
-                                                        })}
-                                                </>
-                                            )}
-
-                                        {/* Show create button at bottom - workspace if enabled, otherwise organization */}
-                                        {workspacesEnabled && (
-                                            <CreateOrgButton
-                                                onClick={() => {
-                                                    if (
-                                                        activeOrganization &&
-                                                        (!activeOrgMembership
-                                                            ?.eligibility_restriction
-                                                            ?.type ||
-                                                            activeOrgMembership
-                                                                ?.eligibility_restriction
-                                                                ?.type ===
-                                                                "none")
-                                                    ) {
-                                                        setSelectedOrgForWorkspace(
-                                                            activeOrganization.id,
-                                                        );
-                                                    } else {
-                                                        setSelectedOrgForWorkspace(
-                                                            null,
-                                                        );
-                                                    }
-                                                    createWorkspaceDialog.open();
-                                                }}
-                                                disabled={isSwitching}
-                                            >
-                                                <MenuItemContent>
-                                                    <PlusIcon>
-                                                        <Plus size={12} />
-                                                    </PlusIcon>
-                                                    <MenuItemInfo>
-                                                        <MenuItemName>
-                                                            Create workspace
-                                                        </MenuItemName>
-                                                    </MenuItemInfo>
-                                                </MenuItemContent>
-                                            </CreateOrgButton>
-                                        )}
-                                        {!workspacesEnabled &&
-                                            allowUsersToCreateOrgs && (
-                                                <CreateOrgButton
-                                                    onClick={() => {
-                                                        createOrgDialog.open();
-                                                    }}
-                                                    disabled={isSwitching}
-                                                >
-                                                    <MenuItemContent>
-                                                        <PlusIcon>
-                                                            <Plus size={12} />
-                                                        </PlusIcon>
-                                                        <MenuItemInfo>
-                                                            <MenuItemName>
-                                                                Create
-                                                                organization
-                                                            </MenuItemName>
-                                                        </MenuItemInfo>
-                                                    </MenuItemContent>
-                                                </CreateOrgButton>
-                                            )}
-                                    </div>
+                                                </React.Fragment>
+                                            );
+                                        })}
+                                    </>
                                 )}
-                            </Dropdown>
-                        </DefaultStylesProvider>,
-                        document.body,
-                    )}
+                            </List>
 
-                {organizationsEnabled && allowUsersToCreateOrgs && (
-                    <CreateOrganizationDialog
-                        isOpen={createOrgDialog.isOpen}
-                        onClose={createOrgDialog.close}
-                        onCreated={handleOrganizationCreated}
-                    />
+                            {workspacesEnabled ? (
+                                <Footer>
+                                    <CreateRow
+                                        onClick={() => {
+                                            setSelectedOrgForWorkspace(
+                                                activeOrganization && !orgRestricted ? activeOrganization.id : null
+                                            );
+                                            createWorkspaceDialog.open();
+                                        }}
+                                        disabled={isSwitching || !activeOrganization || orgRestricted}
+                                    >
+                                        <CreateIcon><Plus size={12} /></CreateIcon>
+                                        New workspace
+                                    </CreateRow>
+                                </Footer>
+                            ) : allowUsersToCreateOrgs && (
+                                <Footer>
+                                    <CreateRow onClick={() => createOrgDialog.open()} disabled={isSwitching}>
+                                        <CreateIcon><Plus size={12} /></CreateIcon>
+                                        New organization
+                                    </CreateRow>
+                                </Footer>
+                            )}
+                        </Dropdown>
+                    </DefaultStylesProvider>,
+                    document.body,
                 )}
 
-                <ManageOrganizationDialog
-                    isOpen={manageOrgDialog.isOpen}
-                    onClose={manageOrgDialog.close}
-                />
-
-                <ManageWorkspaceDialog
-                    isOpen={manageWorkspaceDialog.isOpen}
-                    onClose={manageWorkspaceDialog.close}
-                />
-
-                <CreateWorkspaceDialog
-                    isOpen={createWorkspaceDialog.isOpen}
-                    onClose={() => {
-                        createWorkspaceDialog.close();
-                        setSelectedOrgForWorkspace(null);
-                    }}
-                    organizationId={selectedOrgForWorkspace || undefined}
-                />
+                {organizationsEnabled && allowUsersToCreateOrgs && (
+                    <CreateOrganizationDialog isOpen={createOrgDialog.isOpen} onClose={createOrgDialog.close} onCreated={refetchOrganizations} />
+                )}
+                <ManageOrganizationDialog isOpen={manageOrgDialog.isOpen} onClose={manageOrgDialog.close} />
+                {workspacesEnabled && (
+                    <>
+                        <ManageWorkspaceDialog isOpen={manageWorkspaceDialog.isOpen} onClose={manageWorkspaceDialog.close} />
+                        <CreateWorkspaceDialog
+                            isOpen={createWorkspaceDialog.isOpen}
+                            onClose={() => { createWorkspaceDialog.close(); setSelectedOrgForWorkspace(null); }}
+                            organizationId={selectedOrgForWorkspace || undefined}
+                        />
+                    </>
+                )}
             </Container>
         </DefaultStylesProvider>
     );

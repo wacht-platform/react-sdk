@@ -106,7 +106,10 @@ export const ProfileDetailsManagementSection = () => {
                     user.refetch();
                     toast("Profile picture updated successfully", "info");
                 } catch (error: any) {
-                    toast(error.message || "Failed to update profile picture", "error");
+                    toast(
+                        error.message || "Failed to update profile picture",
+                        "error",
+                    );
                     // Reset preview on error
                     setPreviewUrl(user?.profile_picture_url || null);
                 }
@@ -183,11 +186,13 @@ export const ProfileDetailsManagementSection = () => {
                             }}
                             onClick={triggerFileInput}
                             onMouseEnter={(e) => {
-                                e.currentTarget.style.borderColor = "var(--color-primary)";
+                                e.currentTarget.style.borderColor =
+                                    "var(--color-primary)";
                                 e.currentTarget.style.transform = "scale(1.02)";
                             }}
                             onMouseLeave={(e) => {
-                                e.currentTarget.style.borderColor = "var(--color-border)";
+                                e.currentTarget.style.borderColor =
+                                    "var(--color-border)";
                                 e.currentTarget.style.transform = "scale(1)";
                             }}
                         >
@@ -263,18 +268,27 @@ export const ProfileDetailsManagementSection = () => {
                                             remove_profile_picture: true,
                                         });
                                         await user.refetch();
-                                        toast("Profile picture removed successfully", "info");
+                                        toast(
+                                            "Profile picture removed successfully",
+                                            "info",
+                                        );
                                     } catch (error: any) {
                                         toast(
-                                            error.message || "Failed to remove profile picture",
+                                            error.message ||
+                                                "Failed to remove profile picture",
                                             "error",
                                         );
                                         // Reset preview on error
-                                        setPreviewUrl(user?.profile_picture_url || null);
+                                        setPreviewUrl(
+                                            user?.profile_picture_url || null,
+                                        );
                                     }
                                 }}
                             >
-                                <Trash size={14} style={{ marginRight: "var(--space-2u)" }} />
+                                <Trash
+                                    size={14}
+                                    style={{ marginRight: "var(--space-2u)" }}
+                                />
                                 Remove
                             </Button>
                         </ButtonActions>
@@ -412,7 +426,9 @@ export const ProfileDetailsManagementSection = () => {
                                 display: "flex",
                                 alignItems: "center",
                                 justifyContent: "space-between",
-                                marginBottom: showDeleteConfirm ? "var(--space-10u)" : "0",
+                                marginBottom: showDeleteConfirm
+                                    ? "var(--space-10u)"
+                                    : "0",
                             }}
                         >
                             <div>
@@ -432,8 +448,8 @@ export const ProfileDetailsManagementSection = () => {
                                         color: "var(--color-muted)",
                                     }}
                                 >
-                                    Once you delete your account, there is no going back. Please
-                                    be certain.
+                                    Once you delete your account, there is no
+                                    going back. Please be certain.
                                 </div>
                             </div>
                             <Button
@@ -451,7 +467,7 @@ export const ProfileDetailsManagementSection = () => {
                                     border: "none",
                                     padding: "var(--space-3u) var(--space-6u)",
                                     fontSize: "var(--font-size-md)",
-                                    height: "var(--size-16u)",
+                                    height: "calc(var(--size-8u) * 2)",
                                     width: "auto",
                                 }}
                             >
@@ -460,7 +476,12 @@ export const ProfileDetailsManagementSection = () => {
                         </div>
 
                         {showDeleteConfirm && (
-                            <div style={{ width: "100%", marginTop: "var(--space-8u)" }}>
+                            <div
+                                style={{
+                                    width: "100%",
+                                    marginTop: "var(--space-8u)",
+                                }}
+                            >
                                 <FormGroup>
                                     <Label htmlFor="confirm_username">
                                         Type "delete this account" to confirm
@@ -469,7 +490,9 @@ export const ProfileDetailsManagementSection = () => {
                                         id="confirm_username"
                                         type="text"
                                         value={confirmName}
-                                        onChange={(e) => setConfirmName(e.target.value)}
+                                        onChange={(e) =>
+                                            setConfirmName(e.target.value)
+                                        }
                                         placeholder="delete this account"
                                         style={{ width: "100%" }}
                                     />
@@ -483,33 +506,45 @@ export const ProfileDetailsManagementSection = () => {
                                     }
                                     style={{
                                         background:
-                                            confirmName === "delete this account"
+                                            confirmName ===
+                                            "delete this account"
                                                 ? "var(--color-error)"
                                                 : "transparent",
                                         color:
-                                            confirmName === "delete this account"
+                                            confirmName ===
+                                            "delete this account"
                                                 ? "var(--color-foreground-inverse)"
                                                 : "var(--color-muted)",
                                         border: "var(--border-width-thin) solid var(--color-border)",
-                                        padding: "var(--space-4u) var(--space-8u)",
+                                        padding:
+                                            "var(--space-4u) var(--space-8u)",
                                         fontSize: "var(--font-size-lg)",
                                         height: "var(--size-18u)",
                                         cursor:
-                                            confirmName === "delete this account"
+                                            confirmName ===
+                                            "delete this account"
                                                 ? "pointer"
                                                 : "not-allowed",
-                                        opacity: confirmName === "delete this account" ? 1 : 0.6,
+                                        opacity:
+                                            confirmName ===
+                                            "delete this account"
+                                                ? 1
+                                                : 0.6,
                                         marginTop: "var(--space-6u)",
                                         width: "100%",
                                     }}
                                 >
-                                    {isDeleting ? <Spinner size={12} /> : "Delete Forever"}
+                                    {isDeleting ? (
+                                        <Spinner size={12} />
+                                    ) : (
+                                        "Delete Forever"
+                                    )}
                                 </Button>
                             </div>
                         )}
                     </div>
                 </div>
-            </div >
+            </div>
         </>
     );
 };
