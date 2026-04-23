@@ -1,8 +1,8 @@
 "use client";
 
 import { useState } from "react";
-import styled from "styled-components";
-import { Check } from "lucide-react";
+import styled, { keyframes } from "styled-components";
+import { Check, CircleNotch } from "@phosphor-icons/react";
 import { DefaultStylesProvider } from "../utility/root";
 import { Input } from "../utility/input";
 import { Button } from "../utility/button";
@@ -10,6 +10,15 @@ import { useDeployment } from "@/hooks/use-deployment";
 import { useWaitlist, type WaitlistParams } from "@/hooks/use-waitlist";
 import { AuthFormImage } from "./auth-image";
 import { standaloneAuthShell } from "./auth-shell";
+
+const spin = keyframes`
+  from { transform: rotate(0deg); }
+  to   { transform: rotate(360deg); }
+`;
+
+const ButtonSpinner = styled(CircleNotch)`
+    animation: ${spin} 1s linear infinite;
+`;
 
 const Container = styled.div`
   ${standaloneAuthShell}
@@ -21,7 +30,7 @@ const Header = styled.div`
 `;
 
 const Title = styled.h1`
-  font-size: var(--font-size-2xl);
+  font-size: var(--font-size-xl);
   font-weight: 400;
   color: var(--color-card-foreground);
   margin-bottom: var(--space-2u);
@@ -91,7 +100,8 @@ const SuccessIcon = styled.div`
 `;
 
 const SuccessTitle = styled.h2`
-  font-size: var(--font-size-2xl);
+  font-size: var(--font-size-xl);
+  font-weight: 400;
   color: var(--color-card-foreground);
   margin: 0;
 `;
@@ -104,13 +114,15 @@ const SuccessMessage = styled.p`
 `;
 
 const Footer = styled.div`
-  text-align: center;
   margin-top: var(--space-8u);
+  padding-top: var(--space-6u);
+  border-top: var(--border-width-thin) solid var(--color-border);
+  text-align: center;
+  font-size: var(--font-size-sm);
+  color: var(--color-secondary-text);
 `;
 
 const FooterText = styled.p`
-  font-size: var(--font-size-md);
-  color: var(--color-muted);
   margin: 0;
 `;
 
@@ -283,7 +295,7 @@ export function WaitlistForm() {
           )}
 
           <Button type="submit" $primary $fullWidth disabled={isSubmitting || loading}>
-            {isSubmitting || loading ? "Joining waitlist..." : "Join waitlist"}
+            {isSubmitting || loading ? <ButtonSpinner size={16} /> : "Join waitlist"}
           </Button>
         </Form>
 

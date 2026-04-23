@@ -1,6 +1,6 @@
 import { useState } from "react";
 import styled, { keyframes } from "styled-components";
-import { Fingerprint, Loader2 } from "lucide-react";
+import { Fingerprint, CircleNotch } from "@phosphor-icons/react";
 import { useUser } from "../../hooks/use-user";
 import { useDeployment } from "../../hooks/use-deployment";
 import { Button } from "../utility/button";
@@ -53,7 +53,7 @@ const spin = keyframes`
   to { transform: rotate(360deg); }
 `;
 
-const Spinner = styled(Loader2)`
+const Spinner = styled(CircleNotch)`
   animation: ${spin} 1s linear infinite;
 `;
 

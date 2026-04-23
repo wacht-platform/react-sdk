@@ -1,6 +1,6 @@
 import { useEffect, useState, useRef } from "react";
 import styled, { keyframes } from "styled-components";
-import { Loader2 } from "lucide-react";
+import { CircleNotch } from "@phosphor-icons/react";
 import { useSignInWithStrategy } from "../../hooks/use-signin";
 import type { OAuthProvider } from "../../hooks/use-signin";
 import { useSession } from "../../hooks/use-session";
@@ -24,9 +24,10 @@ import type { SignInParams } from "@/types";
 import type { DeploymentSocialConnection } from "@/types";
 import { useDeployment } from "@/hooks/use-deployment";
 import { useNavigation } from "@/hooks/use-navigation";
-import { Button } from "@/components/utility";
+import { Button, MethodButton } from "@/components/utility";
 import { AuthFormImage } from "./auth-image";
-import { ChevronRight, Fingerprint, Users } from "lucide-react";
+import { CaretRight, Fingerprint, Hash, Lock, UserCirclePlus, EnvelopeSimple, DeviceMobile, PencilSimple } from "@phosphor-icons/react";
+
 import { getStoredDevSession } from "@/utils/dev-session";
 import { standaloneAuthShell } from "./auth-shell";
 
@@ -105,6 +106,56 @@ const PasswordGroup = styled.div`
     position: relative;
 `;
 
+
+const LockedInput = styled.div`
+    display: flex;
+    align-items: center;
+    gap: var(--space-3u);
+    height: var(--size-18u);
+    padding: 0 var(--space-6u);
+    border: var(--border-width-thin) dashed var(--color-border);
+    border-radius: var(--radius-md);
+    background: var(--color-secondary);
+    font-size: var(--font-size-md);
+    color: var(--color-card-foreground);
+`;
+
+const LockedInputIcon = styled.span`
+    color: var(--color-secondary-text);
+    display: flex;
+    flex-shrink: 0;
+
+    svg {
+        width: var(--size-8u);
+        height: var(--size-8u);
+    }
+`;
+
+const LockedInputValue = styled.span`
+    flex: 1;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+`;
+
+const LockedInputEdit = styled.button`
+    background: transparent;
+    border: none;
+    padding: 0;
+    cursor: pointer;
+    font-size: var(--font-size-sm);
+    font-weight: 500;
+    color: var(--color-card-foreground);
+    text-decoration: underline;
+    text-underline-offset: 3px;
+    flex-shrink: 0;
+    transition: color 0.15s ease;
+
+    &:hover {
+        color: var(--color-primary);
+    }
+`;
+
 const ErrorMessage = styled.p`
     font-size: var(--font-size-xs);
     color: var(--color-error);
@@ -123,7 +174,7 @@ const SubmitButton = styled(Button).withConfig({
     line-height: 1;
 `;
 
-const ButtonSpinner = styled(Loader2)`
+const ButtonSpinner = styled(CircleNotch)`
     animation: ${spin} 1s linear infinite;
 `;
 
@@ -148,61 +199,51 @@ const PasskeyButton = styled(Button).withConfig({
 `;
 
 const Footer = styled.div`
-    margin-top: var(--space-6u);
+    margin-top: var(--space-8u);
+    padding-top: var(--space-6u);
+    border-top: var(--border-width-thin) solid var(--color-border);
     text-align: center;
-    font-size: var(--font-size-md);
+    font-size: var(--font-size-sm);
     color: var(--color-secondary-text);
 `;
 
-const ExistingAccountsCard = styled.div`
+const WelcomeBackCard = styled.button`
     display: flex;
-    gap: var(--space-4u);
-    flex-wrap: wrap;
-    margin-bottom: var(--space-6u);
-`;
-
-const ExistingAccountsActions = styled.div`
-    display: flex;
-    gap: var(--space-4u);
-    flex-wrap: wrap;
-    width: 100%;
-`;
-
-const ExistingAccountButton = styled(Button).withConfig({
-    shouldForwardProp: (prop) => !["$size", "$secondary"].includes(prop),
-})<{ $size?: "sm" | "md" | "lg"; $secondary?: boolean }>`
-    display: inline-flex;
     align-items: center;
     gap: var(--space-4u);
     width: 100%;
-    justify-content: flex-start;
-    height: var(--size-18u);
-    min-height: var(--size-18u);
-    padding-top: 0;
-    padding-bottom: 0;
-    line-height: 1;
+    padding: var(--space-4u) var(--space-5u);
     background: transparent;
-    color: var(--color-card-foreground);
     border: var(--border-width-thin) solid var(--color-border);
-    box-shadow: none;
+    border-radius: var(--radius-md);
+    margin-bottom: var(--space-6u);
+    cursor: pointer;
+    text-align: left;
+    transition: background-color 0.15s ease, border-color 0.15s ease;
 
     &:hover:not(:disabled) {
         background: var(--color-accent);
         border-color: var(--color-border-hover);
-        color: var(--color-accent-foreground);
+    }
+
+    &:disabled {
+        opacity: 0.6;
+        cursor: not-allowed;
     }
 `;
 
-const ExistingAccountAvatar = styled.div`
-    width: var(--size-10u);
-    height: var(--size-10u);
+const WelcomeBackAvatar = styled.div`
+    width: var(--size-20u);
+    height: var(--size-20u);
     border-radius: var(--radius-full);
     overflow: hidden;
-    background: var(--color-secondary);
-    color: var(--color-secondary-text);
-    font-size: var(--font-size-2xs);
-    line-height: var(--size-10u);
-    text-align: center;
+    background: var(--color-accent);
+    color: var(--color-card-foreground);
+    font-size: var(--font-size-sm);
+    font-weight: 500;
+    display: flex;
+    align-items: center;
+    justify-content: center;
     flex-shrink: 0;
 
     img {
@@ -212,39 +253,45 @@ const ExistingAccountAvatar = styled.div`
     }
 `;
 
-const ExistingAccountAvatarOutline = styled(ExistingAccountAvatar)`
-    background: var(--color-secondary);
-    color: var(--color-secondary-text);
-    border: var(--border-width-thin) solid var(--color-border);
-
-    @media (prefers-color-scheme: dark) {
-        border: var(--border-width-thin) solid var(--color-border);
-    }
+const WelcomeBackInfo = styled.div`
+    flex: 1;
+    min-width: 0;
 `;
 
-const ExistingAccountsIcon = styled(ExistingAccountAvatarOutline)`
-    display: flex;
-    align-items: center;
-    justify-content: center;
-
-    svg {
-        width: var(--size-8u);
-        height: var(--size-8u);
-        color: var(--color-secondary-text);
-    }
-`;
-
-const ExistingAccountText = styled.span`
+const WelcomeBackName = styled.div`
+    font-size: var(--font-size-md);
+    font-weight: 400;
+    color: var(--color-card-foreground);
+    white-space: nowrap;
     overflow: hidden;
     text-overflow: ellipsis;
-    white-space: nowrap;
+    line-height: 1.3;
 `;
 
-const ExistingAccountArrow = styled(ChevronRight)`
-    margin-left: auto;
-    width: var(--space-7u);
-    height: var(--space-7u);
+const WelcomeBackEmail = styled.div`
+    font-size: var(--font-size-sm);
     color: var(--color-secondary-text);
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    margin-top: var(--space-1u);
+    line-height: 1.3;
+`;
+
+const NotYouLink = styled.span`
+    font-size: var(--font-size-sm);
+    font-weight: 400;
+    color: var(--color-secondary-text);
+    text-decoration: underline;
+    text-underline-offset: 3px;
+    cursor: pointer;
+    white-space: nowrap;
+    flex-shrink: 0;
+    transition: color 0.15s ease;
+
+    &:hover {
+        color: var(--color-card-foreground);
+    }
 `;
 
 const Link = styled.span`
@@ -256,6 +303,190 @@ const Link = styled.span`
 
     &:hover {
         color: var(--color-primary-hover);
+    }
+`;
+
+const SwitcherCard = styled.div`
+    border: var(--border-width-thin) solid var(--color-border);
+    border-radius: var(--radius-md);
+    overflow: hidden;
+    margin-bottom: var(--space-6u);
+    background: transparent;
+`;
+
+const SwitcherHeader = styled.div`
+    padding: var(--space-4u) var(--space-5u);
+    border-bottom: var(--border-width-thin) solid var(--color-border);
+    font-size: var(--font-size-sm);
+    color: var(--color-secondary-text);
+`;
+
+const SwitcherRow = styled.button`
+    display: flex;
+    align-items: center;
+    gap: var(--space-4u);
+    width: 100%;
+    padding: var(--space-4u) var(--space-5u);
+    background: transparent;
+    border: none;
+    border-bottom: var(--border-width-thin) solid var(--color-border);
+    cursor: pointer;
+    text-align: left;
+    transition: background-color 0.15s ease;
+
+    &:last-child {
+        border-bottom: none;
+    }
+
+    &:hover {
+        background: var(--color-accent);
+    }
+`;
+
+const SwitcherAvatar = styled.div`
+    width: var(--size-18u);
+    height: var(--size-18u);
+    border-radius: var(--radius-full);
+    overflow: hidden;
+    background: var(--color-accent);
+    color: var(--color-card-foreground);
+    font-size: var(--font-size-xs);
+    font-weight: 500;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    flex-shrink: 0;
+
+    img {
+        width: 100%;
+        height: 100%;
+        object-fit: cover;
+    }
+`;
+
+const SwitcherInfo = styled.div`
+    flex: 1;
+    min-width: 0;
+`;
+
+const SwitcherName = styled.div`
+    font-size: var(--font-size-md);
+    font-weight: 400;
+    color: var(--color-card-foreground);
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    line-height: 1.3;
+`;
+
+const SwitcherEmail = styled.div`
+    font-size: var(--font-size-sm);
+    color: var(--color-secondary-text);
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    margin-top: var(--space-1u);
+    line-height: 1.3;
+`;
+
+const SwitcherArrow = styled(CaretRight)`
+    width: var(--space-6u);
+    height: var(--space-6u);
+    color: var(--color-secondary-text);
+    flex-shrink: 0;
+    opacity: 0;
+    transform: translateX(-4px);
+    transition: opacity 0.15s ease, transform 0.15s ease;
+
+    ${SwitcherRow}:hover & {
+        opacity: 1;
+        transform: translateX(0);
+    }
+`;
+
+const OtpIconCircle = styled.div`
+    width: var(--size-24u);
+    height: var(--size-24u);
+    border-radius: var(--radius-full);
+    border: var(--border-width-thin) solid var(--color-border);
+    background: var(--color-accent);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    margin: 0 auto var(--space-6u);
+
+    svg {
+        width: var(--size-12u);
+        height: var(--size-12u);
+        color: var(--color-card-foreground);
+    }
+`;
+
+const OtpAddressRow = styled.div`
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: var(--space-2u);
+    margin-top: var(--space-3u);
+`;
+
+
+const OtpAddressBadge = styled.button`
+    display: inline-flex;
+    align-items: center;
+    gap: var(--space-2u);
+    padding: var(--space-2u) var(--space-4u);
+    border: var(--border-width-thin) solid var(--color-border);
+    border-radius: var(--radius-full);
+    font-size: var(--font-size-sm);
+    color: var(--color-secondary-text);
+    background: transparent;
+    cursor: pointer;
+    transition: border-color 0.15s ease, color 0.15s ease;
+
+    svg {
+        width: 12px;
+        height: 12px;
+        flex-shrink: 0;
+    }
+
+    &:hover {
+        border-color: var(--color-border-hover);
+        color: var(--color-card-foreground);
+    }
+`;
+
+const MagicLinkBody = styled.div`
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: var(--space-6u);
+    padding: var(--space-8u) 0;
+`;
+
+const MagicLinkResendText = styled.span`
+    font-size: var(--font-size-sm);
+    color: var(--color-secondary-text);
+`;
+
+const MagicLinkResendButton = styled.button`
+    background: none;
+    border: none;
+    padding: 0;
+    font-size: var(--font-size-sm);
+    color: var(--color-card-foreground);
+    cursor: pointer;
+    text-decoration: underline;
+    text-underline-offset: 3px;
+    transition: color 0.15s ease;
+
+    &:hover:not(:disabled) {
+        color: var(--color-primary);
+    }
+
+    &:disabled {
+        color: var(--color-secondary-text);
+        cursor: not-allowed;
     }
 `;
 
@@ -323,6 +554,7 @@ function SignInFormContent() {
         setShowOtherOptions,
         enabledSocialsProviders,
         firstFactor,
+        setFirstFactor,
         signInStep,
         setSignInStep,
     } = useSignInContext();
@@ -348,6 +580,10 @@ function SignInFormContent() {
     const [isRedirecting, setIsRedirecting] = useState(false);
     const [ssoError, setSsoError] = useState<string | null>(null);
     const [showPasskeyPrompt, setShowPasskeyPrompt] = useState(false);
+    const [showSwitcher, setShowSwitcher] = useState(false);
+    const [dismissedWelcomeBack, setDismissedWelcomeBack] = useState(false);
+    const [magicLinkTimer, setMagicLinkTimer] = useState(60);
+    const [magicLinkCanResend, setMagicLinkCanResend] = useState(false);
     const [pendingRedirectUri, setPendingRedirectUri] = useState<string | null>(
         null,
     );
@@ -377,6 +613,23 @@ function SignInFormContent() {
             window.history.replaceState({}, "", newUrl);
         }
     }, []);
+
+    useEffect(() => {
+        if (firstFactor !== "email_magic_link" || !otpSent) return;
+        setMagicLinkTimer(60);
+        setMagicLinkCanResend(false);
+        const interval = setInterval(() => {
+            setMagicLinkTimer((prev) => {
+                if (prev <= 1) {
+                    setMagicLinkCanResend(true);
+                    clearInterval(interval);
+                    return 0;
+                }
+                return prev - 1;
+            });
+        }, 1000);
+        return () => clearInterval(interval);
+    }, [firstFactor, otpSent]);
 
     useEffect(() => {
         if (
@@ -586,6 +839,8 @@ function SignInFormContent() {
                 break;
         }
 
+        const isVerificationStrategy = firstFactor === "email_otp" || firstFactor === "email_magic_link" || firstFactor === "phone_otp";
+
         setIsSubmitting(true);
         try {
             const submitData: any = {
@@ -598,9 +853,9 @@ function SignInFormContent() {
             }
 
             await signIn.create(submitData);
+            if (!isVerificationStrategy) setIsSubmitting(false);
         } catch (err) {
             setErrors({ submit: (err as Error).message });
-        } finally {
             setIsSubmitting(false);
         }
     };
@@ -722,18 +977,6 @@ function SignInFormContent() {
         return uri.toString();
     };
 
-    const resolveFrontendHostUrl = () => {
-        if (!deployment?.frontend_host) return null;
-        const uri = new URL(`https://${deployment.frontend_host}`);
-        if (deployment?.mode === "staging") {
-            uri.searchParams.set(
-                "__dev_session__",
-                getStoredDevSession(deployment.backend_host) || "",
-            );
-        }
-        return uri.toString();
-    };
-
     const handleContinueAsSignIn = async (signInId: string) => {
         if (loading || isSubmitting) return;
         setErrors({});
@@ -755,13 +998,6 @@ function SignInFormContent() {
         } finally {
             setIsSubmitting(false);
         }
-    };
-
-    const handleMoreAccounts = () => {
-        const frontendHostUrl = resolveFrontendHostUrl();
-        if (!frontendHostUrl) return;
-        setIsRedirecting(true);
-        navigate(frontendHostUrl);
     };
 
     const getInitials = (firstName?: string | null, lastName?: string | null) =>
@@ -920,12 +1156,12 @@ function SignInFormContent() {
         const prepareVerificationAsync = async () => {
             try {
                 await signIn.prepareVerification({ strategy });
+                setIsSubmitting(false);
                 setOtpSent(true);
             } catch {
                 setErrors({
                     submit: "Failed to send verification. Please try again.",
                 });
-            } finally {
                 setIsSubmitting(false);
             }
         };
@@ -1008,7 +1244,7 @@ function SignInFormContent() {
                 <Container>
                     <AuthFormImage />
                     <LoadingContainer>
-                        <Loader2 size={32} />
+                        <CircleNotch size={32} />
                     </LoadingContainer>
                 </Container>
             </DefaultStylesProvider>
@@ -1021,7 +1257,7 @@ function SignInFormContent() {
                 <Container>
                     <AuthFormImage />
                     <LoadingContainer>
-                        <Loader2 size={32} />
+                        <CircleNotch size={32} />
                     </LoadingContainer>
                 </Container>
             </DefaultStylesProvider>
@@ -1040,7 +1276,7 @@ function SignInFormContent() {
 
     const showOtpForm = isVerificationStep && otpSent;
     const showExistingAccountHints =
-        isMultiSessionEnabled && !showOtpForm && existingSignins.length > 0;
+        isMultiSessionEnabled && !showOtpForm && existingSignins.length > 0 && !dismissedWelcomeBack;
 
     return (
         <DefaultStylesProvider>
@@ -1048,22 +1284,61 @@ function SignInFormContent() {
                 <AuthFormImage />
 
                 {showOtpForm ? (
-                    <>
-                        <Header>
-                            <Title>
-                                {firstFactor === "phone_otp"
-                                    ? "Check your phone"
-                                    : "Check your email"}
-                            </Title>
-                            <Subtitle>
-                                {firstFactor === "email_magic_link"
-                                    ? `If ${formData.email} exists in our records, you will receive a magic link. Click the link to sign in.`
-                                    : firstFactor === "phone_otp"
-                                      ? `If ${formData.phone} exists in our records, you will receive a verification code via SMS. Enter it below to continue.`
-                                      : `If ${formData.email} exists in our records, you will receive a verification code. Enter it below to continue.`}
-                            </Subtitle>
-                        </Header>
-                    </>
+                    <Header>
+                        {!deployment?.ui_settings?.logo_image_url && (
+                            <OtpIconCircle>
+                                {firstFactor === "phone_otp" ? (
+                                    <DeviceMobile weight="light" />
+                                ) : (
+                                    <EnvelopeSimple weight="light" />
+                                )}
+                            </OtpIconCircle>
+                        )}
+                        <Title>
+                            {firstFactor === "phone_otp"
+                                ? "Check your phone"
+                                : firstFactor === "email_magic_link"
+                                  ? "Check your inbox"
+                                  : "Enter the code"}
+                        </Title>
+                        <Subtitle>
+                            {firstFactor === "email_magic_link"
+                                ? "We sent a magic link to your email — click it to sign in instantly."
+                                : firstFactor === "phone_otp"
+                                  ? "We sent a verification code via SMS."
+                                  : "We sent a 6-digit code to your email."}
+                        </Subtitle>
+                        {(firstFactor === "email_otp" || firstFactor === "email_magic_link") && formData.email && (
+                            <OtpAddressRow>
+                                <OtpAddressBadge
+                                    type="button"
+                                    onClick={() => {
+                                        setOtpSent(false);
+                                        discardSignInAttempt();
+                                        resetFormData();
+                                    }}
+                                >
+                                    <PencilSimple weight="light" />
+                                    {formData.email}
+                                </OtpAddressBadge>
+                            </OtpAddressRow>
+                        )}
+                        {firstFactor === "phone_otp" && formData.phone && (
+                            <OtpAddressRow>
+                                <OtpAddressBadge
+                                    type="button"
+                                    onClick={() => {
+                                        setOtpSent(false);
+                                        discardSignInAttempt();
+                                        resetFormData();
+                                    }}
+                                >
+                                    <PencilSimple weight="light" />
+                                    +{formData.phone}
+                                </OtpAddressBadge>
+                            </OtpAddressRow>
+                        )}
+                    </Header>
                 ) : (
                     <Header>
                         <Title>Sign in to your account</Title>
@@ -1085,69 +1360,103 @@ function SignInFormContent() {
                 )}
 
                 {showExistingAccountHints && (
-                    <ExistingAccountsCard>
-                        <ExistingAccountsActions>
-                            <ExistingAccountButton
-                                type="button"
-                                $size="md"
-                                $outline
-                                onClick={() =>
-                                    handleContinueAsSignIn(
-                                        existingSignins[0].id,
-                                    )
-                                }
-                                disabled={isSubmitting || loading}
-                            >
-                                <ExistingAccountAvatar>
-                                    {existingSignins[0].user
-                                        .has_profile_picture ? (
-                                        <img
-                                            src={
-                                                existingSignins[0].user
-                                                    .profile_picture_url
-                                            }
-                                            alt={
-                                                existingSignins[0].user
-                                                    .primary_email_address
-                                                    ?.email || "account"
-                                            }
-                                        />
-                                    ) : (
-                                        getInitials(
-                                            existingSignins[0].user.first_name,
-                                            existingSignins[0].user.last_name,
-                                        )
-                                    )}
-                                </ExistingAccountAvatar>
-                                <ExistingAccountText>
-                                    Continue as{" "}
-                                    {existingSignins[0].user
-                                        .primary_email_address?.email ||
-                                        existingSignins[0].user.first_name ||
-                                        "account"}
-                                </ExistingAccountText>
-                                <ExistingAccountArrow />
-                            </ExistingAccountButton>
-                            {existingSignins.length > 1 && (
-                                <ExistingAccountButton
+                    showSwitcher ? (
+                        <SwitcherCard>
+                            <SwitcherHeader>Choose an account</SwitcherHeader>
+                            {existingSignins.map((signin) => (
+                                <SwitcherRow
+                                    key={signin.id}
                                     type="button"
-                                    $size="md"
-                                    $outline
-                                    onClick={handleMoreAccounts}
+                                    onClick={() => handleContinueAsSignIn(signin.id)}
                                     disabled={isSubmitting || loading}
                                 >
-                                    <ExistingAccountsIcon as="div">
-                                        <Users />
-                                    </ExistingAccountsIcon>
-                                    <ExistingAccountText>
-                                        +{existingSignins.length - 1} existing
-                                        signins
-                                    </ExistingAccountText>
-                                    <ExistingAccountArrow />
-                                </ExistingAccountButton>
-                            )}
-                        </ExistingAccountsActions>
-                    </ExistingAccountsCard>
+                                    <SwitcherAvatar>
+                                        {signin.user.has_profile_picture ? (
+                                            <img
+                                                src={signin.user.profile_picture_url}
+                                                alt={signin.user.primary_email_address?.email || "account"}
+                                            />
+                                        ) : (
+                                            getInitials(signin.user.first_name, signin.user.last_name)
+                                        )}
+                                    </SwitcherAvatar>
+                                    <SwitcherInfo>
+                                        <SwitcherName>
+                                            {signin.user.first_name && signin.user.last_name
+                                                ? `${signin.user.first_name} ${signin.user.last_name}`
+                                                : signin.user.first_name ||
+                                                  signin.user.primary_email_address?.email?.split("@")[0] ||
+                                                  "Account"}
+                                        </SwitcherName>
+                                        <SwitcherEmail>
+                                            {signin.user.primary_email_address?.email}
+                                        </SwitcherEmail>
+                                    </SwitcherInfo>
+                                    <SwitcherArrow />
+                                </SwitcherRow>
+                            ))}
+                            <SwitcherRow
+                                type="button"
+                                onClick={() => {
+                                    setShowSwitcher(false);
+                                    setDismissedWelcomeBack(true);
+                                    resetFormData();
+                                }}
+                            >
+                                <SwitcherAvatar>
+                                    <UserCirclePlus size={16} />
+                                </SwitcherAvatar>
+                                <SwitcherInfo>
+                                    <SwitcherName>Use a different account</SwitcherName>
+                                </SwitcherInfo>
+                                <SwitcherArrow />
+                            </SwitcherRow>
+                        </SwitcherCard>
+                    ) : (
+                        <WelcomeBackCard
+                            type="button"
+                            onClick={() => handleContinueAsSignIn(existingSignins[0].id)}
+                            disabled={isSubmitting || loading}
+                        >
+                            <WelcomeBackAvatar>
+                                {existingSignins[0].user.has_profile_picture ? (
+                                    <img
+                                        src={existingSignins[0].user.profile_picture_url}
+                                        alt={existingSignins[0].user.primary_email_address?.email || "account"}
+                                    />
+                                ) : (
+                                    getInitials(
+                                        existingSignins[0].user.first_name,
+                                        existingSignins[0].user.last_name,
+                                    )
+                                )}
+                            </WelcomeBackAvatar>
+                            <WelcomeBackInfo>
+                                <WelcomeBackName>
+                                    Welcome back,{" "}
+                                    {existingSignins[0].user.first_name ||
+                                        existingSignins[0].user.primary_email_address?.email?.split("@")[0] ||
+                                        "back"}
+                                </WelcomeBackName>
+                                <WelcomeBackEmail>
+                                    {existingSignins[0].user.primary_email_address?.email}
+                                </WelcomeBackEmail>
+                            </WelcomeBackInfo>
+                            <NotYouLink
+                                onClick={(e) => {
+                                    e.stopPropagation();
+                                    if (existingSignins.length > 1) {
+                                        setShowSwitcher(true);
+                                    } else {
+                                        setDismissedWelcomeBack(true);
+                                        resetFormData();
+                                    }
+                                }}
+                            >
+                                Not you?
+                            </NotYouLink>
+                        </WelcomeBackCard>
+                    )
                 )}
 
                 {!showOtpForm ? (
@@ -1173,7 +1482,7 @@ function SignInFormContent() {
                             >
                                 <Fingerprint size={16} />
                                 Sign in with Passkey
-                                <ExistingAccountArrow />
+                                <SwitcherArrow />
                             </PasskeyButton>
                         )}
 
@@ -1191,18 +1500,51 @@ function SignInFormContent() {
                                 deployment?.auth_settings?.email_address
                                     ?.enabled && (
                                     <FormGroup>
-                                        <Label htmlFor="email">
-                                            Email address
-                                        </Label>
-                                        <Input
-                                            type="email"
-                                            id="email"
-                                            name="email"
-                                            value={formData.email}
-                                            onChange={handleInputChange}
-                                            placeholder="Enter your email address"
-                                            aria-invalid={!!errors.email}
-                                        />
+                                        <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between" }}>
+                                            <Label htmlFor="email">
+                                                Email address
+                                            </Label>
+                                            {signInStep === "identifier" && (
+                                                <Link
+                                                    style={{ fontSize: "var(--font-size-sm)" }}
+                                                    onClick={() => setShowOtherOptions(true)}
+                                                >
+                                                    Other methods
+                                                </Link>
+                                            )}
+                                        </div>
+                                        {signInStep === "password" &&
+                                        firstFactor === "email_password" &&
+                                        formData.email ? (
+                                            <LockedInput>
+                                                <LockedInputIcon>
+                                                    <Lock />
+                                                </LockedInputIcon>
+                                                <LockedInputValue>
+                                                    {formData.email}
+                                                </LockedInputValue>
+                                                <LockedInputEdit
+                                                    type="button"
+                                                    onClick={() =>
+                                                        setSignInStep(
+                                                            "identifier",
+                                                        )
+                                                    }
+                                                >
+                                                    Edit
+                                                </LockedInputEdit>
+                                            </LockedInput>
+                                        ) : (
+                                            <Input
+                                                type="email"
+                                                id="email"
+                                                name="email"
+                                                value={formData.email}
+                                                onChange={handleInputChange}
+                                                placeholder="Enter your email address"
+                                                aria-invalid={!!errors.email}
+                                            />
+                                        )}
                                         {errors.email && (
                                             <ErrorMessage>
                                                 {errors.email}
@@ -1263,20 +1605,13 @@ function SignInFormContent() {
                                 deployment?.auth_settings?.password
                                     ?.enabled && (
                                     <FormGroup>
-                                        <div
-                                            style={{
-                                                display: "flex",
-                                                justifyContent: "space-between",
-                                            }}
-                                        >
+                                        <div style={{ display: "flex", justifyContent: "space-between" }}>
                                             <Label htmlFor="password">
                                                 Password
                                             </Label>
                                             <Link
                                                 style={{ fontSize: "var(--font-size-sm)" }}
-                                                onClick={() =>
-                                                    setShowForgotPassword(true)
-                                                }
+                                                onClick={() => setShowForgotPassword(true)}
                                             >
                                                 Forgot password?
                                             </Link>
@@ -1319,17 +1654,38 @@ function SignInFormContent() {
                                         "Sign in"
                                     )}
                                 </SubmitButton>
+
+                                {signInStep === "password" &&
+                                    deployment?.auth_settings?.auth_factors_enabled?.email_otp && (
+                                        <>
+                                            <Divider style={{ margin: "var(--space-6u) 0 var(--space-5u)" }}>
+                                                <DividerText>or</DividerText>
+                                            </Divider>
+                                            <MethodButton
+                                                type="button"
+                                                icon={<Hash />}
+                                                label="Sign in with a code"
+                                                description="We'll send a 6-digit code to your email"
+                                                disabled={isSubmitting}
+                                                onClick={async () => {
+                                                    setIsSubmitting(true);
+                                                    setErrors({});
+                                                    try {
+                                                        await signIn.create({
+                                                            email: formData.email,
+                                                            strategy: "email_otp",
+                                                        });
+                                                        setFirstFactor("email_otp");
+                                                    } catch (err) {
+                                                        setErrors({ submit: (err as Error).message });
+                                                        setIsSubmitting(false);
+                                                    }
+                                                }}
+                                            />
+                                        </>
+                                    )}
                             </div>
 
-                            <Link
-                                style={{
-                                    fontSize: "var(--font-size-sm)",
-                                    textAlign: "center",
-                                }}
-                                onClick={() => setShowOtherOptions(true)}
-                            >
-                                Use other methods
-                            </Link>
                         </Form>
                         <Footer>
                             Don't have an account?{" "}
@@ -1343,28 +1699,36 @@ function SignInFormContent() {
                         </Footer>
                     </>
                 ) : firstFactor === "email_magic_link" ? (
-                    <Footer>
-                        Having trouble?{" "}
-                        <Link>
-                            <NavigationLink
-                                to={deployment!.ui_settings.support_page_url}
-                            >
-                                Get help
-                            </NavigationLink>
-                        </Link>
-                        <div style={{ marginTop: "var(--space-4u)" }}>
-                            <Link
-                                onClick={() => {
-                                    setOtpSent(false);
-                                    discardSignInAttempt();
-                                    resetFormData();
-                                }}
-                                style={{ cursor: "pointer" }}
-                            >
-                                Back to login
+                    <>
+                        <MagicLinkBody>
+                            {magicLinkCanResend ? (
+                                <MagicLinkResendButton
+                                    type="button"
+                                    onClick={async () => {
+                                        setMagicLinkCanResend(false);
+                                        setMagicLinkTimer(60);
+                                        try {
+                                            await signIn.prepareVerification({ strategy: "magic_link" });
+                                        } catch {}
+                                    }}
+                                >
+                                    Resend magic link
+                                </MagicLinkResendButton>
+                            ) : (
+                                <MagicLinkResendText>
+                                    Resend in {magicLinkTimer}s
+                                </MagicLinkResendText>
+                            )}
+                        </MagicLinkBody>
+                        <Footer>
+                            Having trouble?{" "}
+                            <Link>
+                                <NavigationLink to={deployment!.ui_settings.support_page_url}>
+                                    Get help
+                                </NavigationLink>
                             </Link>
-                        </div>
-                    </Footer>
+                        </Footer>
+                    </>
                 ) : (
                     <>
                         <Form
@@ -1382,8 +1746,6 @@ function SignInFormContent() {
                                             await signIn.completeVerification(
                                                 code,
                                             );
-                                            // Clear OTP state after successful verification
-                                            // This allows the component to transition to the next step
                                             setOtpSent(false);
                                         } catch (err) {
                                             setErrors({
@@ -1416,8 +1778,8 @@ function SignInFormContent() {
                                 disabled={isSubmitting || loading || !otpCode}
                                 style={{ margin: 0 }}
                             >
-                                {isSubmitting
-                                    ? "Verifying..."
+                                {isSubmitting && otpCode
+                                    ? <ButtonSpinner size={16} />
                                     : `Continue to ${deployment?.ui_settings?.app_name}`}
                             </SubmitButton>
                         </Form>
@@ -1425,25 +1787,11 @@ function SignInFormContent() {
                             Having trouble?{" "}
                             <Link>
                                 <NavigationLink
-                                    to={
-                                        deployment!.ui_settings.support_page_url
-                                    }
+                                    to={deployment!.ui_settings.support_page_url}
                                 >
                                     Get help
                                 </NavigationLink>
                             </Link>
-                            <div style={{ marginTop: "var(--space-4u)" }}>
-                                <Link
-                                    onClick={() => {
-                                        setOtpSent(false);
-                                        discardSignInAttempt();
-                                        resetFormData();
-                                    }}
-                                    style={{ cursor: "pointer" }}
-                                >
-                                    Back to login
-                                </Link>
-                            </div>
                         </Footer>
                     </>
                 )}

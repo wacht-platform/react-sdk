@@ -1,8 +1,8 @@
 "use client";
 
 import { useState } from "react";
-import styled from "styled-components";
-import { Loader2 } from "lucide-react";
+import styled, { keyframes } from "styled-components";
+import { CircleNotch } from "@phosphor-icons/react";
 import { useDeployment } from "../../hooks/use-deployment";
 import { useNavigation } from "../../hooks/use-navigation";
 import { PhoneNumberInput } from "../utility/phone";
@@ -16,6 +16,15 @@ import { Form, FormGroup, Label } from "../utility/form";
 import { Input } from "../utility/input";
 import { getStoredDevSession } from "@/utils/dev-session";
 import { standaloneAuthShell } from "./auth-shell";
+
+const spin = keyframes`
+  from { transform: rotate(0deg); }
+  to   { transform: rotate(360deg); }
+`;
+
+const ButtonSpinner = styled(CircleNotch)`
+    animation: ${spin} 1s linear infinite;
+`;
 
 const Container = styled.div`
   ${standaloneAuthShell}
@@ -217,7 +226,7 @@ export function ProfileCompletion({
         <Container>
           <AuthFormImage />
           <LoadingContainer>
-            <Loader2 size={32} />
+            <CircleNotch size={32} />
           </LoadingContainer>
         </Container>
       </DefaultStylesProvider>
@@ -534,7 +543,7 @@ export function ProfileCompletion({
           )}
 
           <SubmitButton type="submit" disabled={isLoading}>
-            {isLoading ? "Completing..." : "Continue"}
+            {isLoading ? <ButtonSpinner size={16} /> : "Continue"}
           </SubmitButton>
         </Form>
 

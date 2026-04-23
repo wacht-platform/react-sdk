@@ -1,7 +1,7 @@
 import { useState, useRef, useEffect } from "react";
 import ReactDOM from "react-dom";
 import styled, { keyframes, css } from "styled-components";
-import { Bell } from "lucide-react";
+import { Bell } from "@phosphor-icons/react";
 import { DefaultStylesProvider } from "../utility/root";
 import { useNotificationUnreadCount } from "@/hooks/use-notifications";
 import { NotificationPopover } from "./notification-popover";

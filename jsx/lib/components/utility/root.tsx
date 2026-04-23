@@ -99,6 +99,8 @@ type ThemeSettings = {
 type DefaultStylesProviderProps = ComponentPropsWithoutRef<"div">;
 
 const StyledDefaultStylesProvider = styled.div`
+  display: contents;
+
   /* Colors - Light Mode */
   --color-background: var(--theme-light-background, oklch(1 0 0));
   --color-foreground: var(--theme-light-foreground, oklch(0.145 0 0));

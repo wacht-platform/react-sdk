@@ -1,6 +1,6 @@
 import { useState, useRef, useEffect } from "react";
 import styled from "styled-components";
-import { AlertTriangle } from "lucide-react";
+import { Warning } from "@phosphor-icons/react";
 import { Input } from "@/components/utility/input";
 import { Button } from "@/components/utility/button";
 import { FormGroup, Label } from "../utility/form";
@@ -140,7 +140,7 @@ export const RemovePasswordPopover = ({
       onClick={(e) => e.stopPropagation()}
     >
       <Title>
-        <AlertTriangle size={18} color="var(--color-warning)" />
+        <Warning size={18} color="var(--color-warning)" />
         Remove Password
       </Title>
 

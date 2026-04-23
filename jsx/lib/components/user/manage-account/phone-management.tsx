@@ -1,5 +1,5 @@
 import React, { useState, useRef } from "react";
-import { MoreHorizontal } from "lucide-react";
+import { DotsThree } from "@phosphor-icons/react";
 import { useDeployment } from "@/hooks/use-deployment";
 import { useUser } from "@/hooks/use-user";
 import { countries } from "@/constants/geo";
@@ -76,7 +76,7 @@ export const PhoneManagementSection = () => {
                     <SearchInput
                         value={searchQuery}
                         onChange={setSearchQuery}
-                        placeholder="Search Phone"
+                        placeholder="MagnifyingGlass Phone"
                     />
                 </div>
                 <div style={{ position: "relative", flexShrink: 0 }}>
@@ -200,7 +200,7 @@ export const PhoneManagementSection = () => {
                                                             if (ref) phoneVerifyButtonRefs.current[phone.id] = ref;
                                                         }}
                                                     >
-                                                        <MoreHorizontal size={16} />
+                                                        <DotsThree size={16} />
                                                     </IconButton>
                                                 </DropdownTrigger>
                                                 <DropdownItems>
@@ -285,7 +285,7 @@ export const PhoneManagementSection = () => {
                                                             if (ref) phoneVerifyButtonRefs.current[phone.id] = ref;
                                                         }}
                                                     >
-                                                        <MoreHorizontal size={16} />
+                                                        <DotsThree size={16} />
                                                     </IconButton>
                                                 </DropdownTrigger>
                                                 <DropdownItems>

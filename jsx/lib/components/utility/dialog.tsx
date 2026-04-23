@@ -11,7 +11,7 @@ import {
 } from "react";
 import ReactDOM from "react-dom";
 import styled from "styled-components";
-import { X } from "lucide-react";
+import { X } from "@phosphor-icons/react";
 import { DefaultStylesProvider } from "./root";
 
 // Context for Dialog state

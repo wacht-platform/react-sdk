@@ -1,5 +1,5 @@
 import { useState, useRef, useMemo } from "react";
-import { AlertTriangle, Trash2 } from "lucide-react";
+import { Warning, Trash } from "@phosphor-icons/react";
 import useSWR from "swr";
 import { Organization, OrganizationRole } from "@/types";
 import { useOrganizationList } from "@/hooks/use-organization";
@@ -175,14 +175,14 @@ export const RolesSection = ({ organization }: { organization: Organization }) =
         <>
             {message && (
                 <MessageBanner $type={message.type}>
-                    {message.type === "success" ? "✓" : <AlertTriangle size={16} />}
+                    {message.type === "success" ? "✓" : <Warning size={16} />}
                     {message.text}
                 </MessageBanner>
             )}
 
             <HeaderCTAContainer>
                 <SearchInput
-                    placeholder="Search roles..."
+                    placeholder="MagnifyingGlass roles..."
                     onChange={setSearchQuery}
                     value={searchQuery}
                 />
@@ -365,7 +365,7 @@ const RoleActions = ({
                     Edit Role
                 </DropdownItem>
                 <DropdownItem $destructive onClick={onDelete}>
-                    <Trash2 size={16} /> Remove Role
+                    <Trash size={16} /> Remove Role
                 </DropdownItem>
             </DropdownItems>
         </Dropdown>

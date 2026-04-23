@@ -1,5 +1,5 @@
 import { useState, useRef, useMemo } from "react";
-import { AlertTriangle, Copy, ExternalLink, Trash2, Info } from "lucide-react";
+import { Warning, Copy, ArrowSquareOut, Trash, Info } from "@phosphor-icons/react";
 import useSWR from "swr";
 import { Organization, OrganizationDomain } from "@/types";
 import { useOrganizationList } from "@/hooks/use-organization";
@@ -123,7 +123,7 @@ export const DomainsSection = ({ organization }: { organization: Organization })
                 <SearchInput
                     value={searchQuery}
                     onChange={setSearchQuery}
-                    placeholder="Search domains..."
+                    placeholder="MagnifyingGlass domains..."
                 />
                 <Button
                     ref={addDomainButtonRef}
@@ -180,7 +180,7 @@ export const DomainsSection = ({ organization }: { organization: Organization })
                                                 <Badge $type="success">✓ Verified</Badge>
                                             ) : (
                                                 <Badge $type="warning">
-                                                    <AlertTriangle size={12} /> Pending
+                                                    <Warning size={12} /> Pending
                                                 </Badge>
                                             )}
                                         </TableCell>
@@ -227,7 +227,7 @@ export const DomainsSection = ({ organization }: { organization: Organization })
                                         <Badge $type="success">✓ Verified</Badge>
                                     ) : (
                                         <Badge $type="warning">
-                                            <AlertTriangle size={12} /> Pending Verification
+                                            <Warning size={12} /> Pending Verification
                                         </Badge>
                                     )}
                                 </div>
@@ -285,11 +285,11 @@ const ActionButtonContainer = ({
                     <Copy size={16} /> Copy Domain
                 </DropdownItem>
                 <DropdownItem onClick={() => { window.open(`https://${domain.fqdn}`, "_blank"); setSelectedAction(null); }}>
-                    <ExternalLink size={16} /> Visit Domain
+                    <ArrowSquareOut size={16} /> Visit Domain
                 </DropdownItem>
                 <DropdownDivider />
                 <DropdownItem $destructive onClick={() => { onDelete(); setSelectedAction(null); }}>
-                    <Trash2 size={16} /> Remove Domain
+                    <Trash size={16} /> Remove Domain
                 </DropdownItem>
             </DropdownItems>
         </Dropdown>

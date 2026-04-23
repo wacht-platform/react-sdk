@@ -1,6 +1,6 @@
 import React, { useState, useRef, useEffect } from "react";
 import styled from "styled-components";
-import { Check, ChevronDown, ChevronUp } from "lucide-react";
+import { Check, CaretDown, CaretUp } from "@phosphor-icons/react";
 
 const ComboBoxContainer = styled.div`
   position: relative;
@@ -245,7 +245,7 @@ export const ComboBox: React.FC<ComboBoxProps> = ({
         ) : (
           <Placeholder>{placeholder}</Placeholder>
         )}
-        {isOpen ? <ChevronUp size={16} /> : <ChevronDown size={16} />}
+        {isOpen ? <CaretUp size={16} /> : <CaretDown size={16} />}
       </ComboBoxTrigger>
 
       <DropdownMenu isOpen={isOpen} role="listbox">
@@ -253,7 +253,7 @@ export const ComboBox: React.FC<ComboBoxProps> = ({
           <SearchInput
             ref={searchInputRef}
             type="text"
-            placeholder="Search..."
+            placeholder="MagnifyingGlass..."
             value={searchQuery}
             onChange={(e) => setSearchQuery(e.target.value)}
             onClick={(e) => e.stopPropagation()}
@@ -438,7 +438,7 @@ export const ComboBoxMulti: React.FC<ComboBoxMultiProps> = ({
         ) : (
           <Placeholder>{placeholder}</Placeholder>
         )}
-        {isOpen ? <ChevronUp size={16} /> : <ChevronDown size={16} />}
+        {isOpen ? <CaretUp size={16} /> : <CaretDown size={16} />}
       </ComboBoxTrigger>
 
       <DropdownMenu isOpen={isOpen} role="listbox">
@@ -446,7 +446,7 @@ export const ComboBoxMulti: React.FC<ComboBoxMultiProps> = ({
           <SearchInput
             ref={searchInputRef}
             type="text"
-            placeholder="Search..."
+            placeholder="MagnifyingGlass..."
             value={searchQuery}
             onChange={(e) => setSearchQuery(e.target.value)}
             onClick={(e) => e.stopPropagation()}

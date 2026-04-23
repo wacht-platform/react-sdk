@@ -1,5 +1,5 @@
 import { useState, useRef, useMemo } from "react";
-import { Trash2 } from "lucide-react";
+import { Trash } from "@phosphor-icons/react";
 import useSWR from "swr";
 import { useActiveWorkspace } from "@/hooks/use-workspace";
 import { useDeployment } from "@/hooks/use-deployment";
@@ -150,7 +150,7 @@ export const RolesSection = () => {
             <HeaderCTAContainer>
                 <div style={{ flex: 1 }}>
                     <SearchInput
-                        placeholder="Search roles..."
+                        placeholder="MagnifyingGlass roles..."
                         onChange={setSearchQuery}
                         value={searchQuery}
                     />
@@ -330,7 +330,7 @@ const RoleActions = ({
                     Edit Role
                 </DropdownItem>
                 <DropdownItem $destructive onClick={onDelete}>
-                    <Trash2 size={16} /> Remove Role
+                    <Trash size={16} /> Remove Role
                 </DropdownItem>
             </DropdownItems>
         </Dropdown>

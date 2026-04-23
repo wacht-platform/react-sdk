@@ -1,6 +1,6 @@
 import { useState, useRef, useEffect } from "react";
 import styled from "styled-components";
-import { Mail } from "lucide-react";
+import { EnvelopeSimple } from "@phosphor-icons/react";
 import { Input } from "@/components/utility/input";
 import { Button } from "@/components/utility/button";
 import { FormGroup } from "../utility/form";
@@ -172,7 +172,7 @@ export const EmailAddPopover = ({
           <FormGroup>
             <InputWrapper>
               <IconWrapper>
-                <Mail size={16} />
+                <EnvelopeSimple size={16} />
               </IconWrapper>
               <Input
                 id="email-input"

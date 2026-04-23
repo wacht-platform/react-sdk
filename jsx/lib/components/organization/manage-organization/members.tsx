@@ -1,5 +1,5 @@
 import { useState, useEffect, useRef } from "react";
-import { Check, ChevronDown, Trash2 } from "lucide-react";
+import { Check, CaretDown, Trash } from "@phosphor-icons/react";
 import useSWR from "swr";
 import styled from "styled-components";
 import {
@@ -152,7 +152,7 @@ export const MembersSection = ({
                     <SearchInput
                         value={searchQuery}
                         onChange={setSearchQuery}
-                        placeholder="Search members..."
+                        placeholder="MagnifyingGlass members..."
                     />
                 </div>
                 <div
@@ -402,7 +402,7 @@ const RoleSelector = ({ member, roles, onToggle, onRemove }: any) => {
                     }}
                 >
                     {memberRoles.length > 0 ? memberRoles[0]?.name : "No role"}{" "}
-                    <ChevronDown
+                    <CaretDown
                         size={14}
                         style={{ marginLeft: "var(--space-2u)" }}
                     />
@@ -444,7 +444,7 @@ const RoleSelector = ({ member, roles, onToggle, onRemove }: any) => {
                             gap: "var(--space-4u)",
                         }}
                     >
-                        <Trash2 size={14} /> Remove Member
+                        <Trash size={14} /> Remove Member
                     </div>
                 </DropdownItem>
             </DropdownItems>

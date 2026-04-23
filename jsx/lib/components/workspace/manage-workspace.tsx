@@ -1,5 +1,5 @@
 import { useCallback, useState } from "react";
-import { Settings, Users, Send, Shield, AlertTriangle, Check } from "lucide-react";
+import { GearSix, Users, PaperPlaneTilt, Shield, Warning, Check } from "@phosphor-icons/react";
 import { useActiveWorkspace } from "@/hooks/use-workspace";
 import { useDeployment } from "@/hooks/use-deployment";
 import { Spinner, DefaultStylesProvider } from "../utility";
@@ -58,13 +58,13 @@ export const ManageWorkspace = () => {
             <TabsContainer>
               <TabsList>
                 <Tab $isActive={activeTab === "general"} onClick={() => setActiveTab("general")}>
-                  <TabIcon><Settings size={16} /> General</TabIcon>
+                  <TabIcon><GearSix size={16} /> General</TabIcon>
                 </Tab>
                 <Tab $isActive={activeTab === "members"} onClick={() => setActiveTab("members")}>
                   <TabIcon><Users size={16} /> Members</TabIcon>
                 </Tab>
                 <Tab $isActive={activeTab === "invitations"} onClick={() => setActiveTab("invitations")}>
-                  <TabIcon><Send size={16} /> Invitations</TabIcon>
+                  <TabIcon><PaperPlaneTilt size={16} /> Invitations</TabIcon>
                 </Tab>
                 {deployment?.b2b_settings?.custom_workspace_role_enabled && (
                   <Tab $isActive={activeTab === "roles"} onClick={() => setActiveTab("roles")}>
@@ -84,7 +84,7 @@ export const ManageWorkspace = () => {
             {toastMessage && (
               <div style={{ position: "absolute", bottom: "20px", right: "20px", background: "var(--color-popover)", border: "1px solid var(--color-border)", borderRadius: "8px", padding: "12px 16px", boxShadow: "var(--shadow-md)", animation: "slideDown 0.3s ease-out", zIndex: 100 }}>
                 <div style={{ display: "flex", alignItems: "center", gap: "8px" }}>
-                  {toastLevel === "error" ? <AlertTriangle size={16} color="var(--color-error)" /> : <Check size={16} color="var(--color-success)" />}
+                  {toastLevel === "error" ? <Warning size={16} color="var(--color-error)" /> : <Check size={16} color="var(--color-success)" />}
                   <span style={{ fontSize: "14px", color: "var(--color-popover-foreground)" }}>{toastMessage}</span>
                 </div>
               </div>

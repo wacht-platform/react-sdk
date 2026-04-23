@@ -1,5 +1,5 @@
 import { useState, useRef, useEffect, useCallback, ChangeEvent } from "react";
-import { User, Trash2 } from "lucide-react";
+import { User, Trash } from "@phosphor-icons/react";
 import { useDeployment } from "@/hooks/use-deployment";
 import { useSession } from "@/hooks/use-session";
 import { useUser } from "@/hooks/use-user";
@@ -274,7 +274,7 @@ export const ProfileDetailsManagementSection = () => {
                                     }
                                 }}
                             >
-                                <Trash2 size={14} style={{ marginRight: "var(--space-2u)" }} />
+                                <Trash size={14} style={{ marginRight: "var(--space-2u)" }} />
                                 Remove
                             </Button>
                         </ButtonActions>

@@ -1,7 +1,7 @@
 import React, { useState, useRef, useEffect, JSX } from "react";
 import ReactDOM from "react-dom";
 import styled from "styled-components";
-import { LogOut, Settings, Plus } from "lucide-react";
+import { SignOut, GearSix, Plus } from "@phosphor-icons/react";
 import { DefaultStylesProvider } from "../utility/root";
 import { useSession, useDeployment, useNavigation } from "@/hooks";
 import { ManageAccountDialog } from "./manage-account-dialog";
@@ -166,8 +166,8 @@ const ActionLink = styled.button<{ $destructive?: boolean }>`
     align-items: center;
     justify-content: center;
     gap: var(--space-3u);
-    background: var(--color-secondary);
-    border: none;
+    background: transparent;
+    border: var(--border-width-thin) solid var(--color-border);
     border-radius: var(--radius-2xs);
     padding: var(--space-3u);
     font-size: var(--font-size-sm);
@@ -178,16 +178,21 @@ const ActionLink = styled.button<{ $destructive?: boolean }>`
     cursor: pointer;
     text-align: center;
     flex: 1;
+    transition: background-color 0.15s ease, border-color 0.15s ease, color 0.15s ease;
 
     &:hover {
         background: ${(props) =>
             props.$destructive
                 ? "var(--color-error-background)"
                 : "var(--color-accent)"};
+        border-color: ${(props) =>
+            props.$destructive
+                ? "var(--color-error-border)"
+                : "var(--color-border-hover)"};
         color: ${(props) =>
             props.$destructive
                 ? "var(--color-error)"
-                : "var(--color-accent-foreground)"};
+                : "var(--color-popover-foreground)"};
     }
 
     svg {
@@ -197,7 +202,8 @@ const ActionLink = styled.button<{ $destructive?: boolean }>`
 `;
 
 const FooterSection = styled.div`
-    background: var(--color-secondary);
+    background: transparent;
+    border-top: var(--border-width-thin) solid var(--color-border);
     padding: var(--space-4u) var(--space-6u);
 `;
 
@@ -461,7 +467,7 @@ export const UserButton: React.FC<UserButtonProps> = ({
                                                                                   handleOpenManageAccount
                                                                               }
                                                                           >
-                                                                              <Settings />
+                                                                              <GearSix />
                                                                               Manage
                                                                               account
                                                                           </ActionLink>
@@ -473,7 +479,7 @@ export const UserButton: React.FC<UserButtonProps> = ({
                                                                                   )
                                                                               }
                                                                           >
-                                                                              <LogOut />
+                                                                              <SignOut />
                                                                               Sign
                                                                               out
                                                                           </ActionLink>
@@ -547,7 +553,7 @@ export const UserButton: React.FC<UserButtonProps> = ({
                                                               handleOpenManageAccount
                                                           }
                                                       >
-                                                          <Settings />
+                                                          <GearSix />
                                                           Manage account
                                                       </ActionLink>
                                                       <ActionLink
@@ -561,7 +567,7 @@ export const UserButton: React.FC<UserButtonProps> = ({
                                                               )
                                                           }
                                                       >
-                                                          <LogOut />
+                                                          <SignOut />
                                                           Sign out
                                                       </ActionLink>
                                                   </ActionRow>
@@ -570,12 +576,7 @@ export const UserButton: React.FC<UserButtonProps> = ({
 
                                     {isMultiSessionEnabled && (
                                         <>
-                                            <FooterSection
-                                                style={{
-                                                    borderBottom:
-                                                        "var(--border-width-thin) solid var(--color-border)",
-                                                }}
-                                            >
+                                            <FooterSection>
                                                 <FooterButton
                                                     onClick={() =>
                                                         navigateToSignIn()
@@ -593,7 +594,7 @@ export const UserButton: React.FC<UserButtonProps> = ({
                                                             handleSignOutAll
                                                         }
                                                     >
-                                                        <LogOut />
+                                                        <SignOut />
                                                         Sign out of all accounts
                                                     </FooterButton>
                                                 </FooterSection>

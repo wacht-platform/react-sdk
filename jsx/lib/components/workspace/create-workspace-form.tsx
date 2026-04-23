@@ -1,6 +1,6 @@
 import React, { useState, useRef, useEffect } from "react";
 import styled from "styled-components";
-import { ChevronLeft, ChevronDown, Plus } from "lucide-react";
+import { CaretLeft, CaretDown, Plus } from "@phosphor-icons/react";
 import { useWorkspaceList } from "@/hooks/use-workspace";
 import { useOrganizationMemberships } from "@/hooks/use-organization";
 import { useSession } from "@/hooks/use-session";
@@ -603,7 +603,7 @@ export const CreateWorkspaceForm: React.FC<CreateWorkspaceFormProps> = ({
                                                 "Select organization"}
                                         </span>
                                     </div>
-                                    <ChevronDown
+                                    <CaretDown
                                         size={16}
                                         style={{
                                             color: "var(--color-secondary-text)",
@@ -761,7 +761,7 @@ export const CreateWorkspaceForm: React.FC<CreateWorkspaceFormProps> = ({
                                 onClick={onCancel}
                                 disabled={isSubmitting}
                             >
-                                <ChevronLeft size={16} />
+                                <CaretLeft size={16} />
                                 Back
                             </BackButton>
                         ) : (

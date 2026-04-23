@@ -1,6 +1,6 @@
 import { useState, useRef, useEffect } from "react";
 import styled from "styled-components";
-import { X } from "lucide-react";
+import { X } from "@phosphor-icons/react";
 import { Input } from "@/components/utility/input";
 import { FormGroup, Label } from "../utility/form";
 import { Button, Spinner } from "../utility";
@@ -252,7 +252,7 @@ export const InviteMemberPopover = ({
               <Spinner size={14} /> Sending...
             </>
           ) : (
-            "Send Invitation"
+            "PaperPlaneTilt Invitation"
           )}
         </Button>
       </ButtonGroup>

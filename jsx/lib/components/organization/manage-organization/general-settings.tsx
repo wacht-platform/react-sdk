@@ -1,5 +1,5 @@
 import { useState, useMemo, useEffect, useRef, useCallback, ChangeEvent } from "react";
-import { Building, Trash2 } from "lucide-react";
+import { Buildings, Trash } from "@phosphor-icons/react";
 import { Organization } from "@/types";
 import { useSession } from "@/hooks/use-session";
 import { useWorkspaceList } from "@/hooks/use-workspace";
@@ -210,7 +210,7 @@ export const GeneralSettingsSection = ({
                                 style={{ width: "100%", height: "100%", objectFit: "cover" }}
                             />
                         ) : (
-                            <Building size={32} color="var(--color-muted)" />
+                            <Buildings size={32} color="var(--color-muted)" />
                         )}
                         <input
                             type="file"
@@ -263,7 +263,7 @@ export const GeneralSettingsSection = ({
                                     }
                                 }}
                             >
-                                <Trash2 size={14} style={{ marginRight: "var(--space-2u)" }} /> Remove
+                                <Trash size={14} style={{ marginRight: "var(--space-2u)" }} /> Remove
                             </Button>
                         )}
                     </ButtonActions>

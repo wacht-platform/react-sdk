@@ -1,6 +1,6 @@
 import { useState } from "react";
 import styled from "styled-components";
-import { Archive, Star, RotateCcw, Circle } from "lucide-react";
+import { Archive, Star, ArrowCounterClockwise, Circle } from "@phosphor-icons/react";
 import type { Notification } from "@/types";
 
 const Item = styled.div<{ $unread: boolean; $expanded: boolean }>`
@@ -251,7 +251,7 @@ export function NotificationItem({
               onMouseOver={(e) => e.currentTarget.style.color = 'var(--color-popover-foreground)'}
               onMouseOut={(e) => e.currentTarget.style.color = 'var(--color-muted)'}
             >
-              {notification.is_archived ? <RotateCcw size={14} /> : <Archive size={14} />}
+              {notification.is_archived ? <ArrowCounterClockwise size={14} /> : <Archive size={14} />}
             </button>
           </div>
           <Time>{formatTime(notification.created_at)}</Time>

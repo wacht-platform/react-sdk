@@ -2,7 +2,7 @@ import { useState, useRef, useEffect } from "react";
 import styled from "styled-components";
 import { useOrganizationList } from "@/hooks/use-organization";
 import { useSession } from "@/hooks/use-session";
-import { ChevronLeft } from "lucide-react";
+import { CaretLeft } from "@phosphor-icons/react";
 import { useScreenContext } from "./context";
 import { DefaultStylesProvider } from "../utility";
 
@@ -458,7 +458,7 @@ export const CreateOrganizationForm: React.FC<CreateOrganizationFormProps> = ({
                                 onClick={onCancel}
                                 disabled={isSubmitting}
                             >
-                                <ChevronLeft size={16} />
+                                <CaretLeft size={16} />
                                 Back
                             </BackButton>
                         ) : (

@@ -1,7 +1,7 @@
 import { useState, useEffect } from "react";
 import styled, { keyframes } from "styled-components";
 import { useSignUp } from "../../hooks/use-signup";
-import { Loader2 } from "lucide-react";
+import { CircleNotch, EnvelopeSimple, DeviceMobile, PencilSimple } from "@phosphor-icons/react";
 import {
     useSignInWithStrategy,
     type OAuthProvider,
@@ -31,12 +31,9 @@ const spin = keyframes`
 }
 `;
 
-const breakpoints = {
-    sm: "36rem",
-    md: "48rem",
-    lg: "62rem",
-    xl: "75rem",
-};
+const ButtonSpinner = styled(CircleNotch)`
+    animation: ${spin} 1s linear infinite;
+`;
 
 const Container = styled.div`
     ${standaloneAuthShell}
@@ -56,34 +53,22 @@ const LoadingContainer = styled.div`
 
 const Header = styled.div`
     text-align: center;
-    margin-bottom: var(--space-12u);
+    margin-bottom: var(--space-8u);
     position: relative;
-
-    @media (max-width: ${breakpoints.sm}) {
-        margin-bottom: var(--space-6u);
-    }
 `;
 
 const Title = styled.h1`
-    font-size: var(--font-size-2xl);
+    font-size: var(--font-size-xl);
     font-weight: 400;
     color: var(--color-card-foreground);
     margin-bottom: var(--space-2u);
     margin-top: 0;
-
-    @media (max-width: ${breakpoints.sm}) {
-        font-size: var(--font-size-xl);
-    }
 `;
 
 const Subtitle = styled.p`
     color: var(--color-secondary-text);
     font-size: var(--font-size-md);
     margin: 0;
-
-    @media (max-width: ${breakpoints.sm}) {
-        font-size: var(--font-size-xs);
-    }
 `;
 
 const Divider = styled.div`
@@ -97,12 +82,8 @@ const Divider = styled.div`
         top: 50%;
         left: 0;
         right: 0;
-        height: 1px;
-        background: var(--color-divider);
-    }
-
-    @media (max-width: ${breakpoints.sm}) {
-        margin: var(--space-6u) 0;
+        height: var(--border-width-thin);
+        background: var(--color-border);
     }
 `;
 
@@ -111,17 +92,16 @@ const DividerText = styled.span`
     background: var(--color-card);
     padding: 0 var(--space-4u);
     color: var(--color-secondary-text);
-    font-size: var(--font-size-md);
+    font-size: var(--font-size-2xs);
+    font-weight: 600;
+    text-transform: uppercase;
+    letter-spacing: 0.1em;
 `;
 
 const Form = styled.form`
     display: flex;
     flex-direction: column;
-    gap: var(--space-8u);
-
-    @media (max-width: ${breakpoints.sm}) {
-        gap: var(--space-8u);
-    }
+    gap: var(--space-6u);
 `;
 
 const NameFields = styled.div<{ $isBothEnabled: boolean }>`
@@ -129,11 +109,6 @@ const NameFields = styled.div<{ $isBothEnabled: boolean }>`
     grid-template-columns: ${(props) =>
         props.$isBothEnabled ? "1fr 1fr" : "1fr"};
     gap: var(--space-4u);
-
-    @media (max-width: ${breakpoints.sm}) {
-        grid-template-columns: 1fr;
-        gap: var(--space-4u);
-    }
 `;
 
 const FormGroup = styled.div`
@@ -147,10 +122,6 @@ const Label = styled.label`
     text-align: left;
     font-weight: 400;
     color: var(--color-card-foreground);
-
-    @media (max-width: ${breakpoints.sm}) {
-        font-size: var(--font-size-sm);
-    }
 `;
 
 const PasswordGroup = styled.div`
@@ -174,11 +145,7 @@ const SubmitButton = styled.button`
     font-weight: 400;
     font-size: var(--font-size-md);
     cursor: pointer;
-    transition:
-        background-color 0.2s,
-        border-color 0.2s,
-        color 0.2s;
-    margin-top: var(--space-8u);
+    transition: background-color 0.2s, border-color 0.2s;
     min-height: var(--size-18u);
     height: var(--size-18u);
     display: inline-flex;
@@ -195,22 +162,15 @@ const SubmitButton = styled.button`
         opacity: 0.7;
         cursor: not-allowed;
     }
-
-    @media (max-width: ${breakpoints.sm}) {
-        font-size: var(--font-size-md);
-    }
 `;
 
 const Footer = styled.div`
     margin-top: var(--space-8u);
+    padding-top: var(--space-6u);
+    border-top: var(--border-width-thin) solid var(--color-border);
     text-align: center;
-    font-size: var(--font-size-md);
+    font-size: var(--font-size-sm);
     color: var(--color-secondary-text);
-
-    @media (max-width: ${breakpoints.sm}) {
-        margin-top: var(--space-8u);
-        font-size: var(--font-size-sm);
-    }
 `;
 
 const Link = styled.span`
@@ -228,7 +188,7 @@ const RestrictedMessage = styled.div`
     text-align: center;
     padding: var(--space-10u);
     margin-bottom: var(--space-8u);
-    background: var(--color-secondary);
+    background: transparent;
     border: var(--border-width-thin) solid var(--color-border);
     border-radius: var(--radius-md);
 `;
@@ -260,6 +220,57 @@ const RestrictedLink = styled.a`
 const RequiredAsterisk = styled.span`
     color: var(--color-error);
     margin-left: var(--space-1u);
+`;
+
+const OtpIconCircle = styled.div`
+    width: var(--size-24u);
+    height: var(--size-24u);
+    border-radius: var(--radius-full);
+    border: var(--border-width-thin) solid var(--color-border);
+    background: var(--color-accent);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    margin: 0 auto var(--space-6u);
+
+    svg {
+        width: var(--size-12u);
+        height: var(--size-12u);
+        color: var(--color-card-foreground);
+    }
+`;
+
+const OtpAddressRow = styled.div`
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: var(--space-2u);
+    margin-top: var(--space-3u);
+`;
+
+const OtpAddressBadge = styled.button`
+    display: inline-flex;
+    align-items: center;
+    gap: var(--space-2u);
+    padding: var(--space-2u) var(--space-4u);
+    border: var(--border-width-thin) solid var(--color-border);
+    border-radius: var(--radius-full);
+    font-size: var(--font-size-sm);
+    color: var(--color-secondary-text);
+    background: transparent;
+    cursor: pointer;
+    transition: border-color 0.15s ease, color 0.15s ease;
+
+    svg {
+        width: 12px;
+        height: 12px;
+        flex-shrink: 0;
+    }
+
+    &:hover {
+        border-color: var(--color-border-hover);
+        color: var(--color-card-foreground);
+    }
 `;
 
 export function SignUpForm() {
@@ -624,7 +635,7 @@ export function SignUpForm() {
                 <Container>
                     <AuthFormImage />
                     <LoadingContainer>
-                        <Loader2 size={32} />
+                        <CircleNotch size={32} />
                     </LoadingContainer>
                 </Container>
             </DefaultStylesProvider>
@@ -637,7 +648,7 @@ export function SignUpForm() {
                 <Container>
                     <AuthFormImage />
                     <LoadingContainer>
-                        <Loader2 size={32} />
+                        <CircleNotch size={32} />
                     </LoadingContainer>
                 </Container>
             </DefaultStylesProvider>
@@ -686,72 +697,70 @@ export function SignUpForm() {
             <Container>
                 {otpSent ? (
                     <>
+                        <AuthFormImage />
                         <Header>
+                            {!deployment?.ui_settings?.logo_image_url && (
+                                <OtpIconCircle>
+                                    {signupAttempt?.current_step === "verify_phone" ? (
+                                        <DeviceMobile weight="light" />
+                                    ) : (
+                                        <EnvelopeSimple weight="light" />
+                                    )}
+                                </OtpIconCircle>
+                            )}
                             <Title>
-                                Check your{" "}
-                                {signupAttempt?.current_step === "verify_email"
-                                    ? "email"
-                                    : "phone"}
+                                {signupAttempt?.current_step === "verify_phone"
+                                    ? "Check your phone"
+                                    : "Enter the code"}
                             </Title>
                             <Subtitle>
-                                {signupAttempt?.current_step === "verify_email"
-                                    ? `${formData.email} to continue to ${deployment?.ui_settings?.app_name}`
-                                    : `${formData.phone_number} to continue to ${deployment?.ui_settings?.app_name}`}
+                                {signupAttempt?.current_step === "verify_phone"
+                                    ? "We sent a verification code via SMS."
+                                    : "We sent a 6-digit code to your email."}
                             </Subtitle>
+                            <OtpAddressRow>
+                                <OtpAddressBadge
+                                    type="button"
+                                    onClick={resetFormData}
+                                >
+                                    <PencilSimple weight="light" />
+                                    {signupAttempt?.current_step === "verify_phone"
+                                        ? `+${formData.phone_number}`
+                                        : formData.email}
+                                </OtpAddressBadge>
+                            </OtpAddressRow>
                         </Header>
-                        <Form
-                            style={{ gap: "15px" }}
-                            onSubmit={completeVerification}
-                            noValidate
-                        >
+                        <Form onSubmit={completeVerification} noValidate>
                             <OTPInput
                                 onComplete={async (code) => {
                                     setOtpCode(code);
                                 }}
                                 onResend={async () => {
                                     const strategy =
-                                        signupAttempt?.current_step ===
-                                        "verify_email"
+                                        signupAttempt?.current_step === "verify_email"
                                             ? "email_otp"
                                             : "phone_otp";
-                                    await signUp.prepareVerification({
-                                        strategy,
-                                    });
+                                    await signUp.prepareVerification({ strategy });
                                 }}
                                 error={errors.otp}
                                 isSubmitting={isSubmitting}
                             />
-
                             <SubmitButton
                                 type="submit"
                                 disabled={isSubmitting || loading || !otpCode}
                             >
-                                {isSubmitting
-                                    ? "Verifying..."
+                                {isSubmitting && otpCode
+                                    ? <ButtonSpinner size={16} />
                                     : `Continue to ${deployment?.ui_settings?.app_name}`}
                             </SubmitButton>
                         </Form>
                         <Footer>
                             Having trouble?{" "}
                             <Link>
-                                <NavigationLink
-                                    to={
-                                        deployment!.ui_settings.support_page_url
-                                    }
-                                >
-                                    Contact support
+                                <NavigationLink to={deployment!.ui_settings.support_page_url}>
+                                    Get help
                                 </NavigationLink>
                             </Link>
-                            <div style={{ marginTop: "var(--space-4u)" }}>
-                                <Link
-                                    onClick={() => {
-                                        resetFormData();
-                                    }}
-                                    style={{ cursor: "pointer" }}
-                                >
-                                    Use other method
-                                </Link>
-                            </div>
                         </Footer>
                     </>
                 ) : (
@@ -775,7 +784,7 @@ export function SignUpForm() {
                                 />
 
                                 <Divider>
-                                    <DividerText>OR</DividerText>
+                                    <DividerText>or</DividerText>
                                 </Divider>
                             </>
                         )}
@@ -989,7 +998,7 @@ export function SignUpForm() {
                                 disabled={isSubmitting || loading}
                             >
                                 {isSubmitting
-                                    ? "Creating account..."
+                                    ? <ButtonSpinner size={16} />
                                     : "Continue"}
                             </SubmitButton>
                         </Form>

@@ -1,11 +1,21 @@
 import { useState } from "react";
-import styled from "styled-components";
+import styled, { keyframes } from "styled-components";
+import { CircleNotch } from "@phosphor-icons/react";
 import { Button } from "@/components/utility";
 import { Input } from "@/components/utility/input";
 import { Form, FormGroup, Label } from "../utility/form";
 import { DefaultStylesProvider } from "../utility/root";
 import { AuthFormImage } from "./auth-image";
 import { standaloneAuthShell } from "./auth-shell";
+
+const spin = keyframes`
+  from { transform: rotate(0deg); }
+  to   { transform: rotate(360deg); }
+`;
+
+const ButtonSpinner = styled(CircleNotch)`
+    animation: ${spin} 1s linear infinite;
+`;
 
 const Container = styled.div`
   ${standaloneAuthShell}
@@ -130,7 +140,7 @@ export function PhoneVerification({
             type="submit"
             disabled={loading || lastFourDigits.length !== 4}
           >
-            {loading ? "Verifying..." : "Send code"}
+            {loading ? <ButtonSpinner size={16} /> : "Send code"}
           </SubmitButton>
         </Form>
 

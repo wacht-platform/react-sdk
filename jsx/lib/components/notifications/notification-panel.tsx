@@ -1,6 +1,6 @@
 import { useState, useRef, useEffect, forwardRef } from "react";
 import styled from "styled-components";
-import { BellOff, CheckCheck, MoreHorizontal, Archive } from "lucide-react";
+import { BellSlash, Checks, DotsThree, Archive } from "@phosphor-icons/react";
 import { NotificationItem, type NotificationAction } from "./notification-item";
 import { Spinner } from "../utility/spinner";
 import { useNotifications } from "@/hooks/use-notifications";
@@ -332,14 +332,14 @@ export const NotificationPanel = forwardRef<HTMLDivElement, NotificationPanelPro
                     </ToggleContainer>
 
                     <IconButton onClick={() => setShowMenu(!showMenu)} style={{ padding: 'var(--space-2u)' }}>
-                        <MoreHorizontal size={16} />
+                        <DotsThree size={16} />
                     </IconButton>
 
                     {showMenu && (
                         <SettingsMenu ref={menuRef} style={{ top: 'var(--size-18u)', right: 'var(--space-6u)' }}>
                             {activeTab === 'inbox' && (
                                 <MenuItem onClick={handleMarkAllRead}>
-                                    <CheckCheck /> Mark all as read
+                                    <Checks /> Mark all as read
                                 </MenuItem>
                             )}
                             <MenuItem onClick={handleArchiveAllRead}>
@@ -357,7 +357,7 @@ export const NotificationPanel = forwardRef<HTMLDivElement, NotificationPanelPro
                     ) : error ? (
                         <EmptyStateContainer>
                             <EmptyIcon>
-                                <BellOff size={24} style={{ color: 'var(--color-error)' }} />
+                                <BellSlash size={24} style={{ color: 'var(--color-error)' }} />
                             </EmptyIcon>
                             <EmptyTitle>Failed to load notifications</EmptyTitle>
                             <EmptyDescription>{error.message || "An unexpected error occurred."}</EmptyDescription>
@@ -365,7 +365,7 @@ export const NotificationPanel = forwardRef<HTMLDivElement, NotificationPanelPro
                     ) : notifications.length === 0 ? (
                         <EmptyStateContainer>
                             <EmptyIcon>
-                                <BellOff size={24} />
+                                <BellSlash size={24} />
                             </EmptyIcon>
                             <EmptyTitle>No notifications</EmptyTitle>
                             <EmptyDescription>You're all caught up!</EmptyDescription>

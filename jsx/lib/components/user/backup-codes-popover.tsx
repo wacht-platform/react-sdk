@@ -1,6 +1,6 @@
 import { useRef, useEffect, useState } from "react";
 import styled from "styled-components";
-import { Copy, Download } from "lucide-react";
+import { Copy, DownloadSimple } from "@phosphor-icons/react";
 import { Button } from "@/components/utility/button";
 import { usePopoverPosition } from "@/hooks/use-popover-position";
 
@@ -138,8 +138,8 @@ export const BackupCodesPopover = ({
             Copy
           </Button>
           <Button $outline $size="sm" onClick={onDownload} style={{ display: 'flex', alignItems: 'center', gap: 'var(--space-2u)' }}>
-            <Download size={14} />
-            Download
+            <DownloadSimple size={14} />
+            DownloadSimple
           </Button>
         </TopButtons>
       </Header>

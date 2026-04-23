@@ -1,5 +1,5 @@
 import React, { useState, useRef } from "react";
-import { MoreHorizontal } from "lucide-react";
+import { DotsThree } from "@phosphor-icons/react";
 import { useDeployment } from "@/hooks/use-deployment";
 import { useUser } from "@/hooks/use-user";
 import { useScreenContext } from "../context";
@@ -95,7 +95,7 @@ export const EmailManagementSection = () => {
                     <SearchInput
                         value={searchQuery}
                         onChange={setSearchQuery}
-                        placeholder="Search Email"
+                        placeholder="MagnifyingGlass Email"
                     />
                 </div>
                 <div style={{ position: "relative", flexShrink: 0 }}>
@@ -185,7 +185,7 @@ export const EmailManagementSection = () => {
                                                                 if (ref) verifyButtonRefs.current[email.id] = ref;
                                                             }}
                                                         >
-                                                            <MoreHorizontal size={16} />
+                                                            <DotsThree size={16} />
                                                         </IconButton>
                                                     </DropdownTrigger>
                                                     <DropdownItems>
@@ -286,7 +286,7 @@ export const EmailManagementSection = () => {
                                                                 if (ref) verifyButtonRefs.current[email.id] = ref;
                                                             }}
                                                         >
-                                                            <MoreHorizontal size={16} />
+                                                            <DotsThree size={16} />
                                                         </IconButton>
                                                     </DropdownTrigger>
                                                     <DropdownItems>

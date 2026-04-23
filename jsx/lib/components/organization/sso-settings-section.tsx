@@ -3,7 +3,7 @@
 import React, { useState, useEffect } from "react";
 import styled from "styled-components";
 import useSWR from "swr";
-import { Shield, Copy, Check, Plus, ExternalLink } from "lucide-react";
+import { Shield, Copy, Check, Plus, ArrowSquareOut } from "@phosphor-icons/react";
 import { useOrganizationList } from "@/hooks/use-organization";
 import { useDeployment } from "@/hooks";
 import { Spinner } from "../utility/spinner";
@@ -1741,7 +1741,7 @@ const CreateSSOScreen = ({
                                                 alignItems: "center",
                                             }}
                                         >
-                                            <ExternalLink size={12} /> Docs
+                                            <ArrowSquareOut size={12} /> Docs
                                         </a>
                                     )}
                                 <Button

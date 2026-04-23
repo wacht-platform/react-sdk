@@ -1,4 +1,4 @@
-import { X } from "lucide-react";
+import { X } from "@phosphor-icons/react";
 import { useUser } from "@/hooks/use-user";
 import { useDeployment } from "@/hooks/use-deployment";
 import { GoogleIcon } from "../../icons/google";

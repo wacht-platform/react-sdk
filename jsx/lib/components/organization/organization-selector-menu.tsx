@@ -4,12 +4,12 @@ import { useState, useEffect, useRef } from "react";
 import styled from "styled-components";
 import {
     Plus,
-    Building2,
+    Buildings,
     Users,
-    ChevronRight,
-    ChevronLeft,
-    AlertCircle,
-} from "lucide-react";
+    CaretRight,
+    CaretLeft,
+    WarningCircle,
+} from "@phosphor-icons/react";
 import { useSession, useDeployment, useOrganizationMemberships } from "@/hooks";
 import { useWorkspaceList } from "@/hooks/use-workspace";
 import type { Organization, WorkspaceWithOrganization } from "@/types";
@@ -305,7 +305,7 @@ const ItemArrow = styled.div`
     }
 `;
 
-// WarningText is no longer used, replaced by right-aligned AlertCircle
+// WarningText is no longer used, replaced by right-aligned WarningCircle
 
 const EmptyState = styled.div`
     text-align: center;
@@ -525,7 +525,7 @@ export const OrganizationSelectorMenu = () => {
                                 aria-label="Go back"
                                 title="Go back"
                             >
-                                <ChevronLeft />
+                                <CaretLeft />
                             </BackLink>
                         )}
                         <ListHeader>
@@ -600,14 +600,14 @@ export const OrganizationSelectorMenu = () => {
                                                 </ItemContent>
                                                 <ItemArrow>
                                                     {hasRestriction && (
-                                                        <AlertCircle
+                                                        <WarningCircle
                                                             size={16}
                                                             style={{
                                                                 color: "var(--color-error)",
                                                             }}
                                                         />
                                                     )}
-                                                    <ChevronRight />
+                                                    <CaretRight />
                                                 </ItemArrow>
                                             </ListItem>
                                         );
@@ -708,7 +708,7 @@ export const OrganizationSelectorMenu = () => {
                                                     </>
                                                 ) : (
                                                     <>
-                                                        <Building2 />
+                                                        <Buildings />
                                                         {roleName} •{" "}
                                                         {memberCount} member
                                                         {memberCount !== 1
@@ -720,14 +720,14 @@ export const OrganizationSelectorMenu = () => {
                                         </ItemContent>
                                         <ItemArrow>
                                             {hasRestriction && (
-                                                <AlertCircle
+                                                <WarningCircle
                                                     size={16}
                                                     style={{
                                                         color: "var(--color-error)",
                                                     }}
                                                 />
                                             )}
-                                            <ChevronRight />
+                                            <CaretRight />
                                         </ItemArrow>
                                     </ListItem>
                                 );

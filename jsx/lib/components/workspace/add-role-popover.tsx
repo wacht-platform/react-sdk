@@ -1,6 +1,6 @@
 import { useEffect, useRef, useState } from "react";
 import styled from "styled-components";
-import { X } from "lucide-react";
+import { X } from "@phosphor-icons/react";
 import type { WorkspaceRole } from "@/types";
 import { useScreenContext } from "../organization/context";
 import { Button, Input, Label, FormGroup } from "@/components/utility";

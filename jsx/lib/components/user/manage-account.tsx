@@ -1,14 +1,14 @@
 import { useCallback, useState } from "react";
 import {
   User,
-  Mail,
+  EnvelopeSimple,
   Phone,
-  Link2,
+  Link,
   Shield,
-  Activity,
-  AlertTriangle,
+  Pulse,
+  Warning,
   Check,
-} from "lucide-react";
+} from "@phosphor-icons/react";
 
 import { useUser } from "@/hooks/use-user";
 import { useDeployment } from "@/hooks/use-deployment";
@@ -132,7 +132,7 @@ export const ManageAccount = () => {
                     onClick={() => setActiveTab("email")}
                   >
                     <TabIcon>
-                      <Mail size={16} />
+                      <EnvelopeSimple size={16} />
                       Email
                     </TabIcon>
                   </Tab>
@@ -156,7 +156,7 @@ export const ManageAccount = () => {
                     onClick={() => setActiveTab("social")}
                   >
                     <TabIcon>
-                      <Link2 size={16} />
+                      <Link size={16} />
                       Connections
                     </TabIcon>
                   </Tab>
@@ -179,7 +179,7 @@ export const ManageAccount = () => {
                   onClick={() => setActiveTab("sessions")}
                 >
                   <TabIcon>
-                    <Activity size={16} />
+                    <Pulse size={16} />
                     Sessions
                   </TabIcon>
                 </Tab>
@@ -207,7 +207,7 @@ export const ManageAccount = () => {
               <Toast>
                 <ToastContent>
                   {toastLevel === "error" ? (
-                    <AlertTriangle size={16} color="var(--color-error)" />
+                    <Warning size={16} color="var(--color-error)" />
                   ) : (
                     <Check size={16} color="var(--color-success)" />
                   )}

@@ -3,79 +3,87 @@ import { DefaultStylesProvider } from "@/components/utility/root";
 import { OtherAuthOptions } from "@/components/auth/other-auth-options";
 import { AuthFormImage } from "./auth-image";
 import { standaloneAuthShell } from "./auth-shell";
+import { useDeployment } from "@/hooks/use-deployment";
 
 const Container = styled.div`
-  ${standaloneAuthShell}
+    ${standaloneAuthShell}
 `;
 
 const Header = styled.div`
-  text-align: center;
-  margin-bottom: var(--space-8u);
-  position: relative;
+    margin-bottom: var(--space-8u);
+    text-align: center;
 `;
 
 const Title = styled.h1`
-  font-size: var(--font-size-2xl);
-  font-weight: 400;
-  color: var(--color-card-foreground);
-  margin-bottom: var(--space-2u);
-  margin-top: 0;
+    font-size: var(--font-size-xl);
+    font-weight: 400;
+    color: var(--color-card-foreground);
+    margin: 0 0 var(--space-2u) 0;
+    line-height: 1.3;
 `;
 
 const Subtitle = styled.p`
-  color: var(--color-secondary-text);
-  font-size: var(--font-size-md);
-  margin: 0;
+    font-size: var(--font-size-md);
+    color: var(--color-secondary-text);
+    margin: 0;
+    line-height: 1.5;
 `;
 
 const Footer = styled.div`
-  text-align: center;
-  margin-top: var(--space-8u);
+    margin-top: var(--space-8u);
+    padding-top: var(--space-6u);
+    border-top: var(--border-width-thin) solid var(--color-border);
+    text-align: center;
+    font-size: var(--font-size-sm);
+    color: var(--color-secondary-text);
 `;
 
-const FooterText = styled.p`
-  font-size: var(--font-size-md);
-  color: var(--color-muted);
-`;
+const BackLink = styled.button`
+    background: transparent;
+    border: none;
+    padding: 0;
+    cursor: pointer;
+    font-size: var(--font-size-sm);
+    font-weight: 400;
+    color: var(--color-card-foreground);
+    text-decoration: underline;
+    text-underline-offset: 3px;
+    transition: color 0.15s ease;
 
-const Link = styled.a`
-  color: var(--color-primary);
-  text-decoration: none;
-`;
-
-const BackFooterText = styled(FooterText)`
-  margin-top: var(--space-4u);
-`;
-
-const ClickableLink = styled(Link)`
-  cursor: pointer;
+    &:hover {
+        color: var(--color-primary);
+    }
 `;
 
 interface OtherSignInOptionsProps {
-  onBack: () => void;
+    onBack: () => void;
 }
 
 export function OtherSignInOptions({ onBack }: OtherSignInOptionsProps) {
-  return (
-    <DefaultStylesProvider>
-      <Container>
-        <AuthFormImage />
-        <Header>
-          <Title>Supported Options</Title>
-          <Subtitle>Choose one of the following options to continue</Subtitle>
-        </Header>
-        <OtherAuthOptions />
-        <Footer>
-          <FooterText>
-            Don't have an account? <Link href="/signup">Sign up</Link>
-          </FooterText>
-          <BackFooterText>
-            <ClickableLink onClick={onBack}>
-              Back to login
-            </ClickableLink>
-          </BackFooterText>
-        </Footer>
-      </Container>
-    </DefaultStylesProvider>
-  );
+    const { deployment } = useDeployment();
+    const appName = deployment?.ui_settings?.app_name;
+
+    return (
+        <DefaultStylesProvider>
+            <Container>
+                <AuthFormImage />
+
+                <Header>
+                    <Title>All sign-in methods</Title>
+                    <Subtitle>
+                        Choose another way to sign in to{" "}
+                        {appName || "your account"}
+                    </Subtitle>
+                </Header>
+
+                <OtherAuthOptions />
+
+                <Footer>
+                    <BackLink type="button" onClick={onBack}>
+                        Back to sign in
+                    </BackLink>
+                </Footer>
+            </Container>
+        </DefaultStylesProvider>
+    );
 }

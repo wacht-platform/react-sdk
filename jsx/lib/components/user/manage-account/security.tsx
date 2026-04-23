@@ -1,11 +1,11 @@
 import { useState, useRef, useEffect, ChangeEvent } from "react";
 import {
     Shield,
-    AlertTriangle,
-    Download,
+    Warning,
+    DownloadSimple,
     Check,
-    ChevronDown,
-} from "lucide-react";
+    CaretDown,
+} from "@phosphor-icons/react";
 import { QRCodeSVG } from "qrcode.react";
 import { useDeployment } from "@/hooks/use-deployment";
 import { useUser } from "@/hooks/use-user";
@@ -642,7 +642,7 @@ export const SecurityManagementSection = () => {
                                     textAlign: "left",
                                 }}
                             >
-                                <AlertTriangle
+                                <Warning
                                     size={16}
                                     style={{
                                         color: "var(--color-warning)",
@@ -728,11 +728,11 @@ export const SecurityManagementSection = () => {
                                         border: "var(--border-width-thin) solid var(--color-border)",
                                     }}
                                 >
-                                    <Download
+                                    <DownloadSimple
                                         size={16}
                                         style={{ marginRight: "var(--space-2u)" }}
                                     />
-                                    Download
+                                    DownloadSimple
                                 </Button>
                             </div>
 
@@ -809,7 +809,7 @@ export const SecurityManagementSection = () => {
                             color: "var(--color-foreground)",
                         }}
                     >
-                        Security Settings
+                        Security GearSix
                     </span>
                 </div>
             </HeaderCTAContainer>
@@ -1039,7 +1039,7 @@ export const SecurityManagementSection = () => {
                                                     }}
                                                 >
                                                     {isPasskeyExpanded ? "Hide" : "Manage"} ({passkeys.length})
-                                                    <ChevronDown
+                                                    <CaretDown
                                                         size={14}
                                                         style={{
                                                             transform: isPasskeyExpanded ? "rotate(180deg)" : "rotate(0deg)",

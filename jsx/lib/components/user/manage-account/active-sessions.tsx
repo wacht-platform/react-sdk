@@ -1,5 +1,5 @@
 import { useState } from "react";
-import { LogOut } from "lucide-react";
+import { SignOut } from "@phosphor-icons/react";
 import {
     Dropdown,
     DropdownItem,
@@ -289,7 +289,7 @@ export const ActiveSessionsSection = () => {
                                                                         gap: "var(--space-4u)",
                                                                     }}
                                                                 >
-                                                                    <LogOut size={14} />
+                                                                    <SignOut size={14} />
                                                                     End Session
                                                                 </div>
                                                             </DropdownItem>
@@ -340,7 +340,7 @@ export const ActiveSessionsSection = () => {
                                                                         gap: "var(--space-4u)",
                                                                     }}
                                                                 >
-                                                                    <LogOut size={14} />
+                                                                    <SignOut size={14} />
                                                                     End Session
                                                                 </div>
                                                             </DropdownItem>

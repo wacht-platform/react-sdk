@@ -1,5 +1,5 @@
 import { useState, useRef, useEffect, useMemo } from "react";
-import { Send, Trash2 } from "lucide-react";
+import { PaperPlaneTilt, Trash } from "@phosphor-icons/react";
 import { useActiveWorkspace } from "@/hooks/use-workspace";
 import { useScreenContext } from "../../organization/context";
 import { WorkspaceRole } from "@/types";
@@ -111,7 +111,7 @@ export const InvitationsSection = () => {
                     <SearchInput
                         value={searchQuery}
                         onChange={setSearchQuery}
-                        placeholder="Search invitations..."
+                        placeholder="MagnifyingGlass invitations..."
                     />
                 </div>
                 <Button
@@ -204,10 +204,10 @@ const InvitationActions = ({ onResend, onCancel }: any) => (
         </DropdownTrigger>
         <DropdownItems>
             <DropdownItem onClick={onResend}>
-                <Send size={16} /> Resend
+                <PaperPlaneTilt size={16} /> Resend
             </DropdownItem>
             <DropdownItem $destructive onClick={onCancel}>
-                <Trash2 size={16} /> Cancel
+                <Trash size={16} /> Cancel
             </DropdownItem>
         </DropdownItems>
     </Dropdown>

@@ -1,5 +1,5 @@
 import { useState, useRef, useEffect, ChangeEvent } from "react";
-import { Building, Trash2 } from "lucide-react";
+import { Buildings, Trash } from "@phosphor-icons/react";
 import { useActiveWorkspace, useWorkspaceList } from "@/hooks/use-workspace";
 import { useDeployment } from "@/hooks/use-deployment";
 import { useScreenContext } from "../../organization/context";
@@ -145,7 +145,7 @@ export const GeneralSettingsSection = () => {
                         {previewUrl ? (
                             <img src={previewUrl} alt="Logo" style={{ width: "100%", height: "100%", objectFit: "cover" }} />
                         ) : (
-                            <Building size={32} color="var(--color-muted)" />
+                            <Buildings size={32} color="var(--color-muted)" />
                         )}
                         <input type="file" ref={fileInputRef} style={{ display: "none" }} accept="image/*" onChange={handleImageChange} />
                     </div>
@@ -181,7 +181,7 @@ export const GeneralSettingsSection = () => {
                                     setIsSaving(false);
                                 }
                             }}>
-                                <Trash2 size={14} style={{ marginRight: "var(--space-2u)" }} /> Remove
+                                <Trash size={14} style={{ marginRight: "var(--space-2u)" }} /> Remove
                             </Button>
                         )}
                     </ButtonActions>

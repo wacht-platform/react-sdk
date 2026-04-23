@@ -1,5 +1,5 @@
 import { useCallback, useState, useEffect } from "react";
-import { Building, Settings, Globe, Users, Shield, Mail, AlertTriangle, Check } from "lucide-react";
+import { Buildings, GearSix, Globe, Users, Shield, EnvelopeSimple, Warning, Check } from "@phosphor-icons/react";
 import { useActiveOrganization } from "@/hooks/use-organization";
 import { useDeployment } from "@/hooks/use-deployment";
 import { Spinner, DefaultStylesProvider } from "../utility";
@@ -134,7 +134,7 @@ export const ManageOrganization = () => {
           <Container>
             <EmptyState>
               <EmptyStateIcon>
-                <Building size={32} color="var(--color-muted)" />
+                <Buildings size={32} color="var(--color-muted)" />
               </EmptyStateIcon>
               <EmptyStateTitle>No Organization Selected</EmptyStateTitle>
               <OrganizationSwitcher />
@@ -153,7 +153,7 @@ export const ManageOrganization = () => {
             <TabsContainer>
               <TabsList>
                 <Tab $isActive={activeTab === "general"} onClick={() => setActiveTab("general")}>
-                  <TabIcon><Settings size={16} /> General</TabIcon>
+                  <TabIcon><GearSix size={16} /> General</TabIcon>
                 </Tab>
                 <Tab $isActive={activeTab === "domains"} onClick={() => setActiveTab("domains")}>
                   <TabIcon><Globe size={16} /> Domains</TabIcon>
@@ -162,7 +162,7 @@ export const ManageOrganization = () => {
                   <TabIcon><Users size={16} /> Members</TabIcon>
                 </Tab>
                 <Tab $isActive={activeTab === "invitations"} onClick={() => setActiveTab("invitations")}>
-                  <TabIcon><Mail size={16} /> Invitations</TabIcon>
+                  <TabIcon><EnvelopeSimple size={16} /> Invitations</TabIcon>
                 </Tab>
                 {deployment?.b2b_settings?.custom_org_role_enabled && (
                   <Tab $isActive={activeTab === "roles"} onClick={() => setActiveTab("roles")}>
@@ -189,7 +189,7 @@ export const ManageOrganization = () => {
             {toastMessage && (
               <Toast>
                 <ToastContent>
-                  {toastLevel === "error" ? <AlertTriangle size={16} color="var(--color-error)" /> : <Check size={16} color="var(--color-success)" />}
+                  {toastLevel === "error" ? <Warning size={16} color="var(--color-error)" /> : <Check size={16} color="var(--color-success)" />}
                   <ToastText>{toastMessage}</ToastText>
                 </ToastContent>
               </Toast>

@@ -12,3 +12,4 @@ export * from "./use-dialog";
 export * from "./search";
 export * from "./button";
 export * from "./combo-box";
+export * from "./method-button";

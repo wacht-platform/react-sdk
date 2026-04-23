@@ -1,5 +1,5 @@
 import { useState, useRef, useMemo } from "react";
-import { Mail, Trash2 } from "lucide-react";
+import { EnvelopeSimple, Trash } from "@phosphor-icons/react";
 import useSWR from "swr";
 import { Organization, OrganizationInvitation, OrganizationRole } from "@/types";
 import { useOrganizationList } from "@/hooks/use-organization";
@@ -94,7 +94,7 @@ export const InvitationsSection = ({ organization }: { organization: Organizatio
                     <SearchInput
                         value={searchQuery}
                         onChange={setSearchQuery}
-                        placeholder="Search invitations..."
+                        placeholder="MagnifyingGlass invitations..."
                     />
                 </div>
                 <Button
@@ -184,10 +184,10 @@ const InvitationActions = ({ invitation, onResend, onCancel }: any) => (
         </DropdownTrigger>
         <DropdownItems>
             <DropdownItem onClick={() => onResend(invitation)}>
-                <Mail size={16} /> Resend
+                <EnvelopeSimple size={16} /> Resend
             </DropdownItem>
             <DropdownItem $destructive onClick={() => onCancel(invitation)}>
-                <Trash2 size={16} /> Cancel
+                <Trash size={16} /> Cancel
             </DropdownItem>
         </DropdownItems>
     </Dropdown>

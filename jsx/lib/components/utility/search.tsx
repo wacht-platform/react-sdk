@@ -1,4 +1,4 @@
-import { Search } from "lucide-react";
+import { MagnifyingGlass } from "@phosphor-icons/react";
 import styled from "styled-components";
 
 const SearchWrapper = styled.div`
@@ -21,7 +21,7 @@ const SearchField = styled.input`
   background-color: transparent;
 `;
 
-const SearchIcon = styled(Search)`
+const SearchIcon = styled(MagnifyingGlass)`
   margin-right: var(--space-4u);
   color: var(--color-secondary-text);
 `;

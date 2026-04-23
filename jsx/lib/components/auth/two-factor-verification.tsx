@@ -18,7 +18,7 @@ import { SmartphoneIcon } from "../icons/smartphone";
 import { KeyIcon } from "../icons/key";
 import { ProfileCompletionProps } from "@wacht/types";
 import { useNavigation } from "@/hooks";
-import { Loader2 } from "lucide-react";
+import { CircleNotch } from "@phosphor-icons/react";
 import { getStoredDevSession } from "@/utils/dev-session";
 import { standaloneAuthShell } from "./auth-shell";
 
@@ -33,6 +33,10 @@ const spin = keyframes`
   to {
     transform: rotate(360deg);
   }
+`;
+
+const ButtonSpinner = styled(CircleNotch)`
+    animation: ${spin} 1s linear infinite;
 `;
 
 const LoadingContainer = styled.div`
@@ -269,7 +273,7 @@ export function TwoFactorVerification({
                 <Container>
                     <AuthFormImage />
                     <LoadingContainer>
-                        <Loader2 size={32} />
+                        <CircleNotch size={32} />
                     </LoadingContainer>
                 </Container>
             </DefaultStylesProvider>
@@ -424,7 +428,7 @@ export function TwoFactorVerification({
                             type="submit"
                             disabled={isSubmitting || !verificationCode}
                         >
-                            {isSubmitting ? "Verifying..." : "Verify"}
+                            {isSubmitting ? <ButtonSpinner size={16} /> : "Verify"}
                         </SubmitButton>
                     </div>
                 </Form>

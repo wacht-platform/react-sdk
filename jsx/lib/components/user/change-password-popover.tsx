@@ -3,7 +3,7 @@ import styled from "styled-components";
 import { Input } from "@/components/utility/input";
 import { Button } from "@/components/utility/button";
 import { Label } from "../utility/form";
-import { Eye, EyeOff } from "lucide-react";
+import { Eye, EyeSlash } from "@phosphor-icons/react";
 import { usePopoverPosition } from "@/hooks/use-popover-position";
 
 const PopoverContainer = styled.div`
@@ -204,7 +204,7 @@ export const ChangePasswordPopover = ({
               onClick={() => setShowCurrentPassword(!showCurrentPassword)}
               aria-label={showCurrentPassword ? "Hide current password" : "Show current password"}
             >
-              {showCurrentPassword ? <EyeOff size={16} /> : <Eye size={16} />}
+              {showCurrentPassword ? <EyeSlash size={16} /> : <Eye size={16} />}
             </button>
           </PasswordInput>
           {errors.currentPassword && (
@@ -228,7 +228,7 @@ export const ChangePasswordPopover = ({
             onClick={() => setShowNewPassword(!showNewPassword)}
             aria-label={showNewPassword ? "Hide new password" : "Show new password"}
           >
-            {showNewPassword ? <EyeOff size={16} /> : <Eye size={16} />}
+            {showNewPassword ? <EyeSlash size={16} /> : <Eye size={16} />}
           </button>
         </PasswordInput>
         {errors.newPassword && (
@@ -251,7 +251,7 @@ export const ChangePasswordPopover = ({
             onClick={() => setShowConfirmPassword(!showConfirmPassword)}
             aria-label={showConfirmPassword ? "Hide confirm password" : "Show confirm password"}
           >
-            {showConfirmPassword ? <EyeOff size={16} /> : <Eye size={16} />}
+            {showConfirmPassword ? <EyeSlash size={16} /> : <Eye size={16} />}
           </button>
         </PasswordInput>
         {errors.confirmPassword && (

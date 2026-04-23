@@ -1,5 +1,6 @@
 import { useState } from "react";
-import styled from "styled-components";
+import styled, { keyframes } from "styled-components";
+import { CircleNotch } from "@phosphor-icons/react";
 import { Button, Input, FormGroup, Label, Form } from "../utility";
 import { OTPInput } from "../utility/otp-input";
 import {
@@ -16,6 +17,15 @@ interface ForgotPasswordProps {
   onBack: () => void;
 }
 
+const spin = keyframes`
+  from { transform: rotate(0deg); }
+  to   { transform: rotate(360deg); }
+`;
+
+const ButtonSpinner = styled(CircleNotch)`
+    animation: ${spin} 1s linear infinite;
+`;
+
 const Container = styled.div`
   ${standaloneAuthShell}
 `;
@@ -26,14 +36,15 @@ const Header = styled.div`
 `;
 
 const Title = styled.h1`
-  font-size: var(--font-size-2xl);
+  font-size: var(--font-size-xl);
+  font-weight: 400;
   color: var(--color-card-foreground);
   margin: 0 0 var(--space-2u) 0;
 `;
 
 const Message = styled.p`
-  font-size: var(--font-size-lg);
-  color: var(--color-muted);
+  font-size: var(--font-size-md);
+  color: var(--color-secondary-text);
   margin: 0;
 `;
 
@@ -77,16 +88,22 @@ const DividerText = styled.span`
   white-space: nowrap;
   background: var(--color-card);
   padding: 0 var(--space-4u);
+  color: var(--color-secondary-text);
+  font-size: var(--font-size-2xs);
+  text-transform: uppercase;
+  letter-spacing: 0.1em;
 `;
 
 const Footer = styled.div`
-  text-align: center;
   margin-top: var(--space-8u);
+  padding-top: var(--space-6u);
+  border-top: var(--border-width-thin) solid var(--color-border);
+  text-align: center;
+  font-size: var(--font-size-sm);
+  color: var(--color-secondary-text);
 `;
 
 const FooterText = styled.p`
-  font-size: var(--font-size-lg);
-  color: var(--color-muted);
   margin: 0;
 `;
 
@@ -271,7 +288,7 @@ export function ForgotPassword({ onBack }: ForgotPasswordProps) {
                 disabled={loading}
                 style={{ marginTop: "var(--space-6u)" }}
               >
-                {loading ? "Sending..." : "Send Code"}
+                {loading ? <ButtonSpinner size={16} /> : "Send Code"}
               </Button>
             </Form>
             <Footer>
@@ -312,7 +329,7 @@ export function ForgotPassword({ onBack }: ForgotPasswordProps) {
                 disabled={loading || otp.length !== 6}
                 style={{ marginTop: "var(--space-6u)" }}
               >
-                {loading ? "Verifying..." : "Verify"}
+                {loading ? <ButtonSpinner size={16} /> : "Verify"}
               </Button>
             </Form>
             <Footer>
@@ -365,7 +382,7 @@ export function ForgotPassword({ onBack }: ForgotPasswordProps) {
                 disabled={loading}
                 style={{ marginTop: "var(--space-6u)" }}
               >
-                {loading ? "Resetting..." : "Reset Password"}
+                {loading ? <ButtonSpinner size={16} /> : "Reset Password"}
               </Button>
             </Form>
             <Footer>

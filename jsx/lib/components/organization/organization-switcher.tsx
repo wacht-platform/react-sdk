@@ -4,14 +4,14 @@ import React, { useState, useRef, useEffect, useMemo } from "react";
 import ReactDOM from "react-dom";
 import styled from "styled-components";
 import {
-    ChevronDown,
-    ChevronRight,
+    CaretDown,
+    CaretRight,
     Plus,
     User,
-    Settings,
-    LogOut,
-    AlertCircle,
-} from "lucide-react";
+    GearSix,
+    SignOut,
+    WarningCircle,
+} from "@phosphor-icons/react";
 import { DefaultStylesProvider } from "../utility/root";
 import {
     useActiveOrganization,
@@ -104,7 +104,7 @@ const OrgName = styled.span`
     color: var(--color-card-foreground);
 `;
 
-const TriggerChevron = styled(ChevronDown)<{ $isOpen: boolean }>`
+const TriggerChevron = styled(CaretDown)<{ $isOpen: boolean }>`
     color: var(--color-secondary-text);
     transition: transform 0.15s ease;
     transform: ${(props) =>
@@ -193,7 +193,7 @@ const MenuItem = styled.div<{ $isActive?: boolean; as?: React.ElementType }>`
     }
 `;
 
-const HoverArrow = styled(ChevronRight)`
+const HoverArrow = styled(CaretRight)`
     opacity: 0;
     transition: opacity 0.1s ease;
     color: var(--color-secondary-text);
@@ -770,7 +770,7 @@ export const OrganizationSwitcher = ({
                                     alignItems: "center",
                                 }}
                             >
-                                <AlertCircle
+                                <WarningCircle
                                     size={14}
                                     color="var(--color-error)"
                                 />
@@ -928,7 +928,7 @@ export const OrganizationSwitcher = ({
                                                     <ActiveIndicator />
                                                     <MenuItemContent>
                                                         {workspacesEnabled && (
-                                                            <ChevronDown
+                                                            <CaretDown
                                                                 size={12}
                                                                 style={{
                                                                     marginRight:
@@ -997,7 +997,7 @@ export const OrganizationSwitcher = ({
                                                                             "center",
                                                                     }}
                                                                 >
-                                                                    <AlertCircle
+                                                                    <WarningCircle
                                                                         size={
                                                                             14
                                                                         }
@@ -1020,7 +1020,7 @@ export const OrganizationSwitcher = ({
                                                                     }}
                                                                     title="Manage organization"
                                                                 >
-                                                                    <Settings
+                                                                    <GearSix
                                                                         size={
                                                                             12
                                                                         }
@@ -1066,7 +1066,7 @@ export const OrganizationSwitcher = ({
                                                             }
                                                             title="Leave organization"
                                                         >
-                                                            <LogOut size={12} />
+                                                            <SignOut size={12} />
                                                         </LogoutButton>
                                                     </div>
                                                 </MenuItem>
@@ -1237,7 +1237,7 @@ export const OrganizationSwitcher = ({
                                                                                             "center",
                                                                                     }}
                                                                                 >
-                                                                                    <AlertCircle
+                                                                                    <WarningCircle
                                                                                         size={
                                                                                             14
                                                                                         }
@@ -1275,7 +1275,7 @@ export const OrganizationSwitcher = ({
                                                                                                 }}
                                                                                                 title="Manage workspace"
                                                                                             >
-                                                                                                <Settings
+                                                                                                <GearSix
                                                                                                     size={
                                                                                                         12
                                                                                                     }
@@ -1305,7 +1305,7 @@ export const OrganizationSwitcher = ({
                                                                                         }}
                                                                                         title="Leave workspace"
                                                                                     >
-                                                                                        <LogOut
+                                                                                        <SignOut
                                                                                             size={
                                                                                                 12
                                                                                             }
@@ -1458,7 +1458,7 @@ export const OrganizationSwitcher = ({
                                                                     >
                                                                         <MenuItemContent>
                                                                             {workspacesEnabled && (
-                                                                                <ChevronDown
+                                                                                <CaretDown
                                                                                     size={
                                                                                         12
                                                                                     }
@@ -1528,7 +1528,7 @@ export const OrganizationSwitcher = ({
                                                                                                 "center",
                                                                                         }}
                                                                                     >
-                                                                                        <AlertCircle
+                                                                                        <WarningCircle
                                                                                             size={
                                                                                                 14
                                                                                             }
@@ -1697,7 +1697,7 @@ export const OrganizationSwitcher = ({
                                                                                                                     "center",
                                                                                                             }}
                                                                                                         >
-                                                                                                            <AlertCircle
+                                                                                                            <WarningCircle
                                                                                                                 size={
                                                                                                                     14
                                                                                                                 }
@@ -1727,7 +1727,7 @@ export const OrganizationSwitcher = ({
                                                                                                                     }}
                                                                                                                     title="Manage workspace"
                                                                                                                 >
-                                                                                                                    <Settings
+                                                                                                                    <GearSix
                                                                                                                         size={
                                                                                                                             12
                                                                                                                         }
@@ -1757,7 +1757,7 @@ export const OrganizationSwitcher = ({
                                                                                                                 }}
                                                                                                                 title="Leave workspace"
                                                                                                             >
-                                                                                                                <LogOut
+                                                                                                                <SignOut
                                                                                                                     size={
                                                                                                                         12
                                                                                                                     }
