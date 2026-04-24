@@ -17,10 +17,9 @@ async function fetchWorkspaceMemberships(client: Client) {
 async function leaveWorkspace(
     client: Client,
     workspaceId: string,
-    userId: string,
 ) {
     const response = await responseMapper<void>(
-        await client(`/workspaces/${workspaceId}/members/${userId}/remove`, {
+        await client(`/workspaces/${workspaceId}/leave`, {
             method: "POST",
         }),
     );
@@ -66,6 +65,7 @@ export const useWorkspaceList = () => {
     const { workspaceMemberships, refetch, loading, error } =
         useWorkspaceMemberships();
     const { client } = useClient();
+    const { refetch: refetchSession } = useSession();
 
     const workspaces = useMemo(() => {
         return workspaceMemberships?.map((membership) => ({
@@ -108,12 +108,14 @@ export const useWorkspaceList = () => {
     );
 
     const leaveWorkspaceCallback = useCallback(
-        async (id: string, userId: string) => {
-            const result = await leaveWorkspace(client, id, userId);
+        async (id: string) => {
+            const result = await leaveWorkspace(client, id);
+            clearTokenCache();
             await refetch();
+            await refetchSession();
             return result;
         },
-        [client, refetch],
+        [client, refetch, refetchSession],
     );
 
     const updateWorkspace = useCallback(
@@ -432,12 +434,9 @@ export const useActiveWorkspace = () => {
     }, [activeMembership]);
 
     const leaveCurrentWorkspace = useCallback(async () => {
-        if (!activeWorkspace || !session?.active_signin?.user_id) return;
-        return await leaveWorkspaceFromList(
-            activeWorkspace.id,
-            session.active_signin.user_id,
-        );
-    }, [activeWorkspace, leaveWorkspaceFromList, session]);
+        if (!activeWorkspace) return;
+        return await leaveWorkspaceFromList(activeWorkspace.id);
+    }, [activeWorkspace, leaveWorkspaceFromList]);
 
     const updateCurrentWorkspace = useCallback(
         async (data: {
