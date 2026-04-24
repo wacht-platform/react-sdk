@@ -4,15 +4,14 @@ export const Table = styled.table`
   width: 100%;
   border-collapse: separate;
   border-spacing: 0;
-  font-size: var(--font-size-lg);
-  border: var(--border-width-thin) solid var(--color-border);
+  background: var(--color-card);
+  border: 1px solid var(--color-border);
   border-radius: var(--radius-md);
   overflow: hidden;
-  background: transparent;
 `;
 
 export const TableHead = styled.thead`
-  background-color: var(--color-background-subtle);
+  background: color-mix(in srgb, var(--color-popover-foreground) 3%, transparent);
 `;
 
 export const TableBody = styled.tbody`
@@ -22,44 +21,46 @@ export const TableBody = styled.tbody`
 `;
 
 export const TableRow = styled.tr`
-  &:not(:last-child) td {
-    border-bottom: var(--border-width-thin) solid var(--color-border);
+  transition: background 0.12s ease;
+
+  tbody &:not(:last-child) td {
+    border-bottom: 1px solid var(--color-border);
+  }
+
+  tbody &:hover td {
+    background: color-mix(in srgb, var(--color-popover-foreground) 4%, transparent);
   }
 `;
 
 export const TableHeader = styled.th`
   text-align: left;
-  padding: var(--space-4u) var(--space-8u);
-  font-weight: 400;
-  font-size: var(--font-size-lg);
+  padding: 10px 16px;
+  font-size: 12px;
+  font-weight: 500;
   color: var(--color-secondary-text);
-  background-color: var(--color-background-subtle);
-  border-bottom: var(--border-width-thin) solid var(--color-border);
   white-space: nowrap;
-  
+  border-bottom: 1px solid var(--color-border);
+
   &:last-child {
     text-align: right;
     width: var(--size-30u);
   }
-  
-  &:first-child {
-    width: 40%;
-  }
 `;
 
 export const TableCell = styled.td`
-  padding: var(--space-6u) var(--space-8u);
-  font-size: var(--font-size-lg);
+  padding: 12px 16px;
+  font-size: 13px;
   color: var(--color-foreground);
   vertical-align: middle;
   white-space: nowrap;
+  transition: background 0.12s ease;
 `;
 
 export const TableCellFlex = styled(TableCell)`
   & > div {
     display: flex;
     align-items: center;
-    gap: var(--space-6u);
+    gap: 10px;
   }
 `;
 

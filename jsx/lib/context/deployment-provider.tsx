@@ -1,6 +1,6 @@
 "use client";
 
-import type { ClinetReponse, Deployment, DeploymentUISettings } from "@/types";
+import type { ClientResponse, Deployment, DeploymentUISettings } from "@/types";
 import type { DeploymentContextType, PlatformAdapter } from "@/types";
 import { useState, useEffect, useMemo, createContext, useRef } from "react";
 import type { ReactNode } from "react";
@@ -14,14 +14,14 @@ interface DeploymentProviderProps {
     children: ReactNode;
     publicKey: string;
     adapter: PlatformAdapter;
-    uiOverwrites?: Partial<DeploymentUISettings>;
+    uiOverrides?: Partial<DeploymentUISettings>;
 }
 
 function DeploymentProvider({
     children,
     publicKey,
     adapter,
-    uiOverwrites,
+    uiOverrides,
 }: DeploymentProviderProps) {
     const [loading, setLoading] = useState(true);
     const [deployment, setDeployment] = useState<Deployment | null>(null);
@@ -89,14 +89,14 @@ function DeploymentProvider({
                 }
 
                 const deploymentConfig =
-                    (await deployment.json()) as ClinetReponse<Deployment>;
+                    (await deployment.json()) as ClientResponse<Deployment>;
 
                 deploymentConfig.data.backend_host = baseUrl;
 
-                if (uiOverwrites) {
+                if (uiOverrides) {
                     deploymentConfig.data.ui_settings = {
                         ...deploymentConfig.data.ui_settings,
-                        ...uiOverwrites,
+                        ...uiOverrides,
                     };
                 }
 
@@ -119,7 +119,7 @@ function DeploymentProvider({
         }
 
         initializeDeployment();
-    }, [publicKey]);
+    }, [publicKey, uiOverrides]);
 
     const value = useMemo(
         () => ({

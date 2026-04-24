@@ -1,18 +1,9 @@
-import { useState, useRef, useMemo } from "react";
-import { Warning, Copy, ArrowSquareOut, Trash, Info } from "@phosphor-icons/react";
+import { useState, useRef } from "react";
 import useSWR from "swr";
+import styled from "styled-components";
 import { Organization, OrganizationDomain } from "@/types";
 import { useOrganizationList } from "@/hooks/use-organization";
-import {
-    Button,
-    SearchInput,
-    Spinner,
-    Dropdown,
-    DropdownItems,
-    DropdownItem,
-    DropdownTrigger,
-    DropdownDivider,
-} from "@/components/utility";
+import { Button, Spinner } from "@/components/utility";
 import {
     Table,
     TableBody,
@@ -27,51 +18,17 @@ import { AddDomainPopover } from "../add-domain-popover";
 import { ConfirmationPopover } from "../../utility/confirmation-popover";
 import {
     HeaderCTAContainer,
-    IconButton,
     DesktopTableContainer,
-    MobileListContainer,
+    StatusPill,
 } from "./shared";
-import styled from "styled-components";
 
-const Badge = styled.span<{ $type: "success" | "warning" }>`
-  background: ${props => props.$type === "success" ? "var(--color-primary-background)" : "var(--color-warning-background)"};
-  color: ${props => props.$type === "success" ? "var(--color-primary)" : "var(--color-warning)"};
-  padding: var(--space-2u) var(--space-4u);
-  border-radius: var(--radius-2xs);
-  font-size: var(--font-size-sm);
-  font-weight: 400;
-  display: flex;
-  align-items: center;
-  gap: var(--space-2u);
-  max-width: max-content;
-`;
-
-const InfoCard = styled.div`
-  padding: var(--space-8u);
-  background: var(--color-background-subtle);
-  border-radius: var(--radius-lg);
-  margin-bottom: var(--space-12u);
-  border: var(--border-width-thin) solid var(--color-border);
-  display: flex;
-  gap: var(--space-6u);
-  align-items: flex-start;
-`;
-
-const InfoContent = styled.div`
-  flex: 1;
-  font-size: var(--font-size-md);
-  line-height: 1.5;
-  color: var(--color-secondary-text);
-`;
-
-const MobileDomainCard = styled.div`
-  padding: var(--space-8u);
-  background: var(--color-input-background);
-  border: var(--border-width-thin) solid var(--color-border);
-  border-radius: var(--radius-lg);
-  display: flex;
-  flex-direction: column;
-  gap: var(--space-6u);
+const InlineActions = styled.div`
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    justify-content: flex-end;
+    flex-wrap: nowrap;
+    white-space: nowrap;
 `;
 
 export const DomainsSection = ({ organization }: { organization: Organization }) => {
@@ -79,7 +36,13 @@ export const DomainsSection = ({ organization }: { organization: Organization })
         getOrganizationDomains: getDomains,
         removeOrganizationDomain: removeDomain,
     } = useOrganizationList();
+
     const [domainForDeletion, setDomainForDeletion] = useState<string | null>(null);
+    const [isAddingDomain, setIsAddingDomain] = useState(false);
+    const [domainInVerification, setDomainInVerification] = useState<string | null>(null);
+    const [pendingIds, setPendingIds] = useState<Set<string>>(new Set());
+    const addDomainButtonRef = useRef<HTMLButtonElement>(null);
+    const verifyButtonRefs = useRef<Record<string, HTMLButtonElement | null>>({});
 
     const {
         data: domains = [],
@@ -88,48 +51,48 @@ export const DomainsSection = ({ organization }: { organization: Organization })
     } = useSWR(
         organization?.id ? `wacht-org-domains:${organization.id}` : null,
         async () => {
-            const realDomains = (await getDomains?.(organization)) || [];
-            return realDomains.map((domain) => ({
-                ...domain,
-                verified: domain.verified !== undefined ? domain.verified : false,
+            const real = (await getDomains?.(organization)) || [];
+            return real.map((d) => ({
+                ...d,
+                verified: d.verified !== undefined ? d.verified : false,
             }));
-        }
+        },
     );
 
-    const [isAddingDomain, setIsAddingDomain] = useState(false);
-    const [domainInVerification, setDomainInVerification] = useState<string | null>(null);
-    const [searchQuery, setSearchQuery] = useState("");
-    const [selectedDomainInAction, setSelectedDomainAction] = useState<string | null>(null);
-    const addDomainButtonRef = useRef<HTMLButtonElement>(null);
-    const actionButtonRefs = useRef<Record<string, HTMLButtonElement | null>>({});
+    const markPending = (id: string, on: boolean) => {
+        setPendingIds((prev) => {
+            const next = new Set(prev);
+            on ? next.add(id) : next.delete(id);
+            return next;
+        });
+    };
 
-    const filteredDomains = useMemo(() => {
-        if (!searchQuery.trim()) return domains;
-        const lower = searchQuery.toLowerCase();
-        return domains.filter((d) => d.fqdn.toLowerCase().includes(lower));
-    }, [domains, searchQuery]);
-
-    const handleDeleteDomain = async (domain: OrganizationDomain) => {
-        await removeDomain(organization, domain);
-        mutate();
-        setDomainForDeletion(null);
+    const handleDelete = async (domain: OrganizationDomain) => {
+        markPending(domain.id, true);
+        try {
+            await removeDomain(organization, domain);
+            mutate();
+        } finally {
+            markPending(domain.id, false);
+            setDomainForDeletion(null);
+        }
     };
 
     if (isLoading) return <Spinner />;
 
     return (
         <>
-            <HeaderCTAContainer>
-                <SearchInput
-                    value={searchQuery}
-                    onChange={setSearchQuery}
-                    placeholder="MagnifyingGlass domains..."
-                />
-                <Button
-                    ref={addDomainButtonRef}
-                    onClick={() => setIsAddingDomain(true)}
-                >
-                    Add Domain
+            <HeaderCTAContainer style={{ marginBottom: "var(--space-6u)" }}>
+                <div style={{ flex: 1, minWidth: 0 }}>
+                    <div style={{ fontSize: 14, fontWeight: 500, color: "var(--color-card-foreground)" }}>
+                        Domains
+                    </div>
+                    <div style={{ fontSize: 12, color: "var(--color-secondary-text)", marginTop: 2 }}>
+                        Users with verified domain emails auto-join this organization.
+                    </div>
+                </div>
+                <Button ref={addDomainButtonRef} onClick={() => setIsAddingDomain(true)} $size="sm">
+                    Add domain
                 </Button>
                 {isAddingDomain && (
                     <AddDomainPopover
@@ -142,108 +105,77 @@ export const DomainsSection = ({ organization }: { organization: Organization })
                 )}
             </HeaderCTAContainer>
 
-            {filteredDomains?.length > 0 && (
-                <InfoCard>
-                    <Info size={18} color="var(--color-primary)" style={{ flexShrink: 0, marginTop: "var(--space-1u)" }} />
-                    <InfoContent>
-                        Users with verified domain emails automatically join this organization
-                        {organization?.auto_assigned_workspace_id &&
-                            ` and will be auto-assigned to the default workspace.`}
-                        . This helps streamline onboarding for your team.
-                    </InfoContent>
-                </InfoCard>
-            )}
-
-            {!filteredDomains?.length ? (
+            {!domains?.length ? (
                 <EmptyState
-                    title={searchQuery ? "No domains match your search" : "No domains added"}
-                    description={searchQuery ? "Try a different search term." : "Manage your corporate domains to streamline onboarding for your team."}
+                    title="No domains added"
+                    description="Users with verified domain emails automatically join this organization."
                 />
             ) : (
-                <>
-                    <DesktopTableContainer>
-                        <Table>
-                            <TableHead>
-                                <TableRow>
-                                    <TableHeader>Domain</TableHeader>
-                                    <TableHeader>Status</TableHeader>
-                                    <TableHeader>Date Added</TableHeader>
-                                    <TableHeader></TableHeader>
-                                </TableRow>
-                            </TableHead>
-                            <TableBody>
-                                {filteredDomains.map((domain) => (
+                <DesktopTableContainer>
+                    <Table>
+                        <TableHead>
+                            <TableRow>
+                                <TableHeader>Domain</TableHeader>
+                                <TableHeader>Status</TableHeader>
+                                <TableHeader>Added</TableHeader>
+                                <TableHeader />
+                            </TableRow>
+                        </TableHead>
+                        <TableBody>
+                            {domains.map((domain) => {
+                                const isBusy = pendingIds.has(domain.id);
+                                return (
                                     <TableRow key={domain.id}>
                                         <TableCell>{domain.fqdn}</TableCell>
                                         <TableCell>
                                             {domain.verified ? (
-                                                <Badge $type="success">✓ Verified</Badge>
+                                                <StatusPill $variant="success">Verified</StatusPill>
                                             ) : (
-                                                <Badge $type="warning">
-                                                    <Warning size={12} /> Pending
-                                                </Badge>
+                                                <StatusPill $variant="warning">Pending</StatusPill>
                                             )}
                                         </TableCell>
-                                        <TableCell>
+                                        <TableCell style={{ color: "var(--color-secondary-text)" }}>
                                             {new Date(domain.created_at).toLocaleDateString()}
                                         </TableCell>
                                         <ActionsCell>
-                                            <ActionButtonContainer
-                                                domain={domain}
-                                                selectedAction={selectedDomainInAction}
-                                                setSelectedAction={setSelectedDomainAction}
-                                                onVerify={() => setDomainInVerification(domain.id)}
-                                                onDelete={() => setDomainForDeletion(domain.id)}
-                                                actionButtonRefs={actionButtonRefs}
-                                            />
+                                            <InlineActions>
+                                                <Button
+                                                    ref={(r: HTMLButtonElement | null) => {
+                                                        if (r) verifyButtonRefs.current[domain.id] = r;
+                                                    }}
+                                                    $size="sm"
+                                                    $outline
+                                                    disabled={isBusy}
+                                                    onClick={() => setDomainInVerification(domain.id)}
+                                                >
+                                                    {domain.verified ? "View DNS" : "Verify"}
+                                                </Button>
+                                                <Button
+                                                    $size="sm"
+                                                    $outline
+                                                    $destructive
+                                                    disabled={isBusy}
+                                                    onClick={() => setDomainForDeletion(domain.id)}
+                                                >
+                                                    {isBusy ? <Spinner size={12} /> : "Remove"}
+                                                </Button>
+                                            </InlineActions>
                                         </ActionsCell>
                                     </TableRow>
-                                ))}
-                            </TableBody>
-                        </Table>
-                    </DesktopTableContainer>
-
-                    <MobileListContainer>
-                        {filteredDomains.map((domain) => (
-                            <MobileDomainCard key={domain.id}>
-                                <div style={{ display: "flex", justifyContent: "space-between", alignItems: "flex-start" }}>
-                                    <div>
-                                        <div style={{ fontWeight: 400, fontSize: "var(--font-size-lg)", marginBottom: "var(--space-2u)" }}>{domain.fqdn}</div>
-                                        <div style={{ fontSize: "var(--font-size-sm)", color: "var(--color-muted)" }}>
-                                            Added on {new Date(domain.created_at).toLocaleDateString()}
-                                        </div>
-                                    </div>
-                                    <ActionButtonContainer
-                                        domain={domain}
-                                        selectedAction={selectedDomainInAction}
-                                        setSelectedAction={setSelectedDomainAction}
-                                        onVerify={() => setDomainInVerification(domain.id)}
-                                        onDelete={() => setDomainForDeletion(domain.id)}
-                                        actionButtonRefs={actionButtonRefs}
-                                    />
-                                </div>
-                                <div>
-                                    {domain.verified ? (
-                                        <Badge $type="success">✓ Verified</Badge>
-                                    ) : (
-                                        <Badge $type="warning">
-                                            <Warning size={12} /> Pending Verification
-                                        </Badge>
-                                    )}
-                                </div>
-                            </MobileDomainCard>
-                        ))}
-                    </MobileListContainer>
-                </>
+                                );
+                            })}
+                        </TableBody>
+                    </Table>
+                </DesktopTableContainer>
             )}
 
             {domainForDeletion && (
                 <ConfirmationPopover
-                    title="Delete domain?"
-                    description="Are you sure you want to remove this domain? Active users won't be affected but new ones won't auto-join."
+                    title="Remove domain?"
+                    description="Active users aren't affected, but new users with this domain won't auto-join."
                     onConfirm={() => {
-                        const domain = domains.find(d => d.id === domainForDeletion);
-                        if (domain) handleDeleteDomain(domain);
+                        const domain = domains.find((d) => d.id === domainForDeletion);
+                        if (domain) handleDelete(domain);
                     }}
                     onCancel={() => setDomainForDeletion(null)}
                 />
@@ -251,47 +183,11 @@ export const DomainsSection = ({ organization }: { organization: Organization })
 
             {domainInVerification && (
                 <AddDomainPopover
-                    domain={domains.find(d => d.id === domainInVerification)}
+                    domain={domains.find((d) => d.id === domainInVerification)}
                     onClose={() => setDomainInVerification(null)}
-                    triggerRef={{ current: actionButtonRefs.current[domainInVerification] }}
+                    triggerRef={{ current: verifyButtonRefs.current[domainInVerification] }}
                 />
             )}
         </>
     );
 };
-
-const ActionButtonContainer = ({
-    domain,
-    selectedAction,
-    setSelectedAction,
-    onVerify,
-    onDelete,
-    actionButtonRefs
-}: any) => (
-    <div style={{ position: "relative" }}>
-        <Dropdown
-            open={selectedAction === domain.id}
-            openChange={(v) => setSelectedAction(v ? domain.id : null)}
-        >
-            <DropdownTrigger>
-                <IconButton ref={(el) => { actionButtonRefs.current[domain.id] = el; }}>•••</IconButton>
-            </DropdownTrigger>
-
-            <DropdownItems>
-                <DropdownItem onClick={() => { onVerify(); setSelectedAction(null); }}>
-                    {domain.verified ? "📋 View DNS Record" : "✓ Verify Domain"}
-                </DropdownItem>
-                <DropdownItem onClick={() => { navigator.clipboard.writeText(domain.fqdn); setSelectedAction(null); }}>
-                    <Copy size={16} /> Copy Domain
-                </DropdownItem>
-                <DropdownItem onClick={() => { window.open(`https://${domain.fqdn}`, "_blank"); setSelectedAction(null); }}>
-                    <ArrowSquareOut size={16} /> Visit Domain
-                </DropdownItem>
-                <DropdownDivider />
-                <DropdownItem $destructive onClick={() => { onDelete(); setSelectedAction(null); }}>
-                    <Trash size={16} /> Remove Domain
-                </DropdownItem>
-            </DropdownItems>
-        </Dropdown>
-    </div>
-);

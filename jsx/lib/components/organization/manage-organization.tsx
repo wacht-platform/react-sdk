@@ -1,5 +1,5 @@
-import { useCallback, useState, useEffect } from "react";
-import { Buildings, GearSix, Globe, Users, Shield, EnvelopeSimple, Warning, Check } from "@phosphor-icons/react";
+import { useCallback, useState, useEffect, useRef, ChangeEvent } from "react";
+import { Buildings, Camera, GearSix, Globe, Users, Shield, EnvelopeSimple, Warning, Check } from "@phosphor-icons/react";
 import { useActiveOrganization } from "@/hooks/use-organization";
 import { useDeployment } from "@/hooks/use-deployment";
 import { Spinner, DefaultStylesProvider } from "../utility";
@@ -16,6 +16,10 @@ import {
   Tab,
   TabIcon,
   TabContent,
+  PageHeader,
+  PageHeaderInfo,
+  PageHeaderName,
+  PageHeaderSub,
 } from "./manage-organization/shared";
 import styled from "styled-components";
 
@@ -77,6 +81,50 @@ const EmptyStateTitle = styled.h3`
   margin: 0 0 var(--space-4u) 0;
 `;
 
+const EditableAvatar = styled.button`
+  position: relative;
+  width: 44px;
+  height: 44px;
+  min-width: 44px;
+  border-radius: 50%;
+  background: var(--color-secondary);
+  color: var(--color-secondary-text);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  overflow: hidden;
+  font-size: 14px;
+  font-weight: 600;
+  flex-shrink: 0;
+  border: none;
+  padding: 0;
+  cursor: pointer;
+  transition: filter 0.15s ease;
+
+  img { width: 100%; height: 100%; object-fit: cover; }
+
+  .hover-overlay {
+    position: absolute;
+    inset: 0;
+    background: color-mix(in srgb, black 55%, transparent);
+    color: white;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    opacity: 0;
+    transition: opacity 0.15s ease;
+    border-radius: 50%;
+  }
+  &:hover .hover-overlay { opacity: 1; }
+
+  @media (max-width: 600px) {
+    width: 38px;
+    height: 38px;
+    min-width: 38px;
+    font-size: 13px;
+  }
+`;
+
 const Toast = styled.div`
   position: absolute;
   bottom: var(--space-10u);
@@ -103,10 +151,13 @@ const ToastText = styled.span`
 
 export const ManageOrganization = () => {
   const { loading, activeOrganization } = useStickyActiveOrganization();
+  const { updateOrganization } = useActiveOrganization();
   const { deployment } = useDeployment();
   const [activeTab, setActiveTab] = useState<TabType>("general");
   const [toastMessage, setToastMessage] = useState<string | null>(null);
   const [toastLevel, setToastLevel] = useState<"info" | "error">("info");
+  const [isUploadingLogo, setIsUploadingLogo] = useState(false);
+  const fileInputRef = useRef<HTMLInputElement>(null);
 
   const toast = useCallback(
     (message: string, level: "info" | "error" = "info") => {
@@ -116,6 +167,29 @@ export const ManageOrganization = () => {
     },
     [],
   );
+
+  const handleLogoChange = async (event: ChangeEvent<HTMLInputElement>) => {
+    const file = event.target.files?.[0];
+    if (!file) return;
+    if (file.size > 2 * 1024 * 1024) {
+      toast("File size cannot exceed 2MB", "error");
+      return;
+    }
+    if (!file.type.startsWith("image/")) {
+      toast("Please select a valid image file", "error");
+      return;
+    }
+    try {
+      setIsUploadingLogo(true);
+      await updateOrganization({ image: file as any });
+      toast("Logo updated", "info");
+    } catch (error: any) {
+      toast(error?.message || "Failed to update logo", "error");
+    } finally {
+      setIsUploadingLogo(false);
+      if (fileInputRef.current) fileInputRef.current.value = "";
+    }
+  };
 
   if (loading && !activeOrganization) {
     return (
@@ -150,6 +224,39 @@ export const ManageOrganization = () => {
       <TypographyProvider>
         <ScreenContext.Provider value={{ screen: null, setScreen: () => { }, toast }}>
           <Container>
+            <PageHeader>
+              <EditableAvatar
+                type="button"
+                onClick={() => fileInputRef.current?.click()}
+                disabled={isUploadingLogo}
+                title="Change logo"
+                aria-label="Change organization logo"
+              >
+                {activeOrganization.image_url
+                  ? <img src={activeOrganization.image_url} alt={activeOrganization.name} />
+                  : (activeOrganization.name?.slice(0, 2).toUpperCase() || "O")
+                }
+                <span className="hover-overlay">
+                  {isUploadingLogo ? <Spinner size={14} /> : <Camera size={16} />}
+                </span>
+              </EditableAvatar>
+              <input
+                ref={fileInputRef}
+                type="file"
+                accept="image/*"
+                style={{ display: "none" }}
+                onChange={handleLogoChange}
+              />
+              <PageHeaderInfo>
+                <PageHeaderName>{activeOrganization.name}</PageHeaderName>
+                <PageHeaderSub>
+                  {(activeOrganization as any).member_count != null
+                    ? `${(activeOrganization as any).member_count} members`
+                    : "Organization settings"
+                  }
+                </PageHeaderSub>
+              </PageHeaderInfo>
+            </PageHeader>
             <TabsContainer>
               <TabsList>
                 <Tab $isActive={activeTab === "general"} onClick={() => setActiveTab("general")}>

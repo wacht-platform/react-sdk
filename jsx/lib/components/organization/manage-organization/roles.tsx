@@ -1,18 +1,11 @@
-import { useState, useRef, useMemo } from "react";
-import { Warning, Trash } from "@phosphor-icons/react";
+import { useState, useRef } from "react";
+import { Warning } from "@phosphor-icons/react";
 import useSWR from "swr";
+import styled from "styled-components";
 import { Organization, OrganizationRole } from "@/types";
 import { useOrganizationList } from "@/hooks/use-organization";
 import { useDeployment } from "@/hooks/use-deployment";
-import {
-    Button,
-    SearchInput,
-    Spinner,
-    Dropdown,
-    DropdownItems,
-    DropdownItem,
-    DropdownTrigger,
-} from "@/components/utility";
+import { Button, Spinner } from "@/components/utility";
 import {
     Table,
     TableBody,
@@ -28,75 +21,65 @@ import { ConfirmationPopover } from "../../utility/confirmation-popover";
 import { canEditOrganizationRole } from "@/utils/roles";
 import {
     HeaderCTAContainer,
-    IconButton,
     DesktopTableContainer,
-    MobileListContainer,
-    ConnectionItemRow,
-    ConnectionLeft,
+    StatusPill,
 } from "./shared";
-import styled from "styled-components";
 
 const MessageBanner = styled.div<{ $type: "success" | "error" }>`
-  margin-bottom: var(--space-10u);
-  padding: var(--space-6u) var(--space-8u);
-  background: ${(props) =>
-    props.$type === "success"
-      ? "var(--color-success-background)"
-      : "var(--color-error-background)"};
-  color: ${(props) =>
-    props.$type === "success" ? "var(--color-success)" : "var(--color-error)"};
-  border-radius: var(--radius-md);
-  display: flex;
-  align-items: center;
-  gap: var(--space-4u);
-  font-size: var(--font-size-lg);
+    margin-bottom: var(--space-8u);
+    padding: var(--space-4u) var(--space-6u);
+    background: ${(p) =>
+        p.$type === "success"
+            ? "color-mix(in srgb, var(--color-success, #10b981) 12%, transparent)"
+            : "color-mix(in srgb, var(--color-error) 12%, transparent)"};
+    color: ${(p) =>
+        p.$type === "success"
+            ? "var(--color-success, #10b981)"
+            : "var(--color-error)"};
+    border: 1px solid currentColor;
+    border-radius: 8px;
+    display: flex;
+    align-items: center;
+    gap: var(--space-3u);
+    font-size: 13px;
 `;
 
 const RoleName = styled.div`
-  font-weight: 500;
+    font-size: 13px;
+    font-weight: 500;
+    color: var(--color-card-foreground);
+    display: inline-flex;
+    align-items: center;
+    gap: 8px;
 `;
 
-const RoleNameRow = styled.div`
-  display: flex;
-  align-items: center;
-  gap: var(--space-4u);
-  flex-wrap: wrap;
-`;
-
-const RoleBadge = styled.span`
-  display: inline-flex;
-  align-items: center;
-  padding: var(--space-1u) var(--space-3u);
-  border-radius: var(--radius-full);
-  background: var(--color-secondary);
-  color: var(--color-secondary-foreground);
-  font-size: var(--font-size-sm);
-  line-height: 1;
+const InlineActions = styled.div`
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    justify-content: flex-end;
+    flex-wrap: nowrap;
+    white-space: nowrap;
 `;
 
 const PermissionText = styled.div`
-  color: var(--color-secondary-text);
+    color: var(--color-secondary-text);
+    font-size: 13px;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+    max-width: 340px;
 `;
 
-const MobileRoleName = styled.div`
-  font-weight: 600;
-  font-size: var(--font-size-lg);
-  margin-bottom: var(--space-2u);
-`;
-
-const MobileRolePermissions = styled.div`
-  font-size: var(--font-size-sm);
-  color: var(--color-secondary-text);
-  line-height: 1.4;
-`;
-
-const MobileRoleActions = styled.div`
-  margin-left: auto;
-`;
-
-export const RolesSection = ({ organization }: { organization: Organization }) => {
-    const { getOrganizationRoles: getRoles, removeOrganizationRoles: removeRole } =
-        useOrganizationList();
+export const RolesSection = ({
+    organization,
+}: {
+    organization: Organization;
+}) => {
+    const {
+        getOrganizationRoles: getRoles,
+        removeOrganizationRoles: removeRole,
+    } = useOrganizationList();
     const { deployment } = useDeployment();
 
     const [rolePopover, setRolePopover] = useState<{
@@ -110,26 +93,29 @@ export const RolesSection = ({ organization }: { organization: Organization }) =
         type: "success" | "error";
     } | null>(null);
 
-    const [searchQuery, setSearchQuery] = useState("");
     const [roleForDeletion, setRoleForDeletion] = useState<string | null>(null);
+    const [pendingIds, setPendingIds] = useState<Set<string>>(new Set());
     const addRoleButtonRef = useRef<HTMLButtonElement>(null);
-    const dropdownButtonRefs = useRef<Map<string, HTMLButtonElement>>(new Map());
+    const editButtonRefs = useRef<Map<string, HTMLButtonElement>>(new Map());
 
     const {
         data: roles = [],
         isLoading: rolesLoading,
         mutate: reloadRoles,
     } = useSWR(
-        organization ? `wacht-api-organizations:${organization.id}:roles` : null,
+        organization
+            ? `wacht-api-organizations:${organization.id}:roles`
+            : null,
         () => getRoles?.(organization) || [],
     );
 
-    const filteredRoles = useMemo(() => {
-        if (!searchQuery) return roles;
-        return roles.filter((role) =>
-            role.name.toLowerCase().includes(searchQuery.toLowerCase()),
-        );
-    }, [roles, searchQuery]);
+    const markPending = (id: string, on: boolean) => {
+        setPendingIds((prev) => {
+            const next = new Set(prev);
+            on ? next.add(id) : next.delete(id);
+            return next;
+        });
+    };
 
     const handleRoleSaved = async (role: {
         id?: string;
@@ -137,61 +123,163 @@ export const RolesSection = ({ organization }: { organization: Organization }) =
         description?: string;
     }) => {
         try {
-            // Mock delay as found in original code
             await new Promise((resolve) => setTimeout(resolve, 500));
-
             setMessage({
                 text: `Role ${role.id ? "updated" : "created"} successfully`,
                 type: "success",
             });
-
             setRolePopover({ isOpen: false });
             reloadRoles();
         } catch (error: unknown) {
-            const message =
+            const text =
                 error instanceof Error ? error.message : "Failed to save role";
-            setMessage({
-                text: message,
-                type: "error",
-            });
+            setMessage({ text, type: "error" });
         } finally {
             setTimeout(() => setMessage(null), 3000);
         }
     };
 
     const handleDeleteRole = async (role: OrganizationRole) => {
+        markPending(role.id, true);
         try {
             await removeRole(organization, role);
             reloadRoles();
+        } finally {
+            markPending(role.id, false);
             setRoleForDeletion(null);
-        } catch (error) {
-            // handled by caller or generic error
         }
     };
 
     if (rolesLoading && roles.length === 0) return <Spinner />;
 
+    const renderRow = (role: OrganizationRole) => {
+        const editable = canEditOrganizationRole(role);
+        const isBusy = pendingIds.has(role.id);
+        const permCount = role.permissions.length;
+        return (
+            <TableRow key={role.id}>
+                <TableCell>
+                    <RoleName>
+                        {role.name}
+                        {!editable && (
+                            <StatusPill $variant="neutral">Default</StatusPill>
+                        )}
+                    </RoleName>
+                </TableCell>
+                <TableCell>
+                    {permCount === 0 ? (
+                        <StatusPill $variant="neutral">
+                            No permissions
+                        </StatusPill>
+                    ) : (
+                        <div
+                            style={{
+                                display: "inline-flex",
+                                alignItems: "center",
+                                gap: 8,
+                            }}
+                        >
+                            <StatusPill $variant="primary">
+                                {permCount}{" "}
+                                {permCount === 1 ? "permission" : "permissions"}
+                            </StatusPill>
+                            <PermissionText>
+                                {role.permissions.join(", ")}
+                            </PermissionText>
+                        </div>
+                    )}
+                </TableCell>
+                <ActionsCell>
+                    {editable ? (
+                        <InlineActions>
+                            <Button
+                                ref={(el: HTMLButtonElement | null) => {
+                                    if (el)
+                                        editButtonRefs.current.set(role.id, el);
+                                }}
+                                $size="sm"
+                                $outline
+                                disabled={isBusy}
+                                onClick={() =>
+                                    setRolePopover({
+                                        isOpen: true,
+                                        role,
+                                        triggerElement:
+                                            editButtonRefs.current.get(
+                                                role.id,
+                                            ) ?? null,
+                                    })
+                                }
+                            >
+                                Edit
+                            </Button>
+                            <Button
+                                $size="sm"
+                                $outline
+                                $destructive
+                                disabled={isBusy}
+                                onClick={() => setRoleForDeletion(role.id)}
+                            >
+                                {isBusy ? <Spinner size={12} /> : "Delete"}
+                            </Button>
+                        </InlineActions>
+                    ) : (
+                        <span
+                            style={{
+                                fontSize: 12,
+                                color: "var(--color-secondary-text)",
+                            }}
+                        >
+                            Read-only
+                        </span>
+                    )}
+                </ActionsCell>
+            </TableRow>
+        );
+    };
+
     return (
         <>
             {message && (
                 <MessageBanner $type={message.type}>
-                    {message.type === "success" ? "✓" : <Warning size={16} />}
+                    {message.type === "success" ? "✓" : <Warning size={13} />}
                     {message.text}
                 </MessageBanner>
             )}
 
-            <HeaderCTAContainer>
-                <SearchInput
-                    placeholder="MagnifyingGlass roles..."
-                    onChange={setSearchQuery}
-                    value={searchQuery}
-                />
+            <HeaderCTAContainer style={{ marginBottom: "var(--space-6u)" }}>
+                <div style={{ flex: 1, minWidth: 0 }}>
+                    <div
+                        style={{
+                            fontSize: 14,
+                            fontWeight: 500,
+                            color: "var(--color-card-foreground)",
+                        }}
+                    >
+                        Roles
+                    </div>
+                    <div
+                        style={{
+                            fontSize: 12,
+                            color: "var(--color-secondary-text)",
+                            marginTop: 2,
+                        }}
+                    >
+                        Define granular permissions for members.
+                    </div>
+                </div>
                 {deployment?.b2b_settings?.custom_org_role_enabled && (
                     <Button
                         ref={addRoleButtonRef}
-                        onClick={() => setRolePopover({ isOpen: true, triggerElement: addRoleButtonRef.current })}
+                        onClick={() =>
+                            setRolePopover({
+                                isOpen: true,
+                                triggerElement: addRoleButtonRef.current,
+                            })
+                        }
+                        $size="sm"
                     >
-                        Add Role
+                        Add role
                     </Button>
                 )}
             </HeaderCTAContainer>
@@ -200,13 +288,17 @@ export const RolesSection = ({ organization }: { organization: Organization }) =
                 <AddRolePopover
                     onClose={() => setRolePopover({ isOpen: false })}
                     onSuccess={handleRoleSaved}
-                    triggerRef={{ current: rolePopover.triggerElement || addRoleButtonRef.current }}
+                    triggerRef={{
+                        current:
+                            rolePopover.triggerElement ||
+                            addRoleButtonRef.current,
+                    }}
                 />
             )}
 
-            {filteredRoles.length === 0 ? (
+            {roles.length === 0 ? (
                 <EmptyState
-                    title={searchQuery ? "No roles match" : "No roles yet"}
+                    title="No roles yet"
                     description="Define custom roles to manage granular permissions."
                 />
             ) : (
@@ -217,82 +309,12 @@ export const RolesSection = ({ organization }: { organization: Organization }) =
                                 <TableRow>
                                     <TableHeader>Role</TableHeader>
                                     <TableHeader>Permissions</TableHeader>
-                                    <TableHeader></TableHeader>
+                                    <TableHeader />
                                 </TableRow>
                             </TableHead>
-                            <TableBody>
-                                {filteredRoles.map((role) => (
-                                    <TableRow key={role.id}>
-                                        <TableCell>
-                                            <RoleNameRow>
-                                                <RoleName>{role.name}</RoleName>
-                                                {!canEditOrganizationRole(role) && (
-                                                    <RoleBadge>Default</RoleBadge>
-                                                )}
-                                            </RoleNameRow>
-                                        </TableCell>
-                                        <TableCell>
-                                          <PermissionText>
-                                            {role.permissions.join(", ")}
-                                            {!canEditOrganizationRole(role) &&
-                                                " • Cannot be edited or deleted"}
-                                          </PermissionText>
-                                        </TableCell>
-                                        <ActionsCell>
-                                            <RoleActions
-                                                role={role}
-                                                onEdit={(el) =>
-                                                    setRolePopover({
-                                                        isOpen: true,
-                                                        role,
-                                                        triggerElement: el,
-                                                    })
-                                                }
-                                                onDelete={() => setRoleForDeletion(role.id)}
-                                                dropdownButtonRefs={dropdownButtonRefs}
-                                            />
-                                        </ActionsCell>
-                                    </TableRow>
-                                ))}
-                            </TableBody>
+                            <TableBody>{roles.map(renderRow)}</TableBody>
                         </Table>
                     </DesktopTableContainer>
-
-                    <MobileListContainer>
-                        {filteredRoles.map((role) => (
-                            <ConnectionItemRow key={role.id}>
-                                <ConnectionLeft>
-                                    <div>
-                                        <RoleNameRow>
-                                            <MobileRoleName>{role.name}</MobileRoleName>
-                                            {!canEditOrganizationRole(role) && (
-                                                <RoleBadge>Default</RoleBadge>
-                                            )}
-                                        </RoleNameRow>
-                                        <MobileRolePermissions>
-                                            {role.permissions.join(", ")}
-                                            {!canEditOrganizationRole(role) &&
-                                                " • Cannot be edited or deleted"}
-                                        </MobileRolePermissions>
-                                    </div>
-                                    <MobileRoleActions>
-                                        <RoleActions
-                                            role={role}
-                                            onEdit={(el) =>
-                                                setRolePopover({
-                                                    isOpen: true,
-                                                    role,
-                                                    triggerElement: el,
-                                                })
-                                            }
-                                            onDelete={() => setRoleForDeletion(role.id)}
-                                            dropdownButtonRefs={dropdownButtonRefs}
-                                        />
-                                    </MobileRoleActions>
-                                </ConnectionLeft>
-                            </ConnectionItemRow>
-                        ))}
-                    </MobileListContainer>
                 </>
             )}
 
@@ -301,7 +323,9 @@ export const RolesSection = ({ organization }: { organization: Organization }) =
                     title="Delete role?"
                     description="This action cannot be undone. Users with this role might lose access to certain features."
                     onConfirm={() => {
-                        const role = roles.find(r => r.id === roleForDeletion);
+                        const role = roles.find(
+                            (r) => r.id === roleForDeletion,
+                        );
                         if (role) handleDeleteRole(role);
                     }}
                     onCancel={() => setRoleForDeletion(null)}
@@ -317,57 +341,5 @@ export const RolesSection = ({ organization }: { organization: Organization }) =
                 />
             )}
         </>
-    );
-};
-
-interface OrganizationRoleActionsProps {
-    role: OrganizationRole;
-    onEdit: (triggerElement: HTMLElement | null) => void;
-    onDelete: () => void;
-    dropdownButtonRefs: React.MutableRefObject<Map<string, HTMLButtonElement>>;
-}
-
-const RoleActions = ({
-    role,
-    onEdit,
-    onDelete,
-    dropdownButtonRefs,
-}: OrganizationRoleActionsProps) => {
-    const editable = canEditOrganizationRole(role);
-
-    if (!editable) {
-        return (
-            <IconButton
-                disabled
-                title="Deployment roles cannot be edited"
-                aria-label="Deployment roles cannot be edited"
-            >
-                •••
-            </IconButton>
-        );
-    }
-
-    return (
-        <Dropdown>
-            <DropdownTrigger>
-                <IconButton
-                    ref={(el) => {
-                        if (el) dropdownButtonRefs.current.set(role.id, el);
-                    }}
-                >
-                    •••
-                </IconButton>
-            </DropdownTrigger>
-            <DropdownItems>
-                <DropdownItem
-                    onClick={() => onEdit(dropdownButtonRefs.current.get(role.id) ?? null)}
-                >
-                    Edit Role
-                </DropdownItem>
-                <DropdownItem $destructive onClick={onDelete}>
-                    <Trash size={16} /> Remove Role
-                </DropdownItem>
-            </DropdownItems>
-        </Dropdown>
     );
 };

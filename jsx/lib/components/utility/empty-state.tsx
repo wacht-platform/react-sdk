@@ -8,7 +8,7 @@ const EmptyStateContainer = styled.div`
   justify-content: center;
   padding: var(--space-16u) var(--space-8u);
   text-align: center;
-  background-color: var(--color-background);
+  background-color: transparent;
   border-radius: var(--radius-lg);
   border: var(--border-width-thin) dashed var(--color-border);
   width: 100%;

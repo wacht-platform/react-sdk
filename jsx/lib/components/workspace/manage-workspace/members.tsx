@@ -27,13 +27,7 @@ import {
 } from "@/components/utility/table";
 import { EmptyState } from "@/components/utility/empty-state";
 import { InviteMemberPopover } from "../invite-member-popover";
-import {
-    HeaderCTAContainer,
-    DesktopTableContainer,
-    MobileListContainer,
-    ConnectionItemRow,
-    ConnectionLeft,
-} from "./shared";
+import { HeaderCTAContainer, DesktopTableContainer } from "./shared";
 const AvatarPlaceholder = styled.div`
     width: var(--size-20u);
     height: var(--size-20u);
@@ -76,22 +70,19 @@ export const MembersSection = () => {
         return () => clearTimeout(handler);
     }, [searchQuery]);
 
-    const {
-        data: membersResponse,
-        isLoading: membersLoading,
-        mutate: reloadMembers,
-    } = useSWR(
+    const { data: membersResponse, mutate: reloadMembers } = useSWR(
         activeWorkspace
             ? `wacht - api - workspaces:${activeWorkspace.id}: members:${page}:${limit}:${debouncedSearchQuery} `
             : null,
         () => getMembers?.({ page, limit, search: debouncedSearchQuery }),
+        { keepPreviousData: true },
     );
 
     const members = membersResponse?.data || [];
     const meta = membersResponse?.meta || { total: 0, page: 1, limit: 10 };
     const totalPages = Math.ceil(meta.total / (meta.limit || 10));
 
-    const { data: rolesData = [], isLoading: rolesLoading } = useSWR(
+    const { data: rolesData = [] } = useSWR(
         activeWorkspace
             ? `wacht - api - workspaces:${activeWorkspace.id}: roles`
             : null,
@@ -128,7 +119,7 @@ export const MembersSection = () => {
         }
     };
 
-    if (membersLoading || rolesLoading) return <Spinner />;
+    if (!membersResponse) return <Spinner />;
 
     return (
         <>
@@ -137,7 +128,7 @@ export const MembersSection = () => {
                     <SearchInput
                         value={searchQuery}
                         onChange={setSearchQuery}
-                        placeholder="MagnifyingGlass members..."
+                        placeholder="Search members..."
                     />
                 </div>
                 <div
@@ -234,39 +225,6 @@ export const MembersSection = () => {
                             </TableBody>
                         </Table>
                     </DesktopTableContainer>
-
-                    <MobileListContainer>
-                        {members.map((member: any) => (
-                            <ConnectionItemRow key={member.id}>
-                                <ConnectionLeft>
-                                    <UserIdentity
-                                        member={member}
-                                        session={session}
-                                        subtitle={`Joined ${new Date(member.created_at).toLocaleDateString()}`}
-                                    />
-                                    <div style={{ marginLeft: "auto" }}>
-                                        <RoleSelector
-                                            member={member}
-                                            roles={roles}
-                                            onToggle={(
-                                                roleId: string,
-                                                active: boolean,
-                                            ) =>
-                                                handleToggleRole(
-                                                    member.id,
-                                                    roleId,
-                                                    active,
-                                                )
-                                            }
-                                            onRemove={() =>
-                                                handleRemoveMember(member.id)
-                                            }
-                                        />
-                                    </div>
-                                </ConnectionLeft>
-                            </ConnectionItemRow>
-                        ))}
-                    </MobileListContainer>
                 </>
             )}
 

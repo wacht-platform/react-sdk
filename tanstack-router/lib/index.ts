@@ -79,6 +79,11 @@ export {
   useApiAuthAuditAnalytics,
   useApiAuthAuditTimeseries,
 } from "@wacht/jsx";
+export type {
+  ActorMcpServerSummary,
+  ExternalAgentConnection,
+  ExternalAgentConnectionStatus,
+} from "@wacht/types";
 export { DeploymentProvider as BaseDeploymentProvider } from "@wacht/jsx";
 export { DeploymentProvider } from "./providers";
 export { createTanStackRouterAdapter } from "./tanstack-router-adapter";

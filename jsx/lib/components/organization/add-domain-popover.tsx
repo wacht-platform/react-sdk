@@ -1,401 +1,231 @@
 import { useState, useRef, useEffect } from "react";
 import styled from "styled-components";
-import { X } from "@phosphor-icons/react";
 import { Input } from "@/components/utility/input";
-import { FormGroup, Label } from "../utility/form";
 import { Button, Spinner } from "../utility";
 import { OrganizationDomain } from "@/types";
 import { useActiveOrganization } from "@/hooks/use-organization";
 import { useScreenContext } from "./context";
+import { usePopoverPosition } from "@/hooks/use-popover-position";
 
 const PopoverContainer = styled.div`
-  position: fixed;
-  width: calc(var(--space-10u) * 18);
-  max-width: calc(100vw - var(--space-24u));
-  background: var(--color-popover);
-  border: var(--border-width-thin) solid var(--color-border);
-  border-radius: var(--radius-md);
-  box-shadow: var(--shadow-md);
-  z-index: 1001;
-  
-  @media (max-width: 600px) {
-    width: calc(100vw - var(--space-24u));
-  }
+    position: fixed;
+    background: var(--color-popover);
+    border-radius: 10px;
+    box-shadow: var(--shadow-md);
+    border: 1px solid var(--color-border);
+    width: 360px;
+    max-width: calc(100vw - 24px);
+    z-index: 1001;
+    overflow: hidden;
+    padding: 14px;
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
+
+    @media (max-width: 600px) {
+        width: calc(100vw - 24px);
+    }
 `;
 
-const Header = styled.div`
-  display: flex;
-  justify-content: space-between;
-  align-items: center;
-  padding: var(--space-4u) var(--space-6u);
-  border-bottom: var(--border-width-thin) solid var(--color-border);
+const Title = styled.div`
+    font-size: 13px;
+    font-weight: 600;
+    color: var(--color-popover-foreground);
 `;
 
-const Title = styled.h3`
-  margin: 0;
-  font-size: var(--font-size-md);
-  font-weight: 400;
-  color: var(--color-popover-foreground);
+const Hint = styled.div`
+    font-size: 12px;
+    color: var(--color-secondary-text);
+    line-height: 1.4;
 `;
 
-const Content = styled.div`
-  padding: var(--space-6u);
+const Field = styled.div`
+    display: flex;
+    flex-direction: column;
+    gap: 4px;
 `;
 
-const ButtonGroup = styled.div`
-  display: flex;
-  gap: var(--space-2u);
-  justify-content: flex-end;
-  padding: var(--space-4u) var(--space-6u);
-  border-top: var(--border-width-thin) solid var(--color-border);
-  background: var(--color-background-subtle);
+const FieldLabel = styled.label`
+    font-size: 11px;
+    font-weight: 500;
+    color: var(--color-secondary-text);
 `;
 
-const CloseButton = styled.button`
-  background: none;
-  border: none;
-  padding: var(--space-2u);
-  cursor: pointer;
-  color: var(--color-muted);
-  transition: all 0.15s ease;
-  border-radius: var(--radius-2xs);
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  
-  &:hover {
-    color: var(--color-accent-foreground);
-    background: var(--color-accent);
-  }
+const Actions = styled.div`
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 6px;
+    & > button { width: 100%; }
 `;
 
 interface AddDomainPopoverProps {
-  onClose?: () => void;
-  domain?: OrganizationDomain;
-  triggerRef?: React.RefObject<HTMLElement | null>;
+    onClose?: () => void;
+    domain?: OrganizationDomain;
+    triggerRef?: React.RefObject<HTMLElement | null>;
 }
 
 export const AddDomainPopover = ({
-  onClose,
-  domain,
-  triggerRef,
+    onClose,
+    domain,
+    triggerRef,
 }: AddDomainPopoverProps) => {
-  const popoverRef = useRef<HTMLDivElement>(null);
-  const [currentDomain, setCurrentDomain] = useState<OrganizationDomain>();
-  const [newFqdn, setNewFqdn] = useState("");
-  const [loading, setLoading] = useState(false);
-  const [mounted, setMounted] = useState(false);
-  const [position, setPosition] = useState({ top: 0, left: 0 });
-  const { addDomain, verifyDomain } = useActiveOrganization();
-  const { toast } = useScreenContext();
+    const popoverRef = useRef<HTMLDivElement>(null);
+    const [currentDomain, setCurrentDomain] = useState<OrganizationDomain>();
+    const [newFqdn, setNewFqdn] = useState("");
+    const [loading, setLoading] = useState(false);
+    const [mounted, setMounted] = useState(false);
+    const { addDomain, verifyDomain } = useActiveOrganization();
+    const { toast } = useScreenContext();
+    const position = usePopoverPosition({
+        triggerRef: triggerRef ?? { current: null },
+        isOpen: mounted,
+        minWidth: 360,
+        defaultMaxHeight: 420,
+    });
 
-  const validateDomain = (domain: string): boolean => {
-    // Basic domain validation - allows subdomains
-    const domainRegex = /^[a-zA-Z0-9]([a-zA-Z0-9-]{0,61}[a-zA-Z0-9])?(\.[a-zA-Z0-9]([a-zA-Z0-9-]{0,61}[a-zA-Z0-9])?)*\.[a-zA-Z]{2,}$/;
-    return domainRegex.test(domain);
-  };
+    const validateDomain = (d: string): boolean =>
+        /^[a-zA-Z0-9]([a-zA-Z0-9-]{0,61}[a-zA-Z0-9])?(\.[a-zA-Z0-9]([a-zA-Z0-9-]{0,61}[a-zA-Z0-9])?)*\.[a-zA-Z]{2,}$/.test(d);
 
-  const sanitizeDomain = (domain: string): string => {
-    return domain.trim().toLowerCase().replace(/^https?:\/\//, '');
-  };
+    const sanitizeDomain = (d: string): string =>
+        d.trim().toLowerCase().replace(/^https?:\/\//, "");
 
-  const handleDomainCreation = async () => {
-    const sanitizedDomain = sanitizeDomain(newFqdn);
-
-    if (!sanitizedDomain) {
-      toast("Please enter a domain name", "error");
-      return;
-    }
-
-    // Validate domain format
-    if (!validateDomain(sanitizedDomain)) {
-      toast("Please enter a valid domain name (e.g., example.com)", "error");
-      return;
-    }
-
-    // Validate domain length
-    if (sanitizedDomain.length > 253) { // RFC 1035 limit
-      toast("Domain name is too long", "error");
-      return;
-    }
-
-    try {
-      const res = await addDomain!({ fqdn: sanitizedDomain });
-
-      toast("Domain added successfully", "info");
-      setCurrentDomain(res!.data);
-    } catch (error: any) {
-      const errorMessage = error.message || "Failed to add domain. Please try again.";
-      toast(errorMessage, "error");
-    }
-  };
-
-  const handleDomainVerification = async () => {
-    if (!currentDomain || loading) return;
-    setLoading(true);
-    try {
-      await verifyDomain!(currentDomain);
-      onClose?.();
-      toast("Domain verified successfully", "info");
-    } catch (error: any) {
-      const errorMessage = error.message || "Failed to verify domain. Please check DNS records and try again.";
-      toast(errorMessage, "error");
-    } finally {
-      setLoading(false);
-    }
-  };
-
-  useEffect(() => {
-    setMounted(true);
-
-    // Calculate position after a short delay
-    const timer = setTimeout(() => {
-      if (!popoverRef.current) return;
-
-      const triggerButton = triggerRef?.current;
-      const popoverWidth = 360;
-      const popoverHeight = 250; // Approximate height
-      const spacing = 8;
-
-      let top = 0;
-      let left = 0;
-
-      if (!triggerButton) {
-        const popoverRect = popoverRef.current.getBoundingClientRect();
-        const actualWidth = popoverRect.width || popoverWidth;
-        const actualHeight = popoverRect.height || popoverHeight;
-        top = Math.max(spacing, (window.innerHeight - actualHeight) / 2);
-        left = Math.max(spacing, (window.innerWidth - actualWidth) / 2);
-        setPosition({ top, left });
-        return;
-      }
-
-      const rect = triggerButton.getBoundingClientRect();
-
-      // Check available space
-      const spaceBottom = window.innerHeight - rect.bottom;
-      const spaceTop = rect.top;
-
-      // Prefer to open below if there's space
-      if (spaceBottom >= popoverHeight + spacing) {
-        top = rect.bottom + spacing;
-        // Align to right edge of button (bottom-right)
-        left = rect.right - popoverWidth;
-
-        // If it goes off left edge, align to left edge of button instead (bottom-left)
-        if (left < spacing) {
-          left = rect.left;
-
-          // If that also goes off right edge, center it on screen
-          if (left + popoverWidth > window.innerWidth - spacing) {
-            left = (window.innerWidth - popoverWidth) / 2;
-          }
+    const handleDomainCreation = async () => {
+        const sanitized = sanitizeDomain(newFqdn);
+        if (!sanitized) {
+            toast("Please enter a domain name", "error");
+            return;
         }
-      }
-      // Otherwise open above
-      else if (spaceTop >= popoverHeight + spacing) {
-        top = rect.top - popoverHeight - spacing;
-        // Align to right edge of button (top-right)
-        left = rect.right - popoverWidth;
-
-        // If it goes off left edge, align to left edge of button instead (top-left)
-        if (left < spacing) {
-          left = rect.left;
-
-          // If that also goes off right edge, center it on screen
-          if (left + popoverWidth > window.innerWidth - spacing) {
-            left = (window.innerWidth - popoverWidth) / 2;
-          }
+        if (!validateDomain(sanitized)) {
+            toast("Please enter a valid domain (e.g., example.com)", "error");
+            return;
         }
-      }
-      // If no space above or below, position it at the best available spot
-      else {
-        // Position at bottom with scrolling if needed
-        top = rect.bottom + spacing;
-        left = rect.right - popoverWidth;
-
-        if (left < spacing) {
-          left = rect.left;
+        if (sanitized.length > 253) {
+            toast("Domain name is too long", "error");
+            return;
         }
-      }
-
-      setPosition({ top, left });
-    }, 10);
-
-    // Add click outside listener
-    const handleClickOutside = (event: MouseEvent) => {
-      if (popoverRef.current && !popoverRef.current.contains(event.target as Node)) {
-        onClose?.();
-      }
+        setLoading(true);
+        try {
+            const res = await addDomain!({ fqdn: sanitized });
+            toast("Domain added", "info");
+            setCurrentDomain(res!.data);
+        } catch (error: any) {
+            toast(error.message || "Failed to add domain. Please try again.", "error");
+        } finally {
+            setLoading(false);
+        }
     };
 
-    // Add escape key listener
-    const handleEscape = (e: KeyboardEvent) => {
-      if (e.key === "Escape") {
-        onClose?.();
-      }
+    const handleDomainVerification = async () => {
+        if (!currentDomain || loading) return;
+        setLoading(true);
+        try {
+            await verifyDomain!(currentDomain);
+            onClose?.();
+            toast("Domain verified", "info");
+        } catch (error: any) {
+            toast(error.message || "Failed to verify domain. Check DNS records and try again.", "error");
+        } finally {
+            setLoading(false);
+        }
     };
 
-    document.addEventListener("mousedown", handleClickOutside);
-    document.addEventListener("keydown", handleEscape);
+    useEffect(() => {
+        setMounted(true);
+        const handleClickOutside = (event: MouseEvent) => {
+            if (popoverRef.current && !popoverRef.current.contains(event.target as Node)) {
+                onClose?.();
+            }
+        };
+        const handleEscape = (e: KeyboardEvent) => {
+            if (e.key === "Escape") onClose?.();
+        };
+        document.addEventListener("mousedown", handleClickOutside);
+        document.addEventListener("keydown", handleEscape);
+        return () => {
+            document.removeEventListener("mousedown", handleClickOutside);
+            document.removeEventListener("keydown", handleEscape);
+        };
+    }, [onClose]);
 
-    return () => {
-      clearTimeout(timer);
-      document.removeEventListener("mousedown", handleClickOutside);
-      document.removeEventListener("keydown", handleEscape);
+    useEffect(() => {
+        if (domain) setCurrentDomain(domain);
+    }, [domain]);
+
+    if (!mounted) return null;
+
+    const style: React.CSSProperties = {
+        top: position?.top !== undefined ? `${position.top}px` : undefined,
+        bottom: position?.bottom !== undefined ? `${position.bottom}px` : undefined,
+        left: position?.left !== undefined ? `${position.left}px` : undefined,
+        right: position?.right !== undefined ? `${position.right}px` : undefined,
+        visibility: position ? "visible" : "hidden",
     };
-  }, [onClose, triggerRef]);
 
-  useEffect(() => {
-    if (!domain) return;
-    setCurrentDomain(domain);
-  }, [domain]);
-
-  if (!mounted) {
-    return null;
-  }
-
-  return (
-    <PopoverContainer
-      ref={popoverRef}
-      style={{
-        top: `${position.top}px`,
-        left: `${position.left}px`,
-        visibility: position.top > 0 ? 'visible' : 'hidden'
-      }}
-      onClick={(e) => e.stopPropagation()}
-      role="dialog"
-      aria-labelledby="add-domain-title"
-      aria-modal="true"
-    >
-      {!currentDomain ? (
-        <>
-          <Header>
-            <Title id="add-domain-title">Add Domain</Title>
-            <CloseButton onClick={onClose} aria-label="Close add domain dialog">
-              <X size={16} />
-            </CloseButton>
-          </Header>
-
-          <Content>
-            <div style={{ display: "flex", flexDirection: "column", gap: "var(--space-4u)" }}>
-              <FormGroup>
-                <Label>Enter FQDN</Label>
-                <Input
-                  type="text"
-                  placeholder="Enter your domain"
-                  value={newFqdn}
-                  onChange={(e) => setNewFqdn(e.target.value)}
-                  autoFocus
-                  aria-label="Domain name (FQDN)"
-                  aria-describedby="domain-help"
-                />
-              </FormGroup>
-            </div>
-          </Content>
-
-          <ButtonGroup>
-            <Button
-              $outline
-              onClick={onClose}
-              style={{
-                width: "auto",
-              }}
+    if (!currentDomain) {
+        return (
+            <PopoverContainer
+                ref={popoverRef}
+                style={style}
+                onClick={(e) => e.stopPropagation()}
+                role="dialog"
+                aria-labelledby="add-domain-title"
+                aria-modal="true"
             >
-              Cancel
-            </Button>
-            <Button
-              onClick={handleDomainCreation}
-              disabled={!newFqdn || loading}
-              style={{
-                width: "auto",
-              }}
-            >
-              {loading ? (
-                <>
-                  <Spinner size={14} /> Adding...
-                </>
-              ) : (
-                "Continue"
-              )}
-            </Button>
-          </ButtonGroup>
-        </>
-      ) : (
-        <>
-          <Header>
-            <Title id="verify-domain-title">Verify Domain</Title>
-            <CloseButton onClick={onClose} aria-label="Close domain verification dialog">
-              <X size={16} />
-            </CloseButton>
-          </Header>
+                <Title id="add-domain-title">Add domain</Title>
+                <Hint>Add a corporate domain so verified users auto-join this organization.</Hint>
+                <Field>
+                    <FieldLabel>Domain</FieldLabel>
+                    <Input
+                        type="text"
+                        placeholder="example.com"
+                        value={newFqdn}
+                        onChange={(e) => setNewFqdn(e.target.value)}
+                        onKeyDown={(e) => {
+                            if (e.key === "Enter" && newFqdn) handleDomainCreation();
+                        }}
+                        autoFocus
+                        aria-label="Domain name"
+                    />
+                </Field>
+                <Actions>
+                    <Button $size="sm" $outline onClick={onClose}>Cancel</Button>
+                    <Button $size="sm" onClick={handleDomainCreation} disabled={!newFqdn || loading}>
+                        {loading ? <Spinner size={12} /> : "Continue"}
+                    </Button>
+                </Actions>
+            </PopoverContainer>
+        );
+    }
 
-          <Content>
-            <div style={{ marginBottom: "var(--space-6u)" }}>
-              <p style={{
-                fontSize: "var(--font-size-md)",
-                color: "var(--color-muted)",
-                margin: 0,
-                textAlign: "left",
-              }}>
-                Add the following DNS record to your domain
-              </p>
-            </div>
-
-            <div style={{ display: "flex", flexDirection: "column", gap: "var(--space-4u)" }}>
-              <FormGroup>
-                <Label>Record Type</Label>
-                <Input
-                  value={currentDomain?.verification_dns_record_type}
-                  disabled
-                />
-              </FormGroup>
-              <FormGroup>
-                <Label>Record Name</Label>
-                <Input
-                  value={currentDomain?.verification_dns_record_name}
-                  disabled
-                />
-              </FormGroup>
-              <FormGroup>
-                <Label>Record Data</Label>
-                <Input
-                  type="text"
-                  value={currentDomain?.verification_dns_record_data}
-                  disabled
-                />
-              </FormGroup>
-            </div>
-          </Content>
-
-          <ButtonGroup>
-            <Button
-              $outline
-              onClick={onClose}
-              style={{
-                width: "auto",
-              }}
-            >
-              Cancel
-            </Button>
-            <Button
-              onClick={handleDomainVerification}
-              disabled={loading}
-              style={{
-                width: "auto",
-              }}
-            >
-              {loading ? (
-                <>
-                  <Spinner size={14} /> Verifying...
-                </>
-              ) : (
-                "Verify Domain"
-              )}
-            </Button>
-          </ButtonGroup>
-        </>
-      )}
-    </PopoverContainer>
-  );
+    return (
+        <PopoverContainer
+            ref={popoverRef}
+            style={style}
+            onClick={(e) => e.stopPropagation()}
+            role="dialog"
+            aria-labelledby="verify-domain-title"
+            aria-modal="true"
+        >
+            <Title id="verify-domain-title">Verify domain</Title>
+            <Hint>Add the following DNS record to your provider, then verify.</Hint>
+            <Field>
+                <FieldLabel>Type</FieldLabel>
+                <Input value={currentDomain?.verification_dns_record_type} disabled />
+            </Field>
+            <Field>
+                <FieldLabel>Name</FieldLabel>
+                <Input value={currentDomain?.verification_dns_record_name} disabled />
+            </Field>
+            <Field>
+                <FieldLabel>Value</FieldLabel>
+                <Input value={currentDomain?.verification_dns_record_data} disabled />
+            </Field>
+            <Actions>
+                <Button $size="sm" $outline onClick={onClose}>Cancel</Button>
+                <Button $size="sm" onClick={handleDomainVerification} disabled={loading}>
+                    {loading ? <Spinner size={12} /> : "Verify"}
+                </Button>
+            </Actions>
+        </PopoverContainer>
+    );
 };

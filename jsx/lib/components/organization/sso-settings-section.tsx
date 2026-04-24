@@ -1108,7 +1108,6 @@ const SectionTitle = styled.h3`
 
 const CreateSSOScreen = ({
     onCreate,
-    onClose,
     organization,
 }: CreateSSOScreenProps & { organization: Organization }) => {
     const {
@@ -1746,14 +1745,12 @@ const CreateSSOScreen = ({
                                     )}
                                 <Button
                                     type="button"
+                                    $outline
                                     onClick={testConnection}
                                     disabled={testing || !selectedTemplate}
                                     style={{
-                                        width: "auto",
                                         padding:
                                             "var(--space-4u) var(--space-8u)",
-                                        background: "transparent",
-                                        border: "var(--border-width-thin) solid var(--color-border)",
                                     }}
                                 >
                                     {testing ? (
@@ -2289,46 +2286,6 @@ const CreateSSOScreen = ({
                                 )}
                             </div>
 
-                            <div
-                                style={{
-                                    gridColumn: "1 / -1",
-                                    display: "flex",
-                                    justifyContent: "flex-end",
-                                    gap: "var(--space-6u)",
-                                    marginTop: "var(--space-12u)",
-                                }}
-                            >
-                                <Button
-                                    type="button"
-                                    onClick={onClose}
-                                    style={{
-                                        background: "transparent",
-                                        border: "var(--border-width-thin) solid var(--color-border)",
-                                        color: "var(--color-foreground)",
-                                        padding:
-                                            "var(--space-4u) var(--space-8u)",
-                                        borderRadius: "var(--radius-xs)",
-                                    }}
-                                >
-                                    Cancel
-                                </Button>
-                                <Button
-                                    type="submit"
-                                    disabled={loading}
-                                    style={{
-                                        background: "var(--color-primary)",
-                                        color: "var(--color-foreground-inverse)",
-                                        border: "none",
-                                        padding:
-                                            "var(--space-4u) var(--space-8u)",
-                                        borderRadius: "var(--radius-xs)",
-                                    }}
-                                >
-                                    {loading
-                                        ? "Saving..."
-                                        : "Create Connection"}
-                                </Button>
-                            </div>
                         </div>
                     </div>
                 </>

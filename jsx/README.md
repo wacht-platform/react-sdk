@@ -55,7 +55,7 @@ export default function App() {
 - resolves deployment configuration from the `publicKey`
 - exposes deployment-aware client state to the hooks
 - powers navigation-aware auth components through the platform adapter
-- lets you override deployment UI settings with `uiOverwrites` when you are embedding auth UI inside your own app
+- lets you override deployment UI settings with `uiOverrides` when you are embedding auth UI inside your own app
 
 ## Main hook families
 

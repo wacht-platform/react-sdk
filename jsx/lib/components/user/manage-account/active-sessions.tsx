@@ -1,11 +1,4 @@
-import { useState } from "react";
 import { SignOut } from "@phosphor-icons/react";
-import {
-    Dropdown,
-    DropdownItem,
-    DropdownItems,
-    DropdownTrigger,
-} from "@/components/utility/dropdown";
 import { useUserSignins } from "@/hooks/use-user";
 import { useSession } from "@/hooks/use-session";
 import { useScreenContext } from "../context";
@@ -19,7 +12,7 @@ import {
     ActionsCell,
 } from "@/components/utility/table";
 import { EmptyState } from "@/components/utility/empty-state";
-import { Spinner } from "@/components/utility";
+import { Button, Spinner } from "@/components/utility";
 import { ChromeIcon as ChromeIconComponent } from "../../icons/chrome";
 import { FirefoxIcon } from "../../icons/firefox";
 import { SafariIcon } from "../../icons/safari";
@@ -28,12 +21,7 @@ import { OperaIcon } from "../../icons/opera";
 import { BraveIcon } from "../../icons/brave";
 import {
     DesktopTableContainer,
-    MobileListContainer,
     IconWrapper,
-    IconButton,
-    ConnectionItemRow,
-    ConnectionLeft,
-    useMediaQuery
 } from "./shared";
 
 // Local interface
@@ -132,11 +120,9 @@ const BrowserIcon = ({ browser }: { browser: string }) => {
 };
 
 export const ActiveSessionsSection = () => {
-    const [activeSession, setActiveSession] = useState<string | null>(null);
     const { signins, removeSignin, refetch, loading } = useUserSignins();
     const { refetch: refetchSession } = useSession();
     const { toast } = useScreenContext();
-    const isMobile = useMediaQuery("(max-width: 600px)");
 
     // Type the signins data properly
     const typedSignins = signins as UserSignIn[] | undefined;
@@ -146,7 +132,6 @@ export const ActiveSessionsSection = () => {
             await removeSignin(sessionId);
             // Refetch both the signins list and the current session
             await Promise.all([refetch(), refetchSession()]);
-            setActiveSession(null);
             toast("Session ended successfully", "info");
         } catch (error: any) {
             toast(
@@ -184,32 +169,10 @@ export const ActiveSessionsSection = () => {
     }
 
     return (
-        <>
-            <div style={{ marginBottom: "var(--space-8u)" }}>
-                <h3
-                    style={{
-                        fontSize: "var(--font-size-xl)",
-                        color: "var(--color-foreground)",
-                        margin: 0,
-                    }}
-                >
-                    Active Sessions
-                </h3>
-                <p
-                    style={{
-                        fontSize: "var(--font-size-lg)",
-                        color: "var(--color-muted)",
-                        margin: 0,
-                    }}
-                >
-                    Manage your active browser sessions and sign-ins
-                </p>
-            </div>
-            <div>
+        <div>
                 {typedSignins && typedSignins.length > 0 ? (
                     <>
-                        {!isMobile && (
-                            <DesktopTableContainer>
+                        <DesktopTableContainer>
                                 <Table>
                                     <TableHead>
                                         <TableRow>
@@ -271,96 +234,21 @@ export const ActiveSessionsSection = () => {
                                                     {formatLastActive(signin.last_active_at)}
                                                 </TableCell>
                                                 <ActionsCell>
-                                                    <Dropdown
-                                                        open={activeSession === signin.id}
-                                                        openChange={(isOpen) =>
-                                                            setActiveSession(isOpen ? signin.id : null)
-                                                        }
+                                                    <Button
+                                                        $size="sm"
+                                                        $outline
+                                                        $destructive
+                                                        onClick={() => logoutSession(signin.id)}
                                                     >
-                                                        <DropdownTrigger>
-                                                            <IconButton>•••</IconButton>
-                                                        </DropdownTrigger>
-                                                        <DropdownItems>
-                                                            <DropdownItem onClick={() => logoutSession(signin.id)}>
-                                                                <div
-                                                                    style={{
-                                                                        display: "flex",
-                                                                        alignItems: "center",
-                                                                        gap: "var(--space-4u)",
-                                                                    }}
-                                                                >
-                                                                    <SignOut size={14} />
-                                                                    End Session
-                                                                </div>
-                                                            </DropdownItem>
-                                                        </DropdownItems>
-                                                    </Dropdown>
+                                                        <SignOut size={12} style={{ marginRight: 4 }} />
+                                                        Sign out
+                                                    </Button>
                                                 </ActionsCell>
                                             </TableRow>
                                         ))}
                                     </TableBody>
                                 </Table>
-                            </DesktopTableContainer>
-                        )}
-
-                        {isMobile && (
-                            <MobileListContainer>
-                                {typedSignins.map((signin, index) => (
-                                    <div key={signin.id}>
-                                        <ConnectionItemRow>
-                                            <ConnectionLeft>
-                                                <IconWrapper>
-                                                    <BrowserIcon browser={signin.browser || "Unknown"} />
-                                                </IconWrapper>
-                                                <div style={{ marginLeft: "var(--space-6u)", display: "flex", flexDirection: "column" }}>
-                                                    <div style={{ fontWeight: 500, fontSize: "var(--font-size-lg)", color: "var(--color-foreground)" }}>
-                                                        {signin.browser || "Unknown"} {signin.device ? `on ${signin.device}` : ""}
-                                                    </div>
-                                                    <div style={{ fontSize: "var(--font-size-sm)", color: "var(--color-muted)" }}>
-                                                        {signin.city && signin.country ? `${signin.city}, ${signin.country}` : "Unknown location"} • {formatLastActive(signin.last_active_at)}
-                                                    </div>
-                                                </div>
-
-                                                <div style={{ marginLeft: "auto" }}>
-                                                    <Dropdown
-                                                        open={activeSession === signin.id}
-                                                        openChange={(isOpen) =>
-                                                            setActiveSession(isOpen ? signin.id : null)
-                                                        }
-                                                    >
-                                                        <DropdownTrigger>
-                                                            <IconButton>•••</IconButton>
-                                                        </DropdownTrigger>
-                                                        <DropdownItems>
-                                                            <DropdownItem onClick={() => logoutSession(signin.id)}>
-                                                                <div
-                                                                    style={{
-                                                                        display: "flex",
-                                                                        alignItems: "center",
-                                                                        gap: "var(--space-4u)",
-                                                                    }}
-                                                                >
-                                                                    <SignOut size={14} />
-                                                                    End Session
-                                                                </div>
-                                                            </DropdownItem>
-                                                        </DropdownItems>
-                                                    </Dropdown>
-                                                </div>
-                                            </ConnectionLeft>
-                                        </ConnectionItemRow>
-                                        {index < typedSignins.length - 1 && (
-                                            <div
-                                                style={{
-                                                    height: "var(--border-width-thin)",
-                                                    background: "var(--color-border)",
-                                                }}
-                                            />
-                                        )}
-                                    </div>
-                                ))}
-                            </MobileListContainer>
-                        )}
+                        </DesktopTableContainer>
                     </>
                 ) : (
                     <EmptyState
@@ -368,7 +256,6 @@ export const ActiveSessionsSection = () => {
                         description="You don't have any active sessions at the moment."
                     />
                 )}
-            </div>
-        </>
+        </div>
     );
 };

@@ -1,5 +1,5 @@
 import { useState, useEffect, useRef } from "react";
-import { Check, CaretDown, Trash } from "@phosphor-icons/react";
+import { Check, CaretDown } from "@phosphor-icons/react";
 import useSWR from "swr";
 import styled from "styled-components";
 import {
@@ -18,7 +18,6 @@ import {
     DropdownItems,
     DropdownItem,
     DropdownTrigger,
-    DropdownDivider,
 } from "@/components/utility";
 import {
     Table,
@@ -34,24 +33,33 @@ import { InviteMemberPopover } from "../invite-member-popover";
 import {
     HeaderCTAContainer,
     DesktopTableContainer,
-    MobileListContainer,
-    ConnectionItemRow,
-    ConnectionLeft,
+    StatusPill,
 } from "./shared";
 
 const AvatarPlaceholder = styled.div`
-    width: var(--size-20u);
-    height: var(--size-20u);
+    width: 32px;
+    height: 32px;
+    min-width: 32px;
     border-radius: 50%;
-    background: var(--color-input-background);
-    border: var(--border-width-thin) solid var(--color-border);
+    background: var(--color-secondary);
+    color: var(--color-secondary-text);
     display: flex;
     align-items: center;
     justify-content: center;
-    color: var(--color-muted);
-    font-weight: 400;
-    font-size: var(--font-size-lg);
+    font-size: 12px;
+    font-weight: 500;
     overflow: hidden;
+    flex-shrink: 0;
+    img { width: 100%; height: 100%; object-fit: cover; }
+`;
+
+const InlineActions = styled.div`
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    justify-content: flex-end;
+    flex-wrap: nowrap;
+    white-space: nowrap;
 `;
 
 export const MembersSection = ({
@@ -73,10 +81,10 @@ export const MembersSection = ({
     const [page, setPage] = useState(1);
     const [limit] = useState(10);
     const [isInviting, setIsInviting] = useState(false);
+    const [pendingIds, setPendingIds] = useState<Set<string>>(new Set());
     const inviteMemberButtonRef = useRef<HTMLButtonElement>(null);
 
-    const [debouncedSearchQuery, setDebouncedSearchQuery] =
-        useState(searchQuery);
+    const [debouncedSearchQuery, setDebouncedSearchQuery] = useState(searchQuery);
 
     useEffect(() => {
         const handler = setTimeout(() => {
@@ -88,7 +96,6 @@ export const MembersSection = ({
 
     const {
         data: membersResponse,
-        isLoading: membersLoading,
         mutate: reloadMembers,
     } = useSWR(
         organization
@@ -100,50 +107,63 @@ export const MembersSection = ({
                 limit,
                 search: debouncedSearchQuery,
             }),
+        { keepPreviousData: true },
     );
 
     const members = membersResponse?.data || [];
     const meta = membersResponse?.meta || { total: 0, page: 1, limit: 10 };
     const totalPages = Math.ceil(meta.total / (meta.limit || 10));
 
-    const { data: rolesData = [], isLoading: rolesLoading } = useSWR(
-        organization
-            ? `wacht-api-organizations:${organization.id}:roles`
-            : null,
+    const { data: rolesData = [] } = useSWR(
+        organization ? `wacht-api-organizations:${organization.id}:roles` : null,
         () => getRoles?.(organization) || [],
     );
     const roles = rolesData as OrganizationRole[];
+
+    const markPending = (id: string, on: boolean) => {
+        setPendingIds((prev) => {
+            const next = new Set(prev);
+            on ? next.add(id) : next.delete(id);
+            return next;
+        });
+    };
 
     const toggleRole = async (
         member: OrganizationMembership,
         role: OrganizationRole,
         hasRole: boolean,
     ) => {
+        markPending(member.id, true);
         try {
             if (hasRole) {
                 await removeMemberRole(organization, member, role);
-                toast("Role removed successfully", "info");
+                toast("Role removed", "info");
             } else {
                 await addMemberRole(organization, member, role);
-                toast("Role added successfully", "info");
+                toast("Role added", "info");
             }
             reloadMembers();
         } catch (error: any) {
             toast(error.message || "Failed to update role", "error");
+        } finally {
+            markPending(member.id, false);
         }
     };
 
     const handleRemoveMember = async (member: OrganizationMembership) => {
+        markPending(member.id, true);
         try {
             await removeMember(organization, member);
             reloadMembers();
-            toast("Member removed successfully", "info");
+            toast("Member removed", "info");
         } catch (error: any) {
             toast(error.message || "Failed to remove member", "error");
+        } finally {
+            markPending(member.id, false);
         }
     };
 
-    if (membersLoading || rolesLoading) return <Spinner />;
+    if (!membersResponse) return <Spinner />;
 
     return (
         <>
@@ -152,30 +172,16 @@ export const MembersSection = ({
                     <SearchInput
                         value={searchQuery}
                         onChange={setSearchQuery}
-                        placeholder="MagnifyingGlass members..."
+                        placeholder="Search members..."
                     />
                 </div>
-                <div
-                    style={{
-                        display: "flex",
-                        gap: "var(--space-6u)",
-                        alignItems: "center",
-                    }}
-                >
+                <div style={{ display: "flex", gap: "var(--space-6u)", alignItems: "center" }}>
                     {meta.total > 0 && (
-                        <div
-                            style={{
-                                fontSize: "var(--font-size-lg)",
-                                color: "var(--color-muted)",
-                            }}
-                        >
+                        <div style={{ fontSize: 13, color: "var(--color-secondary-text)" }}>
                             {meta.total} member{meta.total !== 1 ? "s" : ""}
                         </div>
                     )}
-                    <Button
-                        ref={inviteMemberButtonRef}
-                        onClick={() => setIsInviting(true)}
-                    >
+                    <Button ref={inviteMemberButtonRef} onClick={() => setIsInviting(true)} $size="sm">
                         Invite
                     </Button>
                 </div>
@@ -196,98 +202,76 @@ export const MembersSection = ({
             {members.length === 0 ? (
                 <EmptyState
                     title={searchQuery ? "No members match" : "No members yet"}
-                    description="Members with corporate domains will automatically join."
+                    description="Invite someone or connect a corporate domain to auto-join."
                 />
             ) : (
-                <>
-                    <DesktopTableContainer>
-                        <Table>
-                            <TableHead>
-                                <TableRow>
-                                    <TableHeader>Member</TableHeader>
-                                    <TableHeader>Joined</TableHeader>
-                                    <TableHeader>Roles</TableHeader>
-                                </TableRow>
-                            </TableHead>
-                            <TableBody>
-                                {members.map((member) => (
+                <DesktopTableContainer>
+                    <Table>
+                        <TableHead>
+                            <TableRow>
+                                <TableHeader>Member</TableHeader>
+                                <TableHeader>Joined</TableHeader>
+                                <TableHeader>Roles</TableHeader>
+                                <TableHeader />
+                            </TableRow>
+                        </TableHead>
+                        <TableBody>
+                            {members.map((member) => {
+                                const isCurrentUser = member.user?.id === session?.active_signin?.user_id;
+                                const isBusy = pendingIds.has(member.id);
+                                return (
                                     <TableRow key={member.id}>
                                         <TableCell>
-                                            <UserIdentity
-                                                member={member}
-                                                session={session}
-                                            />
+                                            <UserIdentity member={member} isCurrentUser={isCurrentUser} />
+                                        </TableCell>
+                                        <TableCell style={{ color: "var(--color-secondary-text)" }}>
+                                            {new Date(member.created_at).toLocaleDateString()}
                                         </TableCell>
                                         <TableCell>
-                                            {new Date(
-                                                member.created_at,
-                                            ).toLocaleDateString()}
-                                        </TableCell>
-                                        <ActionsCell>
-                                            <RoleSelector
+                                            <RolePicker
                                                 member={member}
                                                 roles={roles}
                                                 onToggle={toggleRole}
-                                                onRemove={handleRemoveMember}
+                                                disabled={isBusy}
                                             />
+                                        </TableCell>
+                                        <ActionsCell>
+                                            <InlineActions>
+                                                <Button
+                                                    $size="sm"
+                                                    $outline
+                                                    $destructive
+                                                    disabled={isBusy || isCurrentUser}
+                                                    onClick={() => handleRemoveMember(member)}
+                                                    title={isCurrentUser ? "You cannot remove yourself" : "Remove member"}
+                                                >
+                                                    {isBusy ? <Spinner size={12} /> : "Remove"}
+                                                </Button>
+                                            </InlineActions>
                                         </ActionsCell>
                                     </TableRow>
-                                ))}
-                            </TableBody>
-                        </Table>
-                    </DesktopTableContainer>
-
-                    <MobileListContainer>
-                        {members.map((member) => (
-                            <ConnectionItemRow key={member.id}>
-                                <ConnectionLeft>
-                                    <UserIdentity
-                                        member={member}
-                                        session={session}
-                                        subtitle={`Joined ${new Date(member.created_at).toLocaleDateString()}`}
-                                    />
-                                    <div style={{ marginLeft: "auto" }}>
-                                        <RoleSelector
-                                            member={member}
-                                            roles={roles}
-                                            onToggle={toggleRole}
-                                            onRemove={handleRemoveMember}
-                                        />
-                                    </div>
-                                </ConnectionLeft>
-                            </ConnectionItemRow>
-                        ))}
-                    </MobileListContainer>
-                </>
+                                );
+                            })}
+                        </TableBody>
+                    </Table>
+                </DesktopTableContainer>
             )}
 
             {totalPages > 1 && (
-                <div
-                    style={{
-                        display: "flex",
-                        justifyContent: "center",
-                        alignItems: "center",
-                        gap: "var(--space-8u)",
-                        marginTop: "var(--space-12u)",
-                    }}
-                >
-                    <Button
-                        onClick={() => setPage((p) => Math.max(1, p - 1))}
-                        disabled={page === 1}
-                        $size="sm"
-                    >
+                <div style={{
+                    display: "flex",
+                    justifyContent: "center",
+                    alignItems: "center",
+                    gap: "var(--space-8u)",
+                    marginTop: "var(--space-12u)",
+                }}>
+                    <Button onClick={() => setPage((p) => Math.max(1, p - 1))} disabled={page === 1} $size="sm" $outline>
                         Previous
                     </Button>
-                    <span style={{ fontSize: "var(--font-size-md)" }}>
+                    <span style={{ fontSize: 13, color: "var(--color-secondary-text)" }}>
                         {page} / {totalPages}
                     </span>
-                    <Button
-                        onClick={() =>
-                            setPage((p) => Math.min(totalPages, p + 1))
-                        }
-                        disabled={page === totalPages}
-                        $size="sm"
-                    >
+                    <Button onClick={() => setPage((p) => Math.min(totalPages, p + 1))} disabled={page === totalPages} $size="sm" $outline>
                         Next
                     </Button>
                 </div>
@@ -296,157 +280,89 @@ export const MembersSection = ({
     );
 };
 
-const UserIdentity = ({ member, session, subtitle }: any) => {
-    const userData = member.user;
-    const isCurrentUser = userData?.id === session?.active_signin?.user_id;
-
+const UserIdentity = ({ member, isCurrentUser }: { member: any; isCurrentUser: boolean }) => {
+    const u = member.user;
     const getInitials = (f = "", l = "") =>
-        `${f[0] || ""}${l[0] || ""}`.toUpperCase();
+        `${f[0] || ""}${l[0] || ""}`.toUpperCase() || "?";
+    const name = u ? `${u.first_name || ""} ${u.last_name || ""}`.trim() || u.primary_email_address?.email : "Unknown";
 
     return (
-        <div
-            style={{
-                display: "flex",
-                alignItems: "center",
-                gap: "var(--space-6u)",
-            }}
-        >
+        <div style={{ display: "flex", alignItems: "center", gap: 10, minWidth: 0 }}>
             <AvatarPlaceholder>
-                {userData?.profile_picture_url ? (
-                    <img
-                        src={userData.profile_picture_url}
-                        alt="Avatar"
-                        style={{
-                            width: "100%",
-                            height: "100%",
-                            objectFit: "cover",
-                        }}
-                    />
-                ) : (
-                    getInitials(userData?.first_name, userData?.last_name) ||
-                    "?"
-                )}
+                {u?.profile_picture_url
+                    ? <img src={u.profile_picture_url} alt={name} />
+                    : getInitials(u?.first_name, u?.last_name)
+                }
             </AvatarPlaceholder>
-            <div>
-                <div
-                    style={{
-                        display: "flex",
-                        alignItems: "center",
-                        gap: "var(--space-4u)",
-                    }}
-                >
-                    <span
-                        style={{
-                            fontSize: "var(--font-size-lg)",
-                            fontWeight: "400",
-                        }}
-                    >
-                        {userData
-                            ? `${userData.first_name || ""} ${userData.last_name || ""}`.trim() ||
-                              userData.primary_email_address?.email
-                            : "Unknown"}
+            <div style={{ minWidth: 0, display: "flex", flexDirection: "column", gap: 2 }}>
+                <div style={{ display: "flex", alignItems: "center", gap: 6 }}>
+                    <span style={{ fontSize: 13, fontWeight: 500, color: "var(--color-card-foreground)" }}>
+                        {name}
                     </span>
-                    {isCurrentUser && (
-                        <span
-                            style={{
-                                fontSize: "var(--font-size-2xs)",
-                                padding: "var(--space-1u) var(--space-2u)",
-                                background: "var(--color-background-subtle)",
-                                color: "var(--color-muted)",
-                                borderRadius:
-                                    "calc(var(--radius-2xs) - var(--border-width-thin))",
-                                fontWeight: "400",
-                            }}
-                        >
-                            You
-                        </span>
-                    )}
+                    {isCurrentUser && <StatusPill $variant="neutral">You</StatusPill>}
                 </div>
-                <div
-                    style={{
-                        fontSize: "var(--font-size-xs)",
-                        color: "var(--color-secondary-text)",
-                        fontWeight: "400",
-                        display: "flex",
-                        flexWrap: "wrap",
-                        gap: "var(--space-2u) var(--space-4u)",
-                    }}
-                >
-                    <span>{userData?.primary_email_address?.email}</span>
-                    {subtitle && (
-                        <span style={{ color: "var(--color-muted)" }}>
-                            • {subtitle}
-                        </span>
-                    )}
-                </div>
+                <span style={{ fontSize: 12, color: "var(--color-secondary-text)" }}>
+                    {u?.primary_email_address?.email}
+                </span>
             </div>
         </div>
     );
 };
 
-const RoleSelector = ({ member, roles, onToggle, onRemove }: any) => {
-    const memberRoles = member.roles || [];
-    const memberHasRole = (roleId: string) =>
-        memberRoles.some((r: any) => r.id === roleId);
-    const roleSelectorWidth = "calc(var(--size-50u) + var(--size-40u))";
+const RolePicker = ({
+    member,
+    roles,
+    onToggle,
+    disabled,
+}: {
+    member: OrganizationMembership;
+    roles: OrganizationRole[];
+    onToggle: (m: OrganizationMembership, r: OrganizationRole, has: boolean) => Promise<void>;
+    disabled?: boolean;
+}) => {
+    const memberRoles = (member as any).roles || [];
+    const memberHasRole = (roleId: string) => memberRoles.some((r: any) => r.id === roleId);
+
+    const label = memberRoles.length === 0
+        ? "No role"
+        : memberRoles.length === 1
+        ? memberRoles[0]?.name
+        : `${memberRoles.length} roles`;
 
     return (
         <Dropdown>
             <DropdownTrigger>
                 <Button
+                    $size="sm"
                     $outline
-                    style={{
-                        color: "var(--color-foreground)",
-                        minWidth: roleSelectorWidth,
-                        justifyContent: "space-between",
-                    }}
+                    disabled={disabled}
+                    style={{ minWidth: 150, justifyContent: "space-between" }}
                 >
-                    {memberRoles.length > 0 ? memberRoles[0]?.name : "No role"}{" "}
-                    <CaretDown
-                        size={14}
-                        style={{ marginLeft: "var(--space-2u)" }}
-                    />
+                    {label}
+                    <CaretDown size={12} style={{ marginLeft: 6 }} />
                 </Button>
             </DropdownTrigger>
-            <DropdownItems style={{ minWidth: roleSelectorWidth }}>
-                {roles.map((role: any) => {
-                    const active = memberHasRole(role.id);
-                    return (
-                        <DropdownItem
-                            key={role.id}
-                            onClick={() => onToggle(member, role, active)}
-                        >
-                            <div
-                                style={{
-                                    display: "flex",
-                                    justifyContent: "space-between",
-                                    width: "100%",
-                                    gap: "var(--space-6u)",
-                                }}
-                            >
-                                <span>{role.name}</span>
-                                {active && (
-                                    <Check
-                                        size={14}
-                                        color="var(--color-success)"
-                                    />
-                                )}
-                            </div>
-                        </DropdownItem>
-                    );
-                })}
-                <DropdownDivider />
-                <DropdownItem $destructive onClick={() => onRemove(member)}>
-                    <div
-                        style={{
-                            display: "flex",
-                            alignItems: "center",
-                            gap: "var(--space-4u)",
-                        }}
-                    >
-                        <Trash size={14} /> Remove Member
+            <DropdownItems style={{ minWidth: 180 }}>
+                {roles.length === 0 ? (
+                    <div style={{ padding: "10px 14px", fontSize: 12, color: "var(--color-secondary-text)" }}>
+                        No roles configured
                     </div>
-                </DropdownItem>
+                ) : (
+                    roles.map((role) => {
+                        const active = memberHasRole(role.id);
+                        return (
+                            <DropdownItem
+                                key={role.id}
+                                onClick={() => onToggle(member, role, active)}
+                            >
+                                <div style={{ display: "flex", justifyContent: "space-between", width: "100%", gap: 10 }}>
+                                    <span>{role.name}</span>
+                                    {active && <Check size={13} color="var(--color-primary)" />}
+                                </div>
+                            </DropdownItem>
+                        );
+                    })
+                )}
             </DropdownItems>
         </Dropdown>
     );

@@ -32,7 +32,7 @@ export const Container = styled.div`
     min-height: calc(calc(var(--size-50u) * 4) + calc(var(--size-50u) * 2));
     max-height: calc(calc(var(--size-50u) * 4) + calc(var(--size-50u) * 2));
     background: var(--color-card);
-    border-radius: var(--radius-2xl);
+    border-radius: var(--radius-md);
     box-shadow: var(--shadow-xl);
     transition: all 0.3s ease;
     overflow: hidden;
@@ -42,8 +42,11 @@ export const Container = styled.div`
     position: relative;
 
     @media (max-width: 768px) {
-        border-radius: var(--radius-xl);
-        padding-bottom: var(--space-10u);
+        border-radius: var(--radius-md);
+        padding-bottom: var(--space-8u);
+        height: auto;
+        min-height: 100vh;
+        max-height: 100%;
     }
 
     /* Blur effect at the bottom */
@@ -92,7 +95,9 @@ export const Tab = styled.button<{ $isActive: boolean }>`
     font-size: var(--font-size-lg);
     font-weight: 400;
     color: ${(props) =>
-        props.$isActive ? "var(--color-card-foreground)" : "var(--color-muted)"};
+        props.$isActive
+            ? "var(--color-card-foreground)"
+            : "var(--color-muted)"};
     cursor: pointer;
     position: relative;
     transition: color 0.15s ease;
@@ -124,7 +129,7 @@ export const TabIcon = styled.span`
 
 export const TabContent = styled.div`
     flex: 1;
-    padding: var(--space-12u) var(--space-12u) 0 var(--space-12u);
+    padding: var(--space-8u) var(--space-10u) 0 var(--space-10u);
     overflow-y: auto;
     position: relative;
 
@@ -156,7 +161,14 @@ export const HeaderCTAContainer = styled.div`
     align-items: center;
     flex-wrap: wrap;
     gap: var(--space-6u);
-    margin-bottom: var(--space-12u);
+    margin-bottom: var(--space-6u);
+
+    @media (max-width: 600px) {
+        flex-direction: column;
+        align-items: stretch;
+        & > * { width: 100%; }
+        & button { width: 100%; }
+    }
 `;
 
 export const SectionLayout = styled.div`
@@ -225,13 +237,21 @@ export const ResponsiveHeaderContainer = styled.div`
         flex-direction: column;
         align-items: stretch;
         gap: var(--space-8u);
+        & > * { width: 100%; }
+        & button { width: 100%; }
     }
 `;
 
 export const DesktopTableContainer = styled.div`
     display: block;
-    @media (max-width: 768px) {
-        display: none;
+    overflow-x: auto;
+    -webkit-overflow-scrolling: touch;
+    &::-webkit-scrollbar {
+        height: 6px;
+    }
+    &::-webkit-scrollbar-thumb {
+        background: var(--color-border);
+        border-radius: 999px;
     }
 `;
 
@@ -327,3 +347,158 @@ export const useMediaQuery = (query: string) => {
 
     return matches;
 };
+
+/* ─── PageHeader ──────────────────────────────────────────────────────────── */
+
+export const PageHeader = styled.div`
+    display: flex;
+    align-items: center;
+    gap: var(--space-5u);
+    padding: var(--space-8u) var(--space-12u) var(--space-6u);
+    flex-wrap: wrap;
+    @media (max-width: 768px) {
+        padding: var(--space-8u) var(--space-8u) var(--space-5u);
+    }
+    @media (max-width: 480px) {
+        padding: var(--space-6u) var(--space-6u) var(--space-4u);
+        gap: var(--space-3u);
+    }
+`;
+
+export const PageHeaderAvatar = styled.div`
+    width: 44px;
+    height: 44px;
+    min-width: 44px;
+    border-radius: 50%;
+    background: var(--color-secondary);
+    color: var(--color-secondary-text);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    overflow: hidden;
+    font-size: 14px;
+    font-weight: 600;
+    flex-shrink: 0;
+    img {
+        width: 100%;
+        height: 100%;
+        object-fit: cover;
+    }
+    @media (max-width: 600px) {
+        width: 38px;
+        height: 38px;
+        min-width: 38px;
+        font-size: 13px;
+    }
+`;
+
+export const PageHeaderInfo = styled.div`
+    flex: 1;
+    min-width: 0;
+    display: flex;
+    flex-direction: column;
+    gap: 2px;
+`;
+
+export const PageHeaderName = styled.div`
+    font-size: 16px;
+    font-weight: 600;
+    color: var(--color-card-foreground);
+    line-height: 1.3;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    @media (max-width: 600px) {
+        font-size: 14px;
+    }
+`;
+
+export const PageHeaderSub = styled.div`
+    font-size: 13px;
+    color: var(--color-secondary-text);
+    line-height: 1.3;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    @media (max-width: 600px) {
+        font-size: 12px;
+        white-space: normal;
+    }
+`;
+
+export const PageHeaderActions = styled.div`
+    display: flex;
+    align-items: center;
+    gap: var(--space-3u);
+    flex-shrink: 0;
+    @media (max-width: 600px) {
+        width: 100%;
+        justify-content: flex-end;
+    }
+`;
+
+/* ─── StatusPill ──────────────────────────────────────────────────────────── */
+
+type PillVariant = "primary" | "success" | "warning" | "danger" | "neutral";
+
+export const StatusPill = styled.span<{ $variant?: PillVariant }>`
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    padding: 3px 9px;
+    border-radius: 999px;
+    font-size: 11px;
+    font-weight: 500;
+    line-height: 1.4;
+    white-space: nowrap;
+    background: ${(p) => {
+        switch (p.$variant) {
+            case "warning":
+                return "transparent";
+            case "danger":
+                return "color-mix(in srgb, var(--color-error) 14%, transparent)";
+            case "success":
+                return "color-mix(in srgb, var(--color-success, #10b981) 14%, transparent)";
+            case "primary":
+                return "color-mix(in srgb, var(--color-primary) 14%, transparent)";
+            default:
+                return "color-mix(in srgb, var(--color-popover-foreground) 8%, transparent)";
+        }
+    }};
+    border: ${(p) =>
+        p.$variant === "warning"
+            ? "1px dashed var(--color-warning, #f59e0b)"
+            : "1px solid transparent"};
+    color: ${(p) => {
+        switch (p.$variant) {
+            case "warning":
+                return "var(--color-warning, #f59e0b)";
+            case "danger":
+                return "var(--color-error)";
+            case "success":
+                return "var(--color-success, #10b981)";
+            case "primary":
+                return "var(--color-primary)";
+            default:
+                return "var(--color-secondary-text)";
+        }
+    }};
+    &::before {
+        content: "";
+        width: 6px;
+        height: 6px;
+        border-radius: 50%;
+        background: currentColor;
+        flex-shrink: 0;
+    }
+`;
+
+/* ─── SectionLabel ────────────────────────────────────────────────────────── */
+
+export const SectionLabel = styled.div<{ $first?: boolean }>`
+    font-size: var(--font-size-md);
+    font-weight: 600;
+    color: var(--color-secondary-text);
+    padding: ${(p) => (p.$first ? "0" : "var(--space-4u) 0 0")};
+    margin-bottom: 0;
+`;

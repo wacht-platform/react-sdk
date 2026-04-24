@@ -1,24 +1,8 @@
 import { useCallback } from "react";
 import useSWR from "swr";
+import type { ExternalAgentConnection } from "@wacht/types";
 import { useClient } from "./use-client";
 import { responseMapper } from "../utils/response-mapper";
-
-export type ExternalAgentConnectionStatus =
-    | "disconnected"
-    | "pending"
-    | "active"
-    | "expired"
-    | "failed";
-
-export interface ExternalAgentConnection {
-    provider: string;
-    slug: string;
-    display_name: string;
-    logo_url?: string;
-    status: ExternalAgentConnectionStatus;
-    external_account_id?: string;
-    connected_at?: string;
-}
 
 interface ConnectResponse {
     redirect_url: string;

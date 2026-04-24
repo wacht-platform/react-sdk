@@ -14,11 +14,11 @@ import type { DeploymentUISettings } from "@wacht/types";
 export function DeploymentProvider({
   children,
   publicKey,
-  uiOverwrites,
+  uiOverrides,
 }: {
   children: React.ReactNode;
   publicKey: string;
-  uiOverwrites?: Partial<DeploymentUISettings>;
+  uiOverrides?: Partial<DeploymentUISettings>;
 }) {
   const adapter = createTanStackRouterAdapter();
 
@@ -26,7 +26,7 @@ export function DeploymentProvider({
     <BaseProvider
       publicKey={publicKey}
       adapter={adapter}
-      uiOverwrites={uiOverwrites}
+      uiOverrides={uiOverrides}
     >
       {children}
     </BaseProvider>

@@ -484,3 +484,31 @@ export interface AgentSessionData {
     actor: Actor;
     agents: Agent[];
 }
+
+export interface ActorMcpServerSummary {
+    id: string;
+    name: string;
+    endpoint: string;
+    auth_type: string;
+    requires_user_connection: boolean;
+    connection_status: "ready" | "connected" | "not_connected" | "expired";
+    connected_at?: string;
+    expires_at?: string;
+}
+
+export type ExternalAgentConnectionStatus =
+    | "disconnected"
+    | "pending"
+    | "active"
+    | "expired"
+    | "failed";
+
+export interface ExternalAgentConnection {
+    provider: string;
+    slug: string;
+    display_name: string;
+    logo_url?: string;
+    status: ExternalAgentConnectionStatus;
+    external_account_id?: string;
+    connected_at?: string;
+}

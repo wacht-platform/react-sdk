@@ -1,8 +1,6 @@
 import { useState, useRef, useEffect } from "react";
 import styled from "styled-components";
-import { X } from "@phosphor-icons/react";
 import { Input } from "@/components/utility/input";
-import { FormGroup, Label } from "../utility/form";
 import { useActiveOrganization } from "@/hooks/use-organization";
 import { Button, Spinner } from "../utility";
 import { ComboBox, ComboBoxOption } from "../utility/combo-box";
@@ -11,244 +9,181 @@ import { useScreenContext } from "./context";
 import { usePopoverPosition } from "@/hooks/use-popover-position";
 
 const PopoverContainer = styled.div`
-  position: fixed;
-  width: calc(calc(var(--size-50u) * 4) - var(--space-20u));
-  max-width: calc(100vw - var(--space-24u));
-  background: var(--color-popover);
-  border: var(--border-width-thin) solid var(--color-border);
-  border-radius: var(--radius-md);
-  box-shadow: var(--shadow-md);
-  z-index: 1001;
-  
-  @media (max-width: 600px) {
-    width: calc(100vw - var(--space-24u));
-  }
+    position: fixed;
+    background: var(--color-popover);
+    border-radius: 10px;
+    box-shadow: var(--shadow-md);
+    border: 1px solid var(--color-border);
+    width: 360px;
+    max-width: calc(100vw - 24px);
+    z-index: 1001;
+    overflow: hidden;
+    padding: 14px;
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
+
+    @media (max-width: 600px) {
+        width: calc(100vw - 24px);
+    }
 `;
 
-const Header = styled.div`
-  display: flex;
-  justify-content: space-between;
-  align-items: center;
-  padding: var(--space-4u) var(--space-6u);
-  border-bottom: var(--border-width-thin) solid var(--color-border);
+const Title = styled.div`
+    font-size: 13px;
+    font-weight: 600;
+    color: var(--color-popover-foreground);
 `;
 
-const Title = styled.h3`
-  margin: 0;
-  font-size: var(--font-size-md);
-  font-weight: 400;
-  color: var(--color-popover-foreground);
+const Field = styled.div`
+    display: flex;
+    flex-direction: column;
+    gap: 4px;
 `;
 
-const Content = styled.div`
-  padding: var(--space-6u);
+const FieldLabel = styled.label`
+    font-size: 11px;
+    font-weight: 500;
+    color: var(--color-secondary-text);
 `;
 
-const ButtonGroup = styled.div`
-  display: flex;
-  gap: var(--space-2u);
-  justify-content: flex-end;
-  padding: var(--space-4u) var(--space-6u);
-  border-top: var(--border-width-thin) solid var(--color-border);
-  background: var(--color-secondary);
-`;
-
-const CloseButton = styled.button`
-  background: none;
-  border: none;
-  padding: var(--space-2u);
-  cursor: pointer;
-  color: var(--color-muted);
-  transition: all 0.15s ease;
-  border-radius: var(--radius-2xs);
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  
-  &:hover {
-    color: var(--color-accent-foreground);
-    background: var(--color-accent);
-  }
+const Actions = styled.div`
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 6px;
+    & > button { width: 100%; }
 `;
 
 interface InviteMemberPopoverProps {
-  onClose?: () => void;
-  onSuccess?: () => void;
-  roles: OrganizationRole[];
-  triggerRef?: React.RefObject<HTMLElement | null>;
+    onClose?: () => void;
+    onSuccess?: () => void;
+    roles: OrganizationRole[];
+    triggerRef?: React.RefObject<HTMLElement | null>;
 }
 
 export const InviteMemberPopover = ({
-  onClose,
-  onSuccess,
-  roles,
-  triggerRef,
+    onClose,
+    onSuccess,
+    roles,
+    triggerRef,
 }: InviteMemberPopoverProps) => {
-  const popoverRef = useRef<HTMLDivElement>(null);
-  const [email, setEmail] = useState("");
-  const [selectedRole, setSelectedRole] = useState<OrganizationRole | null>(
-    null
-  );
-  const [loading, setLoading] = useState(false);
-  const [mounted, setMounted] = useState(false);
-  const { inviteMember } = useActiveOrganization();
-  const { toast } = useScreenContext();
-  const position = usePopoverPosition({
-    triggerRef: triggerRef ?? { current: null },
-    isOpen: mounted,
-    minWidth: 360,
-    defaultMaxHeight: 320,
-  });
+    const popoverRef = useRef<HTMLDivElement>(null);
+    const [email, setEmail] = useState("");
+    const [selectedRole, setSelectedRole] = useState<OrganizationRole | null>(null);
+    const [loading, setLoading] = useState(false);
+    const [mounted, setMounted] = useState(false);
+    const { inviteMember } = useActiveOrganization();
+    const { toast } = useScreenContext();
+    const position = usePopoverPosition({
+        triggerRef: triggerRef ?? { current: null },
+        isOpen: mounted,
+        minWidth: 360,
+        defaultMaxHeight: 360,
+    });
 
-  const roleOptions: ComboBoxOption[] = roles.map((role) => ({
-    value: role.id,
-    label: role.name,
-  }));
+    const roleOptions: ComboBoxOption[] = roles.map((role) => ({
+        value: role.id,
+        label: role.name,
+    }));
 
-  const validateEmail = (email: string): boolean => {
-    const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
-    return emailRegex.test(email);
-  };
+    const validateEmail = (email: string): boolean =>
+        /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email);
 
-  const handleInvite = async () => {
-    const trimmedEmail = email.trim().toLowerCase();
-
-    if (!trimmedEmail || !selectedRole) return;
-
-    // Validate email format
-    if (!validateEmail(trimmedEmail)) {
-      toast("Please enter a valid email address", "error");
-      return;
-    }
-
-    // Sanitize and validate email length
-    if (trimmedEmail.length > 320) { // RFC 5321 limit
-      toast("Email address is too long", "error");
-      return;
-    }
-
-    setLoading(true);
-    try {
-      await inviteMember({ email: trimmedEmail, organizationRole: selectedRole });
-
-      onSuccess?.();
-    } catch (error: any) {
-      const errorMessage = error.message || "Failed to send invitation. Please try again.";
-      toast(errorMessage, "error");
-    } finally {
-      setLoading(false);
-    }
-  };
-
-  useEffect(() => {
-    setMounted(true);
-
-    // Add click outside listener
-    const handleClickOutside = (event: MouseEvent) => {
-      if (popoverRef.current && !popoverRef.current.contains(event.target as Node)) {
-        onClose?.();
-      }
+    const handleInvite = async () => {
+        const trimmedEmail = email.trim().toLowerCase();
+        if (!trimmedEmail || !selectedRole) return;
+        if (!validateEmail(trimmedEmail)) {
+            toast("Please enter a valid email address", "error");
+            return;
+        }
+        if (trimmedEmail.length > 320) {
+            toast("Email address is too long", "error");
+            return;
+        }
+        setLoading(true);
+        try {
+            await inviteMember({ email: trimmedEmail, organizationRole: selectedRole });
+            onSuccess?.();
+        } catch (error: any) {
+            toast(error.message || "Failed to send invitation. Please try again.", "error");
+        } finally {
+            setLoading(false);
+        }
     };
 
-    // Add escape key listener
-    const handleEscape = (e: KeyboardEvent) => {
-      if (e.key === "Escape") {
-        onClose?.();
-      }
-    };
+    useEffect(() => {
+        setMounted(true);
+        const handleClickOutside = (event: MouseEvent) => {
+            if (popoverRef.current && !popoverRef.current.contains(event.target as Node)) {
+                onClose?.();
+            }
+        };
+        const handleEscape = (e: KeyboardEvent) => {
+            if (e.key === "Escape") onClose?.();
+        };
+        document.addEventListener("mousedown", handleClickOutside);
+        document.addEventListener("keydown", handleEscape);
+        return () => {
+            document.removeEventListener("mousedown", handleClickOutside);
+            document.removeEventListener("keydown", handleEscape);
+        };
+    }, [onClose]);
 
-    document.addEventListener("mousedown", handleClickOutside);
-    document.addEventListener("keydown", handleEscape);
+    if (!mounted) return null;
 
-    return () => {
-      document.removeEventListener("mousedown", handleClickOutside);
-      document.removeEventListener("keydown", handleEscape);
-    };
-  }, [onClose]);
-
-  if (!mounted) {
-    return null;
-  }
-
-  return (
-    <PopoverContainer
-      ref={popoverRef}
-      style={{
-        top: position?.top !== undefined ? `${position.top}px` : undefined,
-        bottom: position?.bottom !== undefined ? `${position.bottom}px` : undefined,
-        left: position?.left !== undefined ? `${position.left}px` : undefined,
-        right: position?.right !== undefined ? `${position.right}px` : undefined,
-        maxHeight: position?.maxHeight ? `${position.maxHeight}px` : undefined,
-        visibility: position ? "visible" : "hidden",
-      }}
-      onClick={(e) => e.stopPropagation()}
-      role="dialog"
-      aria-labelledby="invite-member-title"
-      aria-modal="true"
-    >
-      <Header>
-        <Title id="invite-member-title">Invite Member</Title>
-        <CloseButton onClick={onClose} aria-label="Close invite member dialog">
-          <X size={16} />
-        </CloseButton>
-      </Header>
-
-      <Content>
-        <div style={{ display: "flex", flexDirection: "column", gap: "var(--space-4u)" }}>
-          <FormGroup>
-            <Label>Email Address</Label>
-            <Input
-              type="email"
-              placeholder="colleague@company.com"
-              value={email}
-              onChange={(e) => setEmail(e.target.value)}
-              autoFocus
-              aria-label="Email address for invitation"
-              aria-describedby="email-help"
-            />
-          </FormGroup>
-
-          <FormGroup>
-            <Label>Role</Label>
-            <ComboBox
-              options={roleOptions}
-              value={selectedRole?.id}
-              onChange={(id) =>
-                setSelectedRole(roles.find((role) => role.id === id)!)
-              }
-              placeholder="Select a role"
-              aria-label="Select role for invited member"
-            />
-          </FormGroup>
-        </div>
-      </Content>
-
-      <ButtonGroup>
-        <Button
-          $outline
-          onClick={onClose}
-          style={{
-            width: "auto",
-          }}
+    return (
+        <PopoverContainer
+            ref={popoverRef}
+            style={{
+                top: position?.top !== undefined ? `${position.top}px` : undefined,
+                bottom: position?.bottom !== undefined ? `${position.bottom}px` : undefined,
+                left: position?.left !== undefined ? `${position.left}px` : undefined,
+                right: position?.right !== undefined ? `${position.right}px` : undefined,
+                visibility: position ? "visible" : "hidden",
+            }}
+            onClick={(e) => e.stopPropagation()}
+            role="dialog"
+            aria-labelledby="invite-member-title"
+            aria-modal="true"
         >
-          Cancel
-        </Button>
-        <Button
-          onClick={handleInvite}
-          disabled={!email || !selectedRole || loading}
-          style={{
-            width: "auto",
-          }}
-        >
-          {loading ? (
-            <>
-              <Spinner size={14} /> Sending...
-            </>
-          ) : (
-            "PaperPlaneTilt Invitation"
-          )}
-        </Button>
-      </ButtonGroup>
-    </PopoverContainer>
-  );
+            <Title id="invite-member-title">Invite member</Title>
+            <Field>
+                <FieldLabel>Email</FieldLabel>
+                <Input
+                    type="email"
+                    placeholder="colleague@company.com"
+                    value={email}
+                    onChange={(e) => setEmail(e.target.value)}
+                    onKeyDown={(e) => {
+                        if (e.key === "Enter" && email && selectedRole) handleInvite();
+                    }}
+                    autoFocus
+                    aria-label="Email address for invitation"
+                />
+            </Field>
+            <Field>
+                <FieldLabel>Role</FieldLabel>
+                <ComboBox
+                    options={roleOptions}
+                    value={selectedRole?.id}
+                    onChange={(id) =>
+                        setSelectedRole(roles.find((role) => role.id === id)!)
+                    }
+                    placeholder="Select a role"
+                    aria-label="Select role for invited member"
+                />
+            </Field>
+            <Actions>
+                <Button $size="sm" $outline onClick={onClose}>
+                    Cancel
+                </Button>
+                <Button
+                    $size="sm"
+                    onClick={handleInvite}
+                    disabled={!email || !selectedRole || loading}
+                >
+                    {loading ? <Spinner size={12} /> : "Send invite"}
+                </Button>
+            </Actions>
+        </PopoverContainer>
+    );
 };

@@ -1,4 +1,5 @@
 import { X } from "@phosphor-icons/react";
+import styled from "styled-components";
 import { useUser } from "@/hooks/use-user";
 import { useDeployment } from "@/hooks/use-deployment";
 import { GoogleIcon } from "../../icons/google";
@@ -9,223 +10,244 @@ import { GitLabIcon } from "../../icons/gitlab";
 import { LinkedInIcon } from "../../icons/linkedin";
 import { DiscordIcon } from "../../icons/discord";
 import { Button } from "@/components/utility";
-import {
-    ConnectionItemRow,
-    ConnectionLeft,
-    ConnectionRight,
-    IconWrapper,
-    IconButton,
-} from "./shared";
-import styled from "styled-components";
+import { EmptyState } from "@/components/utility/empty-state";
 
-const ProviderInfo = styled.div`
+const providerMeta: Record<string, { icon: React.ReactNode; label: string }> = {
+    google_oauth: { icon: <GoogleIcon />, label: "Google" },
+    microsoft_oauth: { icon: <MicrosoftIcon />, label: "Microsoft" },
+    github_oauth: { icon: <GithubIcon />, label: "GitHub" },
+    gitlab_oauth: { icon: <GitLabIcon />, label: "GitLab" },
+    linkedin_oauth: { icon: <LinkedInIcon />, label: "LinkedIn" },
+    discord_oauth: { icon: <DiscordIcon />, label: "Discord" },
+    x_oauth: { icon: <XIcon />, label: "X" },
+};
+
+const Header = styled.div`
     display: flex;
-    flex-direction: column;
-    gap: var(--space-3u);
+    align-items: center;
+    gap: var(--space-4u);
+    margin-bottom: var(--space-6u);
+`;
+
+const HeaderText = styled.div`
+    flex: 1;
     min-width: 0;
 `;
 
-const ProviderName = styled.div`
-    font-size: var(--font-size-lg);
+const HeaderTitle = styled.div`
+    font-size: 14px;
     font-weight: 500;
     color: var(--color-card-foreground);
 `;
 
-const ConnectedAccountsRow = styled.div`
+const HeaderSubtitle = styled.div`
+    font-size: 12px;
+    color: var(--color-secondary-text);
+    margin-top: 2px;
+`;
+
+const ProviderList = styled.div`
+    display: flex;
+    flex-direction: column;
+    gap: 2px;
+`;
+
+const ProviderRow = styled.div`
+    display: grid;
+    grid-template-columns: auto 1fr auto;
+    align-items: center;
+    gap: var(--space-6u);
+    padding: var(--space-5u) 0;
+    border-bottom: 1px solid var(--color-border);
+
+    &:last-child {
+        border-bottom: none;
+    }
+
+    @media (max-width: 600px) {
+        grid-template-columns: auto 1fr;
+        row-gap: var(--space-4u);
+    }
+`;
+
+const ProviderIcon = styled.div`
+    width: 28px;
+    height: 28px;
+    min-width: 28px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+
+    svg {
+        width: 20px;
+        height: 20px;
+    }
+`;
+
+const ProviderMain = styled.div`
+    min-width: 0;
+    display: flex;
+    flex-direction: column;
+    gap: 4px;
+`;
+
+const ProviderName = styled.div`
+    font-size: 13px;
+    font-weight: 500;
+    color: var(--color-card-foreground);
+`;
+
+const AccountChips = styled.div`
     display: flex;
     flex-wrap: wrap;
-    gap: var(--space-3u);
+    gap: 4px;
 `;
 
-const ConnectedAccountChip = styled.div`
+const AccountChip = styled.span`
     display: inline-flex;
     align-items: center;
-    gap: var(--space-2u);
-    background: var(--color-secondary);
-    border: var(--border-width-thin) solid var(--color-border);
-    border-radius: var(--radius-xs);
-    padding: var(--space-2u) var(--space-4u);
-    font-size: var(--font-size-sm);
+    gap: 4px;
+    padding: 2px 4px 2px 8px;
+    font-size: 11px;
     color: var(--color-secondary-text);
-    min-width: 0;
+    background: color-mix(in srgb, var(--color-popover-foreground) 6%, transparent);
+    border-radius: 999px;
+    max-width: 100%;
 `;
 
-const ChipText = styled.span`
-    white-space: nowrap;
+const ChipEmail = styled.span`
+    max-width: 180px;
     overflow: hidden;
     text-overflow: ellipsis;
-    max-width: calc(var(--size-50u) + var(--size-24u));
+    white-space: nowrap;
+`;
+
+const ChipRemove = styled.button`
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    width: 16px;
+    height: 16px;
+    padding: 0;
+    border: none;
+    background: transparent;
+    color: var(--color-secondary-text);
+    border-radius: 999px;
+    cursor: pointer;
+    flex-shrink: 0;
+    transition: all 0.12s ease;
+
+    &:hover {
+        color: var(--color-error);
+        background: color-mix(in srgb, var(--color-error) 14%, transparent);
+    }
+`;
+
+const NotLinked = styled.span`
+    font-size: 11px;
+    color: var(--color-muted);
+`;
+
+const Actions = styled.div`
+    display: flex;
+    justify-content: flex-end;
+
+    @media (max-width: 600px) {
+        grid-column: 1 / -1;
+        justify-content: flex-start;
+        padding-left: calc(28px + var(--space-6u));
+    }
 `;
 
 export const SocialManagementSection = () => {
-    const { user, disconnectSocialConnection, connectSocialAccount } =
-        useUser();
+    const { user, disconnectSocialConnection, connectSocialAccount } = useUser();
     const { deployment } = useDeployment();
 
-    const socialAuthProviders = {
-        google_oauth: {
-            icon: <GoogleIcon />,
-            label: "Google",
-        },
-        microsoft_oauth: {
-            icon: <MicrosoftIcon />,
-            label: "Microsoft",
-        },
-        github_oauth: {
-            icon: <GithubIcon />,
-            label: "GitHub",
-        },
-        gitlab_oauth: {
-            icon: <GitLabIcon />,
-            label: "GitLab",
-        },
-        linkedin_oauth: {
-            icon: <LinkedInIcon />,
-            label: "LinkedIn",
-        },
-        discord_oauth: {
-            icon: <DiscordIcon />,
-            label: "Discord",
-        },
-        x_oauth: {
-            icon: <XIcon />,
-            label: "X",
-        },
+    const enabledProviders =
+        deployment?.social_connections.filter((c) => c.enabled) || [];
+
+    const handleConnect = (provider: string) => {
+        connectSocialAccount({ provider, redirectUri: window.location.href });
     };
 
-    const enabledProviders =
-        deployment?.social_connections.filter((conn) => conn.enabled) || [];
+    const handleDisconnect = async (id: string | number) => {
+        await disconnectSocialConnection(id.toString());
+        user.refetch();
+    };
+
+    if (enabledProviders.length === 0) {
+        return (
+            <EmptyState
+                title="No providers available"
+                description="Social sign-in providers have not been configured for this app."
+            />
+        );
+    }
 
     return (
         <>
-            <div style={{ marginBottom: "var(--space-6u)" }}>
-                <h3
-                    style={{
-                        fontSize: "var(--font-size-xl)",
-                        margin: "0 0 var(--space-3u) 0",
-                        letterSpacing: "-0.01em",
-                        color: "var(--color-foreground)",
-                    }}
-                >
-                    Connected Accounts
-                </h3>
-                <p
-                    style={{
-                        fontSize: "var(--font-size-md)",
-                        margin: 0,
-                        lineHeight: "1.5",
-                        color: "var(--color-muted)",
-                    }}
-                >
-                    Connect social accounts for easy sign-in and profile sync
-                </p>
-            </div>
-            <div
-                style={{
-                    display: "flex",
-                    flexDirection: "column",
-                }}
-            >
-                {enabledProviders.map((provider, index) => {
-                    const connectedAccounts =
-                        user?.social_connections?.filter(
-                            (conn) => conn.provider === provider.provider,
-                        ) || [];
-                    const providerInfo =
-                        socialAuthProviders[
-                            provider.provider as keyof typeof socialAuthProviders
-                        ];
+            <Header>
+                <HeaderText>
+                    <HeaderTitle>Connected accounts</HeaderTitle>
+                    <HeaderSubtitle>
+                        Sign in faster by linking third-party accounts.
+                    </HeaderSubtitle>
+                </HeaderText>
+            </Header>
 
-                    if (!providerInfo) return null;
+            <ProviderList>
+                {enabledProviders.map((provider) => {
+                    const meta =
+                        providerMeta[provider.provider as keyof typeof providerMeta];
+                    if (!meta) return null;
+
+                    const accounts =
+                        user?.social_connections?.filter(
+                            (c) => c.provider === provider.provider,
+                        ) || [];
+                    const linked = accounts.length > 0;
 
                     return (
-                        <div key={provider.provider}>
-                            <ConnectionItemRow>
-                                <ConnectionLeft>
-                                    <IconWrapper>
-                                        {providerInfo.icon}
-                                    </IconWrapper>
-                                    <ProviderInfo>
-                                        <ProviderName>
-                                            {providerInfo.label}
-                                        </ProviderName>
-                                        {connectedAccounts.length > 0 && (
-                                            <ConnectedAccountsRow>
-                                                {connectedAccounts.map(
-                                                    (account) => (
-                                                        <ConnectedAccountChip
-                                                            key={account.id}
-                                                        >
-                                                            <ChipText>
-                                                                {
-                                                                    account.email_address
-                                                                }
-                                                            </ChipText>
-                                                            <IconButton
-                                                                onClick={async () => {
-                                                                    await disconnectSocialConnection(
-                                                                        account.id.toString(),
-                                                                    );
-                                                                    user.refetch();
-                                                                }}
-                                                                style={{
-                                                                    padding:
-                                                                        "var(--space-1u)",
-                                                                }}
-                                                            >
-                                                                <X size={14} />
-                                                            </IconButton>
-                                                        </ConnectedAccountChip>
-                                                    ),
-                                                )}
-                                            </ConnectedAccountsRow>
-                                        )}
-                                    </ProviderInfo>
-                                </ConnectionLeft>
-
-                                <ConnectionRight>
-                                    {connectedAccounts.length > 0 ? (
-                                        <Button
-                                            $size="sm"
-                                            onClick={() => {
-                                                connectSocialAccount({
-                                                    provider: provider.provider,
-                                                    redirectUri:
-                                                        window.location.href,
-                                                });
-                                            }}
-                                        >
-                                            Add
-                                        </Button>
-                                    ) : (
-                                        <Button
-                                            $size="sm"
-                                            onClick={() => {
-                                                connectSocialAccount({
-                                                    provider: provider.provider,
-                                                    redirectUri:
-                                                        window.location.href,
-                                                });
-                                            }}
-                                        >
-                                            Connect
-                                        </Button>
-                                    )}
-                                </ConnectionRight>
-                            </ConnectionItemRow>
-
-                            {index < enabledProviders.length - 1 && (
-                                <div
-                                    style={{
-                                        height: "var(--border-width-thin)",
-                                        background: "var(--color-border)",
-                                    }}
-                                />
-                            )}
-                        </div>
+                        <ProviderRow key={provider.provider}>
+                            <ProviderIcon>{meta.icon}</ProviderIcon>
+                            <ProviderMain>
+                                <ProviderName>{meta.label}</ProviderName>
+                                {linked ? (
+                                    <AccountChips>
+                                        {accounts.map((account) => (
+                                            <AccountChip key={account.id}>
+                                                <ChipEmail>
+                                                    {account.email_address}
+                                                </ChipEmail>
+                                                <ChipRemove
+                                                    onClick={() =>
+                                                        handleDisconnect(account.id)
+                                                    }
+                                                    title="Remove connection"
+                                                    aria-label="Remove connection"
+                                                >
+                                                    <X size={10} weight="bold" />
+                                                </ChipRemove>
+                                            </AccountChip>
+                                        ))}
+                                    </AccountChips>
+                                ) : (
+                                    <NotLinked>Not linked</NotLinked>
+                                )}
+                            </ProviderMain>
+                            <Actions>
+                                <Button
+                                    $size="sm"
+                                    $outline
+                                    onClick={() => handleConnect(provider.provider)}
+                                >
+                                    {linked ? "Link another" : "Link"}
+                                </Button>
+                            </Actions>
+                        </ProviderRow>
                     );
                 })}
-            </div>
+            </ProviderList>
         </>
     );
 };

@@ -13,8 +13,6 @@ import {
     GearSix,
     Plus,
     Check,
-    ArrowsOutSimple,
-    MagnifyingGlass,
     CaretDown,
     CaretLeft,
     User,
@@ -166,6 +164,7 @@ const Divider = styled.div`
 
 const ProfileBlock = styled.div`
     padding: var(--space-6u) var(--space-5u) var(--space-3u);
+    margin-bottom: var(--space-4u);
 `;
 
 const ProfileHeader = styled.div`
@@ -260,13 +259,6 @@ const OrgChipName = styled.div`
 const OrgChipRole = styled.div`
     font-size: var(--font-size-xs);
     font-weight: 400;
-    color: var(--color-secondary-text);
-    flex-shrink: 0;
-`;
-
-const OrgChevron = styled(ArrowsOutSimple)`
-    width: 12px;
-    height: 12px;
     color: var(--color-secondary-text);
     flex-shrink: 0;
 `;
@@ -413,35 +405,6 @@ const SignOutButton = styled.button`
     }
 `;
 
-// ─── Side panel: search ───────────────────────────────────────────────────────
-
-const SearchRow = styled.div`
-    display: flex;
-    align-items: center;
-    gap: var(--space-3u);
-    padding: var(--space-4u) var(--space-4u);
-    flex-shrink: 0;
-    svg {
-        width: 15px;
-        height: 15px;
-        color: var(--color-secondary-text);
-        flex-shrink: 0;
-    }
-`;
-
-const SearchInput = styled.input`
-    flex: 1;
-    background: transparent;
-    border: none;
-    outline: none;
-    font-size: var(--font-size-sm);
-    font-weight: 400;
-    color: var(--color-popover-foreground);
-    &::placeholder {
-        color: var(--color-secondary-text);
-    }
-`;
-
 // ─── Side panel: slick list (mirrors OrganizationSwitcher) ────────────────────
 
 const SPBack = styled.button`
@@ -460,7 +423,13 @@ const SPBack = styled.button`
     text-align: left;
     flex-shrink: 0;
     transition: background 0.12s ease;
-    &:hover { background: color-mix(in srgb, var(--color-popover-foreground) 6%, transparent); }
+    &:hover {
+        background: color-mix(
+            in srgb,
+            var(--color-popover-foreground) 6%,
+            transparent
+        );
+    }
 `;
 
 const SPList = styled.div`
@@ -486,14 +455,24 @@ const sprowBase = styled.button<{ $active?: boolean }>`
     text-align: left;
     transition: background 0.12s ease;
 
-    .sp-actions { display: none; }
-    .sp-check { display: inline-flex; }
-
-    &:hover:not(:disabled) {
-        background: color-mix(in srgb, var(--color-popover-foreground) 6%, transparent);
+    .sp-actions {
+        display: none;
+    }
+    .sp-check {
+        display: inline-flex;
     }
 
-    ${(p) => p.$active && `
+    &:hover:not(:disabled) {
+        background: color-mix(
+            in srgb,
+            var(--color-popover-foreground) 6%,
+            transparent
+        );
+    }
+
+    ${(p) =>
+        p.$active &&
+        `
         font-weight: 500;
         &:hover:not(:disabled) {
             background: color-mix(in srgb, var(--color-popover-foreground) 4%, transparent);
@@ -502,7 +481,9 @@ const sprowBase = styled.button<{ $active?: boolean }>`
         &:hover:not(:disabled) .sp-check { display: none; }
     `}
 
-    &:disabled { cursor: default; }
+    &:disabled {
+        cursor: default;
+    }
 `;
 
 const SPRow = sprowBase;
@@ -526,7 +507,7 @@ const SPOrgAvatar = styled.div<{ $personal?: boolean }>`
     width: 24px;
     height: 24px;
     min-width: 24px;
-    border-radius: ${(p) => p.$personal ? "50%" : "6px"};
+    border-radius: ${(p) => (p.$personal ? "50%" : "6px")};
     overflow: hidden;
     display: flex;
     align-items: center;
@@ -536,7 +517,11 @@ const SPOrgAvatar = styled.div<{ $personal?: boolean }>`
     font-size: 11px;
     font-weight: 600;
     flex-shrink: 0;
-    img { width: 100%; height: 100%; object-fit: cover; }
+    img {
+        width: 100%;
+        height: 100%;
+        object-fit: cover;
+    }
 `;
 
 const SPWsAvatar = styled.div`
@@ -553,7 +538,11 @@ const SPWsAvatar = styled.div`
     font-size: 10px;
     font-weight: 600;
     flex-shrink: 0;
-    img { width: 100%; height: 100%; object-fit: cover; }
+    img {
+        width: 100%;
+        height: 100%;
+        object-fit: cover;
+    }
 `;
 
 const SPRowName = styled.span`
@@ -581,7 +570,7 @@ const SPExpandCaret = styled(CaretDown)<{ $open: boolean }>`
     color: var(--color-secondary-text);
     flex-shrink: 0;
     transition: transform 0.2s ease;
-    transform: ${(p) => p.$open ? "rotate(0deg)" : "rotate(-90deg)"};
+    transform: ${(p) => (p.$open ? "rotate(0deg)" : "rotate(-90deg)")};
 `;
 
 const SPCheckMark = styled(Check)`
@@ -589,29 +578,134 @@ const SPCheckMark = styled(Check)`
     flex-shrink: 0;
 `;
 
-const SPIconBtn = styled.button`
-    width: 22px;
-    height: 22px;
-    min-width: 22px;
-    border-radius: 4px;
+const SPSelectedBlock = styled.div`
+    padding: 10px 10px 8px;
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+    border-bottom: 1px solid var(--color-border);
+    flex-shrink: 0;
+`;
+
+const SPSegmented = styled.div`
+    display: flex;
+    padding: 2px;
+    background: color-mix(in srgb, var(--color-popover-foreground) 5%, transparent);
+    border-radius: 7px;
+`;
+
+const SPSegmentedTab = styled.button<{ $active?: boolean }>`
+    flex: 1;
+    height: 26px;
+    padding: 0 10px;
+    border: none;
+    border-radius: 5px;
+    font-size: 12px;
+    font-weight: 500;
+    cursor: pointer;
+    background: ${(p) => (p.$active ? "var(--color-popover)" : "transparent")};
+    color: ${(p) =>
+        p.$active
+            ? "var(--color-popover-foreground)"
+            : "var(--color-secondary-text)"};
+    box-shadow: ${(p) =>
+        p.$active
+            ? "0 1px 2px color-mix(in srgb, black 8%, transparent)"
+            : "none"};
+    transition: background 0.12s ease, color 0.12s ease;
+
+    &:hover:not([data-active="true"]) {
+        color: var(--color-popover-foreground);
+    }
+`;
+
+const SPContextRow = styled.div`
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    padding: 4px 4px 2px;
+    min-width: 0;
+`;
+
+const SPContextAvatar = styled.div`
+    width: 28px;
+    height: 28px;
+    min-width: 28px;
+    border-radius: 6px;
+    overflow: hidden;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    background: var(--color-secondary);
+    color: var(--color-secondary-text);
+    font-size: 11px;
+    font-weight: 600;
+    flex-shrink: 0;
+    img { width: 100%; height: 100%; object-fit: cover; }
+`;
+
+const SPContextText = styled.div`
+    display: flex;
+    flex-direction: column;
+    gap: 1px;
+    min-width: 0;
+    flex: 1;
+`;
+
+const SPContextName = styled.div`
+    font-size: 13px;
+    font-weight: 500;
+    color: var(--color-popover-foreground);
+    line-height: 1.3;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+`;
+
+const SPContextRole = styled.div`
+    font-size: 11px;
+    color: var(--color-secondary-text);
+    line-height: 1.3;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+`;
+
+const SPContextActions = styled.div`
+    display: flex;
+    align-items: center;
+    gap: 2px;
+    flex-shrink: 0;
+`;
+
+const SPHeaderIconButton = styled.button<{ $destructive?: boolean }>`
+    width: 26px;
+    height: 26px;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    border-radius: 5px;
     border: none;
     background: transparent;
     color: var(--color-secondary-text);
     cursor: pointer;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    flex-shrink: 0;
-    transition: all 0.1s ease;
-    &:hover { background: color-mix(in srgb, var(--color-popover-foreground) 10%, transparent); color: var(--color-popover-foreground); }
-`;
+    transition: background 0.12s ease, color 0.12s ease;
 
-const SPLeaveBtn = styled(SPIconBtn)`
     &:hover:not(:disabled) {
-        background: var(--color-error-background);
-        color: var(--color-error);
+        background: ${(p) =>
+            p.$destructive
+                ? "color-mix(in srgb, var(--color-error) 14%, transparent)"
+                : "color-mix(in srgb, var(--color-popover-foreground) 10%, transparent)"};
+        color: ${(p) =>
+            p.$destructive
+                ? "var(--color-error)"
+                : "var(--color-popover-foreground)"};
     }
-    &:disabled { opacity: 0.5; cursor: not-allowed; }
+
+    &:disabled {
+        opacity: 0.5;
+        cursor: not-allowed;
+    }
 `;
 
 const SPFooter = styled.div`
@@ -635,12 +729,21 @@ const SPCreateRow = styled.button`
     font-size: 13px;
     font-weight: 400;
     text-align: left;
-    transition: background 0.12s ease, color 0.12s ease;
+    transition:
+        background 0.12s ease,
+        color 0.12s ease;
     &:hover:not(:disabled) {
-        background: color-mix(in srgb, var(--color-popover-foreground) 6%, transparent);
+        background: color-mix(
+            in srgb,
+            var(--color-popover-foreground) 6%,
+            transparent
+        );
         color: var(--color-popover-foreground);
     }
-    &:disabled { cursor: not-allowed; opacity: 0.6; }
+    &:disabled {
+        cursor: not-allowed;
+        opacity: 0.6;
+    }
 `;
 
 const SPCreateIcon = styled.div`
@@ -677,8 +780,9 @@ export const UserButton: React.FC<UserButtonProps> = ({
     const [isNarrow, setIsNarrow] = useState(
         typeof window !== "undefined" && window.innerWidth < narrowBreakpoint,
     );
-    const [orgSearch, setOrgSearch] = useState("");
     const [switching, setSwitching] = useState(false);
+    const [contextTab, setContextTab] = useState<"org" | "ws">("org");
+    const [leavingType, setLeavingType] = useState<"org" | "ws" | null>(null);
     const [sidePanelPos, setSidePanelPos] = useState({
         top: 0,
         left: 0,
@@ -739,7 +843,7 @@ export const UserButton: React.FC<UserButtonProps> = ({
     const workspacesByOrg = useMemo(() => {
         const map: Record<string, typeof workspaces> = {};
         for (const ws of workspaces || []) {
-            const orgId = (ws as any).organization?.id;
+            const orgId = ws.organization?.id;
             if (!orgId) continue;
             if (!map[orgId]) map[orgId] = [];
             map[orgId].push(ws);
@@ -747,13 +851,7 @@ export const UserButton: React.FC<UserButtonProps> = ({
         return map;
     }, [workspaces]);
 
-    const filteredMemberships = useMemo(() => {
-        const q = orgSearch.trim().toLowerCase();
-        if (!q) return organizationMemberships || [];
-        return (organizationMemberships || []).filter((m) =>
-            m.organization.name.toLowerCase().includes(q),
-        );
-    }, [organizationMemberships, orgSearch]);
+    const filteredMemberships = organizationMemberships || [];
 
     const updateSidePanelPos = useCallback(() => {
         if (!dropdownRef.current) return;
@@ -772,7 +870,7 @@ export const UserButton: React.FC<UserButtonProps> = ({
             return;
         }
         const maxHeight = Math.min(
-            Math.max(rect.height, 300),
+            Math.max(rect.height, 520),
             window.innerHeight - rect.top - 16,
         );
         const fitsRight =
@@ -789,7 +887,6 @@ export const UserButton: React.FC<UserButtonProps> = ({
     const openSwitcher = useCallback(() => {
         updateSidePanelPos();
         setShowSwitcher(true);
-        setOrgSearch("");
     }, [updateSidePanelPos]);
 
     const toggleOrgExpanded = useCallback((orgId: string) => {
@@ -811,6 +908,11 @@ export const UserButton: React.FC<UserButtonProps> = ({
             });
         }
     }, [activeOrganization, workspacesEnabled]);
+
+    useEffect(() => {
+        if (workspacesEnabled && activeWorkspace) setContextTab("ws");
+        else setContextTab("org");
+    }, [workspacesEnabled, activeWorkspace?.id]);
 
     useEffect(() => {
         const onResize = () => {
@@ -914,23 +1016,6 @@ export const UserButton: React.FC<UserButtonProps> = ({
         }
     };
 
-    const handleLeaveOrg = async (e: React.MouseEvent) => {
-        e.stopPropagation();
-        if (!leaveOrganization) return;
-        try {
-            await leaveOrganization();
-            await refetch();
-        } catch {}
-    };
-
-    const handleLeaveWorkspace = async (e: React.MouseEvent) => {
-        e.stopPropagation();
-        if (!leaveWorkspace) return;
-        try {
-            await leaveWorkspace();
-        } catch {}
-    };
-
     const openManage = () => {
         manageAccountDialog.open();
         setIsOpen(false);
@@ -944,10 +1029,7 @@ export const UserButton: React.FC<UserButtonProps> = ({
 
     const activeSignInId =
         sorted.find((s) => s.user.id === selectedAccount?.id)?.id || "";
-    const roleLabel =
-        (activeOrgMembership as any)?.roles?.[0]?.name ??
-        (activeOrgMembership as any)?.role?.name ??
-        null;
+    const roleLabel = activeOrgMembership?.roles?.[0]?.name ?? null;
 
     return (
         <DefaultStylesProvider>
@@ -1008,55 +1090,54 @@ export const UserButton: React.FC<UserButtonProps> = ({
                                 {/* Org chip + menu — same container so widths are identical */}
                                 <MenuList>
                                     {showOrgSwitcher && (
-                                    <OrgChip
-                                        $active={showSwitcher}
-                                        onClick={openSwitcher}
-                                        style={{
-                                            marginBottom: "var(--space-2u)",
-                                        }}
-                                    >
-                                        <InitialBox>
-                                            {activeOrganization ? (
-                                                activeOrganization.image_url ? (
+                                        <OrgChip
+                                            $active={showSwitcher}
+                                            onClick={openSwitcher}
+                                            style={{
+                                                marginBottom: "var(--space-2u)",
+                                            }}
+                                        >
+                                            <InitialBox>
+                                                {activeOrganization ? (
+                                                    activeOrganization.image_url ? (
+                                                        <img
+                                                            src={
+                                                                activeOrganization.image_url
+                                                            }
+                                                            alt={
+                                                                activeOrganization.name
+                                                            }
+                                                        />
+                                                    ) : (
+                                                        activeOrganization.name
+                                                            ?.charAt(0)
+                                                            .toUpperCase()
+                                                    )
+                                                ) : selectedAccount?.has_profile_picture ? (
                                                     <img
                                                         src={
-                                                            activeOrganization.image_url
+                                                            selectedAccount.profile_picture_url
                                                         }
                                                         alt={
-                                                            activeOrganization.name
+                                                            selectedAccount.first_name
                                                         }
                                                     />
                                                 ) : (
-                                                    activeOrganization.name
-                                                        ?.charAt(0)
-                                                        .toUpperCase()
-                                                )
-                                            ) : selectedAccount?.has_profile_picture ? (
-                                                <img
-                                                    src={
-                                                        selectedAccount.profile_picture_url
-                                                    }
-                                                    alt={
-                                                        selectedAccount.first_name
-                                                    }
-                                                />
-                                            ) : (
-                                                getInitials(
-                                                    `${selectedAccount?.first_name || ""} ${selectedAccount?.last_name || ""}`,
-                                                )
+                                                    getInitials(
+                                                        `${selectedAccount?.first_name || ""} ${selectedAccount?.last_name || ""}`,
+                                                    )
+                                                )}
+                                            </InitialBox>
+                                            <OrgChipName>
+                                                {activeOrganization?.name ??
+                                                    "Personal account"}
+                                            </OrgChipName>
+                                            {roleLabel && (
+                                                <OrgChipRole>
+                                                    {roleLabel}
+                                                </OrgChipRole>
                                             )}
-                                        </InitialBox>
-                                        <OrgChipName>
-                                            {activeOrganization?.name ??
-                                                "Personal account"}
-                                        </OrgChipName>
-                                        {roleLabel && (
-                                            <OrgChipRole>
-                                                {roleLabel}
-                                            </OrgChipRole>
-                                        )}
-                                        <OrgChevron />
-                                    </OrgChip>
+                                        </OrgChip>
                                     )}
                                     <MenuItem onClick={openManage}>
                                         <GearSix />
@@ -1180,37 +1261,275 @@ export const UserButton: React.FC<UserButtonProps> = ({
                                 $maxHeight={sidePanelPos.maxHeight}
                             >
                                 {isNarrow && (
-                                    <SPBack onClick={() => setShowSwitcher(false)}>
+                                    <SPBack
+                                        onClick={() => setShowSwitcher(false)}
+                                    >
                                         <CaretLeft size={13} />
                                         Back
                                     </SPBack>
                                 )}
-                                <SearchRow>
-                                    <MagnifyingGlass />
-                                    <SearchInput
-                                        placeholder="Search..."
-                                        value={orgSearch}
-                                        onChange={(e) =>
-                                            setOrgSearch(e.target.value)
+                                {(() => {
+                                    if (isPersonalActive) return null;
+                                    const activeIsWorkspace =
+                                        workspacesEnabled && !!activeWorkspace;
+                                    const orgRestricted =
+                                        !!activeOrgMembership
+                                            ?.eligibility_restriction?.type &&
+                                        activeOrgMembership
+                                            .eligibility_restriction.type !==
+                                            "none";
+                                    const canManageOrg =
+                                        !!activeOrganization &&
+                                        !orgRestricted &&
+                                        canManageOrganization(
+                                            activeOrgMembership,
+                                        );
+                                    const canManageWs =
+                                        activeIsWorkspace &&
+                                        !orgRestricted &&
+                                        canManageWorkspace(activeWsMembership);
+                                    const viewingTab: "org" | "ws" =
+                                        activeIsWorkspace ? contextTab : "org";
+                                    const orgRole =
+                                        activeOrgMembership?.roles?.[0]?.name;
+                                    const wsRole =
+                                        activeWsMembership?.roles?.[0]?.name;
+
+                                    const handleLeaveOrgBtn = async () => {
+                                        if (!leaveOrganization) return;
+                                        setLeavingType("org");
+                                        try {
+                                            await leaveOrganization();
+                                            await refetch();
+                                            setShowSwitcher(false);
+                                        } catch {
+                                        } finally {
+                                            setLeavingType(null);
                                         }
-                                        autoFocus={showSwitcher}
-                                    />
-                                </SearchRow>
-                                <Divider />
+                                    };
+                                    const handleLeaveWsBtn = async () => {
+                                        if (!leaveWorkspace) return;
+                                        setLeavingType("ws");
+                                        try {
+                                            await leaveWorkspace();
+                                            setShowSwitcher(false);
+                                        } catch {
+                                        } finally {
+                                            setLeavingType(null);
+                                        }
+                                    };
+
+                                    return (
+                                        <SPSelectedBlock>
+                                            {activeIsWorkspace && (
+                                                <SPSegmented>
+                                                    <SPSegmentedTab
+                                                        type="button"
+                                                        $active={
+                                                            viewingTab === "org"
+                                                        }
+                                                        data-active={
+                                                            viewingTab === "org"
+                                                        }
+                                                        onClick={() =>
+                                                            setContextTab("org")
+                                                        }
+                                                    >
+                                                        Organization
+                                                    </SPSegmentedTab>
+                                                    <SPSegmentedTab
+                                                        type="button"
+                                                        $active={
+                                                            viewingTab === "ws"
+                                                        }
+                                                        data-active={
+                                                            viewingTab === "ws"
+                                                        }
+                                                        onClick={() =>
+                                                            setContextTab("ws")
+                                                        }
+                                                    >
+                                                        Workspace
+                                                    </SPSegmentedTab>
+                                                </SPSegmented>
+                                            )}
+
+                                            {viewingTab === "org" &&
+                                                activeOrganization && (
+                                                    <SPContextRow>
+                                                        <SPContextAvatar>
+                                                            {activeOrganization.image_url ? (
+                                                                <img
+                                                                    src={
+                                                                        activeOrganization.image_url
+                                                                    }
+                                                                    alt={
+                                                                        activeOrganization.name
+                                                                    }
+                                                                />
+                                                            ) : (
+                                                                getInitials(
+                                                                    activeOrganization.name,
+                                                                )
+                                                            )}
+                                                        </SPContextAvatar>
+                                                        <SPContextText>
+                                                            <SPContextName>
+                                                                {
+                                                                    activeOrganization.name
+                                                                }
+                                                            </SPContextName>
+                                                            {orgRole && (
+                                                                <SPContextRole>
+                                                                    {orgRole}
+                                                                </SPContextRole>
+                                                            )}
+                                                        </SPContextText>
+                                                        <SPContextActions>
+                                                            {canManageOrg && (
+                                                                <SPHeaderIconButton
+                                                                    onClick={() => {
+                                                                        manageOrgDialog.open();
+                                                                        setIsOpen(
+                                                                            false,
+                                                                        );
+                                                                    }}
+                                                                    title="Organization settings"
+                                                                    aria-label="Organization settings"
+                                                                >
+                                                                    <GearSix
+                                                                        size={
+                                                                            14
+                                                                        }
+                                                                    />
+                                                                </SPHeaderIconButton>
+                                                            )}
+                                                            <SPHeaderIconButton
+                                                                $destructive
+                                                                onClick={
+                                                                    handleLeaveOrgBtn
+                                                                }
+                                                                disabled={
+                                                                    leavingType ===
+                                                                    "org"
+                                                                }
+                                                                title="Leave organization"
+                                                                aria-label="Leave organization"
+                                                            >
+                                                                <SignOut
+                                                                    size={14}
+                                                                />
+                                                            </SPHeaderIconButton>
+                                                        </SPContextActions>
+                                                    </SPContextRow>
+                                                )}
+
+                                            {viewingTab === "ws" &&
+                                                activeIsWorkspace && (
+                                                    <SPContextRow>
+                                                        <SPContextAvatar>
+                                                            {(
+                                                                activeWorkspace as WorkspaceWithOrganization
+                                                            ).image_url ? (
+                                                                <img
+                                                                    src={
+                                                                        (
+                                                                            activeWorkspace as WorkspaceWithOrganization
+                                                                        )
+                                                                            .image_url
+                                                                    }
+                                                                    alt={
+                                                                        activeWorkspace!
+                                                                            .name
+                                                                    }
+                                                                />
+                                                            ) : (
+                                                                getInitials(
+                                                                    activeWorkspace!
+                                                                        .name,
+                                                                )
+                                                            )}
+                                                        </SPContextAvatar>
+                                                        <SPContextText>
+                                                            <SPContextName>
+                                                                {
+                                                                    activeWorkspace!
+                                                                        .name
+                                                                }
+                                                            </SPContextName>
+                                                            {wsRole && (
+                                                                <SPContextRole>
+                                                                    {wsRole}
+                                                                </SPContextRole>
+                                                            )}
+                                                        </SPContextText>
+                                                        <SPContextActions>
+                                                            {canManageWs && (
+                                                                <SPHeaderIconButton
+                                                                    onClick={() => {
+                                                                        manageWorkspaceDialog.open();
+                                                                        setIsOpen(
+                                                                            false,
+                                                                        );
+                                                                    }}
+                                                                    title="Workspace settings"
+                                                                    aria-label="Workspace settings"
+                                                                >
+                                                                    <GearSix
+                                                                        size={
+                                                                            14
+                                                                        }
+                                                                    />
+                                                                </SPHeaderIconButton>
+                                                            )}
+                                                            <SPHeaderIconButton
+                                                                $destructive
+                                                                onClick={
+                                                                    handleLeaveWsBtn
+                                                                }
+                                                                disabled={
+                                                                    leavingType ===
+                                                                    "ws"
+                                                                }
+                                                                title="Leave workspace"
+                                                                aria-label="Leave workspace"
+                                                            >
+                                                                <SignOut
+                                                                    size={14}
+                                                                />
+                                                            </SPHeaderIconButton>
+                                                        </SPContextActions>
+                                                    </SPContextRow>
+                                                )}
+                                        </SPSelectedBlock>
+                                    );
+                                })()}
 
                                 <SPList>
                                     {/* Personal account */}
                                     <SPRow
                                         $active={isPersonalActive}
                                         onClick={() => {
-                                            if (!isPersonalActive) handleSwitchOrg(undefined);
+                                            if (!isPersonalActive)
+                                                handleSwitchOrg(undefined);
                                         }}
                                         disabled={switching}
-                                        style={isPersonalActive ? { cursor: "default" } : undefined}
+                                        style={
+                                            isPersonalActive
+                                                ? { cursor: "default" }
+                                                : undefined
+                                        }
                                     >
                                         <SPOrgAvatar $personal>
                                             {selectedAccount?.has_profile_picture ? (
-                                                <img src={selectedAccount.profile_picture_url} alt={selectedAccount.first_name} />
+                                                <img
+                                                    src={
+                                                        selectedAccount.profile_picture_url
+                                                    }
+                                                    alt={
+                                                        selectedAccount.first_name
+                                                    }
+                                                />
                                             ) : (
                                                 <User size={12} />
                                             )}
@@ -1218,7 +1537,12 @@ export const UserButton: React.FC<UserButtonProps> = ({
                                         <SPRowName>Personal account</SPRowName>
                                         {isPersonalActive && (
                                             <SPRowRight>
-                                                <span className="sp-check" style={{ display: "inline-flex" }}>
+                                                <span
+                                                    className="sp-check"
+                                                    style={{
+                                                        display: "inline-flex",
+                                                    }}
+                                                >
                                                     <SPCheckMark size={13} />
                                                 </span>
                                             </SPRowRight>
@@ -1228,167 +1552,233 @@ export const UserButton: React.FC<UserButtonProps> = ({
                                     {/* All orgs */}
                                     {filteredMemberships.map((membership) => {
                                         const org = membership.organization;
-                                        const isActive = org.id === activeOrganization?.id;
-                                        const isExpanded = expandedOrgs.has(org.id);
+                                        const isActive =
+                                            org.id === activeOrganization?.id;
+                                        const isExpanded = expandedOrgs.has(
+                                            org.id,
+                                        );
                                         const orgWorkspaces = workspacesEnabled
-                                            ? (workspacesByOrg[org.id] || [])
+                                            ? workspacesByOrg[org.id] || []
                                             : [];
-                                        const memRestricted = (membership as any).eligibility_restriction?.type &&
-                                            (membership as any).eligibility_restriction?.type !== "none";
-                                        const orgRestr = isActive && (activeOrgMembership as any)?.eligibility_restriction?.type &&
-                                            (activeOrgMembership as any)?.eligibility_restriction?.type !== "none";
-                                        const canManage = isActive && !orgRestr && canManageOrganization(activeOrgMembership);
+                                        const memRestricted =
+                                            !!membership.eligibility_restriction
+                                                ?.type &&
+                                            membership.eligibility_restriction
+                                                .type !== "none";
 
                                         return (
                                             <React.Fragment key={org.id}>
                                                 <SPRow
                                                     $active={isActive}
                                                     onClick={() => {
-                                                        if (memRestricted) return;
-                                                        if (workspacesEnabled) toggleOrgExpanded(org.id);
-                                                        else if (!isActive) handleSwitchOrg(org.id);
+                                                        if (memRestricted)
+                                                            return;
+                                                        if (workspacesEnabled)
+                                                            toggleOrgExpanded(
+                                                                org.id,
+                                                            );
+                                                        else if (!isActive)
+                                                            handleSwitchOrg(
+                                                                org.id,
+                                                            );
                                                     }}
                                                     disabled={switching}
                                                     style={
                                                         memRestricted
-                                                            ? { opacity: 0.55, cursor: "not-allowed" }
-                                                            : (isActive && !workspacesEnabled)
-                                                                ? { cursor: "default" }
-                                                                : undefined
+                                                            ? {
+                                                                  opacity: 0.55,
+                                                                  cursor: "not-allowed",
+                                                              }
+                                                            : isActive &&
+                                                                !workspacesEnabled
+                                                              ? {
+                                                                    cursor: "default",
+                                                                }
+                                                              : undefined
                                                     }
-                                                    title={(membership as any).eligibility_restriction?.message}
+                                                    title={
+                                                        membership
+                                                            .eligibility_restriction
+                                                            ?.message
+                                                    }
                                                 >
                                                     <SPOrgAvatar>
-                                                        {org.image_url
-                                                            ? <img src={org.image_url} alt={org.name} />
-                                                            : getInitials(org.name)
-                                                        }
-                                                    </SPOrgAvatar>
-                                                    <SPRowName>{org.name}</SPRowName>
-                                                    <SPRowRight>
-                                                        {memRestricted && <WarningCircle size={12} color="var(--color-error)" />}
-                                                        {isActive && !workspacesEnabled && (
-                                                            <>
-                                                                <span className="sp-actions" style={{ gap: "2px", alignItems: "center" }}>
-                                                                    {canManage && (
-                                                                        <SPIconBtn
-                                                                            onClick={(e) => { e.stopPropagation(); manageOrgDialog.open(); }}
-                                                                            title="Manage organization"
-                                                                        >
-                                                                            <GearSix size={12} />
-                                                                        </SPIconBtn>
-                                                                    )}
-                                                                    <SPLeaveBtn
-                                                                        onClick={(e) => { e.stopPropagation(); handleLeaveOrg(e); }}
-                                                                        title="Leave organization"
-                                                                    >
-                                                                        <SignOut size={12} />
-                                                                    </SPLeaveBtn>
-                                                                </span>
-                                                                <span className="sp-check"><SPCheckMark size={13} /></span>
-                                                            </>
+                                                        {org.image_url ? (
+                                                            <img
+                                                                src={
+                                                                    org.image_url
+                                                                }
+                                                                alt={org.name}
+                                                            />
+                                                        ) : (
+                                                            getInitials(
+                                                                org.name,
+                                                            )
                                                         )}
+                                                    </SPOrgAvatar>
+                                                    <SPRowName>
+                                                        {org.name}
+                                                    </SPRowName>
+                                                    <SPRowRight>
+                                                        {memRestricted && (
+                                                            <WarningCircle
+                                                                size={12}
+                                                                color="var(--color-error)"
+                                                            />
+                                                        )}
+                                                        {isActive &&
+                                                            !workspacesEnabled && (
+                                                                <SPCheckMark
+                                                                    size={13}
+                                                                />
+                                                            )}
                                                         {workspacesEnabled && (
-                                                            <>
-                                                                {isActive && (
-                                                                    <span className="sp-actions" style={{ gap: "2px", alignItems: "center" }}>
-                                                                        {canManage && (
-                                                                            <SPIconBtn
-                                                                                onClick={(e) => { e.stopPropagation(); manageOrgDialog.open(); }}
-                                                                                title="Manage organization"
-                                                                            >
-                                                                                <GearSix size={12} />
-                                                                            </SPIconBtn>
-                                                                        )}
-                                                                        <SPLeaveBtn
-                                                                            onClick={(e) => { e.stopPropagation(); handleLeaveOrg(e); }}
-                                                                            title="Leave organization"
-                                                                        >
-                                                                            <SignOut size={12} />
-                                                                        </SPLeaveBtn>
-                                                                    </span>
-                                                                )}
-                                                                <SPExpandCaret size={11} $open={isExpanded} />
-                                                            </>
+                                                            <SPExpandCaret
+                                                                size={11}
+                                                                $open={
+                                                                    isExpanded
+                                                                }
+                                                            />
                                                         )}
                                                     </SPRowRight>
                                                 </SPRow>
 
-                                                {workspacesEnabled && isExpanded && (
-                                                    <>
-                                                        {orgWorkspaces.map((ws) => {
-                                                            const isActiveWs = isActive && activeWorkspace?.id === ws.id;
-                                                            const wsAny = ws as WorkspaceWithOrganization;
-                                                            const wsRestr = wsAny.eligibility_restriction?.type &&
-                                                                wsAny.eligibility_restriction.type !== "none";
-                                                            const canManageWs = isActiveWs && !wsRestr && !orgRestr &&
-                                                                canManageWorkspace(activeWsMembership);
+                                                {workspacesEnabled &&
+                                                    isExpanded && (
+                                                        <>
+                                                            {orgWorkspaces.map(
+                                                                (ws) => {
+                                                                    const isActiveWs =
+                                                                        isActive &&
+                                                                        activeWorkspace?.id ===
+                                                                            ws.id;
+                                                                    const wsAny =
+                                                                        ws as WorkspaceWithOrganization;
+                                                                    const wsRestr =
+                                                                        wsAny
+                                                                            .eligibility_restriction
+                                                                            ?.type &&
+                                                                        wsAny
+                                                                            .eligibility_restriction
+                                                                            .type !==
+                                                                            "none";
 
-                                                            return (
+                                                                    return (
+                                                                        <SPWsRow
+                                                                            key={
+                                                                                ws.id
+                                                                            }
+                                                                            $active={
+                                                                                isActiveWs
+                                                                            }
+                                                                            onClick={() => {
+                                                                                if (
+                                                                                    !isActiveWs &&
+                                                                                    !wsRestr
+                                                                                )
+                                                                                    handleSwitchWorkspace(
+                                                                                        ws.id,
+                                                                                    );
+                                                                            }}
+                                                                            disabled={
+                                                                                switching
+                                                                            }
+                                                                            style={
+                                                                                wsRestr ||
+                                                                                memRestricted
+                                                                                    ? {
+                                                                                          opacity: 0.55,
+                                                                                          cursor: "not-allowed",
+                                                                                      }
+                                                                                    : isActiveWs
+                                                                                      ? {
+                                                                                            cursor: "default",
+                                                                                        }
+                                                                                      : undefined
+                                                                            }
+                                                                            title={
+                                                                                wsAny
+                                                                                    .eligibility_restriction
+                                                                                    ?.message
+                                                                            }
+                                                                        >
+                                                                            <SPWsAvatar>
+                                                                                {wsAny.image_url ? (
+                                                                                    <img
+                                                                                        src={
+                                                                                            wsAny.image_url
+                                                                                        }
+                                                                                        alt={
+                                                                                            wsAny.name
+                                                                                        }
+                                                                                    />
+                                                                                ) : (
+                                                                                    getInitials(
+                                                                                        wsAny.name,
+                                                                                    ).charAt(
+                                                                                        0,
+                                                                                    )
+                                                                                )}
+                                                                            </SPWsAvatar>
+                                                                            <SPWsName>
+                                                                                {
+                                                                                    wsAny.name
+                                                                                }
+                                                                            </SPWsName>
+                                                                            <SPRowRight>
+                                                                                {wsRestr && (
+                                                                                    <WarningCircle
+                                                                                        size={
+                                                                                            12
+                                                                                        }
+                                                                                        color="var(--color-error)"
+                                                                                    />
+                                                                                )}
+                                                                                {isActiveWs && (
+                                                                                    <SPCheckMark
+                                                                                        size={
+                                                                                            12
+                                                                                        }
+                                                                                    />
+                                                                                )}
+                                                                            </SPRowRight>
+                                                                        </SPWsRow>
+                                                                    );
+                                                                },
+                                                            )}
+                                                            {!memRestricted && (
                                                                 <SPWsRow
-                                                                    key={ws.id}
-                                                                    $active={isActiveWs}
-                                                                    onClick={() => { if (!isActiveWs && !wsRestr) handleSwitchWorkspace(ws.id); }}
-                                                                    disabled={switching}
-                                                                    style={
-                                                                        (wsRestr || memRestricted)
-                                                                            ? { opacity: 0.55, cursor: "not-allowed" }
-                                                                            : isActiveWs
-                                                                                ? { cursor: "default" }
-                                                                                : undefined
+                                                                    onClick={() => {
+                                                                        setSelectedOrgForWorkspace(
+                                                                            org.id,
+                                                                        );
+                                                                        createWorkspaceDialog.open();
+                                                                    }}
+                                                                    disabled={
+                                                                        switching
                                                                     }
-                                                                    title={wsAny.eligibility_restriction?.message}
                                                                 >
-                                                                    <SPWsAvatar>
-                                                                        {wsAny.image_url
-                                                                            ? <img src={wsAny.image_url} alt={wsAny.name} />
-                                                                            : getInitials(wsAny.name).charAt(0)
-                                                                        }
+                                                                    <SPWsAvatar
+                                                                        style={{
+                                                                            background:
+                                                                                "transparent",
+                                                                            border: "1px dashed var(--color-border)",
+                                                                        }}
+                                                                    >
+                                                                        <Plus
+                                                                            size={
+                                                                                10
+                                                                            }
+                                                                        />
                                                                     </SPWsAvatar>
-                                                                    <SPWsName>{wsAny.name}</SPWsName>
-                                                                    <SPRowRight>
-                                                                        {wsRestr && <WarningCircle size={12} color="var(--color-error)" />}
-                                                                        {isActiveWs && (
-                                                                            <>
-                                                                                <span className="sp-actions" style={{ gap: "2px", alignItems: "center" }}>
-                                                                                    {canManageWs && (
-                                                                                        <SPIconBtn
-                                                                                            onClick={(e) => { e.stopPropagation(); manageWorkspaceDialog.open(); }}
-                                                                                            title="Manage workspace"
-                                                                                        >
-                                                                                            <GearSix size={11} />
-                                                                                        </SPIconBtn>
-                                                                                    )}
-                                                                                    <SPLeaveBtn
-                                                                                        onClick={(e) => { e.stopPropagation(); handleLeaveWorkspace(e); }}
-                                                                                        title="Leave workspace"
-                                                                                    >
-                                                                                        <SignOut size={11} />
-                                                                                    </SPLeaveBtn>
-                                                                                </span>
-                                                                                <span className="sp-check"><SPCheckMark size={12} /></span>
-                                                                            </>
-                                                                        )}
-                                                                    </SPRowRight>
+                                                                    <SPWsName>
+                                                                        New
+                                                                        workspace
+                                                                    </SPWsName>
                                                                 </SPWsRow>
-                                                            );
-                                                        })}
-                                                        {!memRestricted && (
-                                                            <SPWsRow
-                                                                onClick={() => {
-                                                                    setSelectedOrgForWorkspace(org.id);
-                                                                    createWorkspaceDialog.open();
-                                                                }}
-                                                                disabled={switching}
-                                                            >
-                                                                <SPWsAvatar style={{ background: "transparent", border: "1px dashed var(--color-border)" }}>
-                                                                    <Plus size={10} />
-                                                                </SPWsAvatar>
-                                                                <SPWsName>New workspace</SPWsName>
-                                                            </SPWsRow>
-                                                        )}
-                                                    </>
-                                                )}
+                                                            )}
+                                                        </>
+                                                    )}
                                             </React.Fragment>
                                         );
                                     })}
@@ -1400,34 +1790,50 @@ export const UserButton: React.FC<UserButtonProps> = ({
                                         <SPCreateRow
                                             onClick={() => {
                                                 setSelectedOrgForWorkspace(
-                                                    activeOrganization && !((activeOrgMembership as any)?.eligibility_restriction?.type &&
-                                                        (activeOrgMembership as any)?.eligibility_restriction?.type !== "none")
+                                                    activeOrganization &&
+                                                        !(
+                                                            !!activeOrgMembership
+                                                                ?.eligibility_restriction
+                                                                ?.type &&
+                                                            activeOrgMembership
+                                                                .eligibility_restriction
+                                                                .type !== "none"
+                                                        )
                                                         ? activeOrganization.id
-                                                        : null
+                                                        : null,
                                                 );
                                                 createWorkspaceDialog.open();
                                             }}
-                                            disabled={switching || !activeOrganization}
+                                            disabled={
+                                                switching || !activeOrganization
+                                            }
                                         >
-                                            <SPCreateIcon><Plus size={12} /></SPCreateIcon>
+                                            <SPCreateIcon>
+                                                <Plus size={12} />
+                                            </SPCreateIcon>
                                             New workspace
                                         </SPCreateRow>
                                     </SPFooter>
-                                ) : canCreateOrg && (
-                                    <SPFooter>
-                                        <SPCreateRow
-                                            onClick={() => {
-                                                if (onCreateOrg) {
-                                                    onCreateOrg();
-                                                    setIsOpen(false);
-                                                } else createOrgDialog.open();
-                                            }}
-                                            disabled={switching}
-                                        >
-                                            <SPCreateIcon><Plus size={12} /></SPCreateIcon>
-                                            New organization
-                                        </SPCreateRow>
-                                    </SPFooter>
+                                ) : (
+                                    canCreateOrg && (
+                                        <SPFooter>
+                                            <SPCreateRow
+                                                onClick={() => {
+                                                    if (onCreateOrg) {
+                                                        onCreateOrg();
+                                                        setIsOpen(false);
+                                                    } else
+                                                        createOrgDialog.open();
+                                                }}
+                                                disabled={switching}
+                                            >
+                                                <SPCreateIcon>
+                                                    <Plus size={12} />
+                                                </SPCreateIcon>
+                                                New organization
+                                            </SPCreateRow>
+                                        </SPFooter>
+                                    )
                                 )}
                             </SidePanel>
                         </DefaultStylesProvider>,
@@ -1456,7 +1862,9 @@ export const UserButton: React.FC<UserButtonProps> = ({
                                         createWorkspaceDialog.close();
                                         setSelectedOrgForWorkspace(null);
                                     }}
-                                    organizationId={selectedOrgForWorkspace || undefined}
+                                    organizationId={
+                                        selectedOrgForWorkspace || undefined
+                                    }
                                 />
                                 <ManageWorkspaceDialog
                                     isOpen={manageWorkspaceDialog.isOpen}

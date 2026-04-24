@@ -1,18 +1,10 @@
-import { useState, useRef, useMemo } from "react";
-import { EnvelopeSimple, Trash } from "@phosphor-icons/react";
+import { useState, useRef } from "react";
 import useSWR from "swr";
+import styled from "styled-components";
 import { Organization, OrganizationInvitation, OrganizationRole } from "@/types";
 import { useOrganizationList } from "@/hooks/use-organization";
 import { useScreenContext } from "../context";
-import {
-    Button,
-    SearchInput,
-    Spinner,
-    Dropdown,
-    DropdownItems,
-    DropdownItem,
-    DropdownTrigger,
-} from "@/components/utility";
+import { Button, Spinner } from "@/components/utility";
 import {
     Table,
     TableBody,
@@ -26,12 +18,24 @@ import { EmptyState } from "@/components/utility/empty-state";
 import { InviteMemberPopover } from "../invite-member-popover";
 import {
     HeaderCTAContainer,
-    IconButton,
     DesktopTableContainer,
-    MobileListContainer,
-    ConnectionItemRow,
-    ConnectionLeft,
+    StatusPill,
 } from "./shared";
+
+const InlineActions = styled.div`
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    justify-content: flex-end;
+    flex-wrap: nowrap;
+    white-space: nowrap;
+`;
+
+const isExpired = (inv: OrganizationInvitation) => {
+    const exp = (inv as any).expires_at;
+    if (!exp) return false;
+    return new Date(exp).getTime() < Date.now();
+};
 
 export const InvitationsSection = ({ organization }: { organization: Organization }) => {
     const {
@@ -42,7 +46,7 @@ export const InvitationsSection = ({ organization }: { organization: Organizatio
     } = useOrganizationList();
     const { toast } = useScreenContext();
     const [isInviting, setIsInviting] = useState(false);
-    const [searchQuery, setSearchQuery] = useState("");
+    const [pendingIds, setPendingIds] = useState<Set<string>>(new Set());
     const inviteMemberButtonRef = useRef<HTMLButtonElement>(null);
 
     const {
@@ -60,28 +64,36 @@ export const InvitationsSection = ({ organization }: { organization: Organizatio
     );
     const roles = rolesData as OrganizationRole[];
 
-    const filteredInvitations = useMemo(() => {
-        if (!searchQuery) return invitations;
-        const lower = searchQuery.toLowerCase();
-        return invitations.filter((inv) => inv.email.toLowerCase().includes(lower));
-    }, [invitations, searchQuery]);
+    const markPending = (id: string, on: boolean) => {
+        setPendingIds((prev) => {
+            const next = new Set(prev);
+            on ? next.add(id) : next.delete(id);
+            return next;
+        });
+    };
 
-    const handleCancelInvitation = async (invitation: OrganizationInvitation) => {
+    const handleCancel = async (invitation: OrganizationInvitation) => {
+        markPending(invitation.id, true);
         try {
             await discardInvitation(organization, invitation);
             reloadInvitations();
             toast("Invitation cancelled", "info");
         } catch (error: any) {
             toast(error.message || "Failed to cancel invitation", "error");
+        } finally {
+            markPending(invitation.id, false);
         }
     };
 
-    const handleResendInvitation = async (invitation: OrganizationInvitation) => {
+    const handleResend = async (invitation: OrganizationInvitation) => {
+        markPending(invitation.id, true);
         try {
             await resendInvitation(organization, invitation);
             toast("Invitation resent", "info");
         } catch (error: any) {
             toast(error.message || "Failed to resend invitation", "error");
+        } finally {
+            markPending(invitation.id, false);
         }
     };
 
@@ -89,17 +101,19 @@ export const InvitationsSection = ({ organization }: { organization: Organizatio
 
     return (
         <>
-            <HeaderCTAContainer>
-                <div style={{ flex: 1 }}>
-                    <SearchInput
-                        value={searchQuery}
-                        onChange={setSearchQuery}
-                        placeholder="MagnifyingGlass invitations..."
-                    />
+            <HeaderCTAContainer style={{ marginBottom: "var(--space-6u)" }}>
+                <div style={{ flex: 1, minWidth: 0 }}>
+                    <div style={{ fontSize: 14, fontWeight: 500, color: "var(--color-card-foreground)" }}>
+                        Invitations
+                    </div>
+                    <div style={{ fontSize: 12, color: "var(--color-secondary-text)", marginTop: 2 }}>
+                        Pending invites to join this organization.
+                    </div>
                 </div>
                 <Button
                     ref={inviteMemberButtonRef}
                     onClick={() => setIsInviting(true)}
+                    $size="sm"
                 >
                     Invite
                 </Button>
@@ -108,87 +122,79 @@ export const InvitationsSection = ({ organization }: { organization: Organizatio
             {isInviting && (
                 <InviteMemberPopover
                     onClose={() => setIsInviting(false)}
-                    onSuccess={() => { reloadInvitations(); setIsInviting(false); }}
+                    onSuccess={() => {
+                        reloadInvitations();
+                        setIsInviting(false);
+                    }}
                     roles={roles}
                     triggerRef={inviteMemberButtonRef}
                 />
             )}
 
-            {filteredInvitations.length === 0 ? (
+            {invitations.length === 0 ? (
                 <EmptyState
-                    title={searchQuery ? "No invitations match" : "No pending invitations"}
+                    title="No pending invitations"
                     description="Invite members to collaborate."
                 />
             ) : (
-                <>
-                    <DesktopTableContainer>
-                        <Table>
-                            <TableHead>
-                                <TableRow>
-                                    <TableHeader>Email</TableHeader>
-                                    <TableHeader>Role</TableHeader>
-                                    <TableHeader>Invited</TableHeader>
-                                    <TableHeader></TableHeader>
-                                </TableRow>
-                            </TableHead>
-                            <TableBody>
-                                {filteredInvitations.map((inv) => (
+                <DesktopTableContainer>
+                    <Table>
+                        <TableHead>
+                            <TableRow>
+                                <TableHeader>Email</TableHeader>
+                                <TableHeader>Role</TableHeader>
+                                <TableHeader>Status</TableHeader>
+                                <TableHeader>Invited</TableHeader>
+                                <TableHeader />
+                            </TableRow>
+                        </TableHead>
+                        <TableBody>
+                            {invitations.map((inv) => {
+                                const expired = isExpired(inv);
+                                const isBusy = pendingIds.has(inv.id);
+                                return (
                                     <TableRow key={inv.id}>
                                         <TableCell>{inv.email}</TableCell>
-                                        <TableCell>{inv.initial_organization_role?.name || "No role"}</TableCell>
-                                        <TableCell>{new Date(inv.created_at).toLocaleDateString()}</TableCell>
+                                        <TableCell style={{ color: "var(--color-secondary-text)" }}>
+                                            {inv.initial_organization_role?.name || "No role"}
+                                        </TableCell>
+                                        <TableCell>
+                                            {expired
+                                                ? <StatusPill $variant="danger">Expired</StatusPill>
+                                                : <StatusPill $variant="warning">Pending</StatusPill>
+                                            }
+                                        </TableCell>
+                                        <TableCell style={{ color: "var(--color-secondary-text)" }}>
+                                            {new Date(inv.created_at).toLocaleDateString()}
+                                        </TableCell>
                                         <ActionsCell>
-                                            <InvitationActions
-                                                invitation={inv}
-                                                onResend={handleResendInvitation}
-                                                onCancel={handleCancelInvitation}
-                                            />
+                                            <InlineActions>
+                                                <Button
+                                                    $size="sm"
+                                                    $outline
+                                                    disabled={isBusy}
+                                                    onClick={() => handleResend(inv)}
+                                                >
+                                                    Resend
+                                                </Button>
+                                                <Button
+                                                    $size="sm"
+                                                    $outline
+                                                    $destructive
+                                                    disabled={isBusy}
+                                                    onClick={() => handleCancel(inv)}
+                                                >
+                                                    {isBusy ? <Spinner size={12} /> : "Cancel"}
+                                                </Button>
+                                            </InlineActions>
                                         </ActionsCell>
                                     </TableRow>
-                                ))}
-                            </TableBody>
-                        </Table>
-                    </DesktopTableContainer>
-
-                    <MobileListContainer>
-                        {filteredInvitations.map((inv) => (
-                            <ConnectionItemRow key={inv.id}>
-                                <ConnectionLeft>
-                                    <div>
-                                        <div style={{ fontWeight: 600, fontSize: "14px", marginBottom: "4px" }}>{inv.email}</div>
-                                        <div style={{ fontSize: "12px", color: "var(--color-muted)" }}>
-                                            {inv.initial_organization_role?.name || "No role"} • {new Date(inv.created_at).toLocaleDateString()}
-                                        </div>
-                                    </div>
-                                    <div style={{ marginLeft: "auto" }}>
-                                        <InvitationActions
-                                            invitation={inv}
-                                            onResend={handleResendInvitation}
-                                            onCancel={handleCancelInvitation}
-                                        />
-                                    </div>
-                                </ConnectionLeft>
-                            </ConnectionItemRow>
-                        ))}
-                    </MobileListContainer>
-                </>
+                                );
+                            })}
+                        </TableBody>
+                    </Table>
+                </DesktopTableContainer>
             )}
         </>
     );
 };
-
-const InvitationActions = ({ invitation, onResend, onCancel }: any) => (
-    <Dropdown>
-        <DropdownTrigger>
-            <IconButton>•••</IconButton>
-        </DropdownTrigger>
-        <DropdownItems>
-            <DropdownItem onClick={() => onResend(invitation)}>
-                <EnvelopeSimple size={16} /> Resend
-            </DropdownItem>
-            <DropdownItem $destructive onClick={() => onCancel(invitation)}>
-                <Trash size={16} /> Cancel
-            </DropdownItem>
-        </DropdownItems>
-    </Dropdown>
-);

@@ -1,11 +1,10 @@
-import { useState, useRef, useEffect, useMemo } from "react";
+import { useState, useRef, useEffect } from "react";
 import { PaperPlaneTilt, Trash } from "@phosphor-icons/react";
 import { useActiveWorkspace } from "@/hooks/use-workspace";
 import { useScreenContext } from "../../organization/context";
 import { WorkspaceRole } from "@/types";
 import {
     Button,
-    SearchInput,
     Spinner,
     Dropdown,
     DropdownItems,
@@ -27,9 +26,6 @@ import {
     HeaderCTAContainer,
     IconButton,
     DesktopTableContainer,
-    MobileListContainer,
-    ConnectionItemRow,
-    ConnectionLeft,
 } from "./shared";
 
 export const InvitationsSection = () => {
@@ -46,7 +42,6 @@ export const InvitationsSection = () => {
 
     const [rolesLoading, setRolesLoading] = useState(true);
     const [invitationsLoading, setInvitationsLoading] = useState(true);
-    const [searchQuery, setSearchQuery] = useState("");
     const [invitations, setInvitations] = useState<any[]>([]);
     const [roles, setRoles] = useState<WorkspaceRole[]>([]);
     const [showInvitePopover, setShowInvitePopover] = useState(false);
@@ -96,27 +91,23 @@ export const InvitationsSection = () => {
         }
     };
 
-    const filteredInvitations = useMemo(() => {
-        if (!searchQuery) return invitations;
-        const lower = searchQuery.toLowerCase();
-        return invitations.filter((inv) => inv.email?.toLowerCase().includes(lower));
-    }, [invitations, searchQuery]);
-
     if (loading || rolesLoading || invitationsLoading) return <Spinner />;
 
     return (
         <>
-            <HeaderCTAContainer>
-                <div style={{ flex: 1 }}>
-                    <SearchInput
-                        value={searchQuery}
-                        onChange={setSearchQuery}
-                        placeholder="MagnifyingGlass invitations..."
-                    />
+            <HeaderCTAContainer style={{ marginBottom: "var(--space-6u)" }}>
+                <div style={{ flex: 1, minWidth: 0 }}>
+                    <div style={{ fontSize: 14, fontWeight: 500, color: "var(--color-card-foreground)" }}>
+                        Invitations
+                    </div>
+                    <div style={{ fontSize: 12, color: "var(--color-secondary-text)", marginTop: 2 }}>
+                        Pending invites to join this workspace.
+                    </div>
                 </div>
                 <Button
                     ref={inviteButtonRef}
                     onClick={() => setShowInvitePopover(true)}
+                    $size="sm"
                 >
                     Invite
                 </Button>
@@ -132,9 +123,9 @@ export const InvitationsSection = () => {
                 />
             )}
 
-            {filteredInvitations.length === 0 ? (
+            {invitations.length === 0 ? (
                 <EmptyState
-                    title={searchQuery ? "No invitations match" : "No pending invitations"}
+                    title="No pending invitations"
                     description="Invite members to your workspace."
                 />
             ) : (
@@ -150,7 +141,7 @@ export const InvitationsSection = () => {
                                 </TableRow>
                             </TableHead>
                             <TableBody>
-                                {filteredInvitations.map((inv) => (
+                                {invitations.map((inv) => (
                                     <TableRow key={inv.id}>
                                         <TableCell>{inv.email}</TableCell>
                                         <TableCell>
@@ -170,27 +161,6 @@ export const InvitationsSection = () => {
                             </TableBody>
                         </Table>
                     </DesktopTableContainer>
-
-                    <MobileListContainer>
-                        {filteredInvitations.map((inv) => (
-                            <ConnectionItemRow key={inv.id}>
-                                <ConnectionLeft>
-                                    <div>
-                                        <div style={{ fontWeight: 600, fontSize: "14px", marginBottom: "4px" }}>{inv.email}</div>
-                                        <div style={{ fontSize: "12px", color: "var(--color-muted)" }}>
-                                            {inv.initial_workspace_role?.name || "No role"} • {new Date(inv.created_at).toLocaleDateString()}
-                                        </div>
-                                    </div>
-                                    <div style={{ marginLeft: "auto" }}>
-                                        <InvitationActions
-                                            onResend={() => handleResendInvitation(inv.id)}
-                                            onCancel={() => handleCancelInvitation(inv.id)}
-                                        />
-                                    </div>
-                                </ConnectionLeft>
-                            </ConnectionItemRow>
-                        ))}
-                    </MobileListContainer>
                 </>
             )}
         </>

@@ -1,18 +1,8 @@
 import { useCallback } from "react";
 import useSWR from "swr";
+import type { ActorMcpServerSummary } from "@wacht/types";
 import { useClient } from "./use-client";
 import { responseMapper } from "../utils/response-mapper";
-
-export interface ActorMcpServerSummary {
-    id: string;
-    name: string;
-    endpoint: string;
-    auth_type: string;
-    requires_user_connection: boolean;
-    connection_status: "ready" | "connected" | "not_connected" | "expired";
-    connected_at?: string;
-    expires_at?: string;
-}
 
 interface ActorMcpServerConnectResponse {
     auth_url: string;

@@ -1,10 +1,10 @@
-import React, { useState, useRef } from "react";
-import { DotsThree } from "@phosphor-icons/react";
+import { useState, useRef } from "react";
+import styled from "styled-components";
 import { useDeployment } from "@/hooks/use-deployment";
 import { useUser } from "@/hooks/use-user";
 import { useScreenContext } from "../context";
 import { EmailAddPopover } from "@/components/user/add-email-popover";
-import { Button, SearchInput } from "@/components/utility";
+import { Button, Spinner } from "@/components/utility";
 import { EmptyState } from "@/components/utility/empty-state";
 import {
     Table,
@@ -16,32 +16,35 @@ import {
     ActionsCell,
 } from "@/components/utility/table";
 import {
-    Dropdown,
-    DropdownItem,
-    DropdownItems,
-    DropdownTrigger,
-} from "@/components/utility/dropdown";
-import {
     ResponsiveHeaderContainer,
     DesktopTableContainer,
-    MobileListContainer,
-    ConnectionItemRow,
-    ConnectionLeft,
-    IconButton,
+    StatusPill,
 } from "./shared";
+
+const InlineActions = styled.div`
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    justify-content: flex-end;
+    flex-wrap: nowrap;
+    white-space: nowrap;
+    & > button { white-space: nowrap; }
+`;
+
+const MutedLabel = styled.span`
+    font-size: 12px;
+    color: var(--color-secondary-text);
+`;
 
 export const EmailManagementSection = () => {
     const { deployment } = useDeployment();
     const { toast } = useScreenContext();
-    const [activeDropdown, setActiveDropdown] = useState<string | null>(null);
     const [newEmail, setNewEmail] = useState("");
     const [isAddingEmail, setIsAddingEmail] = useState(false);
     const [verifyingEmailId, setVerifyingEmailId] = useState<string | null>(null);
-    const [searchQuery, setSearchQuery] = useState("");
+    const [pendingIds, setPendingIds] = useState<Set<string>>(new Set());
     const emailButtonRef = useRef<HTMLButtonElement>(null);
-    const verifyButtonRefs = useRef<{ [key: string]: HTMLButtonElement | null }>(
-        {},
-    );
+    const verifyButtonRefs = useRef<{ [key: string]: HTMLButtonElement | null }>({});
     const {
         user,
         createEmailAddress,
@@ -51,67 +54,140 @@ export const EmailManagementSection = () => {
         makeEmailPrimary,
     } = useUser();
 
-    // Don't render if email is disabled
-    if (!deployment?.auth_settings?.email_address?.enabled) {
-        return null;
-    }
+    if (!deployment?.auth_settings?.email_address?.enabled) return null;
 
-    const handleDeleteEmail = async (emailId: string) => {
+    const markPending = (id: string, on: boolean) => {
+        setPendingIds((prev) => {
+            const next = new Set(prev);
+            on ? next.add(id) : next.delete(id);
+            return next;
+        });
+    };
+
+    const handleMakePrimary = async (id: string) => {
+        markPending(id, true);
         try {
-            // Check if this is the primary email
-            if (emailId === user?.primary_email_address_id) {
-                toast(
-                    "Cannot delete primary email address. Please set another email as primary first.",
-                    "error",
-                );
-                return;
-            }
+            await makeEmailPrimary(id);
+            await user.refetch();
+            toast("Primary email updated", "info");
+        } catch (error: any) {
+            toast(error.message || "Failed to update primary email", "error");
+        } finally {
+            markPending(id, false);
+        }
+    };
 
-            await deleteEmailAddress(emailId);
-            user.refetch();
-            toast("Email address deleted successfully", "info");
+    const handleDeleteEmail = async (id: string) => {
+        if (id === user?.primary_email_address_id) {
+            toast(
+                "Cannot delete primary email. Set another email as primary first.",
+                "error",
+            );
+            return;
+        }
+        markPending(id, true);
+        try {
+            await deleteEmailAddress(id);
+            await user.refetch();
+            toast("Email removed", "info");
         } catch (error: any) {
             toast(
                 error.message || "Failed to delete email address. Please try again.",
                 "error",
             );
+        } finally {
+            markPending(id, false);
         }
     };
 
-    // Filter emails based on search query
-    const filteredEmails = React.useMemo(() => {
-        if (!user?.user_email_addresses) return [];
-        if (!searchQuery.trim()) return user.user_email_addresses;
+    const handleResend = async (id: string) => {
+        markPending(id, true);
+        try {
+            await prepareEmailVerification(id);
+            await user.refetch();
+            setVerifyingEmailId(id);
+        } catch (error: any) {
+            toast(error.message || "Failed to send verification", "error");
+        } finally {
+            markPending(id, false);
+        }
+    };
 
-        return user.user_email_addresses.filter((email) =>
-            email.email.toLowerCase().includes(searchQuery.toLowerCase()),
+    const emails = user?.user_email_addresses || [];
+
+    const renderStatus = (email: { id: string; verified: boolean }) => {
+        if (email.id === user?.primary_email_address_id) {
+            return <StatusPill $variant="success">Primary</StatusPill>;
+        }
+        if (email.verified) {
+            return <StatusPill $variant="neutral">Backup</StatusPill>;
+        }
+        return <StatusPill $variant="warning">Pending verification</StatusPill>;
+    };
+
+    const renderActions = (email: { id: string; verified: boolean }) => {
+        const isPrimary = email.id === user?.primary_email_address_id;
+        const isBusy = pendingIds.has(email.id);
+
+        if (isPrimary) {
+            return <MutedLabel>Cannot remove</MutedLabel>;
+        }
+
+        return (
+            <InlineActions>
+                {email.verified && (
+                    <Button
+                        $size="sm"
+                        $outline
+                        disabled={isBusy}
+                        onClick={() => handleMakePrimary(email.id)}
+                    >
+                        Make primary
+                    </Button>
+                )}
+                {!email.verified && (
+                    <Button
+                        ref={(r: HTMLButtonElement | null) => {
+                            if (r) verifyButtonRefs.current[email.id] = r;
+                        }}
+                        $size="sm"
+                        $outline
+                        disabled={isBusy}
+                        onClick={() => handleResend(email.id)}
+                    >
+                        Resend
+                    </Button>
+                )}
+                <Button
+                    $size="sm"
+                    $destructive
+                    disabled={isBusy}
+                    onClick={() => handleDeleteEmail(email.id)}
+                >
+                    {isBusy ? <Spinner size={12} /> : "Remove"}
+                </Button>
+            </InlineActions>
         );
-    }, [user?.user_email_addresses, searchQuery]);
+    };
 
     return (
         <>
-            <ResponsiveHeaderContainer>
-                <div style={{ flex: 1, minWidth: "calc(var(--size-50u) * 2)" }}>
-                    <SearchInput
-                        value={searchQuery}
-                        onChange={setSearchQuery}
-                        placeholder="MagnifyingGlass Email"
-                    />
+            <ResponsiveHeaderContainer style={{ marginBottom: "var(--space-6u)" }}>
+                <div style={{ flex: 1, minWidth: 0 }}>
+                    <div style={{ fontSize: 14, fontWeight: 500, color: "var(--color-card-foreground)" }}>
+                        Email addresses
+                    </div>
+                    <div style={{ fontSize: 12, color: "var(--color-secondary-text)", marginTop: 2 }}>
+                        Sign in and receive notifications at these addresses.
+                    </div>
                 </div>
                 <div style={{ position: "relative", flexShrink: 0 }}>
                     <Button
                         ref={emailButtonRef}
+                        $size="sm"
                         onClick={() => setIsAddingEmail(true)}
-                        style={{
-                            padding: "var(--space-4u) var(--space-8u)",
-                            borderRadius: "var(--radius-xs)",
-                            fontSize: "var(--font-size-lg)",
-                            fontWeight: 500,
-                            height: "var(--size-18u)",
-                            width: "100%",
-                        }}
                     >
-                        Add Email
+                        Add email
                     </Button>
                     {isAddingEmail && (
                         <EmailAddPopover
@@ -122,7 +198,6 @@ export const EmailManagementSection = () => {
                                 setNewEmail(newEmailData.data.id);
                                 await prepareEmailVerification(newEmailData.data.id);
                                 user.refetch();
-                                // Don't close the popover - let it transition to OTP step
                             }}
                             onPrepareVerification={async () => {
                                 await prepareEmailVerification(newEmail);
@@ -133,18 +208,16 @@ export const EmailManagementSection = () => {
                                 user.refetch();
                                 setIsAddingEmail(false);
                                 setNewEmail("");
-                                toast("Email added and verified successfully!", "info");
+                                toast("Email added and verified", "info");
                             }}
                         />
                     )}
                 </div>
             </ResponsiveHeaderContainer>
 
-            {!filteredEmails?.length ? (
+            {!emails.length ? (
                 <EmptyState
-                    title={
-                        searchQuery ? "No emails match your search" : "No email addresses"
-                    }
+                    title="No email addresses"
                     description="Add an email address to get started."
                 />
             ) : (
@@ -153,219 +226,33 @@ export const EmailManagementSection = () => {
                         <Table>
                             <TableHead>
                                 <TableRow>
-                                    <TableHeader>Email Address</TableHeader>
+                                    <TableHeader>Email address</TableHeader>
                                     <TableHeader>Status</TableHeader>
-                                    <TableHeader></TableHeader>
+                                    <TableHeader />
                                 </TableRow>
                             </TableHead>
                             <TableBody>
-                                {filteredEmails.map((email) => (
+                                {emails.map((email) => (
                                     <TableRow key={email.id}>
                                         <TableCell>{email.email}</TableCell>
-                                        <TableCell>
-                                            {email.id === user?.primary_email_address_id
-                                                ? "Primary"
-                                                : email.verified
-                                                    ? "Verified"
-                                                    : "Not Verified"}
-                                        </TableCell>
-                                        <ActionsCell>
-                                            {/* Only show dropdown if there are actions available (not primary or not verified) */}
-                                            {email.id !== user?.primary_email_address_id ||
-                                                !email.verified ? (
-                                                <Dropdown
-                                                    open={activeDropdown === email.id}
-                                                    openChange={(isOpen) =>
-                                                        setActiveDropdown(isOpen ? email.id : null)
-                                                    }
-                                                >
-                                                    <DropdownTrigger>
-                                                        <IconButton
-                                                            ref={(ref: HTMLButtonElement | null) => {
-                                                                if (ref) verifyButtonRefs.current[email.id] = ref;
-                                                            }}
-                                                        >
-                                                            <DotsThree size={16} />
-                                                        </IconButton>
-                                                    </DropdownTrigger>
-                                                    <DropdownItems>
-                                                        {email.id !== user?.primary_email_address_id &&
-                                                            email.verified && (
-                                                                <DropdownItem
-                                                                    onClick={async () => {
-                                                                        try {
-                                                                            await makeEmailPrimary(email.id);
-                                                                            user.refetch();
-                                                                            setActiveDropdown(null);
-                                                                            toast(
-                                                                                "Primary email updated successfully",
-                                                                                "info",
-                                                                            );
-                                                                        } catch (error: any) {
-                                                                            toast(
-                                                                                error.message ||
-                                                                                "Failed to update primary email",
-                                                                                "error",
-                                                                            );
-                                                                        }
-                                                                    }}
-                                                                >
-                                                                    Make primary
-                                                                </DropdownItem>
-                                                            )}
-                                                        {!email.verified && (
-                                                            <DropdownItem
-                                                                onClick={async () => {
-                                                                    setActiveDropdown(null);
-                                                                    await prepareEmailVerification(email.id);
-                                                                    setVerifyingEmailId(email.id);
-                                                                }}
-                                                            >
-                                                                Verify email
-                                                            </DropdownItem>
-                                                        )}
-                                                        {email.id !== user?.primary_email_address_id && (
-                                                            <DropdownItem
-                                                                $destructive
-                                                                onClick={() => {
-                                                                    handleDeleteEmail(email.id);
-                                                                    setActiveDropdown(null);
-                                                                }}
-                                                            >
-                                                                Remove
-                                                            </DropdownItem>
-                                                        )}
-                                                    </DropdownItems>
-                                                </Dropdown>
-                                            ) : null}
-                                        </ActionsCell>
+                                        <TableCell>{renderStatus(email)}</TableCell>
+                                        <ActionsCell>{renderActions(email)}</ActionsCell>
                                     </TableRow>
                                 ))}
                             </TableBody>
                         </Table>
                     </DesktopTableContainer>
-
-                    <MobileListContainer>
-                        {filteredEmails.map((email, index) => (
-                            <div key={email.id}>
-                                <ConnectionItemRow>
-                                    <ConnectionLeft>
-                                        <div style={{ fontWeight: 500, fontSize: "var(--font-size-lg)", color: "var(--color-foreground)" }}>
-                                            {email.email}
-                                        </div>
-
-                                        <div
-                                            style={{
-                                                fontSize: "var(--font-size-md)",
-                                                color: "var(--color-muted)",
-                                                background: "var(--color-input-background)",
-                                                padding: "var(--space-1u) var(--space-4u)",
-                                                borderRadius: "var(--radius-2xs)",
-                                                border: "var(--border-width-thin) solid var(--color-border)",
-                                            }}
-                                        >
-                                            {email.id === user?.primary_email_address_id
-                                                ? "Primary"
-                                                : email.verified
-                                                    ? "Verified"
-                                                    : "Not Verified"}
-                                        </div>
-
-                                        {/* Menu on first line */}
-                                        <div style={{ marginLeft: "auto" }}>
-                                            {(email.id !== user?.primary_email_address_id || !email.verified) && (
-                                                <Dropdown
-                                                    open={activeDropdown === email.id}
-                                                    openChange={(isOpen) =>
-                                                        setActiveDropdown(isOpen ? email.id : null)
-                                                    }
-                                                >
-                                                    <DropdownTrigger>
-                                                        <IconButton
-                                                            ref={(ref: HTMLButtonElement | null) => {
-                                                                if (ref) verifyButtonRefs.current[email.id] = ref;
-                                                            }}
-                                                        >
-                                                            <DotsThree size={16} />
-                                                        </IconButton>
-                                                    </DropdownTrigger>
-                                                    <DropdownItems>
-                                                        {email.id !== user?.primary_email_address_id &&
-                                                            email.verified && (
-                                                                <DropdownItem
-                                                                    onClick={async () => {
-                                                                        try {
-                                                                            await makeEmailPrimary(email.id);
-                                                                            user.refetch();
-                                                                            setActiveDropdown(null);
-                                                                            toast(
-                                                                                "Primary email updated successfully",
-                                                                                "info",
-                                                                            );
-                                                                        } catch (error: any) {
-                                                                            toast(
-                                                                                error.message ||
-                                                                                "Failed to update primary email",
-                                                                                "error",
-                                                                            );
-                                                                        }
-                                                                    }}
-                                                                >
-                                                                    Make primary
-                                                                </DropdownItem>
-                                                            )}
-                                                        {!email.verified && (
-                                                            <DropdownItem
-                                                                onClick={async () => {
-                                                                    setActiveDropdown(null);
-                                                                    await prepareEmailVerification(email.id);
-                                                                    setVerifyingEmailId(email.id);
-                                                                }}
-                                                            >
-                                                                Verify email
-                                                            </DropdownItem>
-                                                        )}
-                                                        {email.id !== user?.primary_email_address_id && (
-                                                            <DropdownItem
-                                                                $destructive
-                                                                onClick={() => {
-                                                                    handleDeleteEmail(email.id);
-                                                                    setActiveDropdown(null);
-                                                                }}
-                                                            >
-                                                                Remove
-                                                            </DropdownItem>
-                                                        )}
-                                                    </DropdownItems>
-                                                </Dropdown>
-                                            )}
-                                        </div>
-                                    </ConnectionLeft>
-                                </ConnectionItemRow>
-                                {index < filteredEmails.length - 1 && (
-                                    <div
-                                        style={{
-                                            height: "var(--border-width-thin)",
-                                            background: "var(--color-border)",
-                                        }}
-                                    />
-                                )}
-                            </div>
-                        ))}
-                    </MobileListContainer>
                 </>
             )}
+
             {verifyingEmailId && (
                 <EmailAddPopover
                     existingEmail={
-                        user?.user_email_addresses?.find((e) => e.id === verifyingEmailId)
-                            ?.email
+                        user?.user_email_addresses?.find((e) => e.id === verifyingEmailId)?.email
                     }
                     triggerRef={{ current: verifyButtonRefs.current[verifyingEmailId] }}
                     onClose={() => setVerifyingEmailId(null)}
-                    onAddEmail={async () => {
-                        // This won't be called since we're starting at OTP step
-                    }}
+                    onAddEmail={async () => { }}
                     onPrepareVerification={async () => {
                         await prepareEmailVerification(verifyingEmailId);
                         user.refetch();
@@ -374,7 +261,7 @@ export const EmailManagementSection = () => {
                         await attemptEmailVerification(verifyingEmailId, otp);
                         user.refetch();
                         setVerifyingEmailId(null);
-                        toast("Email verified successfully!", "info");
+                        toast("Email verified", "info");
                     }}
                 />
             )}

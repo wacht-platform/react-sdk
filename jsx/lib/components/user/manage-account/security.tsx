@@ -25,8 +25,18 @@ import {
     SecurityItemRow,
     SecurityItemContent,
     SecurityItemActions,
+    StatusPill,
     spin,
 } from "./shared";
+import styled from "styled-components";
+
+const SectionLabel = styled.div<{ $first?: boolean }>`
+    font-size: var(--font-size-sm);
+    text-transform: uppercase;
+    color: var(--color-secondary-text);
+    padding: ${(p) => (p.$first ? "0" : "var(--space-8u) 0 0")};
+    margin-bottom: var(--space-4u);
+`;
 
 export const SecurityManagementSection = () => {
     const { deployment } = useDeployment();
@@ -146,7 +156,8 @@ export const SecurityManagementSection = () => {
             (authSettings?.first_factor === "email_otp" && hasVerifiedEmail) ||
             (authSettings?.magic_link?.enabled && hasVerifiedEmail) ||
             authSettings?.passkey?.enabled ||
-            (authSettings?.auth_factors_enabled?.phone_otp && hasVerifiedPhone) ||
+            (authSettings?.auth_factors_enabled?.phone_otp &&
+                hasVerifiedPhone) ||
             (hasSocialConnection &&
                 deployment?.social_connections?.some((sc) => sc.enabled));
 
@@ -186,7 +197,10 @@ export const SecurityManagementSection = () => {
         setAuthenticatorId("");
         setVerificationCodes(["", ""]);
         setBackupCodes([]);
-        toast("Two-factor authentication setup completed successfully!", "info");
+        toast(
+            "Two-factor authentication setup completed successfully!",
+            "info",
+        );
     };
 
     const handleRemoveAuthenticator = async () => {
@@ -290,7 +304,16 @@ export const SecurityManagementSection = () => {
     }, [deployment?.auth_settings?.passkey?.enabled]);
 
     // Create security items for table display
-    const securityItems = [];
+    type SecurityGroup = "sign-in" | "recovery";
+    interface SecurityItem {
+        id: string;
+        name: string;
+        description: string;
+        status: string;
+        actions: string[];
+        group: SecurityGroup;
+    }
+    const securityItems: SecurityItem[] = [];
 
     if (passwordEnabled) {
         securityItems.push({
@@ -299,6 +322,7 @@ export const SecurityManagementSection = () => {
             description: "Secure your account with a strong password",
             status: user?.has_password ? "Enabled" : "Disabled",
             actions: user?.has_password ? ["change"] : ["setup"],
+            group: "sign-in",
         });
     }
 
@@ -306,9 +330,11 @@ export const SecurityManagementSection = () => {
         securityItems.push({
             id: "passkey",
             name: "Passkeys",
-            description: "Sign in faster with fingerprint, face, or screen lock",
+            description:
+                "Sign in faster with fingerprint, face, or screen lock",
             status: passkeys.length > 0 ? `${passkeys.length} registered` : "",
             actions: passkeys.length > 0 ? ["manage", "add"] : ["add"],
+            group: "sign-in",
         });
     }
 
@@ -319,6 +345,7 @@ export const SecurityManagementSection = () => {
             description: "Use an authenticator app for extra security",
             status: user?.user_authenticator ? "Enabled" : "Disabled",
             actions: user?.user_authenticator ? ["remove"] : ["setup"],
+            group: "sign-in",
         });
     }
 
@@ -327,8 +354,11 @@ export const SecurityManagementSection = () => {
             id: "backup_codes",
             name: "Backup Codes",
             description: "Recovery codes if you lose your authenticator",
-            status: user?.backup_codes_generated ? "Generated" : "Not Generated",
+            status: user?.backup_codes_generated
+                ? "Generated"
+                : "Not Generated",
             actions: ["generate"],
+            group: "recovery",
         });
     }
 
@@ -339,8 +369,41 @@ export const SecurityManagementSection = () => {
             description: "Require a second factor for all sign-ins",
             status: secondFactorPolicy === "enforced" ? "Enforced" : "Optional",
             actions: ["toggle"],
+            group: "recovery",
         });
     }
+
+    const pillFor = (
+        id: string,
+    ): { variant: "success" | "warning" | "neutral"; label: string } | null => {
+        switch (id) {
+            case "password":
+                return user?.has_password
+                    ? { variant: "success", label: "Active" }
+                    : { variant: "warning", label: "Not set up" };
+            case "passkey":
+                return passkeys.length > 0
+                    ? {
+                          variant: "neutral",
+                          label: `${passkeys.length} registered`,
+                      }
+                    : { variant: "warning", label: "None" };
+            case "authenticator":
+                return user?.user_authenticator
+                    ? { variant: "success", label: "Enabled" }
+                    : { variant: "warning", label: "Not set up" };
+            case "backup_codes":
+                return user?.backup_codes_generated
+                    ? { variant: "success", label: "Generated" }
+                    : { variant: "warning", label: "Not generated" };
+            case "second_factor_policy":
+                return secondFactorPolicy === "enforced"
+                    ? { variant: "success", label: "Enforced" }
+                    : { variant: "neutral", label: "Optional" };
+            default:
+                return null;
+        }
+    };
 
     if (setupStep !== "table") {
         return (
@@ -361,8 +424,10 @@ export const SecurityManagementSection = () => {
                                 color: "var(--color-foreground)",
                             }}
                         >
-                            {setupStep === "qr" && "Setup Two-Factor Authentication"}
-                            {setupStep === "verify" && "Verify Your Authenticator"}
+                            {setupStep === "qr" &&
+                                "Setup Two-Factor Authentication"}
+                            {setupStep === "verify" &&
+                                "Verify Your Authenticator"}
                             {setupStep === "backup" && "Save Your Backup Codes"}
                             {setupStep === "success" && "Setup Complete!"}
                         </span>
@@ -401,8 +466,8 @@ export const SecurityManagementSection = () => {
                                     marginBottom: "var(--space-12u)",
                                 }}
                             >
-                                Scan this QR code with your authenticator app (Google
-                                Authenticator, Authy, etc.)
+                                Scan this QR code with your authenticator app
+                                (Google Authenticator, Authy, etc.)
                             </p>
 
                             <div
@@ -422,7 +487,8 @@ export const SecurityManagementSection = () => {
                                             display: "flex",
                                             alignItems: "center",
                                             justifyContent: "center",
-                                            background: "var(--color-input-background)",
+                                            background:
+                                                "var(--color-input-background)",
                                         }}
                                     >
                                         <div style={{ textAlign: "center" }}>
@@ -431,7 +497,8 @@ export const SecurityManagementSection = () => {
                                                     width: "var(--size-12u)",
                                                     height: "var(--size-12u)",
                                                     border: "var(--border-width-regular) solid var(--color-border)",
-                                                    borderTop: "var(--border-width-regular) solid var(--color-primary)",
+                                                    borderTop:
+                                                        "var(--border-width-regular) solid var(--color-primary)",
                                                     borderRadius: "50%",
                                                     animation: `${spin} 1s linear infinite`,
                                                     margin: "0 auto var(--space-4u)",
@@ -439,7 +506,8 @@ export const SecurityManagementSection = () => {
                                             ></div>
                                             <div
                                                 style={{
-                                                    fontSize: "var(--font-size-sm)",
+                                                    fontSize:
+                                                        "var(--font-size-sm)",
                                                     color: "var(--color-secondary-text)",
                                                 }}
                                             >
@@ -453,7 +521,8 @@ export const SecurityManagementSection = () => {
                                             border: "var(--border-width-thin) solid var(--color-border)",
                                             borderRadius: "var(--radius-md)",
                                             padding: "var(--space-8u)",
-                                            background: "var(--color-background)",
+                                            background:
+                                                "var(--color-background)",
                                         }}
                                     >
                                         <QRCodeSVG
@@ -473,7 +542,8 @@ export const SecurityManagementSection = () => {
                                             display: "flex",
                                             alignItems: "center",
                                             justifyContent: "center",
-                                            background: "var(--color-input-background)",
+                                            background:
+                                                "var(--color-input-background)",
                                             color: "var(--color-error)",
                                             fontSize: "var(--font-size-lg)",
                                             textAlign: "center",
@@ -527,7 +597,10 @@ export const SecurityManagementSection = () => {
                                             ? "var(--color-secondary-text)"
                                             : "var(--color-background)",
                                     border: `var(--border-width-thin) solid ${!qrCodeUrl || !secretKey ? "var(--color-border)" : "var(--color-primary)"}`,
-                                    cursor: !qrCodeUrl || !secretKey ? "not-allowed" : "pointer",
+                                    cursor:
+                                        !qrCodeUrl || !secretKey
+                                            ? "not-allowed"
+                                            : "pointer",
                                 }}
                             >
                                 I've Scanned the Code
@@ -543,8 +616,8 @@ export const SecurityManagementSection = () => {
                                     marginBottom: "var(--space-12u)",
                                 }}
                             >
-                                Enter two consecutive codes from your authenticator app to
-                                verify setup
+                                Enter two consecutive codes from your
+                                authenticator app to verify setup
                             </p>
 
                             <div
@@ -559,11 +632,16 @@ export const SecurityManagementSection = () => {
                                     type="text"
                                     placeholder="000000"
                                     value={verificationCodes[0]}
-                                    onChange={(e: ChangeEvent<HTMLInputElement>) => {
+                                    onChange={(
+                                        e: ChangeEvent<HTMLInputElement>,
+                                    ) => {
                                         const value = e.target.value
                                             .replace(/[^0-9]/g, "")
                                             .substring(0, 6);
-                                        setVerificationCodes([value, verificationCodes[1]]);
+                                        setVerificationCodes([
+                                            value,
+                                            verificationCodes[1],
+                                        ]);
                                     }}
                                     maxLength={6}
                                     style={{
@@ -576,11 +654,16 @@ export const SecurityManagementSection = () => {
                                     type="text"
                                     placeholder="000000"
                                     value={verificationCodes[1]}
-                                    onChange={(e: ChangeEvent<HTMLInputElement>) => {
+                                    onChange={(
+                                        e: ChangeEvent<HTMLInputElement>,
+                                    ) => {
                                         const value = e.target.value
                                             .replace(/[^0-9]/g, "")
                                             .substring(0, 6);
-                                        setVerificationCodes([verificationCodes[0], value]);
+                                        setVerificationCodes([
+                                            verificationCodes[0],
+                                            value,
+                                        ]);
                                     }}
                                     maxLength={6}
                                     style={{
@@ -601,7 +684,8 @@ export const SecurityManagementSection = () => {
                                 <Button
                                     onClick={() => setSetupStep("qr")}
                                     style={{
-                                        padding: "var(--space-4u) var(--space-8u)",
+                                        padding:
+                                            "var(--space-4u) var(--space-8u)",
                                         background: "var(--color-background)",
                                         border: "var(--border-width-thin) solid var(--color-border)",
                                     }}
@@ -612,16 +696,21 @@ export const SecurityManagementSection = () => {
                                     onClick={handleVerifyAuthenticator}
                                     disabled={
                                         isVerifying ||
-                                        verificationCodes.some((code) => code.length !== 6)
+                                        verificationCodes.some(
+                                            (code) => code.length !== 6,
+                                        )
                                     }
                                     style={{
-                                        padding: "var(--space-4u) var(--space-8u)",
+                                        padding:
+                                            "var(--space-4u) var(--space-8u)",
                                         background: "var(--color-primary)",
                                         color: "var(--color-foreground-inverse)",
                                         border: "var(--border-width-thin) solid var(--color-primary)",
                                     }}
                                 >
-                                    {isVerifying ? "Verifying..." : "Verify & Continue"}
+                                    {isVerifying
+                                        ? "Verifying..."
+                                        : "Verify & Continue"}
                                 </Button>
                             </div>
                         </>
@@ -631,7 +720,8 @@ export const SecurityManagementSection = () => {
                         <>
                             <div
                                 style={{
-                                    background: "var(--color-warning-background)",
+                                    background:
+                                        "var(--color-warning-background)",
                                     border: "var(--border-width-thin) solid var(--color-warning-border)",
                                     borderRadius: "var(--radius-md)",
                                     padding: "var(--space-8u)",
@@ -664,8 +754,9 @@ export const SecurityManagementSection = () => {
                                             color: "var(--color-secondary-text)",
                                         }}
                                     >
-                                        Store these codes safely. Each code can only be used once if
-                                        you lose access to your authenticator device.
+                                        Store these codes safely. Each code can
+                                        only be used once if you lose access to
+                                        your authenticator device.
                                     </div>
                                 </div>
                             </div>
@@ -684,7 +775,8 @@ export const SecurityManagementSection = () => {
                                     <div
                                         key={index}
                                         style={{
-                                            background: "var(--color-input-background)",
+                                            background:
+                                                "var(--color-input-background)",
                                             border: "var(--border-width-thin) solid var(--color-border)",
                                             borderRadius: "var(--radius-md)",
                                             padding: "var(--space-4u)",
@@ -693,7 +785,9 @@ export const SecurityManagementSection = () => {
                                             textAlign: "center",
                                             cursor: "pointer",
                                         }}
-                                        onClick={() => navigator.clipboard.writeText(code)}
+                                        onClick={() =>
+                                            navigator.clipboard.writeText(code)
+                                        }
                                     >
                                         {code}
                                     </div>
@@ -711,7 +805,8 @@ export const SecurityManagementSection = () => {
                                 <Button
                                     onClick={copyBackupCodes}
                                     style={{
-                                        padding: "var(--space-4u) var(--space-8u)",
+                                        padding:
+                                            "var(--space-4u) var(--space-8u)",
                                         fontSize: "var(--font-size-lg)",
                                         background: "var(--color-background)",
                                         border: "var(--border-width-thin) solid var(--color-border)",
@@ -722,7 +817,8 @@ export const SecurityManagementSection = () => {
                                 <Button
                                     onClick={downloadBackupCodes}
                                     style={{
-                                        padding: "var(--space-4u) var(--space-8u)",
+                                        padding:
+                                            "var(--space-4u) var(--space-8u)",
                                         fontSize: "var(--font-size-lg)",
                                         background: "var(--color-background)",
                                         border: "var(--border-width-thin) solid var(--color-border)",
@@ -730,7 +826,9 @@ export const SecurityManagementSection = () => {
                                 >
                                     <DownloadSimple
                                         size={16}
-                                        style={{ marginRight: "var(--space-2u)" }}
+                                        style={{
+                                            marginRight: "var(--space-2u)",
+                                        }}
                                     />
                                     DownloadSimple
                                 </Button>
@@ -776,7 +874,8 @@ export const SecurityManagementSection = () => {
                                         margin: 0,
                                     }}
                                 >
-                                    Your account is now protected with two-factor authentication.
+                                    Your account is now protected with
+                                    two-factor authentication.
                                 </p>
                             </div>
 
@@ -800,20 +899,6 @@ export const SecurityManagementSection = () => {
 
     return (
         <>
-            <HeaderCTAContainer>
-                <div style={{ display: "flex", alignItems: "center", gap: "var(--space-4u)" }}>
-                    <span
-                        style={{
-                            fontSize: "var(--font-size-lg)",
-                            fontWeight: 400,
-                            color: "var(--color-foreground)",
-                        }}
-                    >
-                        Security GearSix
-                    </span>
-                </div>
-            </HeaderCTAContainer>
-
             {!securityItems.length ? (
                 <EmptyState
                     title="No security features available"
@@ -821,276 +906,503 @@ export const SecurityManagementSection = () => {
                 />
             ) : (
                 <div>
-                    {securityItems.map((item, index) => (
-                        <div key={item.id}>
-                            <SecurityItemRow>
-                                <SecurityItemContent>
-                                    <div
-                                        style={{
-                                            fontWeight: 400,
-                                            color: "var(--color-foreground)",
-                                        }}
-                                    >
-                                        {item.name}
-                                    </div>
-                                    <div
-                                        style={{
-                                            fontSize: "var(--font-size-md)",
-                                            color: "var(--color-secondary-text)",
-                                        }}
-                                    >
-                                        {item.description}
-                                    </div>
-                                </SecurityItemContent>
+                    {securityItems.map((item, index) => {
+                        const prevGroup =
+                            index > 0 ? securityItems[index - 1].group : null;
+                        const showGroupLabel = item.group !== prevGroup;
+                        const nextItem = securityItems[index + 1];
+                        const nextSameGroup =
+                            nextItem && nextItem.group === item.group;
+                        const pill = pillFor(item.id);
+                        return (
+                            <div key={item.id}>
+                                {showGroupLabel && (
+                                    <SectionLabel $first={index === 0}>
+                                        {item.group === "sign-in"
+                                            ? "Sign-in methods"
+                                            : "Recovery"}
+                                    </SectionLabel>
+                                )}
+                                <SecurityItemRow
+                                    style={
+                                        showGroupLabel
+                                            ? { paddingTop: 0 }
+                                            : undefined
+                                    }
+                                >
+                                    <SecurityItemContent>
+                                        <div
+                                            style={{
+                                                display: "flex",
+                                                alignItems: "center",
+                                                gap: 8,
+                                                flexWrap: "wrap",
+                                                fontWeight: 400,
+                                                color: "var(--color-foreground)",
+                                            }}
+                                        >
+                                            <span>{item.name}</span>
+                                            {pill && (
+                                                <StatusPill
+                                                    $variant={pill.variant}
+                                                >
+                                                    {pill.label}
+                                                </StatusPill>
+                                            )}
+                                        </div>
+                                        <div
+                                            style={{
+                                                fontSize: "var(--font-size-md)",
+                                                color: "var(--color-secondary-text)",
+                                            }}
+                                        >
+                                            {item.description}
+                                        </div>
+                                    </SecurityItemContent>
 
-                                <SecurityItemActions>
-                                    {/* Status badge - hide for passkeys since they have custom buttons */}
-                                    <div style={{ position: "relative" }}>
-                                        {item.id === "password" && (
-                                            <>
-                                                {user?.has_password ? (
-                                                    <div style={{ display: "flex", gap: "var(--space-4u)" }}>
-                                                    <div style={{ position: "relative" }}>
-                                                        <Button
-                                                            $size="sm"
-                                                            ref={passwordButtonRef}
-                                                            onClick={() => setShowPasswordPopover(true)}
+                                    <SecurityItemActions>
+                                        {/* Status badge - hide for passkeys since they have custom buttons */}
+                                        <div style={{ position: "relative" }}>
+                                            {item.id === "password" && (
+                                                <>
+                                                    {user?.has_password ? (
+                                                        <div
+                                                            style={{
+                                                                display: "flex",
+                                                                gap: "var(--space-4u)",
+                                                            }}
                                                         >
-                                                            Change
-                                                        </Button>
-
-                                                            {showPasswordPopover && (
-                                                                <ChangePasswordPopover
-                                                                    triggerRef={passwordButtonRef}
-                                                                    onClose={() => setShowPasswordPopover(false)}
-                                                                    onChangePassword={handleChangePassword}
-                                                                />
-                                                            )}
-                                                        </div>
-
-                                                        {canRemovePassword() && (
-                                                            <div style={{ position: "relative" }}>
+                                                            <div
+                                                                style={{
+                                                                    position:
+                                                                        "relative",
+                                                                }}
+                                                            >
                                                                 <Button
-                                                                    $destructive
                                                                     $size="sm"
-                                                                    ref={removePasswordButtonRef}
+                                                                    ref={
+                                                                        passwordButtonRef
+                                                                    }
                                                                     onClick={() =>
-                                                                        setShowRemovePasswordPopover(true)
+                                                                        setShowPasswordPopover(
+                                                                            true,
+                                                                        )
                                                                     }
                                                                 >
-                                                                    Remove
+                                                                    Change
                                                                 </Button>
 
-                                                                {showRemovePasswordPopover && (
-                                                                    <RemovePasswordPopover
-                                                                        triggerRef={removePasswordButtonRef}
-                                                                        onClose={() =>
-                                                                            setShowRemovePasswordPopover(false)
+                                                                {showPasswordPopover && (
+                                                                    <ChangePasswordPopover
+                                                                        triggerRef={
+                                                                            passwordButtonRef
                                                                         }
-                                                                        onRemovePassword={handleRemovePassword}
+                                                                        onClose={() =>
+                                                                            setShowPasswordPopover(
+                                                                                false,
+                                                                            )
+                                                                        }
+                                                                        onChangePassword={
+                                                                            handleChangePassword
+                                                                        }
                                                                     />
                                                                 )}
                                                             </div>
-                                                        )}
-                                                    </div>
-                                                ) : (
-                                                    <div style={{ position: "relative" }}>
-                                                        <Button
-                                                            $size="sm"
-                                                            ref={passwordButtonRef}
-                                                            onClick={() => setShowPasswordPopover(true)}
-                                                        >
-                                                            Setup
-                                                        </Button>
 
-                                                        {showPasswordPopover && (
-                                                            <ChangePasswordPopover
-                                                                triggerRef={passwordButtonRef}
-                                                                onClose={() => setShowPasswordPopover(false)}
-                                                                onChangePassword={handleChangePassword}
-                                                                isSetup={true}
+                                                            {canRemovePassword() && (
+                                                                <div
+                                                                    style={{
+                                                                        position:
+                                                                            "relative",
+                                                                    }}
+                                                                >
+                                                                    <Button
+                                                                        $destructive
+                                                                        $size="sm"
+                                                                        ref={
+                                                                            removePasswordButtonRef
+                                                                        }
+                                                                        onClick={() =>
+                                                                            setShowRemovePasswordPopover(
+                                                                                true,
+                                                                            )
+                                                                        }
+                                                                    >
+                                                                        Remove
+                                                                    </Button>
+
+                                                                    {showRemovePasswordPopover && (
+                                                                        <RemovePasswordPopover
+                                                                            triggerRef={
+                                                                                removePasswordButtonRef
+                                                                            }
+                                                                            onClose={() =>
+                                                                                setShowRemovePasswordPopover(
+                                                                                    false,
+                                                                                )
+                                                                            }
+                                                                            onRemovePassword={
+                                                                                handleRemovePassword
+                                                                            }
+                                                                        />
+                                                                    )}
+                                                                </div>
+                                                            )}
+                                                        </div>
+                                                    ) : (
+                                                        <div
+                                                            style={{
+                                                                position:
+                                                                    "relative",
+                                                            }}
+                                                        >
+                                                            <Button
+                                                                $size="sm"
+                                                                ref={
+                                                                    passwordButtonRef
+                                                                }
+                                                                onClick={() =>
+                                                                    setShowPasswordPopover(
+                                                                        true,
+                                                                    )
+                                                                }
+                                                            >
+                                                                Setup
+                                                            </Button>
+
+                                                            {showPasswordPopover && (
+                                                                <ChangePasswordPopover
+                                                                    triggerRef={
+                                                                        passwordButtonRef
+                                                                    }
+                                                                    onClose={() =>
+                                                                        setShowPasswordPopover(
+                                                                            false,
+                                                                        )
+                                                                    }
+                                                                    onChangePassword={
+                                                                        handleChangePassword
+                                                                    }
+                                                                    isSetup={
+                                                                        true
+                                                                    }
+                                                                />
+                                                            )}
+                                                        </div>
+                                                    )}
+                                                </>
+                                            )}
+
+                                            {item.id === "authenticator" &&
+                                                !user?.user_authenticator && (
+                                                    <>
+                                                        <div
+                                                            style={{
+                                                                position:
+                                                                    "relative",
+                                                            }}
+                                                        >
+                                                            <Button
+                                                                $size="sm"
+                                                                ref={
+                                                                    totpButtonRef
+                                                                }
+                                                                onClick={() =>
+                                                                    setShowTOTPPopover(
+                                                                        true,
+                                                                    )
+                                                                }
+                                                                disabled={
+                                                                    isLoadingQR
+                                                                }
+                                                            >
+                                                                {isLoadingQR
+                                                                    ? "Setting up..."
+                                                                    : "Setup"}
+                                                            </Button>
+
+                                                            {showTOTPPopover && (
+                                                                <SetupTOTPPopover
+                                                                    triggerRef={
+                                                                        totpButtonRef
+                                                                    }
+                                                                    onClose={() =>
+                                                                        setShowTOTPPopover(
+                                                                            false,
+                                                                        )
+                                                                    }
+                                                                    onSetupTOTP={async () => {
+                                                                        const result =
+                                                                            await setupAuthenticator();
+                                                                        setAuthenticatorId(
+                                                                            result.id,
+                                                                        );
+                                                                        return result;
+                                                                    }}
+                                                                    onVerifyTOTP={async (
+                                                                        codes,
+                                                                    ) => {
+                                                                        await verifyAuthenticator(
+                                                                            authenticatorId,
+                                                                            codes,
+                                                                        );
+                                                                        await user.refetch();
+                                                                        toast(
+                                                                            "Two-factor authentication enabled successfully!",
+                                                                            "info",
+                                                                        );
+                                                                    }}
+                                                                />
+                                                            )}
+                                                        </div>
+                                                    </>
+                                                )}
+
+                                            {item.id === "authenticator" &&
+                                                user?.user_authenticator && (
+                                                    <div
+                                                        style={{
+                                                            position:
+                                                                "relative",
+                                                        }}
+                                                    >
+                                                        <Button
+                                                            $destructive
+                                                            onClick={() =>
+                                                                setShowDeleteAuthPopover(
+                                                                    true,
+                                                                )
+                                                            }
+                                                            disabled={
+                                                                isRemovingAuth
+                                                            }
+                                                            style={{
+                                                                cursor: isRemovingAuth
+                                                                    ? "not-allowed"
+                                                                    : "pointer",
+                                                                opacity:
+                                                                    isRemovingAuth
+                                                                        ? 0.6
+                                                                        : 1,
+                                                            }}
+                                                        >
+                                                            {isRemovingAuth
+                                                                ? "Removing..."
+                                                                : "Remove"}
+                                                        </Button>
+                                                        {showDeleteAuthPopover && (
+                                                            <ConfirmationPopover
+                                                                title="Remove MFA and reset policy to default?"
+                                                                onConfirm={
+                                                                    handleRemoveAuthenticator
+                                                                }
+                                                                onCancel={() =>
+                                                                    setShowDeleteAuthPopover(
+                                                                        false,
+                                                                    )
+                                                                }
                                                             />
                                                         )}
                                                     </div>
                                                 )}
-                                            </>
-                                        )}
 
-                                        {item.id === "authenticator" &&
-                                            !user?.user_authenticator && (
+                                            {item.id === "backup_codes" && (
                                                 <>
-                                                    <div style={{ position: "relative" }}>
+                                                    <div
+                                                        style={{
+                                                            position:
+                                                                "relative",
+                                                        }}
+                                                    >
                                                         <Button
                                                             $size="sm"
-                                                            ref={totpButtonRef}
-                                                            onClick={() => setShowTOTPPopover(true)}
-                                                            disabled={isLoadingQR}
+                                                            ref={
+                                                                backupCodesButtonRef
+                                                            }
+                                                            onClick={
+                                                                handleGenerateNewBackupCodes
+                                                            }
+                                                            disabled={
+                                                                isGeneratingCodes
+                                                            }
                                                         >
-                                                            {isLoadingQR ? "Setting up..." : "Setup"}
+                                                            {isGeneratingCodes
+                                                                ? "Generating..."
+                                                                : user?.backup_codes_generated
+                                                                  ? "Regenerate"
+                                                                  : "Generate"}
                                                         </Button>
 
-                                                        {showTOTPPopover && (
-                                                            <SetupTOTPPopover
-                                                                triggerRef={totpButtonRef}
-                                                                onClose={() => setShowTOTPPopover(false)}
-                                                                onSetupTOTP={async () => {
-                                                                    const result = await setupAuthenticator();
-                                                                    setAuthenticatorId(result.id);
-                                                                    return result;
-                                                                }}
-                                                                onVerifyTOTP={async (codes) => {
-                                                                    await verifyAuthenticator(
-                                                                        authenticatorId,
-                                                                        codes,
-                                                                    );
-                                                                    await user.refetch();
-                                                                    toast(
-                                                                        "Two-factor authentication enabled successfully!",
-                                                                        "info",
-                                                                    );
-                                                                }}
+                                                        {showBackupCodesPopover && (
+                                                            <BackupCodesPopover
+                                                                triggerRef={
+                                                                    backupCodesButtonRef
+                                                                }
+                                                                codes={
+                                                                    backupCodes
+                                                                }
+                                                                onClose={() =>
+                                                                    setShowBackupCodesPopover(
+                                                                        false,
+                                                                    )
+                                                                }
+                                                                onCopy={
+                                                                    copyBackupCodes
+                                                                }
+                                                                onDownload={
+                                                                    downloadBackupCodes
+                                                                }
                                                             />
                                                         )}
                                                     </div>
                                                 </>
                                             )}
 
-                                        {item.id === "authenticator" &&
-                                            user?.user_authenticator && (
-                                                <div style={{ position: "relative" }}>
-                                                    <Button
-                                                        $destructive
-                                                        onClick={() => setShowDeleteAuthPopover(true)}
-                                                        disabled={isRemovingAuth}
-                                                        style={{
-                                                            cursor: isRemovingAuth ? "not-allowed" : "pointer",
-                                                            opacity: isRemovingAuth ? 0.6 : 1,
-                                                        }}
-                                                    >
-                                                        {isRemovingAuth ? "Removing..." : "Remove"}
-                                                    </Button>
-                                                    {showDeleteAuthPopover && (
-                                                        <ConfirmationPopover
-                                                            title="Remove MFA and reset policy to default?"
-                                                            onConfirm={handleRemoveAuthenticator}
-                                                            onCancel={() => setShowDeleteAuthPopover(false)}
-                                                        />
-                                                    )}
-                                                </div>
+                                            {item.id ===
+                                                "second_factor_policy" && (
+                                                <Switch
+                                                    checked={
+                                                        secondFactorPolicy ===
+                                                        "enforced"
+                                                    }
+                                                    onChange={(checked) => {
+                                                        handleSecondFactorPolicyChange(
+                                                            checked
+                                                                ? "enforced"
+                                                                : "none",
+                                                        );
+                                                    }}
+                                                />
                                             )}
 
-                                        {item.id === "backup_codes" && (
-                                            <>
-                                                <div style={{ position: "relative" }}>
-                                                    <Button
-                                                        $size="sm"
-                                                        ref={backupCodesButtonRef}
-                                                        onClick={handleGenerateNewBackupCodes}
-                                                        disabled={isGeneratingCodes}
-                                                    >
-                                                        {isGeneratingCodes
-                                                            ? "Generating..."
-                                                            : user?.backup_codes_generated
-                                                                ? "Regenerate"
-                                                                : "Generate"}
-                                                    </Button>
-
-                                                    {showBackupCodesPopover && (
-                                                        <BackupCodesPopover
-                                                            triggerRef={backupCodesButtonRef}
-                                                            codes={backupCodes}
-                                                            onClose={() => setShowBackupCodesPopover(false)}
-                                                            onCopy={copyBackupCodes}
-                                                            onDownload={downloadBackupCodes}
-                                                        />
-                                                    )}
-                                                </div>
-                                            </>
-                                        )}
-
-                                        {item.id === "second_factor_policy" && (
-                                            <Switch
-                                                checked={secondFactorPolicy === "enforced"}
-                                                onChange={(checked) => {
-                                                    handleSecondFactorPolicyChange(
-                                                        checked ? "enforced" : "none",
-                                                    );
-                                                }}
-                                            />
-                                        )}
-
-                                        {item.id === "passkey" && (
-                                            <div style={{ display: "flex", gap: "var(--space-4u)", alignItems: "center" }}>
-                                                <Button
-                                                    $outline
-                                                    $size="sm"
-                                                    onClick={() => setIsPasskeyExpanded(!isPasskeyExpanded)}
+                                            {item.id === "passkey" && (
+                                                <div
                                                     style={{
-                                                        color: "var(--color-foreground)",
-                                                        cursor: "pointer",
                                                         display: "flex",
+                                                        gap: "var(--space-4u)",
                                                         alignItems: "center",
-                                                        justifyContent: "center",
-                                                        gap: "var(--space-3u)",
-                                                        whiteSpace: "nowrap",
-                                                        flexShrink: 0,
-                                                        width: "calc(var(--size-50u) + var(--space-5u))",
-                                                        height: "var(--size-18u)",
                                                     }}
                                                 >
-                                                    {isPasskeyExpanded ? "Hide" : "Manage"} ({passkeys.length})
-                                                    <CaretDown
-                                                        size={14}
-                                                        style={{
-                                                            transform: isPasskeyExpanded ? "rotate(180deg)" : "rotate(0deg)",
-                                                            transition: "transform 0.2s ease",
-                                                        }}
-                                                    />
-                                                </Button>
-                                                <div style={{ position: "relative" }}>
                                                     <Button
+                                                        $outline
                                                         $size="sm"
-                                                        ref={addPasskeyButtonRef}
-                                                        onClick={() => setShowAddPasskeyPopover(true)}
-                                                        disabled={isRegisteringPasskey}
+                                                        onClick={() =>
+                                                            setIsPasskeyExpanded(
+                                                                !isPasskeyExpanded,
+                                                            )
+                                                        }
                                                         style={{
-                                                            cursor: isRegisteringPasskey ? "not-allowed" : "pointer",
-                                                            opacity: isRegisteringPasskey ? 0.7 : 1,
-                                                            whiteSpace: "nowrap",
-                                                            minWidth: "var(--size-40u)",
-                                                            width: "auto",
+                                                            color: "var(--color-foreground)",
+                                                            cursor: "pointer",
+                                                            display: "flex",
+                                                            alignItems:
+                                                                "center",
+                                                            justifyContent:
+                                                                "center",
+                                                            gap: "var(--space-3u)",
+                                                            whiteSpace:
+                                                                "nowrap",
+                                                            flexShrink: 0,
+                                                            width: "calc(var(--size-50u) + var(--space-5u))",
                                                             height: "var(--size-18u)",
                                                         }}
                                                     >
-                                                        {isRegisteringPasskey ? "Adding..." : "Add"}
-                                                    </Button>
-
-                                                    {showAddPasskeyPopover && (
-                                                        <AddPasskeyPopover
-                                                            triggerRef={addPasskeyButtonRef}
-                                                            onClose={() => setShowAddPasskeyPopover(false)}
-                                                            onAddPasskey={handleRegisterPasskey}
+                                                        {isPasskeyExpanded
+                                                            ? "Hide"
+                                                            : "Manage"}{" "}
+                                                        ({passkeys.length})
+                                                        <CaretDown
+                                                            size={14}
+                                                            style={{
+                                                                transform:
+                                                                    isPasskeyExpanded
+                                                                        ? "rotate(180deg)"
+                                                                        : "rotate(0deg)",
+                                                                transition:
+                                                                    "transform 0.2s ease",
+                                                            }}
                                                         />
-                                                    )}
-                                                </div>
-                                            </div>
-                                        )}
-                                    </div>
-                                </SecurityItemActions>
-                            </SecurityItemRow>
+                                                    </Button>
+                                                    <div
+                                                        style={{
+                                                            position:
+                                                                "relative",
+                                                        }}
+                                                    >
+                                                        <Button
+                                                            $size="sm"
+                                                            ref={
+                                                                addPasskeyButtonRef
+                                                            }
+                                                            onClick={() =>
+                                                                setShowAddPasskeyPopover(
+                                                                    true,
+                                                                )
+                                                            }
+                                                            disabled={
+                                                                isRegisteringPasskey
+                                                            }
+                                                            style={{
+                                                                cursor: isRegisteringPasskey
+                                                                    ? "not-allowed"
+                                                                    : "pointer",
+                                                                opacity:
+                                                                    isRegisteringPasskey
+                                                                        ? 0.7
+                                                                        : 1,
+                                                                whiteSpace:
+                                                                    "nowrap",
+                                                                minWidth:
+                                                                    "var(--size-40u)",
+                                                                width: "auto",
+                                                                height: "var(--size-18u)",
+                                                            }}
+                                                        >
+                                                            {isRegisteringPasskey
+                                                                ? "Adding..."
+                                                                : "Add"}
+                                                        </Button>
 
-                            {/* Passkey Accordion Content */}
-                            {
-                                item.id === "passkey" && isPasskeyExpanded && (
+                                                        {showAddPasskeyPopover && (
+                                                            <AddPasskeyPopover
+                                                                triggerRef={
+                                                                    addPasskeyButtonRef
+                                                                }
+                                                                onClose={() =>
+                                                                    setShowAddPasskeyPopover(
+                                                                        false,
+                                                                    )
+                                                                }
+                                                                onAddPasskey={
+                                                                    handleRegisterPasskey
+                                                                }
+                                                            />
+                                                        )}
+                                                    </div>
+                                                </div>
+                                            )}
+                                        </div>
+                                    </SecurityItemActions>
+                                </SecurityItemRow>
+
+                                {/* Passkey Accordion Content */}
+                                {item.id === "passkey" && isPasskeyExpanded && (
                                     <div
                                         style={{
                                             padding: "var(--space-6u) 0",
-                                            borderTop: "var(--border-width-thin) solid var(--color-border)",
+                                            borderTop:
+                                                "var(--border-width-thin) solid var(--color-border)",
                                             marginTop: "var(--space-4u)",
                                         }}
                                     >
                                         {isLoadingPasskeys ? (
-                                            <div style={{ display: "flex", justifyContent: "center", padding: "var(--space-8u)" }}>
+                                            <div
+                                                style={{
+                                                    display: "flex",
+                                                    justifyContent: "center",
+                                                    padding: "var(--space-8u)",
+                                                }}
+                                            >
                                                 <Spinner />
                                             </div>
                                         ) : passkeys.length === 0 ? (
@@ -1099,77 +1411,125 @@ export const SecurityManagementSection = () => {
                                                     textAlign: "center",
                                                     padding: "var(--space-8u)",
                                                     color: "var(--color-secondary-text)",
-                                                    fontSize: "var(--font-size-md)",
+                                                    fontSize:
+                                                        "var(--font-size-md)",
                                                 }}
                                             >
                                                 No passkeys registered yet
                                             </div>
                                         ) : (
-                                            <div style={{ display: "flex", flexDirection: "column", gap: "var(--space-4u)" }}>
-                                                {passkeys.map((passkey: any) => (
-                                                    <div
-                                                        key={passkey.id}
-                                                        style={{
-                                                            display: "flex",
-                                                            justifyContent: "space-between",
-                                                            alignItems: "center",
-                                                            padding: "var(--space-5u) var(--space-6u)",
-                                                            background: "var(--color-input-background)",
-                                                            borderRadius: "var(--radius-md)",
-                                                            border: "var(--border-width-thin) solid var(--color-border)",
-                                                        }}
-                                                    >
-                                                        <div style={{ display: "flex", flexDirection: "column", gap: "var(--space-1u)" }}>
-                                                            <span
+                                            <div
+                                                style={{
+                                                    display: "flex",
+                                                    flexDirection: "column",
+                                                    gap: "var(--space-4u)",
+                                                }}
+                                            >
+                                                {passkeys.map(
+                                                    (passkey: any) => (
+                                                        <div
+                                                            key={passkey.id}
+                                                            style={{
+                                                                display: "flex",
+                                                                justifyContent:
+                                                                    "space-between",
+                                                                alignItems:
+                                                                    "center",
+                                                                padding:
+                                                                    "var(--space-5u) var(--space-6u)",
+                                                                background:
+                                                                    "var(--color-input-background)",
+                                                                borderRadius:
+                                                                    "var(--radius-md)",
+                                                                border: "var(--border-width-thin) solid var(--color-border)",
+                                                            }}
+                                                        >
+                                                            <div
                                                                 style={{
-                                                                    fontWeight: 500,
-                                                                    fontSize: "var(--font-size-md)",
-                                                                    color: "var(--color-foreground)",
+                                                                    display:
+                                                                        "flex",
+                                                                    flexDirection:
+                                                                        "column",
+                                                                    gap: "var(--space-1u)",
                                                                 }}
                                                             >
-                                                                {passkey.name || "Unnamed Passkey"}
-                                                            </span>
-                                                            <span
-                                                                style={{
-                                                                    fontSize: "var(--font-size-xs)",
-                                                                    color: "var(--color-secondary-text)",
-                                                                }}
-                                                            >
-                                                                {passkey.device_type === "platform" ? "This device" : "Security key"}
-                                                                {passkey.last_used_at && ` • Last used ${new Date(passkey.last_used_at).toLocaleDateString()}`}
-                                                            </span>
-                                                        </div>
-                                                        <div style={{ position: "relative" }}>
-                                                            <Button
-                                                                $destructive
-                                                                $size="sm"
-                                                                onClick={() => setPasskeyToDelete(passkey.id)}
-                                                                style={{ flexShrink: 0, width: "auto" }}
-                                                            >
-                                                                Remove
-                                                            </Button>
-
-                                                            {passkeyToDelete === passkey.id && (
-                                                                <ConfirmationPopover
-                                                                    title={`Remove "${passkey.name || "Unnamed Passkey"}"?`}
-                                                                    onConfirm={() => {
-                                                                        handleDeletePasskey(passkey.id);
-                                                                        setPasskeyToDelete(null);
+                                                                <span
+                                                                    style={{
+                                                                        fontWeight: 500,
+                                                                        fontSize:
+                                                                            "var(--font-size-md)",
+                                                                        color: "var(--color-foreground)",
                                                                     }}
-                                                                    onCancel={() => setPasskeyToDelete(null)}
-                                                                />
-                                                            )}
+                                                                >
+                                                                    {passkey.name ||
+                                                                        "Unnamed Passkey"}
+                                                                </span>
+                                                                <span
+                                                                    style={{
+                                                                        fontSize:
+                                                                            "var(--font-size-xs)",
+                                                                        color: "var(--color-secondary-text)",
+                                                                    }}
+                                                                >
+                                                                    {passkey.device_type ===
+                                                                    "platform"
+                                                                        ? "This device"
+                                                                        : "Security key"}
+                                                                    {passkey.last_used_at &&
+                                                                        ` • Last used ${new Date(passkey.last_used_at).toLocaleDateString()}`}
+                                                                </span>
+                                                            </div>
+                                                            <div
+                                                                style={{
+                                                                    position:
+                                                                        "relative",
+                                                                }}
+                                                            >
+                                                                <Button
+                                                                    $destructive
+                                                                    $size="sm"
+                                                                    onClick={() =>
+                                                                        setPasskeyToDelete(
+                                                                            passkey.id,
+                                                                        )
+                                                                    }
+                                                                    style={{
+                                                                        flexShrink: 0,
+                                                                        width: "auto",
+                                                                    }}
+                                                                >
+                                                                    Remove
+                                                                </Button>
+
+                                                                {passkeyToDelete ===
+                                                                    passkey.id && (
+                                                                    <ConfirmationPopover
+                                                                        title={`Remove "${passkey.name || "Unnamed Passkey"}"?`}
+                                                                        onConfirm={() => {
+                                                                            handleDeletePasskey(
+                                                                                passkey.id,
+                                                                            );
+                                                                            setPasskeyToDelete(
+                                                                                null,
+                                                                            );
+                                                                        }}
+                                                                        onCancel={() =>
+                                                                            setPasskeyToDelete(
+                                                                                null,
+                                                                            )
+                                                                        }
+                                                                    />
+                                                                )}
+                                                            </div>
                                                         </div>
-                                                    </div>
-                                                ))}
+                                                    ),
+                                                )}
                                             </div>
                                         )}
                                     </div>
-                                )
-                            }
+                                )}
 
-                            {
-                                index < securityItems.length - 1 && (
+                                {nextSameGroup && (
                                     <div
                                         style={{
                                             height: "var(--border-width-thin)",
@@ -1177,11 +1537,11 @@ export const SecurityManagementSection = () => {
                                             margin: "0",
                                         }}
                                     />
-                                )
-                            }
-                        </div>
-                    ))}
-                </div >
+                                )}
+                            </div>
+                        );
+                    })}
+                </div>
             )}
         </>
     );

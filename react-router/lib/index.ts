@@ -52,6 +52,7 @@ export {
   useMagicLinkVerification,
   useAgentThreadConversation,
   useActorMcpServers,
+  useExternalAgentConnections,
   useActorProjects,
   useActorProjectSearch,
   useActorThreadSearch,
@@ -79,6 +80,11 @@ export {
   useApiAuthAuditAnalytics,
   useApiAuthAuditTimeseries,
 } from "@wacht/jsx";
+export type {
+  ActorMcpServerSummary,
+  ExternalAgentConnection,
+  ExternalAgentConnectionStatus,
+} from "@wacht/types";
 export { DeploymentProvider as BaseDeploymentProvider } from "@wacht/jsx";
 export { DeploymentProvider } from "./providers";
 export { createReactRouterAdapter } from "./react-router-adapter";

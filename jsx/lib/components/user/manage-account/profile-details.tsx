@@ -1,5 +1,4 @@
-import { useState, useRef, useEffect, useCallback, ChangeEvent } from "react";
-import { User, Trash } from "@phosphor-icons/react";
+import { useState, useEffect, useCallback, ChangeEvent } from "react";
 import { useDeployment } from "@/hooks/use-deployment";
 import { useSession } from "@/hooks/use-session";
 import { useUser } from "@/hooks/use-user";
@@ -7,18 +6,12 @@ import { useScreenContext } from "../context";
 import { Button, Spinner } from "@/components/utility";
 import { FormGroup, Label } from "@/components/utility/form";
 import { Input } from "@/components/utility/input";
-import {
-    ProfileSectionLayout,
-    ProfileImageContainer,
-    FormRow,
-    ButtonActions,
-} from "./shared";
+import { FormRow } from "./shared";
 
 export const ProfileDetailsManagementSection = () => {
     const { deployment } = useDeployment();
     const { refetch: refetchSession } = useSession();
-    const { user, updateProfile, updateProfilePicture, deleteAccount } =
-        useUser();
+    const { user, updateProfile, deleteAccount } = useUser();
     const { toast } = useScreenContext();
 
     const [firstName, setFirstName] = useState("");
@@ -29,19 +22,12 @@ export const ProfileDetailsManagementSection = () => {
     const [isDeleting, setIsDeleting] = useState(false);
     const [confirmName, setConfirmName] = useState("");
 
-    const [previewUrl, setPreviewUrl] = useState<string | null>(
-        user?.profile_picture_url || null,
-    );
-
-    const fileInputRef = useRef<HTMLInputElement>(null);
-
     // Initialize form values only once when user data is available
     useEffect(() => {
         if (user && !hasInitialized) {
             setFirstName(user.first_name || "");
             setLastName(user.last_name || "");
             setUsername(user.username || "");
-            setPreviewUrl(user.profile_picture_url || null);
             setHasInitialized(true);
         }
     }, [user, hasInitialized]);
@@ -95,34 +81,6 @@ export const ProfileDetailsManagementSection = () => {
         autoSave();
     };
 
-    const handleImageChange = (event: ChangeEvent<HTMLInputElement>) => {
-        if (event.target.files?.[0]) {
-            const file = event.target.files[0];
-            setPreviewUrl(URL.createObjectURL(file));
-            // Auto-save image immediately
-            setTimeout(async () => {
-                try {
-                    await updateProfilePicture(file);
-                    user.refetch();
-                    toast("Profile picture updated successfully", "info");
-                } catch (error: any) {
-                    toast(
-                        error.message || "Failed to update profile picture",
-                        "error",
-                    );
-                    // Reset preview on error
-                    setPreviewUrl(user?.profile_picture_url || null);
-                }
-            }, 100);
-        }
-    };
-
-    const triggerFileInput = () => {
-        if (fileInputRef.current) {
-            fileInputRef.current.click();
-        }
-    };
-
     if (!user) {
         return (
             <div
@@ -163,148 +121,6 @@ export const ProfileDetailsManagementSection = () => {
                     gap: "var(--space-12u)",
                 }}
             >
-                {/* Profile Picture Section - Two Column Layout */}
-                <ProfileSectionLayout>
-                    {/* Left Column - Profile Picture Preview */}
-                    <ProfileImageContainer>
-                        <div
-                            style={{
-                                width: "calc(var(--size-40u) + var(--space-5u))",
-                                height: "calc(var(--size-40u) + var(--space-5u))",
-                                borderRadius: "50%",
-                                border: "var(--border-width-regular) dashed var(--color-border)",
-                                background: previewUrl
-                                    ? "transparent"
-                                    : "var(--color-input-background)",
-                                cursor: "pointer",
-                                display: "flex",
-                                alignItems: "center",
-                                justifyContent: "center",
-                                overflow: "hidden",
-                                transition: "all 0.2s ease",
-                                margin: "0 auto", // Center on mobile
-                            }}
-                            onClick={triggerFileInput}
-                            onMouseEnter={(e) => {
-                                e.currentTarget.style.borderColor =
-                                    "var(--color-primary)";
-                                e.currentTarget.style.transform = "scale(1.02)";
-                            }}
-                            onMouseLeave={(e) => {
-                                e.currentTarget.style.borderColor =
-                                    "var(--color-border)";
-                                e.currentTarget.style.transform = "scale(1)";
-                            }}
-                        >
-                            {previewUrl ? (
-                                <img
-                                    src={previewUrl}
-                                    alt="Profile Picture"
-                                    style={{
-                                        width: "100%",
-                                        height: "100%",
-                                        objectFit: "cover",
-                                        borderRadius: "50%",
-                                    }}
-                                />
-                            ) : (
-                                <User size={32} color="var(--color-muted)" />
-                            )}
-                            <input
-                                type="file"
-                                ref={fileInputRef}
-                                style={{ display: "none" }}
-                                accept="image/*"
-                                onChange={handleImageChange}
-                            />
-                        </div>
-                    </ProfileImageContainer>
-
-                    {/* Right Column - Content and Controls */}
-                    <div style={{ flex: 1 }}>
-                        <div style={{ marginBottom: "var(--space-8u)" }}>
-                            <h3
-                                style={{
-                                    fontSize: "var(--font-size-lg)",
-                                    color: "var(--color-foreground)",
-                                    margin: "0 0 var(--space-1u) 0",
-                                }}
-                            >
-                                Profile Picture
-                            </h3>
-                            <p
-                                style={{
-                                    fontSize: "var(--font-size-md)",
-                                    color: "var(--color-secondary-text)",
-                                    margin: 0,
-                                }}
-                            >
-                                Upload an image to represent your profile
-                            </p>
-                        </div>
-
-                        <ButtonActions
-                            style={{
-                                marginBottom: "var(--space-4u)",
-                            }}
-                        >
-                            <Button
-                                $size="sm"
-                                onClick={() => fileInputRef.current?.click()}
-                            >
-                                {previewUrl ? "Change" : "Upload"}
-                            </Button>
-                            <Button
-                                $size="sm"
-                                $outline
-                                onClick={async () => {
-                                    setPreviewUrl(null);
-                                    if (fileInputRef.current) {
-                                        fileInputRef.current.value = "";
-                                    }
-                                    // Save the removal to backend
-                                    try {
-                                        await updateProfile({
-                                            remove_profile_picture: true,
-                                        });
-                                        await user.refetch();
-                                        toast(
-                                            "Profile picture removed successfully",
-                                            "info",
-                                        );
-                                    } catch (error: any) {
-                                        toast(
-                                            error.message ||
-                                                "Failed to remove profile picture",
-                                            "error",
-                                        );
-                                        // Reset preview on error
-                                        setPreviewUrl(
-                                            user?.profile_picture_url || null,
-                                        );
-                                    }
-                                }}
-                            >
-                                <Trash
-                                    size={14}
-                                    style={{ marginRight: "var(--space-2u)" }}
-                                />
-                                Remove
-                            </Button>
-                        </ButtonActions>
-                    </div>
-                </ProfileSectionLayout>
-
-                {/* Divider */}
-                <div
-                    style={{
-                        position: "relative",
-                        height: "var(--border-width-thin)",
-                        background: "var(--color-divider)",
-                        margin: "0",
-                    }}
-                />
-
                 {/* Profile Details */}
                 <div>
                     <div style={{ marginBottom: "var(--space-6u)" }}>

@@ -1,5 +1,5 @@
-import { useState, useMemo, useEffect, useRef, useCallback, ChangeEvent } from "react";
-import { Buildings, Trash } from "@phosphor-icons/react";
+import { useState, useMemo, useEffect, useRef, useCallback } from "react";
+import styled from "styled-components";
 import { Organization } from "@/types";
 import { useSession } from "@/hooks/use-session";
 import { useWorkspaceList } from "@/hooks/use-workspace";
@@ -15,14 +15,45 @@ import {
     FormGroup,
     Label,
 } from "@/components/utility";
-import {
-    SectionLayout,
-    ImageContainer,
-    ItemRow,
-    ItemContent,
-    ItemActions,
-    ButtonActions,
-} from "./shared";
+import { ItemRow, ItemContent, ItemActions, SectionLabel } from "./shared";
+
+const Section = styled.div`
+    display: flex;
+    flex-direction: column;
+    gap: var(--space-6u);
+`;
+
+const DangerCard = styled.div`
+    padding: var(--space-8u);
+    border: 1px solid
+        color-mix(in srgb, var(--color-error) 45%, var(--color-border));
+    background: color-mix(in srgb, var(--color-error) 4%, transparent);
+    border-radius: 10px;
+`;
+
+const DangerRow = styled.div`
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: var(--space-4u);
+    @media (max-width: 600px) {
+        flex-direction: column;
+        align-items: stretch;
+    }
+`;
+
+const DangerTitle = styled.div`
+    font-size: 13px;
+    font-weight: 500;
+    color: var(--color-card-foreground);
+`;
+
+const DangerSub = styled.div`
+    font-size: 12px;
+    color: var(--color-secondary-text);
+    margin-top: 2px;
+    line-height: 1.4;
+`;
 
 export const GeneralSettingsSection = ({
     organization: selectedOrganization,
@@ -40,12 +71,6 @@ export const GeneralSettingsSection = ({
         selectedOrganization?.description || "",
     );
 
-    const [previewUrl, setPreviewUrl] = useState<string | null>(
-        selectedOrganization?.image_url || null,
-    );
-
-    const fileInputRef = useRef<HTMLInputElement>(null);
-
     const [isSaving, setIsSaving] = useState(false);
     const [security, setSecurity] = useState({
         mfa_required: false,
@@ -56,47 +81,50 @@ export const GeneralSettingsSection = ({
     const [confirmName, setConfirmName] = useState("");
     const [isDeleting, setIsDeleting] = useState(false);
     const [showDeleteConfirm, setShowDeleteConfirm] = useState(false);
-    const [imageFile, setImageFile] = useState<File | null>(null);
 
-    // Latest state ref to avoid closure issues in autoSave and concurrent updates
-    const latestState = useRef({ name, description, security, imageFile, isSaving });
+    const latestState = useRef({ name, description, security, isSaving });
     useEffect(() => {
-        latestState.current = { name, description, security, imageFile, isSaving };
-    }, [name, description, security, imageFile, isSaving]);
+        latestState.current = { name, description, security, isSaving };
+    }, [name, description, security, isSaving]);
 
-    const autoSave = useCallback(async () => {
-        if (!selectedOrganization || latestState.current.isSaving) return;
+    const saveAll = useCallback(async () => {
+        if (!selectedOrganization) return;
         const state = latestState.current;
-
         try {
             setIsSaving(true);
             await updateOrganization(selectedOrganization, {
                 name: state.name,
                 description: state.description,
-                image: state.imageFile as any,
-                whitelisted_ips: state.security.allowed_ips.split("\n").filter(ip => ip.trim()),
+                whitelisted_ips: state.security.allowed_ips
+                    .split("\n")
+                    .filter((ip) => ip.trim()),
                 enable_ip_restriction: state.security.ip_restrictions,
                 enforce_mfa: state.security.mfa_required,
-                auto_assigned_workspace_id: state.security.default_workspace_id || "0",
+                auto_assigned_workspace_id:
+                    state.security.default_workspace_id || "0",
             });
             toast("Changes saved", "info");
         } catch (error: any) {
-            const errorMessage =
-                error.message || "Failed to save changes. Please try again.";
-            toast(errorMessage, "error");
+            toast(error.message || "Failed to save changes", "error");
         } finally {
             setIsSaving(false);
         }
     }, [selectedOrganization, updateOrganization, toast]);
 
+    const autoSave = useCallback(() => {
+        if (latestState.current.isSaving) return;
+        saveAll();
+    }, [saveAll]);
+
     useEffect(() => {
         if (selectedOrganization) {
             setName(selectedOrganization.name || "");
             setDescription(selectedOrganization.description || "");
-            setPreviewUrl(selectedOrganization.image_url || null);
             setSecurity({
-                allowed_ips: selectedOrganization.whitelisted_ips?.join("\n") || "",
-                ip_restrictions: selectedOrganization.enable_ip_restriction || false,
+                allowed_ips:
+                    selectedOrganization.whitelisted_ips?.join("\n") || "",
+                ip_restrictions:
+                    selectedOrganization.enable_ip_restriction || false,
                 mfa_required: selectedOrganization.enforce_mfa || false,
                 default_workspace_id:
                     selectedOrganization.auto_assigned_workspace_id || "",
@@ -105,23 +133,21 @@ export const GeneralSettingsSection = ({
     }, [selectedOrganization]);
 
     const workspaces = useMemo(() => {
-        const currentOrgWorkspaces = workspaceList.filter(
-            (workspace) => workspace.organization.id === selectedOrganization?.id,
+        return workspaceList.filter(
+            (w) => w.organization.id === selectedOrganization?.id,
         );
-        return currentOrgWorkspaces;
     }, [workspaceList, selectedOrganization?.id]);
 
     const handleDeleteOrganization = async () => {
         if (!selectedOrganization || confirmName !== selectedOrganization.name)
             return;
-
         try {
             setIsDeleting(true);
             await switchOrganization("");
             await deleteOrgFromList(selectedOrganization);
             await refetch();
-            toast("Organization deleted successfully", "info");
-        } catch (error) {
+            toast("Organization deleted", "info");
+        } catch {
             toast("Failed to delete organization", "error");
         } finally {
             setIsDeleting(false);
@@ -129,193 +155,97 @@ export const GeneralSettingsSection = ({
         }
     };
 
-    useEffect(() => {
-        return () => {
-            if (previewUrl && previewUrl.startsWith("blob:")) {
-                URL.revokeObjectURL(previewUrl);
-            }
-        };
-    }, [previewUrl]);
-
-    const handleImageChange = async (event: ChangeEvent<HTMLInputElement>) => {
-        if (event.target.files?.[0]) {
-            const file = event.target.files[0];
-
-            if (file.size > 2 * 1024 * 1024) {
-                toast("File size cannot exceed 2MB", "error");
-                return;
-            }
-
-            if (!file.type.startsWith("image/")) {
-                toast("Please select a valid image file", "error");
-                return;
-            }
-
-            if (previewUrl && previewUrl.startsWith("blob:")) {
-                URL.revokeObjectURL(previewUrl);
-            }
-
-            setImageFile(file);
-            setPreviewUrl(URL.createObjectURL(file));
-
-            // Immediate save for image
-            try {
-                setIsSaving(true);
-                const state = latestState.current;
-                await updateOrganization(selectedOrganization, {
-                    name: state.name,
-                    description: state.description,
-                    image: file as any,
-                    whitelisted_ips: state.security.allowed_ips.split("\n").filter(ip => ip.trim()),
-                    enable_ip_restriction: state.security.ip_restrictions,
-                    enforce_mfa: state.security.mfa_required,
-                    auto_assigned_workspace_id: state.security.default_workspace_id || "0",
-                });
-                toast("Logo updated", "info");
-            } catch (error: any) {
-                toast(error.message || "Failed to update logo", "error");
-            } finally {
-                setIsSaving(false);
-            }
-        }
-    };
-
     if (!selectedOrganization) return <Spinner />;
 
     return (
-        <div style={{ display: "flex", flexDirection: "column", gap: "var(--space-12u)", paddingBottom: "var(--size-20u)" }}>
-            <SectionLayout>
-                <ImageContainer>
-                    <div
+        <div
+            style={{
+                display: "flex",
+                flexDirection: "column",
+                gap: "var(--space-8u)",
+                paddingBottom: "var(--size-20u)",
+            }}
+        >
+            {/* Details */}
+            <Section>
+                <FormGroup>
+                    <Label htmlFor="name">Organization name</Label>
+                    <Input
+                        id="name"
+                        value={name}
+                        onChange={(e) => setName(e.target.value)}
+                        onBlur={autoSave}
+                        placeholder="Organization name"
+                        required
+                    />
+                </FormGroup>
+                <FormGroup>
+                    <Label htmlFor="description">Description</Label>
+                    <Input
+                        id="description"
+                        as="textarea"
+                        value={description}
+                        onChange={(e) => setDescription(e.target.value)}
+                        onBlur={autoSave}
+                        placeholder="Optional description"
                         style={{
-                            width: "calc(var(--size-40u) + var(--space-5u))",
-                            height: "calc(var(--size-40u) + var(--space-5u))",
-                            borderRadius: "50%",
-                            border: "var(--border-width-regular) dashed var(--color-border)",
-                            background: previewUrl ? "transparent" : "var(--color-input-background)",
-                            cursor: "pointer",
-                            display: "flex",
-                            alignItems: "center",
-                            justifyContent: "center",
-                            overflow: "hidden",
-                            transition: "all 0.2s ease",
-                            boxShadow: "var(--shadow-md)",
+                            minHeight: "var(--size-40u)",
+                            resize: "vertical",
                         }}
-                        onClick={() => fileInputRef.current?.click()}
-                    >
-                        {previewUrl ? (
-                            <img
-                                src={previewUrl}
-                                alt="Logo"
-                                style={{ width: "100%", height: "100%", objectFit: "cover" }}
-                            />
-                        ) : (
-                            <Buildings size={32} color="var(--color-muted)" />
-                        )}
-                        <input
-                            type="file"
-                            ref={fileInputRef}
-                            style={{ display: "none" }}
-                            accept="image/*"
-                            onChange={handleImageChange}
-                        />
-                    </div>
-                </ImageContainer>
-
-                <div style={{ flex: 1 }}>
-                    <div style={{ marginBottom: "var(--space-8u)" }}>
-                        <h3 style={{ fontSize: "var(--font-size-lg)", color: "var(--color-foreground)", margin: "0 0 var(--space-2u) 0", fontWeight: "400" }}>
-                            Organization Logo
-                        </h3>
-                        <p style={{ fontSize: "var(--font-size-md)", color: "var(--color-secondary-text)", margin: 0 }}>
-                            Upload an image to represent your organization
-                        </p>
-                    </div>
-
-                    <ButtonActions style={{ marginBottom: "var(--space-4u)" }}>
-                        <Button $size="sm" onClick={() => fileInputRef.current?.click()}>
-                            {previewUrl ? "Change" : "Upload"}
-                        </Button>
-                        {previewUrl && (
-                            <Button
-                                $outline
-                                $size="sm"
-                                onClick={async () => {
-                                    setPreviewUrl(null);
-                                    setImageFile(null);
-                                    try {
-                                        setIsSaving(true);
-                                        const state = latestState.current;
-                                        await updateOrganization(selectedOrganization, {
-                                            name: state.name,
-                                            description: state.description,
-                                            image: "null" as any, // Explicitly Remove
-                                            whitelisted_ips: state.security.allowed_ips.split("\n").filter(ip => ip.trim()),
-                                            enable_ip_restriction: state.security.ip_restrictions,
-                                            enforce_mfa: state.security.mfa_required,
-                                            auto_assigned_workspace_id: state.security.default_workspace_id || "0",
-                                        });
-                                        toast("Logo removed", "info");
-                                    } catch (error: any) {
-                                        toast(error.message || "Failed to remove logo", "error");
-                                    } finally {
-                                        setIsSaving(false);
-                                    }
+                    />
+                </FormGroup>
+                {deployment?.b2b_settings?.workspaces_enabled &&
+                    workspaces.length > 0 && (
+                        <FormGroup>
+                            <Label htmlFor="default_workspace">
+                                Default workspace
+                            </Label>
+                            <ComboBox
+                                options={workspaces.map((w) => ({
+                                    value: w.id,
+                                    label: w.name,
+                                }))}
+                                value={security.default_workspace_id}
+                                onChange={(val) => {
+                                    setSecurity((prev) => ({
+                                        ...prev,
+                                        default_workspace_id: val,
+                                    }));
+                                    setTimeout(autoSave, 0);
                                 }}
-                            >
-                                <Trash size={14} style={{ marginRight: "var(--space-2u)" }} /> Remove
-                            </Button>
-                        )}
-                    </ButtonActions>
-                </div>
-            </SectionLayout>
+                                placeholder="Select default workspace"
+                            />
+                        </FormGroup>
+                    )}
+            </Section>
 
-            <div style={{ height: "var(--border-width-thin)", background: "var(--color-divider)" }} />
-
-            <div>
-                <div style={{ marginBottom: "var(--space-6u)", textAlign: "inherit" }}>
-                    <h3 style={{ fontSize: "var(--font-size-lg)", color: "var(--color-foreground)", margin: "0 0 var(--space-2u) 0" }}>
-                        Organization Details
-                    </h3>
-                    <p style={{ fontSize: "var(--font-size-md)", color: "var(--color-secondary-text)", margin: 0 }}>
-                        Basic information about your organization
-                    </p>
-                </div>
-
-                <div style={{ display: "flex", flexDirection: "column", gap: "var(--space-10u)" }}>
-                    <FormGroup>
-                        <Label htmlFor="name">Organization Name</Label>
-                        <Input
-                            id="name"
-                            value={name}
-                            onChange={(e) => setName(e.target.value)}
-                            onBlur={autoSave}
-                            placeholder="Enter organization name"
-                            required
-                        />
-                    </FormGroup>
-
-                    <FormGroup>
-                        <Label htmlFor="description">Description</Label>
-                        <Input
-                            id="description"
-                            as="textarea"
-                            value={description}
-                            onChange={(e) => setDescription(e.target.value)}
-                            onBlur={autoSave}
-                            placeholder="Enter organization description"
-                            style={{ minHeight: "var(--size-40u)", resize: "vertical" }}
-                        />
-                    </FormGroup>
-
+            {/* Security */}
+            {(deployment?.b2b_settings?.enforce_mfa_per_org_enabled ||
+                deployment?.b2b_settings?.ip_allowlist_per_org_enabled) && (
+                <Section>
+                    <SectionLabel>Security</SectionLabel>
                     {deployment?.b2b_settings?.enforce_mfa_per_org_enabled && (
-                        <ItemRow style={{ padding: "0" }}>
+                        <ItemRow style={{ padding: 0 }}>
                             <ItemContent>
-                                <Label style={{ fontSize: "var(--font-size-md)", fontWeight: "400", marginBottom: "var(--space-2u)", display: "block" }}>
-                                    Multi-Factor Authentication
+                                <Label
+                                    style={{
+                                        fontSize: 13,
+                                        fontWeight: 500,
+                                        marginBottom: 4,
+                                        display: "block",
+                                    }}
+                                >
+                                    Multi-factor authentication
                                 </Label>
-                                <p style={{ fontSize: "var(--font-size-sm)", color: "var(--color-muted)", margin: 0 }}>
-                                    Require all members to set up MFA for added security
+                                <p
+                                    style={{
+                                        fontSize: 12,
+                                        color: "var(--color-secondary-text)",
+                                        margin: 0,
+                                    }}
+                                >
+                                    Require all members to set up MFA for added
+                                    security.
                                 </p>
                             </ItemContent>
                             <ItemActions>
@@ -323,181 +253,161 @@ export const GeneralSettingsSection = ({
                                     checked={security.mfa_required}
                                     onChange={() => {
                                         const next = !security.mfa_required;
-                                        setSecurity(prev => ({ ...prev, mfa_required: next }));
-                                        setTimeout(() => autoSave(), 0);
+                                        setSecurity((prev) => ({
+                                            ...prev,
+                                            mfa_required: next,
+                                        }));
+                                        setTimeout(autoSave, 0);
                                     }}
                                 />
                             </ItemActions>
                         </ItemRow>
                     )}
-
                     {deployment?.b2b_settings?.ip_allowlist_per_org_enabled && (
                         <>
-                            <ItemRow style={{ padding: "0" }}>
+                            <ItemRow style={{ padding: 0 }}>
                                 <ItemContent>
-                                    <Label style={{ fontSize: "var(--font-size-md)", fontWeight: "400", marginBottom: "var(--space-2u)", display: "block" }}>
-                                        IP Restrictions
+                                    <Label
+                                        style={{
+                                            fontSize: 13,
+                                            fontWeight: 500,
+                                            marginBottom: 4,
+                                            display: "block",
+                                        }}
+                                    >
+                                        IP restrictions
                                     </Label>
-                                    <p style={{ fontSize: "var(--font-size-sm)", color: "var(--color-muted)", margin: 0 }}>
-                                        Only allow access from specific IP addresses
+                                    <p
+                                        style={{
+                                            fontSize: 12,
+                                            color: "var(--color-secondary-text)",
+                                            margin: 0,
+                                        }}
+                                    >
+                                        Only allow access from specific IP
+                                        addresses.
                                     </p>
                                 </ItemContent>
                                 <ItemActions>
                                     <Switch
                                         checked={security.ip_restrictions}
                                         onChange={() => {
-                                            const next = !security.ip_restrictions;
-                                            setSecurity(prev => ({ ...prev, ip_restrictions: next }));
-                                            setTimeout(() => autoSave(), 0);
+                                            const next =
+                                                !security.ip_restrictions;
+                                            setSecurity((prev) => ({
+                                                ...prev,
+                                                ip_restrictions: next,
+                                            }));
+                                            setTimeout(autoSave, 0);
                                         }}
                                     />
                                 </ItemActions>
                             </ItemRow>
-
                             {security.ip_restrictions && (
                                 <FormGroup>
-                                    <Label htmlFor="allowed_ips">Allowed IP Addresses</Label>
+                                    <Label htmlFor="allowed_ips">
+                                        Allowed IP addresses
+                                    </Label>
                                     <Input
                                         id="allowed_ips"
                                         as="textarea"
                                         value={security.allowed_ips}
-                                        onChange={(e) => setSecurity(prev => ({ ...prev, allowed_ips: e.target.value }))}
+                                        onChange={(e) =>
+                                            setSecurity((prev) => ({
+                                                ...prev,
+                                                allowed_ips: e.target.value,
+                                            }))
+                                        }
                                         onBlur={autoSave}
                                         placeholder="192.168.1.1&#10;10.0.0.0/24"
-                                        style={{ minHeight: "var(--size-40u)", fontFamily: "monospace" }}
+                                        style={{
+                                            minHeight: "var(--size-40u)",
+                                            fontFamily: "monospace",
+                                        }}
                                     />
                                 </FormGroup>
                             )}
                         </>
                     )}
+                </Section>
+            )}
 
-                    {deployment?.b2b_settings?.workspaces_enabled && workspaces.length > 0 && (
-                        <FormGroup>
-                            <Label htmlFor="default_workspace">Default Workspace</Label>
-                            <ComboBox
-                                options={workspaces.map(w => ({ value: w.id, label: w.name }))}
-                                value={security.default_workspace_id}
-                                onChange={(val) => {
-                                    setSecurity(prev => ({ ...prev, default_workspace_id: val }));
-                                    setTimeout(() => autoSave(), 0);
+            {/* Danger zone */}
+            {deployment?.b2b_settings?.allow_org_deletion && (
+                <Section>
+                    <SectionLabel>Danger zone</SectionLabel>
+                    <DangerCard>
+                        <DangerRow>
+                            <div style={{ flex: 1, minWidth: 0 }}>
+                                <DangerTitle>Delete organization</DangerTitle>
+                                <DangerSub>
+                                    Once you delete this organization, there is
+                                    no going back.
+                                </DangerSub>
+                            </div>
+                            <Button
+                                $size="sm"
+                                $outline
+                                $destructive
+                                onClick={() => {
+                                    setShowDeleteConfirm(!showDeleteConfirm);
+                                    setConfirmName("");
                                 }}
-                                placeholder="Select default workspace"
-                            />
-                        </FormGroup>
-                    )}
-                </div>
-            </div>
+                            >
+                                {showDeleteConfirm
+                                    ? "Cancel"
+                                    : "Delete organization"}
+                            </Button>
+                        </DangerRow>
 
-            {
-                deployment?.b2b_settings?.allow_org_deletion && (
-                    <>
-                        <div style={{ height: "var(--border-width-thin)", background: "var(--color-divider)" }} />
-
-                        <div>
-                            <div style={{ marginBottom: "var(--space-8u)" }}>
-                                <h3 style={{ fontSize: "var(--font-size-xl)", color: "var(--color-foreground)", margin: "0 0 var(--space-2u) 0" }}>
-                                    Danger Zone
-                                </h3>
-                                <p style={{ fontSize: "var(--font-size-lg)", color: "var(--color-muted)", margin: 0 }}>
-                                    Irreversible and destructive actions
-                                </p>
-                            </div>
-
-                            <div style={{
-                                padding: "var(--space-10u)",
-                                border: "var(--border-width-thin) solid var(--color-error)",
-                                borderRadius: "var(--radius-md)",
-                            }}>
-                                <div style={{
+                        {showDeleteConfirm && (
+                            <div
+                                style={{
+                                    marginTop: 14,
                                     display: "flex",
-                                    alignItems: "center",
-                                    justifyContent: "space-between",
-                                    marginBottom: showDeleteConfirm ? "var(--space-10u)" : "0",
-                                }}>
-                                    <div>
-                                        <div style={{
-                                            fontSize: "var(--font-size-lg)",
-                                            color: "var(--color-foreground)",
-                                            marginBottom: "var(--space-2u)",
-                                            fontWeight: "500",
-                                        }}>
-                                            Delete Organization
-                                        </div>
-                                        <div style={{
-                                            fontSize: "var(--font-size-md)",
-                                            color: "var(--color-muted)",
-                                        }}>
-                                            Once you delete an organization, there is no going back. Please be certain.
-                                        </div>
-                                    </div>
-                                    <Button
-                                        onClick={() => {
-                                            if (!showDeleteConfirm) {
-                                                setShowDeleteConfirm(true);
-                                            } else {
-                                                setShowDeleteConfirm(false);
-                                                setConfirmName("");
-                                            }
-                                        }}
-                                        style={{
-                                            background: "var(--color-error)",
-                                            color: "var(--color-foreground-inverse)",
-                                            border: "none",
-                                            padding: "var(--space-4u) var(--space-6u)",
-                                            fontSize: "var(--font-size-md)",
-                                            height: "var(--size-18u)",
-                                            width: "auto",
-                                        }}
-                                    >
-                                        {showDeleteConfirm ? "Cancel" : "Delete"}
-                                    </Button>
-                                </div>
-
-                                {showDeleteConfirm && (
-                                    <div style={{ width: "100%", marginTop: "var(--space-8u)" }}>
-                                        <FormGroup>
-                                            <Label htmlFor="confirm_org_name">
-                                                Type <strong>{selectedOrganization.name}</strong> to confirm
-                                            </Label>
-                                            <Input
-                                                id="confirm_org_name"
-                                                type="text"
-                                                value={confirmName}
-                                                onChange={(e) => setConfirmName(e.target.value)}
-                                                placeholder="Organization name"
-                                                style={{ width: "100%" }}
-                                            />
-                                        </FormGroup>
-
-                                        <Button
-                                            onClick={handleDeleteOrganization}
-                                            disabled={confirmName !== selectedOrganization.name || isDeleting}
-                                            style={{
-                                                background: confirmName === selectedOrganization.name
-                                                    ? "var(--color-error)"
-                                                    : "transparent",
-                                                color: confirmName === selectedOrganization.name
-                                                    ? "var(--color-foreground-inverse)"
-                                                    : "var(--color-muted)",
-                                                border: "var(--border-width-thin) solid var(--color-border)",
-                                                padding: "var(--space-4u) var(--space-8u)",
-                                                fontSize: "var(--font-size-lg)",
-                                                height: "var(--size-18u)",
-                                                cursor: confirmName === selectedOrganization.name
-                                                    ? "pointer"
-                                                    : "not-allowed",
-                                                width: "100%",
-                                            }}
-                                        >
-                                            {isDeleting ? <Spinner size={12} /> : "Delete Forever"}
-                                        </Button>
-                                    </div>
-                                )}
+                                    flexDirection: "column",
+                                    gap: 10,
+                                }}
+                            >
+                                <FormGroup>
+                                    <Label htmlFor="confirm_org_name">
+                                        Type{" "}
+                                        <strong>
+                                            {selectedOrganization.name}
+                                        </strong>{" "}
+                                        to confirm
+                                    </Label>
+                                    <Input
+                                        id="confirm_org_name"
+                                        type="text"
+                                        value={confirmName}
+                                        onChange={(e) =>
+                                            setConfirmName(e.target.value)
+                                        }
+                                        placeholder={selectedOrganization.name}
+                                    />
+                                </FormGroup>
+                                <Button
+                                    $size="sm"
+                                    $destructive
+                                    onClick={handleDeleteOrganization}
+                                    disabled={
+                                        confirmName !==
+                                            selectedOrganization.name ||
+                                        isDeleting
+                                    }
+                                >
+                                    {isDeleting ? (
+                                        <Spinner size={12} />
+                                    ) : (
+                                        "Delete forever"
+                                    )}
+                                </Button>
                             </div>
-                        </div>
-                    </>
-                )
-            }
-        </div >
+                        )}
+                    </DangerCard>
+                </Section>
+            )}
+        </div>
     );
 };

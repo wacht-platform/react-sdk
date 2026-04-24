@@ -3,7 +3,7 @@ export type Client = (
   options?: RequestInit
 ) => Promise<Response>;
 
-export type ClinetReponse<T> = {
+export type ClientResponse<T> = {
   status: number;
   message: string;
   data: T;

@@ -1,4 +1,4 @@
-import { useState, useRef, useMemo } from "react";
+import { useState, useRef } from "react";
 import { Trash } from "@phosphor-icons/react";
 import useSWR from "swr";
 import { useActiveWorkspace } from "@/hooks/use-workspace";
@@ -7,7 +7,6 @@ import { useScreenContext } from "../../organization/context";
 import { WorkspaceRole } from "@/types";
 import {
     Button,
-    SearchInput,
     Spinner,
     Dropdown,
     DropdownItems,
@@ -31,9 +30,6 @@ import {
     HeaderCTAContainer,
     IconButton,
     DesktopTableContainer,
-    MobileListContainer,
-    ConnectionItemRow,
-    ConnectionLeft,
 } from "./shared";
 import styled from "styled-components";
 
@@ -63,22 +59,6 @@ const PermissionText = styled.div`
     color: var(--color-secondary-text);
 `;
 
-const MobileRoleName = styled.div`
-    font-weight: 600;
-    font-size: var(--font-size-lg);
-    margin-bottom: var(--space-2u);
-`;
-
-const MobileRolePermissions = styled.div`
-    font-size: var(--font-size-sm);
-    color: var(--color-secondary-text);
-    line-height: 1.4;
-`;
-
-const MobileRoleActions = styled.div`
-    margin-left: auto;
-`;
-
 export const RolesSection = () => {
     const {
         activeWorkspace,
@@ -90,7 +70,6 @@ export const RolesSection = () => {
     const { deployment } = useDeployment();
     const { toast } = useScreenContext();
 
-    const [searchQuery, setSearchQuery] = useState("");
     const [rolePopover, setRolePopover] = useState<{
         isOpen: boolean;
         role?: WorkspaceRole;
@@ -109,13 +88,6 @@ export const RolesSection = () => {
         activeWorkspace ? `wacht-api-workspaces:${activeWorkspace.id}:roles` : null,
         () => getRoles() || [],
     );
-
-    const filteredRoles = useMemo(() => {
-        if (!searchQuery) return roles;
-        return roles.filter((role) =>
-            role.name.toLowerCase().includes(searchQuery.toLowerCase()),
-        );
-    }, [roles, searchQuery]);
 
     const handleRoleSaved = async (role: {
         id?: string;
@@ -147,20 +119,22 @@ export const RolesSection = () => {
 
     return (
         <>
-            <HeaderCTAContainer>
-                <div style={{ flex: 1 }}>
-                    <SearchInput
-                        placeholder="MagnifyingGlass roles..."
-                        onChange={setSearchQuery}
-                        value={searchQuery}
-                    />
+            <HeaderCTAContainer style={{ marginBottom: "var(--space-6u)" }}>
+                <div style={{ flex: 1, minWidth: 0 }}>
+                    <div style={{ fontSize: 14, fontWeight: 500, color: "var(--color-card-foreground)" }}>
+                        Roles
+                    </div>
+                    <div style={{ fontSize: 12, color: "var(--color-secondary-text)", marginTop: 2 }}>
+                        Define granular permissions for this workspace.
+                    </div>
                 </div>
                 {deployment?.b2b_settings?.custom_workspace_role_enabled && (
                     <Button
                         ref={addRoleButtonRef}
                         onClick={() => setRolePopover({ isOpen: true, triggerElement: addRoleButtonRef.current })}
+                        $size="sm"
                     >
-                        Add Role
+                        Add role
                     </Button>
                 )}
             </HeaderCTAContainer>
@@ -173,9 +147,9 @@ export const RolesSection = () => {
                 />
             )}
 
-            {filteredRoles.length === 0 ? (
+            {roles.length === 0 ? (
                 <EmptyState
-                    title={searchQuery ? "No roles match" : "No roles yet"}
+                    title="No roles yet"
                     description="Create workspace-specific roles to manage access."
                 />
             ) : (
@@ -190,7 +164,7 @@ export const RolesSection = () => {
                                 </TableRow>
                             </TableHead>
                             <TableBody>
-                                {filteredRoles.map((role) => (
+                                {roles.map((role) => (
                                     <TableRow key={role.id}>
                                         <TableCell>
                                             <RoleNameRow>
@@ -222,38 +196,6 @@ export const RolesSection = () => {
                             </TableBody>
                         </Table>
                     </DesktopTableContainer>
-
-                    <MobileListContainer>
-                        {filteredRoles.map((role) => (
-                            <ConnectionItemRow key={role.id}>
-                                <ConnectionLeft>
-                                    <div>
-                                        <RoleNameRow>
-                                            <MobileRoleName>{role.name}</MobileRoleName>
-                                            {!canEditWorkspaceRole(role) && (
-                                                <RoleBadge>Default</RoleBadge>
-                                            )}
-                                        </RoleNameRow>
-                                        <MobileRolePermissions>
-                                            {role.permissions?.join(", ")}
-                                            {!canEditWorkspaceRole(role) &&
-                                                " • Cannot be edited or deleted"}
-                                        </MobileRolePermissions>
-                                    </div>
-                                    <MobileRoleActions>
-                                        <RoleActions
-                                            role={role}
-                                            onEdit={(el) => setRolePopover({ isOpen: true, role, triggerElement: el })}
-                                            onDelete={() => setRoleForDeletion(role.id)}
-                                            open={roleForOptionPopover === role.id}
-                                            onOpenChange={(v) => setRoleForOptionPopover(v ? role.id : null)}
-                                            dropdownButtonRefs={dropdownButtonRefs}
-                                        />
-                                    </MobileRoleActions>
-                                </ConnectionLeft>
-                            </ConnectionItemRow>
-                        ))}
-                    </MobileListContainer>
                 </>
             )}
 

@@ -46,6 +46,7 @@ export {
     useMagicLinkVerification,
     useAgentThreadConversation,
     useActorMcpServers,
+    useExternalAgentConnections,
     useActorProjects,
     useActorProjectSearch,
     useActorThreadSearch,
@@ -73,6 +74,11 @@ export {
     useApiAuthAuditAnalytics,
     useApiAuthAuditTimeseries,
 } from "@wacht/jsx";
+export type {
+    ActorMcpServerSummary,
+    ExternalAgentConnection,
+    ExternalAgentConnectionStatus,
+} from "@wacht/types";
 export { DeploymentProvider as BaseDeploymentProvider } from "@wacht/jsx";
 export { DeploymentProvider } from "./providers";
 export { createNextjsAdapter } from "./nextjs-adapter";

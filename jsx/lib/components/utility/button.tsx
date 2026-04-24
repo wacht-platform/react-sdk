@@ -18,8 +18,7 @@ export const Button = styled.button<ButtonProps>`
     border: var(--border-width-thin) solid transparent;
     border-radius: var(--radius-md);
     font-weight: 500;
-    font-size: ${(props) =>
-        props.$size === "sm" ? "var(--font-size-sm)" : "var(--font-size-md)"};
+    font-size: var(--font-size-md);
     cursor: pointer;
     transition: all 0.2s ease;
     display: inline-flex;

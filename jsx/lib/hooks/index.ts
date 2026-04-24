@@ -32,12 +32,7 @@ export {
     useProjectTaskBoardItem,
 } from "./use-agent-threads";
 export { useActorMcpServers } from "./use-actor-mcp-servers";
-export type { ActorMcpServerSummary } from "./use-actor-mcp-servers";
 export { useExternalAgentConnections } from "./use-external-agent-connections";
-export type {
-    ExternalAgentConnection,
-    ExternalAgentConnectionStatus,
-} from "./use-external-agent-connections";
 export { useWebhookAppSession } from "./use-webhook-app";
 export { useWebhookStats } from "./use-webhook-stats";
 export { useWebhookEndpoints } from "./use-webhook-endpoints";
