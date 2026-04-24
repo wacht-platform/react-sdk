@@ -1785,56 +1785,71 @@ export const UserButton: React.FC<UserButtonProps> = ({
                                 </SPList>
 
                                 {/* Footer create button */}
-                                {workspacesEnabled ? (
-                                    <SPFooter>
-                                        <SPCreateRow
-                                            onClick={() => {
-                                                setSelectedOrgForWorkspace(
-                                                    activeOrganization &&
-                                                        !(
-                                                            !!activeOrgMembership
-                                                                ?.eligibility_restriction
-                                                                ?.type &&
-                                                            activeOrgMembership
-                                                                .eligibility_restriction
-                                                                .type !== "none"
-                                                        )
-                                                        ? activeOrganization.id
-                                                        : null,
-                                                );
-                                                createWorkspaceDialog.open();
-                                            }}
-                                            disabled={
-                                                switching || !activeOrganization
-                                            }
-                                        >
-                                            <SPCreateIcon>
-                                                <Plus size={12} />
-                                            </SPCreateIcon>
-                                            New workspace
-                                        </SPCreateRow>
-                                    </SPFooter>
-                                ) : (
-                                    canCreateOrg && (
+                                {(() => {
+                                    const hasOrgs =
+                                        (organizationMemberships?.length ?? 0) >
+                                        0;
+
+                                    const renderCreateOrg = () =>
+                                        canCreateOrg && (
+                                            <SPFooter>
+                                                <SPCreateRow
+                                                    onClick={() => {
+                                                        if (onCreateOrg) {
+                                                            onCreateOrg();
+                                                            setIsOpen(false);
+                                                        } else
+                                                            createOrgDialog.open();
+                                                    }}
+                                                    disabled={switching}
+                                                >
+                                                    <SPCreateIcon>
+                                                        <Plus size={12} />
+                                                    </SPCreateIcon>
+                                                    New organization
+                                                </SPCreateRow>
+                                            </SPFooter>
+                                        );
+
+                                    if (!workspacesEnabled)
+                                        return renderCreateOrg();
+
+                                    if (!hasOrgs) return renderCreateOrg();
+
+                                    const orgRestrictedForCreate =
+                                        !!activeOrgMembership
+                                            ?.eligibility_restriction?.type &&
+                                        activeOrgMembership
+                                            .eligibility_restriction.type !==
+                                            "none";
+                                    const fallbackOrgId =
+                                        organizationMemberships?.[0]
+                                            ?.organization?.id ?? null;
+                                    const targetOrgId =
+                                        activeOrganization &&
+                                        !orgRestrictedForCreate
+                                            ? activeOrganization.id
+                                            : fallbackOrgId;
+
+                                    return (
                                         <SPFooter>
                                             <SPCreateRow
                                                 onClick={() => {
-                                                    if (onCreateOrg) {
-                                                        onCreateOrg();
-                                                        setIsOpen(false);
-                                                    } else
-                                                        createOrgDialog.open();
+                                                    setSelectedOrgForWorkspace(
+                                                        targetOrgId,
+                                                    );
+                                                    createWorkspaceDialog.open();
                                                 }}
                                                 disabled={switching}
                                             >
                                                 <SPCreateIcon>
                                                     <Plus size={12} />
                                                 </SPCreateIcon>
-                                                New organization
+                                                New workspace
                                             </SPCreateRow>
                                         </SPFooter>
-                                    )
-                                )}
+                                    );
+                                })()}
                             </SidePanel>
                         </DefaultStylesProvider>,
                         document.body,

@@ -679,50 +679,7 @@ export const OrganizationSwitcher = ({ showPersonal = true }: OrganizationSwitch
                                     }
                                 };
 
-                                if (isPersonalActive) {
-                                    return (
-                                        <SelectedBlock>
-                                            <ContextRow>
-                                                <ContextAvatar $personal>
-                                                    {session?.active_signin
-                                                        ?.user
-                                                        ?.profile_picture_url ? (
-                                                        <img
-                                                            src={
-                                                                session
-                                                                    .active_signin
-                                                                    .user
-                                                                    .profile_picture_url
-                                                            }
-                                                            alt=""
-                                                        />
-                                                    ) : (
-                                                        <User size={14} />
-                                                    )}
-                                                </ContextAvatar>
-                                                <ContextText>
-                                                    <ContextName>
-                                                        Personal account
-                                                    </ContextName>
-                                                    {session?.active_signin
-                                                        ?.user
-                                                        ?.primary_email_address
-                                                        ?.email && (
-                                                        <ContextRole>
-                                                            {
-                                                                session
-                                                                    .active_signin
-                                                                    .user
-                                                                    .primary_email_address
-                                                                    .email
-                                                            }
-                                                        </ContextRole>
-                                                    )}
-                                                </ContextText>
-                                            </ContextRow>
-                                        </SelectedBlock>
-                                    );
-                                }
+                                if (isPersonalActive) return null;
 
                                 const showTabs = activeIsWorkspace;
                                 const viewingTab: "org" | "ws" = showTabs
