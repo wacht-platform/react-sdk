@@ -11,6 +11,20 @@ import { useDeployment } from "./use-deployment";
 import { useClient } from "./use-client";
 import { responseMapper } from "../utils/response-mapper";
 import { getStoredDevSession } from "../utils/dev-session";
+import {
+    buildApprovalRunFormData,
+    buildCancelRunFormData,
+    buildMessageRunFormData,
+    createConfirmedUserMessage,
+    getConversationMessageType,
+    getExecutionStatus,
+    isFinalSteerMessage,
+    isTerminalSystemDecision,
+    normalizeConversationMessage,
+    resolveThreadFileUrl,
+    sortConversationMessages,
+    unwrapConversationEvent,
+} from "./agent-conversation-utils";
 import type {
     Actor,
     ToolApprovalDecision,
@@ -27,6 +41,7 @@ const THREAD_STATUS_POLL_INTERVAL_MS = 5000;
 
 interface UseAgentThreadConversationProps {
     threadId: string;
+    initialThread?: AgentThread | null;
     platformAdapter?: {
         onPlatformEvent?: (eventName: string, eventData: unknown) => void;
     };
@@ -34,6 +49,7 @@ interface UseAgentThreadConversationProps {
 
 export function useAgentThreadConversation({
     threadId,
+    initialThread = null,
     platformAdapter,
 }: UseAgentThreadConversationProps) {
     const { deployment } = useDeployment();
@@ -42,7 +58,9 @@ export function useAgentThreadConversation({
     const [messages, setMessages] = useState<ConversationMessage[]>([]);
     const [pendingMessage, setPendingMessage] = useState<string | null>(null);
     const [pendingFiles, setPendingFiles] = useState<File[] | null>(null);
-    const [threadState, setThreadState] = useState<AgentThread | null>(null);
+    const [threadState, setThreadState] = useState<AgentThread | null>(
+        initialThread,
+    );
     const [executionStatus, setExecutionStatus] = useState<FrontendStatus>(
         FRONTEND_STATUS.IDLE,
     );
@@ -73,14 +91,36 @@ export function useAgentThreadConversation({
                 next.push(message);
             }
 
-            next.sort(
-                (a, b) =>
-                    new Date(a.timestamp).getTime() -
-                    new Date(b.timestamp).getTime(),
-            );
-            return next;
+            return sortConversationMessages(next);
         });
     }, []);
+
+    const applyMessagePage = useCallback(
+        ({
+            messages,
+            prepend,
+            hasMore,
+        }: {
+            messages: ConversationMessage[];
+            prepend?: boolean;
+            hasMore?: boolean;
+        }) => {
+            const sortedMessages = sortConversationMessages(messages);
+
+            if (sortedMessages.length > 0) {
+                oldestMessageIdRef.current = sortedMessages[0].id;
+            }
+
+            setMessages((prev) =>
+                prepend ? [...sortedMessages, ...prev] : sortedMessages,
+            );
+
+            if (hasMore !== undefined) {
+                setHasMoreMessages(hasMore);
+            }
+        },
+        [],
+    );
 
     const applyExecutionState = useCallback((nextStatus: FrontendStatus) => {
         executionStatusRef.current = nextStatus;
@@ -135,91 +175,81 @@ export function useAgentThreadConversation({
         setPendingFiles(null);
     }, []);
 
+    const touchThreadActivity = useCallback((status?: string) => {
+        setThreadState((current) => {
+            if (!current) return current;
+
+            return {
+                ...current,
+                ...(status ? { status } : {}),
+                last_activity_at: new Date().toISOString(),
+            };
+        });
+    }, []);
+
     const insertConfirmedUserMessage = useCallback(
         (conversationId: string, message: string) => {
-            const confirmedMessage: ConversationMessage = {
-                id: conversationId,
-                timestamp: new Date().toISOString(),
-                content: {
-                    type: "user_message",
-                    message,
-                },
-                metadata: {
-                    message_type: "user_message",
-                },
-            };
-
-            upsertMessage(confirmedMessage);
+            upsertMessage(createConfirmedUserMessage(conversationId, message));
             clearPendingSubmission();
         },
         [clearPendingSubmission, upsertMessage],
     );
 
     const handleConversationMessage = useCallback(
-        (data: any) => {
-            const { content } = data;
-            const message_type =
-                data.message_type ||
-                data.metadata?.message_type ||
-                content?.type;
+        (data: unknown) => {
+            const message = normalizeConversationMessage(data);
+            if (!message) return;
 
-            const message = {
-                ...data,
-                metadata: { ...(data.metadata || {}), message_type },
-            } as ConversationMessage;
+            const messageType = getConversationMessageType(message);
 
-            if (
-                message_type === "system_decision" ||
-                message_type === "execution_summary" ||
-                message_type === "tool_result"
-            ) {
-                upsertMessage(message);
+            switch (messageType) {
+                case "system_decision":
+                    upsertMessage(message);
+                    if (isTerminalSystemDecision(message)) {
+                        applyTerminalExecutionState();
+                    }
+                    return;
 
-                const step = content?.step;
-                if (
-                    message_type === "system_decision" &&
-                    (step === "execution_cancelled" ||
-                        step === "abort")
-                ) {
-                    applyTerminalExecutionState();
+                case "execution_summary":
+                case "tool_result":
+                case "user_message":
+                    upsertMessage(message);
+                    return;
+
+                case "steer":
+                    upsertMessage(message);
+                    if (isFinalSteerMessage(message)) {
+                        applyTerminalExecutionState();
+                    }
+                    return;
+
+                case "approval_request":
+                    optimisticExecutionDeadlineRef.current = 0;
+                    applyExecutionState(FRONTEND_STATUS.WAITING_FOR_INPUT);
+                    upsertMessage(message);
+                    return;
+
+                case "approval_response":
+                    upsertMessage(message);
+                    markRunRequested(FRONTEND_STATUS.RUNNING);
+                    return;
+
+                case "execution_status": {
+                    const nextStatus = getExecutionStatus(message);
+                    if (!nextStatus) return;
+
+                    applyAuthoritativeThreadStatus(nextStatus);
+                    setThreadState((current) =>
+                        current
+                            ? { ...current, status: nextStatus }
+                            : current,
+                    );
+                    return;
                 }
-                return;
+
+                default:
+                    upsertMessage(message);
             }
-
-            if (message_type === "user_message") {
-                upsertMessage(message);
-                return;
-            }
-
-            if (message_type === "steer") {
-                upsertMessage(message);
-
-                if (!content?.further_actions_required) {
-                    applyTerminalExecutionState();
-                }
-                return;
-            }
-
-            if (message_type === "approval_request") {
-                optimisticExecutionDeadlineRef.current = 0;
-                applyExecutionState(FRONTEND_STATUS.WAITING_FOR_INPUT);
-                upsertMessage(message);
-                return;
-            }
-
-            if (message_type === "approval_response") {
-                upsertMessage(message);
-                markRunRequested(FRONTEND_STATUS.RUNNING);
-                return;
-            }
-
-            if (message_type === "execution_status") {
-                // @ts-ignore
-                applyAuthoritativeThreadStatus(content.status);
-                return;
-            }
-
-            upsertMessage(message);
         },
         [
             applyAuthoritativeThreadStatus,
@@ -288,24 +318,11 @@ export function useAgentThreadConversation({
                     result.data &&
                     activeThreadIdRef.current === requestThreadId
                 ) {
-                    const messages = [...result.data.data].sort((a, b) => {
-                        const timeA = new Date(a.timestamp).getTime();
-                        const timeB = new Date(b.timestamp).getTime();
-                        return timeA - timeB;
+                    applyMessagePage({
+                        messages: result.data.data,
+                        prepend: Boolean(beforeId),
+                        hasMore: result.data.has_more || false,
                     });
-
-                    if (messages.length > 0) {
-                        oldestMessageIdRef.current = messages[0].id;
-                    }
-
-                    setMessages((prev) => {
-                        if (beforeId) {
-                            return [...messages, ...prev];
-                        }
-                        return messages;
-                    });
-
-                    setHasMoreMessages(result.data.has_more || false);
                 }
             } catch (error) {
                 if (activeThreadIdRef.current === requestThreadId) {
@@ -325,7 +342,7 @@ export function useAgentThreadConversation({
                 }
             }
         },
-        [threadId, client],
+        [threadId, client, applyMessagePage],
     );
 
     useEffect(() => {
@@ -374,12 +391,11 @@ export function useAgentThreadConversation({
                                     activeThreadIdRef.current ===
                                         reconnectThreadId
                                 ) {
-                                    const messages = [...result.data.data].sort(
-                                        (a, b) =>
-                                            new Date(a.timestamp).getTime() -
-                                            new Date(b.timestamp).getTime(),
-                                    );
-                                    setMessages(messages);
+                                    applyMessagePage({
+                                        messages: result.data.data,
+                                        hasMore:
+                                            result.data.has_more || false,
+                                    });
                                 }
                             })
                             .catch(() => {});
@@ -412,9 +428,9 @@ export function useAgentThreadConversation({
 
             eventSource.addEventListener("conversation_message", (event) => {
                 try {
-                    const data = JSON.parse(event.data);
-                    const conversation =
-                        data?.ConversationMessage ?? data ?? null;
+                    const conversation = unwrapConversationEvent(
+                        JSON.parse(event.data),
+                    );
                     if (conversation) {
                         handleConversationMessageRef.current(conversation);
                     }
@@ -451,8 +467,7 @@ export function useAgentThreadConversation({
                 eventSourceRef.current = null;
             }
         };
-        // eslint-disable-next-line react-hooks/exhaustive-deps
-    }, [threadId]);
+    }, [threadId, client, applyMessagePage]);
 
     const refreshThreadStatus = useCallback(async () => {
         if (!threadId) return;
@@ -514,6 +529,11 @@ export function useAgentThreadConversation({
         clearPendingSubmission();
     }, [threadId, clearPendingSubmission]);
 
+    useEffect(() => {
+        if (!initialThread || initialThread.id !== threadId) return;
+        setThreadState(initialThread);
+    }, [initialThread, threadId]);
+
     // Send message
     const sendMessage = useCallback(
         async (message: string, files?: File[]) => {
@@ -525,23 +545,20 @@ export function useAgentThreadConversation({
             }
 
             try {
-                const formData = new FormData();
-                formData.append("message", message);
-                if (files && files.length > 0) {
-                    files.forEach((file) => {
-                        formData.append("files", file);
-                    });
-                }
-
                 const response = await client(`/ai/threads/${threadId}/run`, {
                     method: "POST",
-                    body: formData,
+                    body: buildMessageRunFormData(message, files),
                 });
 
                 if (response.ok) {
                     const result =
                         await responseMapper<ExecuteAgentResponse>(response);
                     const conversationId = result.data?.conversation_id ?? null;
+                    touchThreadActivity(
+                        typeof result.data?.status === "string"
+                            ? result.data.status
+                            : undefined,
+                    );
                     if (conversationId) {
                         insertConfirmedUserMessage(conversationId, message);
                     } else {
@@ -560,6 +577,7 @@ export function useAgentThreadConversation({
             deployment,
             client,
             markRunRequested,
+            touchThreadActivity,
             clearPendingSubmission,
             insertConfirmedUserMessage,
         ],
@@ -599,89 +617,52 @@ export function useAgentThreadConversation({
             if (!threadId) return false;
 
             try {
-                const formData = new FormData();
-                formData.append("request_message_id", requestMessageId);
-                approvals.forEach((approval) => {
-                    formData.append("approval_tool_name", approval.tool_name);
-                    formData.append("approval_mode", approval.mode);
-                });
-
                 const response = await client(`/ai/threads/${threadId}/run`, {
                     method: "POST",
-                    body: formData,
+                    body: buildApprovalRunFormData(
+                        requestMessageId,
+                        approvals,
+                    ),
                 });
 
                 if (!response.ok) {
                     return false;
                 }
 
+                touchThreadActivity();
                 markRunRequested(FRONTEND_STATUS.RUNNING);
                 return true;
             } catch {
                 return false;
             }
         },
-        [threadId, client, markRunRequested],
+        [threadId, client, markRunRequested, touchThreadActivity],
     );
 
     const cancelExecution = useCallback(async () => {
         if (!threadId || !isExecutionActive(executionStatus)) return;
 
         try {
-            const formData = new FormData();
-            formData.append("cancel", "true");
             await client(`/ai/threads/${threadId}/run`, {
                 method: "POST",
-                body: formData,
+                body: buildCancelRunFormData(),
             });
             optimisticExecutionDeadlineRef.current = 0;
+            touchThreadActivity();
             applyExecutionState(FRONTEND_STATUS.IDLE);
         } catch {}
-    }, [threadId, executionStatus, client, applyExecutionState]);
+    }, [
+        threadId,
+        executionStatus,
+        client,
+        applyExecutionState,
+        touchThreadActivity,
+    ]);
 
     const resolveMessageFileUrl = useCallback(
         (file: FileData | null | undefined): string | null => {
             if (!deployment || !threadId || !file) return null;
-
-            const raw = file.url || file.filename;
-            if (!raw) return null;
-            if (/^https?:\/\//i.test(raw)) return raw;
-
-            const backendHost = deployment.backend_host.replace(/\/$/, "");
-            let fileUrl: URL;
-
-            if (raw.startsWith("/ai/threads/")) {
-                fileUrl = new URL(raw, `${backendHost}/`);
-            } else if (raw.startsWith("/uploads/")) {
-                const filename = raw.split("/").pop() ?? "";
-                if (!filename) return null;
-
-                fileUrl = new URL(
-                    `/ai/threads/${encodeURIComponent(threadId)}/filesystem/file`,
-                    `${backendHost}/`,
-                );
-                fileUrl.searchParams.set("path", `uploads/${filename}`);
-            } else {
-                const filename = raw.includes("/")
-                    ? (raw.split("/").pop() ?? "")
-                    : raw;
-                if (!filename) return null;
-
-                fileUrl = new URL(
-                    `/ai/threads/${encodeURIComponent(threadId)}/filesystem/file`,
-                    `${backendHost}/`,
-                );
-                fileUrl.searchParams.set("path", `uploads/${filename}`);
-            }
-
-            if (deployment.mode === "staging") {
-                const devSession = getStoredDevSession(deployment.backend_host);
-                if (devSession) {
-                    fileUrl.searchParams.set("__dev_session__", devSession);
-                }
-            }
-
-            return fileUrl.toString();
+            return resolveThreadFileUrl({ deployment, threadId, file });
         },
         [threadId, deployment],
     );
@@ -706,9 +687,12 @@ export function useAgentThreadConversation({
         threadState?.execution_state?.pending_approval_request ?? null;
     const activeApprovalRequestId =
         pendingApprovalRequest?.request_message_id ?? null;
+    const threadStatus = threadState?.status;
 
     return {
+        thread: threadState,
         threadState,
+        threadStatus,
         messages,
         pendingMessage,
         pendingFiles,
@@ -727,6 +711,7 @@ export function useAgentThreadConversation({
         isLoadingMore,
         messagesLoading,
         messagesError,
+        refreshThread: refreshThreadStatus,
         refreshMessages,
         sendMessage,
         submitApprovalResponse,
