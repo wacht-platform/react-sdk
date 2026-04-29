@@ -58,6 +58,7 @@ export function useAgentThreadConversation({
 
     const optimisticExecutionDeadlineRef = useRef(0);
     const executionStatusRef = useRef<FrontendStatus>(FRONTEND_STATUS.IDLE);
+    const refreshThreadStatusRef = useRef<(() => Promise<void>) | null>(null);
 
     const upsertMessage = useCallback((message: ConversationMessage) => {
         setMessages((prev) => {
@@ -104,6 +105,7 @@ export function useAgentThreadConversation({
         }
 
         applyExecutionState(FRONTEND_STATUS.IDLE);
+        void refreshThreadStatusRef.current?.();
     }, [applyExecutionState]);
 
     const applyAuthoritativeThreadStatus = useCallback(
@@ -474,6 +476,10 @@ export function useAgentThreadConversation({
             }
         } catch {}
     }, [threadId, client, applyAuthoritativeThreadStatus]);
+
+    useEffect(() => {
+        refreshThreadStatusRef.current = refreshThreadStatus;
+    }, [refreshThreadStatus]);
 
     useEffect(() => {
         if (!threadId) return;
