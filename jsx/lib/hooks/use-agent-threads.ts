@@ -846,6 +846,7 @@ export function useProjectTasks(projectId?: string, enabled = true, options: Pro
       revalidateOnFocus: false,
       revalidateFirstPage: true,
       persistSize: true,
+      refreshInterval: 5000,
     },
   );
 

@@ -1,5 +1,5 @@
 import { useState, useRef, useCallback, useEffect } from "react";
-import useSWR from "swr";
+import useSWR, { mutate as globalMutate } from "swr";
 import { CONNECTION_STATES } from "../constants/ai-agent";
 import {
     FrontendStatus,
@@ -466,6 +466,11 @@ export function useAgentThreadConversation({
             if (result.data && activeThreadIdRef.current === requestThreadId) {
                 setThreadState(result.data);
                 applyAuthoritativeThreadStatus(result.data.status);
+                void globalMutate(
+                    `wacht-ai-thread:${requestThreadId}`,
+                    result.data,
+                    { revalidate: false },
+                );
             }
         } catch {}
     }, [threadId, client, applyAuthoritativeThreadStatus]);
