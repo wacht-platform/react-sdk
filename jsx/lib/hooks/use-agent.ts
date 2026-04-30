@@ -526,6 +526,7 @@ export function useAgentThreadConversation({
         oldestMessageIdRef.current = null;
         optimisticExecutionDeadlineRef.current = 0;
         executionStatusRef.current = FRONTEND_STATUS.IDLE;
+        setExecutionStatus(FRONTEND_STATUS.IDLE);
         clearPendingSubmission();
     }, [threadId, clearPendingSubmission]);
 
@@ -543,6 +544,7 @@ export function useAgentThreadConversation({
             if (files && files.length > 0) {
                 setPendingFiles(files);
             }
+            markRunRequested(FRONTEND_STATUS.STARTING);
 
             try {
                 const response = await client(`/ai/threads/${threadId}/run`, {
@@ -566,9 +568,13 @@ export function useAgentThreadConversation({
                     }
                     markRunRequested(FRONTEND_STATUS.RUNNING);
                 } else {
+                    optimisticExecutionDeadlineRef.current = 0;
+                    applyExecutionState(FRONTEND_STATUS.IDLE);
                     clearPendingSubmission();
                 }
             } catch (err) {
+                optimisticExecutionDeadlineRef.current = 0;
+                applyExecutionState(FRONTEND_STATUS.IDLE);
                 clearPendingSubmission();
             }
         },
@@ -577,6 +583,7 @@ export function useAgentThreadConversation({
             deployment,
             client,
             markRunRequested,
+            applyExecutionState,
             touchThreadActivity,
             clearPendingSubmission,
             insertConfirmedUserMessage,
@@ -616,6 +623,8 @@ export function useAgentThreadConversation({
         ): Promise<boolean> => {
             if (!threadId) return false;
 
+            markRunRequested(FRONTEND_STATUS.STARTING);
+
             try {
                 const response = await client(`/ai/threads/${threadId}/run`, {
                     method: "POST",
@@ -626,6 +635,8 @@ export function useAgentThreadConversation({
                 });
 
                 if (!response.ok) {
+                    optimisticExecutionDeadlineRef.current = 0;
+                    applyExecutionState(FRONTEND_STATUS.IDLE);
                     return false;
                 }
 
@@ -633,10 +644,18 @@ export function useAgentThreadConversation({
                 markRunRequested(FRONTEND_STATUS.RUNNING);
                 return true;
             } catch {
+                optimisticExecutionDeadlineRef.current = 0;
+                applyExecutionState(FRONTEND_STATUS.IDLE);
                 return false;
             }
         },
-        [threadId, client, markRunRequested, touchThreadActivity],
+        [
+            threadId,
+            client,
+            markRunRequested,
+            applyExecutionState,
+            touchThreadActivity,
+        ],
     );
 
     const cancelExecution = useCallback(async () => {
