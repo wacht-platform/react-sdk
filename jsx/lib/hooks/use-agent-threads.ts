@@ -29,6 +29,21 @@ const EMPTY_WORKSPACE_LISTING: ProjectTaskWorkspaceListing = {
   files: [],
 };
 
+function upsertActorProject(
+  projects: ActorProject[] | undefined,
+  project: ActorProject,
+  includeArchived: boolean,
+): ActorProject[] {
+  const currentProjects = projects || [];
+  const withoutProject = currentProjects.filter((item) => item.id !== project.id);
+
+  if (!includeArchived && project.archived_at) {
+    return withoutProject;
+  }
+
+  return [project, ...withoutProject];
+}
+
 type AgentThreadHookOptions = {
   enabled?: boolean;
   limit?: number;
@@ -282,9 +297,13 @@ export function useActorProjects(options: { includeArchived?: boolean; enabled?:
       body: buildActorProjectFormData(request),
     });
     const parsed = await responseMapper<ActorProject>(response);
-    await mutate();
+    await mutate(
+      (projects) =>
+        upsertActorProject(projects, parsed.data, includeArchived),
+      { revalidate: true },
+    );
     return parsed;
-  }, [client, mutate]);
+  }, [client, includeArchived, mutate]);
 
   const updateProject = useCallback(async (projectId: string, request: UpdateActorProjectRequest) => {
     const response = await client(`/ai/projects/${projectId}/update`, {
@@ -292,9 +311,13 @@ export function useActorProjects(options: { includeArchived?: boolean; enabled?:
       body: buildActorProjectFormData(request),
     });
     const parsed = await responseMapper<ActorProject>(response);
-    await mutate();
+    await mutate(
+      (projects) =>
+        upsertActorProject(projects, parsed.data, includeArchived),
+      { revalidate: true },
+    );
     return parsed;
-  }, [client, mutate]);
+  }, [client, includeArchived, mutate]);
 
   const archiveProject = useCallback(async (projectId: string) => {
     const response = await client(`/ai/projects/${projectId}/archive`, {
@@ -302,9 +325,13 @@ export function useActorProjects(options: { includeArchived?: boolean; enabled?:
       body: new URLSearchParams(),
     });
     const parsed = await responseMapper<ActorProject>(response);
-    await mutate();
+    await mutate(
+      (projects) =>
+        upsertActorProject(projects, parsed.data, includeArchived),
+      { revalidate: true },
+    );
     return parsed;
-  }, [client, mutate]);
+  }, [client, includeArchived, mutate]);
 
   const unarchiveProject = useCallback(async (projectId: string) => {
     const response = await client(`/ai/projects/${projectId}/unarchive`, {
@@ -312,9 +339,13 @@ export function useActorProjects(options: { includeArchived?: boolean; enabled?:
       body: new URLSearchParams(),
     });
     const parsed = await responseMapper<ActorProject>(response);
-    await mutate();
+    await mutate(
+      (projects) =>
+        upsertActorProject(projects, parsed.data, includeArchived),
+      { revalidate: true },
+    );
     return parsed;
-  }, [client, mutate]);
+  }, [client, includeArchived, mutate]);
 
   return {
     projects: data || [],
