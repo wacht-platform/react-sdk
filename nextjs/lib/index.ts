@@ -52,7 +52,6 @@ export {
     useActorThreadSearch,
     useAgentThread,
     useAgentThreadFilesystem,
-    useAgentThreadEvents,
     useAgentThreadAssignments,
     useAgentThreadTaskGraphs,
     useProjectThreadFeed,

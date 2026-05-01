@@ -248,7 +248,6 @@ function buildTaskBoardItemFormData(
   appendFormValue(formData, "title", request.title);
   appendFormValue(formData, "description", request.description);
   appendFormValue(formData, "status", request.status);
-  appendFormValue(formData, "priority", request.priority);
   appendFormValue(formData, "schedule_kind", request.schedule_kind);
   appendFormValue(formData, "next_run_at", request.next_run_at);
   appendFormValue(formData, "interval_seconds", request.interval_seconds);
@@ -962,6 +961,18 @@ export function useProjectTaskBoardItem(projectId?: string, itemId?: string, ena
     return parsed;
   }, [projectId, itemId, client, item]);
 
+  const cancelItem = useCallback(async () => {
+    if (!projectId || !itemId) throw new Error("projectId and itemId are required");
+    const response = await client(`/ai/projects/${projectId}/board/items/${itemId}/cancel`, {
+      method: "POST",
+      body: new URLSearchParams(),
+    });
+    const parsed = await responseMapper<ProjectTaskBoardItem>(response);
+    await item.mutate();
+    await assignments.mutate();
+    return parsed;
+  }, [projectId, itemId, client, item, assignments]);
+
   const getTaskWorkspaceFile = useCallback(async (path: string) => {
     if (!projectId || !itemId) throw new Error("projectId and itemId are required");
     const response = await client(
@@ -1006,6 +1017,7 @@ export function useProjectTaskBoardItem(projectId?: string, itemId?: string, ena
     updateItem,
     archiveItem,
     unarchiveItem,
+    cancelItem,
     getTaskWorkspaceFile,
     listTaskWorkspaceDirectory,
     refetch: async () => {

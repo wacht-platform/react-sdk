@@ -47,12 +47,12 @@ const SwitcherButton = styled.button`
     font-size: 13px;
     font-weight: 400;
     cursor: pointer;
-    border: 1px solid var(--color-border);
+    border: none;
     border-radius: 8px;
-    background: var(--color-card);
+    background: transparent;
     color: var(--color-card-foreground);
-    transition: background 0.1s ease, border-color 0.1s ease;
-    &:hover:not(:disabled) { background: var(--color-accent); border-color: var(--color-border-hover); }
+    transition: color 0.1s ease;
+    &:hover:not(:disabled) { color: var(--color-popover-foreground); }
     &:disabled { cursor: not-allowed; opacity: 0.7; }
 `;
 
@@ -426,9 +426,9 @@ const SkeletonButton = styled.div`
     gap: 10px;
     padding: 6px 10px;
     height: 36px;
-    border: 1px solid var(--color-border);
+    border: none;
     border-radius: 8px;
-    background: var(--color-card);
+    background: transparent;
     width: 100%;
     animation: pulse 1.5s ease-in-out infinite;
     @keyframes pulse { 0%, 100% { opacity: 1; } 50% { opacity: 0.5; } }

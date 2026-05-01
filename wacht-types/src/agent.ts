@@ -251,7 +251,6 @@ export interface CreateProjectTaskBoardItemRequest {
     title: string;
     description?: string;
     status?: string;
-    priority?: "urgent" | "high" | "neutral" | "low";
     schedule_kind?: "once" | "interval";
     next_run_at?: string;
     interval_seconds?: number;
@@ -261,7 +260,6 @@ export interface UpdateProjectTaskBoardItemRequest {
     title?: string;
     description?: string;
     status?: string;
-    priority?: "urgent" | "high" | "neutral" | "low";
     schedule_kind?: "once" | "interval";
     next_run_at?: string;
     interval_seconds?: number;
@@ -271,7 +269,6 @@ export interface UpdateProjectTaskBoardItemRequest {
 export interface ScheduleTemplatePayload {
     title: string;
     description?: string;
-    priority: "urgent" | "high" | "neutral" | "low" | string;
     metadata?: Record<string, unknown>;
 }
 
@@ -299,7 +296,6 @@ export interface ProjectTaskBoardItem {
     title: string;
     description?: string;
     status: string;
-    priority: "urgent" | "high" | "neutral" | "low" | string;
     assigned_thread_id?: string;
     metadata?: Record<string, unknown>;
     schedule?: ProjectTaskSchedule;
