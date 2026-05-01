@@ -7,17 +7,14 @@ import type {
   ActorProject,
   ActorProjectsResponse,
   AgentThread,
-  AppendProjectTaskBoardItemJournalRequest,
   CreateProjectTaskBoardItemRequest,
   CreateActorProjectRequest,
   UpdateActorProjectRequest,
   CreateAgentThreadRequest,
   ProjectTaskBoardItem,
   ProjectTaskBoardItemAssignment,
-  ProjectTaskBoardItemEvent,
   ProjectTaskWorkspaceFileContent,
   ProjectTaskWorkspaceListing,
-  ThreadEvent,
   ThreadTaskGraphsResponse,
   UpdateAgentThreadRequest,
   UpdateProjectTaskBoardItemRequest,
@@ -55,22 +52,8 @@ type AgentSearchOptions = {
   limit?: number;
 };
 
-type ThreadEventsPage = {
-  data: ThreadEvent[];
-  limit: number;
-  has_more: boolean;
-  next_cursor?: string;
-};
-
 type ThreadAssignmentsPage = {
   data: ProjectTaskBoardItemAssignment[];
-  limit: number;
-  has_more: boolean;
-  next_cursor?: string;
-};
-
-type BoardItemEventsPage = {
-  data: ProjectTaskBoardItemEvent[];
   limit: number;
   has_more: boolean;
   next_cursor?: string;
@@ -714,52 +697,6 @@ export function useAgentThreadFilesystem(threadId?: string, enabled = true) {
   };
 }
 
-export function useAgentThreadEvents(threadId?: string, options: AgentThreadHookOptions = {}) {
-  const { client } = useClient();
-  const { enabled = true, limit = 40 } = options;
-
-  const events = useSWRInfinite(
-    (index, previousPageData: ThreadEventsPage | null) => {
-      if (!enabled || !threadId) return null;
-      if (index > 0 && previousPageData && !previousPageData.has_more) {
-        return null;
-      }
-      const cursor = index === 0 ? undefined : previousPageData?.next_cursor;
-      return ["wacht-ai-thread-events", threadId, limit, cursor || ""];
-    },
-    async ([, currentThreadId, currentLimit, cursor]) => {
-      const params = new URLSearchParams({ limit: String(currentLimit) });
-      if (cursor) params.set("cursor", String(cursor));
-      const response = await client(`/ai/threads/${currentThreadId}/events?${params.toString()}`);
-      const parsed = await responseMapper<ThreadEventsPage>(response);
-      return parsed.data;
-    },
-    { revalidateOnFocus: false, revalidateFirstPage: true, persistSize: true, refreshInterval: 5000 },
-  );
-
-  const data = useMemo(
-    () => events.data?.flatMap((page) => page.data || []) || [],
-    [events.data],
-  );
-  const hasMore = events.data ? events.data[events.data.length - 1]?.has_more || false : false;
-  const loadingMore = events.isValidating && !!events.data && events.size > (events.data?.length || 0);
-
-  return {
-    events: data,
-    loading: !events.data && !events.error,
-    error: events.error || null,
-    hasMore,
-    loadingMore,
-    loadMore: async () => {
-      if (!hasMore || loadingMore) return;
-      await events.setSize((size) => size + 1);
-    },
-    refetch: async () => {
-      await events.mutate();
-    },
-  };
-}
-
 export function useAgentThreadAssignments(threadId?: string, options: AgentThreadHookOptions = {}) {
   const { client } = useClient();
   const { enabled = true, limit = 40 } = options;
@@ -958,30 +895,6 @@ export function useProjectTaskBoardItem(projectId?: string, itemId?: string, ena
 
   const item = useSWR(itemKey, itemFetcher, { revalidateOnFocus: false, refreshInterval: 5000 });
 
-  const events = useSWRInfinite(
-    (index, previousPageData: BoardItemEventsPage | null) => {
-      if (!enabled || !projectId || !itemId) return null;
-      if (index > 0 && previousPageData && !previousPageData.has_more) {
-        return null;
-      }
-      const cursor = index === 0 ? undefined : previousPageData?.next_cursor;
-      return ["wacht-ai-board-item-events", projectId, itemId, archiveKey, cursor || ""];
-    },
-    async ([, currentProjectId, currentItemId, , cursor]) => {
-      const params = new URLSearchParams({ limit: "40" });
-      if (options.includeArchived) {
-        params.set("include_archived", "true");
-      }
-      if (cursor) {
-        params.set("cursor", String(cursor));
-      }
-      const response = await client(`/ai/projects/${currentProjectId}/board/items/${currentItemId}/events?${params.toString()}`);
-      const parsed = await responseMapper<BoardItemEventsPage>(response);
-      return parsed.data;
-    },
-    { revalidateOnFocus: false, revalidateFirstPage: true, persistSize: true, refreshInterval: 5000 },
-  );
-
   const assignments = useSWRInfinite(
     (index, previousPageData: BoardItemAssignmentsPage | null) => {
       if (!enabled || !projectId || !itemId) return null;
@@ -1067,61 +980,18 @@ export function useProjectTaskBoardItem(projectId?: string, itemId?: string, ena
     return parsed;
   }, [projectId, itemId, client, options.includeArchived]);
 
-  const appendJournal = useCallback(async (
-    request: AppendProjectTaskBoardItemJournalRequest,
-    files: File[] = [],
-  ) => {
-    if (!projectId || !itemId) throw new Error("projectId and itemId are required");
-
-    const response = await client(`/ai/projects/${projectId}/board/items/${itemId}/journal`, {
-      method: "POST",
-      body: (() => {
-        const formData = new FormData();
-        formData.set("summary", request.summary);
-        if (request.body_markdown) {
-          formData.set("body_markdown", request.body_markdown);
-        }
-        if (request.details) {
-          formData.set("details", request.details);
-        }
-        for (const file of files) {
-          formData.append("files", file);
-        }
-        return formData;
-      })(),
-    });
-    const parsed = await responseMapper<ProjectTaskBoardItemEvent>(response);
-    await events.mutate();
-    await workspace.mutate();
-    return parsed;
-  }, [projectId, itemId, client, events, workspace]);
-
-  const flattenedEvents = useMemo(
-    () => events.data?.flatMap((page) => page.data || []) || [],
-    [events.data],
-  );
-
   const flattenedAssignments = useMemo(
     () => assignments.data?.flatMap((page) => page.data || []) || [],
     [assignments.data],
   );
 
-  const eventsHasMore = events.data ? events.data[events.data.length - 1]?.has_more || false : false;
-  const eventsLoadingMore = events.isValidating && !!events.data && events.size > (events.data?.length || 0);
   const assignmentsHasMore = assignments.data ? assignments.data[assignments.data.length - 1]?.has_more || false : false;
   const assignmentsLoadingMore =
     assignments.isValidating && !!assignments.data && assignments.size > (assignments.data?.length || 0);
 
   return {
     item: item.data || null,
-    events: flattenedEvents,
     assignments: flattenedAssignments,
-    eventsHasMore,
-    eventsLoadingMore,
-    loadMoreEvents: async () => {
-      if (!eventsHasMore || eventsLoadingMore) return;
-      await events.setSize((size) => size + 1);
-    },
     assignmentsHasMore,
     assignmentsLoadingMore,
     loadMoreAssignments: async () => {
@@ -1131,22 +1001,17 @@ export function useProjectTaskBoardItem(projectId?: string, itemId?: string, ena
     taskWorkspace: workspace.data || { exists: false, files: [] },
     taskWorkspaceLoading: !workspace.data && !workspace.error,
     taskWorkspaceError: workspace.error || null,
-    loading: (!item.data && !item.error) || (!events.data && !events.error) || (!assignments.data && !assignments.error),
-    error: item.error || events.error || assignments.error || null,
+    loading: (!item.data && !item.error) || (!assignments.data && !assignments.error),
+    error: item.error || assignments.error || null,
     updateItem,
     archiveItem,
     unarchiveItem,
     getTaskWorkspaceFile,
     listTaskWorkspaceDirectory,
-    appendJournal,
     refetch: async () => {
       await item.mutate();
-      await events.mutate();
       await assignments.mutate();
       await workspace.mutate();
-    },
-    refetchEvents: async () => {
-      await events.mutate();
     },
     refetchAssignments: async () => {
       await assignments.mutate();

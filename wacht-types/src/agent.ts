@@ -119,7 +119,6 @@ export interface Actor {
     subject_type: string;
     external_key: string;
     display_name?: string;
-    deployment_id?: string;
     metadata?: Record<string, unknown>;
     created_at?: string;
     updated_at?: string;
@@ -169,8 +168,6 @@ export interface AgentThread {
     project_name?: string;
     agent_id?: string;
     title: string;
-    thread_kind?: string;
-    thread_visibility?: string;
     thread_purpose: string;
     responsibility?: string;
     reusable: boolean;
@@ -271,14 +268,26 @@ export interface UpdateProjectTaskBoardItemRequest {
     clear_schedule?: boolean;
 }
 
+export interface ScheduleTemplatePayload {
+    title: string;
+    description?: string;
+    priority: "urgent" | "high" | "neutral" | "low" | string;
+    metadata?: Record<string, unknown>;
+}
+
 export interface ProjectTaskSchedule {
     id: string;
-    template_board_item_id: string;
+    board_id: string;
+    task_key: string;
+    template_payload: ScheduleTemplatePayload;
+    state: Record<string, unknown>;
+    state_version: number;
     status: string;
     schedule_kind: "once" | "interval" | string;
     interval_seconds?: number;
     next_run_at: string;
-    last_enqueued_at?: string;
+    last_fired_at?: string;
+    overlap_policy: "skip" | "parallel" | string;
     created_at: string;
     updated_at: string;
 }
@@ -294,6 +303,10 @@ export interface ProjectTaskBoardItem {
     assigned_thread_id?: string;
     metadata?: Record<string, unknown>;
     schedule?: ProjectTaskSchedule;
+    state_version: string;
+    schedule_id?: string;
+    scheduled_for?: string;
+    fired_at?: string;
     completed_at?: string;
     archived_at?: string;
     created_at: string;
@@ -307,18 +320,6 @@ export interface ProjectTaskBoardItemsResponse {
     next_cursor?: string;
 }
 
-export interface ProjectTaskBoardItemEvent {
-    id: string;
-    board_item_id: string;
-    thread_id?: string;
-    execution_run_id?: string;
-    event_type: string;
-    summary: string;
-    body_markdown?: string;
-    details?: Record<string, unknown>;
-    created_at: string;
-}
-
 export interface UploadedTaskWorkspaceFile {
     path: string;
     name: string;
@@ -327,11 +328,6 @@ export interface UploadedTaskWorkspaceFile {
     size_bytes: number;
 }
 
-export interface AppendProjectTaskBoardItemJournalRequest {
-    summary: string;
-    details?: string;
-    body_markdown?: string;
-}
 
 export interface ProjectTaskBoardItemAssignment {
     id: string;
@@ -376,27 +372,6 @@ export interface ProjectTaskWorkspaceFileContent {
     truncated: boolean;
     content?: string;
     content_base64?: string;
-}
-
-export interface ThreadEvent {
-    id: string;
-    deployment_id: string;
-    project_id: string;
-    thread_id: string;
-    board_item_id?: string;
-    event_type: string;
-    status: string;
-    priority: number;
-    payload?: Record<string, unknown>;
-    available_at: string;
-    claimed_at?: string;
-    completed_at?: string;
-    failed_at?: string;
-    caused_by_conversation_id?: string;
-    caused_by_run_id?: string;
-    caused_by_thread_id?: string;
-    created_at: string;
-    updated_at: string;
 }
 
 export interface ThreadTaskGraph {
