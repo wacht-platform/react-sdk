@@ -307,6 +307,54 @@ export interface ProjectTaskBoardItem {
     archived_at?: string;
     created_at: string;
     updated_at: string;
+    pending_question?: PendingQuestion;
+}
+
+export interface Choice {
+    value: string;
+    label: string;
+    description?: string;
+}
+
+export type AnswerKind =
+    | { kind: "free_text"; placeholder?: string; max_length?: number }
+    | { kind: "single_choice"; choices: Choice[]; allow_other?: boolean }
+    | { kind: "multi_choice"; choices: Choice[]; min_selected?: number; max_selected?: number }
+    | { kind: "yes_no" }
+    | { kind: "number"; min?: number; max?: number; unit?: string }
+    | { kind: "date"; min_date?: string; max_date?: string }
+    | { kind: "confirm"; confirm_label: string; cancel_label: string };
+
+export interface Question {
+    id: string;
+    text: string;
+    answer_kind: AnswerKind;
+}
+
+export interface PendingQuestion {
+    questions: Question[];
+    context?: string;
+    asked_at: string;
+    asked_by_thread_id: string;
+    asked_by_assignment_id?: string;
+}
+
+export type AnswerValue =
+    | { kind: "free_text"; value: string }
+    | { kind: "single_choice"; value: string }
+    | { kind: "multi_choice"; values: string[] }
+    | { kind: "yes_no"; value: boolean }
+    | { kind: "number"; value: number }
+    | { kind: "date"; value: string }
+    | { kind: "confirm"; accepted: boolean };
+
+export interface QuestionAnswer {
+    question_id: string;
+    value: AnswerValue;
+}
+
+export interface AnswerSubmission {
+    answers: QuestionAnswer[];
 }
 
 export interface ProjectTaskBoardItemsResponse {
@@ -330,7 +378,6 @@ export interface ProjectTaskBoardItemAssignment {
     board_item_id: string;
     thread_id: string;
     assignment_role: string;
-    assignment_order: number;
     status: string;
     instructions?: string;
     handoff_file_path?: string;

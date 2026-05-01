@@ -11,6 +11,7 @@ import type {
   CreateActorProjectRequest,
   UpdateActorProjectRequest,
   CreateAgentThreadRequest,
+  AnswerSubmission,
   ProjectTaskBoardItem,
   ProjectTaskBoardItemAssignment,
   ProjectTaskWorkspaceFileContent,
@@ -623,6 +624,15 @@ export function useAgentThread(threadId?: string, enabled = true) {
     return parsed;
   }, [threadId, client, thread]);
 
+  const submitAnswer = useCallback(async (submission: AnswerSubmission) => {
+    if (!threadId) throw new Error("threadId is required");
+    await client(`/ai/threads/${threadId}/messages/answer`, {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify(submission),
+    });
+  }, [threadId, client]);
+
   return {
     thread: thread.data || null,
     loading: !thread.data && !thread.error,
@@ -630,6 +640,7 @@ export function useAgentThread(threadId?: string, enabled = true) {
     updateThread,
     archiveThread,
     unarchiveThread,
+    submitAnswer,
     refetch: async () => {
       await thread.mutate();
     },
@@ -973,6 +984,18 @@ export function useProjectTaskBoardItem(projectId?: string, itemId?: string, ena
     return parsed;
   }, [projectId, itemId, client, item, assignments]);
 
+  const submitAnswer = useCallback(async (submission: AnswerSubmission) => {
+    if (!projectId || !itemId) throw new Error("projectId and itemId are required");
+    const response = await client(`/ai/projects/${projectId}/board/items/${itemId}/answer`, {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify(submission),
+    });
+    const parsed = await responseMapper<ProjectTaskBoardItem>(response);
+    await item.mutate();
+    return parsed;
+  }, [projectId, itemId, client, item]);
+
   const getTaskWorkspaceFile = useCallback(async (path: string) => {
     if (!projectId || !itemId) throw new Error("projectId and itemId are required");
     const response = await client(
@@ -1018,6 +1041,7 @@ export function useProjectTaskBoardItem(projectId?: string, itemId?: string, ena
     archiveItem,
     unarchiveItem,
     cancelItem,
+    submitAnswer,
     getTaskWorkspaceFile,
     listTaskWorkspaceDirectory,
     refetch: async () => {
