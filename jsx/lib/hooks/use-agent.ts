@@ -27,6 +27,7 @@ import {
 } from "./agent-conversation-utils";
 import type {
     Actor,
+    AnswerSubmission,
     ToolApprovalDecision,
     ConversationMessage,
     ListMessagesResponse,
@@ -658,6 +659,42 @@ export function useAgentThreadConversation({
         ],
     );
 
+    const submitAnswer = useCallback(
+        async (submission: AnswerSubmission): Promise<boolean> => {
+            if (!threadId) return false;
+            markRunRequested(FRONTEND_STATUS.STARTING);
+            try {
+                const response = await client(
+                    `/ai/threads/${threadId}/messages/answer`,
+                    {
+                        method: "POST",
+                        headers: { "Content-Type": "application/json" },
+                        body: JSON.stringify(submission),
+                    },
+                );
+                if (!response.ok) {
+                    optimisticExecutionDeadlineRef.current = 0;
+                    applyExecutionState(FRONTEND_STATUS.IDLE);
+                    return false;
+                }
+                touchThreadActivity();
+                markRunRequested(FRONTEND_STATUS.RUNNING);
+                return true;
+            } catch {
+                optimisticExecutionDeadlineRef.current = 0;
+                applyExecutionState(FRONTEND_STATUS.IDLE);
+                return false;
+            }
+        },
+        [
+            threadId,
+            client,
+            markRunRequested,
+            applyExecutionState,
+            touchThreadActivity,
+        ],
+    );
+
     const cancelExecution = useCallback(async () => {
         if (!threadId || !isExecutionActive(executionStatus)) return;
 
@@ -704,8 +741,8 @@ export function useAgentThreadConversation({
 
     const pendingApprovalRequest =
         threadState?.execution_state?.pending_approval_request ?? null;
-    const activeApprovalRequestId =
-        pendingApprovalRequest?.request_message_id ?? null;
+    const pendingClarificationRequest =
+        threadState?.execution_state?.pending_question ?? null;
     const threadStatus = threadState?.status;
 
     return {
@@ -725,7 +762,7 @@ export function useAgentThreadConversation({
         isWaitingForInput:
             executionStatus === FRONTEND_STATUS.WAITING_FOR_INPUT,
         pendingApprovalRequest,
-        activeApprovalRequestId,
+        pendingClarificationRequest,
         hasMoreMessages,
         isLoadingMore,
         messagesLoading,
@@ -734,6 +771,7 @@ export function useAgentThreadConversation({
         refreshMessages,
         sendMessage,
         submitApprovalResponse,
+        submitAnswer,
         clearMessages,
         loadMoreMessages,
         cancelExecution,

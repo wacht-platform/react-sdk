@@ -80,6 +80,18 @@ export interface ExecutionSummaryContent {
     token_count: number;
 }
 
+export interface ClarificationRequestContent {
+    type: "clarification_request";
+    questions: Question[];
+    context?: string;
+}
+
+export interface ClarificationResponseContent {
+    type: "clarification_response";
+    request_message_id?: string;
+    answers: QuestionAnswer[];
+}
+
 export type ConversationContent =
     | UserMessageContent
     | SteerContent
@@ -87,7 +99,9 @@ export type ConversationContent =
     | SystemDecisionContent
     | ApprovalRequestContent
     | ApprovalResponseContent
-    | ExecutionSummaryContent;
+    | ExecutionSummaryContent
+    | ClarificationRequestContent
+    | ClarificationResponseContent;
 
 export type MessageType = ConversationContent["type"];
 
@@ -233,6 +247,7 @@ export interface ThreadExecutionState {
     deep_think_used?: number;
     approved_once_tool_ids?: string[];
     pending_approval_request?: ThreadPendingApprovalRequestState;
+    pending_question?: PendingQuestion;
 }
 
 export interface ThreadPendingState {
