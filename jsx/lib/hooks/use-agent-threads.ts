@@ -1152,11 +1152,16 @@ export function useProjectTaskBoardItemComments(
   });
 
   const createComment = useCallback(
-    async (body: string) => {
+    async (body: string, files?: File[]) => {
       if (!projectId || !itemId)
         throw new Error("projectId and itemId are required");
-      const form = new URLSearchParams();
+      const form = new FormData();
       form.set("body", body);
+      if (files) {
+        for (const file of files) {
+          form.append("attachments", file, file.name);
+        }
+      }
       const response = await client(
         `/ai/projects/${projectId}/board/items/${itemId}/comments`,
         { method: "POST", body: form },

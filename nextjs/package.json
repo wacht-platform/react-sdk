@@ -1,6 +1,6 @@
 {
     "name": "@wacht/nextjs",
-    "version": "1.0.0-beta.28",
+    "version": "1.0.0-beta.29",
     "description": "Next.js adapter for Wacht authentication library",
     "type": "module",
     "main": "dist/index.cjs.js",
@@ -39,7 +39,7 @@
         "vite-plugin-dts": "^4.4.0"
     },
     "peerDependencies": {
-        "@wacht/jsx": "^1.0.0-beta.37",
+        "@wacht/jsx": "^1.0.0-beta.38",
         "@wacht/types": "^1.0.0-beta.30",
         "react": "catalog:",
         "react-dom": "catalog:",
