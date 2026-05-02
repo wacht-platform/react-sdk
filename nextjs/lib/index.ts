@@ -58,6 +58,7 @@ export {
     useProjectThreads,
     useProjectTasks,
     useProjectTaskBoardItem,
+    useProjectTaskBoardItemComments,
     useAgentSession,
     useWebhookAppSession,
     useWebhookStats,

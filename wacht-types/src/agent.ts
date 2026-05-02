@@ -379,6 +379,22 @@ export interface ProjectTaskBoardItemsResponse {
     next_cursor?: string;
 }
 
+export interface ProjectTaskBoardItemComment {
+    id: string;
+    deployment_id: string;
+    board_item_id: string;
+    actor_id: string;
+    body: string;
+    metadata?: Record<string, unknown>;
+    created_at: string;
+    updated_at: string;
+    archived_at?: string;
+}
+
+export interface CreateProjectTaskBoardItemCommentRequest {
+    body: string;
+}
+
 export interface UploadedTaskWorkspaceFile {
     path: string;
     name: string;

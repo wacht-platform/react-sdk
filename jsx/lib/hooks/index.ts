@@ -29,6 +29,7 @@ export {
     useProjectThreads,
     useProjectTasks,
     useProjectTaskBoardItem,
+    useProjectTaskBoardItemComments,
 } from "./use-agent-threads";
 export { useActorMcpServers } from "./use-actor-mcp-servers";
 export { useExternalAgentConnections } from "./use-external-agent-connections";

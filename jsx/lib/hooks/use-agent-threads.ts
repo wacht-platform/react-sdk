@@ -14,6 +14,7 @@ import type {
   AnswerSubmission,
   ProjectTaskBoardItem,
   ProjectTaskBoardItemAssignment,
+  ProjectTaskBoardItemComment,
   ProjectTaskWorkspaceFileContent,
   ProjectTaskWorkspaceListing,
   ThreadTaskGraphsResponse,
@@ -1122,5 +1123,58 @@ export function useAgentThreadTaskGraphs(threadId?: string, enabled = true) {
       await setSize(size + 1);
     },
     refetch: async () => { await mutate(); },
+  };
+}
+
+export function useProjectTaskBoardItemComments(
+  projectId?: string,
+  itemId?: string,
+  enabled = true,
+) {
+  const { client } = useClient();
+  const swrKey =
+    enabled && projectId && itemId
+      ? `wacht-ai-board-item-comments:${projectId}:${itemId}`
+      : null;
+
+  const fetcher = useCallback(async () => {
+    if (!projectId || !itemId) return [] as ProjectTaskBoardItemComment[];
+    const response = await client(
+      `/ai/projects/${projectId}/board/items/${itemId}/comments`,
+    );
+    const parsed = await responseMapper<ProjectTaskBoardItemComment[]>(response);
+    return parsed.data;
+  }, [projectId, itemId, client]);
+
+  const swr = useSWR(swrKey, fetcher, {
+    revalidateOnFocus: false,
+    refreshInterval: 5000,
+  });
+
+  const createComment = useCallback(
+    async (body: string) => {
+      if (!projectId || !itemId)
+        throw new Error("projectId and itemId are required");
+      const form = new URLSearchParams();
+      form.set("body", body);
+      const response = await client(
+        `/ai/projects/${projectId}/board/items/${itemId}/comments`,
+        { method: "POST", body: form },
+      );
+      const parsed = await responseMapper<ProjectTaskBoardItemComment>(response);
+      await swr.mutate();
+      return parsed;
+    },
+    [projectId, itemId, client, swr],
+  );
+
+  return {
+    comments: swr.data || [],
+    loading: !swr.data && !swr.error,
+    error: swr.error || null,
+    createComment,
+    refetch: async () => {
+      await swr.mutate();
+    },
   };
 }
