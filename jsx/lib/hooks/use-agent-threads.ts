@@ -18,6 +18,7 @@ import type {
   ProjectTaskWorkspaceFileContent,
   ProjectTaskWorkspaceListing,
   ThreadTaskGraphsResponse,
+  ToolApprovalDecision,
   UpdateAgentThreadRequest,
   UpdateProjectTaskBoardItemRequest,
   ProjectThreadsResponse,
@@ -987,14 +988,37 @@ export function useProjectTaskBoardItem(projectId?: string, itemId?: string, ena
 
   const submitAnswer = useCallback(async (submission: AnswerSubmission) => {
     if (!projectId || !itemId) throw new Error("projectId and itemId are required");
-    const response = await client(`/ai/projects/${projectId}/board/items/${itemId}/answer`, {
-      method: "POST",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify(submission),
-    });
+    const form = new FormData();
+    for (const answer of submission.answers) {
+      form.append("answer_question_id", answer.question_id);
+      form.append("answer_value", JSON.stringify(answer.value));
+    }
+    const response = await client(
+      `/ai/projects/${projectId}/board/items/${itemId}/answer`,
+      { method: "POST", body: form },
+    );
     const parsed = await responseMapper<ProjectTaskBoardItem>(response);
     await item.mutate();
     return parsed;
+  }, [projectId, itemId, client, item]);
+
+  const submitApproval = useCallback(async (approvals: ToolApprovalDecision[]) => {
+    if (!projectId || !itemId) throw new Error("projectId and itemId are required");
+    const data = item.data;
+    const requestMessageId = data?.pending_approval?.request_message_id;
+    if (!requestMessageId) throw new Error("Task has no pending approval");
+    const form = new FormData();
+    form.set("request_message_id", requestMessageId);
+    for (const approval of approvals) {
+      form.append("approval_tool_name", approval.tool_name);
+      form.append("approval_mode", approval.mode);
+    }
+    const response = await client(
+      `/ai/projects/${projectId}/board/items/${itemId}/approval`,
+      { method: "POST", body: form },
+    );
+    await item.mutate();
+    return response.ok;
   }, [projectId, itemId, client, item]);
 
   const getTaskWorkspaceFile = useCallback(async (path: string) => {
@@ -1043,6 +1067,7 @@ export function useProjectTaskBoardItem(projectId?: string, itemId?: string, ena
     unarchiveItem,
     cancelItem,
     submitAnswer,
+    submitApproval,
     getTaskWorkspaceFile,
     listTaskWorkspaceDirectory,
     refetch: async () => {

@@ -323,6 +323,7 @@ export interface ProjectTaskBoardItem {
     created_at: string;
     updated_at: string;
     pending_question?: PendingQuestion;
+    pending_approval?: ThreadPendingApprovalRequestState;
 }
 
 export interface Choice {
