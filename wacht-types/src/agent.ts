@@ -389,6 +389,9 @@ export interface ProjectTaskBoardItemComment {
     created_at: string;
     updated_at: string;
     archived_at?: string;
+    resolved_at?: string;
+    resolved_by_thread_id?: string;
+    resolution_summary?: string;
 }
 
 export interface CreateProjectTaskBoardItemCommentRequest {
