@@ -124,15 +124,6 @@ export const ProfileDetailsManagementSection = () => {
                 {/* Profile Details */}
                 <div>
                     <div style={{ marginBottom: "var(--space-6u)" }}>
-                        <h3
-                            style={{
-                                fontSize: "var(--font-size-lg)",
-                                color: "var(--color-foreground)",
-                                margin: "0 0 var(--space-1u) 0",
-                            }}
-                        >
-                            Profile Details
-                        </h3>
                         <p
                             style={{
                                 fontSize: "var(--font-size-md)",

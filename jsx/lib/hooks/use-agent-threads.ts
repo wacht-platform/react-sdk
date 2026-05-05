@@ -729,7 +729,7 @@ export function useAgentThreadAssignments(threadId?: string, options: AgentThrea
       const parsed = await responseMapper<ThreadAssignmentsPage>(response);
       return parsed.data;
     },
-    { revalidateOnFocus: false, revalidateFirstPage: true, persistSize: true, refreshInterval: 5000 },
+    { revalidateOnFocus: false, revalidateFirstPage: true, persistSize: true, refreshInterval: 15000, dedupingInterval: 15000 },
   );
 
   const data = useMemo(
@@ -826,7 +826,8 @@ export function useProjectTasks(projectId?: string, enabled = true, options: Pro
       revalidateOnFocus: false,
       revalidateFirstPage: true,
       persistSize: true,
-      refreshInterval: 5000,
+      refreshInterval: 15000,
+      dedupingInterval: 15000,
     },
   );
 
@@ -905,7 +906,7 @@ export function useProjectTaskBoardItem(projectId?: string, itemId?: string, ena
     return parsed.data;
   }, [projectId, itemId, client, detailQuery]);
 
-  const item = useSWR(itemKey, itemFetcher, { revalidateOnFocus: false, refreshInterval: 5000 });
+  const item = useSWR(itemKey, itemFetcher, { revalidateOnFocus: false, refreshInterval: 15000, dedupingInterval: 15000 });
 
   const assignments = useSWRInfinite(
     (index, previousPageData: BoardItemAssignmentsPage | null) => {
@@ -928,7 +929,7 @@ export function useProjectTaskBoardItem(projectId?: string, itemId?: string, ena
       const parsed = await responseMapper<BoardItemAssignmentsPage>(response);
       return parsed.data;
     },
-    { revalidateOnFocus: false, revalidateFirstPage: true, persistSize: true, refreshInterval: 5000 },
+    { revalidateOnFocus: false, revalidateFirstPage: true, persistSize: true, refreshInterval: 15000, dedupingInterval: 15000 },
   );
 
   const workspaceFetcher = useCallback(async () => {
@@ -938,7 +939,7 @@ export function useProjectTaskBoardItem(projectId?: string, itemId?: string, ena
     return parsed.data;
   }, [projectId, itemId, client, detailQuery]);
 
-  const workspace = useSWR(workspaceKey, workspaceFetcher, { revalidateOnFocus: false, refreshInterval: 5000 });
+  const workspace = useSWR(workspaceKey, workspaceFetcher, { revalidateOnFocus: false, refreshInterval: 15000, dedupingInterval: 15000 });
 
   const updateItem = useCallback(async (request: UpdateProjectTaskBoardItemRequest, files: File[] = []) => {
     if (!projectId || !itemId) throw new Error("projectId and itemId are required");
@@ -1122,7 +1123,8 @@ export function useAgentThreadTaskGraphs(threadId?: string, enabled = true) {
     },
     {
       revalidateOnFocus: false,
-      refreshInterval: 5000,
+      refreshInterval: 15000,
+      dedupingInterval: 15000,
       revalidateFirstPage: true,
       revalidateAll: false,
       persistSize: true,
@@ -1173,7 +1175,8 @@ export function useProjectTaskBoardItemComments(
 
   const swr = useSWR(swrKey, fetcher, {
     revalidateOnFocus: false,
-    refreshInterval: 5000,
+    refreshInterval: 15000,
+    dedupingInterval: 15000,
   });
 
   const createComment = useCallback(
