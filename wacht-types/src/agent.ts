@@ -287,13 +287,19 @@ export interface ScheduleTemplatePayload {
     metadata?: Record<string, unknown>;
 }
 
+export interface ScheduleMount {
+    mount_path: string;
+    s3_relative_key: string;
+    mode: "rw" | "ro" | string;
+    description?: string;
+}
+
 export interface ProjectTaskSchedule {
     id: string;
     board_id: string;
     task_key: string;
     template_payload: ScheduleTemplatePayload;
-    state: Record<string, unknown>;
-    state_version: number;
+    mounts: ScheduleMount[];
     status: string;
     schedule_kind: "once" | "interval" | string;
     interval_seconds?: number;
@@ -314,6 +320,7 @@ export interface ProjectTaskBoardItem {
     assigned_thread_id?: string;
     metadata?: Record<string, unknown>;
     schedule?: ProjectTaskSchedule;
+    mounts?: ScheduleMount[];
     state_version: string;
     schedule_id?: string;
     scheduled_for?: string;

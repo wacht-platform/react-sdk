@@ -110,7 +110,11 @@ const AccountChip = styled.span`
     padding: 2px 4px 2px 8px;
     font-size: 11px;
     color: var(--color-secondary-text);
-    background: color-mix(in srgb, var(--color-popover-foreground) 6%, transparent);
+    background: color-mix(
+        in srgb,
+        var(--color-popover-foreground) 6%,
+        transparent
+    );
     border-radius: 999px;
     max-width: 100%;
 `;
@@ -156,11 +160,16 @@ const Actions = styled.div`
         grid-column: 1 / -1;
         justify-content: flex-start;
         padding-left: calc(28px + var(--space-6u));
+
+        button {
+            width: 100%;
+        }
     }
 `;
 
 export const SocialManagementSection = () => {
-    const { user, disconnectSocialConnection, connectSocialAccount } = useUser();
+    const { user, disconnectSocialConnection, connectSocialAccount } =
+        useUser();
     const { deployment } = useDeployment();
 
     const enabledProviders =
@@ -198,7 +207,9 @@ export const SocialManagementSection = () => {
             <ProviderList>
                 {enabledProviders.map((provider) => {
                     const meta =
-                        providerMeta[provider.provider as keyof typeof providerMeta];
+                        providerMeta[
+                            provider.provider as keyof typeof providerMeta
+                        ];
                     if (!meta) return null;
 
                     const accounts =
@@ -221,12 +232,17 @@ export const SocialManagementSection = () => {
                                                 </ChipEmail>
                                                 <ChipRemove
                                                     onClick={() =>
-                                                        handleDisconnect(account.id)
+                                                        handleDisconnect(
+                                                            account.id,
+                                                        )
                                                     }
                                                     title="Remove connection"
                                                     aria-label="Remove connection"
                                                 >
-                                                    <X size={10} weight="bold" />
+                                                    <X
+                                                        size={10}
+                                                        weight="bold"
+                                                    />
                                                 </ChipRemove>
                                             </AccountChip>
                                         ))}
@@ -239,7 +255,9 @@ export const SocialManagementSection = () => {
                                 <Button
                                     $size="sm"
                                     $outline
-                                    onClick={() => handleConnect(provider.provider)}
+                                    onClick={() =>
+                                        handleConnect(provider.provider)
+                                    }
                                 >
                                     {linked ? "Link another" : "Link"}
                                 </Button>

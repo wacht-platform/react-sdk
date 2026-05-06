@@ -25,7 +25,6 @@ import {
     SecurityItemRow,
     SecurityItemContent,
     SecurityItemActions,
-    StatusPill,
     spin,
 } from "./shared";
 import styled from "styled-components";
@@ -112,7 +111,6 @@ export const SecurityManagementSection = () => {
     const authFactorsEnabled = deployment?.auth_settings?.auth_factors_enabled;
     const passwordEnabled = deployment?.auth_settings?.password?.enabled;
 
-    // Don't render if nothing is enabled
     if (
         !authFactorsEnabled?.authenticator &&
         !authFactorsEnabled?.backup_code &&
@@ -913,7 +911,6 @@ export const SecurityManagementSection = () => {
                         const nextItem = securityItems[index + 1];
                         const nextSameGroup =
                             nextItem && nextItem.group === item.group;
-                        const pill = pillFor(item.id);
                         return (
                             <div key={item.id}>
                                 {showGroupLabel && (
@@ -942,13 +939,6 @@ export const SecurityManagementSection = () => {
                                             }}
                                         >
                                             <span>{item.name}</span>
-                                            {pill && (
-                                                <StatusPill
-                                                    $variant={pill.variant}
-                                                >
-                                                    {pill.label}
-                                                </StatusPill>
-                                            )}
                                         </div>
                                         <div
                                             style={{
