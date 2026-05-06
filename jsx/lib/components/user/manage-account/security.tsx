@@ -371,38 +371,6 @@ export const SecurityManagementSection = () => {
         });
     }
 
-    const pillFor = (
-        id: string,
-    ): { variant: "success" | "warning" | "neutral"; label: string } | null => {
-        switch (id) {
-            case "password":
-                return user?.has_password
-                    ? { variant: "success", label: "Active" }
-                    : { variant: "warning", label: "Not set up" };
-            case "passkey":
-                return passkeys.length > 0
-                    ? {
-                          variant: "neutral",
-                          label: `${passkeys.length} registered`,
-                      }
-                    : { variant: "warning", label: "None" };
-            case "authenticator":
-                return user?.user_authenticator
-                    ? { variant: "success", label: "Enabled" }
-                    : { variant: "warning", label: "Not set up" };
-            case "backup_codes":
-                return user?.backup_codes_generated
-                    ? { variant: "success", label: "Generated" }
-                    : { variant: "warning", label: "Not generated" };
-            case "second_factor_policy":
-                return secondFactorPolicy === "enforced"
-                    ? { variant: "success", label: "Enforced" }
-                    : { variant: "neutral", label: "Optional" };
-            default:
-                return null;
-        }
-    };
-
     if (setupStep !== "table") {
         return (
             <>

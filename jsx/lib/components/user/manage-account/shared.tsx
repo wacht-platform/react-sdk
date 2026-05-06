@@ -582,6 +582,63 @@ export const RowActions = styled.div`
     }
 `;
 
+/* Status pill */
+type PillVariant = "primary" | "success" | "warning" | "danger" | "neutral";
+
+export const StatusPill = styled.span<{ $variant?: PillVariant }>`
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    padding: 3px 9px;
+    border-radius: 999px;
+    font-size: 11px;
+    font-weight: 500;
+    line-height: 1.4;
+    white-space: nowrap;
+
+    background: ${(p) => {
+        switch (p.$variant) {
+            case "warning":
+                return "transparent";
+            case "danger":
+                return "color-mix(in srgb, var(--color-error) 14%, transparent)";
+            case "success":
+                return "color-mix(in srgb, var(--color-success, #10b981) 14%, transparent)";
+            case "primary":
+                return "color-mix(in srgb, var(--color-primary) 14%, transparent)";
+            default:
+                return "color-mix(in srgb, var(--color-popover-foreground) 8%, transparent)";
+        }
+    }};
+    border: ${(p) =>
+        p.$variant === "warning"
+            ? "1px dashed var(--color-warning, #f59e0b)"
+            : "1px solid transparent"};
+    color: ${(p) => {
+        switch (p.$variant) {
+            case "warning":
+                return "var(--color-warning, #f59e0b)";
+            case "danger":
+                return "var(--color-error)";
+            case "success":
+                return "var(--color-success, #10b981)";
+            case "primary":
+                return "var(--color-primary)";
+            default:
+                return "var(--color-secondary-text)";
+        }
+    }};
+
+    &::before {
+        content: "";
+        width: 6px;
+        height: 6px;
+        border-radius: 50%;
+        background: currentColor;
+        flex-shrink: 0;
+    }
+`;
+
 /* Table */
 export const Table = styled.div`
     display: flex;
