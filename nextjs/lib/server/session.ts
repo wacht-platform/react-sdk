@@ -18,6 +18,49 @@ import {
 } from './auth-state';
 import type { NextWachtAuth, WachtMiddlewareOptions, WachtTokenType } from './middleware';
 
+const AUTH_COOKIE_EXPIRY_BUFFER_SECONDS = 2;
+
+type ExchangedSessionToken = Awaited<ReturnType<typeof exchangeSessionForAuthToken>> & {
+  authTokenExpiresAt?: number | null;
+};
+
+type TokenExchangeOptions = {
+  forwardedFor?: string | null;
+};
+
+const exchangeSessionForAuthTokenWithForwarding = exchangeSessionForAuthToken as typeof exchangeSessionForAuthToken &
+  ((
+    sessionToken: string,
+    options: WachtMiddlewareOptions,
+    isDevSession: boolean,
+    exchangeOptions: TokenExchangeOptions,
+  ) => ReturnType<typeof exchangeSessionForAuthToken>);
+
+function authCookieMaxAge(expiresAtMs: number | null): number | undefined {
+  if (!expiresAtMs) return undefined;
+
+  const maxAge = Math.floor((expiresAtMs - Date.now()) / 1000) - AUTH_COOKIE_EXPIRY_BUFFER_SECONDS;
+  return maxAge > 0 ? maxAge : undefined;
+}
+
+function exchangedAuthCookieOptions(exchanged: ExchangedSessionToken): { maxAge?: number } {
+  return {
+    maxAge: authCookieMaxAge(exchanged.authTokenExpiresAt ?? null),
+  };
+}
+
+export function tokenExchangeForwardedFor(request: Request | NextRequest): string | null {
+  const forwardedFor = request.headers.get('x-forwarded-for')?.split(',')[0]?.trim();
+  if (forwardedFor) return forwardedFor;
+
+  for (const header of ['cf-connecting-ip', 'true-client-ip', 'x-real-ip']) {
+    const value = request.headers.get(header)?.trim();
+    if (value) return value;
+  }
+
+  return null;
+}
+
 async function authenticateBearerThroughGateway(
   request: Request | NextRequest,
   token: string,
@@ -110,7 +153,9 @@ export async function authenticateRequestWithHandshake(
     return { auth, headers };
   }
 
-  const exchanged = await exchangeSessionForAuthToken(transportToken, options, isDevSession);
+  const exchanged = await exchangeSessionForAuthTokenWithForwarding(transportToken, options, isDevSession, {
+    forwardedFor: tokenExchangeForwardedFor(request),
+  });
   const auth = decorateAuth(
     exchanged.authToken
       ? await sdkGetAuthFromToken(exchanged.authToken, options)
@@ -120,7 +165,10 @@ export async function authenticateRequestWithHandshake(
   );
 
   if (exchanged.authToken && auth.userId) {
-    appendSetCookie(headers, buildCookie(authCookieName, exchanged.authToken, true));
+    appendSetCookie(
+      headers,
+      buildCookie(authCookieName, exchanged.authToken, true, exchangedAuthCookieOptions(exchanged)),
+    );
   }
 
   if (exchanged.nextDevSession) {
@@ -153,13 +201,18 @@ export async function normalizeDevSessionQuery(
   const { authCookieName, devSessionCookieName, devSessionUpdatedAtCookieName } =
     resolveCookieNames(options);
 
-  const exchanged = await exchangeSessionForAuthToken(devSessionFromQuery, options, true);
+  const exchanged = await exchangeSessionForAuthTokenWithForwarding(devSessionFromQuery, options, true, {
+    forwardedFor: tokenExchangeForwardedFor(request),
+  });
   const auth = exchanged.authToken
     ? decorateAuth(await sdkGetAuthFromToken(exchanged.authToken, options), request, options)
     : null;
 
   if (auth?.userId && exchanged.authToken) {
-    appendSetCookie(headers, buildCookie(authCookieName, exchanged.authToken, true));
+    appendSetCookie(
+      headers,
+      buildCookie(authCookieName, exchanged.authToken, true, exchangedAuthCookieOptions(exchanged)),
+    );
     appendSetCookie(
       headers,
       buildCookie(devSessionCookieName, exchanged.nextDevSession || devSessionFromQuery, false),

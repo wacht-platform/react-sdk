@@ -21,7 +21,11 @@ import {
     parseSerializedNextAuth,
 } from "./auth-state";
 import { readCookie, resolveCookieNames } from "./cookies";
-import { authenticateRequestWithHandshake, normalizeDevSessionQuery } from "./session";
+import {
+    authenticateRequestWithHandshake,
+    normalizeDevSessionQuery,
+    tokenExchangeForwardedFor,
+} from "./session";
 import { applyAuthHeaders, isApiLikeRequest, resolveSignInRedirectUrl } from "./urls";
 
 export type { WachtAuth, ProtectOptions, PermissionCheck, JWTPayload };
@@ -71,6 +75,18 @@ export interface WachtMiddlewareOptions extends WachtServerOptions {
 export interface AuthenticatedRequest extends NextRequest {
     auth: NextWachtAuth;
 }
+
+type TokenExchangeOptions = {
+    forwardedFor?: string | null;
+};
+
+const exchangeSessionForAuthTokenWithForwarding = exchangeSessionForAuthToken as typeof exchangeSessionForAuthToken &
+    ((
+        sessionToken: string,
+        options: WachtServerOptions,
+        isDevSession: boolean,
+        exchangeOptions: TokenExchangeOptions,
+    ) => ReturnType<typeof exchangeSessionForAuthToken>);
 
 type WachtMiddlewareHandler = (
     authState: NextWachtAuth,
@@ -137,10 +153,13 @@ export async function getVerifiedJwtClaims(
         return null;
     }
 
-    const exchanged = await exchangeSessionForAuthToken(
+    const exchanged = await exchangeSessionForAuthTokenWithForwarding(
         transportToken,
         options,
         isDevSession,
+        {
+            forwardedFor: tokenExchangeForwardedFor(request),
+        },
     );
 
     if (!exchanged.authToken) {

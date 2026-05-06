@@ -11,7 +11,7 @@ export interface WaitlistParams {
 
 export interface WaitlistEntry {
 	id: string;
-	deployment_id: number;
+	deployment_id: string;
 	email_address: string;
 	first_name: string;
 	last_name: string;

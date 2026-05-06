@@ -17,6 +17,7 @@ import {
     CaretLeft,
     User,
     WarningCircle,
+    ArrowsLeftRight,
 } from "@phosphor-icons/react";
 import { DefaultStylesProvider } from "../utility/root";
 import { useSession, useDeployment, useNavigation } from "@/hooks";
@@ -435,22 +436,22 @@ const SPBack = styled.button`
 const SPList = styled.div`
     flex: 1;
     overflow-y: auto;
-    padding: 6px;
+    padding: var(--space-2u);
 `;
 
 const sprowBase = styled.button<{ $active?: boolean }>`
     display: flex;
     align-items: center;
-    gap: 10px;
+    gap: var(--space-3u);
     width: 100%;
-    height: 36px;
-    padding: 0 8px;
+    height: 30px;
+    padding: 0 var(--space-3u);
     background: transparent;
     border: none;
-    border-radius: 6px;
+    border-radius: var(--radius-xs);
     cursor: pointer;
     color: var(--color-popover-foreground);
-    font-size: 13px;
+    font-size: var(--font-size-md);
     font-weight: 400;
     text-align: left;
     transition: background 0.12s ease;
@@ -463,20 +464,12 @@ const sprowBase = styled.button<{ $active?: boolean }>`
     }
 
     &:hover:not(:disabled) {
-        background: color-mix(
-            in srgb,
-            var(--color-popover-foreground) 6%,
-            transparent
-        );
+        background: var(--color-accent);
     }
 
     ${(p) =>
         p.$active &&
         `
-        font-weight: 500;
-        &:hover:not(:disabled) {
-            background: color-mix(in srgb, var(--color-popover-foreground) 4%, transparent);
-        }
         &:hover:not(:disabled) .sp-actions { display: inline-flex; }
         &:hover:not(:disabled) .sp-check { display: none; }
     `}
@@ -489,13 +482,12 @@ const sprowBase = styled.button<{ $active?: boolean }>`
 const SPRow = sprowBase;
 
 const SPWsRow = styled(sprowBase)`
-    height: 36px;
-    padding-left: 34px;
+    padding-left: 30px;
     position: relative;
     &::before {
         content: "";
         position: absolute;
-        left: 20px;
+        left: 18px;
         top: 0;
         bottom: 0;
         width: 1px;
@@ -504,18 +496,18 @@ const SPWsRow = styled(sprowBase)`
 `;
 
 const SPOrgAvatar = styled.div<{ $personal?: boolean }>`
-    width: 24px;
-    height: 24px;
-    min-width: 24px;
-    border-radius: ${(p) => (p.$personal ? "50%" : "6px")};
+    width: 20px;
+    height: 20px;
+    min-width: 20px;
+    border-radius: ${(p) => (p.$personal ? "50%" : "var(--radius-2xs)")};
     overflow: hidden;
     display: flex;
     align-items: center;
     justify-content: center;
     background: var(--color-secondary);
     color: var(--color-secondary-text);
-    font-size: 11px;
-    font-weight: 600;
+    font-size: 10px;
+    font-weight: 500;
     flex-shrink: 0;
     img {
         width: 100%;
@@ -525,18 +517,18 @@ const SPOrgAvatar = styled.div<{ $personal?: boolean }>`
 `;
 
 const SPWsAvatar = styled.div`
-    width: 22px;
-    height: 22px;
-    min-width: 22px;
-    border-radius: 5px;
+    width: 18px;
+    height: 18px;
+    min-width: 18px;
+    border-radius: var(--radius-2xs);
     overflow: hidden;
     display: flex;
     align-items: center;
     justify-content: center;
     background: var(--color-secondary);
     color: var(--color-secondary-text);
-    font-size: 10px;
-    font-weight: 600;
+    font-size: 9px;
+    font-weight: 500;
     flex-shrink: 0;
     img {
         width: 100%;
@@ -548,7 +540,7 @@ const SPWsAvatar = styled.div`
 const SPRowName = styled.span`
     flex: 1;
     min-width: 0;
-    font-size: 13px;
+    font-size: var(--font-size-md);
     color: var(--color-popover-foreground);
     overflow: hidden;
     text-overflow: ellipsis;
@@ -556,7 +548,7 @@ const SPRowName = styled.span`
 `;
 
 const SPWsName = styled(SPRowName)`
-    font-size: 12px;
+    font-size: var(--font-size-sm);
 `;
 
 const SPRowRight = styled.div`
@@ -579,67 +571,59 @@ const SPCheckMark = styled(Check)`
 `;
 
 const SPSelectedBlock = styled.div`
-    padding: 10px 10px 8px;
+    padding: var(--space-3u) var(--space-3u) var(--space-4u);
     display: flex;
     flex-direction: column;
-    gap: 8px;
-    border-bottom: 1px solid var(--color-border);
+    gap: var(--space-3u);
+    border-bottom: var(--border-width-thin) solid var(--color-border);
     flex-shrink: 0;
 `;
 
-const SPSegmented = styled.div`
-    display: flex;
-    padding: 2px;
-    background: color-mix(in srgb, var(--color-popover-foreground) 5%, transparent);
-    border-radius: 7px;
-`;
-
-const SPSegmentedTab = styled.button<{ $active?: boolean }>`
-    flex: 1;
-    height: 26px;
-    padding: 0 10px;
+const SPContextSwitchButton = styled.button`
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    padding: var(--space-1u);
+    border-radius: var(--radius-2xs);
     border: none;
-    border-radius: 5px;
-    font-size: 12px;
-    font-weight: 500;
+    background: transparent;
+    color: var(--color-secondary-text);
     cursor: pointer;
-    background: ${(p) => (p.$active ? "var(--color-popover)" : "transparent")};
-    color: ${(p) =>
-        p.$active
-            ? "var(--color-popover-foreground)"
-            : "var(--color-secondary-text)"};
-    box-shadow: ${(p) =>
-        p.$active
-            ? "0 1px 2px color-mix(in srgb, black 8%, transparent)"
-            : "none"};
+    flex-shrink: 0;
     transition: background 0.12s ease, color 0.12s ease;
 
-    &:hover:not([data-active="true"]) {
+    &:hover:not(:disabled) {
+        background: var(--color-accent);
         color: var(--color-popover-foreground);
+    }
+
+    &:disabled {
+        opacity: 0.5;
+        cursor: not-allowed;
     }
 `;
 
 const SPContextRow = styled.div`
     display: flex;
     align-items: center;
-    gap: 10px;
-    padding: 4px 4px 2px;
+    gap: var(--space-3u);
+    padding: var(--space-1u) var(--space-1u) 0;
     min-width: 0;
 `;
 
 const SPContextAvatar = styled.div`
-    width: 28px;
-    height: 28px;
-    min-width: 28px;
-    border-radius: 6px;
+    width: 24px;
+    height: 24px;
+    min-width: 24px;
+    border-radius: var(--radius-xs);
     overflow: hidden;
     display: flex;
     align-items: center;
     justify-content: center;
     background: var(--color-secondary);
     color: var(--color-secondary-text);
-    font-size: 11px;
-    font-weight: 600;
+    font-size: var(--font-size-xs);
+    font-weight: 500;
     flex-shrink: 0;
     img { width: 100%; height: 100%; object-fit: cover; }
 `;
@@ -653,18 +637,9 @@ const SPContextText = styled.div`
 `;
 
 const SPContextName = styled.div`
-    font-size: 13px;
-    font-weight: 500;
+    font-size: var(--font-size-md);
+    font-weight: 400;
     color: var(--color-popover-foreground);
-    line-height: 1.3;
-    white-space: nowrap;
-    overflow: hidden;
-    text-overflow: ellipsis;
-`;
-
-const SPContextRole = styled.div`
-    font-size: 11px;
-    color: var(--color-secondary-text);
     line-height: 1.3;
     white-space: nowrap;
     overflow: hidden;
@@ -679,12 +654,12 @@ const SPContextActions = styled.div`
 `;
 
 const SPHeaderIconButton = styled.button<{ $destructive?: boolean }>`
-    width: 26px;
-    height: 26px;
+    width: 24px;
+    height: 24px;
     display: inline-flex;
     align-items: center;
     justify-content: center;
-    border-radius: 5px;
+    border-radius: var(--radius-xs);
     border: none;
     background: transparent;
     color: var(--color-secondary-text);
@@ -695,7 +670,7 @@ const SPHeaderIconButton = styled.button<{ $destructive?: boolean }>`
         background: ${(p) =>
             p.$destructive
                 ? "color-mix(in srgb, var(--color-error) 14%, transparent)"
-                : "color-mix(in srgb, var(--color-popover-foreground) 10%, transparent)"};
+                : "var(--color-accent)"};
         color: ${(p) =>
             p.$destructive
                 ? "var(--color-error)"
@@ -709,35 +684,31 @@ const SPHeaderIconButton = styled.button<{ $destructive?: boolean }>`
 `;
 
 const SPFooter = styled.div`
-    border-top: 1px solid var(--color-border);
-    padding: 6px;
+    border-top: var(--border-width-thin) solid var(--color-border);
+    padding: var(--space-2u);
     flex-shrink: 0;
 `;
 
 const SPCreateRow = styled.button`
     display: flex;
     align-items: center;
-    gap: 10px;
+    gap: var(--space-3u);
     width: 100%;
-    height: 34px;
-    padding: 0 8px;
+    height: 30px;
+    padding: 0 var(--space-3u);
     background: transparent;
     border: none;
-    border-radius: 6px;
+    border-radius: var(--radius-xs);
     cursor: pointer;
     color: var(--color-secondary-text);
-    font-size: 13px;
+    font-size: var(--font-size-md);
     font-weight: 400;
     text-align: left;
     transition:
         background 0.12s ease,
         color 0.12s ease;
     &:hover:not(:disabled) {
-        background: color-mix(
-            in srgb,
-            var(--color-popover-foreground) 6%,
-            transparent
-        );
+        background: var(--color-accent);
         color: var(--color-popover-foreground);
     }
     &:disabled {
@@ -747,11 +718,9 @@ const SPCreateRow = styled.button`
 `;
 
 const SPCreateIcon = styled.div`
-    width: 22px;
-    height: 22px;
-    min-width: 22px;
-    border-radius: 5px;
-    border: 1px dashed var(--color-border);
+    width: 20px;
+    height: 20px;
+    min-width: 20px;
     display: flex;
     align-items: center;
     justify-content: center;
@@ -1290,10 +1259,6 @@ export const UserButton: React.FC<UserButtonProps> = ({
                                         canManageWorkspace(activeWsMembership);
                                     const viewingTab: "org" | "ws" =
                                         activeIsWorkspace ? contextTab : "org";
-                                    const orgRole =
-                                        activeOrgMembership?.roles?.[0]?.name;
-                                    const wsRole =
-                                        activeWsMembership?.roles?.[0]?.name;
 
                                     const handleLeaveOrgBtn = async () => {
                                         if (!leaveOrganization) return;
@@ -1319,44 +1284,32 @@ export const UserButton: React.FC<UserButtonProps> = ({
                                         }
                                     };
 
+                                    const renderSpContextSwitch = () => {
+                                        if (!activeIsWorkspace) return null;
+                                        const next: "org" | "ws" =
+                                            viewingTab === "org" ? "ws" : "org";
+                                        const label =
+                                            next === "ws"
+                                                ? "Switch to workspace context"
+                                                : "Switch to organization context";
+                                        return (
+                                            <SPContextSwitchButton
+                                                type="button"
+                                                onClick={() => setContextTab(next)}
+                                                title={label}
+                                                aria-label={label}
+                                            >
+                                                <ArrowsLeftRight size={12} />
+                                            </SPContextSwitchButton>
+                                        );
+                                    };
+
                                     return (
                                         <SPSelectedBlock>
-                                            {activeIsWorkspace && (
-                                                <SPSegmented>
-                                                    <SPSegmentedTab
-                                                        type="button"
-                                                        $active={
-                                                            viewingTab === "org"
-                                                        }
-                                                        data-active={
-                                                            viewingTab === "org"
-                                                        }
-                                                        onClick={() =>
-                                                            setContextTab("org")
-                                                        }
-                                                    >
-                                                        Organization
-                                                    </SPSegmentedTab>
-                                                    <SPSegmentedTab
-                                                        type="button"
-                                                        $active={
-                                                            viewingTab === "ws"
-                                                        }
-                                                        data-active={
-                                                            viewingTab === "ws"
-                                                        }
-                                                        onClick={() =>
-                                                            setContextTab("ws")
-                                                        }
-                                                    >
-                                                        Workspace
-                                                    </SPSegmentedTab>
-                                                </SPSegmented>
-                                            )}
-
                                             {viewingTab === "org" &&
                                                 activeOrganization && (
                                                     <SPContextRow>
+                                                        {renderSpContextSwitch()}
                                                         <SPContextAvatar>
                                                             {activeOrganization.image_url ? (
                                                                 <img
@@ -1379,11 +1332,6 @@ export const UserButton: React.FC<UserButtonProps> = ({
                                                                     activeOrganization.name
                                                                 }
                                                             </SPContextName>
-                                                            {orgRole && (
-                                                                <SPContextRole>
-                                                                    {orgRole}
-                                                                </SPContextRole>
-                                                            )}
                                                         </SPContextText>
                                                         <SPContextActions>
                                                             {canManageOrg && (
@@ -1427,6 +1375,7 @@ export const UserButton: React.FC<UserButtonProps> = ({
                                             {viewingTab === "ws" &&
                                                 activeIsWorkspace && (
                                                     <SPContextRow>
+                                                        {renderSpContextSwitch()}
                                                         <SPContextAvatar>
                                                             {(
                                                                 activeWorkspace as WorkspaceWithOrganization
@@ -1457,11 +1406,6 @@ export const UserButton: React.FC<UserButtonProps> = ({
                                                                         .name
                                                                 }
                                                             </SPContextName>
-                                                            {wsRole && (
-                                                                <SPContextRole>
-                                                                    {wsRole}
-                                                                </SPContextRole>
-                                                            )}
                                                         </SPContextText>
                                                         <SPContextActions>
                                                             {canManageWs && (

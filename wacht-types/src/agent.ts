@@ -436,9 +436,16 @@ export interface ProjectTaskWorkspaceFileEntry {
     modified_at?: string;
 }
 
+export interface ProjectTaskWorkspaceMount {
+    mount_path: string;
+    mode: string;
+    description?: string;
+}
+
 export interface ProjectTaskWorkspaceListing {
     exists: boolean;
     files: ProjectTaskWorkspaceFileEntry[];
+    mounts?: ProjectTaskWorkspaceMount[];
 }
 
 export interface ProjectTaskWorkspaceFileContent {

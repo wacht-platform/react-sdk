@@ -19,7 +19,16 @@ export interface SignIn {
   countryCode: string;
 }
 
-export type SignInMethod = "plain" | "sso" | "passkey";
+export type SignInMethod =
+  | "plain_email"
+  | "plain_username"
+  | "phone_otp"
+  | "magic_link"
+  | "email_otp"
+  | "sso"
+  | "enterprise_sso"
+  | "passkey"
+  | "impersonation";
 
 export type SSOProvider =
   | "x_oauth"
@@ -45,7 +54,7 @@ export type CurrentSessionStep =
 export interface SigninAttempt {
   id: string;
   email: string;
-  session_id: number;
+  session_id: string;
   method: SignInMethod;
   sso_provider: SSOProvider;
   expires_at: string;
@@ -53,8 +62,7 @@ export interface SigninAttempt {
   second_method_authenticated: boolean;
   second_method_authentication_required: boolean;
   available_2fa_methods?: string[];
-  user_id: number;
-  last_active_org_id: number;
+  user_id: string | null;
   current_step: CurrentSessionStep;
   completed: boolean;
   requires_completion?: boolean;
@@ -70,7 +78,7 @@ export type SignupAttemptStep =
 
 export interface SignupAttempt {
   id: string;
-  session_id: number;
+  session_id: string;
   first_name: string;
   last_name: string;
   email: string;
@@ -85,7 +93,7 @@ export interface SignupAttempt {
 }
 
 export interface Session {
-  id: number;
+  id: string;
   active_signin: SignIn | null;
   signins?: SignIn[];
   signin_attempts?: SigninAttempt[];

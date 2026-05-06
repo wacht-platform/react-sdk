@@ -4,6 +4,7 @@ import React, { useState, useRef, useEffect, useMemo } from "react";
 import ReactDOM from "react-dom";
 import styled, { css } from "styled-components";
 import {
+    ArrowsLeftRight,
     CaretDown,
     CaretUpDown,
     Plus,
@@ -119,72 +120,64 @@ const Dropdown = styled.div<{
 const List = styled.div`
     flex: 1;
     overflow-y: auto;
-    padding: 6px;
+    padding: var(--space-2u);
 `;
 
 // ─── Selected block ───────────────────────────────────────────────────────────
 
 const SelectedBlock = styled.div`
-    padding: 10px 10px 8px;
+    padding: var(--space-3u) var(--space-3u) var(--space-4u);
     display: flex;
     flex-direction: column;
-    gap: 8px;
-    border-bottom: 1px solid var(--color-border);
+    gap: var(--space-3u);
+    border-bottom: var(--border-width-thin) solid var(--color-border);
 `;
 
-const Segmented = styled.div`
-    display: flex;
-    padding: 2px;
-    background: color-mix(in srgb, var(--color-popover-foreground) 5%, transparent);
-    border-radius: 7px;
-`;
-
-const SegmentedTab = styled.button<{ $active?: boolean }>`
-    flex: 1;
-    height: 26px;
-    padding: 0 10px;
+const ContextSwitchButton = styled.button`
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    padding: var(--space-1u);
+    border-radius: var(--radius-2xs);
     border: none;
-    border-radius: 5px;
-    font-size: 12px;
-    font-weight: 500;
+    background: transparent;
+    color: var(--color-secondary-text);
     cursor: pointer;
-    background: ${(p) => (p.$active ? "var(--color-popover)" : "transparent")};
-    color: ${(p) =>
-        p.$active
-            ? "var(--color-popover-foreground)"
-            : "var(--color-secondary-text)"};
-    box-shadow: ${(p) =>
-        p.$active
-            ? "0 1px 2px color-mix(in srgb, black 8%, transparent)"
-            : "none"};
+    flex-shrink: 0;
     transition: background 0.12s ease, color 0.12s ease;
 
-    &:hover:not([data-active="true"]) {
+    &:hover:not(:disabled) {
+        background: var(--color-accent);
         color: var(--color-popover-foreground);
+    }
+
+    &:disabled {
+        opacity: 0.5;
+        cursor: not-allowed;
     }
 `;
 
 const ContextRow = styled.div`
     display: flex;
     align-items: center;
-    gap: 10px;
-    padding: 4px 4px 2px;
+    gap: var(--space-3u);
+    padding: var(--space-1u) var(--space-1u) 0;
     min-width: 0;
 `;
 
 const ContextAvatar = styled.div<{ $personal?: boolean }>`
-    width: 28px;
-    height: 28px;
-    min-width: 28px;
-    border-radius: ${(p) => (p.$personal ? "50%" : "6px")};
+    width: 24px;
+    height: 24px;
+    min-width: 24px;
+    border-radius: ${(p) => (p.$personal ? "50%" : "var(--radius-xs)")};
     overflow: hidden;
     display: flex;
     align-items: center;
     justify-content: center;
     background: var(--color-secondary);
     color: var(--color-secondary-text);
-    font-size: 11px;
-    font-weight: 600;
+    font-size: var(--font-size-xs);
+    font-weight: 500;
     flex-shrink: 0;
     img { width: 100%; height: 100%; object-fit: cover; }
 `;
@@ -198,18 +191,9 @@ const ContextText = styled.div`
 `;
 
 const ContextName = styled.div`
-    font-size: 13px;
-    font-weight: 500;
+    font-size: var(--font-size-md);
+    font-weight: 400;
     color: var(--color-popover-foreground);
-    line-height: 1.3;
-    white-space: nowrap;
-    overflow: hidden;
-    text-overflow: ellipsis;
-`;
-
-const ContextRole = styled.div`
-    font-size: 11px;
-    color: var(--color-secondary-text);
     line-height: 1.3;
     white-space: nowrap;
     overflow: hidden;
@@ -224,12 +208,12 @@ const ContextActions = styled.div`
 `;
 
 const HeaderIconButton = styled.button<{ $destructive?: boolean }>`
-    width: 26px;
-    height: 26px;
+    width: 24px;
+    height: 24px;
     display: inline-flex;
     align-items: center;
     justify-content: center;
-    border-radius: 5px;
+    border-radius: var(--radius-xs);
     border: none;
     background: transparent;
     color: var(--color-secondary-text);
@@ -240,7 +224,7 @@ const HeaderIconButton = styled.button<{ $destructive?: boolean }>`
         background: ${(p) =>
             p.$destructive
                 ? "color-mix(in srgb, var(--color-error) 14%, transparent)"
-                : "color-mix(in srgb, var(--color-popover-foreground) 10%, transparent)"};
+                : "var(--color-accent)"};
         color: ${(p) =>
             p.$destructive
                 ? "var(--color-error)"
@@ -258,16 +242,16 @@ const HeaderIconButton = styled.button<{ $destructive?: boolean }>`
 const rowBase = css<{ $active?: boolean }>`
     display: flex;
     align-items: center;
-    gap: 10px;
+    gap: var(--space-3u);
     width: 100%;
-    height: 36px;
-    padding: 0 8px;
+    height: 30px;
+    padding: 0 var(--space-3u);
     background: transparent;
     border: none;
-    border-radius: 6px;
+    border-radius: var(--radius-xs);
     cursor: pointer;
     color: var(--color-popover-foreground);
-    font-size: 13px;
+    font-size: var(--font-size-md);
     font-weight: 400;
     text-align: left;
     transition: background 0.12s ease;
@@ -276,16 +260,12 @@ const rowBase = css<{ $active?: boolean }>`
     .row-check { display: inline-flex; }
 
     &:hover:not(:disabled) {
-        background: color-mix(in srgb, var(--color-popover-foreground) 6%, transparent);
+        background: var(--color-accent);
     }
 
     ${(p) => p.$active && css`
-        font-weight: 500;
-        &:hover:not(:disabled) {
-            background: color-mix(in srgb, var(--color-popover-foreground) 4%, transparent);
-            .row-actions { display: inline-flex; }
-            .row-check { display: none; }
-        }
+        &:hover:not(:disabled) .row-actions { display: inline-flex; }
+        &:hover:not(:disabled) .row-check { display: none; }
     `}
 
     &:disabled { cursor: default; }
@@ -295,13 +275,12 @@ const Row = styled.button<{ $active?: boolean }>`${rowBase}`;
 
 const WorkspaceRow = styled.button<{ $active?: boolean }>`
     ${rowBase}
-    height: 36px;
-    padding-left: 34px;
+    padding-left: 30px;
     position: relative;
     &::before {
         content: "";
         position: absolute;
-        left: 20px;
+        left: 18px;
         top: 0;
         bottom: 0;
         width: 1px;
@@ -312,27 +291,10 @@ const WorkspaceRow = styled.button<{ $active?: boolean }>`
 // ─── Row internals ────────────────────────────────────────────────────────────
 
 const OrgAvatar = styled.div<{ $personal?: boolean }>`
-    width: 24px;
-    height: 24px;
-    min-width: 24px;
-    border-radius: ${(p) => p.$personal ? "50%" : "6px"};
-    overflow: hidden;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    background: var(--color-secondary);
-    color: var(--color-secondary-text);
-    font-size: 11px;
-    font-weight: 600;
-    flex-shrink: 0;
-    img { width: 100%; height: 100%; object-fit: cover; }
-`;
-
-const WsAvatar = styled.div`
-    width: 22px;
-    height: 22px;
-    min-width: 22px;
-    border-radius: 5px;
+    width: 20px;
+    height: 20px;
+    min-width: 20px;
+    border-radius: ${(p) => p.$personal ? "50%" : "var(--radius-2xs)"};
     overflow: hidden;
     display: flex;
     align-items: center;
@@ -340,7 +302,24 @@ const WsAvatar = styled.div`
     background: var(--color-secondary);
     color: var(--color-secondary-text);
     font-size: 10px;
-    font-weight: 600;
+    font-weight: 500;
+    flex-shrink: 0;
+    img { width: 100%; height: 100%; object-fit: cover; }
+`;
+
+const WsAvatar = styled.div`
+    width: 18px;
+    height: 18px;
+    min-width: 18px;
+    border-radius: var(--radius-2xs);
+    overflow: hidden;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    background: var(--color-secondary);
+    color: var(--color-secondary-text);
+    font-size: 9px;
+    font-weight: 500;
     flex-shrink: 0;
     img { width: 100%; height: 100%; object-fit: cover; }
 `;
@@ -348,7 +327,7 @@ const WsAvatar = styled.div`
 const RowName = styled.span`
     flex: 1;
     min-width: 0;
-    font-size: 13px;
+    font-size: var(--font-size-md);
     color: var(--color-popover-foreground);
     overflow: hidden;
     text-overflow: ellipsis;
@@ -356,7 +335,7 @@ const RowName = styled.span`
 `;
 
 const WsName = styled(RowName)`
-    font-size: 12px;
+    font-size: var(--font-size-sm);
 `;
 
 const RowRight = styled.div`
@@ -381,24 +360,24 @@ const CheckMark = styled(Check)`
 // ─── Footer create button ─────────────────────────────────────────────────────
 
 const Footer = styled.div`
-    border-top: 1px solid var(--color-border);
-    padding: 6px;
+    border-top: var(--border-width-thin) solid var(--color-border);
+    padding: var(--space-2u);
     flex-shrink: 0;
 `;
 
 const CreateRow = styled.button`
     display: flex;
     align-items: center;
-    gap: 10px;
+    gap: var(--space-3u);
     width: 100%;
-    height: 32px;
-    padding: 0 8px;
+    height: 30px;
+    padding: 0 var(--space-3u);
     background: transparent;
     border: none;
-    border-radius: 6px;
+    border-radius: var(--radius-xs);
     cursor: pointer;
     color: var(--color-secondary-text);
-    font-size: 13px;
+    font-size: var(--font-size-md);
     font-weight: 400;
     text-align: left;
     transition: background 0.1s ease, color 0.1s ease;
@@ -407,11 +386,9 @@ const CreateRow = styled.button`
 `;
 
 const CreateIcon = styled.div`
-    width: 22px;
-    height: 22px;
-    min-width: 22px;
-    border-radius: 5px;
-    border: 1px dashed var(--color-border);
+    width: 20px;
+    height: 20px;
+    min-width: 20px;
     display: flex;
     align-items: center;
     justify-content: center;
@@ -686,49 +663,32 @@ export const OrganizationSwitcher = ({ showPersonal = true }: OrganizationSwitch
                                     ? contextTab
                                     : "org";
 
-                                const orgRole =
-                                    activeOrgMembership?.roles?.[0]?.name;
-                                const wsRole =
-                                    activeWsMembership?.roles?.[0]?.name;
+                                const renderContextSwitch = () => {
+                                    if (!showTabs) return null;
+                                    const next: "org" | "ws" =
+                                        viewingTab === "org" ? "ws" : "org";
+                                    const label =
+                                        next === "ws"
+                                            ? "Switch to workspace context"
+                                            : "Switch to organization context";
+                                    return (
+                                        <ContextSwitchButton
+                                            type="button"
+                                            onClick={() => setContextTab(next)}
+                                            title={label}
+                                            aria-label={label}
+                                        >
+                                            <ArrowsLeftRight size={12} />
+                                        </ContextSwitchButton>
+                                    );
+                                };
 
                                 return (
                                     <SelectedBlock>
-                                        {showTabs && (
-                                            <Segmented>
-                                                <SegmentedTab
-                                                    type="button"
-                                                    $active={
-                                                        viewingTab === "org"
-                                                    }
-                                                    data-active={
-                                                        viewingTab === "org"
-                                                    }
-                                                    onClick={() =>
-                                                        setContextTab("org")
-                                                    }
-                                                >
-                                                    Organization
-                                                </SegmentedTab>
-                                                <SegmentedTab
-                                                    type="button"
-                                                    $active={
-                                                        viewingTab === "ws"
-                                                    }
-                                                    data-active={
-                                                        viewingTab === "ws"
-                                                    }
-                                                    onClick={() =>
-                                                        setContextTab("ws")
-                                                    }
-                                                >
-                                                    Workspace
-                                                </SegmentedTab>
-                                            </Segmented>
-                                        )}
-
                                         {viewingTab === "org" &&
                                             activeOrganization && (
                                                 <ContextRow>
+                                                    {renderContextSwitch()}
                                                     <ContextAvatar>
                                                         {activeOrganization.image_url ? (
                                                             <img
@@ -751,11 +711,6 @@ export const OrganizationSwitcher = ({ showPersonal = true }: OrganizationSwitch
                                                                 activeOrganization.name
                                                             }
                                                         </ContextName>
-                                                        {orgRole && (
-                                                            <ContextRole>
-                                                                {orgRole}
-                                                            </ContextRole>
-                                                        )}
                                                     </ContextText>
                                                     <ContextActions>
                                                         {canManageOrg && (
@@ -794,6 +749,7 @@ export const OrganizationSwitcher = ({ showPersonal = true }: OrganizationSwitch
                                         {viewingTab === "ws" &&
                                             activeIsWorkspace && (
                                                 <ContextRow>
+                                                    {renderContextSwitch()}
                                                     <ContextAvatar>
                                                         {activeWorkspace!.image_url ? (
                                                             <img
@@ -820,11 +776,6 @@ export const OrganizationSwitcher = ({ showPersonal = true }: OrganizationSwitch
                                                                     .name
                                                             }
                                                         </ContextName>
-                                                        {wsRole && (
-                                                            <ContextRole>
-                                                                {wsRole}
-                                                            </ContextRole>
-                                                        )}
                                                     </ContextText>
                                                     <ContextActions>
                                                         {canManageWs && (

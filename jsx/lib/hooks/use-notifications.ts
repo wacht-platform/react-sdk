@@ -209,11 +209,11 @@ export function useNotifications(
   }, [params?.channels, params?.scope]);
 
   const streamOrganizationIds = useMemo(() => {
-    return params?.organization_ids?.map((id) => Number(id)).filter((id) => Number.isFinite(id));
+    return params?.organization_ids;
   }, [params?.organization_ids]);
 
   const streamWorkspaceIds = useMemo(() => {
-    return params?.workspace_ids?.map((id) => Number(id)).filter((id) => Number.isFinite(id));
+    return params?.workspace_ids;
   }, [params?.workspace_ids]);
 
   useNotificationStream({

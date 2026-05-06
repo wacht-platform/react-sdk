@@ -72,9 +72,9 @@ export interface ApiAuthAppSessionData {
 
 export interface ApiAuditLog {
   request_id: string;
-  deployment_id: number;
+  deployment_id: string;
   app_slug: string;
-  key_id: number;
+  key_id: string;
   key_name: string;
   outcome: string;
   blocked_by_rule?: string;
@@ -105,7 +105,7 @@ export interface ApiAuditAnalyticsResponse {
 }
 
 export interface KeyStatsItem {
-  key_id: number;
+  key_id: string;
   key_name: string;
   total_requests: number;
 }

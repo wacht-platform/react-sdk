@@ -1,5 +1,5 @@
 export interface WebsocketMessage<T = any> {
-  message_id?: number;
+  message_id?: string;
   message_type: string | Record<string, any>;
   data: T;
 }

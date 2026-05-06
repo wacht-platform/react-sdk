@@ -4,9 +4,9 @@ import { useDeployment } from './use-deployment';
 import { getStoredDevSession } from '@/utils/dev-session';
 
 export interface NotificationMessage {
-  id: number;
-  user_id: number;
-  deployment_id: number;
+  id: string;
+  user_id: string;
+  deployment_id: string;
   title: string;
   body: string;
   severity: string;
@@ -24,8 +24,8 @@ interface WebSocketMessage {
 export interface UseNotificationStreamOptions {
   enabled?: boolean;
   channels?: string[];
-  organizationIds?: number[];
-  workspaceIds?: number[];
+  organizationIds?: string[];
+  workspaceIds?: string[];
   onNotification?: (notification: NotificationMessage) => void;
   onError?: (error: string) => void;
   reconnectDelay?: number;

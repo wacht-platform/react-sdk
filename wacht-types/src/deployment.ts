@@ -1,9 +1,9 @@
 export interface B2BSettings {
-  id: number;
+  id: string;
   created_at: string;
   updated_at: string;
   deleted_at: null;
-  deployment_id: number;
+  deployment_id: string;
   organizations_enabled: boolean;
   workspaces_enabled: boolean;
   ip_allowlist_per_org_enabled: boolean;
@@ -19,10 +19,10 @@ export interface B2BSettings {
   org_creation_per_user_count: number;
   workspaces_per_org_count: number;
   custom_workspace_role_enabled: boolean;
-  default_workspace_creator_role_id: number;
-  default_workspace_member_role_id: number;
-  default_org_creator_role_id: number;
-  default_org_member_role_id: number;
+  default_workspace_creator_role_id: string;
+  default_workspace_member_role_id: string;
+  default_org_creator_role_id: string;
+  default_org_member_role_id: string;
   workspace_permissions: string[];
   organization_permissions: string[];
   ip_allowlist_per_workspace_enabled: boolean;
@@ -79,7 +79,7 @@ export interface MultiSessionSupport {
 }
 
 export interface AuthSettings {
-  id: number;
+  id: string;
   created_at: string;
   updated_at: string;
   deleted_at: null;
@@ -102,15 +102,15 @@ export interface AuthSettings {
   alternate_first_factors: FirstFactor[] | null;
   alternate_second_factors: SecondFactor[] | null;
   multi_session_support: MultiSessionSupport;
-  deployment_id: number;
+  deployment_id: string;
 }
 
 export interface DeploymentSocialConnection {
-  id: number;
+  id: string;
   created_at: string;
   updated_at: string;
   deleted_at: null;
-  deployment_id: number;
+  deployment_id: string;
   provider: string;
   enabled: boolean;
   user_defined_scopes: null;
@@ -125,11 +125,11 @@ export interface CountryRestriction {
 export type SignUpMode = "public" | "restricted" | "waitlist";
 
 export interface DeploymentRestrictions {
-  id: number;
+  id: string;
   created_at: string;
   updated_at: string;
   deleted_at: null;
-  deployment_id: number;
+  deployment_id: string;
   allowlist_enabled: boolean;
   blocklist_enabled: boolean;
   block_subaddresses: boolean;
@@ -255,7 +255,7 @@ export interface UITokenOverrides {
 }
 
 export interface DeploymentUISettings {
-  deployment_id: number;
+  deployment_id: string;
   app_name: string;
   privacy_policy_url: string;
   tos_page_url: string;
@@ -288,7 +288,7 @@ export interface DeploymentUISettings {
 
 
 export interface Deployment {
-  id: number;
+  id: string;
   created_at: string;
   updated_at: string;
   deleted_at: null;
@@ -302,6 +302,6 @@ export interface Deployment {
   restrictions: DeploymentRestrictions;
   social_connections: DeploymentSocialConnection[];
   ui_settings: DeploymentUISettings;
-  project_id: number;
+  project_id: string;
   mode: "production" | "staging";
 }

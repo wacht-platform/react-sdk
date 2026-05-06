@@ -13,7 +13,7 @@ export type VerificationStrategy =
   | "oauth_apple";
 
 export interface SocialConnection {
-  id: number;
+  id: string;
   provider: SocialConnectionProvider;
   email_address: string;
   first_name: string;
