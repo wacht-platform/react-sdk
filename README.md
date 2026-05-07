@@ -19,7 +19,7 @@
 
 <p align="center">
   <a href="https://wacht.dev">Website</a> ·
-  <a href="https://docs.wacht.dev">Docs</a> ·
+  <a href="https://wacht.dev/docs">Docs</a> ·
   <a href="https://github.com/wacht-platform/react-sdk/issues">Issues</a>
 </p>
 
@@ -84,7 +84,7 @@ pnpm add @wacht/react-router
 pnpm add @wacht/tanstack-router
 ```
 
-See the [documentation](https://docs.wacht.dev) for provider setup, environment variables,
+See the [documentation](https://wacht.dev/docs) for provider setup, environment variables,
 and framework-specific guides.
 
 ## Local Development
@@ -115,7 +115,7 @@ other use the Apache-2.0 license allows are welcome.
 
 ## Support
 
-- Documentation: [docs.wacht.dev](https://docs.wacht.dev).
+- Documentation: [docs.wacht.dev](https://wacht.dev/docs).
 - Direct assistance: [engineering@intellinesia.com](mailto:engineering@intellinesia.com).
 
 ## License

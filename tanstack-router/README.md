@@ -5,7 +5,7 @@
 <p align="center">TanStack Router adapter for Wacht, including provider integration and server-side auth helpers.</p>
 
 <p align="center">
-  <a href="https://docs.wacht.dev">Documentation</a> |
+  <a href="https://wacht.dev/docs">Documentation</a> |
   <a href="https://www.npmjs.com/package/@wacht/tanstack-router">npm</a>
 </p>
 

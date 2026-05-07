@@ -4,7 +4,7 @@ Shared React components and hooks for building Wacht-powered product surfaces.
 
 Use `@wacht/jsx` when you want the core Wacht React layer without committing to a framework adapter. If you are using Next.js, React Router, or TanStack Router, you will usually install the adapter package instead and import the same primitives from there.
 
-- Docs: https://docs.wacht.dev
+- Docs: https://wacht.dev/docs
 - npm: https://www.npmjs.com/package/@wacht/jsx
 
 ## What it includes

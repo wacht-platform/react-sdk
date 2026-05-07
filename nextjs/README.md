@@ -5,7 +5,7 @@
 <p align="center">Next.js integration for Wacht with middleware auth primitives, server helpers, and React provider exports.</p>
 
 <p align="center">
-  <a href="https://docs.wacht.dev">Documentation</a> |
+  <a href="https://wacht.dev/docs">Documentation</a> |
   <a href="https://www.npmjs.com/package/@wacht/nextjs">npm</a>
 </p>
 
