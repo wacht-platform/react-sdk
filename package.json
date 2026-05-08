@@ -1,24 +1,30 @@
 {
-  "name": "@wacht/wacht-workspace",
-  "version": "1.0.0",
-  "private": true,
-  "description": "Wacht authentication library workspace",
-  "scripts": {
-    "build": "pnpm -r build",
-    "build:types": "pnpm --filter @wacht/types build",
-    "build:jsx": "pnpm --filter @wacht/jsx build",
-    "build:nextjs": "pnpm --filter @wacht/nextjs build",
-    "build:react-router": "pnpm --filter @wacht/react-router build",
-    "build:tanstack-router": "pnpm --filter @wacht/tanstack-router build"
-  },
-  "devDependencies": {
-    "react": "catalog:",
-    "react-dom": "catalog:",
-    "next": "catalog:",
-    "react-router": "catalog:",
-    "@tanstack/react-router": "catalog:",
-    "@types/react": "catalog:",
-    "@types/react-dom": "catalog:",
-    "typescript": "catalog:"
-  }
+    "name": "@wacht/wacht-workspace",
+    "version": "1.0.0",
+    "private": true,
+    "description": "Wacht authentication library workspace",
+    "scripts": {
+        "build": "pnpm -r build",
+        "build:types": "pnpm --filter @wacht/types build",
+        "build:jsx": "pnpm --filter @wacht/jsx build",
+        "build:nextjs": "pnpm --filter @wacht/nextjs build",
+        "build:react-router": "pnpm --filter @wacht/react-router build",
+        "build:tanstack-router": "pnpm --filter @wacht/tanstack-router build"
+    },
+    "pnpm": {
+        "onlyBuiltDependencies": [
+            "esbuild",
+            "sharp"
+        ]
+    },
+    "devDependencies": {
+        "react": "catalog:",
+        "react-dom": "catalog:",
+        "next": "catalog:",
+        "react-router": "catalog:",
+        "@tanstack/react-router": "catalog:",
+        "@types/react": "catalog:",
+        "@types/react-dom": "catalog:",
+        "typescript": "catalog:"
+    }
 }
