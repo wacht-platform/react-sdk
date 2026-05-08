@@ -2,6 +2,7 @@
     "name": "@wacht/wacht-workspace",
     "version": "1.0.0",
     "private": true,
+    "packageManager": "pnpm@10.0.0",
     "description": "Wacht authentication library workspace",
     "scripts": {
         "build": "pnpm -r build",
