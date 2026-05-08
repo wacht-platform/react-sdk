@@ -84,7 +84,7 @@ const methods = [
 export function OtherAuthOptions() {
     const { deployment } = useDeployment();
     const { signIn: oauthSignIn } = useSignInWithStrategy("oauth");
-    const { setFirstFactor, firstFactor, setShowOtherOptions } =
+    const { setFirstFactor, firstFactor, setShowOtherOptions, setSignInStep } =
         useSignInContext();
     const [isSubmitting, setIsSubmitting] = useState(false);
 
@@ -145,6 +145,7 @@ export function OtherAuthOptions() {
                             description={method.description}
                             onClick={() => {
                                 setFirstFactor(method.key);
+                                setSignInStep("identifier");
                                 setShowOtherOptions(false);
                             }}
                         />

@@ -780,6 +780,19 @@ function SignInFormContent() {
             return;
         }
 
+        if (
+            signInStep === "identifier" &&
+            firstFactor === "username_password"
+        ) {
+            if (!formData.username) {
+                setErrors({ username: "Username is required" });
+                return;
+            }
+            setErrors({});
+            setSignInStep("password");
+            return;
+        }
+
         if (firstFactor === "email_password") {
             if (!formData.email) {
                 newErrors.email = "Email address is required";
@@ -1557,18 +1570,55 @@ function SignInFormContent() {
                                 deployment?.auth_settings?.username
                                     ?.enabled && (
                                     <FormGroup>
-                                        <Label htmlFor="username">
-                                            Username
-                                        </Label>
-                                        <Input
-                                            type="text"
-                                            id="username"
-                                            name="username"
-                                            value={formData.username}
-                                            onChange={handleInputChange}
-                                            placeholder="Enter your username"
-                                            aria-invalid={!!errors.username}
-                                        />
+                                        <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between" }}>
+                                            <Label htmlFor="username">
+                                                Username
+                                            </Label>
+                                            {signInStep === "identifier" && (
+                                                <Link
+                                                    style={{ fontSize: "var(--font-size-sm)" }}
+                                                    onClick={() => setShowOtherOptions(true)}
+                                                >
+                                                    Other methods
+                                                </Link>
+                                            )}
+                                        </div>
+                                        {signInStep === "password" &&
+                                        formData.username ? (
+                                            <LockedInput>
+                                                <LockedInputIcon>
+                                                    <Lock />
+                                                </LockedInputIcon>
+                                                <LockedInputValue>
+                                                    {formData.username}
+                                                </LockedInputValue>
+                                                <LockedInputEdit
+                                                    type="button"
+                                                    onClick={() => {
+                                                        setSignInStep(
+                                                            "identifier",
+                                                        );
+                                                        setFormData((prev) => ({
+                                                            ...prev,
+                                                            password: "",
+                                                        }));
+                                                    }}
+                                                >
+                                                    Edit
+                                                </LockedInputEdit>
+                                            </LockedInput>
+                                        ) : (
+                                            <Input
+                                                type="text"
+                                                id="username"
+                                                name="username"
+                                                value={formData.username}
+                                                onChange={handleInputChange}
+                                                placeholder="Enter your username"
+                                                aria-invalid={!!errors.username}
+                                                autoComplete="username"
+                                            />
+                                        )}
                                         {errors.username && (
                                             <ErrorMessage>
                                                 {errors.username}
