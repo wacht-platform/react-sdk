@@ -20,6 +20,7 @@ import { ProfileCompletionProps } from "@wacht/types";
 import { useNavigation } from "@/hooks";
 import { CircleNotch } from "@phosphor-icons/react";
 import { getStoredDevSession } from "@/utils/dev-session";
+import { sanitizeRedirectUri } from "@/utils/redirect-uri";
 import { standaloneAuthShell } from "./auth-shell";
 
 const Container = styled.div`
@@ -233,9 +234,10 @@ export function TwoFactorVerification({
     useEffect(() => {
         if (attempt.completed) {
             setIsRedirecting(true);
-            let redirectUri: string | null = new URLSearchParams(
-                window.location.search,
-            ).get("redirect_uri");
+            let redirectUri: string | null = sanitizeRedirectUri(
+                deployment,
+                new URLSearchParams(window.location.search).get("redirect_uri"),
+            );
 
             if (!redirectUri) {
                 redirectUri =

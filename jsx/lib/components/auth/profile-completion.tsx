@@ -15,6 +15,7 @@ import { Button } from "../utility/button";
 import { Form, FormGroup, Label } from "../utility/form";
 import { Input } from "../utility/input";
 import { getStoredDevSession } from "@/utils/dev-session";
+import { sanitizeRedirectUri } from "@/utils/redirect-uri";
 import { standaloneAuthShell } from "./auth-shell";
 
 const spin = keyframes`
@@ -138,9 +139,10 @@ export function ProfileCompletion({
       // Check if completed and redirect
       if (session) {
         setIsRedirecting(true);
-        let redirectUri: string | null = new URLSearchParams(
-          window.location.search,
-        ).get("redirect_uri");
+        let redirectUri: string | null = sanitizeRedirectUri(
+          deployment,
+          new URLSearchParams(window.location.search).get("redirect_uri"),
+        );
         if (!redirectUri) {
           redirectUri =
             deployment?.ui_settings?.after_signin_redirect_url || null;
@@ -183,9 +185,10 @@ export function ProfileCompletion({
       // Check if completed and redirect
       if (session) {
         setIsRedirecting(true);
-        let redirectUri: string | null = new URLSearchParams(
-          window.location.search,
-        ).get("redirect_uri");
+        let redirectUri: string | null = sanitizeRedirectUri(
+          deployment,
+          new URLSearchParams(window.location.search).get("redirect_uri"),
+        );
         if (!redirectUri) {
           redirectUri =
             deployment?.ui_settings?.after_signin_redirect_url || null;

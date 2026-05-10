@@ -9,6 +9,7 @@ import { Button } from "../utility";
 import { useNavigation } from "../../hooks/use-navigation";
 import { useDeployment } from "../../hooks/use-deployment";
 import { getStoredDevSession } from "@/utils/dev-session";
+import { sanitizeRedirectUri } from "@/utils/redirect-uri";
 import { standaloneAuthShell } from "./auth-shell";
 
 const Container = styled.div`
@@ -133,7 +134,10 @@ export function MagicLinkVerification({
 
         // Handle redirect similar to signin-form
         setTimeout(() => {
-          let finalRedirectUri = redirectUri;
+          let finalRedirectUri: string | null | undefined = sanitizeRedirectUri(
+            deployment,
+            redirectUri,
+          );
 
           if (!finalRedirectUri) {
             finalRedirectUri =

@@ -10,6 +10,7 @@ import { Button } from "../utility";
 import { PasskeyPrompt } from "./passkey-prompt";
 import { AuthFormImage } from "./auth-image";
 import { getStoredDevSession } from "@/utils/dev-session";
+import { sanitizeRedirectUri } from "@/utils/redirect-uri";
 import { standaloneAuthShell } from "./auth-shell";
 
 const Container = styled.div`
@@ -168,8 +169,9 @@ export function SSOCallback() {
     }
 
     if (signinAttempt?.completed) {
+      const safeRedirectUri = sanitizeRedirectUri(deployment, redirectUri);
       const redirectTarget =
-        redirectUri ||
+        safeRedirectUri ||
         deployment?.ui_settings?.after_signin_redirect_url ||
         deployment?.frontend_host ||
         "/";

@@ -29,6 +29,7 @@ import { AuthFormImage } from "./auth-image";
 import { CaretRight, Fingerprint, Hash, Lock, UserCirclePlus, EnvelopeSimple, DeviceMobile, PencilSimple } from "@phosphor-icons/react";
 
 import { getStoredDevSession } from "@/utils/dev-session";
+import { sanitizeRedirectUri } from "@/utils/redirect-uri";
 import { standaloneAuthShell } from "./auth-shell";
 
 const spin = keyframes`
@@ -639,8 +640,9 @@ function SignInFormContent() {
             !isRedirecting &&
             !showPasskeyPrompt
         ) {
-            let redirectUri = new URLSearchParams(window.location.search).get(
-                "redirect_uri",
+            let redirectUri = sanitizeRedirectUri(
+                deployment,
+                new URLSearchParams(window.location.search).get("redirect_uri"),
             );
 
             if (!redirectUri) {
@@ -716,7 +718,10 @@ function SignInFormContent() {
                     window.location.search,
                 );
                 const redirectUri =
-                    searchParams.get("redirect_uri") || undefined;
+                    sanitizeRedirectUri(
+                        deployment,
+                        searchParams.get("redirect_uri"),
+                    ) || undefined;
                 const response = await signIn.initEnterpriseSso(
                     result.connection_id,
                     redirectUri,
@@ -735,7 +740,10 @@ function SignInFormContent() {
                         window.location.search,
                     );
                     const redirectUri =
-                        searchParams.get("redirect_uri") || undefined;
+                        sanitizeRedirectUri(
+                            deployment,
+                            searchParams.get("redirect_uri"),
+                        ) || undefined;
                     const { data } = await oauthSignIn.create({
                         provider: socialConnection.provider as OAuthProvider,
                         redirectUri,
@@ -906,7 +914,9 @@ function SignInFormContent() {
         setIsSubmitting(true);
         try {
             const searchParams = new URLSearchParams(window.location.search);
-            const redirectUri = searchParams.get("redirect_uri") || undefined;
+            const redirectUri =
+                sanitizeRedirectUri(deployment, searchParams.get("redirect_uri")) ||
+                undefined;
             const { data } = await oauthSignIn.create({
                 provider: connection.provider as OAuthProvider,
                 redirectUri,
@@ -931,9 +941,12 @@ function SignInFormContent() {
             if ("data" in result && result.data) {
                 await refetchSession();
 
-                let redirectUri = new URLSearchParams(
-                    window.location.search,
-                ).get("redirect_uri");
+                let redirectUri = sanitizeRedirectUri(
+                    deployment,
+                    new URLSearchParams(window.location.search).get(
+                        "redirect_uri",
+                    ),
+                );
                 if (!redirectUri) {
                     redirectUri =
                         deployment?.ui_settings?.after_signin_redirect_url ||
@@ -958,9 +971,10 @@ function SignInFormContent() {
     };
 
     const resolveRedirectUri = () => {
-        let redirectUri: string | null = new URLSearchParams(
-            window.location.search,
-        ).get("redirect_uri");
+        let redirectUri: string | null = sanitizeRedirectUri(
+            deployment,
+            new URLSearchParams(window.location.search).get("redirect_uri"),
+        );
 
         if (!redirectUri) {
             redirectUri =
@@ -1046,9 +1060,12 @@ function SignInFormContent() {
                     setIsSubmitting(true);
                     await exchangeTicket(ticket);
                     setIsRedirecting(true);
-                    let redirectUri: string | null = new URLSearchParams(
-                        window.location.search,
-                    ).get("redirect_uri");
+                    let redirectUri: string | null = sanitizeRedirectUri(
+                        deployment,
+                        new URLSearchParams(window.location.search).get(
+                            "redirect_uri",
+                        ),
+                    );
 
                     if (!redirectUri) {
                         redirectUri =

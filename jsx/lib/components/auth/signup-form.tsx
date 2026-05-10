@@ -20,6 +20,7 @@ import type { SignUpParams } from "@/types";
 import type { DeploymentSocialConnection } from "@/types";
 import { AuthFormImage } from "./auth-image";
 import { getStoredDevSession } from "@/utils/dev-session";
+import { sanitizeRedirectUri } from "@/utils/redirect-uri";
 import { standaloneAuthShell } from "./auth-shell";
 
 const spin = keyframes`
@@ -322,8 +323,9 @@ export function SignUpForm() {
             !isRedirecting
         ) {
             setIsRedirecting(true);
-            let redirectUri = new URLSearchParams(window.location.search).get(
-                "redirect_uri",
+            let redirectUri = sanitizeRedirectUri(
+                deployment,
+                new URLSearchParams(window.location.search).get("redirect_uri"),
             );
 
             if (!redirectUri) {
@@ -528,7 +530,9 @@ export function SignUpForm() {
         setIsSubmitting(true);
         try {
             const searchParams = new URLSearchParams(window.location.search);
-            const redirectUri = searchParams.get("redirect_uri") || undefined;
+            const redirectUri =
+                sanitizeRedirectUri(deployment, searchParams.get("redirect_uri")) ||
+                undefined;
 
             const { data } = await oauthSignIn.create({
                 provider: connection.provider as OAuthProvider,
@@ -585,9 +589,10 @@ export function SignUpForm() {
         if (!signupAttempt) return;
 
         if (signupAttempt.completed) {
-            let redirectUri: string | null = new URLSearchParams(
-                window.location.search,
-            ).get("redirect_uri");
+            let redirectUri: string | null = sanitizeRedirectUri(
+                deployment,
+                new URLSearchParams(window.location.search).get("redirect_uri"),
+            );
             if (!redirectUri) {
                 redirectUri =
                     deployment?.ui_settings?.after_signup_redirect_url || null;

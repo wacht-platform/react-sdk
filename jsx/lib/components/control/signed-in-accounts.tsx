@@ -6,6 +6,7 @@ import { useSession, useDeployment, useNavigation } from "@/hooks";
 import { DefaultStylesProvider } from "../utility/root";
 import { NavigationLink } from "../utility/navigation";
 import { getStoredDevSession } from "@/utils/dev-session";
+import { sanitizeRedirectUri } from "@/utils/redirect-uri";
 
 const shimmer = keyframes`
   0%   { background-position: calc(var(--size-50u) * -10) 0; }
@@ -372,7 +373,10 @@ export const SignedInAccounts: React.FC<SignedInAccountsProps> = ({
                 onAccountSelect(signInId);
                 setSwitchingToAccount(null);
             } else {
-                let redirectUri = new URLSearchParams(window.location.search).get("redirect_uri");
+                let redirectUri = sanitizeRedirectUri(
+                    deployment,
+                    new URLSearchParams(window.location.search).get("redirect_uri"),
+                );
                 if (!redirectUri) redirectUri = deployment!.ui_settings?.after_signin_redirect_url;
                 if (redirectUri) {
                     let uri: URL;
@@ -400,7 +404,10 @@ export const SignedInAccounts: React.FC<SignedInAccountsProps> = ({
     };
 
     const handleAddAccount = () => {
-        let redirectUri = new URLSearchParams(window.location.search).get("redirect_uri");
+        let redirectUri = sanitizeRedirectUri(
+            deployment,
+            new URLSearchParams(window.location.search).get("redirect_uri"),
+        );
         if (!redirectUri) redirectUri = deployment!.ui_settings?.after_signin_redirect_url;
         navigateToSignIn(redirectUri);
     };

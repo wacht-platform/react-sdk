@@ -5,6 +5,7 @@ import { useNavigation } from "@/hooks/use-navigation";
 import { useDeployment } from "@/hooks/use-deployment";
 import { DefaultStylesProvider } from "../utility/root";
 import { Button } from "../utility";
+import { sanitizeRedirectUri } from "@/utils/redirect-uri";
 import { standaloneAuthShell } from "./auth-shell";
 
 const Container = styled.div`
@@ -151,7 +152,10 @@ export function AcceptInvite({
     const params = new URLSearchParams(window.location.search);
     return {
       token: propToken || params.get("invite_token") || params.get("token"),
-      redirectUri: params.get("redirect_uri") || deployment?.ui_settings?.after_signin_redirect_url || "/",
+      redirectUri:
+        sanitizeRedirectUri(deployment, params.get("redirect_uri")) ||
+        deployment?.ui_settings?.after_signin_redirect_url ||
+        "/",
     };
   };
 
