@@ -274,7 +274,7 @@ export function useActorProjects(options: { includeArchived?: boolean; enabled?:
     return parsed.data;
   }, [client, includeArchived]);
 
-  const { data, error, mutate } = useSWR(key, fetcher, { revalidateOnFocus: false });
+  const { data, error, mutate } = useSWR(key, fetcher, { revalidateOnFocus: false, refreshInterval: 15000 });
 
   const createProject = useCallback(async (request: CreateActorProjectRequest) => {
     const response = await client(`/ai/projects`, {
@@ -400,7 +400,7 @@ export function useProjectThreads(projectId?: string, options: { includeArchived
     return parsed.data;
   }, [projectId, client, includeArchived]);
 
-  const { data, error, mutate } = useSWR(key, fetcher, { revalidateOnFocus: false });
+  const { data, error, mutate } = useSWR(key, fetcher, { revalidateOnFocus: false, refreshInterval: 15000 });
 
   const createThreadForProject = useCallback(async (targetProjectId: string, request: CreateAgentThreadRequest) => {
     const response = await client(`/ai/projects/${targetProjectId}/threads`, {
@@ -518,7 +518,7 @@ export function useProjectThreadFeed(
       const parsed = await responseMapper<ProjectThreadsResponse>(response);
       return parsed.data;
     },
-    { revalidateOnFocus: false, revalidateFirstPage: true, persistSize: true },
+    { revalidateOnFocus: false, revalidateFirstPage: true, persistSize: true, refreshInterval: 15000, dedupingInterval: 15000 },
   );
 
   const threads = useMemo(
