@@ -1031,6 +1031,26 @@ export function useProjectTaskBoardItem(projectId?: string, itemId?: string, ena
     return parsed;
   }, [projectId, itemId, client, options.includeArchived]);
 
+  const downloadTaskWorkspaceFile = useCallback(async (path: string) => {
+    if (!projectId || !itemId) throw new Error("projectId and itemId are required");
+    const response = await client(
+      `/ai/projects/${projectId}/board/items/${itemId}/filesystem/download${buildTaskWorkspaceFileQuery(path, options.includeArchived)}`,
+    );
+    if (!response.ok) {
+      throw new Error("Failed to download file");
+    }
+    const blob = await response.blob();
+    const filename = path.split("/").pop() || "file";
+    const objectUrl = URL.createObjectURL(blob);
+    const anchor = document.createElement("a");
+    anchor.href = objectUrl;
+    anchor.download = filename;
+    document.body.appendChild(anchor);
+    anchor.click();
+    anchor.remove();
+    URL.revokeObjectURL(objectUrl);
+  }, [projectId, itemId, client, options.includeArchived]);
+
   const listTaskWorkspaceDirectory = useCallback(async (path?: string) => {
     if (!projectId || !itemId) throw new Error("projectId and itemId are required");
     const response = await client(
@@ -1070,6 +1090,7 @@ export function useProjectTaskBoardItem(projectId?: string, itemId?: string, ena
     submitAnswer,
     submitApproval,
     getTaskWorkspaceFile,
+    downloadTaskWorkspaceFile,
     listTaskWorkspaceDirectory,
     refetch: async () => {
       await item.mutate();
