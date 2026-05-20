@@ -90,6 +90,7 @@ export interface ClarificationResponseContent {
     type: "clarification_response";
     request_message_id?: string;
     answers: QuestionAnswer[];
+    freeform_text?: string;
 }
 
 export type ConversationContent =
@@ -310,6 +311,18 @@ export interface ProjectTaskSchedule {
     updated_at: string;
 }
 
+export interface ProjectTaskDeliverable {
+    at: string;
+    assignment_id: string;
+    by_thread_id: string;
+    by_agent_name: string;
+    result_summary: string;
+    artifacts: string[];
+    findings?: string;
+    cautions?: string;
+    next?: string;
+}
+
 export interface ProjectTaskBoardItem {
     id: string;
     board_id: string;
@@ -331,6 +344,7 @@ export interface ProjectTaskBoardItem {
     updated_at: string;
     pending_question?: PendingQuestion;
     pending_approval?: ThreadPendingApprovalRequestState;
+    deliverables?: ProjectTaskDeliverable[];
 }
 
 export interface Choice {
@@ -342,7 +356,12 @@ export interface Choice {
 export type AnswerKind =
     | { kind: "free_text"; placeholder?: string; max_length?: number }
     | { kind: "single_choice"; choices: Choice[]; allow_other?: boolean }
-    | { kind: "multi_choice"; choices: Choice[]; min_selected?: number; max_selected?: number }
+    | {
+          kind: "multi_choice";
+          choices: Choice[];
+          min_selected?: number;
+          max_selected?: number;
+      }
     | { kind: "yes_no" }
     | { kind: "number"; min?: number; max?: number; unit?: string }
     | { kind: "date"; min_date?: string; max_date?: string }
@@ -377,7 +396,10 @@ export interface QuestionAnswer {
 }
 
 export interface AnswerSubmission {
-    answers: QuestionAnswer[];
+    answers?: QuestionAnswer[];
+    /** Bypass the structured form and reply in plain text. Exactly one of
+     *  `answers` or `freeform_text` must be set. Max 4000 chars. */
+    freeform_text?: string;
 }
 
 export interface ProjectTaskBoardItemsResponse {
@@ -413,7 +435,6 @@ export interface UploadedTaskWorkspaceFile {
     mime_type: string;
     size_bytes: number;
 }
-
 
 export interface ProjectTaskBoardItemAssignment {
     id: string;

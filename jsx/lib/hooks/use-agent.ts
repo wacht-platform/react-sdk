@@ -838,9 +838,13 @@ export function useAgentSession(ticket?: string | null): UseAgentSessionResult {
         revalidateOnFocus: false,
     });
 
-    // Handle ticket exchange
+    // Handle ticket exchange. Allow re-exchange when a *new* ticket is passed
+    // (e.g. proactive re-mint before the backend session expires). The
+    // attemptedTicketRef dedupes same-ticket retries; exchangedRef must NOT
+    // gate this — otherwise the first successful exchange permanently locks
+    // out all future tickets for the lifetime of this hook instance.
     useEffect(() => {
-        if (!ticket || exchangedRef.current || exchangingRef.current) return;
+        if (!ticket || exchangingRef.current) return;
         if (attemptedTicketRef.current === ticket) return;
         attemptedTicketRef.current = ticket;
 

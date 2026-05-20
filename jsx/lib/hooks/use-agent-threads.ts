@@ -47,6 +47,12 @@ function upsertActorProject(
 type AgentThreadHookOptions = {
   enabled?: boolean;
   limit?: number;
+  /**
+   * Order in which thread-assignment rows are returned. `"asc"` (default) =
+   * oldest first; `"desc"` = newest first. Combine with `limit: 1` to fetch
+   * only the latest assignment.
+   */
+  order?: AssignmentListOrder;
 };
 
 type AgentSearchOptions = {
@@ -711,7 +717,8 @@ export function useAgentThreadFilesystem(threadId?: string, enabled = true) {
 
 export function useAgentThreadAssignments(threadId?: string, options: AgentThreadHookOptions = {}) {
   const { client } = useClient();
-  const { enabled = true, limit = 40 } = options;
+  const { enabled = true, limit = 40, order = "asc" } = options;
+  const normalizedLimit = Math.min(Math.max(limit, 1), 200);
 
   const assignments = useSWRInfinite(
     (index, previousPageData: ThreadAssignmentsPage | null) => {
@@ -720,10 +727,11 @@ export function useAgentThreadAssignments(threadId?: string, options: AgentThrea
         return null;
       }
       const cursor = index === 0 ? undefined : previousPageData?.next_cursor;
-      return ["wacht-ai-thread-assignments", threadId, limit, cursor || ""];
+      return ["wacht-ai-thread-assignments", threadId, normalizedLimit, order, cursor || ""];
     },
-    async ([, currentThreadId, currentLimit, cursor]) => {
+    async ([, currentThreadId, currentLimit, currentOrder, cursor]) => {
       const params = new URLSearchParams({ limit: String(currentLimit) });
+      if (currentOrder === "desc") params.set("order", "desc");
       if (cursor) params.set("cursor", String(cursor));
       const response = await client(`/ai/threads/${currentThreadId}/assignments?${params.toString()}`);
       const parsed = await responseMapper<ThreadAssignmentsPage>(response);
@@ -888,14 +896,28 @@ export function useProjectTasks(projectId?: string, enabled = true, options: Pro
   };
 }
 
+export type AssignmentListOrder = "asc" | "desc";
+
 type ProjectTaskDetailOptions = {
   includeArchived?: boolean;
+  /**
+   * Order in which assignments are returned. `"asc"` (default) lists oldest
+   * first; `"desc"` lists newest first which is convenient when you only need
+   * the most recent assignment (combine with `assignmentsLimit: 1`).
+   */
+  assignmentsOrder?: AssignmentListOrder;
+  /**
+   * Page size for the assignments list. Default 40, max 200 (server-side cap).
+   */
+  assignmentsLimit?: number;
 };
 
 export function useProjectTaskBoardItem(projectId?: string, itemId?: string, enabled = true, options: ProjectTaskDetailOptions = {}) {
   const { client } = useClient();
   const archiveKey = options.includeArchived ? "with-archived" : "active-only";
   const detailQuery = options.includeArchived ? "?include_archived=true" : "";
+  const assignmentsOrder: AssignmentListOrder = options.assignmentsOrder ?? "asc";
+  const assignmentsLimit = Math.min(Math.max(options.assignmentsLimit ?? 40, 1), 200);
   const itemKey = enabled && projectId && itemId ? `wacht-ai-board-item:${projectId}:${itemId}:${archiveKey}` : null;
   const workspaceKey = enabled && projectId && itemId ? `wacht-ai-board-item-workspace:${projectId}:${itemId}:${archiveKey}` : null;
 
@@ -915,12 +937,25 @@ export function useProjectTaskBoardItem(projectId?: string, itemId?: string, ena
         return null;
       }
       const cursor = index === 0 ? undefined : previousPageData?.next_cursor;
-      return ["wacht-ai-board-item-assignments", projectId, itemId, archiveKey, cursor || ""];
+      // Include order + limit in the SWR cache key so changing them re-fetches
+      // instead of returning stale data from the prior (asc / 40) cache.
+      return [
+        "wacht-ai-board-item-assignments",
+        projectId,
+        itemId,
+        archiveKey,
+        assignmentsOrder,
+        assignmentsLimit,
+        cursor || "",
+      ];
     },
-    async ([, currentProjectId, currentItemId, , cursor]) => {
-      const params = new URLSearchParams({ limit: "40" });
+    async ([, currentProjectId, currentItemId, , currentOrder, currentLimit, cursor]) => {
+      const params = new URLSearchParams({ limit: String(currentLimit) });
       if (options.includeArchived) {
         params.set("include_archived", "true");
+      }
+      if (currentOrder === "desc") {
+        params.set("order", "desc");
       }
       if (cursor) {
         params.set("cursor", String(cursor));
@@ -990,9 +1025,13 @@ export function useProjectTaskBoardItem(projectId?: string, itemId?: string, ena
   const submitAnswer = useCallback(async (submission: AnswerSubmission) => {
     if (!projectId || !itemId) throw new Error("projectId and itemId are required");
     const form = new FormData();
-    for (const answer of submission.answers) {
-      form.append("answer_question_id", answer.question_id);
-      form.append("answer_value", JSON.stringify(answer.value));
+    if (submission.freeform_text && submission.freeform_text.trim() !== "") {
+      form.append("freeform_text", submission.freeform_text);
+    } else {
+      for (const answer of submission.answers ?? []) {
+        form.append("answer_question_id", answer.question_id);
+        form.append("answer_value", JSON.stringify(answer.value));
+      }
     }
     const response = await client(
       `/ai/projects/${projectId}/board/items/${itemId}/answer`,
