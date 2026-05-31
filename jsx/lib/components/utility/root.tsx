@@ -1,4 +1,4 @@
-import { useContext, type CSSProperties, type ComponentPropsWithoutRef } from "react";
+import { useContext, useEffect, useState, type CSSProperties, type ComponentPropsWithoutRef } from "react";
 import styled from "styled-components";
 import { DeploymentContext } from "@/context/deployment-provider";
 
@@ -526,7 +526,17 @@ export function DefaultStylesProvider({
   style,
   ...props
 }: DefaultStylesProviderProps) {
+  const [mounted, setMounted] = useState(false);
+  useEffect(() => setMounted(true), []);
   const deploymentContext = useContext(DeploymentContext);
+
+  // styled-components (production) builds its DOM injection tag on the first
+  // server render and calls document.createElement, which throws under SSR.
+  // Render nothing until mounted on the client so styled-components only runs
+  // where a real DOM exists. The Wacht UI is already client-only (deployment
+  // config loads via useEffect), so no meaningful server HTML is lost.
+  if (!mounted) return null;
+
   const themeStyle = buildThemeStyle(
     deploymentContext?.deployment?.ui_settings?.light_mode_settings,
     deploymentContext?.deployment?.ui_settings?.dark_mode_settings,
