@@ -31,33 +31,6 @@ import {
     IconButton,
     DesktopTableContainer,
 } from "./shared";
-import styled from "styled-components";
-
-const RoleNameRow = styled.div`
-    display: flex;
-    align-items: center;
-    gap: var(--space-4u);
-    flex-wrap: wrap;
-`;
-
-const RoleName = styled.div`
-    font-weight: 500;
-`;
-
-const RoleBadge = styled.span`
-    display: inline-flex;
-    align-items: center;
-    padding: var(--space-1u) var(--space-3u);
-    border-radius: var(--radius-full);
-    background: var(--color-secondary);
-    color: var(--color-secondary-foreground);
-    font-size: var(--font-size-sm);
-    line-height: 1;
-`;
-
-const PermissionText = styled.div`
-    color: var(--color-secondary-text);
-`;
 
 export const RolesSection = () => {
     const {
@@ -119,12 +92,10 @@ export const RolesSection = () => {
 
     return (
         <>
-            <HeaderCTAContainer style={{ marginBottom: "var(--space-6u)" }}>
-                <div style={{ flex: 1, minWidth: 0 }}>
-                    <div style={{ fontSize: 14, fontWeight: 500, color: "var(--color-card-foreground)" }}>
-                        Roles
-                    </div>
-                    <div style={{ fontSize: 12, color: "var(--color-secondary-text)", marginTop: 2 }}>
+            <HeaderCTAContainer>
+                <div className="w-grow">
+                    <div className="w-sec">Roles</div>
+                    <div className="w-secsub">
                         Define granular permissions for this workspace.
                     </div>
                 </div>
@@ -167,19 +138,19 @@ export const RolesSection = () => {
                                 {roles.map((role) => (
                                     <TableRow key={role.id}>
                                         <TableCell>
-                                            <RoleNameRow>
-                                                <RoleName>{role.name}</RoleName>
+                                            <div className="w-flex w-items-center w-gap-2 w-wrap">
+                                                <span className="w-sec">{role.name}</span>
                                                 {!canEditWorkspaceRole(role) && (
-                                                    <RoleBadge>Default</RoleBadge>
+                                                    <span className="w-pill">Default</span>
                                                 )}
-                                            </RoleNameRow>
+                                            </div>
                                         </TableCell>
                                         <TableCell>
-                                            <PermissionText>
+                                            <span className="w-text-secondary">
                                             {role.permissions?.join(", ")}
                                             {!canEditWorkspaceRole(role) &&
                                                 " • Cannot be edited or deleted"}
-                                            </PermissionText>
+                                            </span>
                                         </TableCell>
                                         <ActionsCell>
                                             <RoleActions

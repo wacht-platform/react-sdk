@@ -1,5 +1,4 @@
 import { useState, useRef } from "react";
-import styled from "styled-components";
 import { useDeployment } from "@/hooks/use-deployment";
 import { useUser } from "@/hooks/use-user";
 import { useScreenContext } from "../context";
@@ -20,21 +19,6 @@ import {
     DesktopTableContainer,
     StatusPill,
 } from "./shared";
-
-const InlineActions = styled.div`
-    display: flex;
-    align-items: center;
-    gap: 6px;
-    justify-content: flex-end;
-    flex-wrap: nowrap;
-    white-space: nowrap;
-    & > button { white-space: nowrap; }
-`;
-
-const MutedLabel = styled.span`
-    font-size: 12px;
-    color: var(--color-secondary-text);
-`;
 
 export const EmailManagementSection = () => {
     const { deployment } = useDeployment();
@@ -130,11 +114,11 @@ export const EmailManagementSection = () => {
         const isBusy = pendingIds.has(email.id);
 
         if (isPrimary) {
-            return <MutedLabel>Cannot remove</MutedLabel>;
+            return <span className="w-secsub">Cannot remove</span>;
         }
 
         return (
-            <InlineActions>
+            <div className="w-actions">
                 {email.verified && (
                     <Button
                         $size="sm"
@@ -166,22 +150,20 @@ export const EmailManagementSection = () => {
                 >
                     {isBusy ? <Spinner size={12} /> : "Remove"}
                 </Button>
-            </InlineActions>
+            </div>
         );
     };
 
     return (
         <>
-            <ResponsiveHeaderContainer style={{ marginBottom: "var(--space-6u)" }}>
-                <div style={{ flex: 1, minWidth: 0 }}>
-                    <div style={{ fontSize: 14, fontWeight: 500, color: "var(--color-card-foreground)" }}>
-                        Email addresses
-                    </div>
-                    <div style={{ fontSize: 12, color: "var(--color-secondary-text)", marginTop: 2 }}>
+            <ResponsiveHeaderContainer>
+                <div className="w-grow w-flex-col w-gap-1">
+                    <div className="w-sec">Email addresses</div>
+                    <div className="w-secsub">
                         Sign in and receive notifications at these addresses.
                     </div>
                 </div>
-                <div style={{ position: "relative", flexShrink: 0 }}>
+                <div className="w-none w-relative">
                     <Button
                         ref={emailButtonRef}
                         $size="sm"

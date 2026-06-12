@@ -1,55 +1,18 @@
-import styled from "styled-components";
+import { forwardRef, type InputHTMLAttributes } from "react";
 
-const breakpoints = {
-    sm: "36rem",
-    md: "48rem",
-    lg: "62rem",
-    xl: "75rem",
+type InputProps = InputHTMLAttributes<HTMLInputElement> & {
+    as?: "input" | "textarea";
 };
 
-export const Input = styled.input`
-    padding: var(--space-4u) var(--space-6u);
-    width: 100%;
-    height: var(--size-18u);
-    border: var(--border-width-thin) solid var(--color-border);
-    border-radius: var(--radius-md);
-    font-size: var(--font-size-md);
-    color: var(--color-foreground);
-    background: transparent;
-    transition: all 0.2s;
+export const Input = forwardRef<HTMLInputElement, InputProps>(
+    ({ as = "input", className, ...rest }, ref) => {
+        const classes = `w-input${className ? ` ${className}` : ""}`;
+        if (as === "textarea") {
+            // eslint-disable-next-line @typescript-eslint/no-explicit-any
+            return <textarea className={classes} {...(rest as any)} />;
+        }
+        return <input ref={ref} className={classes} {...rest} />;
+    },
+);
 
-    &:not(:placeholder-shown):invalid {
-        outline: none;
-        border: 0.0625rem solid var(--color-error);
-        background: transparent;
-    }
-
-    &:not(:placeholder-shown):valid {
-        outline: none;
-        background: transparent;
-    }
-
-    &:focus:valid {
-        outline: none;
-        border-color: var(--color-success);
-        box-shadow: 0 0 0 0.1875rem var(--color-success-background);
-        background: transparent;
-    }
-
-    &:focus:invalid {
-        outline: none;
-        border-color: var(--color-primary);
-        box-shadow: 0 0 0 0.1875rem var(--color-input-focus-border);
-        background: transparent;
-    }
-
-    &::placeholder {
-        color: var(--color-secondary-text);
-    }
-
-    @media (max-width: ${breakpoints.sm}) {
-        height: calc(var(--size-8u) * 2);
-        font-size: var(--font-size-xs);
-        padding: var(--space-2u) var(--space-4u);
-    }
-`;
+Input.displayName = "Input";

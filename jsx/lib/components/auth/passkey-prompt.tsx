@@ -1,72 +1,8 @@
 import { useState } from "react";
-import styled, { keyframes } from "styled-components";
-import { Fingerprint, CircleNotch } from "@phosphor-icons/react";
+import { Fingerprint } from "@phosphor-icons/react";
 import { useUser } from "../../hooks/use-user";
 import { useDeployment } from "../../hooks/use-deployment";
-import { Button } from "../utility/button";
-
-const Header = styled.div`
-    text-align: center;
-    margin-bottom: var(--space-12u);
-`;
-
-const IconContainer = styled.div`
-    width: var(--size-32u);
-    height: var(--size-32u);
-    border-radius: 50%;
-    background: linear-gradient(
-        135deg,
-        var(--color-primary),
-        var(--color-primary-hover)
-    );
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    margin: 0 auto var(--space-8u);
-
-    svg {
-        width: calc(var(--size-8u) * 2);
-        height: calc(var(--size-8u) * 2);
-        color: var(--color-foreground-inverse);
-    }
-`;
-
-const Title = styled.h1`
-    font-size: var(--font-size-2xl);
-    font-weight: 400;
-    color: var(--color-card-foreground);
-    margin: 0 0 var(--space-2u);
-`;
-
-const Subtitle = styled.p`
-    color: var(--color-secondary-text);
-    font-size: var(--font-size-md);
-    margin: 0;
-    line-height: 1.5;
-`;
-
-const ButtonGroup = styled.div`
-    display: flex;
-    flex-direction: column;
-    gap: var(--space-4u);
-    margin-top: var(--space-10u);
-`;
-
-const spin = keyframes`
-  from { transform: rotate(0deg); }
-  to { transform: rotate(360deg); }
-`;
-
-const Spinner = styled(CircleNotch)`
-    animation: ${spin} 1s linear infinite;
-`;
-
-const ErrorMessage = styled.p`
-    font-size: var(--font-size-md);
-    color: var(--color-error);
-    text-align: center;
-    margin: var(--space-4u) 0 0;
-`;
+import { Spin } from "./auth-card";
 
 interface PasskeyPromptProps {
     onComplete?: () => void;
@@ -100,42 +36,57 @@ export function PasskeyPrompt({ onComplete, onSkip }: PasskeyPromptProps) {
     const appName = deployment?.ui_settings?.app_name || "this app";
 
     return (
-        <>
-            <Header>
-                <IconContainer>
-                    <Fingerprint />
-                </IconContainer>
-                <Title>Add a Passkey</Title>
-                <Subtitle>
-                    Sign in faster and more securely with a passkey. Use your
-                    fingerprint, face, or screen lock to access {appName}.
-                </Subtitle>
-            </Header>
+        <div className="w-flex w-flex-col w-items-center w-text-center">
+            <div className="w-feature-badge">
+                <Fingerprint size={26} />
+            </div>
+            <h1 className="w-title-lg">Add a passkey</h1>
+            <p className="w-sub" style={{ marginTop: 6, maxWidth: 320 }}>
+                Sign in faster and more securely with a passkey. Use your
+                fingerprint, face, or screen lock to access {appName}.
+            </p>
 
-            <ButtonGroup>
-                <Button
-                    $fullWidth
+            <div
+                style={{
+                    display: "flex",
+                    flexDirection: "column",
+                    gap: 10,
+                    width: "100%",
+                    marginTop: 24,
+                }}
+            >
+                <button
+                    type="button"
+                    className="w-btn w-btn--primary w-btn--block"
                     onClick={handleRegister}
                     disabled={isRegistering}
                 >
                     {isRegistering ? (
                         <>
-                            <Spinner size={16} />
-                            Registering...
+                            <Spin size={15} onAccent />
+                            Registering…
                         </>
                     ) : (
                         <>
-                            <Fingerprint size={16} />
-                            Add Passkey
+                            <Fingerprint />
+                            Add passkey
                         </>
                     )}
-                </Button>
-                <Button $fullWidth $outline onClick={onSkip}>
-                    Maybe Later
-                </Button>
-            </ButtonGroup>
+                </button>
+                <button
+                    type="button"
+                    className="w-social"
+                    onClick={onSkip}
+                >
+                    Maybe later
+                </button>
+            </div>
 
-            {error && <ErrorMessage>{error}</ErrorMessage>}
-        </>
+            {error && (
+                <p className="w-input-err" style={{ marginTop: 14 }}>
+                    {error}
+                </p>
+            )}
+        </div>
     );
 }

@@ -1,7 +1,6 @@
 import { useState, useEffect, useRef } from "react";
 import { Check, CaretDown } from "@phosphor-icons/react";
 import useSWR from "swr";
-import styled from "styled-components";
 import {
     Organization,
     OrganizationMembership,
@@ -31,36 +30,9 @@ import {
 import { EmptyState } from "@/components/utility/empty-state";
 import { InviteMemberPopover } from "../invite-member-popover";
 import {
-    HeaderCTAContainer,
     DesktopTableContainer,
     StatusPill,
 } from "./shared";
-
-const AvatarPlaceholder = styled.div`
-    width: 32px;
-    height: 32px;
-    min-width: 32px;
-    border-radius: 50%;
-    background: var(--color-secondary);
-    color: var(--color-secondary-text);
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    font-size: 12px;
-    font-weight: 500;
-    overflow: hidden;
-    flex-shrink: 0;
-    img { width: 100%; height: 100%; object-fit: cover; }
-`;
-
-const InlineActions = styled.div`
-    display: flex;
-    align-items: center;
-    gap: 6px;
-    justify-content: flex-end;
-    flex-wrap: nowrap;
-    white-space: nowrap;
-`;
 
 export const MembersSection = ({
     organization,
@@ -167,17 +139,15 @@ export const MembersSection = ({
 
     return (
         <>
-            <HeaderCTAContainer>
-                <div style={{ flex: 1 }}>
-                    <SearchInput
-                        value={searchQuery}
-                        onChange={setSearchQuery}
-                        placeholder="Search members..."
-                    />
-                </div>
-                <div style={{ display: "flex", gap: "var(--space-6u)", alignItems: "center" }}>
+            <div className="w-toolbar">
+                <SearchInput
+                    value={searchQuery}
+                    onChange={setSearchQuery}
+                    placeholder="Search members..."
+                />
+                <div className="w-flex w-items-center w-gap-3">
                     {meta.total > 0 && (
-                        <div style={{ fontSize: 13, color: "var(--color-secondary-text)" }}>
+                        <div className="w-secsub">
                             {meta.total} member{meta.total !== 1 ? "s" : ""}
                         </div>
                     )}
@@ -185,7 +155,7 @@ export const MembersSection = ({
                         Invite
                     </Button>
                 </div>
-            </HeaderCTAContainer>
+            </div>
 
             {isInviting && (
                 <InviteMemberPopover
@@ -224,7 +194,7 @@ export const MembersSection = ({
                                         <TableCell>
                                             <UserIdentity member={member} isCurrentUser={isCurrentUser} />
                                         </TableCell>
-                                        <TableCell style={{ color: "var(--color-secondary-text)" }}>
+                                        <TableCell>
                                             {new Date(member.created_at).toLocaleDateString()}
                                         </TableCell>
                                         <TableCell>
@@ -236,7 +206,7 @@ export const MembersSection = ({
                                             />
                                         </TableCell>
                                         <ActionsCell>
-                                            <InlineActions>
+                                            <div className="w-actions">
                                                 <Button
                                                     $size="sm"
                                                     $outline
@@ -247,7 +217,7 @@ export const MembersSection = ({
                                                 >
                                                     {isBusy ? <Spinner size={12} /> : "Remove"}
                                                 </Button>
-                                            </InlineActions>
+                                            </div>
                                         </ActionsCell>
                                     </TableRow>
                                 );
@@ -258,17 +228,11 @@ export const MembersSection = ({
             )}
 
             {totalPages > 1 && (
-                <div style={{
-                    display: "flex",
-                    justifyContent: "center",
-                    alignItems: "center",
-                    gap: "var(--space-8u)",
-                    marginTop: "var(--space-12u)",
-                }}>
+                <div className="w-flex w-items-center w-justify-center w-gap-4 w-mt-6">
                     <Button onClick={() => setPage((p) => Math.max(1, p - 1))} disabled={page === 1} $size="sm" $outline>
                         Previous
                     </Button>
-                    <span style={{ fontSize: 13, color: "var(--color-secondary-text)" }}>
+                    <span className="w-secsub">
                         {page} / {totalPages}
                     </span>
                     <Button onClick={() => setPage((p) => Math.min(totalPages, p + 1))} disabled={page === totalPages} $size="sm" $outline>
@@ -287,21 +251,19 @@ const UserIdentity = ({ member, isCurrentUser }: { member: any; isCurrentUser: b
     const name = u ? `${u.first_name || ""} ${u.last_name || ""}`.trim() || u.primary_email_address?.email : "Unknown";
 
     return (
-        <div style={{ display: "flex", alignItems: "center", gap: 10, minWidth: 0 }}>
-            <AvatarPlaceholder>
+        <div className="w-flex w-items-center w-gap-3 w-grow">
+            <div className="w-avatar w-avatar--md">
                 {u?.profile_picture_url
                     ? <img src={u.profile_picture_url} alt={name} />
                     : getInitials(u?.first_name, u?.last_name)
                 }
-            </AvatarPlaceholder>
-            <div style={{ minWidth: 0, display: "flex", flexDirection: "column", gap: 2 }}>
-                <div style={{ display: "flex", alignItems: "center", gap: 6 }}>
-                    <span style={{ fontSize: 13, fontWeight: 500, color: "var(--color-card-foreground)" }}>
-                        {name}
-                    </span>
+            </div>
+            <div className="w-grow w-flex-col w-gap-1">
+                <div className="w-flex w-items-center w-gap-2">
+                    <span className="w-sec">{name}</span>
                     {isCurrentUser && <StatusPill $variant="neutral">You</StatusPill>}
                 </div>
-                <span style={{ fontSize: 12, color: "var(--color-secondary-text)" }}>
+                <span className="w-secsub">
                     {u?.primary_email_address?.email}
                 </span>
             </div>
@@ -336,15 +298,15 @@ const RolePicker = ({
                     $size="sm"
                     $outline
                     disabled={disabled}
-                    style={{ minWidth: 150, justifyContent: "space-between" }}
+                    className="w-justify-between w-rolepick-btn"
                 >
                     {label}
-                    <CaretDown size={12} style={{ marginLeft: 6 }} />
+                    <CaretDown size={12} />
                 </Button>
             </DropdownTrigger>
-            <DropdownItems style={{ minWidth: 180 }}>
+            <DropdownItems>
                 {roles.length === 0 ? (
-                    <div style={{ padding: "10px 14px", fontSize: 12, color: "var(--color-secondary-text)" }}>
+                    <div className="w-secsub w-menu-head">
                         No roles configured
                     </div>
                 ) : (
@@ -355,9 +317,9 @@ const RolePicker = ({
                                 key={role.id}
                                 onClick={() => onToggle(member, role, active)}
                             >
-                                <div style={{ display: "flex", justifyContent: "space-between", width: "100%", gap: 10 }}>
+                                <div className="w-flex w-items-center w-justify-between w-gap-3 w-full">
                                     <span>{role.name}</span>
-                                    {active && <Check size={13} color="var(--color-primary)" />}
+                                    {active && <Check size={13} className="w-text-primary" />}
                                 </div>
                             </DropdownItem>
                         );

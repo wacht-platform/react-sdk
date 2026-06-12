@@ -1,29 +1,5 @@
 import { useState } from "react";
-import styled from "styled-components";
 import { useDeployment } from "../../hooks/use-deployment";
-
-const ImageContainer = styled.div`
-    display: flex;
-    justify-content: center;
-`;
-
-const LogoWrapper = styled.div`
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    max-width: var(--size-32u);
-    max-height: var(--size-32u);
-    border-radius: 50%;
-    margin-bottom: var(--space-6u);
-`;
-
-const LogoImage = styled.img`
-    max-width: 100%;
-    max-height: 100%;
-    width: auto;
-    height: auto;
-    object-fit: contain;
-`;
 
 export function AuthFormImage({
     placement = "center",
@@ -47,18 +23,19 @@ export function AuthFormImage({
               : "center";
 
     return (
-        <ImageContainer
-            style={{
-                justifyContent,
-            }}
-        >
-            <LogoWrapper>
-                <LogoImage
-                    src={logoUrl}
-                    alt="Logo"
-                    onError={() => setImageError(true)}
-                />
-            </LogoWrapper>
-        </ImageContainer>
+        <div style={{ display: "flex", justifyContent, width: "100%" }}>
+            <img
+                src={logoUrl}
+                alt="Logo"
+                onError={() => setImageError(true)}
+                style={{
+                    maxWidth: 40,
+                    maxHeight: 40,
+                    width: "auto",
+                    height: "auto",
+                    objectFit: "contain",
+                }}
+            />
+        </div>
     );
 }

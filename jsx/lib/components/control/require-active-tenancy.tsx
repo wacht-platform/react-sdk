@@ -1,6 +1,5 @@
 "use client";
 
-import styled from "styled-components";
 import {
     useActiveOrganization,
     useDeployment,
@@ -15,19 +14,6 @@ interface RequireActiveTenancyProps {
     children: React.ReactNode;
 }
 
-const StyledDialogContent = styled(Dialog.Content)`
-    padding: 0;
-    width: calc(var(--size-50u) * 9);
-    max-width: 90vw;
-    display: flex;
-    justify-content: center;
-
-    @media (max-width: 768px) {
-        width: calc(100vw - var(--space-10u));
-        max-width: calc(100vw - var(--space-10u));
-    }
-`;
-
 export const RequireActiveTenancy = ({
     children,
 }: RequireActiveTenancyProps) => {
@@ -41,7 +27,8 @@ export const RequireActiveTenancy = ({
     } = useActiveTenancy();
 
     const workspacesEnabled =
-        deployment?.b2b_settings.workspaces_enabled ?? false;
+        (deployment?.b2b_settings.organizations_enabled ?? false) &&
+        (deployment?.b2b_settings.workspaces_enabled ?? false);
 
     const hasOrgRestriction =
         activeOrgMembership?.eligibility_restriction?.type !== "none" &&
@@ -96,9 +83,12 @@ export const RequireActiveTenancy = ({
         <DefaultStylesProvider>
             <Dialog isOpen={true}>
                 <Dialog.Overlay>
-                    <StyledDialogContent>
+                    <Dialog.Content
+                        className="w-flex w-justify-center"
+                        style={{ padding: 0, width: 900, maxWidth: "90vw" }}
+                    >
                         <OrganizationSelectorMenu />
-                    </StyledDialogContent>
+                    </Dialog.Content>
                 </Dialog.Overlay>
             </Dialog>
         </DefaultStylesProvider>

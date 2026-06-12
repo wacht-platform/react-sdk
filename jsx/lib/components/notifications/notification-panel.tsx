@@ -1,232 +1,10 @@
 import { useState, useRef, useEffect, forwardRef } from "react";
-import styled from "styled-components";
 import { BellSlash, Checks, DotsThree, Archive } from "@phosphor-icons/react";
 import { NotificationItem, type NotificationAction } from "./notification-item";
 import { Spinner } from "../utility/spinner";
+import { EmptyState } from "../utility/empty-state";
 import { useNotifications } from "@/hooks/use-notifications";
 import type { NotificationListParams } from "@/types";
-
-const PanelContainer = styled.div<{ $fullWidth?: boolean; $maxHeight?: string }>`
-  width: ${props => props.$fullWidth ? '100%' : 'calc(calc(var(--size-50u) * 4) + var(--space-10u) + var(--space-5u))'};
-  max-width: 100%;
-  height: 100%;
-  max-height: ${props => props.$maxHeight || 'calc(var(--size-50u) * 5)'};
-  display: flex;
-  flex-direction: column;
-  background: var(--color-popover);
-  overflow: hidden;
-`;
-
-const Header = styled.div`
-  padding: var(--space-6u) var(--space-8u);
-  border-bottom: var(--border-width-thin) solid var(--color-border);
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-  background: var(--color-popover);
-  flex-shrink: 0;
-
-  @media(max-width: 400px) {
-    padding: var(--space-5u) var(--space-6u);
-  }
-`;
-
-const TabsContainer = styled.div`
-  display: flex;
-  gap: var(--space-8u);
-  margin-right: auto;
-
-  @media(max-width: 400px) {
-    gap: var(--space-6u);
-  }
-`;
-
-const TabButton = styled.button<{ $active: boolean }>`
-  background: transparent;
-  border: none;
-  font-size: var(--font-size-lg);
-  font-weight: 500;
-  color: ${props => props.$active ? 'var(--color-popover-foreground)' : 'var(--color-secondary-text)'};
-  cursor: pointer;
-  padding: 0 0 var(--space-2u) 0;
-  border-bottom: var(--border-width-regular) solid ${props => props.$active ? 'var(--color-primary)' : 'transparent'};
-  transition: all 0.2s ease;
-
-  &:hover {
-    color: var(--color-popover-foreground);
-  }
-`;
-
-const IconButton = styled.button`
-  background: transparent;
-  border: none;
-  color: var(--color-secondary-text);
-  cursor: pointer;
-  padding: var(--space-3u);
-  border-radius: var(--radius-2xs);
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  transition: all 0.2s ease;
-
-  &:hover {
-    background: var(--color-accent);
-    color: var(--color-accent-foreground);
-  }
-
-  &:focus {
-    outline: none;
-    background: var(--color-accent);
-  }
-`;
-
-const SettingsMenu = styled.div`
-  position: absolute;
-  top: calc(var(--size-20u) + var(--space-2u) + var(--border-width-thin));
-  right: var(--space-6u);
-  background: var(--color-popover);
-  border: var(--border-width-thin) solid var(--color-border);
-  border-radius: var(--radius-md);
-  box-shadow: var(--shadow-md);
-  width: calc(calc(var(--size-50u) * 2) + var(--size-10u));
-  padding: var(--space-2u);
-  z-index: 100000;
-  display: flex;
-  flex-direction: column;
-`;
-
-const MenuItem = styled.button`
-  background: transparent;
-  border: none;
-  text-align: left;
-  padding: var(--space-4u) var(--space-6u);
-  font-size: var(--font-size-md);
-  color: var(--color-popover-foreground);
-  cursor: pointer;
-  border-radius: var(--radius-2xs);
-  display: flex;
-  align-items: center;
-  gap: var(--space-4u);
-  transition: background-color 0.2s;
-
-  &:hover {
-    background: var(--color-accent);
-  }
-  
-  svg {
-    width: var(--space-7u);
-    height: var(--space-7u);
-    color: var(--color-secondary-text);
-  }
-`;
-
-const ToggleContainer = styled.div`
-  display: flex;
-  align-items: center;
-  gap: var(--space-4u);
-  margin-left: var(--space-4u);
-  padding: var(--space-2u) var(--space-4u);
-  border-radius: var(--radius-xs);
-  cursor: pointer;
-  transition: background-color 0.2s;
-
-  &:hover {
-    background: var(--color-accent);
-  }
-`;
-
-const ToggleSwitch = styled.div<{ $active: boolean }>`
-  width: var(--space-14u);
-  height: var(--size-8u);
-  background: ${props => props.$active ? 'var(--color-primary)' : 'var(--color-border)'};
-  border-radius: var(--space-5u);
-  position: relative;
-  transition: all 0.2s ease;
-
-  &::after {
-    content: '';
-    position: absolute;
-    top: var(--space-1u);
-    left: ${props => props.$active ? 'var(--space-7u)' : 'var(--space-1u)'};
-    width: var(--space-6u);
-    height: var(--space-6u);
-    background: var(--color-foreground-inverse);
-    border-radius: 50%;
-    transition: all 0.2s ease;
-  }
-`;
-
-const ToggleLabel = styled.span`
-  font-size: var(--font-size-sm);
-  color: var(--color-secondary-text);
-  font-weight: 500;
-  user-select: none;
-
-  @media(max-width: 480px) {
-    display: none;
-  }
-`;
-
-const Content = styled.div`
-  flex: 1;
-  overflow-y: auto;
-  background: var(--color-popover);
-
-  &::-webkit-scrollbar {
-    width: var(--space-3u);
-  }
-  
-  &::-webkit-scrollbar-track {
-    background: transparent;
-  }
-  
-  &::-webkit-scrollbar-thumb {
-    background: var(--color-border);
-    border-radius: calc(var(--radius-2xs) - var(--border-width-thin));
-  }
-`;
-
-const LoadingContainer = styled.div`
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  padding: var(--size-20u);
-`;
-
-const EmptyStateContainer = styled.div`
-  padding: calc(var(--size-20u) + var(--space-10u)) var(--space-10u);
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  justify-content: center;
-  text-align: center;
-`;
-
-const EmptyIcon = styled.div`
-  width: var(--size-24u);
-  height: var(--size-24u);
-  border-radius: 50%;
-  background: var(--color-secondary);
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  margin-bottom: var(--space-8u);
-  color: var(--color-muted);
-`;
-
-const EmptyTitle = styled.h3`
-  font-size: var(--font-size-lg);
-  font-weight: 400;
-  color: var(--color-popover-foreground);
-  margin: 0 0 var(--space-2u) 0;
-`;
-
-const EmptyDescription = styled.p`
-  font-size: var(--font-size-md);
-  color: var(--color-secondary-text);
-  margin: 0;
-  line-height: 1.4;
-`;
 
 export interface NotificationPanelProps {
     scope?: NotificationListParams["scope"];
@@ -307,69 +85,82 @@ export const NotificationPanel = forwardRef<HTMLDivElement, NotificationPanelPro
         };
 
         return (
-            <PanelContainer
+            <div
                 ref={ref}
-                $fullWidth={fullWidth}
-                $maxHeight={maxHeight}
-                className={className}
+                className={`w-flex-col w-relative w-notif-panel${fullWidth ? " w-notif-panel--fill" : ""}${className ? ` ${className}` : ""}`}
+                style={{ maxHeight: maxHeight || "100%" }}
             >
-                <Header>
-                    <TabsContainer>
-                        <TabButton $active={activeTab === 'inbox'} onClick={() => setActiveTab('inbox')}>
+                <div className="w-flex w-items-center w-justify-between w-gap-3 w-none w-notif-head">
+                    <div className="w-tabs w-grow">
+                        <button
+                            className={`w-tab${activeTab === 'inbox' ? ' w-tab--active' : ''}`}
+                            onClick={() => setActiveTab('inbox')}
+                        >
                             Inbox
-                        </TabButton>
-                        <TabButton $active={activeTab === 'archive'} onClick={() => setActiveTab('archive')}>
+                        </button>
+                        <button
+                            className={`w-tab${activeTab === 'archive' ? ' w-tab--active' : ''}`}
+                            onClick={() => setActiveTab('archive')}
+                        >
                             Archive
-                        </TabButton>
-                        <TabButton $active={activeTab === 'starred'} onClick={() => setActiveTab('starred')}>
+                        </button>
+                        <button
+                            className={`w-tab${activeTab === 'starred' ? ' w-tab--active' : ''}`}
+                            onClick={() => setActiveTab('starred')}
+                        >
                             Starred
-                        </TabButton>
-                    </TabsContainer>
+                        </button>
+                    </div>
 
-                    <ToggleContainer onClick={() => setUnreadOnly(!unreadOnly)}>
-                        <ToggleSwitch $active={unreadOnly} />
-                        <ToggleLabel>Unread Only</ToggleLabel>
-                    </ToggleContainer>
+                    <label
+                        className="w-switch w-none"
+                        data-on={unreadOnly ? "" : undefined}
+                        onClick={() => setUnreadOnly(!unreadOnly)}
+                    >
+                        <span className="w-switch-track">
+                            <span className="w-switch-knob" />
+                        </span>
+                        <span className="w-switch-label">Unread Only</span>
+                    </label>
 
-                    <IconButton onClick={() => setShowMenu(!showMenu)} style={{ padding: 'var(--space-2u)' }}>
+                    <button
+                        className="w-btn w-btn--icon w-none"
+                        onClick={() => setShowMenu(!showMenu)}
+                    >
                         <DotsThree size={16} />
-                    </IconButton>
+                    </button>
 
                     {showMenu && (
-                        <SettingsMenu ref={menuRef} style={{ top: 'var(--size-18u)', right: 'var(--space-6u)' }}>
+                        <div ref={menuRef} className="w-menu w-notif-menu">
                             {activeTab === 'inbox' && (
-                                <MenuItem onClick={handleMarkAllRead}>
+                                <button className="w-menu-item" onClick={handleMarkAllRead}>
                                     <Checks /> Mark all as read
-                                </MenuItem>
+                                </button>
                             )}
-                            <MenuItem onClick={handleArchiveAllRead}>
+                            <button className="w-menu-item" onClick={handleArchiveAllRead}>
                                 <Archive /> Archive all read
-                            </MenuItem>
-                        </SettingsMenu>
+                            </button>
+                        </div>
                     )}
-                </Header>
+                </div>
 
-                <Content>
+                <div className="w-grow w-notif-body">
                     {loading ? (
-                        <LoadingContainer>
+                        <div className="w-loading">
                             <Spinner />
-                        </LoadingContainer>
+                        </div>
                     ) : error ? (
-                        <EmptyStateContainer>
-                            <EmptyIcon>
-                                <BellSlash size={24} style={{ color: 'var(--color-error)' }} />
-                            </EmptyIcon>
-                            <EmptyTitle>Failed to load notifications</EmptyTitle>
-                            <EmptyDescription>{error.message || "An unexpected error occurred."}</EmptyDescription>
-                        </EmptyStateContainer>
+                        <EmptyState
+                            icon={<BellSlash size={20} className="w-text-error" />}
+                            title="Failed to load notifications"
+                            description={error.message || "An unexpected error occurred."}
+                        />
                     ) : notifications.length === 0 ? (
-                        <EmptyStateContainer>
-                            <EmptyIcon>
-                                <BellSlash size={24} />
-                            </EmptyIcon>
-                            <EmptyTitle>No notifications</EmptyTitle>
-                            <EmptyDescription>You're all caught up!</EmptyDescription>
-                        </EmptyStateContainer>
+                        <EmptyState
+                            icon={<BellSlash size={20} />}
+                            title="No notifications"
+                            description="You're all caught up!"
+                        />
                     ) : (
                         <>
                             {notifications.map((notification) => (
@@ -380,16 +171,16 @@ export const NotificationPanel = forwardRef<HTMLDivElement, NotificationPanelPro
                                 />
                             ))}
                             {hasMore && (
-                                <div style={{ padding: 'var(--space-6u)', display: 'flex', justifyContent: 'center' }}>
-                                    <TabButton $active={false} onClick={loadMore} style={{ fontSize: 'var(--font-size-sm)' }}>
+                                <div className="w-flex w-justify-center" style={{ padding: 12 }}>
+                                    <button className="w-btn w-btn--ghost w-btn--sm" onClick={loadMore}>
                                         Load more
-                                    </TabButton>
+                                    </button>
                                 </div>
                             )}
                         </>
                     )}
-                </Content>
-            </PanelContainer>
+                </div>
+            </div>
         );
     }
 );

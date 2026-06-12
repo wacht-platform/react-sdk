@@ -1,72 +1,10 @@
 import { useEffect, useRef, useState } from "react";
-import styled from "styled-components";
 import { X } from "@phosphor-icons/react";
 import type { WorkspaceRole } from "@/types";
 import { useScreenContext } from "../organization/context";
 import { Button, Input, Label, FormGroup } from "@/components/utility";
 import { useDeployment } from "@/hooks/use-deployment";
 import { ComboBoxMulti } from "@/components/utility/combo-box";
-
-const PopoverContainer = styled.div`
-  position: fixed;
-  width: calc(calc(var(--size-50u) * 4) - var(--space-20u));
-  max-width: calc(100vw - var(--space-24u));
-  background: var(--color-popover);
-  border: var(--border-width-thin) solid var(--color-border);
-  border-radius: var(--radius-md);
-  box-shadow: var(--shadow-md);
-  z-index: 1001;
-  
-  @media (max-width: 600px) {
-    width: calc(100vw - var(--space-24u));
-  }
-`;
-
-const Header = styled.div`
-  display: flex;
-  justify-content: space-between;
-  align-items: center;
-  padding: var(--space-4u) var(--space-6u);
-  border-bottom: var(--border-width-thin) solid var(--color-border);
-`;
-
-const Title = styled.h3`
-  margin: 0;
-  font-size: var(--font-size-md);
-  font-weight: 400;
-  color: var(--color-popover-foreground);
-`;
-
-const Content = styled.div`
-  padding: var(--space-6u);
-`;
-
-const ButtonGroup = styled.div`
-  display: flex;
-  gap: var(--space-2u);
-  justify-content: flex-end;
-  padding: var(--space-4u) var(--space-6u);
-  border-top: var(--border-width-thin) solid var(--color-border);
-  background: var(--color-secondary);
-`;
-
-const CloseButton = styled.button`
-  background: none;
-  border: none;
-  padding: var(--space-2u);
-  cursor: pointer;
-  color: var(--color-muted);
-  transition: all 0.15s ease;
-  border-radius: var(--radius-2xs);
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  
-  &:hover {
-    color: var(--color-accent-foreground);
-    background: var(--color-accent);
-  }
-`;
 
 interface AddWorkspaceRolePopoverProps {
   onClose?: () => void;
@@ -220,67 +158,56 @@ export const AddWorkspaceRolePopover = ({
   }
 
   return (
-    <PopoverContainer
+    <div
       ref={popoverRef}
+      className="w-pop w-pop--wide"
       style={{
+        position: "fixed",
+        zIndex: 1001,
         top: `${position.top}px`,
         left: `${position.left}px`,
         visibility: position.top > 0 ? 'visible' : 'hidden'
       }}
       onClick={(e) => e.stopPropagation()}
     >
-      <Header>
-        <Title>{isEditing ? "Edit Role" : "Add Role"}</Title>
-        <CloseButton onClick={onClose}>
+      <div className="w-dialog-head">
+        <h3 className="w-dialog-title">{isEditing ? "Edit Role" : "Add Role"}</h3>
+        <button className="w-kebab" onClick={onClose}>
           <X size={16} />
-        </CloseButton>
-      </Header>
+        </button>
+      </div>
 
-      <Content>
-        <div style={{ display: "flex", flexDirection: "column", gap: "var(--space-4u)" }}>
-          <FormGroup>
-            <Label>Role Name</Label>
-            <Input
-              type="text"
-              value={name}
-              onChange={(e) => setName(e.target.value)}
-              placeholder="Enter role name"
-              autoFocus
-            />
-          </FormGroup>
+      <div className="w-pop-body">
+        <FormGroup>
+          <Label>Role Name</Label>
+          <Input
+            type="text"
+            value={name}
+            onChange={(e) => setName(e.target.value)}
+            placeholder="Enter role name"
+            autoFocus
+          />
+        </FormGroup>
 
-          <FormGroup>
-            <Label>Permissions</Label>
-            <ComboBoxMulti
-              options={permissionOptions}
-              value={permissions}
-              onChange={setPermissions}
-              placeholder="Select permissions"
-            />
-          </FormGroup>
-        </div>
-      </Content>
+        <FormGroup>
+          <Label>Permissions</Label>
+          <ComboBoxMulti
+            options={permissionOptions}
+            value={permissions}
+            onChange={setPermissions}
+            placeholder="Select permissions"
+          />
+        </FormGroup>
+      </div>
 
-      <ButtonGroup>
-        <Button
-          $outline
-          onClick={onClose}
-          style={{
-            width: "auto",
-          }}
-        >
+      <div className="w-pop-foot">
+        <Button $outline onClick={onClose}>
           Cancel
         </Button>
-        <Button
-          onClick={handleSave}
-          disabled={!name.trim() || loading}
-          style={{
-            width: "auto",
-          }}
-        >
+        <Button onClick={handleSave} disabled={!name.trim() || loading}>
           {loading ? "Saving..." : isEditing ? "Update" : "Create"}
         </Button>
-      </ButtonGroup>
-    </PopoverContainer>
+      </div>
+    </div>
   );
 };

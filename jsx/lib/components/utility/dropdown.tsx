@@ -1,6 +1,8 @@
 import {
   createContext,
   CSSProperties,
+  forwardRef,
+  type ButtonHTMLAttributes,
   type ReactNode,
   useCallback,
   useContext,
@@ -8,24 +10,6 @@ import {
   useRef,
   useState,
 } from "react";
-import styled from "styled-components";
-
-const DropdownItemsContainer = styled.div`
-  position: fixed;
-  background: var(--color-popover);
-  color: var(--color-popover-foreground);
-  border-radius: var(--radius-md);
-  box-shadow: var(--shadow-md);
-  border: var(--border-width-thin) solid var(--color-border);
-  overflow: hidden;
-  z-index: 1000;
-  min-width: calc(var(--size-50u) + var(--space-20u));
-  display: grid;
-`;
-
-const DropdownContainer = styled.div`
-  width: fit-content;
-`;
 
 interface DropdownProps {
   children: ReactNode;
@@ -96,9 +80,9 @@ export const Dropdown = ({
         openChange: (v) => _setOpen(v),
       }}
     >
-      <DropdownContainer style={style} ref={dropdownRef}>
+      <div style={{ width: "fit-content", ...style }} ref={dropdownRef}>
         {children}
-      </DropdownContainer>
+      </div>
     </DropdownContext.Provider>
   );
 };
@@ -106,9 +90,11 @@ export const Dropdown = ({
 export const DropdownItems = ({
   children,
   style,
+  className,
 }: {
   children: ReactNode;
   style?: React.CSSProperties;
+  className?: string;
 }) => {
   const { open } = useDropdownContext();
   const [position, setPosition] = useState({ top: 0, left: 0 });
@@ -164,9 +150,15 @@ export const DropdownItems = ({
   if (!open) return null;
 
   return (
-    <DropdownItemsContainer
+    <div
+      className={className ? `w-menu ${className}` : "w-menu"}
       ref={containerRef}
       style={{
+        position: "fixed",
+        zIndex: 1000,
+        width: "max-content",
+        minWidth: 140,
+        maxWidth: 240,
         ...style,
         top: `${position.top}px`,
         left: `${position.left}px`,
@@ -176,7 +168,7 @@ export const DropdownItems = ({
       }}
     >
       {children}
-    </DropdownItemsContainer>
+    </div>
   );
 };
 
@@ -198,35 +190,28 @@ export const DropdownTrigger = ({ children }: { children: ReactNode }) => {
   );
 };
 
-export const DropdownItem = styled.button<{ $destructive?: boolean }>`
-  width: 100%;
-  padding: var(--space-4u) var(--space-6u);
-  background: none;
-  border: none;
-  text-align: left;
-  cursor: pointer;
-  font-size: var(--font-size-lg);
-  width: calc(var(--size-50u) * 2);
-  display: flex;
-  align-items: center;
-  gap: var(--space-4u);
-  color: ${(props) =>
-    props.$destructive ? "var(--color-error)" : "var(--color-text)"};
+interface DropdownItemProps extends ButtonHTMLAttributes<HTMLButtonElement> {
+  $destructive?: boolean;
+}
 
-  &:hover {
-    background: ${(props) =>
-    props.$destructive
-      ? "var(--color-error-background)"
-      : "var(--color-accent)"};
-    color: ${(props) =>
-      props.$destructive
-        ? "var(--color-error)"
-        : "var(--color-accent-foreground)"};
-  }
-`;
+export const DropdownItem = forwardRef<HTMLButtonElement, DropdownItemProps>(
+  ({ $destructive, className, ...rest }, ref) => (
+    <button
+      ref={ref}
+      className={`w-menu-item${$destructive ? " w-menu-item--danger" : ""}${className ? ` ${className}` : ""}`}
+      {...rest}
+    />
+  ),
+);
+DropdownItem.displayName = "DropdownItem";
 
-export const DropdownDivider = styled.div`
-  height: var(--border-width-thin);
-  background-color: var(--color-border);
-  width: 100%;
-`;
+export const DropdownDivider = () => (
+  <div
+    style={{
+      height: "0.5px",
+      background: "var(--wa-border)",
+      width: "100%",
+      margin: "4px 0",
+    }}
+  />
+);

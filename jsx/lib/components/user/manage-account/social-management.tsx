@@ -1,5 +1,4 @@
 import { X } from "@phosphor-icons/react";
-import styled from "styled-components";
 import { useUser } from "@/hooks/use-user";
 import { useDeployment } from "@/hooks/use-deployment";
 import { GoogleIcon } from "../../icons/google";
@@ -11,6 +10,7 @@ import { LinkedInIcon } from "../../icons/linkedin";
 import { DiscordIcon } from "../../icons/discord";
 import { Button } from "@/components/utility";
 import { EmptyState } from "@/components/utility/empty-state";
+import { IconWrapper } from "./shared";
 
 const providerMeta: Record<string, { icon: React.ReactNode; label: string }> = {
     google_oauth: { icon: <GoogleIcon />, label: "Google" },
@@ -21,151 +21,6 @@ const providerMeta: Record<string, { icon: React.ReactNode; label: string }> = {
     discord_oauth: { icon: <DiscordIcon />, label: "Discord" },
     x_oauth: { icon: <XIcon />, label: "X" },
 };
-
-const Header = styled.div`
-    display: flex;
-    align-items: center;
-    gap: var(--space-4u);
-    margin-bottom: var(--space-6u);
-`;
-
-const HeaderText = styled.div`
-    flex: 1;
-    min-width: 0;
-`;
-
-const HeaderTitle = styled.div`
-    font-size: 14px;
-    font-weight: 500;
-    color: var(--color-card-foreground);
-`;
-
-const HeaderSubtitle = styled.div`
-    font-size: 12px;
-    color: var(--color-secondary-text);
-    margin-top: 2px;
-`;
-
-const ProviderList = styled.div`
-    display: flex;
-    flex-direction: column;
-    gap: 2px;
-`;
-
-const ProviderRow = styled.div`
-    display: grid;
-    grid-template-columns: auto 1fr auto;
-    align-items: center;
-    gap: var(--space-6u);
-    padding: var(--space-5u) 0;
-    border-bottom: 1px solid var(--color-border);
-
-    &:last-child {
-        border-bottom: none;
-    }
-
-    @media (max-width: 600px) {
-        grid-template-columns: auto 1fr;
-        row-gap: var(--space-4u);
-    }
-`;
-
-const ProviderIcon = styled.div`
-    width: 28px;
-    height: 28px;
-    min-width: 28px;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-
-    svg {
-        width: 20px;
-        height: 20px;
-    }
-`;
-
-const ProviderMain = styled.div`
-    min-width: 0;
-    display: flex;
-    flex-direction: column;
-    gap: 4px;
-`;
-
-const ProviderName = styled.div`
-    font-size: 13px;
-    font-weight: 500;
-    color: var(--color-card-foreground);
-`;
-
-const AccountChips = styled.div`
-    display: flex;
-    flex-wrap: wrap;
-    gap: 4px;
-`;
-
-const AccountChip = styled.span`
-    display: inline-flex;
-    align-items: center;
-    gap: 4px;
-    padding: 2px 4px 2px 8px;
-    font-size: 11px;
-    color: var(--color-secondary-text);
-    background: color-mix(
-        in srgb,
-        var(--color-popover-foreground) 6%,
-        transparent
-    );
-    border-radius: 999px;
-    max-width: 100%;
-`;
-
-const ChipEmail = styled.span`
-    max-width: 180px;
-    overflow: hidden;
-    text-overflow: ellipsis;
-    white-space: nowrap;
-`;
-
-const ChipRemove = styled.button`
-    display: inline-flex;
-    align-items: center;
-    justify-content: center;
-    width: 16px;
-    height: 16px;
-    padding: 0;
-    border: none;
-    background: transparent;
-    color: var(--color-secondary-text);
-    border-radius: 999px;
-    cursor: pointer;
-    flex-shrink: 0;
-    transition: all 0.12s ease;
-
-    &:hover {
-        color: var(--color-error);
-        background: color-mix(in srgb, var(--color-error) 14%, transparent);
-    }
-`;
-
-const NotLinked = styled.span`
-    font-size: 11px;
-    color: var(--color-muted);
-`;
-
-const Actions = styled.div`
-    display: flex;
-    justify-content: flex-end;
-
-    @media (max-width: 600px) {
-        grid-column: 1 / -1;
-        justify-content: flex-start;
-        padding-left: calc(28px + var(--space-6u));
-
-        button {
-            width: 100%;
-        }
-    }
-`;
 
 export const SocialManagementSection = () => {
     const { user, disconnectSocialConnection, connectSocialAccount } =
@@ -195,16 +50,16 @@ export const SocialManagementSection = () => {
 
     return (
         <>
-            <Header>
-                <HeaderText>
-                    <HeaderTitle>Connected accounts</HeaderTitle>
-                    <HeaderSubtitle>
+            <div className="w-flex w-items-center w-gap-3">
+                <div className="w-grow w-flex-col w-gap-1">
+                    <div className="w-sec">Connected accounts</div>
+                    <div className="w-secsub">
                         Sign in faster by linking third-party accounts.
-                    </HeaderSubtitle>
-                </HeaderText>
-            </Header>
+                    </div>
+                </div>
+            </div>
 
-            <ProviderList>
+            <div className="w-list">
                 {enabledProviders.map((provider) => {
                     const meta =
                         providerMeta[
@@ -219,39 +74,51 @@ export const SocialManagementSection = () => {
                     const linked = accounts.length > 0;
 
                     return (
-                        <ProviderRow key={provider.provider}>
-                            <ProviderIcon>{meta.icon}</ProviderIcon>
-                            <ProviderMain>
-                                <ProviderName>{meta.label}</ProviderName>
-                                {linked ? (
-                                    <AccountChips>
-                                        {accounts.map((account) => (
-                                            <AccountChip key={account.id}>
-                                                <ChipEmail>
-                                                    {account.email_address}
-                                                </ChipEmail>
-                                                <ChipRemove
-                                                    onClick={() =>
-                                                        handleDisconnect(
-                                                            account.id,
-                                                        )
-                                                    }
-                                                    title="Remove connection"
-                                                    aria-label="Remove connection"
+                        <div
+                            key={provider.provider}
+                            className="w-vrow"
+                        >
+                            <div className="w-flex w-items-center w-gap-3 w-grow">
+                                <IconWrapper>{meta.icon}</IconWrapper>
+                                <div className="w-flex-col w-gap-1 w-grow">
+                                    <div className="w-sec">{meta.label}</div>
+                                    {linked ? (
+                                        <div className="w-flex w-wrap w-gap-1">
+                                            {accounts.map((account) => (
+                                                <span
+                                                    key={account.id}
+                                                    className="w-chip"
                                                 >
-                                                    <X
-                                                        size={10}
-                                                        weight="bold"
-                                                    />
-                                                </ChipRemove>
-                                            </AccountChip>
-                                        ))}
-                                    </AccountChips>
-                                ) : (
-                                    <NotLinked>Not linked</NotLinked>
-                                )}
-                            </ProviderMain>
-                            <Actions>
+                                                    <span className="w-truncate">
+                                                        {account.email_address}
+                                                    </span>
+                                                    <span
+                                                        className="w-chip-x"
+                                                        role="button"
+                                                        onClick={() =>
+                                                            handleDisconnect(
+                                                                account.id,
+                                                            )
+                                                        }
+                                                        title="Remove connection"
+                                                        aria-label="Remove connection"
+                                                    >
+                                                        <X
+                                                            size={10}
+                                                            weight="bold"
+                                                        />
+                                                    </span>
+                                                </span>
+                                            ))}
+                                        </div>
+                                    ) : (
+                                        <span className="w-secsub">
+                                            Not linked
+                                        </span>
+                                    )}
+                                </div>
+                            </div>
+                            <div className={`w-flex w-justify-end w-none${linked ? " w-row-act-top" : ""}`}>
                                 <Button
                                     $size="sm"
                                     $outline
@@ -261,11 +128,11 @@ export const SocialManagementSection = () => {
                                 >
                                     {linked ? "Link another" : "Link"}
                                 </Button>
-                            </Actions>
-                        </ProviderRow>
+                            </div>
+                        </div>
                     );
                 })}
-            </ProviderList>
+            </div>
         </>
     );
 };

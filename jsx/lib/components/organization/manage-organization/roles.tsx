@@ -1,7 +1,6 @@
 import { useState, useRef } from "react";
-import { Warning } from "@phosphor-icons/react";
+import { Warning, Check } from "@phosphor-icons/react";
 import useSWR from "swr";
-import styled from "styled-components";
 import { Organization, OrganizationRole } from "@/types";
 import { useOrganizationList } from "@/hooks/use-organization";
 import { useDeployment } from "@/hooks/use-deployment";
@@ -24,52 +23,6 @@ import {
     DesktopTableContainer,
     StatusPill,
 } from "./shared";
-
-const MessageBanner = styled.div<{ $type: "success" | "error" }>`
-    margin-bottom: var(--space-8u);
-    padding: var(--space-4u) var(--space-6u);
-    background: ${(p) =>
-        p.$type === "success"
-            ? "color-mix(in srgb, var(--color-success, #10b981) 12%, transparent)"
-            : "color-mix(in srgb, var(--color-error) 12%, transparent)"};
-    color: ${(p) =>
-        p.$type === "success"
-            ? "var(--color-success, #10b981)"
-            : "var(--color-error)"};
-    border: 1px solid currentColor;
-    border-radius: 8px;
-    display: flex;
-    align-items: center;
-    gap: var(--space-3u);
-    font-size: 13px;
-`;
-
-const RoleName = styled.div`
-    font-size: 13px;
-    font-weight: 500;
-    color: var(--color-card-foreground);
-    display: inline-flex;
-    align-items: center;
-    gap: 8px;
-`;
-
-const InlineActions = styled.div`
-    display: flex;
-    align-items: center;
-    gap: 6px;
-    justify-content: flex-end;
-    flex-wrap: nowrap;
-    white-space: nowrap;
-`;
-
-const PermissionText = styled.div`
-    color: var(--color-secondary-text);
-    font-size: 13px;
-    overflow: hidden;
-    text-overflow: ellipsis;
-    white-space: nowrap;
-    max-width: 340px;
-`;
 
 export const RolesSection = ({
     organization,
@@ -159,12 +112,12 @@ export const RolesSection = ({
         return (
             <TableRow key={role.id}>
                 <TableCell>
-                    <RoleName>
+                    <span className="w-inline w-gap-2 w-sec">
                         {role.name}
                         {!editable && (
                             <StatusPill $variant="neutral">Default</StatusPill>
                         )}
-                    </RoleName>
+                    </span>
                 </TableCell>
                 <TableCell>
                     {permCount === 0 ? (
@@ -172,26 +125,20 @@ export const RolesSection = ({
                             No permissions
                         </StatusPill>
                     ) : (
-                        <div
-                            style={{
-                                display: "inline-flex",
-                                alignItems: "center",
-                                gap: 8,
-                            }}
-                        >
+                        <div className="w-inline w-items-center w-gap-2">
                             <StatusPill $variant="primary">
                                 {permCount}{" "}
                                 {permCount === 1 ? "permission" : "permissions"}
                             </StatusPill>
-                            <PermissionText>
+                            <span className="w-truncate w-text-secondary w-maxw-sm">
                                 {role.permissions.join(", ")}
-                            </PermissionText>
+                            </span>
                         </div>
                     )}
                 </TableCell>
                 <ActionsCell>
                     {editable ? (
-                        <InlineActions>
+                        <div className="w-actions">
                             <Button
                                 ref={(el: HTMLButtonElement | null) => {
                                     if (el)
@@ -222,16 +169,9 @@ export const RolesSection = ({
                             >
                                 {isBusy ? <Spinner size={12} /> : "Delete"}
                             </Button>
-                        </InlineActions>
+                        </div>
                     ) : (
-                        <span
-                            style={{
-                                fontSize: 12,
-                                color: "var(--color-secondary-text)",
-                            }}
-                        >
-                            Read-only
-                        </span>
+                        <span className="w-secsub">Read-only</span>
                     )}
                 </ActionsCell>
             </TableRow>
@@ -241,30 +181,18 @@ export const RolesSection = ({
     return (
         <>
             {message && (
-                <MessageBanner $type={message.type}>
-                    {message.type === "success" ? "✓" : <Warning size={13} />}
-                    {message.text}
-                </MessageBanner>
+                <div
+                    className={`w-banner ${message.type === "success" ? "w-banner--success" : "w-banner--error"} w-mb-4`}
+                >
+                    {message.type === "success" ? <Check size={16} /> : <Warning size={16} />}
+                    <span className="w-banner-txt">{message.text}</span>
+                </div>
             )}
 
-            <HeaderCTAContainer style={{ marginBottom: "var(--space-6u)" }}>
-                <div style={{ flex: 1, minWidth: 0 }}>
-                    <div
-                        style={{
-                            fontSize: 14,
-                            fontWeight: 500,
-                            color: "var(--color-card-foreground)",
-                        }}
-                    >
-                        Roles
-                    </div>
-                    <div
-                        style={{
-                            fontSize: 12,
-                            color: "var(--color-secondary-text)",
-                            marginTop: 2,
-                        }}
-                    >
+            <HeaderCTAContainer>
+                <div className="w-grow w-flex-col w-gap-1">
+                    <div className="w-sec">Roles</div>
+                    <div className="w-secsub">
                         Define granular permissions for members.
                     </div>
                 </div>

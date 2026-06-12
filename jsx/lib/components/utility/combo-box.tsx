@@ -1,121 +1,49 @@
 import React, { useState, useRef, useEffect } from "react";
-import styled from "styled-components";
 import { Check, CaretDown, CaretUp } from "@phosphor-icons/react";
 
-const ComboBoxContainer = styled.div`
-  position: relative;
-  width: 100%;
-`;
+const MENU_STYLE = (isOpen: boolean): React.CSSProperties => ({
+  position: "absolute",
+  top: "calc(100% + 6px)",
+  left: 0,
+  width: "100%",
+  maxHeight: 260,
+  overflowY: "auto",
+  zIndex: 1000,
+  opacity: isOpen ? 1 : 0,
+  transform: isOpen ? "scale(1)" : "scale(0.97)",
+  transformOrigin: "top",
+  pointerEvents: isOpen ? "auto" : "none",
+  transition: "opacity 0.15s ease, transform 0.15s ease",
+});
 
-const ComboBoxTrigger = styled.button`
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-  width: 100%;
-  padding: var(--space-4u) var(--space-6u);
-  background: var(--color-card);
-  border: var(--border-width-thin) solid var(--color-border);
-  border-radius: var(--radius-xs);
-  font-size: var(--font-size-lg);
-  color: var(--color-text);
-  text-align: left;
-  cursor: pointer;
-  transition: all 0.2s ease;
+const COMBO_SEARCH_STYLE: React.CSSProperties = {
+  width: "100%",
+  height: 32,
+  padding: "0 9px",
+  border: "none",
+  borderBottom: "0.5px solid var(--wa-border)",
+  borderRadius: 0,
+  fontFamily: "var(--wa-font-sans)",
+  fontSize: 13,
+  outline: "none",
+  background: "transparent",
+  color: "var(--wa-text)",
+  marginBottom: 4,
+};
 
-  &:hover {
-    background: var(--color-accent);
-    color: var(--color-accent-foreground);
-    border-color: var(--color-border-hover);
-  }
-
-  &:focus {
-    outline: none;
-    border-color: var(--color-primary);
-    box-shadow: 0 0 0 var(--border-width-regular) var(--color-primary-shadow);
-  }
-
-  &:disabled {
-    opacity: 0.6;
-    cursor: not-allowed;
-  }
-`;
-
-const DropdownMenu = styled.div<{ isOpen: boolean }>`
-  position: absolute;
-  top: calc(100% + var(--space-2u));
-  left: 0;
-  width: 100%;
-  max-height: calc(calc(var(--size-50u) * 2) + var(--space-12u) + var(--space-1u));
-  overflow-y: auto;
-  background: var(--color-popover);
-  border-radius: var(--radius-xs);
-  border: var(--border-width-thin) solid var(--color-border);
-  box-shadow: var(--shadow-md);
-  z-index: 1000;
-  opacity: ${(props) => (props.isOpen ? 1 : 0)};
-  transform: ${(props) => (props.isOpen ? "scale(1)" : "scale(0.95)")};
-  transform-origin: top;
-  pointer-events: ${(props) => (props.isOpen ? "auto" : "none")};
-  transition: all 0.2s ease;
-`;
-
-const SearchInput = styled.input`
-  width: 100%;
-  padding: var(--space-4u) var(--space-6u);
-  border: none;
-  border-bottom: var(--border-width-thin) solid var(--color-border);
-  font-size: var(--font-size-lg);
-  outline: none;
-  background: var(--color-popover);
-  color: var(--color-popover-foreground);
-
-  &::placeholder {
-    color: var(--color-muted);
-  }
-`;
-
-const Option = styled.div<{ isSelected?: boolean; disabled?: boolean }>`
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-  padding: var(--space-4u) var(--space-6u);
-  cursor: ${(props) => (props.disabled ? "not-allowed" : "pointer")};
-  font-size: var(--font-size-lg);
-  background: ${(props) =>
-    props.isSelected ? "var(--color-accent)" : "transparent"};
-  color: ${(props) =>
-    props.disabled ? "var(--color-muted)" : "var(--color-text)"};
-  opacity: ${(props) => (props.disabled ? 0.6 : 1)};
-  transition: background 0.2s ease;
-
-  &:hover {
-    background: ${(props) =>
-    !props.disabled ? "var(--color-accent)" : "transparent"};
-    color: ${(props) =>
-      !props.disabled ? "var(--color-accent-foreground)" : "var(--color-muted)"};
-  }
-`;
-
-const Placeholder = styled.span`
-  color: var(--color-muted);
-`;
-
-const NoOptions = styled.div`
-  padding: var(--space-4u) var(--space-6u);
-  color: var(--color-muted);
-  font-size: var(--font-size-lg);
-  text-align: center;
-`;
-
-const GroupHeading = styled.div`
-  padding: var(--space-3u) var(--space-6u);
-  font-size: var(--font-size-sm);
-  font-weight: 400;
-  text-transform: uppercase;
-  color: var(--color-muted);
-  background: var(--color-secondary);
-  color: var(--color-secondary-foreground);
-`;
+const NoOptions = ({ children }: { children: React.ReactNode }) => (
+  <div
+    style={{
+      padding: "10px 9px",
+      color: "var(--wa-text-faint)",
+      fontFamily: "var(--wa-font-sans)",
+      fontSize: 12.5,
+      textAlign: "center",
+    }}
+  >
+    {children}
+  </div>
+);
 
 export interface ComboBoxOption {
   value: string;
@@ -227,33 +155,37 @@ export const ComboBox: React.FC<ComboBoxProps> = ({
   }, []);
 
   return (
-    <ComboBoxContainer
+    <div
       ref={containerRef}
-      style={{ width }}
+      style={{ position: "relative", width: width || "100%" }}
       className={className}
     >
-      <ComboBoxTrigger
+      <button
         type="button"
+        className="w-combo"
+        data-open={isOpen ? "" : undefined}
         onClick={handleToggle}
         disabled={disabled}
         aria-haspopup="listbox"
         aria-expanded={isOpen}
         id={id}
       >
-        {selectedOption ? (
-          selectedOption.label
-        ) : (
-          <Placeholder>{placeholder}</Placeholder>
-        )}
+        <span
+          className="w-combo-val"
+          data-ph={selectedOption ? undefined : ""}
+        >
+          {selectedOption ? selectedOption.label : placeholder}
+        </span>
         {isOpen ? <CaretUp size={16} /> : <CaretDown size={16} />}
-      </ComboBoxTrigger>
+      </button>
 
-      <DropdownMenu isOpen={isOpen} role="listbox">
+      <div className="w-combo-menu" style={MENU_STYLE(isOpen)} role="listbox">
         {searchable && (
-          <SearchInput
+          <input
             ref={searchInputRef}
             type="text"
-            placeholder="MagnifyingGlass..."
+            style={COMBO_SEARCH_STYLE}
+            placeholder="Search..."
             value={searchQuery}
             onChange={(e) => setSearchQuery(e.target.value)}
             onClick={(e) => e.stopPropagation()}
@@ -263,15 +195,16 @@ export const ComboBox: React.FC<ComboBoxProps> = ({
         {isGrouped ? (
           (filteredOptions as ComboBoxGroup[]).map((group, groupIndex) => (
             <React.Fragment key={`group-${groupIndex}`}>
-              <GroupHeading>{group.label}</GroupHeading>
+              <div className="w-combo-grp">{group.label}</div>
               {group.options.length === 0 ? (
                 <NoOptions>No options available</NoOptions>
               ) : (
                 group.options.map((option) => (
-                  <Option
+                  <button
+                    type="button"
                     key={option.value}
-                    isSelected={option.value === value}
-                    disabled={option.disabled}
+                    className="w-combo-opt"
+                    data-disabled={option.disabled ? "" : undefined}
                     onClick={() =>
                       handleOptionClick(option.value, option.disabled)
                     }
@@ -279,8 +212,12 @@ export const ComboBox: React.FC<ComboBoxProps> = ({
                     aria-selected={option.value === value}
                   >
                     {option.label}
-                    {option.value === value && <Check size={16} />}
-                  </Option>
+                    {option.value === value && (
+                      <span className="w-combo-check">
+                        <Check size={16} />
+                      </span>
+                    )}
+                  </button>
                 ))
               )}
             </React.Fragment>
@@ -291,10 +228,11 @@ export const ComboBox: React.FC<ComboBoxProps> = ({
               <NoOptions>No options available</NoOptions>
             ) : (
               (filteredOptions as ComboBoxOption[]).map((option) => (
-                <Option
+                <button
+                  type="button"
                   key={option.value}
-                  isSelected={option.value === value}
-                  disabled={option.disabled}
+                  className="w-combo-opt"
+                  data-disabled={option.disabled ? "" : undefined}
                   onClick={() =>
                     handleOptionClick(option.value, option.disabled)
                   }
@@ -302,17 +240,21 @@ export const ComboBox: React.FC<ComboBoxProps> = ({
                   aria-selected={option.value === value}
                 >
                   {option.label}
-                  {option.value === value && <Check size={16} />}
-                </Option>
+                  {option.value === value && (
+                    <span className="w-combo-check">
+                      <Check size={16} />
+                    </span>
+                  )}
+                </button>
               ))
             )}
           </>
         )}
-      </DropdownMenu>
+      </div>
 
       {/* Hidden select for form submission */}
       {name && <input type="hidden" name={name} value={value || ""} />}
-    </ComboBoxContainer>
+    </div>
   );
 };
 
@@ -420,33 +362,39 @@ export const ComboBoxMulti: React.FC<ComboBoxMultiProps> = ({
   }, []);
 
   return (
-    <ComboBoxContainer
+    <div
       ref={containerRef}
-      style={{ width }}
+      style={{ position: "relative", width: width || "100%" }}
       className={className}
     >
-      <ComboBoxTrigger
+      <button
         type="button"
+        className="w-combo"
+        data-open={isOpen ? "" : undefined}
         onClick={handleToggle}
         disabled={disabled}
         aria-haspopup="listbox"
         aria-expanded={isOpen}
         id={id}
       >
-        {selectedOptions.length > 0 ? (
-          selectedOptions.map((opt) => opt.label).join(", ")
-        ) : (
-          <Placeholder>{placeholder}</Placeholder>
-        )}
+        <span
+          className="w-combo-val"
+          data-ph={selectedOptions.length > 0 ? undefined : ""}
+        >
+          {selectedOptions.length > 0
+            ? selectedOptions.map((opt) => opt.label).join(", ")
+            : placeholder}
+        </span>
         {isOpen ? <CaretUp size={16} /> : <CaretDown size={16} />}
-      </ComboBoxTrigger>
+      </button>
 
-      <DropdownMenu isOpen={isOpen} role="listbox">
+      <div className="w-combo-menu" style={MENU_STYLE(isOpen)} role="listbox">
         {searchable && (
-          <SearchInput
+          <input
             ref={searchInputRef}
             type="text"
-            placeholder="MagnifyingGlass..."
+            style={COMBO_SEARCH_STYLE}
+            placeholder="Search..."
             value={searchQuery}
             onChange={(e) => setSearchQuery(e.target.value)}
             onClick={(e) => e.stopPropagation()}
@@ -456,15 +404,16 @@ export const ComboBoxMulti: React.FC<ComboBoxMultiProps> = ({
         {isGrouped ? (
           (filteredOptions as ComboBoxGroup[]).map((group, groupIndex) => (
             <React.Fragment key={`group-${groupIndex}`}>
-              <GroupHeading>{group.label}</GroupHeading>
+              <div className="w-combo-grp">{group.label}</div>
               {group.options.length === 0 ? (
                 <NoOptions>No options available</NoOptions>
               ) : (
                 group.options.map((option) => (
-                  <Option
+                  <button
+                    type="button"
                     key={option.value}
-                    isSelected={value.includes(option.value)}
-                    disabled={option.disabled}
+                    className="w-combo-opt"
+                    data-disabled={option.disabled ? "" : undefined}
                     onClick={() =>
                       handleOptionClick(option.value, option.disabled)
                     }
@@ -472,8 +421,12 @@ export const ComboBoxMulti: React.FC<ComboBoxMultiProps> = ({
                     aria-selected={value.includes(option.value)}
                   >
                     {option.label}
-                    {value.includes(option.value) && <Check size={16} />}
-                  </Option>
+                    {value.includes(option.value) && (
+                      <span className="w-combo-check">
+                        <Check size={16} />
+                      </span>
+                    )}
+                  </button>
                 ))
               )}
             </React.Fragment>
@@ -484,10 +437,11 @@ export const ComboBoxMulti: React.FC<ComboBoxMultiProps> = ({
               <NoOptions>No options available</NoOptions>
             ) : (
               (filteredOptions as ComboBoxOption[]).map((option) => (
-                <Option
+                <button
+                  type="button"
                   key={option.value}
-                  isSelected={value.includes(option.value)}
-                  disabled={option.disabled}
+                  className="w-combo-opt"
+                  data-disabled={option.disabled ? "" : undefined}
                   onClick={() =>
                     handleOptionClick(option.value, option.disabled)
                   }
@@ -495,16 +449,20 @@ export const ComboBoxMulti: React.FC<ComboBoxMultiProps> = ({
                   aria-selected={value.includes(option.value)}
                 >
                   {option.label}
-                  {value.includes(option.value) && <Check size={16} />}
-                </Option>
+                  {value.includes(option.value) && (
+                    <span className="w-combo-check">
+                      <Check size={16} />
+                    </span>
+                  )}
+                </button>
               ))
             )}
           </>
         )}
-      </DropdownMenu>
+      </div>
 
       {/* Hidden input for form submission */}
       {name && <input type="hidden" name={name} value={value.join(",")} />}
-    </ComboBoxContainer>
+    </div>
   );
 };

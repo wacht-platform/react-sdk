@@ -1,400 +1,302 @@
 import { useState } from "react";
-import styled, { keyframes } from "styled-components";
-import { CircleNotch } from "@phosphor-icons/react";
-import { Button, Input, FormGroup, Label, Form } from "../utility";
 import { OTPInput } from "../utility/otp-input";
-import {
-  useForgotPassword,
-} from "../../hooks/use-forgot-password";
+import { useForgotPassword } from "../../hooks/use-forgot-password";
 import { OtherAuthOptions } from "./other-auth-options";
 import { DefaultStylesProvider } from "../utility/root";
-import { AuthFormImage } from "./auth-image";
+import { AuthCard, AuthHead, Spin } from "./auth-card";
 import { useDeployment } from "@/hooks/use-deployment";
 import { useNavigation } from "@/hooks/use-navigation";
-import { standaloneAuthShell } from "./auth-shell";
 
 interface ForgotPasswordProps {
-  onBack: () => void;
+    onBack: () => void;
 }
 
-const spin = keyframes`
-  from { transform: rotate(0deg); }
-  to   { transform: rotate(360deg); }
-`;
-
-const ButtonSpinner = styled(CircleNotch)`
-    animation: ${spin} 1s linear infinite;
-`;
-
-const Container = styled.div`
-  ${standaloneAuthShell}
-`;
-
-const Header = styled.div`
-  text-align: center;
-  margin-bottom: var(--space-8u);
-`;
-
-const Title = styled.h1`
-  font-size: var(--font-size-xl);
-  font-weight: 400;
-  color: var(--color-card-foreground);
-  margin: 0 0 var(--space-2u) 0;
-`;
-
-const Message = styled.p`
-  font-size: var(--font-size-md);
-  color: var(--color-secondary-text);
-  margin: 0;
-`;
-
-const ErrorMessage = styled.p`
-  font-size: var(--font-size-xs);
-  color: var(--color-error);
-  margin: 0;
-  margin-top: var(--space-1u);
-`;
-
-const ResetButton = styled(Button)`
-  width: 100%;
-  margin-bottom: var(--space-8u);
-`;
-
-const Divider = styled.div`
-  display: flex;
-  align-items: center;
-  text-align: center;
-  margin: var(--space-8u) 0;
-  color: var(--color-muted);
-  font-size: var(--font-size-md);
-
-  &::before,
-  &::after {
-    content: "";
-    flex: 1;
-    border-bottom: var(--border-width-thin) solid var(--color-border);
-  }
-
-  &::before {
-    margin-right: var(--space-4u);
-  }
-
-  &::after {
-    margin-left: var(--space-4u);
-  }
-`;
-
-const DividerText = styled.span`
-  white-space: nowrap;
-  background: var(--color-card);
-  padding: 0 var(--space-4u);
-  color: var(--color-secondary-text);
-  font-size: var(--font-size-2xs);
-  text-transform: uppercase;
-  letter-spacing: 0.1em;
-`;
-
-const Footer = styled.div`
-  margin-top: var(--space-8u);
-  padding-top: var(--space-6u);
-  border-top: var(--border-width-thin) solid var(--color-border);
-  text-align: center;
-  font-size: var(--font-size-sm);
-  color: var(--color-secondary-text);
-`;
-
-const FooterText = styled.p`
-  margin: 0;
-`;
-
-const Link = styled.a`
-  color: var(--color-primary);
-  text-decoration: none;
-
-  &:hover {
-    text-decoration: underline;
-  }
-`;
-
 export function ForgotPassword({ onBack }: ForgotPasswordProps) {
-  const { deployment } = useDeployment();
-  const { navigate } = useNavigation();
-  const [step, setStep] = useState<"start" | "email" | "otp" | "reset">(
-    "start"
-  );
-  const [email, setEmail] = useState("");
-  const [otp, setOtp] = useState("");
-  const [token, setToken] = useState("");
-  const [password, setPassword] = useState("");
-  const [confirmPassword, setConfirmPassword] = useState("");
-  const {
-    forgotPassword,
-    verifyOtp,
-    resetPassword,
-  } = useForgotPassword();
-  const [loading, setLoading] = useState(false);
-  const [error, setError] = useState<Error | null>(null);
+    const { deployment } = useDeployment();
+    const { navigate } = useNavigation();
+    const [step, setStep] = useState<"start" | "email" | "otp" | "reset">(
+        "start",
+    );
+    const [email, setEmail] = useState("");
+    const [otp, setOtp] = useState("");
+    const [token, setToken] = useState("");
+    const [password, setPassword] = useState("");
+    const [confirmPassword, setConfirmPassword] = useState("");
+    const { forgotPassword, verifyOtp, resetPassword } = useForgotPassword();
+    const [loading, setLoading] = useState(false);
+    const [error, setError] = useState<Error | null>(null);
 
-  const handleEmailSubmit = async (e: React.FormEvent) => {
-    e.preventDefault();
-    if (!email) {
-      return;
-    }
-    setLoading(true);
-    setError(null);
-    try {
-      await forgotPassword(email);
-      setStep("otp");
-    } catch (err) {
-      setError(err as Error);
-    } finally {
-      setLoading(false);
-    }
-  };
-
-  const handleOtpSubmit = async (e: React.FormEvent) => {
-    e.preventDefault();
-    if (otp.length !== 6) {
-      return;
-    }
-    setLoading(true);
-    setError(null);
-    try {
-      const result = await verifyOtp(email, otp);
-      if (result.data) {
-        setToken(result.data.token);
-        setStep("reset");
-      }
-    } catch (err) {
-      setError(err as Error);
-    } finally {
-      setLoading(false);
-    }
-  };
-
-  const handleResetSubmit = async (e: React.FormEvent) => {
-    e.preventDefault();
-    if (password !== confirmPassword) {
-      return;
-    }
-    if (password.length < 8) {
-      return;
-    }
-    setLoading(true);
-    setError(null);
-    try {
-      const result = await resetPassword(token, password);
-      if (result.data) {
-        const session = result.data;
-        // Check for incomplete sign-in attempts (e.g. 2FA)
-        // We take the last attempt as it is the one created by the password reset
-        const incompleteAttempt =
-          session.signin_attempts && session.signin_attempts.length > 0
-            ? session.signin_attempts[session.signin_attempts.length - 1]
-            : null;
-
-        if (incompleteAttempt && !incompleteAttempt.completed) {
-          const signinUrl = deployment?.ui_settings?.sign_in_page_url;
-          if (signinUrl) {
-            const url = new URL(signinUrl, window.location.origin);
-            url.searchParams.set("signin_attempt_id", incompleteAttempt.id);
-            navigate(url.toString());
-          } else {
-            // Fallback if no sign-in URL is configured
-            onBack();
-          }
-        } else {
-          // Auto-login successful
-          const redirectUrl =
-            deployment?.ui_settings?.after_signin_redirect_url || "/";
-          navigate(redirectUrl);
+    const handleEmailSubmit = async (e: React.FormEvent) => {
+        e.preventDefault();
+        if (!email) {
+            return;
         }
-      }
-    } catch (err) {
-      setError(err as Error);
-    } finally {
-      setLoading(false);
-    }
-  };
+        setLoading(true);
+        setError(null);
+        try {
+            await forgotPassword(email);
+            setStep("otp");
+        } catch (err) {
+            setError(err as Error);
+        } finally {
+            setLoading(false);
+        }
+    };
 
-  const renderInitialView = () => (
-    <>
-      <AuthFormImage />
+    const handleOtpSubmit = async (e: React.FormEvent) => {
+        e.preventDefault();
+        if (otp.length !== 6) {
+            return;
+        }
+        setLoading(true);
+        setError(null);
+        try {
+            const result = await verifyOtp(email, otp);
+            if (result.data) {
+                setToken(result.data.token);
+                setStep("reset");
+            }
+        } catch (err) {
+            setError(err as Error);
+        } finally {
+            setLoading(false);
+        }
+    };
 
-      <Header>
-        <Title>Forgot Password</Title>
-      </Header>
+    const handleResetSubmit = async (e: React.FormEvent) => {
+        e.preventDefault();
+        if (password !== confirmPassword) {
+            return;
+        }
+        if (password.length < 8) {
+            return;
+        }
+        setLoading(true);
+        setError(null);
+        try {
+            const result = await resetPassword(token, password);
+            if (result.data) {
+                const session = result.data;
+                // Check for incomplete sign-in attempts (e.g. 2FA). We take the
+                // last attempt as it is the one created by the password reset.
+                const incompleteAttempt =
+                    session.signin_attempts &&
+                    session.signin_attempts.length > 0
+                        ? session.signin_attempts[
+                              session.signin_attempts.length - 1
+                          ]
+                        : null;
 
-      <ResetButton
-        onClick={() => setStep("email")}
-        disabled={loading}
-      >
-        Reset your password
-      </ResetButton>
+                if (incompleteAttempt && !incompleteAttempt.completed) {
+                    const signinUrl =
+                        deployment?.ui_settings?.sign_in_page_url;
+                    if (signinUrl) {
+                        const url = new URL(signinUrl, window.location.origin);
+                        url.searchParams.set(
+                            "signin_attempt_id",
+                            incompleteAttempt.id,
+                        );
+                        navigate(url.toString());
+                    } else {
+                        onBack();
+                    }
+                } else {
+                    const redirectUrl =
+                        deployment?.ui_settings?.after_signin_redirect_url ||
+                        "/";
+                    navigate(redirectUrl);
+                }
+            }
+        } catch (err) {
+            setError(err as Error);
+        } finally {
+            setLoading(false);
+        }
+    };
 
-      <Divider>
-        <DividerText>Or, sign in with another method</DividerText>
-      </Divider>
+    const backFooter = (
+        <span className="w-auth-foot">
+            <span
+                className="w-link"
+                style={{ cursor: "pointer" }}
+                onClick={onBack}
+            >
+                Back to sign in
+            </span>
+        </span>
+    );
 
-      <OtherAuthOptions />
+    return (
+        <DefaultStylesProvider>
+            {step === "start" && (
+                <AuthCard footer={backFooter}>
+                    <AuthHead
+                        title="Forgot your password?"
+                        sub="Reset it, or sign in another way."
+                    />
+                    <button
+                        type="button"
+                        className="w-btn w-btn--primary w-btn--block"
+                        onClick={() => setStep("email")}
+                        disabled={loading}
+                    >
+                        Reset your password
+                    </button>
+                    <div className="w-or">
+                        <span>OR</span>
+                    </div>
+                    <OtherAuthOptions />
+                    <p
+                        className="w-secsub"
+                        style={{ textAlign: "center", marginTop: 16 }}
+                    >
+                        Unable to reset password?{" "}
+                        <a
+                            className="w-link"
+                            href={
+                                deployment?.ui_settings?.support_page_url || "#"
+                            }
+                        >
+                            Get help
+                        </a>
+                    </p>
+                </AuthCard>
+            )}
 
-      <Footer>
-        <FooterText>
-          Unable to reset password? <Link href="/contact">Get help</Link>
-        </FooterText>
-        <FooterText style={{ marginTop: "var(--space-4u)" }}>
-          <Link onClick={onBack} style={{ cursor: "pointer" }}>
-            Back to login
-          </Link>
-        </FooterText>
-      </Footer>
-    </>
-  );
+            {step === "email" && (
+                <AuthCard footer={backFooter}>
+                    <AuthHead
+                        title="Forgot password"
+                        sub="Enter your email and we'll send you a code to reset your password."
+                    />
+                    <form
+                        onSubmit={handleEmailSubmit}
+                        noValidate
+                        style={{
+                            display: "flex",
+                            flexDirection: "column",
+                            gap: 13,
+                        }}
+                    >
+                        <label className="w-field">
+                            <span className="w-label">Email address</span>
+                            <input
+                                className="w-input"
+                                type="email"
+                                id="email"
+                                value={email}
+                                onChange={(e) => setEmail(e.target.value)}
+                                placeholder="you@company.com"
+                                required
+                            />
+                        </label>
+                        {error && (
+                            <span className="w-input-err">{error.message}</span>
+                        )}
+                        <button
+                            type="submit"
+                            className="w-btn w-btn--primary w-btn--block"
+                            disabled={loading}
+                        >
+                            {loading ? <Spin size={15} onAccent /> : "Send code"}
+                        </button>
+                    </form>
+                </AuthCard>
+            )}
 
-  return (
-    <DefaultStylesProvider>
-      <Container>
-        {step === "start" && renderInitialView()}
+            {step === "otp" && (
+                <AuthCard footer={backFooter}>
+                    <AuthHead
+                        title="Enter verification code"
+                        sub={`We sent a 6-digit code to ${email}.`}
+                    />
+                    <form
+                        onSubmit={handleOtpSubmit}
+                        noValidate
+                        style={{
+                            display: "flex",
+                            flexDirection: "column",
+                            gap: 20,
+                            alignItems: "center",
+                        }}
+                    >
+                        <OTPInput
+                            onComplete={(code) => setOtp(code)}
+                            isSubmitting={loading}
+                            error={error?.message}
+                            onResend={async () => {
+                                await forgotPassword(email);
+                            }}
+                        />
+                        <button
+                            type="submit"
+                            className="w-btn w-btn--primary w-btn--block"
+                            disabled={loading || otp.length !== 6}
+                        >
+                            {loading ? <Spin size={15} onAccent /> : "Verify"}
+                        </button>
+                    </form>
+                </AuthCard>
+            )}
 
-        {step === "email" && (
-          <>
-            <AuthFormImage />
-
-            <Header>
-              <Title>Forgot Password</Title>
-              <Message>
-                Enter your email address and we'll send you a code to reset your
-                password.
-              </Message>
-            </Header>
-            <Form onSubmit={handleEmailSubmit} noValidate>
-              <FormGroup>
-                <Label htmlFor="email">Email Address</Label>
-                <Input
-                  type="email"
-                  id="email"
-                  value={email}
-                  onChange={(e) => setEmail(e.target.value)}
-                  placeholder="Enter your email"
-                  required
-                />
-              </FormGroup>
-              {error && (
-                <ErrorMessage>{error.message}</ErrorMessage>
-              )}
-              <Button
-                type="submit"
-                $fullWidth
-                disabled={loading}
-                style={{ marginTop: "var(--space-6u)" }}
-              >
-                {loading ? <ButtonSpinner size={16} /> : "Send Code"}
-              </Button>
-            </Form>
-            <Footer>
-              <FooterText style={{ marginTop: "var(--space-4u)" }}>
-                <Link onClick={onBack} style={{ cursor: "pointer" }}>
-                  Back to login
-                </Link>
-              </FooterText>
-            </Footer>
-          </>
-        )}
-
-        {step === "otp" && (
-          <>
-            <AuthFormImage />
-
-            <Header>
-              <Title>Enter Verification Code</Title>
-              <Message>
-                We've sent a 6-digit code to {email}. Please enter it below.
-              </Message>
-            </Header>
-            <Form onSubmit={handleOtpSubmit} noValidate>
-              <OTPInput
-                onComplete={(code) => setOtp(code)}
-                isSubmitting={loading}
-                error={error?.message}
-                onResend={async () => {
-                  await forgotPassword(email);
-                }}
-              />
-              {error && (
-                <ErrorMessage>{error.message}</ErrorMessage>
-              )}
-              <Button
-                type="submit"
-                $fullWidth
-                disabled={loading || otp.length !== 6}
-                style={{ marginTop: "var(--space-6u)" }}
-              >
-                {loading ? <ButtonSpinner size={16} /> : "Verify"}
-              </Button>
-            </Form>
-            <Footer>
-              <FooterText style={{ marginTop: "var(--space-4u)" }}>
-                <Link onClick={onBack} style={{ cursor: "pointer" }}>
-                  Back to login
-                </Link>
-              </FooterText>
-            </Footer>
-          </>
-        )}
-
-        {step === "reset" && (
-          <>
-            <AuthFormImage />
-
-            <Header>
-              <Title>Reset Password</Title>
-              <Message>Create a new password for your account.</Message>
-            </Header>
-            <Form onSubmit={handleResetSubmit} noValidate>
-              <FormGroup>
-                <Label htmlFor="password">New Password</Label>
-                <Input
-                  type="password"
-                  id="password"
-                  value={password}
-                  onChange={(e) => setPassword(e.target.value)}
-                  placeholder="Enter new password"
-                  required
-                />
-              </FormGroup>
-              <FormGroup>
-                <Label htmlFor="confirmPassword">Confirm New Password</Label>
-                <Input
-                  type="password"
-                  id="confirmPassword"
-                  value={confirmPassword}
-                  onChange={(e) => setConfirmPassword(e.target.value)}
-                  placeholder="Confirm new password"
-                  required
-                />
-              </FormGroup>
-              {error && (
-                <ErrorMessage>{error.message}</ErrorMessage>
-              )}
-              <Button
-                type="submit"
-                $fullWidth
-                disabled={loading}
-                style={{ marginTop: "var(--space-6u)" }}
-              >
-                {loading ? <ButtonSpinner size={16} /> : "Reset Password"}
-              </Button>
-            </Form>
-            <Footer>
-              <FooterText style={{ marginTop: "var(--space-4u)" }}>
-                <Link onClick={onBack} style={{ cursor: "pointer" }}>
-                  Back to login
-                </Link>
-              </FooterText>
-            </Footer>
-          </>
-        )}
-      </Container>
-    </DefaultStylesProvider>
-  );
+            {step === "reset" && (
+                <AuthCard footer={backFooter}>
+                    <AuthHead
+                        title="Reset password"
+                        sub="Create a new password for your account."
+                    />
+                    <form
+                        onSubmit={handleResetSubmit}
+                        noValidate
+                        style={{
+                            display: "flex",
+                            flexDirection: "column",
+                            gap: 13,
+                        }}
+                    >
+                        <label className="w-field">
+                            <span className="w-label">New password</span>
+                            <input
+                                className="w-input"
+                                type="password"
+                                id="password"
+                                value={password}
+                                onChange={(e) => setPassword(e.target.value)}
+                                placeholder="Enter new password"
+                                required
+                            />
+                        </label>
+                        <label className="w-field">
+                            <span className="w-label">Confirm new password</span>
+                            <input
+                                className="w-input"
+                                type="password"
+                                id="confirmPassword"
+                                value={confirmPassword}
+                                onChange={(e) =>
+                                    setConfirmPassword(e.target.value)
+                                }
+                                placeholder="Confirm new password"
+                                required
+                            />
+                        </label>
+                        {error && (
+                            <span className="w-input-err">{error.message}</span>
+                        )}
+                        <button
+                            type="submit"
+                            className="w-btn w-btn--primary w-btn--block"
+                            disabled={loading}
+                        >
+                            {loading ? (
+                                <Spin size={15} onAccent />
+                            ) : (
+                                "Reset password"
+                            )}
+                        </button>
+                    </form>
+                </AuthCard>
+            )}
+        </DefaultStylesProvider>
+    );
 }

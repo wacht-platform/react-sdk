@@ -29,7 +29,6 @@ import {
   PageHeaderName,
   PageHeaderSub,
 } from "./manage-account/shared";
-import styled from "styled-components";
 
 // Modularised Sections
 import { ProfileDetailsManagementSection } from "./manage-account/profile-details";
@@ -46,78 +45,6 @@ type TabType =
   | "social"
   | "security"
   | "sessions";
-
-const LoadingState = styled(Container)`
-  display: flex;
-  justify-content: center;
-  align-items: center;
-`;
-
-const EditableAvatar = styled.button`
-  position: relative;
-  width: 44px;
-  height: 44px;
-  min-width: 44px;
-  border-radius: 50%;
-  background: var(--color-secondary);
-  color: var(--color-secondary-text);
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  overflow: hidden;
-  font-size: 14px;
-  font-weight: 600;
-  flex-shrink: 0;
-  border: none;
-  padding: 0;
-  cursor: pointer;
-
-  img { width: 100%; height: 100%; object-fit: cover; }
-
-  .hover-overlay {
-    position: absolute;
-    inset: 0;
-    background: color-mix(in srgb, black 55%, transparent);
-    color: white;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    opacity: 0;
-    transition: opacity 0.15s ease;
-    border-radius: 50%;
-  }
-  &:hover .hover-overlay { opacity: 1; }
-
-  @media (max-width: 600px) {
-    width: 38px;
-    height: 38px;
-    min-width: 38px;
-    font-size: 13px;
-  }
-`;
-
-const Toast = styled.div`
-  position: absolute;
-  bottom: var(--space-10u);
-  right: var(--space-10u);
-  background: var(--color-popover);
-  border: var(--border-width-thin) solid var(--color-border);
-  border-radius: var(--radius-md);
-  padding: var(--space-6u) var(--space-8u);
-  box-shadow: var(--shadow-md);
-  animation: slideUp 0.3s ease-out;
-`;
-
-const ToastContent = styled.div`
-  display: flex;
-  align-items: center;
-  gap: var(--space-4u);
-`;
-
-const ToastText = styled.span`
-  font-size: var(--font-size-lg);
-  color: var(--color-popover-foreground);
-`;
 
 const getInitials = (first?: string, last?: string) =>
   `${first?.[0] || ""}${last?.[0] || ""}`.toUpperCase() || "U";
@@ -167,9 +94,9 @@ export const ManageAccount = () => {
   if (loading)
     return (
       <DefaultStylesProvider>
-        <LoadingState>
+        <Container className="w-flex w-items-center w-justify-center">
           <Spinner />
-        </LoadingState>
+        </Container>
       </DefaultStylesProvider>
     );
 
@@ -190,24 +117,28 @@ export const ManageAccount = () => {
         <ScreenContext.Provider
           value={{ screen: null, setScreen: () => { }, toast }}
         >
-          <Container>
+          <Container className="w-relative">
             {user && (
               <PageHeader className="mac-page-header">
-                <EditableAvatar
+                <button
                   type="button"
+                  className="w-avatar-edit"
+                  data-busy={isUploadingAvatar ? "" : undefined}
                   onClick={() => fileInputRef.current?.click()}
                   disabled={isUploadingAvatar}
                   title="Change profile picture"
                   aria-label="Change profile picture"
                 >
-                  {user.profile_picture_url
-                    ? <img src={user.profile_picture_url} alt="" />
-                    : getInitials(user.first_name, user.last_name)
-                  }
-                  <span className="hover-overlay">
+                  <span className="w-avatar w-avatar--lg">
+                    {user.profile_picture_url
+                      ? <img src={user.profile_picture_url} alt="" />
+                      : getInitials(user.first_name, user.last_name)
+                    }
+                  </span>
+                  <span className="w-avatar-veil">
                     {isUploadingAvatar ? <Spinner size={14} /> : <Camera size={16} />}
                   </span>
-                </EditableAvatar>
+                </button>
                 <input
                   ref={fileInputRef}
                   type="file"
@@ -315,16 +246,15 @@ export const ManageAccount = () => {
             </TabContent>
 
             {toastMessage && (
-              <Toast>
-                <ToastContent>
-                  {toastLevel === "error" ? (
-                    <Warning size={16} color="var(--color-error)" />
-                  ) : (
-                    <Check size={16} color="var(--color-success)" />
-                  )}
-                  <ToastText>{toastMessage}</ToastText>
-                </ToastContent>
-              </Toast>
+              <div
+                className={`w-toast w-toast--contained ${toastLevel === "error" ? "w-toast--error" : "w-toast--success"}`}
+                style={{ minWidth: 0 }}
+              >
+                <span className="w-toast-ic">
+                  {toastLevel === "error" ? <Warning size={12} /> : <Check size={12} />}
+                </span>
+                <span className="w-toast-msg">{toastMessage}</span>
+              </div>
             )}
           </Container>
         </ScreenContext.Provider>

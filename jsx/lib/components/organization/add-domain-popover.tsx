@@ -1,62 +1,10 @@
 import { useState, useRef, useEffect } from "react";
-import styled from "styled-components";
 import { Input } from "@/components/utility/input";
-import { Button, Spinner } from "../utility";
+import { Spinner } from "../utility";
 import { OrganizationDomain } from "@/types";
 import { useActiveOrganization } from "@/hooks/use-organization";
 import { useScreenContext } from "./context";
 import { usePopoverPosition } from "@/hooks/use-popover-position";
-
-const PopoverContainer = styled.div`
-    position: fixed;
-    background: var(--color-popover);
-    border-radius: 10px;
-    box-shadow: var(--shadow-md);
-    border: 1px solid var(--color-border);
-    width: 360px;
-    max-width: calc(100vw - 24px);
-    z-index: 1001;
-    overflow: hidden;
-    padding: 14px;
-    display: flex;
-    flex-direction: column;
-    gap: 10px;
-
-    @media (max-width: 600px) {
-        width: calc(100vw - 24px);
-    }
-`;
-
-const Title = styled.div`
-    font-size: 13px;
-    font-weight: 600;
-    color: var(--color-popover-foreground);
-`;
-
-const Hint = styled.div`
-    font-size: 12px;
-    color: var(--color-secondary-text);
-    line-height: 1.4;
-`;
-
-const Field = styled.div`
-    display: flex;
-    flex-direction: column;
-    gap: 4px;
-`;
-
-const FieldLabel = styled.label`
-    font-size: 11px;
-    font-weight: 500;
-    color: var(--color-secondary-text);
-`;
-
-const Actions = styled.div`
-    display: grid;
-    grid-template-columns: 1fr 1fr;
-    gap: 6px;
-    & > button { width: 100%; }
-`;
 
 interface AddDomainPopoverProps {
     onClose?: () => void;
@@ -77,6 +25,7 @@ export const AddDomainPopover = ({
     const { addDomain, verifyDomain } = useActiveOrganization();
     const { toast } = useScreenContext();
     const position = usePopoverPosition({
+        contentRef: popoverRef,
         triggerRef: triggerRef ?? { current: null },
         isOpen: mounted,
         minWidth: 360,
@@ -154,6 +103,8 @@ export const AddDomainPopover = ({
     if (!mounted) return null;
 
     const style: React.CSSProperties = {
+        position: "fixed",
+        zIndex: 1001,
         top: position?.top !== undefined ? `${position.top}px` : undefined,
         bottom: position?.bottom !== undefined ? `${position.bottom}px` : undefined,
         left: position?.left !== undefined ? `${position.left}px` : undefined,
@@ -163,69 +114,75 @@ export const AddDomainPopover = ({
 
     if (!currentDomain) {
         return (
-            <PopoverContainer
+            <div
                 ref={popoverRef}
+                className="w-pop w-pop--wide"
                 style={style}
                 onClick={(e) => e.stopPropagation()}
                 role="dialog"
                 aria-labelledby="add-domain-title"
                 aria-modal="true"
             >
-                <Title id="add-domain-title">Add domain</Title>
-                <Hint>Add a corporate domain so verified users auto-join this organization.</Hint>
-                <Field>
-                    <FieldLabel>Domain</FieldLabel>
-                    <Input
-                        type="text"
-                        placeholder="example.com"
-                        value={newFqdn}
-                        onChange={(e) => setNewFqdn(e.target.value)}
-                        onKeyDown={(e) => {
-                            if (e.key === "Enter" && newFqdn) handleDomainCreation();
-                        }}
-                        autoFocus
-                        aria-label="Domain name"
-                    />
-                </Field>
-                <Actions>
-                    <Button $size="sm" $outline onClick={onClose}>Cancel</Button>
-                    <Button $size="sm" onClick={handleDomainCreation} disabled={!newFqdn || loading}>
+                <div className="w-pop-body">
+                    <div className="w-pop-title" id="add-domain-title">Add domain</div>
+                    <p className="w-pop-sub">Verified members auto-join this org.</p>
+                    <label className="w-field">
+                        <span className="w-label">Domain</span>
+                        <Input
+                            type="text"
+                            placeholder="example.com"
+                            value={newFqdn}
+                            onChange={(e) => setNewFqdn(e.target.value)}
+                            onKeyDown={(e) => {
+                                if (e.key === "Enter" && newFqdn) handleDomainCreation();
+                            }}
+                            autoFocus
+                            aria-label="Domain name"
+                        />
+                    </label>
+                </div>
+                <div className="w-pop-foot">
+                    <button type="button" className="w-btn w-btn--ghost w-btn--sm" onClick={onClose}>Cancel</button>
+                    <button type="button" className="w-btn w-btn--primary w-btn--sm" onClick={handleDomainCreation} disabled={!newFqdn || loading}>
                         {loading ? <Spinner size={12} /> : "Continue"}
-                    </Button>
-                </Actions>
-            </PopoverContainer>
+                    </button>
+                </div>
+            </div>
         );
     }
 
     return (
-        <PopoverContainer
+        <div
             ref={popoverRef}
+            className="w-pop w-pop--wide"
             style={style}
             onClick={(e) => e.stopPropagation()}
             role="dialog"
             aria-labelledby="verify-domain-title"
             aria-modal="true"
         >
-            <Title id="verify-domain-title">Verify domain</Title>
-            <Hint>Add the following DNS record to your provider, then verify.</Hint>
-            <Field>
-                <FieldLabel>Type</FieldLabel>
-                <Input value={currentDomain?.verification_dns_record_type} disabled />
-            </Field>
-            <Field>
-                <FieldLabel>Name</FieldLabel>
-                <Input value={currentDomain?.verification_dns_record_name} disabled />
-            </Field>
-            <Field>
-                <FieldLabel>Value</FieldLabel>
-                <Input value={currentDomain?.verification_dns_record_data} disabled />
-            </Field>
-            <Actions>
-                <Button $size="sm" $outline onClick={onClose}>Cancel</Button>
-                <Button $size="sm" onClick={handleDomainVerification} disabled={loading}>
+            <div className="w-pop-body">
+                <div className="w-pop-title" id="verify-domain-title">Verify domain</div>
+                <p className="w-pop-sub">Add this DNS record, then verify.</p>
+                <label className="w-field">
+                    <span className="w-label">Type</span>
+                    <Input value={currentDomain?.verification_dns_record_type} disabled />
+                </label>
+                <label className="w-field">
+                    <span className="w-label">Name</span>
+                    <Input value={currentDomain?.verification_dns_record_name} disabled />
+                </label>
+                <label className="w-field">
+                    <span className="w-label">Value</span>
+                    <Input value={currentDomain?.verification_dns_record_data} disabled />
+                </label>
+            </div>
+            <div className="w-pop-foot">
+                <button type="button" className="w-btn w-btn--ghost w-btn--sm" onClick={onClose}>Cancel</button>
+                <button type="button" className="w-btn w-btn--primary w-btn--sm" onClick={handleDomainVerification} disabled={loading}>
                     {loading ? <Spinner size={12} /> : "Verify"}
-                </Button>
-            </Actions>
-        </PopoverContainer>
+                </button>
+            </div>
+        </div>
     );
 };

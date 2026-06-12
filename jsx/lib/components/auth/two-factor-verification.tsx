@@ -1,11 +1,7 @@
 import { useEffect, useState } from "react";
-import styled, { keyframes } from "styled-components";
 import { DefaultStylesProvider } from "../utility/root";
 import { OTPInput } from "@/components/utility/otp-input";
-import { Input } from "@/components/utility/input";
-import { Form, FormGroup, Label } from "../utility/form";
-import { Button } from "@/components/utility";
-import { AuthFormImage } from "./auth-image";
+import { AuthCard, AuthHead, AuthCardLoader, Spin } from "./auth-card";
 import { useDeployment } from "@/hooks/use-deployment";
 import { NavigationLink } from "../utility/navigation";
 import {
@@ -18,93 +14,8 @@ import { SmartphoneIcon } from "../icons/smartphone";
 import { KeyIcon } from "../icons/key";
 import { ProfileCompletionProps } from "@wacht/types";
 import { useNavigation } from "@/hooks";
-import { CircleNotch } from "@phosphor-icons/react";
 import { getStoredDevSession } from "@/utils/dev-session";
 import { sanitizeRedirectUri } from "@/utils/redirect-uri";
-import { standaloneAuthShell } from "./auth-shell";
-
-const Container = styled.div`
-    ${standaloneAuthShell}
-`;
-
-const spin = keyframes`
-  from {
-    transform: rotate(0deg);
-  }
-  to {
-    transform: rotate(360deg);
-  }
-`;
-
-const ButtonSpinner = styled(CircleNotch)`
-    animation: ${spin} 1s linear infinite;
-`;
-
-const LoadingContainer = styled.div`
-    display: flex;
-    justify-content: center;
-    align-items: center;
-    min-height: 200px;
-
-    svg {
-        animation: ${spin} 1s linear infinite;
-        color: var(--color-primary);
-    }
-`;
-
-const Header = styled.div`
-    text-align: center;
-    margin-bottom: var(--space-8u);
-    position: relative;
-`;
-
-const Title = styled.h1`
-    font-size: var(--font-size-xl);
-    font-weight: 400;
-    color: var(--color-card-foreground);
-    margin-bottom: var(--space-2u);
-    margin-top: 0;
-`;
-
-const Subtitle = styled.p`
-    color: var(--color-secondary-text);
-    font-size: var(--font-size-md);
-`;
-
-const ErrorMessage = styled.p`
-    font-size: var(--font-size-xs);
-    color: var(--color-error);
-    margin: 0;
-    margin-top: var(--space-1u);
-`;
-
-const SubmitButton = styled(Button)`
-    margin-top: var(--space-4u);
-    width: 100%;
-`;
-
-const Footer = styled.div`
-    margin-top: var(--space-8u);
-    text-align: center;
-    font-size: var(--font-size-md);
-    color: var(--color-secondary-text);
-`;
-
-const Link = styled.span`
-    color: var(--color-primary);
-    text-decoration: none;
-    font-weight: 400;
-    transition: color 0.2s;
-    cursor: pointer;
-
-    &:hover {
-        color: var(--color-primary-hover);
-    }
-`;
-
-const CodeInput = styled(Input)`
-    padding: var(--space-4u) var(--space-6u);
-`;
 
 export function TwoFactorVerification({
     onBack,
@@ -270,58 +181,45 @@ export function TwoFactorVerification({
     }, [attempt, deployment]);
 
     if (isRedirecting) {
-        return (
-            <DefaultStylesProvider>
-                <Container>
-                    <AuthFormImage />
-                    <LoadingContainer>
-                        <CircleNotch size={32} />
-                    </LoadingContainer>
-                </Container>
-            </DefaultStylesProvider>
-        );
+        return <AuthCardLoader />;
     }
 
     if (showMethodSelector) {
         if (availableMethods.length === 0) {
             return (
                 <DefaultStylesProvider>
-                    <Container>
-                        <AuthFormImage />
-                        <Header>
-                            <Title>Set Up Two-Factor Authentication</Title>
-                            <Subtitle>
-                                Your account requires two-factor authentication,
-                                but you haven't set up any methods yet. Please
-                                contact your administrator to set up 2FA.
-                            </Subtitle>
-                        </Header>
-                        <Footer>
-                            {onBack && (
-                                <div>
-                                    <Link
-                                        onClick={onBack}
-                                        style={{ cursor: "pointer" }}
-                                    >
-                                        Back to login
-                                    </Link>
-                                </div>
-                            )}
-                            <div style={{ marginTop: "var(--space-4u)" }}>
+                    <AuthCard
+                        footer={
+                            <span className="w-auth-foot">
                                 Having trouble?{" "}
-                                <Link>
-                                    <NavigationLink
-                                        to={
-                                            deployment?.ui_settings
-                                                .support_page_url || "#"
-                                        }
-                                    >
-                                        Get help
-                                    </NavigationLink>
-                                </Link>
+                                <NavigationLink
+                                    to={
+                                        deployment?.ui_settings
+                                            .support_page_url || "#"
+                                    }
+                                    className="w-link"
+                                >
+                                    Get help
+                                </NavigationLink>
+                            </span>
+                        }
+                    >
+                        <AuthHead
+                            title="Set up two-factor authentication"
+                            sub="Your account requires two-factor authentication, but you haven't set up any methods yet. Please contact your administrator to set up 2FA."
+                        />
+                        {onBack && (
+                            <div style={{ textAlign: "center" }}>
+                                <button
+                                    type="button"
+                                    className="w-link"
+                                    onClick={onBack}
+                                >
+                                    Back to login
+                                </button>
                             </div>
-                        </Footer>
-                    </Container>
+                        )}
+                    </AuthCard>
                 </DefaultStylesProvider>
             );
         }
@@ -349,28 +247,48 @@ export function TwoFactorVerification({
         );
     }
 
+    const sub =
+        selectedMethod === "authenticator"
+            ? "Enter the 6-digit code from your authenticator app"
+            : selectedMethod === "phone_otp"
+              ? `Enter the 6-digit code sent to your phone ${maskedPhone}`
+              : "Enter one of your backup codes";
+
     return (
         <DefaultStylesProvider>
-            <Container>
-                <AuthFormImage />
+            <AuthCard
+                footer={
+                    <span className="w-auth-foot">
+                        Having trouble?{" "}
+                        <NavigationLink
+                            to={
+                                deployment?.ui_settings.support_page_url || "#"
+                            }
+                            className="w-link"
+                        >
+                            Get help
+                        </NavigationLink>
+                    </span>
+                }
+            >
+                <AuthHead title="Two-factor authentication" sub={sub} />
 
-                <Header>
-                    <Title>Two-factor authentication</Title>
-                    <Subtitle>
-                        {selectedMethod === "authenticator" &&
-                            "Enter the 6-digit code from your authenticator app"}
-                        {selectedMethod === "phone_otp" &&
-                            `Enter the 6-digit code sent to your phone ${maskedPhone}`}
-                        {selectedMethod === "backup_code" &&
-                            "Enter one of your backup codes"}
-                    </Subtitle>
-                </Header>
-
-                <Form onSubmit={handleSubmit} noValidate>
+                <form
+                    onSubmit={handleSubmit}
+                    noValidate
+                    style={{
+                        display: "flex",
+                        flexDirection: "column",
+                        gap: 16,
+                    }}
+                >
                     {selectedMethod === "backup_code" ? (
-                        <FormGroup>
-                            <Label htmlFor="code">Backup code</Label>
-                            <CodeInput
+                        <div className="w-field">
+                            <label className="w-label" htmlFor="code">
+                                Backup code
+                            </label>
+                            <input
+                                className={`w-input${errors.code ? " w-input--invalid" : ""}`}
                                 type="text"
                                 id="code"
                                 name="code"
@@ -383,9 +301,11 @@ export function TwoFactorVerification({
                                 autoFocus
                             />
                             {errors.code && (
-                                <ErrorMessage>{errors.code}</ErrorMessage>
+                                <span className="w-input-err">
+                                    {errors.code}
+                                </span>
                             )}
-                        </FormGroup>
+                        </div>
                     ) : (
                         <OTPInput
                             onComplete={async (code) => {
@@ -421,57 +341,51 @@ export function TwoFactorVerification({
                         />
                     )}
 
-                    <div>
-                        {errors.submit && (
-                            <ErrorMessage>{errors.submit}</ErrorMessage>
-                        )}
+                    {errors.submit && (
+                        <span className="w-input-err">{errors.submit}</span>
+                    )}
 
-                        <SubmitButton
-                            type="submit"
-                            disabled={isSubmitting || !verificationCode}
-                        >
-                            {isSubmitting ? <ButtonSpinner size={16} /> : "Verify"}
-                        </SubmitButton>
-                    </div>
-                </Form>
+                    <button
+                        type="submit"
+                        className="w-btn w-btn--primary w-btn--block"
+                        disabled={isSubmitting || !verificationCode}
+                    >
+                        {isSubmitting ? <Spin onAccent /> : "Verify"}
+                    </button>
+                </form>
 
-                <Footer>
-                    <Link
+                <div
+                    style={{
+                        marginTop: 18,
+                        textAlign: "center",
+                        display: "flex",
+                        flexDirection: "column",
+                        gap: 8,
+                    }}
+                >
+                    <button
+                        type="button"
+                        className="w-link"
                         onClick={() => {
                             setShowMethodSelector(true);
                             setSelectedMethod(null);
                             setVerificationCode("");
                             setErrors({});
                         }}
-                        style={{ cursor: "pointer" }}
                     >
                         Try another method
-                    </Link>
-                    <div style={{ marginTop: "var(--space-4u)" }}>
-                        Having trouble?{" "}
-                        <Link>
-                            <NavigationLink
-                                to={
-                                    deployment?.ui_settings.support_page_url ||
-                                    "#"
-                                }
-                            >
-                                Get help
-                            </NavigationLink>
-                        </Link>
-                    </div>
+                    </button>
                     {onBack && (
-                        <div style={{ marginTop: "var(--space-4u)" }}>
-                            <Link
-                                onClick={onBack}
-                                style={{ cursor: "pointer" }}
-                            >
-                                Back to login
-                            </Link>
-                        </div>
+                        <button
+                            type="button"
+                            className="w-link w-link--muted"
+                            onClick={onBack}
+                        >
+                            Back to login
+                        </button>
                     )}
-                </Footer>
-            </Container>
+                </div>
+            </AuthCard>
         </DefaultStylesProvider>
     );
 }

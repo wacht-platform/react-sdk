@@ -14,6 +14,8 @@ interface UsePopoverPositionProps {
     minWidth?: number;
     defaultMaxHeight?: number;
     offset?: number;
+    /** The popover element — measured for accurate width alignment. */
+    contentRef?: RefObject<HTMLElement | null>;
 }
 
 export const usePopoverPosition = ({
@@ -22,6 +24,7 @@ export const usePopoverPosition = ({
     minWidth = 300,
     defaultMaxHeight = 400,
     offset = 8,
+    contentRef,
 }: UsePopoverPositionProps) => {
     const [position, setPosition] = useState<PopoverPosition | undefined>();
 
@@ -38,13 +41,17 @@ export const usePopoverPosition = ({
             const windowWidth = window.innerWidth;
             const windowHeight = window.innerHeight;
 
-            // Calculate available space
+            // Use the popover's real rendered width when available (it's laid out
+            // even while visibility:hidden) so alignment matches the actual box
+            // instead of a guessed minWidth.
+            const width = contentRef?.current?.offsetWidth || minWidth;
+
             const spaceBelow = windowHeight - rect.bottom;
             const spaceAbove = rect.top;
 
-            let pos: PopoverPosition = {};
+            const pos: PopoverPosition = {};
 
-            // Vertical Positioning: Strictly prefer side with MORE space
+            // Vertical: prefer the side with more room
             if (spaceBelow >= spaceAbove) {
                 pos.top = rect.bottom + offset;
                 pos.maxHeight = Math.min(defaultMaxHeight, spaceBelow - offset * 2);
@@ -53,32 +60,32 @@ export const usePopoverPosition = ({
                 pos.maxHeight = Math.min(defaultMaxHeight, spaceAbove - offset * 2);
             }
 
-            // Horizontal Positioning: Prioritize the side with more space
+            // Horizontal: align to the trigger, clamped to the viewport using the
+            // real width; open toward the side with more room.
             const availableRight = windowWidth - rect.left;
             const availableLeft = rect.right;
-
-            if (availableRight >= availableLeft) {
-                // Open towards right (align left edges)
-                pos.left = Math.max(offset, Math.min(windowWidth - minWidth - offset, rect.left));
-            } else {
-                // Open towards left (align right edges)
-                pos.left = Math.max(offset, Math.min(windowWidth - minWidth - offset, rect.right - minWidth));
-            }
+            const desiredLeft =
+                availableRight >= availableLeft ? rect.left : rect.right - width;
+            pos.left = Math.max(
+                offset,
+                Math.min(windowWidth - width - offset, desiredLeft),
+            );
 
             setPosition(pos);
         };
 
-        calculatePosition();
+        // Measure after layout so contentRef has its dimensions.
+        const raf = requestAnimationFrame(calculatePosition);
 
-        // Recalculate on resize and scroll
         window.addEventListener("resize", calculatePosition);
         window.addEventListener("scroll", calculatePosition, true);
 
         return () => {
+            cancelAnimationFrame(raf);
             window.removeEventListener("resize", calculatePosition);
             window.removeEventListener("scroll", calculatePosition, true);
         };
-    }, [isOpen, minWidth, defaultMaxHeight, offset]);
+    }, [isOpen, minWidth, defaultMaxHeight, offset, contentRef]);
 
     return position;
 };

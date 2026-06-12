@@ -1,5 +1,4 @@
 import { useState, useRef } from "react";
-import styled from "styled-components";
 import { useDeployment } from "@/hooks/use-deployment";
 import { useUser } from "@/hooks/use-user";
 import { useScreenContext } from "../context";
@@ -21,30 +20,6 @@ import {
     DesktopTableContainer,
     StatusPill,
 } from "./shared";
-
-const InlineActions = styled.div`
-    display: flex;
-    align-items: center;
-    gap: 6px;
-    justify-content: flex-end;
-    flex-wrap: nowrap;
-    white-space: nowrap;
-    & > button { white-space: nowrap; }
-`;
-
-const MutedLabel = styled.span`
-    font-size: 12px;
-    color: var(--color-secondary-text);
-`;
-
-const PhoneCell = styled.div`
-    display: inline-flex;
-    align-items: center;
-    gap: 8px;
-    font-size: 13px;
-    & .flag { font-size: 14px; line-height: 1; }
-    & .code { color: var(--color-secondary-text); }
-`;
 
 export const PhoneManagementSection = () => {
     const { deployment } = useDeployment();
@@ -141,10 +116,10 @@ export const PhoneManagementSection = () => {
         const isPrimary = phone.id === user?.primary_phone_number_id;
         const isBusy = pendingIds.has(phone.id);
 
-        if (isPrimary) return <MutedLabel>Cannot remove</MutedLabel>;
+        if (isPrimary) return <span className="w-secsub">Cannot remove</span>;
 
         return (
-            <InlineActions>
+            <div className="w-actions">
                 {phone.verified && (
                     <Button
                         $size="sm"
@@ -176,22 +151,20 @@ export const PhoneManagementSection = () => {
                 >
                     {isBusy ? <Spinner size={12} /> : "Remove"}
                 </Button>
-            </InlineActions>
+            </div>
         );
     };
 
     return (
         <>
-            <ResponsiveHeaderContainer style={{ marginBottom: "var(--space-6u)" }}>
-                <div style={{ flex: 1, minWidth: 0 }}>
-                    <div style={{ fontSize: 14, fontWeight: 500, color: "var(--color-card-foreground)" }}>
-                        Phone numbers
-                    </div>
-                    <div style={{ fontSize: 12, color: "var(--color-secondary-text)", marginTop: 2 }}>
+            <ResponsiveHeaderContainer>
+                <div className="w-grow w-flex-col w-gap-1">
+                    <div className="w-sec">Phone numbers</div>
+                    <div className="w-secsub">
                         Used for sign-in and two-factor authentication.
                     </div>
                 </div>
-                <div style={{ position: "relative", flexShrink: 0 }}>
+                <div className="w-none w-relative">
                     <Button
                         ref={phoneButtonRef}
                         $size="sm"
@@ -264,11 +237,11 @@ export const PhoneManagementSection = () => {
                                 {phones.map((phone) => (
                                     <TableRow key={phone.id}>
                                         <TableCell>
-                                            <PhoneCell>
-                                                <span className="flag">{getCountryFlag(phone.country_code)}</span>
-                                                <span className="code">{phone.country_code}</span>
+                                            <span className="w-inline w-gap-2">
+                                                <span>{getCountryFlag(phone.country_code)}</span>
+                                                <span className="w-text-secondary">{phone.country_code}</span>
                                                 <span>{phone.phone_number}</span>
-                                            </PhoneCell>
+                                            </span>
                                         </TableCell>
                                         <TableCell>{renderStatus(phone)}</TableCell>
                                         <ActionsCell>{renderActions(phone)}</ActionsCell>

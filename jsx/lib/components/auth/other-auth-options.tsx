@@ -1,5 +1,4 @@
 import { useState } from "react";
-import styled from "styled-components";
 import {
     Key,
     DeviceMobile,
@@ -13,40 +12,6 @@ import { SocialAuthButtons } from "@/components/auth/social-buttons";
 import { MethodButton } from "@/components/utility/method-button";
 import { useSignInContext } from "@/context/signin-provider";
 import { DeploymentSocialConnection } from "@/types";
-
-const MethodStack = styled.div`
-    display: flex;
-    flex-direction: column;
-    gap: var(--space-3u);
-`;
-
-
-const Divider = styled.div`
-    position: relative;
-    text-align: center;
-    margin: var(--space-6u) 0;
-
-    &::before {
-        content: "";
-        position: absolute;
-        top: 50%;
-        left: 0;
-        right: 0;
-        height: var(--border-width-thin);
-        background: var(--color-border);
-    }
-`;
-
-const DividerText = styled.span`
-    position: relative;
-    background: var(--color-card);
-    padding: 0 var(--space-4u);
-    color: var(--color-secondary-text);
-    font-size: var(--font-size-2xs);
-    font-weight: 600;
-    text-transform: uppercase;
-    letter-spacing: 0.1em;
-`;
 
 const methods = [
     {
@@ -130,13 +95,13 @@ export function OtherAuthOptions() {
             )}
 
             {hasSocials && hasMethods && (
-                <Divider>
-                    <DividerText>or</DividerText>
-                </Divider>
+                <div className="w-or">
+                    <span>or</span>
+                </div>
             )}
 
             {hasMethods && (
-                <MethodStack>
+                <div className="w-method-stack">
                     {availableMethods.map((method) => (
                         <MethodButton
                             key={method.key}
@@ -150,7 +115,7 @@ export function OtherAuthOptions() {
                             }}
                         />
                     ))}
-                </MethodStack>
+                </div>
             )}
         </>
     );

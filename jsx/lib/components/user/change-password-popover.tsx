@@ -1,73 +1,8 @@
 import { useState, useRef, useEffect } from "react";
-import styled from "styled-components";
 import { Input } from "@/components/utility/input";
-import { Button } from "@/components/utility/button";
 import { Label } from "../utility/form";
 import { Eye, EyeSlash } from "@phosphor-icons/react";
 import { usePopoverPosition } from "@/hooks/use-popover-position";
-
-const PopoverContainer = styled.div`
-  position: fixed;
-  background: var(--color-popover);
-  border-radius: var(--radius-md);
-  box-shadow: var(--shadow-md);
-  border: var(--border-width-thin) solid var(--color-border);
-  padding: var(--space-8u);
-  width: calc(calc(var(--size-50u) * 3) + var(--size-40u));
-  max-width: calc(100vw - var(--space-24u));
-  z-index: 1001;
-  
-  @media (max-width: 600px) {
-    width: calc(100vw - var(--space-24u));
-  }
-`;
-
-const ButtonGroup = styled.div`
-  display: flex;
-  gap: var(--space-4u);
-  justify-content: flex-end;
-  margin-top: var(--space-8u);
-`;
-
-const Title = styled.div`
-  font-size: var(--font-size-lg);
-  font-weight: 400;
-  color: var(--color-popover-foreground);
-  margin-bottom: var(--space-4u);
-`;
-
-const StyledFormGroup = styled.div`
-  display: flex;
-  flex-direction: column;
-  gap: var(--space-2u);
-  margin-bottom: var(--space-6u);
-`;
-
-const PasswordInput = styled.div`
-  position: relative;
-  
-  button {
-    position: absolute;
-    right: var(--space-6u);
-    top: 50%;
-    transform: translateY(-50%);
-    background: none;
-    border: none;
-    cursor: pointer;
-    padding: 0;
-    color: var(--color-secondary-text);
-    
-    &:hover {
-      color: var(--color-popover-foreground);
-    }
-  }
-`;
-
-const ErrorMessage = styled.div`
-  color: var(--color-error);
-  font-size: var(--font-size-sm);
-  margin-top: var(--space-2u);
-`;
 
 interface ChangePasswordPopoverProps {
   triggerRef?: React.RefObject<HTMLElement | null>;
@@ -93,6 +28,7 @@ export const ChangePasswordPopover = ({
   const [loading, setLoading] = useState(false);
   const [errors, setErrors] = useState<Record<string, string>>({});
   const position = usePopoverPosition({
+    contentRef: popoverRef,
     triggerRef: triggerRef ?? { current: null },
     isOpen: mounted,
     minWidth: 380,
@@ -165,9 +101,14 @@ export const ChangePasswordPopover = ({
   }
 
   return (
-    <PopoverContainer
+    <div
       ref={popoverRef}
+      className="w-pop"
       style={{
+        position: "fixed",
+        zIndex: 1001,
+        width: 380,
+        maxWidth: "calc(100vw - 24px)",
         top: position?.top !== undefined ? `${position.top}px` : undefined,
         bottom: position?.bottom !== undefined ? `${position.bottom}px` : undefined,
         left: position?.left !== undefined ? `${position.left}px` : undefined,
@@ -177,99 +118,102 @@ export const ChangePasswordPopover = ({
       }}
       onClick={(e) => e.stopPropagation()}
     >
-      <Title>{isSetup ? "Set Password" : "Change Password"}</Title>
-      <div
-        style={{
-          fontSize: "var(--font-size-lg)",
-          color: "var(--color-muted)",
-          marginBottom: "var(--space-8u)",
-        }}
-      >
-        {isSetup ? "Set a password for your account to enable password authentication." : "Update your account password to keep it secure."}
-      </div>
+      <div className="w-pop-body">
+        <div className="w-flex-col w-gap-1">
+          <div className="w-pop-title">{isSetup ? "Set Password" : "Change Password"}</div>
+          <p className="w-pop-sub">
+            {isSetup ? "Set a password for your account to enable password authentication." : "Update your account password to keep it secure."}
+          </p>
+        </div>
 
-      {!isSetup && (
-        <StyledFormGroup>
-          <Label>Current Password</Label>
-          <PasswordInput>
+        {!isSetup && (
+          <div className="w-field">
+            <Label>Current Password</Label>
+            <div className="w-input-wrap">
+              <Input
+                type={showCurrentPassword ? "text" : "password"}
+                placeholder="Enter your current password"
+                value={currentPassword}
+                onChange={(e) => setCurrentPassword(e.target.value)}
+                style={{ paddingRight: 40 }}
+              />
+              <button
+                type="button"
+                className="w-input-eye"
+                onClick={() => setShowCurrentPassword(!showCurrentPassword)}
+                aria-label={showCurrentPassword ? "Hide current password" : "Show current password"}
+              >
+                {showCurrentPassword ? <EyeSlash size={16} /> : <Eye size={16} />}
+              </button>
+            </div>
+            {errors.currentPassword && (
+              <span className="w-input-err">{errors.currentPassword}</span>
+            )}
+          </div>
+        )}
+
+        <div className="w-field">
+          <Label>{isSetup ? "Password" : "New Password"}</Label>
+          <div className="w-input-wrap">
             <Input
-              type={showCurrentPassword ? "text" : "password"}
-              placeholder="Enter your current password"
-              value={currentPassword}
-              onChange={(e) => setCurrentPassword(e.target.value)}
-              style={{ paddingRight: "var(--size-20u)" }}
+              type={showNewPassword ? "text" : "password"}
+              placeholder={isSetup ? "Enter your password" : "Enter your new password"}
+              value={newPassword}
+              onChange={(e) => setNewPassword(e.target.value)}
+              style={{ paddingRight: 40 }}
             />
             <button
               type="button"
-              onClick={() => setShowCurrentPassword(!showCurrentPassword)}
-              aria-label={showCurrentPassword ? "Hide current password" : "Show current password"}
+              className="w-input-eye"
+              onClick={() => setShowNewPassword(!showNewPassword)}
+              aria-label={showNewPassword ? "Hide new password" : "Show new password"}
             >
-              {showCurrentPassword ? <EyeSlash size={16} /> : <Eye size={16} />}
+              {showNewPassword ? <EyeSlash size={16} /> : <Eye size={16} />}
             </button>
-          </PasswordInput>
-          {errors.currentPassword && (
-            <ErrorMessage>{errors.currentPassword}</ErrorMessage>
+          </div>
+          {errors.newPassword && (
+            <span className="w-input-err">{errors.newPassword}</span>
           )}
-        </StyledFormGroup>
-      )}
+        </div>
 
-      <StyledFormGroup>
-        <Label>{isSetup ? "Password" : "New Password"}</Label>
-        <PasswordInput>
-          <Input
-            type={showNewPassword ? "text" : "password"}
-            placeholder={isSetup ? "Enter your password" : "Enter your new password"}
-            value={newPassword}
-            onChange={(e) => setNewPassword(e.target.value)}
-            style={{ paddingRight: "var(--size-20u)" }}
-          />
-          <button
-            type="button"
-            onClick={() => setShowNewPassword(!showNewPassword)}
-            aria-label={showNewPassword ? "Hide new password" : "Show new password"}
-          >
-            {showNewPassword ? <EyeSlash size={16} /> : <Eye size={16} />}
-          </button>
-        </PasswordInput>
-        {errors.newPassword && (
-          <ErrorMessage>{errors.newPassword}</ErrorMessage>
-        )}
-      </StyledFormGroup>
+        <div className="w-field">
+          <Label>Confirm New Password</Label>
+          <div className="w-input-wrap">
+            <Input
+              type={showConfirmPassword ? "text" : "password"}
+              placeholder="Confirm your new password"
+              value={confirmPassword}
+              onChange={(e) => setConfirmPassword(e.target.value)}
+              style={{ paddingRight: 40 }}
+            />
+            <button
+              type="button"
+              className="w-input-eye"
+              onClick={() => setShowConfirmPassword(!showConfirmPassword)}
+              aria-label={showConfirmPassword ? "Hide confirm password" : "Show confirm password"}
+            >
+              {showConfirmPassword ? <EyeSlash size={16} /> : <Eye size={16} />}
+            </button>
+          </div>
+          {errors.confirmPassword && (
+            <span className="w-input-err">{errors.confirmPassword}</span>
+          )}
+        </div>
 
-      <StyledFormGroup>
-        <Label>Confirm New Password</Label>
-        <PasswordInput>
-          <Input
-            type={showConfirmPassword ? "text" : "password"}
-            placeholder="Confirm your new password"
-            value={confirmPassword}
-            onChange={(e) => setConfirmPassword(e.target.value)}
-            style={{ paddingRight: "var(--size-20u)" }}
-          />
-          <button
-            type="button"
-            onClick={() => setShowConfirmPassword(!showConfirmPassword)}
-            aria-label={showConfirmPassword ? "Hide confirm password" : "Show confirm password"}
-          >
-            {showConfirmPassword ? <EyeSlash size={16} /> : <Eye size={16} />}
-          </button>
-        </PasswordInput>
-        {errors.confirmPassword && (
-          <ErrorMessage>{errors.confirmPassword}</ErrorMessage>
-        )}
-      </StyledFormGroup>
+        {errors.form && <span className="w-input-err">{errors.form}</span>}
+      </div>
 
-      {errors.form && <ErrorMessage>{errors.form}</ErrorMessage>}
-
-      <ButtonGroup>
-        <Button $outline onClick={onClose}>Cancel</Button>
-        <Button
+      <div className="w-pop-foot">
+        <button className="w-btn w-btn--secondary w-btn--sm" onClick={onClose}>Cancel</button>
+        <button
+          className="w-btn w-btn--primary w-btn--sm"
+          style={{ width: "auto" }}
           onClick={handleSubmit}
           disabled={loading}
         >
           {loading ? (isSetup ? "Setting..." : "Updating...") : (isSetup ? "Set Password" : "Update Password")}
-        </Button>
-      </ButtonGroup>
-    </PopoverContainer>
+        </button>
+      </div>
+    </div>
   );
 };

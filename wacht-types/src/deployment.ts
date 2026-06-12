@@ -156,6 +156,46 @@ export interface DarkModeSettings {
   token_overrides?: UITokenOverrides;
 }
 
+/**
+ * Per-mode overrides of the SDK's 23 `--wa-*` design tokens (plus the two
+ * optional font tokens). Keys are snake_case and map to the kebab-case CSS
+ * custom property (e.g. `surface_subtle` -> `--wa-surface-subtle`). Anything
+ * left unset falls back to the SDK's built-in default.
+ */
+export interface WaThemeTokens {
+  surface?: string;
+  surface_subtle?: string;
+  background?: string;
+  canvas?: string;
+  text?: string;
+  text_secondary?: string;
+  text_muted?: string;
+  text_faint?: string;
+  border?: string;
+  border_strong?: string;
+  primary?: string;
+  primary_soft?: string;
+  primary_foreground?: string;
+  success?: string;
+  success_soft?: string;
+  info?: string;
+  info_soft?: string;
+  warning?: string;
+  warning_soft?: string;
+  error?: string;
+  error_soft?: string;
+  radius?: string;
+  radius_lg?: string;
+  font_sans?: string;
+  font_mono?: string;
+}
+
+/** Per-deployment override of the SDK `--wa-*` token contract, split by mode. */
+export interface ThemeTokens {
+  light?: WaThemeTokens;
+  dark?: WaThemeTokens;
+}
+
 export interface UITokenOverrides {
   space_unit?: string;
   card?: string;
@@ -283,6 +323,7 @@ export interface DeploymentUISettings {
   signup_terms_statement_shown: boolean;
   light_mode_settings: LightModeSettings;
   dark_mode_settings: DarkModeSettings;
+  theme_tokens?: ThemeTokens;
 }
 
 

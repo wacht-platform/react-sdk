@@ -10,9 +10,7 @@ import {
     type ReactNode,
 } from "react";
 import ReactDOM from "react-dom";
-import styled from "styled-components";
 import { X } from "@phosphor-icons/react";
-import { DefaultStylesProvider } from "./root";
 
 // Context for Dialog state
 interface DialogContextValue {
@@ -31,71 +29,6 @@ const useDialogContext = () => {
 };
 
 // Styled components
-const StyledOverlay = styled.div`
-    position: fixed;
-    inset: 0;
-    background-color: var(--color-dialog-backdrop);
-    display: flex;
-    justify-content: center;
-    align-items: center;
-    z-index: 99999;
-`;
-
-const StyledContent = styled.div`
-    color: var(--color-popover-foreground);
-    border-radius: var(--radius-md);
-    box-shadow: var(--shadow-lg);
-    width: 100%;
-    max-width: 100%;
-    max-height: 90vh;
-    overflow-y: auto;
-    position: relative;
-    z-index: 100000;
-`;
-
-const StyledHeader = styled.div`
-    display: flex;
-    align-items: center;
-    justify-content: space-between;
-    padding: var(--space-6u) var(--space-8u);
-    border-bottom: var(--border-width-thin) solid var(--color-border);
-`;
-
-const StyledTitle = styled.h2`
-    font-size: var(--font-size-xl);
-    color: var(--color-popover-foreground);
-    margin: 0;
-`;
-
-const StyledCloseButton = styled.button`
-    background: transparent;
-    border: none;
-    cursor: pointer;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    padding: var(--space-2u);
-    border-radius: var(--radius-2xs);
-    color: var(--color-secondary-text);
-
-    &:hover {
-        background-color: var(--color-accent);
-        color: var(--color-accent-foreground);
-    }
-`;
-
-const StyledBody = styled.div`
-    padding: var(--space-8u);
-`;
-
-const StyledFooter = styled.div`
-    display: flex;
-    justify-content: flex-end;
-    gap: var(--space-4u);
-    padding: var(--space-8u);
-    border-top: var(--border-width-thin) solid var(--color-border);
-`;
-
 // Dialog Root Component
 interface DialogProps {
     isOpen: boolean;
@@ -124,14 +57,14 @@ const DialogRoot: FC<DialogProps> = ({ isOpen, onClose, children }) => {
 
     if (!isOpen || !isMounted) return null;
 
-    // Use portal to render outside of parent DOM hierarchy
-    // Wrap with DefaultStylesProvider to ensure CSS variables are available
+    // Portal outside the parent DOM hierarchy; the `.wacht-root` class scopes
+    // the token vars (styles are already injected document-wide by the host).
     return ReactDOM.createPortal(
-        <DefaultStylesProvider>
+        <div className="wacht-root">
             <DialogContext.Provider value={{ isOpen, onClose }}>
                 {children}
             </DialogContext.Provider>
-        </DefaultStylesProvider>,
+        </div>,
         document.body,
     );
 };
@@ -151,9 +84,11 @@ const DialogOverlay: FC<{ children?: ReactNode }> = ({ children }) => {
     };
 
     return (
-        <StyledOverlay onClick={handleOverlayClick}>
-            <div ref={contentRef}>{children}</div>
-        </StyledOverlay>
+        <div className="w-modal" onClick={handleOverlayClick}>
+            <div ref={contentRef} style={{ maxWidth: "100%", minWidth: 0 }}>
+                {children}
+            </div>
+        </div>
     );
 };
 
@@ -170,9 +105,12 @@ const DialogContent: FC<DialogContentProps> = ({
     className,
 }) => {
     return (
-        <StyledContent style={style} className={className}>
+        <div
+            className={`w-dialog${className ? ` ${className}` : ""}`}
+            style={{ maxHeight: "90vh", overflowY: "auto", ...style }}
+        >
             {children}
-        </StyledContent>
+        </div>
     );
 };
 
@@ -189,18 +127,18 @@ const DialogHeader: FC<DialogHeaderProps> = ({
     const { onClose } = useDialogContext();
 
     return (
-        <StyledHeader>
+        <div className="w-dialog-head">
             {typeof children === "string" ? (
-                <StyledTitle>{children}</StyledTitle>
+                <h2 className="w-dialog-title">{children}</h2>
             ) : (
                 children
             )}
             {showCloseButton && (
-                <StyledCloseButton onClick={onClose}>
+                <button className="w-btn w-btn--icon" onClick={onClose}>
                     <X size={18} />
-                </StyledCloseButton>
+                </button>
             )}
-        </StyledHeader>
+        </div>
     );
 };
 
@@ -213,9 +151,12 @@ interface DialogBodyProps {
 
 const DialogBody: FC<DialogBodyProps> = ({ children, style, className }) => {
     return (
-        <StyledBody style={style} className={className}>
+        <div
+            className={`w-dialog-body${className ? ` ${className}` : ""}`}
+            style={style}
+        >
             {children}
-        </StyledBody>
+        </div>
     );
 };
 
@@ -225,7 +166,7 @@ interface DialogFooterProps {
 }
 
 const DialogFooter: FC<DialogFooterProps> = ({ children }) => {
-    return <StyledFooter>{children}</StyledFooter>;
+    return <div className="w-dialog-foot">{children}</div>;
 };
 
 // Compound Dialog Component

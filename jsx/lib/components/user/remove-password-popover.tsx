@@ -1,59 +1,9 @@
 import { useState, useRef, useEffect } from "react";
-import styled from "styled-components";
 import { Warning } from "@phosphor-icons/react";
 import { Input } from "@/components/utility/input";
-import { Button } from "@/components/utility/button";
 import { FormGroup, Label } from "../utility/form";
 import { useScreenContext } from "./context";
 import { usePopoverPosition } from "@/hooks/use-popover-position";
-
-const PopoverContainer = styled.div`
-  position: fixed;
-  background: var(--color-popover);
-  border-radius: var(--radius-md);
-  box-shadow: var(--shadow-md);
-  border: var(--border-width-thin) solid var(--color-border);
-  padding: var(--space-8u);
-  width: calc(calc(var(--size-50u) * 4));
-  max-width: calc(100vw - var(--space-24u));
-  z-index: 1001;
-
-  @media (max-width: 600px) {
-    width: calc(100vw - var(--space-24u));
-  }
-`;
-
-const ButtonGroup = styled.div`
-  display: flex;
-  gap: var(--space-4u);
-  justify-content: flex-end;
-  margin-top: var(--space-8u);
-`;
-
-const Title = styled.div`
-  font-size: var(--font-size-xl);
-  font-weight: 400;
-  color: var(--color-popover-foreground);
-  margin-bottom: var(--space-4u);
-  display: flex;
-  align-items: center;
-  gap: var(--space-4u);
-`;
-
-const WarningBox = styled.div`
-  background: var(--color-warning-background);
-  border: var(--border-width-thin) solid var(--color-warning-border);
-  border-radius: var(--radius-2xs);
-  padding: var(--space-6u);
-  margin-bottom: var(--space-8u);
-`;
-
-const WarningText = styled.p`
-  font-size: var(--font-size-md);
-  color: var(--color-warning-text, var(--color-foreground));
-  margin: 0;
-  line-height: 1.5;
-`;
 
 interface RemovePasswordPopoverProps {
   triggerRef?: React.RefObject<HTMLElement | null>;
@@ -72,6 +22,7 @@ export const RemovePasswordPopover = ({
   const [loading, setLoading] = useState(false);
   const { toast } = useScreenContext();
   const position = usePopoverPosition({
+    contentRef: popoverRef,
     triggerRef: triggerRef ?? { current: null },
     isOpen: mounted,
     minWidth: 400,
@@ -127,9 +78,13 @@ export const RemovePasswordPopover = ({
   }
 
   return (
-    <PopoverContainer
+    <div
       ref={popoverRef}
+      className="w-pop"
       style={{
+        position: "fixed",
+        zIndex: 1001,
+        maxWidth: "calc(100vw - 24px)",
         top: position?.top !== undefined ? `${position.top}px` : undefined,
         bottom: position?.bottom !== undefined ? `${position.bottom}px` : undefined,
         left: position?.left !== undefined ? `${position.left}px` : undefined,
@@ -139,52 +94,43 @@ export const RemovePasswordPopover = ({
       }}
       onClick={(e) => e.stopPropagation()}
     >
-      <Title>
-        <Warning size={18} color="var(--color-warning)" />
-        Remove Password
-      </Title>
+      <div className="w-pop-body">
+        <div className="w-pop-title">Remove Password</div>
 
-      <WarningBox>
-        <WarningText>
-          You're about to remove password authentication from your account.
-          Make sure you have another way to sign in (email, phone, social login, or passkey)
-          before continuing.
-        </WarningText>
-      </WarningBox>
+        <div className="w-banner w-banner--warn">
+          <Warning size={16} />
+          <span className="w-banner-txt">
+            You're about to remove password authentication from your account.
+            Make sure you have another way to sign in (email, phone, social login, or passkey)
+            before continuing.
+          </span>
+        </div>
 
-      <FormGroup>
-        <Label htmlFor="current-password">Confirm your current password</Label>
-        <Input
-          id="current-password"
-          type="password"
-          placeholder="Enter current password"
-          value={currentPassword}
-          onChange={(e) => setCurrentPassword(e.target.value)}
-          autoFocus
-        />
-      </FormGroup>
+        <FormGroup>
+          <Label htmlFor="current-password">Confirm your current password</Label>
+          <Input
+            id="current-password"
+            type="password"
+            placeholder="Enter current password"
+            value={currentPassword}
+            onChange={(e) => setCurrentPassword(e.target.value)}
+            autoFocus
+          />
+        </FormGroup>
+      </div>
 
-      <ButtonGroup>
-        <Button
-          $outline
-          onClick={onClose}
-          style={{ width: 'auto', padding: '0 var(--space-6u)' }}
-        >
+      <div className="w-pop-foot">
+        <button className="w-btn w-btn--secondary w-btn--sm" onClick={onClose}>
           Cancel
-        </Button>
-        <Button
+        </button>
+        <button
+          className="w-btn w-btn--danger-solid w-btn--sm"
           onClick={handleSubmit}
           disabled={!currentPassword || loading}
-          style={{
-            width: 'auto',
-            padding: '0 var(--space-6u)',
-            background: 'var(--color-error)',
-            borderColor: 'var(--color-error)'
-          }}
         >
           {loading ? "Removing..." : "Remove Password"}
-        </Button>
-      </ButtonGroup>
-    </PopoverContainer>
+        </button>
+      </div>
+    </div>
   );
 };

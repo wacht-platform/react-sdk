@@ -10,7 +10,8 @@
         "/dist"
     ],
     "scripts": {
-        "build": "tsc && vite build"
+        "build": "tsc && vite build",
+        "dev": "vite build --watch"
     },
     "keywords": [],
     "author": "Saurav Singh",

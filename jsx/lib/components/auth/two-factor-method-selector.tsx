@@ -1,185 +1,66 @@
-import styled from "styled-components";
-import { AuthFormImage } from "./auth-image";
 import { DefaultStylesProvider } from "../utility/root";
-import { standaloneAuthShell } from "./auth-shell";
-
-const Container = styled.div`
-  ${standaloneAuthShell}
-`;
-
-const Header = styled.div`
-  text-align: center;
-  margin-bottom: var(--space-8u);
-  position: relative;
-`;
-
-const Title = styled.h1`
-  font-size: var(--font-size-xl);
-  font-weight: 400;
-  color: var(--color-card-foreground);
-  margin-bottom: var(--space-2u);
-  margin-top: 0;
-`;
-
-const Subtitle = styled.p`
-  color: var(--color-secondary-text);
-  font-size: var(--font-size-md);
-`;
-
-
-
-const MethodList = styled.div`
-  display: flex;
-  flex-direction: column;
-  gap: 0;
-`;
-
-const MethodButton = styled.button`
-  display: flex;
-  align-items: center;
-  gap: var(--space-6u);
-  padding: var(--space-6u);
-  width: 100%;
-  border: var(--border-width-thin) solid var(--color-border);
-  background: var(--color-card);
-  cursor: pointer;
-  text-align: left;
-  transition: all 0.2s ease;
-  position: relative;
-
-  &:first-child {
-    border-top-left-radius: var(--radius-md);
-    border-top-right-radius: var(--radius-md);
-  }
-
-  &:last-child {
-    border-bottom-left-radius: var(--radius-md);
-    border-bottom-right-radius: var(--radius-md);
-  }
-
-  &:not(:first-child) {
-    margin-top: -1px;
-  }
-
-  &:hover:not(:disabled) {
-    background-color: var(--color-accent);
-    border-color: var(--color-border-hover);
-    z-index: 1;
-  }
-
-  &:disabled {
-    opacity: 0.5;
-    cursor: not-allowed;
-  }
-
-  svg {
-    width: var(--size-10u);
-    height: var(--size-10u);
-    flex-shrink: 0;
-    color: var(--color-primary);
-  }
-`;
-
-const MethodContent = styled.div`
-  flex: 1;
-  display: flex;
-  flex-direction: column;
-  gap: var(--space-1u);
-`;
-
-const MethodName = styled.div`
-  font-weight: 400;
-  font-size: var(--font-size-lg);
-  color: var(--color-card-foreground);
-`;
-
-const MethodDescription = styled.div`
-  font-size: var(--font-size-md);
-  color: var(--color-secondary-text);
-  line-height: 1.4;
-`;
-
-const Footer = styled.div`
-  margin-top: var(--space-8u);
-  text-align: center;
-  font-size: var(--font-size-md);
-  color: var(--color-secondary-text);
-`;
-
-const Link = styled.span`
-  color: var(--color-primary);
-  text-decoration: none;
-  font-weight: 400;
-  transition: color 0.2s;
-  cursor: pointer;
-
-  &:hover {
-    color: var(--color-primary-hover);
-  }
-`;
+import { AuthCard, AuthHead } from "./auth-card";
+import { MethodButton } from "../utility/method-button";
 
 export interface TwoFactorMethod {
-  id: string;
-  name: string;
-  description: string;
-  icon: React.ReactNode;
-  available: boolean;
-  phoneNumber?: string;
+    id: string;
+    name: string;
+    description: string;
+    icon: React.ReactNode;
+    available: boolean;
+    phoneNumber?: string;
 }
 
 interface TwoFactorMethodSelectorProps {
-  methods: TwoFactorMethod[];
-  onSelectMethod: (methodId: string) => void;
-  onBack?: () => void;
+    methods: TwoFactorMethod[];
+    onSelectMethod: (methodId: string) => void;
+    onBack?: () => void;
 }
 
 export function TwoFactorMethodSelector({
-  methods,
-  onSelectMethod,
-  onBack,
+    methods,
+    onSelectMethod,
+    onBack,
 }: TwoFactorMethodSelectorProps) {
-  const handleMethodClick = (methodId: string) => {
-    onSelectMethod(methodId);
-  };
-
-  return (
-    <DefaultStylesProvider>
-      <Container>
-        <AuthFormImage />
-
-        <Header>
-          <Title>Two-factor authentication</Title>
-          <Subtitle>Choose how you'd like to verify your identity</Subtitle>
-        </Header>
-
-        <MethodList>
-          {methods.map((method) => (
-            <MethodButton
-              key={method.id}
-              onClick={() => handleMethodClick(method.id)}
-              disabled={!method.available}
-              type="button"
+    return (
+        <DefaultStylesProvider>
+            <AuthCard
+                footer={
+                    onBack ? (
+                        <span className="w-auth-foot">
+                            <button
+                                type="button"
+                                className="w-link"
+                                onClick={onBack}
+                            >
+                                Back to login
+                            </button>
+                        </span>
+                    ) : undefined
+                }
             >
-              {method.icon}
-              <MethodContent>
-                <MethodName>{method.name}</MethodName>
-                <MethodDescription>
-                  {method.description}
-                  {method.phoneNumber && ` ${method.phoneNumber}`}
-                </MethodDescription>
-              </MethodContent>
-            </MethodButton>
-          ))}
-        </MethodList>
+                <AuthHead
+                    title="Two-factor authentication"
+                    sub="Choose how you'd like to verify your identity"
+                />
 
-        {onBack && (
-          <Footer>
-            <Link onClick={onBack} style={{ cursor: "pointer" }}>
-              Back to login
-            </Link>
-          </Footer>
-        )}
-      </Container>
-    </DefaultStylesProvider>
-  );
+                <div className="w-method-stack">
+                    {methods.map((method) => (
+                        <MethodButton
+                            key={method.id}
+                            icon={method.icon}
+                            label={method.name}
+                            description={
+                                method.phoneNumber
+                                    ? `${method.description} ${method.phoneNumber}`
+                                    : method.description
+                            }
+                            onClick={() => onSelectMethod(method.id)}
+                            disabled={!method.available}
+                        />
+                    ))}
+                </div>
+            </AuthCard>
+        </DefaultStylesProvider>
+    );
 }

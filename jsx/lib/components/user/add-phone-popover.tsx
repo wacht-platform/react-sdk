@@ -1,77 +1,9 @@
 import { useState, useRef, useEffect } from "react";
-import styled from "styled-components";
 import { CaretLeft } from "@phosphor-icons/react";
-import { Button } from "@/components/utility/button";
 import { OTPInput } from "../utility/otp-input";
 import { PhoneNumberInput } from "../utility/phone";
 import { useScreenContext } from "./context";
 import { usePopoverPosition } from "@/hooks/use-popover-position";
-
-const PopoverContainer = styled.div`
-  position: fixed;
-  background: var(--color-popover);
-  border-radius: 10px;
-  box-shadow: var(--shadow-md);
-  border: 1px solid var(--color-border);
-  width: 340px;
-  max-width: calc(100vw - 24px);
-  z-index: 1001;
-  overflow: hidden;
-  padding: 14px;
-  display: flex;
-  flex-direction: column;
-  gap: 10px;
-
-  @media (max-width: 600px) {
-    width: calc(100vw - 24px);
-  }
-`;
-
-const TitleRow = styled.div`
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-  gap: 8px;
-`;
-
-const Title = styled.div`
-  font-size: 13px;
-  font-weight: 600;
-  color: var(--color-popover-foreground);
-`;
-
-const BackBtn = styled.button`
-  display: inline-flex;
-  align-items: center;
-  gap: 2px;
-  background: transparent;
-  border: none;
-  padding: 2px 4px 2px 2px;
-  margin-left: -4px;
-  font-size: 12px;
-  font-weight: 500;
-  color: var(--color-secondary-text);
-  cursor: pointer;
-  border-radius: 4px;
-  &:hover { color: var(--color-popover-foreground); }
-`;
-
-const Hint = styled.div`
-  font-size: 12px;
-  color: var(--color-secondary-text);
-  line-height: 1.4;
-  strong {
-    color: var(--color-popover-foreground);
-    font-weight: 500;
-  }
-`;
-
-const Actions = styled.div`
-  display: grid;
-  grid-template-columns: 1fr 1fr;
-  gap: 6px;
-  & > button { width: 100%; }
-`;
 
 interface PhoneAddPopoverProps {
   existingPhone?: string;
@@ -94,6 +26,7 @@ export const PhoneAddPopover = ({
   const [mounted, setMounted] = useState(false);
   const { toast } = useScreenContext();
   const position = usePopoverPosition({
+    contentRef: popoverRef,
     triggerRef: triggerRef ?? { current: null },
     isOpen: mounted,
     minWidth: 340,
@@ -156,9 +89,13 @@ export const PhoneAddPopover = ({
   if (!mounted) return null;
 
   return (
-    <PopoverContainer
+    <div
       ref={popoverRef}
+      className="w-pop"
       style={{
+        position: "fixed",
+        zIndex: 1001,
+        maxWidth: "calc(100vw - 24px)",
         top: position?.top !== undefined ? `${position.top}px` : undefined,
         bottom: position?.bottom !== undefined ? `${position.bottom}px` : undefined,
         left: position?.left !== undefined ? `${position.left}px` : undefined,
@@ -169,49 +106,57 @@ export const PhoneAddPopover = ({
     >
       {step === "phone" ? (
         <>
-          <TitleRow>
-            <Title>Add phone number</Title>
-          </TitleRow>
-          <PhoneNumberInput
-            value={phoneNumber}
-            onChange={(e) => setPhoneNumber(e.target.value)}
-            error={""}
-            countryCode={countryCode}
-            setCountryCode={setCountryCode}
-          />
-          <Actions>
-            <Button $size="sm" $outline onClick={onClose}>Cancel</Button>
-            <Button $size="sm" onClick={handlePhoneSubmit} disabled={!phoneNumber || loading}>
+          <div className="w-pop-body">
+            <div className="w-pop-title">Add phone number</div>
+            <label className="w-field">
+              <span className="w-label">Phone number</span>
+              <PhoneNumberInput
+                value={phoneNumber}
+                onChange={(e) => setPhoneNumber(e.target.value)}
+                error={""}
+                countryCode={countryCode}
+                setCountryCode={setCountryCode}
+              />
+            </label>
+          </div>
+          <div className="w-pop-foot">
+            <button type="button" className="w-btn w-btn--ghost w-btn--sm" onClick={onClose}>Cancel</button>
+            <button type="button" className="w-btn w-btn--primary w-btn--sm" onClick={handlePhoneSubmit} disabled={!phoneNumber || loading}>
               {loading ? "Sending…" : "Send code"}
-            </Button>
-          </Actions>
+            </button>
+          </div>
         </>
       ) : (
         <>
-          <TitleRow>
-            {!existingPhone ? (
-              <BackBtn onClick={() => setStep("phone")}>
+          <div className="w-pop-body">
+            {!existingPhone && (
+              <button
+                type="button"
+                className="w-link w-link--muted w-inline w-gap-1"
+                style={{ alignSelf: "flex-start", background: "none", border: 0, cursor: "pointer" }}
+                onClick={() => setStep("phone")}
+              >
                 <CaretLeft size={11} /> Back
-              </BackBtn>
-            ) : <span />}
-          </TitleRow>
-          <div style={{ display: "flex", flexDirection: "column", gap: 4 }}>
-            <Title>Verify phone number</Title>
-            <Hint>Enter the 6-digit code sent to <strong>{existingPhone || phoneNumber}</strong></Hint>
+              </button>
+            )}
+            <div className="w-flex-col w-gap-1">
+              <div className="w-pop-title">Verify phone number</div>
+              <p className="w-pop-sub">Enter the 6-digit code sent to <strong>{existingPhone || phoneNumber}</strong></p>
+            </div>
+            <OTPInput
+              onComplete={(code) => setOtp(code)}
+              onResend={async () => onPrepareVerification()}
+              isSubmitting={loading}
+            />
           </div>
-          <OTPInput
-            onComplete={(code) => setOtp(code)}
-            onResend={async () => onPrepareVerification()}
-            isSubmitting={loading}
-          />
-          <Actions>
-            <Button $size="sm" $outline onClick={onClose}>Cancel</Button>
-            <Button $size="sm" onClick={handleOTPSubmit} disabled={otp.length !== 6 || loading}>
+          <div className="w-pop-foot">
+            <button type="button" className="w-btn w-btn--ghost w-btn--sm" onClick={onClose}>Cancel</button>
+            <button type="button" className="w-btn w-btn--primary w-btn--sm" onClick={handleOTPSubmit} disabled={otp.length !== 6 || loading}>
               {loading ? "Verifying…" : "Verify"}
-            </Button>
-          </Actions>
+            </button>
+          </div>
         </>
       )}
-    </PopoverContainer>
+    </div>
   );
 };

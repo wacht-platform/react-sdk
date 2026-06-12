@@ -1,6 +1,5 @@
 import { useState, useRef } from "react";
 import useSWR from "swr";
-import styled from "styled-components";
 import { Organization, OrganizationDomain } from "@/types";
 import { useOrganizationList } from "@/hooks/use-organization";
 import { Button, Spinner } from "@/components/utility";
@@ -21,15 +20,6 @@ import {
     DesktopTableContainer,
     StatusPill,
 } from "./shared";
-
-const InlineActions = styled.div`
-    display: flex;
-    align-items: center;
-    gap: 6px;
-    justify-content: flex-end;
-    flex-wrap: nowrap;
-    white-space: nowrap;
-`;
 
 export const DomainsSection = ({ organization }: { organization: Organization }) => {
     const {
@@ -82,12 +72,10 @@ export const DomainsSection = ({ organization }: { organization: Organization })
 
     return (
         <>
-            <HeaderCTAContainer style={{ marginBottom: "var(--space-6u)" }}>
-                <div style={{ flex: 1, minWidth: 0 }}>
-                    <div style={{ fontSize: 14, fontWeight: 500, color: "var(--color-card-foreground)" }}>
-                        Domains
-                    </div>
-                    <div style={{ fontSize: 12, color: "var(--color-secondary-text)", marginTop: 2 }}>
+            <HeaderCTAContainer>
+                <div className="w-grow w-flex-col w-gap-1">
+                    <div className="w-sec">Domains</div>
+                    <div className="w-secsub">
                         Users with verified domain emails auto-join this organization.
                     </div>
                 </div>
@@ -134,11 +122,11 @@ export const DomainsSection = ({ organization }: { organization: Organization })
                                                 <StatusPill $variant="warning">Pending</StatusPill>
                                             )}
                                         </TableCell>
-                                        <TableCell style={{ color: "var(--color-secondary-text)" }}>
+                                        <TableCell>
                                             {new Date(domain.created_at).toLocaleDateString()}
                                         </TableCell>
                                         <ActionsCell>
-                                            <InlineActions>
+                                            <div className="w-actions">
                                                 <Button
                                                     ref={(r: HTMLButtonElement | null) => {
                                                         if (r) verifyButtonRefs.current[domain.id] = r;
@@ -159,7 +147,7 @@ export const DomainsSection = ({ organization }: { organization: Organization })
                                                 >
                                                     {isBusy ? <Spinner size={12} /> : "Remove"}
                                                 </Button>
-                                            </InlineActions>
+                                            </div>
                                         </ActionsCell>
                                     </TableRow>
                                 );

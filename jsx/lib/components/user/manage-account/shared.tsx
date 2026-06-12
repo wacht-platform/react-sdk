@@ -1,325 +1,267 @@
-import styled, { keyframes } from "styled-components";
-import { useEffect, useState } from "react";
+import {
+    forwardRef,
+    useEffect,
+    useState,
+    type ButtonHTMLAttributes,
+    type HTMLAttributes,
+    type LabelHTMLAttributes,
+    type ReactNode,
+} from "react";
 
-export const spin = keyframes`
-  0% { transform: rotate(0deg); }
-  100% { transform: rotate(360deg); }
-`;
+const cx = (...parts: (string | false | undefined)[]) =>
+    parts.filter(Boolean).join(" ");
 
-export const TypographyProvider = styled.div`
-    * {
-        box-sizing: border-box;
-        font-family: Inter, system-ui, Avenir, Helvetica, Arial, sans-serif;
-    }
+/* ───────────────────────────────────────────────────────────────────────────
+ * Account screen chrome
+ * ──────────────────────────────────────────────────────────────────────── */
 
-    @keyframes slideDown {
-        from {
-            opacity: 0;
-            max-height: 0;
-            transform: translateY(calc(var(--space-5u) * -1));
-        }
-        to {
-            opacity: 1;
-            max-height: calc(var(--size-50u) * 5);
-            transform: translateY(0);
-        }
-    }
-`;
+export const TypographyProvider = forwardRef<
+    HTMLDivElement,
+    HTMLAttributes<HTMLDivElement>
+>(({ className, ...rest }, ref) => (
+    <div ref={ref} className={cx("w-contents", className)} {...rest} />
+));
+TypographyProvider.displayName = "TypographyProvider";
 
-export const Container = styled.div`
-    width: 100%;
-    height: calc(calc(var(--size-50u) * 4) + calc(var(--size-50u) * 2));
-    background: var(--color-card);
-    border-radius: var(--radius-md);
-    box-shadow: var(--shadow-xl);
-    transition: all 0.3s ease;
-    overflow: hidden;
-    display: flex;
-    flex-direction: column;
-    padding-bottom: var(--space-12u);
-    position: relative;
+export const Container = forwardRef<
+    HTMLDivElement,
+    HTMLAttributes<HTMLDivElement>
+>(({ className, ...rest }, ref) => (
+    <div
+        ref={ref}
+        className={cx("w-card", "w-flex-col", "w-full", "w-minh-full", className)}
+        {...rest}
+    />
+));
+Container.displayName = "Container";
 
-    @media (max-width: 768px) {
-        border-radius: var(--radius-md);
-        padding-bottom: var(--space-8u);
-        height: auto;
-        min-height: 100vh;
-        max-height: 100%;
-    }
+export const TabsContainer = forwardRef<
+    HTMLDivElement,
+    HTMLAttributes<HTMLDivElement>
+>(({ className, ...rest }, ref) => (
+    <div ref={ref} className={cx("w-tabsbar", className)} {...rest} />
+));
+TabsContainer.displayName = "TabsContainer";
 
-    /* Blur effect at the bottom */
-    &::after {
-        content: "";
-        position: absolute;
-        bottom: 0;
-        left: 0;
-        right: 0;
-        height: var(--size-20u);
-        background: linear-gradient(
-            to bottom,
-            transparent 0%,
-            var(--color-card) 70%
-        );
-        pointer-events: none;
-        z-index: 1;
-    }
-`;
+export const TabsList = forwardRef<
+    HTMLDivElement,
+    HTMLAttributes<HTMLDivElement>
+>(({ className, ...rest }, ref) => (
+    <div
+        ref={ref}
+        className={cx("w-flex", "w-items-center", "w-gap-1", "w-tabs", className)}
+        {...rest}
+    />
+));
+TabsList.displayName = "TabsList";
 
-export const TabsContainer = styled.div`
-    padding: 0 var(--space-12u);
-    border-bottom: var(--border-width-thin) solid var(--color-border);
+export const Tab = forwardRef<
+    HTMLButtonElement,
+    ButtonHTMLAttributes<HTMLButtonElement> & { $isActive?: boolean }
+>(({ $isActive, className, ...rest }, ref) => (
+    <button
+        ref={ref}
+        className={cx("w-tab", $isActive && "w-tab--active", className)}
+        {...rest}
+    />
+));
+Tab.displayName = "Tab";
 
-    @media (max-width: 768px) {
-        padding: 0 var(--space-8u);
-    }
-    @media (max-width: 480px) {
-        padding: 0 var(--space-6u);
-    }
-`;
+export const TabIcon = forwardRef<
+    HTMLSpanElement,
+    HTMLAttributes<HTMLSpanElement>
+>(({ className, ...rest }, ref) => (
+    <span ref={ref} className={cx("w-inline", "w-gap-1", className)} {...rest} />
+));
+TabIcon.displayName = "TabIcon";
 
-export const TabsList = styled.div`
-    display: flex;
-    align-items: center;
-    gap: var(--space-10u);
-    overflow-x: auto;
-    overflow-y: hidden;
+export const TabContent = forwardRef<
+    HTMLDivElement,
+    HTMLAttributes<HTMLDivElement>
+>(({ className, children, ...rest }, ref) => (
+    <div ref={ref} className={cx("w-tabbody", className)} {...rest}>
+        <div className="w-tabpane">{children}</div>
+    </div>
+));
+TabContent.displayName = "TabContent";
 
-    &::-webkit-scrollbar {
-        display: none;
-    }
-`;
+export const IconButton = forwardRef<
+    HTMLButtonElement,
+    ButtonHTMLAttributes<HTMLButtonElement>
+>(({ className, ...rest }, ref) => (
+    <button
+        ref={ref}
+        className={cx("w-btn", "w-btn--icon", className)}
+        {...rest}
+    />
+));
+IconButton.displayName = "IconButton";
 
-export const Tab = styled.button<{ $isActive: boolean }>`
-    padding: var(--space-6u) var(--space-6u);
-    border: none;
-    background: none;
-    font-size: var(--font-size-lg);
-    font-weight: 400;
-    color: ${(props) =>
-        props.$isActive
-            ? "var(--color-card-foreground)"
-            : "var(--color-muted)"};
-    cursor: pointer;
-    position: relative;
-    transition: color 0.15s ease;
-    white-space: nowrap;
-    min-width: fit-content;
+export const HeaderCTAContainer = forwardRef<
+    HTMLDivElement,
+    HTMLAttributes<HTMLDivElement>
+>(({ className, ...rest }, ref) => (
+    <div
+        ref={ref}
+        className={cx(
+            "w-flex",
+            "w-items-center",
+            "w-justify-between",
+            "w-wrap",
+            "w-gap-3",
+            className,
+        )}
+        {...rest}
+    />
+));
+HeaderCTAContainer.displayName = "HeaderCTAContainer";
 
-    &:hover {
-        color: var(--color-card-foreground);
-    }
+export const ProfileSectionLayout = forwardRef<
+    HTMLDivElement,
+    HTMLAttributes<HTMLDivElement>
+>(({ className, ...rest }, ref) => (
+    <div
+        ref={ref}
+        className={cx("w-flex", "w-items-start", "w-gap-6", className)}
+        {...rest}
+    />
+));
+ProfileSectionLayout.displayName = "ProfileSectionLayout";
 
-    &::after {
-        content: "";
-        position: absolute;
-        bottom: calc(var(--border-width-thin) * -1);
-        left: 0;
-        right: 0;
-        height: var(--border-width-regular);
-        background: var(--color-primary);
-        opacity: ${(props) => (props.$isActive ? 1 : 0)};
-        transition: opacity 0.15s ease;
-    }
-`;
+export const ProfileImageContainer = forwardRef<
+    HTMLDivElement,
+    HTMLAttributes<HTMLDivElement>
+>(({ className, ...rest }, ref) => (
+    <div ref={ref} className={cx("w-none", className)} {...rest} />
+));
+ProfileImageContainer.displayName = "ProfileImageContainer";
 
-export const TabIcon = styled.span`
-    display: inline-flex;
-    align-items: center;
-    gap: var(--space-3u);
-`;
+export const SecurityItemRow = forwardRef<
+    HTMLDivElement,
+    HTMLAttributes<HTMLDivElement>
+>(({ className, ...rest }, ref) => (
+    <div
+        ref={ref}
+        className={cx("w-vrow", className)}
+        {...rest}
+    />
+));
+SecurityItemRow.displayName = "SecurityItemRow";
 
-export const TabContent = styled.div`
-    flex: 1;
-    padding: var(--space-8u) var(--space-10u) 0 var(--space-10u);
-    overflow-y: auto;
-    position: relative;
+export const SecurityItemContent = forwardRef<
+    HTMLDivElement,
+    HTMLAttributes<HTMLDivElement>
+>(({ className, ...rest }, ref) => (
+    <div ref={ref} className={cx("w-grow", className)} {...rest} />
+));
+SecurityItemContent.displayName = "SecurityItemContent";
 
-    @media (max-width: 768px) {
-        padding: var(--space-8u) var(--space-8u) 0 var(--space-8u);
-    }
-    @media (max-width: 480px) {
-        padding: var(--space-6u) var(--space-6u) 0 var(--space-6u);
-    }
-`;
+export const SecurityItemActions = forwardRef<
+    HTMLDivElement,
+    HTMLAttributes<HTMLDivElement>
+>(({ className, ...rest }, ref) => (
+    <div
+        ref={ref}
+        className={cx("w-flex", "w-items-center", "w-gap-2", "w-none", className)}
+        {...rest}
+    />
+));
+SecurityItemActions.displayName = "SecurityItemActions";
 
-export const IconButton = styled.button`
-    background: none;
-    border: none;
-    padding: var(--space-2u);
-    cursor: pointer;
-    color: var(--color-secondary-text);
-    border-radius: var(--radius-2xs);
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    transition: all 0.2s ease;
+export const ResponsiveHeaderContainer = forwardRef<
+    HTMLDivElement,
+    HTMLAttributes<HTMLDivElement>
+>(({ className, ...rest }, ref) => (
+    <div
+        ref={ref}
+        className={cx("w-sechead", className)}
+        {...rest}
+    />
+));
+ResponsiveHeaderContainer.displayName = "ResponsiveHeaderContainer";
 
-    &:hover {
-        background: var(--color-accent);
-        color: var(--color-accent-foreground);
-    }
-`;
+export const DesktopTableContainer = forwardRef<
+    HTMLDivElement,
+    HTMLAttributes<HTMLDivElement>
+>(({ className, ...rest }, ref) => (
+    <div ref={ref} className={cx("w-full", className)} {...rest} />
+));
+DesktopTableContainer.displayName = "DesktopTableContainer";
 
-export const HeaderCTAContainer = styled.div`
-    display: flex;
-    align-items: center;
-    flex-wrap: wrap;
-    gap: var(--space-6u);
-    margin-bottom: 0;
+export const FormRow = forwardRef<
+    HTMLDivElement,
+    HTMLAttributes<HTMLDivElement>
+>(({ className, ...rest }, ref) => (
+    <div ref={ref} className={cx("w-flex", "w-gap-3", className)} {...rest} />
+));
+FormRow.displayName = "FormRow";
 
-    @media (max-width: 600px) {
-        flex-direction: column;
-        align-items: stretch;
-        & > * {
-            width: 100%;
-        }
-        & button {
-            width: 100%;
-        }
-    }
-`;
+export const ConnectionItemRow = forwardRef<
+    HTMLDivElement,
+    HTMLAttributes<HTMLDivElement>
+>(({ className, ...rest }, ref) => (
+    <div
+        ref={ref}
+        className={cx("w-vrow", className)}
+        {...rest}
+    />
+));
+ConnectionItemRow.displayName = "ConnectionItemRow";
 
-export const ProfileSectionLayout = styled.div`
-    display: flex;
-    gap: var(--space-12u);
-    align-items: flex-start;
+export const ConnectionLeft = forwardRef<
+    HTMLDivElement,
+    HTMLAttributes<HTMLDivElement>
+>(({ className, ...rest }, ref) => (
+    <div
+        ref={ref}
+        className={cx("w-flex", "w-items-center", "w-gap-2", "w-grow", className)}
+        {...rest}
+    />
+));
+ConnectionLeft.displayName = "ConnectionLeft";
 
-    @media (max-width: 768px) {
-        flex-direction: column;
-        align-items: center;
-        gap: var(--space-8u);
-        text-align: center;
-    }
-`;
+export const ConnectionRight = forwardRef<
+    HTMLDivElement,
+    HTMLAttributes<HTMLDivElement>
+>(({ className, ...rest }, ref) => (
+    <div
+        ref={ref}
+        className={cx(
+            "w-flex",
+            "w-items-center",
+            "w-justify-end",
+            "w-gap-1",
+            "w-none",
+            className,
+        )}
+        {...rest}
+    />
+));
+ConnectionRight.displayName = "ConnectionRight";
 
-export const ProfileImageContainer = styled.div`
-    flex-shrink: 0;
+export const IconWrapper = forwardRef<
+    HTMLDivElement,
+    HTMLAttributes<HTMLDivElement>
+>(({ className, ...rest }, ref) => (
+    <div
+        ref={ref}
+        className={cx("w-iconbox", className)}
+        {...rest}
+    />
+));
+IconWrapper.displayName = "IconWrapper";
 
-    @media (max-width: 768px) {
-        margin-bottom: var(--space-6u);
-    }
-`;
-
-export const SecurityItemRow = styled.div`
-    display: flex;
-    align-items: center;
-    justify-content: space-between;
-    padding: var(--space-8u) 0;
-    gap: var(--space-6u);
-`;
-
-export const SecurityItemContent = styled.div`
-    flex: 1;
-    min-width: 0;
-`;
-
-export const SecurityItemActions = styled.div`
-    display: flex;
-    align-items: center;
-    gap: var(--space-4u);
-    flex-shrink: 0;
-`;
-
-export const ResponsiveHeaderContainer = styled.div`
-    display: flex;
-    gap: var(--space-6u);
-    flex-wrap: wrap;
-    align-items: center;
-    margin-bottom: var(--space-10u);
-
-    @media (max-width: 600px) {
-        flex-direction: column;
-        align-items: stretch;
-        gap: var(--space-8u);
-        & > * {
-            width: 100%;
-        }
-        & button {
-            width: 100%;
-        }
-    }
-`;
-
-export const DesktopTableContainer = styled.div`
-    display: block;
-    overflow-x: auto;
-    -webkit-overflow-scrolling: touch;
-    &::-webkit-scrollbar {
-        height: 6px;
-    }
-    &::-webkit-scrollbar-thumb {
-        background: var(--color-border);
-        border-radius: 999px;
-    }
-`;
-
-export const FormRow = styled.div`
-    display: flex;
-    gap: var(--space-6u);
-
-    @media (max-width: 768px) {
-        flex-direction: column;
-        gap: var(--space-8u);
-    }
-`;
-
-export const ConnectionItemRow = styled.div`
-    display: flex;
-    align-items: center;
-    justify-content: space-between;
-    padding: var(--space-6u) 0;
-    gap: var(--space-6u);
-
-    div:first-child > & {
-        padding-top: 0;
-    }
-`;
-
-export const ConnectionLeft = styled.div`
-    display: flex;
-    align-items: center;
-    gap: var(--space-4u);
-    color: var(--color-card-foreground);
-    flex: 1;
-    min-width: 0;
-`;
-
-export const ConnectionRight = styled.div`
-    display: flex;
-    flex-direction: row;
-    align-items: center;
-    justify-content: flex-end;
-    gap: var(--space-3u);
-    flex-shrink: 0;
-`;
-
-export const IconWrapper = styled.div`
-    width: var(--size-10u);
-    height: var(--size-10u);
-    min-width: var(--size-10u);
-    flex-shrink: 0;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    overflow: hidden;
-
-    svg {
-        width: var(--size-10u);
-        height: var(--size-10u);
-        flex-shrink: 0;
-        display: block;
-    }
-`;
-
-export const ButtonActions = styled.div`
-    display: flex;
-    gap: var(--space-4u);
-    flex-wrap: wrap;
-
-    @media (max-width: 768px) {
-        justify-content: center;
-    }
-`;
+export const ButtonActions = forwardRef<
+    HTMLDivElement,
+    HTMLAttributes<HTMLDivElement>
+>(({ className, ...rest }, ref) => (
+    <div
+        ref={ref}
+        className={cx("w-flex", "w-wrap", "w-gap-2", className)}
+        {...rest}
+    />
+));
+ButtonActions.displayName = "ButtonActions";
 
 export const useMediaQuery = (query: string) => {
     const [matches, setMatches] = useState(false);
@@ -338,385 +280,350 @@ export const useMediaQuery = (query: string) => {
 };
 
 /* ───────────────────────────────────────────────────────────────────────────
- * NEW LAYOUT PRIMITIVES
+ * Layout primitives
  * ──────────────────────────────────────────────────────────────────────── */
 
-export const PageHeader = styled.div`
-    display: flex;
-    align-items: center;
-    gap: var(--space-5u);
-    padding: var(--space-8u) var(--space-12u) var(--space-6u);
-    flex-wrap: wrap;
-    @media (max-width: 768px) {
-        padding: var(--space-8u) var(--space-8u) var(--space-5u);
-    }
-    @media (max-width: 480px) {
-        padding: var(--space-6u) var(--space-6u) var(--space-4u);
-        gap: var(--space-3u);
-    }
-`;
+export const PageHeader = forwardRef<
+    HTMLDivElement,
+    HTMLAttributes<HTMLDivElement>
+>(({ className, ...rest }, ref) => (
+    <div
+        ref={ref}
+        className={cx("w-page-head", className)}
+        {...rest}
+    />
+));
+PageHeader.displayName = "PageHeader";
 
-export const PageHeaderAvatar = styled.div`
-    width: 44px;
-    height: 44px;
-    min-width: 44px;
-    border-radius: 50%;
-    background: var(--color-secondary);
-    color: var(--color-secondary-text);
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    overflow: hidden;
-    font-size: 14px;
-    font-weight: 600;
-    flex-shrink: 0;
-    img {
-        width: 100%;
-        height: 100%;
-        object-fit: cover;
-    }
-    @media (max-width: 600px) {
-        width: 38px;
-        height: 38px;
-        min-width: 38px;
-        font-size: 13px;
-    }
-`;
+export const PageHeaderAvatar = forwardRef<
+    HTMLDivElement,
+    HTMLAttributes<HTMLDivElement>
+>(({ className, ...rest }, ref) => (
+    <div ref={ref} className={cx("w-avatar", className)} {...rest} />
+));
+PageHeaderAvatar.displayName = "PageHeaderAvatar";
 
-export const PageHeaderInfo = styled.div`
-    flex: 1;
-    min-width: 0;
-    display: flex;
-    flex-direction: column;
-    gap: 2px;
-`;
+export const PageHeaderInfo = forwardRef<
+    HTMLDivElement,
+    HTMLAttributes<HTMLDivElement>
+>(({ className, ...rest }, ref) => (
+    <div
+        ref={ref}
+        className={cx("w-flex-col", "w-gap-1", "w-grow", className)}
+        {...rest}
+    />
+));
+PageHeaderInfo.displayName = "PageHeaderInfo";
 
-export const PageHeaderName = styled.div`
-    font-size: 16px;
-    font-weight: 600;
-    color: var(--color-card-foreground);
-    line-height: 1.3;
-    white-space: nowrap;
-    overflow: hidden;
-    text-overflow: ellipsis;
-    @media (max-width: 600px) {
-        font-size: 14px;
-    }
-`;
+export const PageHeaderName = forwardRef<
+    HTMLDivElement,
+    HTMLAttributes<HTMLDivElement>
+>(({ className, ...rest }, ref) => (
+    <div ref={ref} className={cx("w-sec", "w-truncate", className)} {...rest} />
+));
+PageHeaderName.displayName = "PageHeaderName";
 
-export const PageHeaderSub = styled.div`
-    font-size: 13px;
-    color: var(--color-secondary-text);
-    line-height: 1.3;
-    white-space: nowrap;
-    overflow: hidden;
-    text-overflow: ellipsis;
-    @media (max-width: 600px) {
-        font-size: 12px;
-        white-space: normal;
-    }
-`;
+export const PageHeaderSub = forwardRef<
+    HTMLDivElement,
+    HTMLAttributes<HTMLDivElement>
+>(({ className, ...rest }, ref) => (
+    <div
+        ref={ref}
+        className={cx("w-secsub", "w-truncate", className)}
+        {...rest}
+    />
+));
+PageHeaderSub.displayName = "PageHeaderSub";
 
-export const PageHeaderActions = styled.div`
-    display: flex;
-    align-items: center;
-    gap: var(--space-3u);
-    flex-shrink: 0;
-    @media (max-width: 600px) {
-        width: 100%;
-        justify-content: flex-end;
-    }
-`;
+export const PageHeaderActions = forwardRef<
+    HTMLDivElement,
+    HTMLAttributes<HTMLDivElement>
+>(({ className, ...rest }, ref) => (
+    <div
+        ref={ref}
+        className={cx(
+            "w-flex",
+            "w-items-center",
+            "w-gap-1",
+            "w-none",
+            className,
+        )}
+        {...rest}
+    />
+));
+PageHeaderActions.displayName = "PageHeaderActions";
 
-export const PageContent = styled.div`
-    display: flex;
-    flex-direction: column;
-    gap: 16px;
-    @media (max-width: 600px) {
-        gap: 12px;
-    }
-`;
+export const PageContent = forwardRef<
+    HTMLDivElement,
+    HTMLAttributes<HTMLDivElement>
+>(({ className, ...rest }, ref) => (
+    <div ref={ref} className={cx("w-flex-col", "w-gap-4", className)} {...rest} />
+));
+PageContent.displayName = "PageContent";
 
-export const Card = styled.section`
-    background: var(--color-card);
-    border: 1px solid var(--color-border);
-    border-radius: 12px;
-    overflow: hidden;
-`;
+export const Card = forwardRef<
+    HTMLDivElement,
+    HTMLAttributes<HTMLDivElement>
+>(({ className, ...rest }, ref) => (
+    <section ref={ref} className={cx("w-card", className)} {...rest} />
+));
+Card.displayName = "Card";
 
-export const DangerCard = styled(Card)`
-    border-color: color-mix(
-        in srgb,
-        var(--color-error) 45%,
-        var(--color-border)
-    );
-    background: color-mix(in srgb, var(--color-error) 4%, var(--color-card));
-`;
+export const DangerCard = forwardRef<
+    HTMLDivElement,
+    HTMLAttributes<HTMLDivElement>
+>(({ className, ...rest }, ref) => (
+    <section ref={ref} className={cx("w-card", "w-danger", className)} {...rest} />
+));
+DangerCard.displayName = "DangerCard";
 
-export const CardHeader = styled.div`
-    display: flex;
-    align-items: flex-start;
-    justify-content: space-between;
-    gap: 16px;
-    padding: 18px 22px;
-    flex-wrap: wrap;
-    @media (max-width: 600px) {
-        padding: 14px 16px;
-        gap: 10px;
-    }
-`;
+export const CardHeader = forwardRef<
+    HTMLDivElement,
+    HTMLAttributes<HTMLDivElement>
+>(({ className, ...rest }, ref) => (
+    <div
+        ref={ref}
+        className={cx("w-card-head", className)}
+        {...rest}
+    />
+));
+CardHeader.displayName = "CardHeader";
 
-export const CardTitleBlock = styled.div`
-    flex: 1;
-    min-width: 0;
-    display: flex;
-    flex-direction: column;
-    gap: 4px;
-`;
+export const CardTitleBlock = forwardRef<
+    HTMLDivElement,
+    HTMLAttributes<HTMLDivElement>
+>(({ className, ...rest }, ref) => (
+    <div
+        ref={ref}
+        className={cx("w-flex-col", "w-gap-1", "w-grow", className)}
+        {...rest}
+    />
+));
+CardTitleBlock.displayName = "CardTitleBlock";
 
-export const CardTitle = styled.h3`
-    font-size: 14px;
-    font-weight: 600;
-    color: var(--color-card-foreground);
-    margin: 0;
-    line-height: 1.4;
-`;
+export const CardTitle = forwardRef<
+    HTMLHeadingElement,
+    HTMLAttributes<HTMLHeadingElement>
+>(({ className, ...rest }, ref) => (
+    <h3 ref={ref} className={cx("w-sec", className)} {...rest} />
+));
+CardTitle.displayName = "CardTitle";
 
-export const CardSubtitle = styled.p`
-    font-size: 13px;
-    color: var(--color-secondary-text);
-    margin: 0;
-    line-height: 1.45;
-`;
+export const CardSubtitle = forwardRef<
+    HTMLParagraphElement,
+    HTMLAttributes<HTMLParagraphElement>
+>(({ className, ...rest }, ref) => (
+    <p ref={ref} className={cx("w-secsub", className)} {...rest} />
+));
+CardSubtitle.displayName = "CardSubtitle";
 
-export const CardActions = styled.div`
-    display: flex;
-    align-items: center;
-    gap: 8px;
-    flex-shrink: 0;
-    flex-wrap: wrap;
-    @media (max-width: 600px) {
-        width: 100%;
-        justify-content: flex-end;
-    }
-`;
+export const CardActions = forwardRef<
+    HTMLDivElement,
+    HTMLAttributes<HTMLDivElement>
+>(({ className, ...rest }, ref) => (
+    <div
+        ref={ref}
+        className={cx("w-flex", "w-items-center", "w-wrap", "w-gap-2", "w-none", className)}
+        {...rest}
+    />
+));
+CardActions.displayName = "CardActions";
 
-export const CardDivider = styled.div`
-    height: 1px;
-    background: var(--color-border);
-`;
+export const CardDivider = forwardRef<
+    HTMLDivElement,
+    HTMLAttributes<HTMLDivElement>
+>(({ className, ...rest }, ref) => (
+    <div ref={ref} className={cx("w-hr", className)} {...rest} />
+));
+CardDivider.displayName = "CardDivider";
 
-export const CardBody = styled.div`
-    padding: 20px 22px;
-    @media (max-width: 600px) {
-        padding: 14px 16px;
-    }
-`;
+export const CardBody = forwardRef<
+    HTMLDivElement,
+    HTMLAttributes<HTMLDivElement>
+>(({ className, ...rest }, ref) => (
+    <div ref={ref} className={cx("w-card-body", className)} {...rest} />
+));
+CardBody.displayName = "CardBody";
 
-export const CardFooter = styled.div`
-    display: flex;
-    justify-content: flex-end;
-    align-items: center;
-    gap: 10px;
-    padding: 14px 22px;
-    border-top: 1px solid var(--color-border);
-    flex-wrap: wrap;
-    @media (max-width: 600px) {
-        padding: 12px 16px;
-    }
-`;
+export const CardFooter = forwardRef<
+    HTMLDivElement,
+    HTMLAttributes<HTMLDivElement>
+>(({ className, ...rest }, ref) => (
+    <div
+        ref={ref}
+        className={cx("w-card-foot", className)}
+        {...rest}
+    />
+));
+CardFooter.displayName = "CardFooter";
 
 /* Row list (security items, etc.) */
-export const RowList = styled.div`
-    display: flex;
-    flex-direction: column;
-`;
+export const RowList = forwardRef<
+    HTMLDivElement,
+    HTMLAttributes<HTMLDivElement>
+>(({ className, ...rest }, ref) => (
+    <div ref={ref} className={cx("w-list", className)} {...rest} />
+));
+RowList.displayName = "RowList";
 
-export const RowItem = styled.div`
-    display: flex;
-    align-items: center;
-    justify-content: space-between;
-    gap: 16px;
-    padding: 16px 22px;
-    &:not(:last-child) {
-        border-bottom: 1px solid var(--color-border);
-    }
-    @media (max-width: 600px) {
-        padding: 14px 16px;
-        flex-direction: column;
-        align-items: flex-start;
-        gap: 10px;
-    }
-`;
+export const RowItem = forwardRef<
+    HTMLDivElement,
+    HTMLAttributes<HTMLDivElement>
+>(({ className, ...rest }, ref) => (
+    <div
+        ref={ref}
+        className={cx("w-rowitem", className)}
+        {...rest}
+    />
+));
+RowItem.displayName = "RowItem";
 
-export const RowInfo = styled.div`
-    flex: 1;
-    min-width: 0;
-    display: flex;
-    flex-direction: column;
-    gap: 3px;
-`;
+export const RowInfo = forwardRef<
+    HTMLDivElement,
+    HTMLAttributes<HTMLDivElement>
+>(({ className, ...rest }, ref) => (
+    <div
+        ref={ref}
+        className={cx("w-flex-col", "w-gap-1", "w-grow", className)}
+        {...rest}
+    />
+));
+RowInfo.displayName = "RowInfo";
 
-export const RowTitle = styled.div`
-    font-size: 13px;
-    font-weight: 500;
-    color: var(--color-card-foreground);
-    line-height: 1.4;
-`;
+export const RowTitle = forwardRef<
+    HTMLDivElement,
+    HTMLAttributes<HTMLDivElement>
+>(({ className, ...rest }, ref) => (
+    <div ref={ref} className={cx("w-sec", className)} {...rest} />
+));
+RowTitle.displayName = "RowTitle";
 
-export const RowSub = styled.div`
-    font-size: 12px;
-    color: var(--color-secondary-text);
-    line-height: 1.4;
-`;
+export const RowSub = forwardRef<
+    HTMLDivElement,
+    HTMLAttributes<HTMLDivElement>
+>(({ className, ...rest }, ref) => (
+    <div ref={ref} className={cx("w-secsub", className)} {...rest} />
+));
+RowSub.displayName = "RowSub";
 
-export const RowActions = styled.div`
-    display: flex;
-    align-items: center;
-    gap: 8px;
-    flex-shrink: 0;
-    flex-wrap: wrap;
-    @media (max-width: 600px) {
-        width: 100%;
-        justify-content: flex-end;
-    }
-`;
+export const RowActions = forwardRef<
+    HTMLDivElement,
+    HTMLAttributes<HTMLDivElement>
+>(({ className, ...rest }, ref) => (
+    <div
+        ref={ref}
+        className={cx("w-flex", "w-items-center", "w-wrap", "w-gap-2", "w-none", className)}
+        {...rest}
+    />
+));
+RowActions.displayName = "RowActions";
 
 /* Status pill */
 type PillVariant = "primary" | "success" | "warning" | "danger" | "neutral";
 
-export const StatusPill = styled.span<{ $variant?: PillVariant }>`
-    display: inline-flex;
-    align-items: center;
-    gap: 6px;
-    padding: 3px 9px;
-    border-radius: 999px;
-    font-size: 11px;
-    font-weight: 500;
-    line-height: 1.4;
-    white-space: nowrap;
+const pillVariantClass: Record<PillVariant, string> = {
+    primary: "w-pill--current",
+    success: "w-pill--success",
+    warning: "w-pill--pending",
+    danger: "w-pill--error",
+    neutral: "",
+};
 
-    background: ${(p) => {
-        switch (p.$variant) {
-            case "warning":
-                return "transparent";
-            case "danger":
-                return "color-mix(in srgb, var(--color-error) 14%, transparent)";
-            case "success":
-                return "color-mix(in srgb, var(--color-success, #10b981) 14%, transparent)";
-            case "primary":
-                return "color-mix(in srgb, var(--color-primary) 14%, transparent)";
-            default:
-                return "color-mix(in srgb, var(--color-popover-foreground) 8%, transparent)";
-        }
-    }};
-    border: ${(p) =>
-        p.$variant === "warning"
-            ? "1px dashed var(--color-warning, #f59e0b)"
-            : "1px solid transparent"};
-    color: ${(p) => {
-        switch (p.$variant) {
-            case "warning":
-                return "var(--color-warning, #f59e0b)";
-            case "danger":
-                return "var(--color-error)";
-            case "success":
-                return "var(--color-success, #10b981)";
-            case "primary":
-                return "var(--color-primary)";
-            default:
-                return "var(--color-secondary-text)";
-        }
-    }};
-
-    &::before {
-        content: "";
-        width: 6px;
-        height: 6px;
-        border-radius: 50%;
-        background: currentColor;
-        flex-shrink: 0;
-    }
-`;
+export const StatusPill = ({
+    $variant = "neutral",
+    className,
+    children,
+    ...rest
+}: HTMLAttributes<HTMLSpanElement> & { $variant?: PillVariant }) => (
+    <span
+        className={cx("w-pill", pillVariantClass[$variant], className)}
+        {...rest}
+    >
+        <span className="w-dot" />
+        {children as ReactNode}
+    </span>
+);
 
 /* Table */
-export const Table = styled.div`
-    display: flex;
-    flex-direction: column;
-`;
+export const Table = forwardRef<
+    HTMLDivElement,
+    HTMLAttributes<HTMLDivElement>
+>(({ className, ...rest }, ref) => (
+    <div ref={ref} className={cx("w-list", className)} {...rest} />
+));
+Table.displayName = "Table";
 
-export const TableHead = styled.div<{ $cols?: string }>`
-    display: grid;
-    grid-template-columns: ${(p) => p.$cols || "1fr 1fr auto"};
-    gap: 16px;
-    padding: 10px 22px;
-    border-bottom: 1px solid var(--color-border);
-    @media (max-width: 600px) {
-        display: none;
-    }
-`;
+export const TableHead = forwardRef<
+    HTMLDivElement,
+    HTMLAttributes<HTMLDivElement> & { $cols?: string }
+>(({ $cols, className, style, ...rest }, ref) => (
+    <div
+        ref={ref}
+        className={cx("w-listhead", "w-gap-4", className)}
+        style={{ gridTemplateColumns: $cols || "1fr 1fr auto", ...style }}
+        {...rest}
+    />
+));
+TableHead.displayName = "TableHead";
 
-export const Th = styled.div`
-    font-size: 10px;
-    font-weight: 500;
-    color: var(--color-secondary-text);
-    text-transform: uppercase;
-    letter-spacing: 0.07em;
-`;
+export const Th = forwardRef<
+    HTMLDivElement,
+    HTMLAttributes<HTMLDivElement>
+>(({ className, ...rest }, ref) => (
+    <div ref={ref} className={className} {...rest} />
+));
+Th.displayName = "Th";
 
-export const Tr = styled.div<{ $cols?: string }>`
-    display: grid;
-    grid-template-columns: ${(p) => p.$cols || "1fr 1fr auto"};
-    gap: 16px;
-    padding: 14px 22px;
-    align-items: center;
-    &:not(:last-child) {
-        border-bottom: 1px solid var(--color-border);
-    }
-    @media (max-width: 600px) {
-        display: flex;
-        flex-direction: column;
-        align-items: flex-start;
-        gap: 8px;
-        padding: 14px 16px;
-    }
-`;
+export const Tr = forwardRef<
+    HTMLDivElement,
+    HTMLAttributes<HTMLDivElement> & { $cols?: string }
+>(({ $cols, className, style, ...rest }, ref) => (
+    <div
+        ref={ref}
+        className={cx("w-row", "w-gap-4", className)}
+        style={{ gridTemplateColumns: $cols || "1fr 1fr auto", ...style }}
+        {...rest}
+    />
+));
+Tr.displayName = "Tr";
 
-export const Td = styled.div`
-    font-size: 13px;
-    color: var(--color-card-foreground);
-    min-width: 0;
-    overflow: hidden;
-    text-overflow: ellipsis;
-    white-space: nowrap;
-    @media (max-width: 600px) {
-        width: 100%;
-        white-space: normal;
-        overflow: visible;
-        text-overflow: clip;
-    }
-`;
+export const Td = forwardRef<
+    HTMLDivElement,
+    HTMLAttributes<HTMLDivElement>
+>(({ className, ...rest }, ref) => (
+    <div
+        ref={ref}
+        className={cx("w-truncate", "w-text-secondary", className)}
+        {...rest}
+    />
+));
+Td.displayName = "Td";
 
 /* Form field bits */
-export const FieldGrid = styled.div`
-    display: grid;
-    grid-template-columns: 1fr 1fr;
-    gap: 14px;
-    @media (max-width: 600px) {
-        grid-template-columns: 1fr;
-    }
-`;
+export const FieldGrid = forwardRef<
+    HTMLDivElement,
+    HTMLAttributes<HTMLDivElement>
+>(({ className, ...rest }, ref) => (
+    <div
+        ref={ref}
+        className={cx("w-grid-2", className)}
+        {...rest}
+    />
+));
+FieldGrid.displayName = "FieldGrid";
 
-export const Field = styled.div`
-    display: flex;
-    flex-direction: column;
-    gap: 6px;
-`;
+export const Field = forwardRef<
+    HTMLDivElement,
+    HTMLAttributes<HTMLDivElement>
+>(({ className, ...rest }, ref) => (
+    <div ref={ref} className={cx("w-field", className)} {...rest} />
+));
+Field.displayName = "Field";
 
-export const FieldLabel = styled.label`
-    font-size: 10px;
-    font-weight: 500;
-    color: var(--color-secondary-text);
-    text-transform: uppercase;
-    letter-spacing: 0.07em;
-`;
+export const FieldLabel = forwardRef<
+    HTMLLabelElement,
+    LabelHTMLAttributes<HTMLLabelElement>
+>(({ className, ...rest }, ref) => (
+    <label ref={ref} className={cx("w-label", className)} {...rest} />
+));
+FieldLabel.displayName = "FieldLabel";

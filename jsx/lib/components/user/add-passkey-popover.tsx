@@ -1,51 +1,6 @@
 import { useState, useRef, useEffect } from "react";
-import styled from "styled-components";
 import { Input } from "@/components/utility/input";
-import { Button } from "@/components/utility/button";
 import { usePopoverPosition } from "@/hooks/use-popover-position";
-
-const PopoverContainer = styled.div`
-  position: fixed;
-  background: var(--color-popover);
-  border-radius: var(--radius-md);
-  box-shadow: var(--shadow-md);
-  border: var(--border-width-thin) solid var(--color-border);
-  padding: var(--space-8u);
-  width: calc(calc(var(--size-50u) * 3) + var(--space-10u));
-  max-width: calc(100vw - var(--space-24u));
-  z-index: 1001;
-  
-  @media (max-width: 600px) {
-    width: calc(100vw - var(--space-24u));
-  }
-`;
-
-const ButtonGroup = styled.div`
-  display: flex;
-  gap: var(--space-4u);
-  justify-content: flex-end;
-  margin-top: var(--space-8u);
-`;
-
-const Title = styled.div`
-  font-size: var(--font-size-lg);
-  font-weight: 400;
-  color: var(--color-popover-foreground);
-  margin-bottom: var(--space-4u);
-`;
-
-const StyledFormGroup = styled.div`
-  display: flex;
-  flex-direction: column;
-  gap: var(--space-2u);
-  margin-bottom: var(--space-6u);
-`;
-
-const ErrorMessage = styled.div`
-  color: var(--color-error);
-  font-size: var(--font-size-sm);
-  margin-top: var(--space-2u);
-`;
 
 interface AddPasskeyPopoverProps {
     triggerRef?: React.RefObject<HTMLElement | null>;
@@ -64,6 +19,7 @@ export const AddPasskeyPopover = ({
     const [loading, setLoading] = useState(false);
     const [error, setError] = useState("");
     const position = usePopoverPosition({
+        contentRef: popoverRef,
         triggerRef: triggerRef ?? { current: null },
         isOpen: mounted,
         minWidth: 320,
@@ -113,9 +69,13 @@ export const AddPasskeyPopover = ({
     }
 
     return (
-        <PopoverContainer
+        <div
             ref={popoverRef}
+            className="w-pop"
             style={{
+                position: "fixed",
+                zIndex: 1001,
+                maxWidth: "calc(100vw - 24px)",
                 top: position?.top !== undefined ? `${position.top}px` : undefined,
                 bottom: position?.bottom !== undefined ? `${position.bottom}px` : undefined,
                 left: position?.left !== undefined ? `${position.left}px` : undefined,
@@ -125,9 +85,9 @@ export const AddPasskeyPopover = ({
             }}
             onClick={(e) => e.stopPropagation()}
         >
-            <Title>Add Passkey</Title>
+            <div className="w-pop-body">
+                <div className="w-pop-title">Add Passkey</div>
 
-            <StyledFormGroup>
                 <Input
                     type="text"
                     placeholder="e.g., MacBook Pro, iPhone"
@@ -135,19 +95,21 @@ export const AddPasskeyPopover = ({
                     onChange={(e) => setName(e.target.value)}
                     autoFocus
                 />
-            </StyledFormGroup>
 
-            {error && <ErrorMessage>{error}</ErrorMessage>}
+                {error && <span className="w-input-err">{error}</span>}
+            </div>
 
-            <ButtonGroup>
-                <Button $outline onClick={onClose}>Cancel</Button>
-                <Button
+            <div className="w-pop-foot">
+                <button className="w-btn w-btn--secondary w-btn--sm" onClick={onClose}>Cancel</button>
+                <button
+                    className="w-btn w-btn--primary w-btn--sm"
+                    style={{ width: "auto" }}
                     onClick={handleSubmit}
                     disabled={loading}
                 >
                     {loading ? "Registering..." : "Continue"}
-                </Button>
-            </ButtonGroup>
-        </PopoverContainer>
+                </button>
+            </div>
+        </div>
     );
 };

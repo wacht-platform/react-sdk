@@ -25,17 +25,14 @@ import {
     SecurityItemRow,
     SecurityItemContent,
     SecurityItemActions,
-    spin,
 } from "./shared";
-import styled from "styled-components";
 
-const SectionLabel = styled.div<{ $first?: boolean }>`
-    font-size: var(--font-size-sm);
-    text-transform: uppercase;
-    color: var(--color-secondary-text);
-    padding: ${(p) => (p.$first ? "0" : "var(--space-8u) 0 0")};
-    margin-bottom: var(--space-4u);
-`;
+const SectionLabel = ({
+    children,
+}: {
+    $first?: boolean;
+    children: React.ReactNode;
+}) => <div className="w-eyebrow">{children}</div>;
 
 export const SecurityManagementSection = () => {
     const { deployment } = useDeployment();
@@ -375,21 +372,9 @@ export const SecurityManagementSection = () => {
         return (
             <>
                 <HeaderCTAContainer>
-                    <div
-                        style={{
-                            display: "flex",
-                            alignItems: "center",
-                            gap: "var(--space-4u)",
-                        }}
-                    >
+                    <div className="w-flex w-items-center w-gap-3">
                         <Shield size={16} />
-                        <span
-                            style={{
-                                fontSize: "var(--font-size-lg)",
-                                fontWeight: 500,
-                                color: "var(--color-foreground)",
-                            }}
-                        >
+                        <span className="w-sec">
                             {setupStep === "qr" &&
                                 "Setup Two-Factor Authentication"}
                             {setupStep === "verify" &&
@@ -398,99 +383,32 @@ export const SecurityManagementSection = () => {
                             {setupStep === "success" && "Setup Complete!"}
                         </span>
                     </div>
-                    <Button
-                        onClick={() => setSetupStep("table")}
-                        style={{
-                            padding: "var(--space-4u) var(--space-8u)",
-                            fontSize: "var(--font-size-lg)",
-                            background: "var(--color-background)",
-                            border: "var(--border-width-thin) solid var(--color-border)",
-                            borderRadius: "var(--radius-md)",
-                            color: "var(--color-foreground)",
-                            fontWeight: "500",
-                            cursor: "pointer",
-                            transition: "all 0.2s ease",
-                        }}
-                    >
+                    <Button $outline $size="sm" onClick={() => setSetupStep("table")}>
                         ← Back
                     </Button>
                 </HeaderCTAContainer>
 
                 <div
-                    style={{
-                        maxWidth: "calc(var(--size-50u) * 5)",
-                        margin: "0 auto",
-                        textAlign: "center",
-                        padding: "var(--space-12u)",
-                    }}
+                    className="w-narrow w-flex-col w-items-center w-gap-5"
+                    style={{ textAlign: "center" }}
                 >
                     {setupStep === "qr" && (
                         <>
-                            <p
-                                style={{
-                                    color: "var(--color-secondary-text)",
-                                    marginBottom: "var(--space-12u)",
-                                }}
-                            >
+                            <p className="w-secsub">
                                 Scan this QR code with your authenticator app
                                 (Google Authenticator, Authy, etc.)
                             </p>
 
-                            <div
-                                style={{
-                                    display: "flex",
-                                    justifyContent: "center",
-                                    marginBottom: "var(--space-12u)",
-                                }}
-                            >
+                            <div className="w-flex w-justify-center">
                                 {isLoadingQR ? (
-                                    <div
-                                        style={{
-                                            width: "calc(var(--size-50u) * 2)",
-                                            height: "calc(var(--size-50u) * 2)",
-                                            border: "var(--border-width-thin) solid var(--color-border)",
-                                            borderRadius: "var(--radius-md)",
-                                            display: "flex",
-                                            alignItems: "center",
-                                            justifyContent: "center",
-                                            background:
-                                                "var(--color-input-background)",
-                                        }}
-                                    >
-                                        <div style={{ textAlign: "center" }}>
-                                            <div
-                                                style={{
-                                                    width: "var(--size-12u)",
-                                                    height: "var(--size-12u)",
-                                                    border: "var(--border-width-regular) solid var(--color-border)",
-                                                    borderTop:
-                                                        "var(--border-width-regular) solid var(--color-primary)",
-                                                    borderRadius: "50%",
-                                                    animation: `${spin} 1s linear infinite`,
-                                                    margin: "0 auto var(--space-4u)",
-                                                }}
-                                            ></div>
-                                            <div
-                                                style={{
-                                                    fontSize:
-                                                        "var(--font-size-sm)",
-                                                    color: "var(--color-secondary-text)",
-                                                }}
-                                            >
-                                                Loading QR Code...
-                                            </div>
+                                    <div className="w-qr w-flex-col w-items-center w-gap-3">
+                                        <span className="w-spin" />
+                                        <div className="w-secsub">
+                                            Loading QR Code...
                                         </div>
                                     </div>
                                 ) : qrCodeUrl ? (
-                                    <div
-                                        style={{
-                                            border: "var(--border-width-thin) solid var(--color-border)",
-                                            borderRadius: "var(--radius-md)",
-                                            padding: "var(--space-8u)",
-                                            background:
-                                                "var(--color-background)",
-                                        }}
-                                    >
+                                    <div className="w-tile w-flex w-items-center w-justify-center">
                                         <QRCodeSVG
                                             value={qrCodeUrl}
                                             size={200}
@@ -499,75 +417,25 @@ export const SecurityManagementSection = () => {
                                         />
                                     </div>
                                 ) : (
-                                    <div
-                                        style={{
-                                            width: "calc(var(--size-50u) * 2)",
-                                            height: "calc(var(--size-50u) * 2)",
-                                            border: "var(--border-width-thin) solid var(--color-border)",
-                                            borderRadius: "var(--radius-md)",
-                                            display: "flex",
-                                            alignItems: "center",
-                                            justifyContent: "center",
-                                            background:
-                                                "var(--color-input-background)",
-                                            color: "var(--color-error)",
-                                            fontSize: "var(--font-size-lg)",
-                                            textAlign: "center",
-                                        }}
-                                    >
+                                    <div className="w-qr w-text-error">
                                         QR Code Not Available
                                     </div>
                                 )}
                             </div>
 
-                            <div
-                                style={{
-                                    background: "var(--color-input-background)",
-                                    border: "var(--border-width-thin) solid var(--color-border)",
-                                    borderRadius: "var(--radius-md)",
-                                    padding: "var(--space-6u)",
-                                    marginBottom: "var(--space-12u)",
-                                }}
-                            >
-                                <p
-                                    style={{
-                                        fontSize: "var(--font-size-lg)",
-                                        color: "var(--color-secondary-text)",
-                                        margin: "0 0 var(--space-4u) 0",
-                                    }}
-                                >
+                            <div className="w-flex-col w-gap-2 w-full">
+                                <p className="w-secsub">
                                     Or enter this code manually:
                                 </p>
-                                <code
-                                    style={{
-                                        fontFamily: "monospace",
-                                        fontSize: "var(--font-size-lg)",
-                                        wordBreak: "break-all",
-                                    }}
-                                >
-                                    {secretKey || "Loading..."}
-                                </code>
+                                <div className="w-token">
+                                    <code>{secretKey || "Loading..."}</code>
+                                </div>
                             </div>
 
                             <Button
+                                $fullWidth
                                 onClick={() => setSetupStep("verify")}
                                 disabled={!qrCodeUrl || !secretKey}
-                                style={{
-                                    padding: "var(--space-5u) var(--space-10u)",
-                                    background:
-                                        !qrCodeUrl || !secretKey
-                                            ? "var(--color-border)"
-                                            : "var(--color-primary)",
-                                    color:
-                                        !qrCodeUrl || !secretKey
-                                            ? "var(--color-secondary-text)"
-                                            : "var(--color-background)",
-                                    border: `var(--border-width-thin) solid ${!qrCodeUrl || !secretKey ? "var(--color-border)" : "var(--color-primary)"}`,
-                                    cursor:
-                                        !qrCodeUrl || !secretKey
-                                            ? "not-allowed"
-                                            : "pointer",
-                                }}
                             >
                                 I've Scanned the Code
                             </Button>
@@ -576,24 +444,12 @@ export const SecurityManagementSection = () => {
 
                     {setupStep === "verify" && (
                         <>
-                            <p
-                                style={{
-                                    color: "var(--color-secondary-text)",
-                                    marginBottom: "var(--space-12u)",
-                                }}
-                            >
+                            <p className="w-secsub">
                                 Enter two consecutive codes from your
                                 authenticator app to verify setup
                             </p>
 
-                            <div
-                                style={{
-                                    display: "flex",
-                                    gap: "var(--space-6u)",
-                                    justifyContent: "center",
-                                    marginBottom: "var(--space-12u)",
-                                }}
-                            >
+                            <div className="w-flex w-justify-center w-gap-3">
                                 <Input
                                     type="text"
                                     placeholder="000000"
@@ -611,7 +467,6 @@ export const SecurityManagementSection = () => {
                                     }}
                                     maxLength={6}
                                     style={{
-                                        width: "var(--size-50u)",
                                         textAlign: "center",
                                         fontFamily: "monospace",
                                     }}
@@ -633,32 +488,22 @@ export const SecurityManagementSection = () => {
                                     }}
                                     maxLength={6}
                                     style={{
-                                        width: "var(--size-50u)",
                                         textAlign: "center",
                                         fontFamily: "monospace",
                                     }}
                                 />
                             </div>
 
-                            <div
-                                style={{
-                                    display: "flex",
-                                    gap: "var(--space-6u)",
-                                    justifyContent: "center",
-                                }}
-                            >
+                            <div className="w-flex w-justify-center w-gap-3">
                                 <Button
+                                    $outline
+                                    $size="sm"
                                     onClick={() => setSetupStep("qr")}
-                                    style={{
-                                        padding:
-                                            "var(--space-4u) var(--space-8u)",
-                                        background: "var(--color-background)",
-                                        border: "var(--border-width-thin) solid var(--color-border)",
-                                    }}
                                 >
                                     Back
                                 </Button>
                                 <Button
+                                    $size="sm"
                                     onClick={handleVerifyAuthenticator}
                                     disabled={
                                         isVerifying ||
@@ -666,13 +511,6 @@ export const SecurityManagementSection = () => {
                                             (code) => code.length !== 6,
                                         )
                                     }
-                                    style={{
-                                        padding:
-                                            "var(--space-4u) var(--space-8u)",
-                                        background: "var(--color-primary)",
-                                        color: "var(--color-foreground-inverse)",
-                                        border: "var(--border-width-thin) solid var(--color-primary)",
-                                    }}
                                 >
                                     {isVerifying
                                         ? "Verifying..."
@@ -684,42 +522,11 @@ export const SecurityManagementSection = () => {
 
                     {setupStep === "backup" && (
                         <>
-                            <div
-                                style={{
-                                    background:
-                                        "var(--color-warning-background)",
-                                    border: "var(--border-width-thin) solid var(--color-warning-border)",
-                                    borderRadius: "var(--radius-md)",
-                                    padding: "var(--space-8u)",
-                                    marginBottom: "var(--space-12u)",
-                                    display: "flex",
-                                    alignItems: "flex-start",
-                                    gap: "var(--space-6u)",
-                                    textAlign: "left",
-                                }}
-                            >
-                                <Warning
-                                    size={16}
-                                    style={{
-                                        color: "var(--color-warning)",
-                                        marginTop: "var(--space-1u)",
-                                    }}
-                                />
-                                <div>
-                                    <div
-                                        style={{
-                                            fontWeight: 500,
-                                            marginBottom: "var(--space-2u)",
-                                        }}
-                                    >
-                                        Important!
-                                    </div>
-                                    <div
-                                        style={{
-                                            fontSize: "var(--font-size-lg)",
-                                            color: "var(--color-secondary-text)",
-                                        }}
-                                    >
+                            <div className="w-banner w-banner--warn" style={{ textAlign: "left" }}>
+                                <Warning size={16} />
+                                <div className="w-flex-col w-gap-1">
+                                    <div className="w-sec">Important!</div>
+                                    <div className="w-banner-txt">
                                         Store these codes safely. Each code can
                                         only be used once if you lose access to
                                         your authenticator device.
@@ -727,88 +534,39 @@ export const SecurityManagementSection = () => {
                                 </div>
                             </div>
 
-                            <div
-                                style={{
-                                    display: "grid",
-                                    gridTemplateColumns: "repeat(2, 1fr)",
-                                    gap: "var(--space-4u)",
-                                    marginBottom: "var(--space-12u)",
-                                    maxWidth: "calc(var(--size-50u) * 3)",
-                                    margin: "0 auto var(--space-12u) auto",
-                                }}
-                            >
+                            <div className="w-codes w-full">
                                 {backupCodes.map((code, index) => (
-                                    <div
+                                    <span
                                         key={index}
-                                        style={{
-                                            background:
-                                                "var(--color-input-background)",
-                                            border: "var(--border-width-thin) solid var(--color-border)",
-                                            borderRadius: "var(--radius-md)",
-                                            padding: "var(--space-4u)",
-                                            fontFamily: "monospace",
-                                            fontSize: "var(--font-size-sm)",
-                                            textAlign: "center",
-                                            cursor: "pointer",
-                                        }}
                                         onClick={() =>
                                             navigator.clipboard.writeText(code)
                                         }
+                                        style={{ cursor: "pointer" }}
                                     >
                                         {code}
-                                    </div>
+                                    </span>
                                 ))}
                             </div>
 
-                            <div
-                                style={{
-                                    display: "flex",
-                                    gap: "var(--space-6u)",
-                                    justifyContent: "center",
-                                    marginBottom: "var(--space-12u)",
-                                }}
-                            >
+                            <div className="w-flex w-justify-center w-gap-3">
                                 <Button
+                                    $outline
+                                    $size="sm"
                                     onClick={copyBackupCodes}
-                                    style={{
-                                        padding:
-                                            "var(--space-4u) var(--space-8u)",
-                                        fontSize: "var(--font-size-lg)",
-                                        background: "var(--color-background)",
-                                        border: "var(--border-width-thin) solid var(--color-border)",
-                                    }}
                                 >
                                     Copy All
                                 </Button>
                                 <Button
+                                    $outline
+                                    $size="sm"
                                     onClick={downloadBackupCodes}
-                                    style={{
-                                        padding:
-                                            "var(--space-4u) var(--space-8u)",
-                                        fontSize: "var(--font-size-lg)",
-                                        background: "var(--color-background)",
-                                        border: "var(--border-width-thin) solid var(--color-border)",
-                                    }}
                                 >
-                                    <DownloadSimple
-                                        size={16}
-                                        style={{
-                                            marginRight: "var(--space-2u)",
-                                        }}
-                                    />
+                                    <DownloadSimple size={16} />
                                     DownloadSimple
                                 </Button>
                             </div>
 
-                            <Button
-                                onClick={handleCompleteSetup}
-                                style={{
-                                    padding: "var(--space-5u) var(--space-10u)",
-                                    background: "var(--color-primary)",
-                                    color: "var(--color-foreground-inverse)",
-                                    border: "var(--border-width-thin) solid var(--color-primary)",
-                                }}
-                            >
+                            <Button $fullWidth onClick={handleCompleteSetup}>
                                 Complete Setup
                             </Button>
                         </>
@@ -816,44 +574,21 @@ export const SecurityManagementSection = () => {
 
                     {setupStep === "success" && (
                         <>
-                            <div style={{ marginBottom: "var(--space-12u)" }}>
-                                <Check
-                                    size={48}
-                                    style={{
-                                        color: "var(--color-success)",
-                                        marginBottom: "var(--space-8u)",
-                                    }}
-                                />
-                                <h3
-                                    style={{
-                                        fontSize: "var(--font-size-2xl)",
-                                        fontWeight: 600,
-                                        margin: "0 0 var(--space-4u) 0",
-                                    }}
-                                >
-                                    All Set!
-                                </h3>
-                                <p
-                                    style={{
-                                        fontSize: "var(--font-size-lg)",
-                                        color: "var(--color-secondary-text)",
-                                        margin: 0,
-                                    }}
-                                >
+                            <div className="w-success">
+                                <span className="ring" />
+                                <span className="disc">
+                                    <Check size={26} />
+                                </span>
+                            </div>
+                            <div className="w-flex-col w-gap-1 w-items-center">
+                                <h3 className="w-title">All Set!</h3>
+                                <p className="w-secsub">
                                     Your account is now protected with
                                     two-factor authentication.
                                 </p>
                             </div>
 
-                            <Button
-                                onClick={handleCompleteSetup}
-                                style={{
-                                    padding: "var(--space-5u) var(--space-10u)",
-                                    background: "var(--color-primary)",
-                                    color: "var(--color-foreground-inverse)",
-                                    border: "var(--border-width-thin) solid var(--color-primary)",
-                                }}
-                            >
+                            <Button $fullWidth onClick={handleCompleteSetup}>
                                 Continue to Security
                             </Button>
                         </>
@@ -888,53 +623,24 @@ export const SecurityManagementSection = () => {
                                             : "Recovery"}
                                     </SectionLabel>
                                 )}
-                                <SecurityItemRow
-                                    style={
-                                        showGroupLabel
-                                            ? { paddingTop: 0 }
-                                            : undefined
-                                    }
-                                >
+                                <SecurityItemRow>
                                     <SecurityItemContent>
-                                        <div
-                                            style={{
-                                                display: "flex",
-                                                alignItems: "center",
-                                                gap: 8,
-                                                flexWrap: "wrap",
-                                                fontWeight: 400,
-                                                color: "var(--color-foreground)",
-                                            }}
-                                        >
+                                        <div className="w-flex w-items-center w-wrap w-gap-2 w-sec">
                                             <span>{item.name}</span>
                                         </div>
-                                        <div
-                                            style={{
-                                                fontSize: "var(--font-size-md)",
-                                                color: "var(--color-secondary-text)",
-                                            }}
-                                        >
+                                        <div className="w-secsub">
                                             {item.description}
                                         </div>
                                     </SecurityItemContent>
 
                                     <SecurityItemActions>
                                         {/* Status badge - hide for passkeys since they have custom buttons */}
-                                        <div style={{ position: "relative" }}>
+                                        <div className="w-relative">
                                             {item.id === "password" && (
                                                 <>
                                                     {user?.has_password ? (
-                                                        <div
-                                                            style={{
-                                                                display: "flex",
-                                                                gap: "var(--space-4u)",
-                                                            }}
-                                                        >
-                                                            <div
-                                                                style={{
-                                                                    position:
-                                                                        "relative",
-                                                                }}
+                                                        <div className="w-flex w-gap-2">
+                                                            <div className="w-relative"
                                                             >
                                                                 <Button
                                                                     $size="sm"
@@ -968,11 +674,7 @@ export const SecurityManagementSection = () => {
                                                             </div>
 
                                                             {canRemovePassword() && (
-                                                                <div
-                                                                    style={{
-                                                                        position:
-                                                                            "relative",
-                                                                    }}
+                                                                <div className="w-relative"
                                                                 >
                                                                     <Button
                                                                         $destructive
@@ -1008,11 +710,7 @@ export const SecurityManagementSection = () => {
                                                             )}
                                                         </div>
                                                     ) : (
-                                                        <div
-                                                            style={{
-                                                                position:
-                                                                    "relative",
-                                                            }}
+                                                        <div className="w-relative"
                                                         >
                                                             <Button
                                                                 $size="sm"
@@ -1054,11 +752,7 @@ export const SecurityManagementSection = () => {
                                             {item.id === "authenticator" &&
                                                 !user?.user_authenticator && (
                                                     <>
-                                                        <div
-                                                            style={{
-                                                                position:
-                                                                    "relative",
-                                                            }}
+                                                        <div className="w-relative"
                                                         >
                                                             <Button
                                                                 $size="sm"
@@ -1118,14 +812,11 @@ export const SecurityManagementSection = () => {
 
                                             {item.id === "authenticator" &&
                                                 user?.user_authenticator && (
-                                                    <div
-                                                        style={{
-                                                            position:
-                                                                "relative",
-                                                        }}
+                                                    <div className="w-relative"
                                                     >
                                                         <Button
                                                             $destructive
+                                                            $size="sm"
                                                             onClick={() =>
                                                                 setShowDeleteAuthPopover(
                                                                     true,
@@ -1134,15 +825,6 @@ export const SecurityManagementSection = () => {
                                                             disabled={
                                                                 isRemovingAuth
                                                             }
-                                                            style={{
-                                                                cursor: isRemovingAuth
-                                                                    ? "not-allowed"
-                                                                    : "pointer",
-                                                                opacity:
-                                                                    isRemovingAuth
-                                                                        ? 0.6
-                                                                        : 1,
-                                                            }}
                                                         >
                                                             {isRemovingAuth
                                                                 ? "Removing..."
@@ -1166,11 +848,7 @@ export const SecurityManagementSection = () => {
 
                                             {item.id === "backup_codes" && (
                                                 <>
-                                                    <div
-                                                        style={{
-                                                            position:
-                                                                "relative",
-                                                        }}
+                                                    <div className="w-relative"
                                                     >
                                                         <Button
                                                             $size="sm"
@@ -1234,13 +912,7 @@ export const SecurityManagementSection = () => {
                                             )}
 
                                             {item.id === "passkey" && (
-                                                <div
-                                                    style={{
-                                                        display: "flex",
-                                                        gap: "var(--space-4u)",
-                                                        alignItems: "center",
-                                                    }}
-                                                >
+                                                <div className="w-flex w-items-center w-gap-2">
                                                     <Button
                                                         $outline
                                                         $size="sm"
@@ -1249,21 +921,6 @@ export const SecurityManagementSection = () => {
                                                                 !isPasskeyExpanded,
                                                             )
                                                         }
-                                                        style={{
-                                                            color: "var(--color-foreground)",
-                                                            cursor: "pointer",
-                                                            display: "flex",
-                                                            alignItems:
-                                                                "center",
-                                                            justifyContent:
-                                                                "center",
-                                                            gap: "var(--space-3u)",
-                                                            whiteSpace:
-                                                                "nowrap",
-                                                            flexShrink: 0,
-                                                            width: "calc(var(--size-50u) + var(--space-5u))",
-                                                            height: "var(--size-18u)",
-                                                        }}
                                                     >
                                                         {isPasskeyExpanded
                                                             ? "Hide"
@@ -1281,11 +938,7 @@ export const SecurityManagementSection = () => {
                                                             }}
                                                         />
                                                     </Button>
-                                                    <div
-                                                        style={{
-                                                            position:
-                                                                "relative",
-                                                        }}
+                                                    <div className="w-relative"
                                                     >
                                                         <Button
                                                             $size="sm"
@@ -1300,21 +953,6 @@ export const SecurityManagementSection = () => {
                                                             disabled={
                                                                 isRegisteringPasskey
                                                             }
-                                                            style={{
-                                                                cursor: isRegisteringPasskey
-                                                                    ? "not-allowed"
-                                                                    : "pointer",
-                                                                opacity:
-                                                                    isRegisteringPasskey
-                                                                        ? 0.7
-                                                                        : 1,
-                                                                whiteSpace:
-                                                                    "nowrap",
-                                                                minWidth:
-                                                                    "var(--size-40u)",
-                                                                width: "auto",
-                                                                height: "var(--size-18u)",
-                                                            }}
                                                         >
                                                             {isRegisteringPasskey
                                                                 ? "Adding..."
@@ -1345,90 +983,30 @@ export const SecurityManagementSection = () => {
 
                                 {/* Passkey Accordion Content */}
                                 {item.id === "passkey" && isPasskeyExpanded && (
-                                    <div
-                                        style={{
-                                            padding: "var(--space-6u) 0",
-                                            borderTop:
-                                                "var(--border-width-thin) solid var(--color-border)",
-                                            marginTop: "var(--space-4u)",
-                                        }}
-                                    >
+                                    <div className="w-flex-col w-gap-2">
                                         {isLoadingPasskeys ? (
-                                            <div
-                                                style={{
-                                                    display: "flex",
-                                                    justifyContent: "center",
-                                                    padding: "var(--space-8u)",
-                                                }}
-                                            >
+                                            <div className="w-loading">
                                                 <Spinner />
                                             </div>
                                         ) : passkeys.length === 0 ? (
-                                            <div
-                                                style={{
-                                                    textAlign: "center",
-                                                    padding: "var(--space-8u)",
-                                                    color: "var(--color-secondary-text)",
-                                                    fontSize:
-                                                        "var(--font-size-md)",
-                                                }}
-                                            >
-                                                No passkeys registered yet
+                                            <div className="w-empty">
+                                                <p>No passkeys registered yet</p>
                                             </div>
                                         ) : (
-                                            <div
-                                                style={{
-                                                    display: "flex",
-                                                    flexDirection: "column",
-                                                    gap: "var(--space-4u)",
-                                                }}
-                                            >
+                                            <div className="w-flex-col w-gap-2">
                                                 {passkeys.map(
                                                     (passkey: any) => (
                                                         <div
                                                             key={passkey.id}
-                                                            style={{
-                                                                display: "flex",
-                                                                justifyContent:
-                                                                    "space-between",
-                                                                alignItems:
-                                                                    "center",
-                                                                padding:
-                                                                    "var(--space-5u) var(--space-6u)",
-                                                                background:
-                                                                    "var(--color-input-background)",
-                                                                borderRadius:
-                                                                    "var(--radius-md)",
-                                                                border: "var(--border-width-thin) solid var(--color-border)",
-                                                            }}
+                                                            className="w-locked w-flex w-items-center w-justify-between"
+                                                            style={{ height: "auto", padding: "10px 12px" }}
                                                         >
-                                                            <div
-                                                                style={{
-                                                                    display:
-                                                                        "flex",
-                                                                    flexDirection:
-                                                                        "column",
-                                                                    gap: "var(--space-1u)",
-                                                                }}
-                                                            >
-                                                                <span
-                                                                    style={{
-                                                                        fontWeight: 500,
-                                                                        fontSize:
-                                                                            "var(--font-size-md)",
-                                                                        color: "var(--color-foreground)",
-                                                                    }}
-                                                                >
+                                                            <div className="w-flex-col w-gap-1">
+                                                                <span className="w-sec">
                                                                     {passkey.name ||
                                                                         "Unnamed Passkey"}
                                                                 </span>
-                                                                <span
-                                                                    style={{
-                                                                        fontSize:
-                                                                            "var(--font-size-xs)",
-                                                                        color: "var(--color-secondary-text)",
-                                                                    }}
-                                                                >
+                                                                <span className="w-secsub">
                                                                     {passkey.device_type ===
                                                                     "platform"
                                                                         ? "This device"
@@ -1437,11 +1015,7 @@ export const SecurityManagementSection = () => {
                                                                         ` • Last used ${new Date(passkey.last_used_at).toLocaleDateString()}`}
                                                                 </span>
                                                             </div>
-                                                            <div
-                                                                style={{
-                                                                    position:
-                                                                        "relative",
-                                                                }}
+                                                            <div className="w-relative"
                                                             >
                                                                 <Button
                                                                     $destructive
@@ -1451,10 +1025,6 @@ export const SecurityManagementSection = () => {
                                                                             passkey.id,
                                                                         )
                                                                     }
-                                                                    style={{
-                                                                        flexShrink: 0,
-                                                                        width: "auto",
-                                                                    }}
                                                                 >
                                                                     Remove
                                                                 </Button>
@@ -1487,15 +1057,7 @@ export const SecurityManagementSection = () => {
                                     </div>
                                 )}
 
-                                {nextSameGroup && (
-                                    <div
-                                        style={{
-                                            height: "var(--border-width-thin)",
-                                            background: "var(--color-border)",
-                                            margin: "0",
-                                        }}
-                                    />
-                                )}
+                                {nextSameGroup && <div className="w-hr" />}
                             </div>
                         );
                     })}

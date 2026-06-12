@@ -7,7 +7,6 @@ import React, {
     JSX,
 } from "react";
 import ReactDOM from "react-dom";
-import styled from "styled-components";
 import {
     SignOut,
     GearSix,
@@ -36,696 +35,352 @@ import { usePopoverPosition } from "@/hooks/use-popover-position";
 import { canManageOrganization, canManageWorkspace } from "@/utils/permissions";
 import type { WorkspaceWithOrganization } from "@/types";
 
-// ─── Trigger ──────────────────────────────────────────────────────────────────
+// ─── Thin className renderers (design-system .w-* classes) ────────────────────
 
-const Container = styled.div`
-    position: relative;
-`;
+type DivProps = React.HTMLAttributes<HTMLDivElement>;
+type BtnProps = React.ButtonHTMLAttributes<HTMLButtonElement>;
+type SpanProps = React.HTMLAttributes<HTMLSpanElement>;
 
-const AccountButton = styled.button`
-    display: flex;
-    align-items: center;
-    gap: var(--space-3u);
-    border: none;
-    background: transparent;
-    cursor: pointer;
-    border-radius: var(--radius-full);
-    padding: var(--space-1u);
-    transition: background-color 0.2s ease;
-    &:hover {
-        background: var(--color-accent);
-    }
-`;
+const cx = (...c: (string | false | undefined)[]) => c.filter(Boolean).join(" ");
 
-const Avatar = styled.div`
-    width: calc(var(--size-12u) + var(--space-4u));
-    height: calc(var(--size-12u) + var(--space-4u));
-    border-radius: 50%;
-    overflow: hidden;
-    background: var(--color-secondary);
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    font-size: var(--font-size-md);
-    font-weight: 400;
-    color: var(--color-secondary-text);
-    flex-shrink: 0;
-    border: var(--border-width-thin) solid var(--color-border);
-    img {
-        width: 100%;
-        height: 100%;
-        object-fit: cover;
-    }
-`;
+const Container = (p: DivProps) => (
+    <div {...p} className={cx("w-relative", p.className)} />
+);
 
-const TriggerName = styled.div`
-    font-size: var(--font-size-md);
-    font-weight: 400;
-    color: var(--color-secondary-text);
-`;
+const AccountButton = React.forwardRef<HTMLButtonElement, BtnProps>(
+    (p, ref) => (
+        <button
+            {...p}
+            ref={ref}
+            className={cx("w-acct", p.className)}
+            style={{ width: "auto", margin: 0, padding: 4, gap: 8, ...p.style }}
+        />
+    ),
+);
+AccountButton.displayName = "AccountButton";
+
+const Avatar = ({ children, ...p }: DivProps) => (
+    <div {...p} className={cx("w-avatar", "w-avatar--md", p.className)}>
+        {children}
+    </div>
+);
+
+const TriggerName = (p: DivProps) => (
+    <div {...p} className={cx("w-sec", "w-text-secondary", p.className)} />
+);
 
 // ─── Dropdown shell ───────────────────────────────────────────────────────────
 
-const DropdownContainer = styled.div<{
-    $position?: {
-        top?: number;
-        bottom?: number;
-        left?: number;
-        right?: number;
-    };
-    $isOpen: boolean;
-    $maxHeight?: number;
-}>`
-    position: fixed;
-    ${(p) =>
-        p.$position?.top !== undefined ? `top: ${p.$position.top}px;` : ""}
-    ${(p) =>
-        p.$position?.bottom !== undefined
-            ? `bottom: ${p.$position.bottom}px;`
-            : ""}
-    ${(p) =>
-        p.$position?.left !== undefined ? `left: ${p.$position.left}px;` : ""}
-    ${(p) =>
-        p.$position?.right !== undefined
-            ? `right: ${p.$position.right}px;`
-            : ""}
-    visibility: ${(p) => (p.$position && p.$isOpen ? "visible" : "hidden")};
-    opacity: ${(p) => (p.$isOpen && p.$position ? 1 : 0)};
-    transition:
-        opacity 0.15s ease,
-        visibility 0s linear ${(p) => (p.$isOpen ? "0s" : "0.15s")};
-    border-radius: var(--radius-md);
-    border: var(--border-width-thin) solid var(--color-border);
-    background: var(--color-popover);
-    box-shadow: var(--shadow-md);
-    z-index: 99999;
-    overflow: hidden;
-    width: 300px;
-    max-width: calc(100vw - var(--space-12u));
-    max-height: ${(p) =>
-        p.$maxHeight ? `${p.$maxHeight}px` : "calc(100vh - 48px)"};
-    overflow-y: auto;
-`;
+const DropdownContainer = React.forwardRef<
+    HTMLDivElement,
+    DivProps & {
+        $position?: { top?: number; bottom?: number; left?: number; right?: number };
+        $isOpen: boolean;
+        $maxHeight?: number;
+    }
+>(({ $position, $isOpen, $maxHeight, children, ...p }, ref) => (
+    <div
+        {...p}
+        ref={ref}
+        className="w-menu"
+        style={{
+            position: "fixed",
+            width: 300,
+            maxWidth: "calc(100vw - 24px)",
+            maxHeight: $maxHeight ? `${$maxHeight}px` : "calc(100vh - 48px)",
+            overflowY: "auto",
+            zIndex: 99999,
+            top: $position?.top !== undefined ? `${$position.top}px` : undefined,
+            bottom: $position?.bottom !== undefined ? `${$position.bottom}px` : undefined,
+            left: $position?.left !== undefined ? `${$position.left}px` : undefined,
+            right: $position?.right !== undefined ? `${$position.right}px` : undefined,
+            visibility: $position && $isOpen ? "visible" : "hidden",
+            opacity: $isOpen && $position ? 1 : 0,
+            transition: `opacity 0.15s ease, visibility 0s linear ${$isOpen ? "0s" : "0.15s"}`,
+            padding: 0,
+        }}
+    >
+        {children}
+    </div>
+));
+DropdownContainer.displayName = "DropdownContainer";
 
-const SidePanel = styled.div<{
-    $top: number;
-    $left: number;
-    $isOpen: boolean;
-    $maxHeight: number;
-}>`
-    position: fixed;
-    top: ${(p) => p.$top}px;
-    left: ${(p) => p.$left}px;
-    visibility: ${(p) => (p.$isOpen ? "visible" : "hidden")};
-    opacity: ${(p) => (p.$isOpen ? 1 : 0)};
-    transition:
-        opacity 0.15s ease,
-        visibility 0s linear ${(p) => (p.$isOpen ? "0s" : "0.15s")};
-    border-radius: var(--radius-md);
-    border: var(--border-width-thin) solid var(--color-border);
-    background: var(--color-popover);
-    box-shadow: var(--shadow-md);
-    z-index: 99999;
-    overflow: hidden;
-    width: 300px;
-    max-width: calc(100vw - var(--space-12u));
-    max-height: ${(p) => p.$maxHeight}px;
-    overflow-y: auto;
-    display: flex;
-    flex-direction: column;
-`;
+const SidePanel = React.forwardRef<
+    HTMLDivElement,
+    DivProps & { $top: number; $left: number; $isOpen: boolean; $maxHeight: number }
+>(({ $top, $left, $isOpen, $maxHeight, children, ...p }, ref) => (
+    <div
+        {...p}
+        ref={ref}
+        className="w-menu"
+        style={{
+            position: "fixed",
+            width: 300,
+            maxWidth: "calc(100vw - 24px)",
+            maxHeight: `${$maxHeight}px`,
+            overflowY: "auto",
+            zIndex: 99999,
+            display: "flex",
+            flexDirection: "column",
+            top: `${$top}px`,
+            left: `${$left}px`,
+            visibility: $isOpen ? "visible" : "hidden",
+            opacity: $isOpen ? 1 : 0,
+            transition: `opacity 0.15s ease, visibility 0s linear ${$isOpen ? "0s" : "0.15s"}`,
+            padding: 0,
+        }}
+    >
+        {children}
+    </div>
+));
+SidePanel.displayName = "SidePanel";
 
-const Divider = styled.div`
-    height: var(--border-width-thin);
-    background: var(--color-border);
-    flex-shrink: 0;
-`;
+const Divider = (p: DivProps) => (
+    <hr {...(p as React.HTMLAttributes<HTMLHRElement>)} className={cx("w-hr", p.className)} />
+);
 
 // ─── Profile block ────────────────────────────────────────────────────────────
 
-const ProfileBlock = styled.div`
-    padding: var(--space-6u) var(--space-5u) var(--space-3u);
-    margin-bottom: var(--space-4u);
-`;
+const ProfileBlock = (p: DivProps) => (
+    <div {...p} style={{ padding: "16px 14px 8px", ...p.style }} />
+);
 
-const ProfileHeader = styled.div`
-    display: flex;
-    align-items: center;
-    gap: var(--space-4u);
-`;
+const ProfileHeader = (p: DivProps) => (
+    <div {...p} className={cx("w-flex", "w-items-center", "w-gap-3", p.className)} />
+);
 
-const LargeAvatar = styled(Avatar)`
-    width: 40px;
-    height: 40px;
-    font-size: var(--font-size-md);
-    flex-shrink: 0;
-`;
+const LargeAvatar = ({ children, ...p }: DivProps) => (
+    <div {...p} className={cx("w-avatar", "w-avatar--lg", p.className)}>
+        {children}
+    </div>
+);
 
-const ProfileInfo = styled.div`
-    display: flex;
-    flex-direction: column;
-    gap: 2px;
-    min-width: 0;
-`;
+const ProfileInfo = (p: DivProps) => (
+    <div {...p} className={cx("w-flex-col", "w-grow", p.className)} style={{ gap: 2, ...p.style }} />
+);
 
-const ProfileName = styled.div`
-    font-size: var(--font-size-md);
-    font-weight: 400;
-    color: var(--color-popover-foreground);
-    white-space: nowrap;
-    overflow: hidden;
-    text-overflow: ellipsis;
-    line-height: 1.4;
-`;
+const ProfileName = (p: DivProps) => (
+    <div {...p} className={cx("w-sec", "w-truncate", p.className)} />
+);
 
-const ProfileEmail = styled.div`
-    font-size: var(--font-size-sm);
-    font-weight: 400;
-    color: var(--color-secondary-text);
-    white-space: nowrap;
-    overflow: hidden;
-    text-overflow: ellipsis;
-    line-height: 1.4;
-`;
+const ProfileEmail = (p: DivProps) => (
+    <div {...p} className={cx("w-secsub", "w-truncate", p.className)} />
+);
 
 // ─── Org chip ─────────────────────────────────────────────────────────────────
 
-const OrgChip = styled.button<{ $active?: boolean }>`
-    display: flex;
-    align-items: center;
-    gap: var(--space-3u);
-    width: 100%;
-    padding: calc(var(--space-4u));
-    background: ${(p) => (p.$active ? "var(--color-accent)" : "transparent")};
-    border: var(--border-width-thin) solid var(--color-border);
-    border-radius: var(--radius-xs);
-    cursor: pointer;
-    transition: background-color 0.15s ease;
-    &:hover {
-        background: var(--color-accent);
-    }
-`;
+const OrgChip = ({ $active, ...p }: BtnProps & { $active?: boolean }) => (
+    <button
+        {...p}
+        className="w-menu-item"
+        style={{
+            border: "0.5px solid var(--wa-border)",
+            background: $active ? "var(--wa-surface-subtle)" : undefined,
+            ...p.style,
+        }}
+    />
+);
 
-const InitialBox = styled.div`
-    width: 18px;
-    height: 18px;
-    border-radius: var(--radius-2xs);
-    background: var(--color-secondary);
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    flex-shrink: 0;
-    font-size: 10px;
-    font-weight: 400;
-    color: var(--color-popover-foreground);
-    overflow: hidden;
-    img {
-        width: 100%;
-        height: 100%;
-        object-fit: cover;
-    }
-`;
+const InitialBox = ({ children, ...p }: DivProps) => (
+    <div {...p} className="w-avatar w-avatar--sm">
+        {children}
+    </div>
+);
 
-const OrgChipName = styled.div`
-    flex: 1;
-    font-size: var(--font-size-sm);
-    font-weight: 400;
-    color: var(--color-popover-foreground);
-    text-align: left;
-    white-space: nowrap;
-    overflow: hidden;
-    text-overflow: ellipsis;
-`;
+const OrgChipName = (p: DivProps) => (
+    <div {...p} className={cx("w-sec", "w-grow", "w-truncate", p.className)} />
+);
 
-const OrgChipRole = styled.div`
-    font-size: var(--font-size-xs);
-    font-weight: 400;
-    color: var(--color-secondary-text);
-    flex-shrink: 0;
-`;
+const OrgChipRole = (p: DivProps) => (
+    <div {...p} className={cx("w-secsub", "w-none", p.className)} />
+);
 
 // ─── Menu items ───────────────────────────────────────────────────────────────
 
-const MenuList = styled.div`
-    padding: var(--space-2u) var(--space-2u) var(--space-3u);
-`;
+const MenuList = (p: DivProps) => (
+    <div {...p} style={{ padding: "5px", ...p.style }} />
+);
 
-const MenuItem = styled.button`
-    display: flex;
-    align-items: center;
-    gap: var(--space-4u);
-    width: 100%;
-    padding: var(--space-3u) var(--space-4u);
-    background: transparent;
-    border: none;
-    border-radius: var(--radius-xs);
-    font-size: var(--font-size-sm);
-    font-weight: 400;
-    color: var(--color-popover-foreground);
-    cursor: pointer;
-    text-align: left;
-    transition: background-color 0.15s ease;
-    &:hover {
-        background: var(--color-accent);
-    }
-    svg {
-        width: 15px;
-        height: 15px;
-        color: var(--color-secondary-text);
-        flex-shrink: 0;
-    }
-`;
+const MenuItem = (p: BtnProps) => <button {...p} className={cx("w-menu-item", p.className)} />;
 
-const MenuItemLabel = styled.span`
-    flex: 1;
-`;
+const MenuItemLabel = (p: SpanProps) => <span {...p} className={cx("w-grow", p.className)} />;
 
-const MenuItemShortcut = styled.span`
-    font-size: 11px;
-    font-weight: 400;
-    color: var(--color-secondary-text);
-`;
+const MenuItemShortcut = (p: SpanProps) => <span {...p} className={cx("w-menu-trail", p.className)} />;
 
 // ─── Accounts section ─────────────────────────────────────────────────────────
 
-const AccountsBlock = styled.div`
-    padding: var(--space-2u) var(--space-2u) var(--space-3u);
-`;
+const AccountsBlock = (p: DivProps) => (
+    <div {...p} style={{ padding: "5px", ...p.style }} />
+);
 
-const SectionLabel = styled.div`
-    font-size: 10px;
-    font-weight: 400;
-    color: var(--color-secondary-text);
-    text-transform: uppercase;
-    letter-spacing: 0.08em;
-    padding: var(--space-2u) var(--space-4u) var(--space-2u);
-`;
+const SectionLabel = (p: DivProps) => (
+    <div {...p} className={cx("w-menu-label", p.className)} />
+);
 
-const AccountRow = styled.button<{ $active?: boolean }>`
-    display: flex;
-    align-items: center;
-    gap: var(--space-3u);
-    width: 100%;
-    padding: var(--space-3u) var(--space-4u);
-    background: transparent;
-    border: none;
-    border-radius: var(--radius-xs);
-    cursor: ${(p) => (p.$active ? "default" : "pointer")};
-    transition: background-color 0.15s ease;
-    text-align: left;
-    &:hover {
-        background: ${(p) =>
-            p.$active ? "transparent" : "var(--color-accent)"};
-    }
-`;
+const AccountRow = ({ $active, ...p }: BtnProps & { $active?: boolean }) => (
+    <button
+        {...p}
+        className="w-menu-item"
+        style={{ cursor: $active ? "default" : "pointer", ...p.style }}
+    />
+);
 
-const RowCheck = styled.div`
-    width: 14px;
-    height: 14px;
-    flex-shrink: 0;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    color: var(--color-primary);
-    svg {
-        width: 13px;
-        height: 13px;
-    }
-`;
+const RowCheck = ({ children, ...p }: DivProps) => (
+    <div
+        {...p}
+        className={cx("w-flex", "w-items-center", "w-justify-center", "w-none", p.className)}
+        style={{ width: 14, height: 14, color: "var(--wa-primary)", ...p.style }}
+    >
+        {children}
+    </div>
+);
 
-const RowSpacer = styled.div`
-    width: 14px;
-    flex-shrink: 0;
-`;
+const RowSpacer = (p: DivProps) => (
+    <div {...p} className="w-none" style={{ width: 14, ...p.style }} />
+);
 
-const RowEmail = styled.div`
-    flex: 1;
-    font-size: var(--font-size-sm);
-    font-weight: 400;
-    color: var(--color-popover-foreground);
-    white-space: nowrap;
-    overflow: hidden;
-    text-overflow: ellipsis;
-`;
+const RowEmail = (p: DivProps) => (
+    <div {...p} className={cx("w-sec", "w-grow", "w-truncate", p.className)} />
+);
 
-const RowCurrent = styled.div`
-    font-size: var(--font-size-xs);
-    font-weight: 400;
-    color: var(--color-secondary-text);
-    flex-shrink: 0;
-`;
+const RowCurrent = (p: DivProps) => (
+    <div {...p} className={cx("w-secsub", "w-none", p.className)} />
+);
 
 // ─── Sign out ─────────────────────────────────────────────────────────────────
 
-const SignOutBlock = styled.div`
-    padding: var(--space-2u) var(--space-2u) var(--space-3u);
-`;
+const SignOutBlock = (p: DivProps) => (
+    <div {...p} style={{ padding: "5px", ...p.style }} />
+);
 
-const SignOutButton = styled.button`
-    display: flex;
-    align-items: center;
-    gap: var(--space-4u);
-    width: 100%;
-    padding: var(--space-3u) var(--space-4u);
-    background: transparent;
-    border: none;
-    border-radius: var(--radius-xs);
-    font-size: var(--font-size-sm);
-    font-weight: 400;
-    color: var(--color-error);
-    cursor: pointer;
-    text-align: left;
-    transition: background-color 0.15s ease;
-    &:hover {
-        background: color-mix(in srgb, var(--color-error) 10%, transparent);
-    }
-    svg {
-        width: 15px;
-        height: 15px;
-        flex-shrink: 0;
-    }
-`;
+const SignOutButton = (p: BtnProps) => (
+    <button {...p} className={cx("w-menu-item", "w-menu-item--danger", p.className)} />
+);
 
 // ─── Side panel: slick list (mirrors OrganizationSwitcher) ────────────────────
 
-const SPBack = styled.button`
-    display: flex;
-    align-items: center;
-    gap: 8px;
-    width: 100%;
-    padding: 10px 12px;
-    border: none;
-    border-bottom: 1px solid var(--color-border);
-    background: transparent;
-    color: var(--color-popover-foreground);
-    font-size: 13px;
-    font-weight: 500;
-    cursor: pointer;
-    text-align: left;
-    flex-shrink: 0;
-    transition: background 0.12s ease;
-    &:hover {
-        background: color-mix(
-            in srgb,
-            var(--color-popover-foreground) 6%,
-            transparent
-        );
-    }
-`;
+const SPBack = (p: BtnProps) => (
+    <button
+        {...p}
+        className={cx("w-menu-item", p.className)}
+        style={{ borderBottom: "0.5px solid var(--wa-border)", borderRadius: 0, flex: "none", ...p.style }}
+    />
+);
 
-const SPList = styled.div`
-    flex: 1;
-    overflow-y: auto;
-    padding: var(--space-2u);
-`;
+const SPList = (p: DivProps) => (
+    <div {...p} style={{ flex: "1 1 auto", overflowY: "auto", padding: 5, ...p.style }} />
+);
 
-const sprowBase = styled.button<{ $active?: boolean }>`
-    display: flex;
-    align-items: center;
-    gap: var(--space-3u);
-    width: 100%;
-    height: 30px;
-    padding: 0 var(--space-3u);
-    background: transparent;
-    border: none;
-    border-radius: var(--radius-xs);
-    cursor: pointer;
-    color: var(--color-popover-foreground);
-    font-size: var(--font-size-md);
-    font-weight: 400;
-    text-align: left;
-    transition: background 0.12s ease;
+const SPRow = ({ $active, ...p }: BtnProps & { $active?: boolean }) => (
+    <button
+        {...p}
+        className={cx("w-menu-item", "sp-row", $active && "sp-row--active", p.className)}
+        style={{ height: 30, ...p.style }}
+    />
+);
 
-    .sp-actions {
-        display: none;
-    }
-    .sp-check {
-        display: inline-flex;
-    }
+const SPWsRow = ({ $active, ...p }: BtnProps & { $active?: boolean }) => (
+    <button
+        {...p}
+        className={cx("w-menu-item", "sp-row", "sp-ws-row", $active && "sp-row--active", p.className)}
+        style={{ height: 30, paddingLeft: 30, position: "relative", ...p.style }}
+    >
+        {p.children}
+    </button>
+);
 
-    &:hover:not(:disabled) {
-        background: var(--color-accent);
-    }
+const SPOrgAvatar = ({ $personal, children, ...p }: DivProps & { $personal?: boolean }) => (
+    <div
+        {...p}
+        className={cx("w-avatar", "w-avatar--sm", !$personal && "", p.className)}
+    >
+        {children}
+    </div>
+);
 
-    ${(p) =>
-        p.$active &&
-        `
-        &:hover:not(:disabled) .sp-actions { display: inline-flex; }
-        &:hover:not(:disabled) .sp-check { display: none; }
-    `}
+const SPWsAvatar = ({ children, ...p }: DivProps) => (
+    <div {...p} className={cx("w-avatar", "", "w-avatar--sm", p.className)}>
+        {children}
+    </div>
+);
 
-    &:disabled {
-        cursor: default;
-    }
-`;
+const SPRowName = (p: SpanProps) => (
+    <span {...p} className={cx("w-sec", "w-grow", "w-truncate", p.className)} />
+);
 
-const SPRow = sprowBase;
+const SPWsName = (p: SpanProps) => (
+    <span {...p} className={cx("w-secsub", "w-grow", "w-truncate", p.className)} />
+);
 
-const SPWsRow = styled(sprowBase)`
-    padding-left: 30px;
-    position: relative;
-    &::before {
-        content: "";
-        position: absolute;
-        left: 18px;
-        top: 0;
-        bottom: 0;
-        width: 1px;
-        background: var(--color-border);
-    }
-`;
+const SPRowRight = (p: DivProps) => (
+    <div {...p} className={cx("w-flex", "w-items-center", "w-none", p.className)} style={{ gap: 4, ...p.style }} />
+);
 
-const SPOrgAvatar = styled.div<{ $personal?: boolean }>`
-    width: 20px;
-    height: 20px;
-    min-width: 20px;
-    border-radius: ${(p) => (p.$personal ? "50%" : "var(--radius-2xs)")};
-    overflow: hidden;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    background: var(--color-secondary);
-    color: var(--color-secondary-text);
-    font-size: 10px;
-    font-weight: 500;
-    flex-shrink: 0;
-    img {
-        width: 100%;
-        height: 100%;
-        object-fit: cover;
-    }
-`;
+const SPExpandCaret = ({ $open, ...p }: { $open: boolean; size?: number } & React.ComponentProps<typeof CaretDown>) => (
+    <CaretDown
+        {...p}
+        className="w-text-muted"
+        style={{ flexShrink: 0, transition: "transform 0.2s ease", transform: $open ? "rotate(0deg)" : "rotate(-90deg)" }}
+    />
+);
 
-const SPWsAvatar = styled.div`
-    width: 18px;
-    height: 18px;
-    min-width: 18px;
-    border-radius: var(--radius-2xs);
-    overflow: hidden;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    background: var(--color-secondary);
-    color: var(--color-secondary-text);
-    font-size: 9px;
-    font-weight: 500;
-    flex-shrink: 0;
-    img {
-        width: 100%;
-        height: 100%;
-        object-fit: cover;
-    }
-`;
+const SPCheckMark = (p: React.ComponentProps<typeof Check>) => (
+    <Check {...p} className="w-text-primary" style={{ flexShrink: 0 }} />
+);
 
-const SPRowName = styled.span`
-    flex: 1;
-    min-width: 0;
-    font-size: var(--font-size-md);
-    color: var(--color-popover-foreground);
-    overflow: hidden;
-    text-overflow: ellipsis;
-    white-space: nowrap;
-`;
+const SPSelectedBlock = (p: DivProps) => (
+    <div
+        {...p}
+        className={cx("w-flex-col", "w-gap-3", "w-none", p.className)}
+        style={{ padding: "12px 12px 16px", borderBottom: "0.5px solid var(--wa-border)", ...p.style }}
+    />
+);
 
-const SPWsName = styled(SPRowName)`
-    font-size: var(--font-size-sm);
-`;
+const SPContextSwitchButton = (p: BtnProps) => (
+    <button {...p} className={cx("w-btn", "w-btn--icon", p.className)} style={{ width: 24, height: 24, ...p.style }} />
+);
 
-const SPRowRight = styled.div`
-    display: flex;
-    align-items: center;
-    gap: 4px;
-    flex-shrink: 0;
-`;
+const SPContextRow = (p: DivProps) => (
+    <div {...p} className={cx("w-flex", "w-items-center", "w-gap-3", p.className)} style={{ padding: "4px 4px 0", minWidth: 0, ...p.style }} />
+);
 
-const SPExpandCaret = styled(CaretDown)<{ $open: boolean }>`
-    color: var(--color-secondary-text);
-    flex-shrink: 0;
-    transition: transform 0.2s ease;
-    transform: ${(p) => (p.$open ? "rotate(0deg)" : "rotate(-90deg)")};
-`;
+const SPContextAvatar = ({ children, ...p }: DivProps) => (
+    <div {...p} className={cx("w-avatar", "", "w-avatar--md", p.className)}>
+        {children}
+    </div>
+);
 
-const SPCheckMark = styled(Check)`
-    color: var(--color-primary);
-    flex-shrink: 0;
-`;
+const SPContextText = (p: DivProps) => (
+    <div {...p} className={cx("w-flex-col", "w-grow", p.className)} style={{ gap: 1, minWidth: 0, ...p.style }} />
+);
 
-const SPSelectedBlock = styled.div`
-    padding: var(--space-3u) var(--space-3u) var(--space-4u);
-    display: flex;
-    flex-direction: column;
-    gap: var(--space-3u);
-    border-bottom: var(--border-width-thin) solid var(--color-border);
-    flex-shrink: 0;
-`;
+const SPContextName = (p: DivProps) => (
+    <div {...p} className={cx("w-sec", "w-truncate", p.className)} />
+);
 
-const SPContextSwitchButton = styled.button`
-    display: inline-flex;
-    align-items: center;
-    justify-content: center;
-    padding: var(--space-1u);
-    border-radius: var(--radius-2xs);
-    border: none;
-    background: transparent;
-    color: var(--color-secondary-text);
-    cursor: pointer;
-    flex-shrink: 0;
-    transition: background 0.12s ease, color 0.12s ease;
+const SPContextActions = (p: DivProps) => (
+    <div {...p} className={cx("w-flex", "w-items-center", "w-none", p.className)} style={{ gap: 2, ...p.style }} />
+);
 
-    &:hover:not(:disabled) {
-        background: var(--color-accent);
-        color: var(--color-popover-foreground);
-    }
+const SPHeaderIconButton = ({ $destructive, ...p }: BtnProps & { $destructive?: boolean }) => (
+    <button
+        {...p}
+        className={cx("w-btn", "w-btn--icon", $destructive && "w-btn--danger", p.className)}
+        style={{ width: 24, height: 24, ...p.style }}
+    />
+);
 
-    &:disabled {
-        opacity: 0.5;
-        cursor: not-allowed;
-    }
-`;
+const SPFooter = (p: DivProps) => (
+    <div {...p} className="w-none" style={{ borderTop: "0.5px solid var(--wa-border)", padding: 5, ...p.style }} />
+);
 
-const SPContextRow = styled.div`
-    display: flex;
-    align-items: center;
-    gap: var(--space-3u);
-    padding: var(--space-1u) var(--space-1u) 0;
-    min-width: 0;
-`;
+const SPCreateRow = (p: BtnProps) => (
+    <button {...p} className={cx("w-menu-item", p.className)} style={{ height: 30, color: "var(--wa-text-muted)", ...p.style }} />
+);
 
-const SPContextAvatar = styled.div`
-    width: 24px;
-    height: 24px;
-    min-width: 24px;
-    border-radius: var(--radius-xs);
-    overflow: hidden;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    background: var(--color-secondary);
-    color: var(--color-secondary-text);
-    font-size: var(--font-size-xs);
-    font-weight: 500;
-    flex-shrink: 0;
-    img { width: 100%; height: 100%; object-fit: cover; }
-`;
-
-const SPContextText = styled.div`
-    display: flex;
-    flex-direction: column;
-    gap: 1px;
-    min-width: 0;
-    flex: 1;
-`;
-
-const SPContextName = styled.div`
-    font-size: var(--font-size-md);
-    font-weight: 400;
-    color: var(--color-popover-foreground);
-    line-height: 1.3;
-    white-space: nowrap;
-    overflow: hidden;
-    text-overflow: ellipsis;
-`;
-
-const SPContextActions = styled.div`
-    display: flex;
-    align-items: center;
-    gap: 2px;
-    flex-shrink: 0;
-`;
-
-const SPHeaderIconButton = styled.button<{ $destructive?: boolean }>`
-    width: 24px;
-    height: 24px;
-    display: inline-flex;
-    align-items: center;
-    justify-content: center;
-    border-radius: var(--radius-xs);
-    border: none;
-    background: transparent;
-    color: var(--color-secondary-text);
-    cursor: pointer;
-    transition: background 0.12s ease, color 0.12s ease;
-
-    &:hover:not(:disabled) {
-        background: ${(p) =>
-            p.$destructive
-                ? "color-mix(in srgb, var(--color-error) 14%, transparent)"
-                : "var(--color-accent)"};
-        color: ${(p) =>
-            p.$destructive
-                ? "var(--color-error)"
-                : "var(--color-popover-foreground)"};
-    }
-
-    &:disabled {
-        opacity: 0.5;
-        cursor: not-allowed;
-    }
-`;
-
-const SPFooter = styled.div`
-    border-top: var(--border-width-thin) solid var(--color-border);
-    padding: var(--space-2u);
-    flex-shrink: 0;
-`;
-
-const SPCreateRow = styled.button`
-    display: flex;
-    align-items: center;
-    gap: var(--space-3u);
-    width: 100%;
-    height: 30px;
-    padding: 0 var(--space-3u);
-    background: transparent;
-    border: none;
-    border-radius: var(--radius-xs);
-    cursor: pointer;
-    color: var(--color-secondary-text);
-    font-size: var(--font-size-md);
-    font-weight: 400;
-    text-align: left;
-    transition:
-        background 0.12s ease,
-        color 0.12s ease;
-    &:hover:not(:disabled) {
-        background: var(--color-accent);
-        color: var(--color-popover-foreground);
-    }
-    &:disabled {
-        cursor: not-allowed;
-        opacity: 0.6;
-    }
-`;
-
-const SPCreateIcon = styled.div`
-    width: 20px;
-    height: 20px;
-    min-width: 20px;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    flex-shrink: 0;
-`;
+const SPCreateIcon = (p: DivProps) => (
+    <div {...p} className={cx("w-flex", "w-items-center", "w-justify-center", "w-none", p.className)} style={{ width: 20, height: 20, ...p.style }} />
+);
 
 // ─── Component ────────────────────────────────────────────────────────────────
 
@@ -803,10 +458,14 @@ export const UserButton: React.FC<UserButtonProps> = ({
     const selectedAccount = session?.active_signin?.user;
     const isMultiSession =
         deployment?.auth_settings?.multi_session_support?.enabled ?? false;
-    const workspacesEnabled =
-        deployment?.b2b_settings?.workspaces_enabled ?? false;
     const canCreateOrg =
         deployment?.b2b_settings?.allow_users_to_create_orgs ?? false;
+    const organizationsEnabled =
+        deployment?.b2b_settings?.organizations_enabled ?? false;
+    const workspacesEnabled =
+        organizationsEnabled &&
+        (deployment?.b2b_settings?.workspaces_enabled ?? false);
+    const orgSwitcherEnabled = showOrgSwitcher && organizationsEnabled;
     const isPersonalActive = !activeOrganization;
 
     const workspacesByOrg = useMemo(() => {
@@ -1023,7 +682,7 @@ export const UserButton: React.FC<UserButtonProps> = ({
 
                 {typeof window !== "undefined" &&
                     ReactDOM.createPortal(
-                        <DefaultStylesProvider>
+                        <div className="wacht-root">
                             {/* Main popover */}
                             <DropdownContainer
                                 ref={dropdownRef}
@@ -1058,13 +717,11 @@ export const UserButton: React.FC<UserButtonProps> = ({
 
                                 {/* Org chip + menu — same container so widths are identical */}
                                 <MenuList>
-                                    {showOrgSwitcher && (
+                                    {orgSwitcherEnabled && (
                                         <OrgChip
                                             $active={showSwitcher}
                                             onClick={openSwitcher}
-                                            style={{
-                                                marginBottom: "var(--space-2u)",
-                                            }}
+                                            style={{ marginBottom: 8 }}
                                         >
                                             <InitialBox>
                                                 {activeOrganization ? (
@@ -1189,18 +846,10 @@ export const UserButton: React.FC<UserButtonProps> = ({
                                                 setIsOpen(false);
                                             }}
                                         >
-                                            <RowCheck
-                                                style={{
-                                                    color: "var(--color-secondary-text)",
-                                                }}
-                                            >
+                                            <RowCheck style={{ color: "var(--wa-text-muted)" }}>
                                                 <Plus />
                                             </RowCheck>
-                                            <RowEmail
-                                                style={{
-                                                    color: "var(--color-secondary-text)",
-                                                }}
-                                            >
+                                            <RowEmail style={{ color: "var(--wa-text-muted)" }}>
                                                 Add account
                                             </RowEmail>
                                         </AccountRow>
@@ -1567,7 +1216,7 @@ export const UserButton: React.FC<UserButtonProps> = ({
                                                         {memRestricted && (
                                                             <WarningCircle
                                                                 size={12}
-                                                                color="var(--color-error)"
+                                                                color="var(--wa-error)"
                                                             />
                                                         )}
                                                         {isActive &&
@@ -1675,7 +1324,7 @@ export const UserButton: React.FC<UserButtonProps> = ({
                                                                                         size={
                                                                                             12
                                                                                         }
-                                                                                        color="var(--color-error)"
+                                                                                        color="var(--wa-error)"
                                                                                     />
                                                                                 )}
                                                                                 {isActiveWs && (
@@ -1706,7 +1355,7 @@ export const UserButton: React.FC<UserButtonProps> = ({
                                                                         style={{
                                                                             background:
                                                                                 "transparent",
-                                                                            border: "1px dashed var(--color-border)",
+                                                                            border: "1px dashed var(--wa-border-strong)",
                                                                         }}
                                                                     >
                                                                         <Plus
@@ -1795,7 +1444,7 @@ export const UserButton: React.FC<UserButtonProps> = ({
                                     );
                                 })()}
                             </SidePanel>
-                        </DefaultStylesProvider>,
+                        </div>,
                         document.body,
                     )}
 
@@ -1803,7 +1452,7 @@ export const UserButton: React.FC<UserButtonProps> = ({
                     isOpen={manageAccountDialog.isOpen}
                     onClose={manageAccountDialog.close}
                 />
-                {showOrgSwitcher && (
+                {orgSwitcherEnabled && (
                     <>
                         <CreateOrganizationDialog
                             isOpen={createOrgDialog.isOpen}

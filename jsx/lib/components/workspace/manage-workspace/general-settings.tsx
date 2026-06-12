@@ -1,5 +1,4 @@
 import { useState, useEffect } from "react";
-import styled from "styled-components";
 import { useActiveWorkspace, useWorkspaceList } from "@/hooks/use-workspace";
 import { useDeployment } from "@/hooks/use-deployment";
 import { useScreenContext } from "../../organization/context";
@@ -12,44 +11,6 @@ import {
     Label,
 } from "@/components/utility";
 import { ItemRow, ItemContent, ItemActions, SectionLabel } from "./shared";
-
-const Section = styled.div`
-    display: flex;
-    flex-direction: column;
-    gap: var(--space-6u);
-`;
-
-const DangerCard = styled.div`
-    padding: var(--space-8u);
-    border: 1px solid
-        color-mix(in srgb, var(--color-error) 45%, var(--color-border));
-    background: color-mix(in srgb, var(--color-error) 4%, transparent);
-    border-radius: 10px;
-`;
-
-const DangerRow = styled.div`
-    display: flex;
-    align-items: center;
-    justify-content: space-between;
-    gap: var(--space-4u);
-    @media (max-width: 600px) {
-        flex-direction: column;
-        align-items: stretch;
-    }
-`;
-
-const DangerTitle = styled.div`
-    font-size: 13px;
-    font-weight: 500;
-    color: var(--color-card-foreground);
-`;
-
-const DangerSub = styled.div`
-    font-size: 12px;
-    color: var(--color-secondary-text);
-    margin-top: 2px;
-    line-height: 1.4;
-`;
 
 export const GeneralSettingsSection = () => {
     const { activeWorkspace, loading, updateWorkspace } = useActiveWorkspace();
@@ -125,16 +86,9 @@ export const GeneralSettingsSection = () => {
     const ipEnabled = deployment?.b2b_settings?.ip_allowlist_per_workspace_enabled;
 
     return (
-        <div
-            style={{
-                display: "flex",
-                flexDirection: "column",
-                gap: "var(--space-8u)",
-                paddingBottom: "var(--size-20u)",
-            }}
-        >
+        <div className="w-flex-col w-gap-4">
             {/* Details */}
-            <Section>
+            <div className="w-flex-col w-gap-3">
                 <FormGroup>
                     <Label htmlFor="name">Workspace name</Label>
                     <Input
@@ -155,38 +109,22 @@ export const GeneralSettingsSection = () => {
                         onChange={(e) => setDescription(e.target.value)}
                         onBlur={autoSave}
                         placeholder="Optional description"
-                        style={{
-                            minHeight: "var(--size-40u)",
-                            resize: "vertical",
-                        }}
+                        className="w-input--area"
                     />
                 </FormGroup>
-            </Section>
+            </div>
 
             {/* Security */}
             {(mfaEnabled || ipEnabled) && (
-                <Section>
+                <div className="w-flex-col w-gap-3">
                     <SectionLabel>Security</SectionLabel>
                     {mfaEnabled && (
-                        <ItemRow style={{ padding: 0 }}>
+                        <ItemRow>
                             <ItemContent>
-                                <Label
-                                    style={{
-                                        fontSize: 13,
-                                        fontWeight: 500,
-                                        marginBottom: 4,
-                                        display: "block",
-                                    }}
-                                >
+                                <div className="w-sec">
                                     Multi-factor authentication
-                                </Label>
-                                <p
-                                    style={{
-                                        fontSize: 12,
-                                        color: "var(--color-secondary-text)",
-                                        margin: 0,
-                                    }}
-                                >
+                                </div>
+                                <p className="w-secsub">
                                     Require all workspace members to set up MFA.
                                 </p>
                             </ItemContent>
@@ -206,25 +144,10 @@ export const GeneralSettingsSection = () => {
                     )}
                     {ipEnabled && (
                         <>
-                            <ItemRow style={{ padding: 0 }}>
+                            <ItemRow>
                                 <ItemContent>
-                                    <Label
-                                        style={{
-                                            fontSize: 13,
-                                            fontWeight: 500,
-                                            marginBottom: 4,
-                                            display: "block",
-                                        }}
-                                    >
-                                        IP restrictions
-                                    </Label>
-                                    <p
-                                        style={{
-                                            fontSize: 12,
-                                            color: "var(--color-secondary-text)",
-                                            margin: 0,
-                                        }}
-                                    >
+                                    <div className="w-sec">IP restrictions</div>
+                                    <p className="w-secsub">
                                         Only allow access from specific IP addresses.
                                     </p>
                                 </ItemContent>
@@ -258,77 +181,65 @@ export const GeneralSettingsSection = () => {
                                         }
                                         onBlur={autoSave}
                                         placeholder="192.168.1.1&#10;10.0.0.0/24"
-                                        style={{
-                                            minHeight: "var(--size-40u)",
-                                            fontFamily: "monospace",
-                                        }}
+                                        className="w-input--area w-mono-sm"
                                     />
                                 </FormGroup>
                             )}
                         </>
                     )}
-                </Section>
+                </div>
             )}
 
             {/* Danger zone */}
-            <Section>
+            <div className="w-flex-col w-gap-3">
                 <SectionLabel>Danger zone</SectionLabel>
-                <DangerCard>
-                    <DangerRow>
-                        <div style={{ flex: 1, minWidth: 0 }}>
-                            <DangerTitle>Delete workspace</DangerTitle>
-                            <DangerSub>
-                                Once you delete this workspace, there is no going back.
-                            </DangerSub>
+                <div className="w-danger">
+                    <div className="w-grow">
+                        <div className="w-sec">Delete workspace</div>
+                        <div className="w-secsub">
+                            Once you delete this workspace, there is no going back.
                         </div>
+                    </div>
+                    <Button
+                        $size="sm"
+                        $outline
+                        $destructive
+                        onClick={() => {
+                            setShowDeleteConfirm(!showDeleteConfirm);
+                            setConfirmName("");
+                        }}
+                    >
+                        {showDeleteConfirm ? "Cancel" : "Delete workspace"}
+                    </Button>
+                </div>
+
+                {showDeleteConfirm && (
+                    <div className="w-flex-col w-gap-3">
+                        <FormGroup>
+                            <Label htmlFor="confirm_workspace_name">
+                                Type <strong>{activeWorkspace.name}</strong> to confirm
+                            </Label>
+                            <Input
+                                id="confirm_workspace_name"
+                                type="text"
+                                value={confirmName}
+                                onChange={(e) => setConfirmName(e.target.value)}
+                                placeholder={activeWorkspace.name}
+                            />
+                        </FormGroup>
                         <Button
                             $size="sm"
-                            $outline
                             $destructive
-                            onClick={() => {
-                                setShowDeleteConfirm(!showDeleteConfirm);
-                                setConfirmName("");
-                            }}
+                            onClick={handleDeleteWorkspace}
+                            disabled={
+                                confirmName !== activeWorkspace.name || isDeleting
+                            }
                         >
-                            {showDeleteConfirm ? "Cancel" : "Delete workspace"}
+                            {isDeleting ? <Spinner size={12} /> : "Delete forever"}
                         </Button>
-                    </DangerRow>
-
-                    {showDeleteConfirm && (
-                        <div
-                            style={{
-                                marginTop: 14,
-                                display: "flex",
-                                flexDirection: "column",
-                                gap: 10,
-                            }}
-                        >
-                            <FormGroup>
-                                <Label htmlFor="confirm_workspace_name">
-                                    Type <strong>{activeWorkspace.name}</strong> to confirm
-                                </Label>
-                                <Input
-                                    id="confirm_workspace_name"
-                                    type="text"
-                                    value={confirmName}
-                                    onChange={(e) => setConfirmName(e.target.value)}
-                                    placeholder={activeWorkspace.name}
-                                />
-                            </FormGroup>
-                            <Button
-                                $size="sm"
-                                $destructive
-                                onClick={handleDeleteWorkspace}
-                                disabled={
-                                    confirmName !== activeWorkspace.name || isDeleting
-                                }
-                            >
-                                {isDeleting ? <Spinner size={12} /> : "Delete forever"}
-                            </Button>
-                        </div>
-                    )}
-                </DangerCard>
-            </Section>
+                    </div>
+                )}
+            </div>
         </div>
     );
 };

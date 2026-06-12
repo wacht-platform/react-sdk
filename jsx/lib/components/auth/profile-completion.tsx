@@ -1,575 +1,496 @@
 "use client";
 
 import { useState } from "react";
-import styled, { keyframes } from "styled-components";
-import { CircleNotch } from "@phosphor-icons/react";
 import { useDeployment } from "../../hooks/use-deployment";
 import { useNavigation } from "../../hooks/use-navigation";
 import { PhoneNumberInput } from "../utility/phone";
 import { OTPInput } from "../utility/otp-input";
 import { ProfileCompletionData, ProfileCompletionProps } from "@wacht/types";
-import { AuthFormImage } from "./auth-image";
 import { NavigationLink } from "../utility/navigation";
 import { DefaultStylesProvider } from "../utility/root";
-import { Button } from "../utility/button";
-import { Form, FormGroup, Label } from "../utility/form";
-import { Input } from "../utility/input";
+import { AuthCard, AuthHead, AuthCardLoader, Spin } from "./auth-card";
 import { getStoredDevSession } from "@/utils/dev-session";
 import { sanitizeRedirectUri } from "@/utils/redirect-uri";
-import { standaloneAuthShell } from "./auth-shell";
-
-const spin = keyframes`
-  from { transform: rotate(0deg); }
-  to   { transform: rotate(360deg); }
-`;
-
-const ButtonSpinner = styled(CircleNotch)`
-    animation: ${spin} 1s linear infinite;
-`;
-
-const Container = styled.div`
-  ${standaloneAuthShell}
-`;
-
-const Header = styled.div`
-  text-align: center;
-  margin-bottom: var(--space-8u);
-  position: relative;
-`;
-
-const Title = styled.h1`
-  font-size: var(--font-size-2xl);
-  font-weight: 400;
-  color: var(--color-card-foreground);
-  margin-bottom: var(--space-2u);
-  margin-top: 0;
-`;
-
-const Subtitle = styled.p`
-  color: var(--color-secondary-text);
-  font-size: var(--font-size-md);
-`;
-
-const NameFields = styled.div<{ $isBothEnabled: boolean }>`
-  display: grid;
-  grid-template-columns: ${(props) =>
-    props.$isBothEnabled ? "1fr 1fr" : "1fr"};
-  gap: var(--space-4u);
-`;
-
-const ErrorMessage = styled.p`
-  font-size: var(--font-size-xs);
-  color: var(--color-error);
-  margin: 0;
-  margin-top: var(--space-1u);
-`;
-
-const SubmitButton = styled(Button)`
-  margin-top: var(--space-4u);
-`;
-
-const Footer = styled.div`
-  margin-top: var(--space-8u);
-  text-align: center;
-  font-size: var(--font-size-md);
-  color: var(--color-secondary-text);
-`;
-
-const Link = styled.span`
-  color: var(--color-primary);
-  text-decoration: none;
-  font-weight: 400;
-  transition: color 0.2s;
-  cursor: pointer;
-
-  &:hover {
-    color: var(--color-primary-hover);
-  }
-`;
-
-const LoadingContainer = styled.div`
-  display: flex;
-  justify-content: center;
-  align-items: center;
-  min-height: 200px;
-
-  svg {
-    animation: spin 1s linear infinite;
-    color: var(--color-primary);
-  }
-
-  @keyframes spin {
-    from {
-      transform: rotate(0deg);
-    }
-    to {
-      transform: rotate(360deg);
-    }
-  }
-`;
 
 export function ProfileCompletion({
-  attempt,
-  onBack,
-  completeProfile,
-  completeVerification,
-  prepareVerification,
+    attempt,
+    onBack,
+    completeProfile,
+    completeVerification,
+    prepareVerification,
 }: ProfileCompletionProps) {
-  const { deployment } = useDeployment();
-  const { navigate } = useNavigation();
+    const { deployment } = useDeployment();
+    const { navigate } = useNavigation();
 
-  const [formData, setFormData] = useState<ProfileCompletionData>({});
-  const [errors, setErrors] = useState<Record<string, string>>({});
-  const [countryCode, setCountryCode] = useState<string | undefined>("US");
-  const [showVerification, setShowVerification] = useState(false);
-  const [loading, setLoading] = useState(false);
-  const [error, setError] = useState<Error | null>(null);
-  const [isRedirecting, setIsRedirecting] = useState(false);
+    const [formData, setFormData] = useState<ProfileCompletionData>({});
+    const [errors, setErrors] = useState<Record<string, string>>({});
+    const [countryCode, setCountryCode] = useState<string | undefined>("US");
+    const [showVerification, setShowVerification] = useState(false);
+    const [loading, setLoading] = useState(false);
+    const [error, setError] = useState<Error | null>(null);
+    const [isRedirecting, setIsRedirecting] = useState(false);
 
-  const displayError = error;
-  const isLoading = loading;
+    const displayError = error;
+    const isLoading = loading;
 
-  const handleComplete = async (data: ProfileCompletionData) => {
-    setLoading(true);
-    setError(null);
-
-    try {
-      const session = await completeProfile(data);
-
-      // Check if completed and redirect
-      if (session) {
+    const redirectAfter = () => {
         setIsRedirecting(true);
         let redirectUri: string | null = sanitizeRedirectUri(
-          deployment,
-          new URLSearchParams(window.location.search).get("redirect_uri"),
+            deployment,
+            new URLSearchParams(window.location.search).get("redirect_uri"),
         );
         if (!redirectUri) {
-          redirectUri =
-            deployment?.ui_settings?.after_signin_redirect_url || null;
+            redirectUri =
+                deployment?.ui_settings?.after_signin_redirect_url || null;
         }
         if (!redirectUri && deployment?.frontend_host) {
-          redirectUri = `https://${deployment.frontend_host}`;
+            redirectUri = `https://${deployment.frontend_host}`;
         }
         if (redirectUri) {
-          let uri: URL;
-          try {
-            uri = new URL(redirectUri);
-          } catch {
-            uri = new URL(redirectUri, window.location.origin);
-          }
-          if (deployment?.mode === "staging") {
-            uri.searchParams.set(
-              "__dev_session__",
-              getStoredDevSession(deployment.backend_host) || "",
-            );
-          }
-          navigate(uri.toString());
+            let uri: URL;
+            try {
+                uri = new URL(redirectUri);
+            } catch {
+                uri = new URL(redirectUri, window.location.origin);
+            }
+            if (deployment?.mode === "staging") {
+                uri.searchParams.set(
+                    "__dev_session__",
+                    getStoredDevSession(deployment.backend_host) || "",
+                );
+            }
+            navigate(uri.toString());
         }
-      }
-    } catch (err) {
-      const error = err as Error;
-      setError(error);
-      throw error;
-    } finally {
-      setLoading(false);
-    }
-  };
+    };
 
-  const handleVerificationComplete = async (code: string) => {
-    setLoading(true);
-    setError(null);
+    const handleComplete = async (data: ProfileCompletionData) => {
+        setLoading(true);
+        setError(null);
 
-    try {
-      const session = await completeVerification(code);
-
-      // Check if completed and redirect
-      if (session) {
-        setIsRedirecting(true);
-        let redirectUri: string | null = sanitizeRedirectUri(
-          deployment,
-          new URLSearchParams(window.location.search).get("redirect_uri"),
-        );
-        if (!redirectUri) {
-          redirectUri =
-            deployment?.ui_settings?.after_signin_redirect_url || null;
+        try {
+            const session = await completeProfile(data);
+            if (session) redirectAfter();
+        } catch (err) {
+            const error = err as Error;
+            setError(error);
+            throw error;
+        } finally {
+            setLoading(false);
         }
-        if (!redirectUri && deployment?.frontend_host) {
-          redirectUri = `https://${deployment.frontend_host}`;
+    };
+
+    const handleVerificationComplete = async (code: string) => {
+        setLoading(true);
+        setError(null);
+
+        try {
+            const session = await completeVerification(code);
+            if (session) redirectAfter();
+            return true;
+        } catch (err) {
+            const error = err as Error;
+            setError(error);
+            return false;
+        } finally {
+            setLoading(false);
         }
-        if (redirectUri) {
-          let uri: URL;
-          try {
-            uri = new URL(redirectUri);
-          } catch {
-            uri = new URL(redirectUri, window.location.origin);
-          }
-          if (deployment?.mode === "staging") {
-            uri.searchParams.set(
-              "__dev_session__",
-              getStoredDevSession(deployment.backend_host) || "",
-            );
-          }
-          navigate(uri.toString());
+    };
+
+    if (isRedirecting || !attempt) {
+        return <AuthCardLoader />;
+    }
+
+    const missingFields = attempt.missing_fields || [];
+
+    const authSettings = deployment?.auth_settings;
+    const isVerifying =
+        attempt?.current_step === "verify_phone_otp" ||
+        attempt?.current_step === "verify_email_otp" ||
+        showVerification;
+
+    const handleInputChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+        const { name, value } = e.target;
+        setFormData((prev) => ({ ...prev, [name]: value }));
+        if (errors[name]) {
+            setErrors((prev) => ({ ...prev, [name]: "" }));
         }
-      }
-      return true;
-    } catch (err) {
-      const error = err as Error;
-      setError(error);
-      return false;
-    } finally {
-      setLoading(false);
-    }
-  };
+    };
 
-  // Show loading state while redirecting
-  if (isRedirecting || !attempt) {
-    return (
-      <DefaultStylesProvider>
-        <Container>
-          <AuthFormImage />
-          <LoadingContainer>
-            <CircleNotch size={32} />
-          </LoadingContainer>
-        </Container>
-      </DefaultStylesProvider>
-    );
-  }
+    const validateForm = () => {
+        const newErrors: Record<string, string> = {};
 
-  const missingFields = attempt.missing_fields || [];
-  const title = "Complete Your Profile";
-  const message = "Please provide the following information to continue";
+        missingFields.forEach((field: string) => {
+            const fieldValue = formData[field as keyof ProfileCompletionData];
+            let isFieldEnabled = false;
 
-  const authSettings = deployment?.auth_settings;
-  const isVerifying =
-    attempt?.current_step === "verify_phone_otp" ||
-    attempt?.current_step === "verify_email_otp" ||
-    showVerification;
+            switch (field) {
+                case "first_name":
+                    isFieldEnabled = authSettings?.first_name?.enabled || false;
+                    break;
+                case "last_name":
+                    isFieldEnabled = authSettings?.last_name?.enabled || false;
+                    break;
+                case "username":
+                    isFieldEnabled = authSettings?.username?.enabled || false;
+                    break;
+                case "phone_number":
+                    isFieldEnabled =
+                        authSettings?.phone_number?.enabled || false;
+                    break;
+                case "email_address":
+                    isFieldEnabled =
+                        authSettings?.email_address?.enabled || false;
+                    break;
+                default:
+                    isFieldEnabled = true;
+            }
 
-  const handleInputChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-    const { name, value } = e.target;
-    setFormData((prev) => ({ ...prev, [name]: value }));
-    if (errors[name]) {
-      setErrors((prev) => ({ ...prev, [name]: "" }));
-    }
-  };
+            if (isFieldEnabled && (!fieldValue || fieldValue.trim() === "")) {
+                const fieldName = field
+                    .replace("_", " ")
+                    .replace(/\b\w/g, (l: string) => l.toUpperCase());
+                newErrors[field] = `${fieldName} is required`;
+            }
+        });
 
-  const validateForm = () => {
-    const newErrors: Record<string, string> = {};
+        if (formData.username && missingFields.includes("username")) {
+            const usernameRegex = /^[a-zA-Z0-9_-]{3,30}$/;
+            if (!usernameRegex.test(formData.username)) {
+                newErrors.username =
+                    "Username must be 3-30 characters and contain only letters, numbers, underscores, and hyphens";
+            }
+        }
 
-    missingFields.forEach((field: string) => {
-      const fieldValue = formData[field as keyof ProfileCompletionData];
-      let isFieldEnabled = false;
+        if (formData.phone_number && missingFields.includes("phone_number")) {
+            const phonePattern = /^\d{7,15}$/;
+            if (!phonePattern.test(formData.phone_number)) {
+                newErrors.phone_number = "Phone number must contain 7-15 digits";
+            }
+        }
 
-      switch (field) {
-        case "first_name":
-          isFieldEnabled = authSettings?.first_name?.enabled || false;
-          break;
-        case "last_name":
-          isFieldEnabled = authSettings?.last_name?.enabled || false;
-          break;
-        case "username":
-          isFieldEnabled = authSettings?.username?.enabled || false;
-          break;
-        case "phone_number":
-          isFieldEnabled = authSettings?.phone_number?.enabled || false;
-          break;
-        case "email_address":
-          isFieldEnabled = authSettings?.email_address?.enabled || false;
-          break;
-        default:
-          isFieldEnabled = true;
-      }
+        if (formData.email && missingFields.includes("email_address")) {
+            const emailPattern =
+                /^[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}$/;
+            if (!emailPattern.test(formData.email)) {
+                newErrors.email_address = "Please enter a valid email address";
+            }
+        }
 
-      if (isFieldEnabled && (!fieldValue || fieldValue.trim() === "")) {
-        const fieldName = field
-          .replace("_", " ")
-          .replace(/\b\w/g, (l: string) => l.toUpperCase());
-        newErrors[field] = `${fieldName} is required`;
-      }
-    });
+        setErrors(newErrors);
+        return Object.keys(newErrors).length === 0;
+    };
 
-    // Additional validation
-    if (formData.username && missingFields.includes("username")) {
-      const usernameRegex = /^[a-zA-Z0-9_-]{3,30}$/;
-      if (!usernameRegex.test(formData.username)) {
-        newErrors.username =
-          "Username must be 3-30 characters and contain only letters, numbers, underscores, and hyphens";
-      }
-    }
+    const handleSubmit = async (e: React.FormEvent) => {
+        e.preventDefault();
 
-    if (formData.phone_number && missingFields.includes("phone_number")) {
-      const phonePattern = /^\d{7,15}$/;
-      if (!phonePattern.test(formData.phone_number)) {
-        newErrors.phone_number = "Phone number must contain 7-15 digits";
-      }
-    }
+        if (!validateForm()) {
+            return;
+        }
+        const submitData: any = { ...formData };
+        if (formData.phone_number && countryCode) {
+            submitData.phone_country_code = countryCode;
+        }
+        await handleComplete(submitData);
+    };
 
-    if (formData.email && missingFields.includes("email_address")) {
-      const emailPattern = /^[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}$/;
-      if (!emailPattern.test(formData.email)) {
-        newErrors.email_address = "Please enter a valid email address";
-      }
-    }
+    const handlePhoneChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+        const value = e.target.value;
+        setFormData((prev) => ({ ...prev, phone_number: value }));
+        if (errors.phone_number) {
+            setErrors((prev) => ({ ...prev, phone_number: "" }));
+        }
+    };
 
-    setErrors(newErrors);
-    return Object.keys(newErrors).length === 0;
-  };
-
-  const handleSubmit = async (e: React.FormEvent) => {
-    e.preventDefault();
-
-    if (!validateForm()) {
-      return;
-    }
-    const submitData: any = { ...formData };
-    if (formData.phone_number && countryCode) {
-      submitData.phone_country_code = countryCode;
-    }
-    await handleComplete(submitData);
-  };
-
-  const handlePhoneChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-    const value = e.target.value;
-    setFormData((prev) => ({ ...prev, phone_number: value }));
-    if (errors.phone_number) {
-      setErrors((prev) => ({ ...prev, phone_number: "" }));
-    }
-  };
-
-  if (isVerifying) {
-    const verificationTitle =
-      attempt.current_step === "verify_phone_otp"
-        ? "Verify Your Phone Number"
-        : "Verify Your Email";
-    const verificationMessage =
-      attempt.current_step === "verify_phone_otp"
-        ? "Enter the 6-digit code sent to your phone"
-        : "Enter the 6-digit code sent to your email";
-    const resendStrategy: "phone_otp" | "email_otp" =
-      attempt.current_step === "verify_phone_otp" ? "phone_otp" : "email_otp";
-
-    return (
-      <DefaultStylesProvider>
-        <Container>
-          <AuthFormImage />
-
-          <Header>
-            <Title>{verificationTitle}</Title>
-            <Subtitle>{verificationMessage}</Subtitle>
-          </Header>
-
-          <Form onSubmit={(e) => e.preventDefault()} noValidate>
-            <OTPInput
-              onComplete={handleVerificationComplete}
-              onResend={async () => {
-                await prepareVerification({ strategy: resendStrategy });
-              }}
-              error={displayError?.message}
-              isSubmitting={isLoading}
-            />
-
-            {displayError && (
-              <ErrorMessage style={{ marginBottom: "var(--space-6u)" }}>
-                {displayError.message}
-              </ErrorMessage>
-            )}
-          </Form>
-
-          <Footer>
-            <div>
-              <Link
-                onClick={() => setShowVerification(false)}
-                style={{ cursor: "pointer" }}
-              >
-                Back to profile completion
-              </Link>
-            </div>
-            <div style={{ marginTop: "var(--space-4u)" }}>
-              Having trouble?{" "}
-              <Link>
-                <NavigationLink
-                  to={deployment?.ui_settings.support_page_url || "#"}
-                >
-                  Get help
-                </NavigationLink>
-              </Link>
-            </div>
-          </Footer>
-        </Container>
-      </DefaultStylesProvider>
-    );
-  }
-
-  return (
-    <DefaultStylesProvider>
-      <Container>
-        <AuthFormImage />
-
-        <Header>
-          <Title>{title}</Title>
-          <Subtitle>{message}</Subtitle>
-        </Header>
-
-        <Form onSubmit={handleSubmit} noValidate>
-          {(missingFields.includes("first_name") ||
-            missingFields.includes("last_name")) &&
-            (authSettings?.first_name?.enabled ||
-              authSettings?.last_name?.enabled) && (
-              <NameFields
-                $isBothEnabled={
-                  !!(
-                    authSettings?.first_name?.enabled &&
-                    authSettings?.last_name?.enabled &&
-                    missingFields.includes("first_name") &&
-                    missingFields.includes("last_name")
-                  )
-                }
-              >
-                {missingFields.includes("first_name") &&
-                  authSettings?.first_name?.enabled && (
-                    <FormGroup>
-                      <Label htmlFor="first_name">
-                        First name {authSettings.first_name.required && "*"}
-                      </Label>
-                      <Input
-                        type="text"
-                        id="first_name"
-                        name="first_name"
-                        value={formData.first_name || ""}
-                        onChange={handleInputChange}
-                        placeholder="Enter your first name"
-                        aria-invalid={!!errors.first_name}
-                        disabled={isLoading}
-                        autoComplete="given-name"
-                      />
-                      {errors.first_name && (
-                        <ErrorMessage>{errors.first_name}</ErrorMessage>
-                      )}
-                    </FormGroup>
-                  )}
-
-                {missingFields.includes("last_name") &&
-                  authSettings?.last_name?.enabled && (
-                    <FormGroup>
-                      <Label htmlFor="last_name">
-                        Last name {authSettings.last_name.required && "*"}
-                      </Label>
-                      <Input
-                        type="text"
-                        id="last_name"
-                        name="last_name"
-                        value={formData.last_name || ""}
-                        onChange={handleInputChange}
-                        placeholder="Enter your last name"
-                        aria-invalid={!!errors.last_name}
-                        disabled={isLoading}
-                        autoComplete="family-name"
-                      />
-                      {errors.last_name && (
-                        <ErrorMessage>{errors.last_name}</ErrorMessage>
-                      )}
-                    </FormGroup>
-                  )}
-              </NameFields>
-            )}
-
-          {missingFields.includes("username") &&
-            authSettings?.username?.enabled && (
-              <FormGroup>
-                <Label htmlFor="username">
-                  Username {authSettings.username.required && "*"}
-                </Label>
-                <Input
-                  type="text"
-                  id="username"
-                  name="username"
-                  value={formData.username || ""}
-                  onChange={handleInputChange}
-                  placeholder="Choose a username"
-                  aria-invalid={!!errors.username}
-                  disabled={isLoading}
-                  autoComplete="username"
-                />
-                {errors.username && (
-                  <ErrorMessage>{errors.username}</ErrorMessage>
-                )}
-              </FormGroup>
-            )}
-
-          {missingFields.includes("phone_number") &&
-            authSettings?.phone_number?.enabled && (
-              <FormGroup>
-                <Label htmlFor="phone_number">
-                  Phone number {authSettings.phone_number.required && "*"}
-                </Label>
-                <PhoneNumberInput
-                  value={formData.phone_number || ""}
-                  onChange={handlePhoneChange}
-                  error={errors.phone_number}
-                  countryCode={countryCode}
-                  setCountryCode={setCountryCode}
-                />
-                {errors.phone_number && (
-                  <ErrorMessage>{errors.phone_number}</ErrorMessage>
-                )}
-              </FormGroup>
-            )}
-
-          {missingFields.includes("email_address") &&
-            authSettings?.email_address?.enabled && (
-              <FormGroup>
-                <Label htmlFor="email">
-                  Email address {authSettings.email_address.required && "*"}
-                </Label>
-                <Input
-                  type="email"
-                  id="email"
-                  name="email"
-                  value={formData.email || ""}
-                  onChange={handleInputChange}
-                  placeholder="Enter your email address"
-                  aria-invalid={!!errors.email_address}
-                  disabled={isLoading}
-                  autoComplete="email"
-                />
-                {errors.email_address && (
-                  <ErrorMessage>{errors.email_address}</ErrorMessage>
-                )}
-              </FormGroup>
-            )}
-
-          {displayError && (
-            <ErrorMessage style={{ marginBottom: "var(--space-6u)" }}>
-              {displayError.message}
-            </ErrorMessage>
-          )}
-
-          <SubmitButton type="submit" disabled={isLoading}>
-            {isLoading ? <ButtonSpinner size={16} /> : "Continue"}
-          </SubmitButton>
-        </Form>
-
-        <Footer>
-          {onBack && (
-            <div>
-              <Link onClick={onBack} style={{ cursor: "pointer" }}>
-                Back to login
-              </Link>
-            </div>
-          )}
-          <div style={{ marginTop: "var(--space-4u)" }}>
+    const helpFooter = (
+        <span className="w-auth-foot">
             Having trouble?{" "}
-            <Link>
-              <NavigationLink
+            <NavigationLink
                 to={deployment?.ui_settings.support_page_url || "#"}
-              >
+                className="w-link"
+            >
                 Get help
-              </NavigationLink>
-            </Link>
-          </div>
-        </Footer>
-      </Container>
-    </DefaultStylesProvider>
-  );
+            </NavigationLink>
+        </span>
+    );
+
+    if (isVerifying) {
+        const verificationTitle =
+            attempt.current_step === "verify_phone_otp"
+                ? "Verify your phone number"
+                : "Verify your email";
+        const verificationMessage =
+            attempt.current_step === "verify_phone_otp"
+                ? "Enter the 6-digit code sent to your phone"
+                : "Enter the 6-digit code sent to your email";
+        const resendStrategy: "phone_otp" | "email_otp" =
+            attempt.current_step === "verify_phone_otp"
+                ? "phone_otp"
+                : "email_otp";
+
+        return (
+            <DefaultStylesProvider>
+                <AuthCard footer={helpFooter}>
+                    <AuthHead
+                        title={verificationTitle}
+                        sub={verificationMessage}
+                    />
+
+                    <form
+                        onSubmit={(e) => e.preventDefault()}
+                        noValidate
+                        style={{
+                            display: "flex",
+                            flexDirection: "column",
+                            gap: 14,
+                        }}
+                    >
+                        <OTPInput
+                            onComplete={handleVerificationComplete}
+                            onResend={async () => {
+                                await prepareVerification({
+                                    strategy: resendStrategy,
+                                });
+                            }}
+                            error={displayError?.message}
+                            isSubmitting={isLoading}
+                        />
+
+                        {displayError && (
+                            <span className="w-input-err">
+                                {displayError.message}
+                            </span>
+                        )}
+                    </form>
+
+                    <div style={{ marginTop: 16, textAlign: "center" }}>
+                        <button
+                            type="button"
+                            className="w-link"
+                            onClick={() => setShowVerification(false)}
+                        >
+                            Back to profile completion
+                        </button>
+                    </div>
+                </AuthCard>
+            </DefaultStylesProvider>
+        );
+    }
+
+    const isBothNamesEnabled = !!(
+        authSettings?.first_name?.enabled &&
+        authSettings?.last_name?.enabled &&
+        missingFields.includes("first_name") &&
+        missingFields.includes("last_name")
+    );
+
+    return (
+        <DefaultStylesProvider>
+            <AuthCard
+                footer={
+                    onBack ? (
+                        <span className="w-auth-foot">
+                            <button
+                                type="button"
+                                className="w-link"
+                                onClick={onBack}
+                            >
+                                Back to login
+                            </button>
+                        </span>
+                    ) : (
+                        helpFooter
+                    )
+                }
+            >
+                <AuthHead
+                    title="Complete your profile"
+                    sub="Please provide the following information to continue"
+                />
+
+                <form
+                    onSubmit={handleSubmit}
+                    noValidate
+                    style={{
+                        display: "flex",
+                        flexDirection: "column",
+                        gap: 16,
+                    }}
+                >
+                    {(missingFields.includes("first_name") ||
+                        missingFields.includes("last_name")) &&
+                        (authSettings?.first_name?.enabled ||
+                            authSettings?.last_name?.enabled) && (
+                            <div className={isBothNamesEnabled ? "w-grid-2" : ""}>
+                                {missingFields.includes("first_name") &&
+                                    authSettings?.first_name?.enabled && (
+                                        <div className="w-field">
+                                            <label
+                                                className="w-label"
+                                                htmlFor="first_name"
+                                            >
+                                                First name
+                                                {authSettings.first_name
+                                                    .required && (
+                                                    <span className="w-req">
+                                                        *
+                                                    </span>
+                                                )}
+                                            </label>
+                                            <input
+                                                className={`w-input${errors.first_name ? " w-input--invalid" : ""}`}
+                                                type="text"
+                                                id="first_name"
+                                                name="first_name"
+                                                value={
+                                                    formData.first_name || ""
+                                                }
+                                                onChange={handleInputChange}
+                                                placeholder="Enter your first name"
+                                                disabled={isLoading}
+                                                autoComplete="given-name"
+                                            />
+                                            {errors.first_name && (
+                                                <span className="w-input-err">
+                                                    {errors.first_name}
+                                                </span>
+                                            )}
+                                        </div>
+                                    )}
+
+                                {missingFields.includes("last_name") &&
+                                    authSettings?.last_name?.enabled && (
+                                        <div className="w-field">
+                                            <label
+                                                className="w-label"
+                                                htmlFor="last_name"
+                                            >
+                                                Last name
+                                                {authSettings.last_name
+                                                    .required && (
+                                                    <span className="w-req">
+                                                        *
+                                                    </span>
+                                                )}
+                                            </label>
+                                            <input
+                                                className={`w-input${errors.last_name ? " w-input--invalid" : ""}`}
+                                                type="text"
+                                                id="last_name"
+                                                name="last_name"
+                                                value={formData.last_name || ""}
+                                                onChange={handleInputChange}
+                                                placeholder="Enter your last name"
+                                                disabled={isLoading}
+                                                autoComplete="family-name"
+                                            />
+                                            {errors.last_name && (
+                                                <span className="w-input-err">
+                                                    {errors.last_name}
+                                                </span>
+                                            )}
+                                        </div>
+                                    )}
+                            </div>
+                        )}
+
+                    {missingFields.includes("username") &&
+                        authSettings?.username?.enabled && (
+                            <div className="w-field">
+                                <label className="w-label" htmlFor="username">
+                                    Username
+                                    {authSettings.username.required && (
+                                        <span className="w-req">*</span>
+                                    )}
+                                </label>
+                                <input
+                                    className={`w-input${errors.username ? " w-input--invalid" : ""}`}
+                                    type="text"
+                                    id="username"
+                                    name="username"
+                                    value={formData.username || ""}
+                                    onChange={handleInputChange}
+                                    placeholder="Choose a username"
+                                    disabled={isLoading}
+                                    autoComplete="username"
+                                />
+                                {errors.username && (
+                                    <span className="w-input-err">
+                                        {errors.username}
+                                    </span>
+                                )}
+                            </div>
+                        )}
+
+                    {missingFields.includes("phone_number") &&
+                        authSettings?.phone_number?.enabled && (
+                            <div className="w-field">
+                                <label
+                                    className="w-label"
+                                    htmlFor="phone_number"
+                                >
+                                    Phone number
+                                    {authSettings.phone_number.required && (
+                                        <span className="w-req">*</span>
+                                    )}
+                                </label>
+                                <PhoneNumberInput
+                                    value={formData.phone_number || ""}
+                                    onChange={handlePhoneChange}
+                                    error={errors.phone_number}
+                                    countryCode={countryCode}
+                                    setCountryCode={setCountryCode}
+                                />
+                                {errors.phone_number && (
+                                    <span className="w-input-err">
+                                        {errors.phone_number}
+                                    </span>
+                                )}
+                            </div>
+                        )}
+
+                    {missingFields.includes("email_address") &&
+                        authSettings?.email_address?.enabled && (
+                            <div className="w-field">
+                                <label className="w-label" htmlFor="email">
+                                    Email address
+                                    {authSettings.email_address.required && (
+                                        <span className="w-req">*</span>
+                                    )}
+                                </label>
+                                <input
+                                    className={`w-input${errors.email_address ? " w-input--invalid" : ""}`}
+                                    type="email"
+                                    id="email"
+                                    name="email"
+                                    value={formData.email || ""}
+                                    onChange={handleInputChange}
+                                    placeholder="Enter your email address"
+                                    disabled={isLoading}
+                                    autoComplete="email"
+                                />
+                                {errors.email_address && (
+                                    <span className="w-input-err">
+                                        {errors.email_address}
+                                    </span>
+                                )}
+                            </div>
+                        )}
+
+                    {displayError && (
+                        <span className="w-input-err">
+                            {displayError.message}
+                        </span>
+                    )}
+
+                    <button
+                        type="submit"
+                        className="w-btn w-btn--primary w-btn--block"
+                        disabled={isLoading}
+                    >
+                        {isLoading ? <Spin onAccent /> : "Continue"}
+                    </button>
+                </form>
+            </AuthCard>
+        </DefaultStylesProvider>
+    );
 }

@@ -95,12 +95,10 @@ export const InvitationsSection = () => {
 
     return (
         <>
-            <HeaderCTAContainer style={{ marginBottom: "var(--space-6u)" }}>
-                <div style={{ flex: 1, minWidth: 0 }}>
-                    <div style={{ fontSize: 14, fontWeight: 500, color: "var(--color-card-foreground)" }}>
-                        Invitations
-                    </div>
-                    <div style={{ fontSize: 12, color: "var(--color-secondary-text)", marginTop: 2 }}>
+            <HeaderCTAContainer>
+                <div className="w-grow">
+                    <div className="w-sec">Invitations</div>
+                    <div className="w-secsub">
                         Pending invites to join this workspace.
                     </div>
                 </div>

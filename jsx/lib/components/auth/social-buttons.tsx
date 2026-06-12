@@ -1,5 +1,3 @@
-import styled from "styled-components";
-import { CaretRight } from "@phosphor-icons/react";
 import { GithubIcon } from "../icons/github";
 import { GoogleIcon } from "../icons/google";
 import { XIcon } from "../icons/x";
@@ -21,64 +19,6 @@ const socialAuthProviders = {
     discord_oauth: { label: "Continue with Discord", icon: <DiscordIcon /> },
 };
 
-const Container = styled.div`
-    display: flex;
-    flex-direction: column;
-    gap: var(--space-3u);
-    margin-bottom: var(--space-6u);
-`;
-
-const SocialButton = styled.button`
-    display: flex;
-    align-items: center;
-    gap: var(--space-4u);
-    width: 100%;
-    height: var(--size-18u);
-    padding: 0 var(--space-6u);
-    border: var(--border-width-thin) solid var(--color-border);
-    border-radius: var(--radius-md);
-    background: transparent;
-    cursor: pointer;
-    font-size: var(--font-size-md);
-    font-weight: 400;
-    color: var(--color-card-foreground);
-    transition: background-color 0.15s ease, border-color 0.15s ease;
-
-    &:hover {
-        background-color: var(--color-accent);
-        border-color: var(--color-border-hover);
-    }
-
-    &:hover .arrow {
-        opacity: 1;
-        transform: translateX(0);
-    }
-
-    svg:not(.arrow) {
-        width: var(--size-8u);
-        height: var(--size-8u);
-        flex-shrink: 0;
-    }
-`;
-
-const Label = styled.span`
-    flex: 1;
-    text-align: left;
-    overflow: hidden;
-    text-overflow: ellipsis;
-    white-space: nowrap;
-`;
-
-const Arrow = styled(CaretRight)`
-    width: var(--space-6u);
-    height: var(--space-6u);
-    color: var(--color-secondary-text);
-    flex-shrink: 0;
-    opacity: 0;
-    transform: translateX(-4px);
-    transition: opacity 0.15s ease, transform 0.15s ease;
-`;
-
 interface SocialAuthButtonsProps {
     connections: DeploymentSocialConnection[];
     callback: (provider: DeploymentSocialConnection) => void;
@@ -88,26 +28,58 @@ export const SocialAuthButtons = ({
     connections,
     callback,
 }: SocialAuthButtonsProps) => {
-    return (
-        <Container>
-            {connections.map((connection) => {
-                const config =
-                    socialAuthProviders[
-                        connection.provider as keyof typeof socialAuthProviders
-                    ];
-                if (!config) return null;
-                return (
-                    <SocialButton
+    const items = connections
+        .map((connection) => ({
+            connection,
+            config: socialAuthProviders[
+                connection.provider as keyof typeof socialAuthProviders
+            ],
+        }))
+        .filter((item) => item.config);
+
+    if (!items.length) return null;
+
+    // 4+ providers collapse to a compact icon grid; ≤3 stay full-width buttons.
+    if (items.length > 3) {
+        const cols = Math.min(items.length, 4);
+        return (
+            <div
+                style={{
+                    display: "grid",
+                    gridTemplateColumns: `repeat(${cols}, 1fr)`,
+                    gap: 8,
+                }}
+            >
+                {items.map(({ connection, config }) => (
+                    <button
                         key={connection.provider}
                         type="button"
+                        className="w-social"
+                        style={{ justifyContent: "center", padding: 0 }}
                         onClick={() => callback(connection)}
+                        title={config.label}
+                        aria-label={config.label}
                     >
                         {config.icon}
-                        <Label>{config.label}</Label>
-                        <Arrow className="arrow" />
-                    </SocialButton>
-                );
-            })}
-        </Container>
+                    </button>
+                ))}
+            </div>
+        );
+    }
+
+    return (
+        <div style={{ display: "flex", flexDirection: "column", gap: 10 }}>
+            {items.map(({ connection, config }) => (
+                <button
+                    key={connection.provider}
+                    type="button"
+                    className="w-social"
+                    onClick={() => callback(connection)}
+                >
+                    {config.icon}
+                    <span className="w-social-label">{config.label}</span>
+                </button>
+            ))}
+        </div>
     );
 };

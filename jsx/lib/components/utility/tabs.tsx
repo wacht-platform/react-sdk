@@ -8,7 +8,6 @@ import React, {
   ReactNode,
   KeyboardEvent,
 } from "react";
-import styled from "styled-components";
 
 // Context for Tab state management
 interface TabsContextValue {
@@ -26,119 +25,6 @@ const useTabsContext = () => {
   }
   return context;
 };
-
-// Styled components
-const TabsContainer = styled.div<{ $orientation?: "horizontal" | "vertical" }>`
-  display: flex;
-  flex-direction: ${(props) =>
-    props.$orientation === "vertical" ? "row" : "column"};
-  width: 100%;
-`;
-
-const StyledTabList = styled.div<{ $orientation?: "horizontal" | "vertical" }>`
-  display: flex;
-  flex-direction: ${(props) =>
-    props.$orientation === "vertical" ? "column" : "row"};
-  border-bottom: ${(props) => props.$orientation === "vertical" ? "none" : "var(--border-width-regular) solid var(--color-border)"};
-  border-right: ${(props) => props.$orientation === "vertical" ? "var(--border-width-regular) solid var(--color-border)" : "none"};
-  background: ${(props) =>
-    props.$orientation === "vertical"
-      ? "var(--color-background)"
-      : "linear-gradient(to bottom, var(--color-background), var(--color-background-subtle))"};
-  gap: ${(props) => (props.$orientation === "vertical" ? "var(--space-3u)" : "0")};
-  padding: ${(props) => (props.$orientation === "vertical" ? "var(--space-6u)" : "0 var(--space-4u)")};
-  min-width: ${(props) => (props.$orientation === "vertical" ? "calc(calc(var(--size-50u) * 2) + var(--size-10u))" : "auto")};
-  border-radius: ${(props) => props.$orientation === "vertical" ? "var(--radius-lg) 0 0 var(--radius-lg)" : "0"};
-  box-shadow: ${(props) => props.$orientation === "vertical" ? "inset calc(var(--border-width-thin) * -1) 0 0 var(--color-border)" : "inset 0 calc(var(--border-width-thin) * -1) 0 var(--color-border)"};
-`;
-
-const StyledTab = styled.button<{
-  $active: boolean;
-  $orientation?: "horizontal" | "vertical";
-}>`
-  padding: ${(props) => props.$orientation === "vertical" ? "var(--space-7u) calc(var(--space-1u) * 9)" : "var(--space-7u) var(--space-12u)"};
-  border: none;
-  background: ${(props) =>
-    props.$active
-      ? props.$orientation === "vertical"
-        ? "var(--color-primary-background)"
-        : "var(--color-background)"
-      : "transparent"};
-  color: ${(props) =>
-    props.$active ? "var(--color-primary)" : "var(--color-muted)"};
-  font-size: calc(var(--font-size-lg) + var(--border-width-thin));
-  font-weight: ${(props) => (props.$active ? "600" : "500")};
-  cursor: pointer;
-  transition: all 0.25s ease;
-  border-radius: ${(props) => props.$orientation === "vertical" ? "var(--space-5u)" : "0"};
-  border-bottom: ${(props) =>
-    props.$orientation === "vertical"
-      ? "none"
-      : props.$active
-      ? "var(--border-width-regular) solid var(--color-primary)"
-      : "var(--border-width-regular) solid transparent"};
-  white-space: nowrap;
-  text-align: left;
-  width: ${(props) => (props.$orientation === "vertical" ? "100%" : "auto")};
-  display: flex;
-  align-items: center;
-  justify-content: ${(props) =>
-    props.$orientation === "vertical" ? "flex-start" : "center"};
-  position: relative;
-
-  &:hover:not(:disabled) {
-    color: ${(props) =>
-      props.$active ? "var(--color-primary)" : "var(--color-foreground)"};
-    background: ${(props) =>
-      props.$orientation === "vertical"
-        ? props.$active
-          ? "var(--color-primary-background)"
-          : "var(--color-background-hover)"
-        : props.$active
-        ? "var(--color-background)"
-        : "var(--color-primary-background)"};
-    transform: ${(props) =>
-      props.$orientation === "vertical" ? "none" : "translateY(calc(var(--border-width-thin) * -1))"};
-  }
-
-  &:focus {
-    outline: var(--border-width-regular) solid var(--color-primary);
-    outline-offset: calc(var(--border-width-regular) * -1);
-    border-radius: var(--radius-md);
-  }
-
-  &:disabled {
-    opacity: 0.5;
-    cursor: not-allowed;
-  }
-
-  &:active {
-    transform: ${(props) =>
-      props.$orientation === "vertical" ? "none" : "translateY(0)"};
-  }
-`;
-
-const StyledTabPanels = styled.div<{ $orientation?: "horizontal" | "vertical" }>`
-  flex: 1;
-  padding: ${(props) => (props.$orientation === "vertical" ? "0 0 0 var(--space-16u)" : "var(--space-16u) 0 0 0")};
-  min-height: calc(var(--size-50u) * 4);
-`;
-
-const StyledTabPanel = styled.div<{ $active: boolean }>`
-  display: ${(props) => (props.$active ? "block" : "none")};
-  animation: ${(props) => (props.$active ? "fadeInUp 0.3s ease-out" : "none")};
-
-  @keyframes fadeInUp {
-    from {
-      opacity: 0;
-      transform: translateY(var(--space-6u));
-    }
-    to {
-      opacity: 1;
-      transform: translateY(0);
-    }
-  }
-`;
 
 // Component interfaces
 interface TabsProps {
@@ -200,9 +86,16 @@ export const Tabs: React.FC<TabsProps> = ({
 
   return (
     <TabsContext.Provider value={{ activeTab, setActiveTab, orientation }}>
-      <TabsContainer $orientation={orientation} className={className}>
+      <div
+        className={className}
+        style={{
+          display: "flex",
+          flexDirection: orientation === "vertical" ? "row" : "column",
+          width: "100%",
+        }}
+      >
         {children}
-      </TabsContainer>
+      </div>
     </TabsContext.Provider>
   );
 };
@@ -262,16 +155,25 @@ export const TabList: React.FC<TabListProps> = ({ children, className }) => {
     }
   };
 
+  const isVertical = orientation === "vertical";
+
   return (
-    <StyledTabList
-      $orientation={orientation}
-      className={className}
+    <div
+      className={`${isVertical ? "w-vtabs" : "w-tabs"}${className ? ` ${className}` : ""}`}
       role="tablist"
       aria-orientation={orientation}
       onKeyDown={handleKeyDown}
+      style={
+        isVertical
+          ? { minWidth: 200, paddingRight: 16 }
+          : {
+              borderBottom: "0.5px solid var(--wa-border)",
+              marginBottom: 0,
+            }
+      }
     >
       {children}
-    </StyledTabList>
+    </div>
   );
 };
 
@@ -284,6 +186,7 @@ export const Tab: React.FC<TabProps> = ({
 }) => {
   const { activeTab, setActiveTab, orientation } = useTabsContext();
   const isActive = activeTab === value;
+  const isVertical = orientation === "vertical";
 
   const handleClick = () => {
     if (!disabled) {
@@ -291,13 +194,15 @@ export const Tab: React.FC<TabProps> = ({
     }
   };
 
+  const base = isVertical ? "w-vtab" : "w-tab";
+  const activeCls = isActive && !isVertical ? " w-tab--active" : "";
+
   return (
-    <StyledTab
-      $active={isActive}
-      $orientation={orientation}
-      className={className}
+    <button
+      className={`${base}${activeCls}${className ? ` ${className}` : ""}`}
       onClick={handleClick}
       disabled={disabled}
+      data-on={isVertical && isActive ? "" : undefined}
       role="tab"
       aria-selected={isActive}
       aria-controls={`tabpanel-${value}`}
@@ -305,7 +210,7 @@ export const Tab: React.FC<TabProps> = ({
       tabIndex={isActive ? 0 : -1}
     >
       {children}
-    </StyledTab>
+    </button>
   );
 };
 
@@ -317,9 +222,16 @@ export const TabPanels: React.FC<TabPanelsProps> = ({
   const { orientation } = useTabsContext();
 
   return (
-    <StyledTabPanels $orientation={orientation} className={className}>
+    <div
+      className={className}
+      style={{
+        flex: 1,
+        padding: orientation === "vertical" ? "0 0 0 24px" : "24px 0 0 0",
+        minHeight: 200,
+      }}
+    >
       {children}
-    </StyledTabPanels>
+    </div>
   );
 };
 
@@ -332,9 +244,10 @@ export const TabPanel: React.FC<TabPanelProps> = ({
   const { activeTab } = useTabsContext();
   const isActive = activeTab === value;
 
+  if (!isActive) return null;
+
   return (
-    <StyledTabPanel
-      $active={isActive}
+    <div
       className={className}
       role="tabpanel"
       aria-labelledby={`tab-${value}`}
@@ -342,6 +255,6 @@ export const TabPanel: React.FC<TabPanelProps> = ({
       tabIndex={0}
     >
       {children}
-    </StyledTabPanel>
+    </div>
   );
 };

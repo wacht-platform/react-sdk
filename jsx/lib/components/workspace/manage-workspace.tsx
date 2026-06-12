@@ -8,7 +8,6 @@ import {
     Warning,
     Check,
 } from "@phosphor-icons/react";
-import styled from "styled-components";
 import { useActiveWorkspace } from "@/hooks/use-workspace";
 import { useDeployment } from "@/hooks/use-deployment";
 import { Spinner, DefaultStylesProvider } from "../utility";
@@ -34,61 +33,6 @@ import { InvitationsSection } from "./manage-workspace/invitations";
 import { RolesSection } from "./manage-workspace/roles";
 
 type TabType = "general" | "members" | "invitations" | "roles";
-
-const EditableAvatar = styled.button`
-    position: relative;
-    width: 44px;
-    height: 44px;
-    min-width: 44px;
-    border-radius: 50%;
-    background: var(--color-secondary);
-    color: var(--color-secondary-text);
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    overflow: hidden;
-    font-size: 14px;
-    font-weight: 600;
-    flex-shrink: 0;
-    border: none;
-    padding: 0;
-    cursor: pointer;
-
-    img { width: 100%; height: 100%; object-fit: cover; }
-
-    .hover-overlay {
-        position: absolute;
-        inset: 0;
-        background: color-mix(in srgb, black 55%, transparent);
-        color: white;
-        display: flex;
-        align-items: center;
-        justify-content: center;
-        opacity: 0;
-        transition: opacity 0.15s ease;
-        border-radius: 50%;
-    }
-    &:hover .hover-overlay { opacity: 1; }
-
-    @media (max-width: 600px) {
-        width: 38px;
-        height: 38px;
-        min-width: 38px;
-        font-size: 13px;
-    }
-`;
-
-const Toast = styled.div`
-    position: absolute;
-    bottom: 20px;
-    right: 20px;
-    background: var(--color-popover);
-    border: 1px solid var(--color-border);
-    border-radius: 8px;
-    padding: 12px 16px;
-    box-shadow: var(--shadow-md);
-    z-index: 100;
-`;
 
 const getInitials = (name?: string) =>
     (name || "").slice(0, 2).toUpperCase() || "W";
@@ -137,13 +81,7 @@ export const ManageWorkspace = () => {
     if (loading && !activeWorkspace) {
         return (
             <DefaultStylesProvider>
-                <Container
-                    style={{
-                        display: "flex",
-                        justifyContent: "center",
-                        alignItems: "center",
-                    }}
-                >
+                <Container className="w-items-center w-justify-center">
                     <Spinner />
                 </Container>
             </DefaultStylesProvider>
@@ -160,12 +98,14 @@ export const ManageWorkspace = () => {
                 <ScreenContext.Provider
                     value={{ screen: null, setScreen: () => {}, toast }}
                 >
-                    <Container>
+                    <Container className="w-relative">
                         <PageHeader>
-                            <EditableAvatar
+                            <button
                                 type="button"
+                                className="w-avatar w-avatar--lg w-avatar-edit"
                                 onClick={() => fileInputRef.current?.click()}
                                 disabled={isUploadingLogo}
+                                data-busy={isUploadingLogo ? "" : undefined}
                                 title="Change logo"
                                 aria-label="Change workspace logo"
                             >
@@ -173,15 +113,16 @@ export const ManageWorkspace = () => {
                                     ? <img src={(activeWorkspace as any).image_url} alt={activeWorkspace.name} />
                                     : getInitials(activeWorkspace.name)
                                 }
-                                <span className="hover-overlay">
+                                <span className="w-avatar-veil">
                                     {isUploadingLogo ? <Spinner size={14} /> : <Camera size={16} />}
                                 </span>
-                            </EditableAvatar>
+                            </button>
                             <input
                                 ref={fileInputRef}
                                 type="file"
                                 accept="image/*"
-                                style={{ display: "none" }}
+                                className="w-none"
+                                hidden
                                 onChange={handleLogoChange}
                             />
                             <PageHeaderInfo>
@@ -239,18 +180,18 @@ export const ManageWorkspace = () => {
                         </TabContent>
 
                         {toastMessage && (
-                            <Toast>
-                                <div style={{ display: "flex", alignItems: "center", gap: 8 }}>
+                            <div
+                                className={`w-toast w-toast--contained ${toastLevel === "error" ? "w-toast--error" : "w-toast--success"}`}
+                            >
+                                <span className="w-toast-ic">
                                     {toastLevel === "error" ? (
-                                        <Warning size={14} color="var(--color-error)" />
+                                        <Warning size={14} />
                                     ) : (
-                                        <Check size={14} color="var(--color-success, #10b981)" />
+                                        <Check size={14} />
                                     )}
-                                    <span style={{ fontSize: 13, color: "var(--color-popover-foreground)" }}>
-                                        {toastMessage}
-                                    </span>
-                                </div>
-                            </Toast>
+                                </span>
+                                <span className="w-toast-msg">{toastMessage}</span>
+                            </div>
                         )}
                     </Container>
                 </ScreenContext.Provider>

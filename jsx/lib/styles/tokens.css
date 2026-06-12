@@ -1,0 +1,101 @@
+/* ============================================================
+   Wacht SDK — token contract.
+   The single source of truth for every embedded SDK surface.
+   All components style themselves ONLY through these 23 names;
+   a host re-skins everything by overriding them.
+
+   Naming: `--wa-*` namespace so the SDK never collides with a
+   host app's own CSS variables. Scoped to `.wacht-root` (the
+   DefaultStylesProvider wrapper) so tokens don't leak onto the
+   host page. Dark mode: a `.dark` ancestor (or `.wacht-root.dark`)
+   flips the same names.
+   ============================================================ */
+
+/* Each token resolves through a `--wa-ov-light-<key>` override var (set inline
+   on .wacht-root by the SDK from deployment.ui_settings.theme_tokens), falling
+   back to the built-in default. Override keys are snake_case to match the JSON
+   token keys; the resolved `--wa-*` token stays kebab-case. */
+.wacht-root {
+  /* ---------- Surfaces (raised -> deep) ---------- */
+  --wa-surface:        var(--wa-ov-light-surface, #ffffff); /* cards · popovers · inputs */
+  --wa-surface-subtle: var(--wa-ov-light-surface_subtle, #fafaf8); /* subtle fills · hover */
+  --wa-background:     var(--wa-ov-light-background, #f5f5f2); /* app surface */
+  --wa-canvas:         var(--wa-ov-light-canvas, #ebebe7); /* deepest page background */
+
+  /* ---------- Text (strong -> faint) ---------- */
+  --wa-text:           var(--wa-ov-light-text, #161618); /* primary text */
+  --wa-text-secondary: var(--wa-ov-light-text_secondary, #3b3b3f); /* strong secondary text */
+  --wa-text-muted:     var(--wa-ov-light-text_muted, #76767c); /* muted / secondary text */
+  --wa-text-faint:     var(--wa-ov-light-text_faint, #a8a8ad); /* faint labels · placeholders */
+
+  /* ---------- Lines ---------- */
+  --wa-border:        var(--wa-ov-light-border, rgba(20, 20, 22, 0.08)); /* hairlines · dividers · inputs */
+  --wa-border-strong: var(--wa-ov-light-border_strong, rgba(20, 20, 22, 0.14)); /* emphasized borders · ring */
+
+  /* ---------- Brand ---------- */
+  --wa-primary:            var(--wa-ov-light-primary, #6b3df5);
+  --wa-primary-soft:       var(--wa-ov-light-primary_soft, rgba(107, 61, 245, 0.1));
+  --wa-primary-foreground: var(--wa-ov-light-primary_foreground, #ffffff); /* text/icon on primary */
+
+  /* ---------- Status (base + soft tint) ---------- */
+  --wa-success:      var(--wa-ov-light-success, #0f8a4a);
+  --wa-success-soft: var(--wa-ov-light-success_soft, rgba(15, 138, 74, 0.12));
+  --wa-info:         var(--wa-ov-light-info, #2f6fdb);
+  --wa-info-soft:    var(--wa-ov-light-info_soft, rgba(47, 111, 219, 0.1));
+  --wa-warning:      var(--wa-ov-light-warning, #a8650a);
+  --wa-warning-soft: var(--wa-ov-light-warning_soft, rgba(168, 101, 10, 0.12));
+  --wa-error:        var(--wa-ov-light-error, #c4271f);
+  --wa-error-soft:   var(--wa-ov-light-error_soft, rgba(196, 39, 31, 0.1));
+
+  /* ---------- Shape & type ---------- */
+  --wa-radius:    var(--wa-ov-light-radius, 6px);
+  --wa-radius-lg: var(--wa-ov-light-radius_lg, 10px);
+  /* Font override = a single admin-supplied family slotted in front of the
+     always-present system fallback. Unset -> brand defaults + system fallback. */
+  --wa-font-sans: var(--wa-ov-light-font_sans, "Geist", "Inter"), system-ui, -apple-system, sans-serif;
+  --wa-font-mono: var(--wa-ov-light-font_mono, "Geist Mono"), ui-monospace, SFMono-Regular, Menlo, monospace;
+
+  font-family: var(--wa-font-sans);
+}
+
+/* ---------- Dark mode ---------- */
+/* Mirrors the light block but resolves through `--wa-ov-dark-<key>` so each
+   mode is overridable independently. Tokens with no dark-specific design value
+   (base status colors, radius, fonts) default to the same value as light. */
+.dark .wacht-root,
+.wacht-root.dark {
+  --wa-surface:        var(--wa-ov-dark-surface, #131318);
+  --wa-surface-subtle: var(--wa-ov-dark-surface_subtle, #101015);
+  --wa-background:     var(--wa-ov-dark-background, #0d0d10);
+  --wa-canvas:         var(--wa-ov-dark-canvas, #050507);
+
+  --wa-text:           var(--wa-ov-dark-text, #ececef);
+  --wa-text-secondary: var(--wa-ov-dark-text_secondary, #c5c5cb);
+  --wa-text-muted:     var(--wa-ov-dark-text_muted, #8a8a92);
+  --wa-text-faint:     var(--wa-ov-dark-text_faint, #57575e);
+
+  --wa-border:        var(--wa-ov-dark-border, rgba(255, 255, 255, 0.07));
+  --wa-border-strong: var(--wa-ov-dark-border_strong, rgba(255, 255, 255, 0.14));
+
+  --wa-primary:            var(--wa-ov-dark-primary, #9277ff);
+  --wa-primary-soft:       var(--wa-ov-dark-primary_soft, rgba(146, 119, 255, 0.16));
+  --wa-primary-foreground: var(--wa-ov-dark-primary_foreground, #ffffff);
+
+  --wa-success:      var(--wa-ov-dark-success, #0f8a4a);
+  --wa-success-soft: var(--wa-ov-dark-success_soft, rgba(15, 138, 74, 0.18));
+  --wa-info:         var(--wa-ov-dark-info, #2f6fdb);
+  --wa-info-soft:    var(--wa-ov-dark-info_soft, rgba(47, 111, 219, 0.18));
+  --wa-warning:      var(--wa-ov-dark-warning, #a8650a);
+  --wa-warning-soft: var(--wa-ov-dark-warning_soft, rgba(168, 101, 10, 0.18));
+  --wa-error:        var(--wa-ov-dark-error, #c4271f);
+  --wa-error-soft:   var(--wa-ov-dark-error_soft, rgba(196, 39, 31, 0.18));
+
+  --wa-radius:    var(--wa-ov-dark-radius, 6px);
+  --wa-radius-lg: var(--wa-ov-dark-radius_lg, 10px);
+  --wa-font-sans: var(--wa-ov-dark-font_sans, "Geist", "Inter"), system-ui, -apple-system, sans-serif;
+  --wa-font-mono: var(--wa-ov-dark-font_mono, "Geist Mono"), ui-monospace, SFMono-Regular, Menlo, monospace;
+}
+
+.wacht-root * {
+  box-sizing: border-box;
+}

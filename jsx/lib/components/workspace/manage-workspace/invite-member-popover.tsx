@@ -1,56 +1,10 @@
 import { useState, useRef, useEffect, RefObject } from "react";
-import styled from "styled-components";
 import { Input } from "@/components/utility/input";
 import { Button, Spinner } from "../../utility";
 import { ComboBox, ComboBoxOption } from "../../utility/combo-box";
 import { WorkspaceRole } from "@/types";
 import { useScreenContext } from "../../organization/context";
 import { usePopoverPosition } from "@/hooks/use-popover-position";
-
-const PopoverContainer = styled.div`
-    position: fixed;
-    background: var(--color-popover);
-    border-radius: 10px;
-    box-shadow: var(--shadow-md);
-    border: 1px solid var(--color-border);
-    width: 360px;
-    max-width: calc(100vw - 24px);
-    z-index: 1001;
-    overflow: hidden;
-    padding: 14px;
-    display: flex;
-    flex-direction: column;
-    gap: 10px;
-
-    @media (max-width: 600px) {
-        width: calc(100vw - 24px);
-    }
-`;
-
-const Title = styled.div`
-    font-size: 13px;
-    font-weight: 600;
-    color: var(--color-popover-foreground);
-`;
-
-const Field = styled.div`
-    display: flex;
-    flex-direction: column;
-    gap: 4px;
-`;
-
-const FieldLabel = styled.label`
-    font-size: 11px;
-    font-weight: 500;
-    color: var(--color-secondary-text);
-`;
-
-const Actions = styled.div`
-    display: grid;
-    grid-template-columns: 1fr 1fr;
-    gap: 6px;
-    & > button { width: 100%; }
-`;
 
 interface InviteMemberPopoverProps {
     onClose: () => void;
@@ -76,6 +30,7 @@ export const InviteMemberPopover = ({
     const [mounted, setMounted] = useState(false);
     const { toast } = useScreenContext();
     const position = usePopoverPosition({
+        contentRef: popoverRef,
         triggerRef,
         isOpen: mounted,
         minWidth: 360,
@@ -139,9 +94,12 @@ export const InviteMemberPopover = ({
     if (!mounted) return null;
 
     return (
-        <PopoverContainer
+        <div
             ref={popoverRef}
+            className="w-pop w-pop--wide w-pop-body"
             style={{
+                position: "fixed",
+                zIndex: 1001,
                 top: position?.top !== undefined ? `${position.top}px` : undefined,
                 bottom: position?.bottom !== undefined ? `${position.bottom}px` : undefined,
                 left: position?.left !== undefined ? `${position.left}px` : undefined,
@@ -153,9 +111,11 @@ export const InviteMemberPopover = ({
             aria-labelledby="invite-member-title"
             aria-modal="true"
         >
-            <Title id="invite-member-title">Invite member</Title>
-            <Field>
-                <FieldLabel>Email</FieldLabel>
+            <div className="w-pop-title" id="invite-member-title">
+                Invite member
+            </div>
+            <div className="w-field">
+                <label className="w-label">Email</label>
                 <Input
                     type="email"
                     placeholder="colleague@company.com"
@@ -167,9 +127,9 @@ export const InviteMemberPopover = ({
                     autoFocus
                     aria-label="Email address for invitation"
                 />
-            </Field>
-            <Field>
-                <FieldLabel>Role</FieldLabel>
+            </div>
+            <div className="w-field">
+                <label className="w-label">Role</label>
                 <ComboBox
                     options={roleOptions}
                     value={selectedRole?.id}
@@ -179,19 +139,20 @@ export const InviteMemberPopover = ({
                     placeholder="Select a role"
                     aria-label="Select role for invited member"
                 />
-            </Field>
-            <Actions>
-                <Button $size="sm" $outline onClick={onClose}>
+            </div>
+            <div className="w-flex w-gap-2">
+                <Button $size="sm" $outline $fullWidth onClick={onClose}>
                     Cancel
                 </Button>
                 <Button
                     $size="sm"
+                    $fullWidth
                     onClick={handleInvite}
                     disabled={!email || !selectedRole || loading}
                 >
                     {loading ? <Spinner size={12} /> : "Send invite"}
                 </Button>
-            </Actions>
-        </PopoverContainer>
+            </div>
+        </div>
     );
 };

@@ -1,7 +1,6 @@
 "use client";
 
 import React, { useState, useEffect } from "react";
-import styled from "styled-components";
 import useSWR from "swr";
 import { Shield, Copy, Check, Plus, ArrowSquareOut } from "@phosphor-icons/react";
 import { useOrganizationList } from "@/hooks/use-organization";
@@ -17,99 +16,6 @@ import type {
     CreateEnterpriseConnectionPayload,
     Organization,
 } from "@/types";
-
-const HeaderCTAContainer = styled.div`
-    display: flex;
-    align-items: center;
-    flex-wrap: wrap;
-    gap: var(--space-6u);
-    margin-bottom: var(--space-12u);
-`;
-
-const Card = styled.div`
-    padding-bottom: var(--space-10u);
-    margin-bottom: var(--space-8u);
-    border-bottom: var(--border-width-thin) solid var(--color-border);
-
-    &:last-child {
-        border-bottom: none;
-        margin-bottom: 0;
-        padding-bottom: 0;
-    }
-`;
-
-const CardHeader = styled.div`
-    display: flex;
-    justify-content: space-between;
-    align-items: flex-start;
-`;
-
-const CardTitle = styled.h3`
-    font-size: var(--font-size-lg);
-    font-weight: 500;
-    color: var(--color-card-foreground);
-    margin: 0;
-    display: flex;
-    align-items: center;
-    gap: var(--space-4u);
-`;
-
-const Badge = styled.span`
-    background: var(--color-primary-background);
-    color: var(--color-primary);
-    padding: var(--space-1u) var(--space-3u);
-    border-radius: var(--radius-2xs);
-    font-size: var(--font-size-2xs);
-    font-weight: 500;
-    text-transform: uppercase;
-    letter-spacing: var(--letter-spacing-tight);
-`;
-
-const IconButton = styled.button`
-    background: none;
-    border: var(--border-width-thin) solid var(--color-border);
-    padding: var(--space-3u);
-    cursor: pointer;
-    color: var(--color-muted);
-    border-radius: var(--radius-2xs);
-    display: flex;
-    align-items: center;
-    justify-content: center;
-
-    &:hover {
-        background: var(--color-input-background);
-        color: var(--color-card-foreground);
-    }
-`;
-
-const InfoBox = styled.div`
-    padding: var(--space-6u) var(--space-8u);
-    background: var(--color-background-subtle);
-    border-radius: var(--radius-md);
-    margin-bottom: var(--space-12u);
-    border: var(--border-width-thin) solid var(--color-border);
-    font-size: var(--font-size-md);
-    color: var(--color-secondary-text);
-`;
-
-const Textarea = styled.textarea`
-    width: 100%;
-    padding: var(--space-5u) var(--space-6u);
-    border: var(--border-width-thin) solid var(--color-border);
-    border-radius: var(--radius-xs);
-    font-size: var(--font-size-lg);
-    background: var(--color-input-background);
-    color: var(--color-card-foreground);
-    min-height: var(--size-50u);
-    resize: vertical;
-    font-family: monospace;
-    box-sizing: border-box;
-
-    &:focus {
-        outline: none;
-        border-color: var(--color-primary);
-    }
-`;
 
 interface IdPTemplate {
     id: string;
@@ -346,68 +252,27 @@ const IDP_TEMPLATES: IdPTemplate[] = [
     },
 ];
 
-const TemplateGrid = styled.div`
-    display: grid;
-    grid-template-columns: repeat(4, 1fr);
-    gap: var(--space-4u);
-    margin-bottom: var(--space-8u);
-`;
-
-const TemplateCard = styled.button<{ $selected?: boolean }>`
-    display: flex;
-    flex-direction: column;
-    align-items: center;
-    gap: var(--space-2u);
-    padding: var(--space-5u) var(--space-3u);
-    border-radius: var(--radius-xs);
-    border: var(--border-width-thin) solid
-        ${(props) =>
-            props.$selected ? "var(--color-primary)" : "var(--color-border)"};
-    background: ${(props) =>
-        props.$selected
-            ? "var(--color-primary-background)"
-            : "var(--color-input-background)"};
-    cursor: pointer;
-    transition: all 0.15s ease;
-    position: relative;
-
-    &:hover {
-        border-color: var(--color-primary);
-        background: var(--color-primary-background);
+// Provider logo with a graceful fallback: many brand logo URLs (Azure, ADFS…)
+// 404 or are hotlink-blocked, which renders a broken image — show the Shield
+// placeholder instead.
+const TemplateLogo = ({ template }: { template: IdPTemplate }) => {
+    const [failed, setFailed] = useState(false);
+    if (!template.logo || failed) {
+        return (
+            <span className="w-avatar w-avatar--square w-avatar--md w-sso-logo--ph">
+                <Shield size={18} className="w-text-muted" />
+            </span>
+        );
     }
-`;
-
-const TemplateLogo = styled.img`
-    height: var(--size-12u);
-    width: var(--size-12u);
-    object-fit: contain;
-    background: var(--color-input-background);
-    border-radius: var(--radius-2xs);
-    padding: var(--space-1u);
-`;
-
-const TemplateName = styled.span`
-    font-size: var(--font-size-xs);
-    font-weight: 500;
-    color: var(--color-card-foreground);
-    text-align: center;
-`;
-
-const Select = styled.select`
-    width: 100%;
-    padding: var(--space-5u) var(--space-6u);
-    border: var(--border-width-thin) solid var(--color-border);
-    border-radius: var(--radius-xs);
-    font-size: var(--font-size-lg);
-    background: var(--color-input-background);
-    color: var(--color-card-foreground);
-    cursor: pointer;
-
-    &:focus {
-        outline: none;
-        border-color: var(--color-primary);
-    }
-`;
+    return (
+        <img
+            className="w-avatar w-avatar--square w-avatar--md w-sso-logo"
+            src={template.logo}
+            alt={template.name}
+            onError={() => setFailed(true)}
+        />
+    );
+};
 
 export const SSOSettingsSection = ({
     organization,
@@ -455,13 +320,7 @@ export const SSOSettingsSection = ({
 
     if (isLoading) {
         return (
-            <div
-                style={{
-                    display: "flex",
-                    justifyContent: "center",
-                    padding: "var(--space-20u) 0",
-                }}
-            >
+            <div className="w-loading">
                 <Spinner />
             </div>
         );
@@ -496,79 +355,30 @@ export const SSOSettingsSection = ({
     return (
         <>
             {connections.length === 0 ? (
-                <div
-                    style={{
-                        display: "flex",
-                        flexDirection: "column",
-                        alignItems: "center",
-                        justifyContent: "center",
-                        padding: "var(--space-40u) var(--space-12u)",
-                        textAlign: "center",
-                        height: "100%",
-                    }}
-                >
-                    <Shield
-                        size={56}
-                        strokeWidth={1}
-                        style={{
-                            color: "var(--color-primary)",
-                            marginBottom: "var(--space-10u)",
-                            opacity: 0.7,
-                        }}
-                    />
-                    <h3
-                        style={{
-                            margin: "0 0 var(--space-4u) 0",
-                            fontSize: "var(--font-size-2xl)",
-                            fontWeight: 500,
-                            color: "var(--color-foreground)",
-                        }}
-                    >
-                        Enterprise SSO
-                    </h3>
-                    <p
-                        style={{
-                            margin: "0 0 var(--space-12u) 0",
-                            fontSize: "var(--font-size-lg)",
-                            color: "var(--color-muted)",
-                            maxWidth: "calc(var(--size-50u) * 4)",
-                            lineHeight: "1.6",
-                        }}
-                    >
-                        Set up SAML or OIDC single sign-on to allow members to
-                        sign in with your identity provider.
-                    </p>
-                    <Button
-                        onClick={() => setIsCreating(true)}
-                        style={{ width: "auto" }}
-                    >
-                        <Plus size={16} /> Configure SSO
-                    </Button>
+                <div className="w-empty w-empty--fill">
+                    <div className="w-empty-ic">
+                        <Shield size={20} />
+                    </div>
+                    <div className="w-empty-text">
+                        <h4>Enterprise SSO</h4>
+                        <p>Let members sign in with your identity provider.</p>
+                    </div>
+                    <div className="w-empty-action">
+                        <Button onClick={() => setIsCreating(true)}>
+                            <Plus size={16} /> Configure SSO
+                        </Button>
+                    </div>
                 </div>
             ) : (
                 <>
-                    <HeaderCTAContainer>
-                        <div style={{ flex: 1 }}>
-                            <h3
-                                style={{
-                                    margin: 0,
-                                    fontSize: "var(--font-size-xl)",
-                                    color: "var(--color-foreground)",
-                                }}
-                            >
-                                Enterprise SSO
-                            </h3>
-                            <p
-                                style={{
-                                    margin: "var(--space-2u) 0 0",
-                                    fontSize: "var(--font-size-md)",
-                                    color: "var(--color-muted)",
-                                }}
-                            >
+                    <div className="w-flex w-items-center w-justify-between w-gap-4 w-sechead">
+                        <div className="w-grow w-flex-col w-gap-1">
+                            <h3 className="w-title">Enterprise SSO</h3>
+                            <p className="w-sub">
                                 Configure SAML or OIDC SSO for your organization
                             </p>
                         </div>
-                    </HeaderCTAContainer>
+                    </div>
                     {connections.map((connection: EnterpriseConnection) => (
                         <ConnectionCard
                             key={connection.id}
@@ -611,28 +421,6 @@ interface ConnectionCardProps {
     revokeSCIMToken: ((connectionId: string) => Promise<void>) | null;
     toast: (message: string, type: "error" | "info") => void;
 }
-
-const SCIMSection = styled.div`
-    margin-top: var(--space-8u);
-    padding-top: var(--space-8u);
-    border-top: var(--border-width-thin) solid var(--color-border);
-`;
-
-const SCIMHeader = styled.div`
-    font-size: var(--font-size-sm);
-    font-weight: 500;
-    color: var(--color-card-foreground);
-    margin-bottom: var(--space-6u);
-    display: flex;
-    align-items: center;
-    gap: var(--space-3u);
-`;
-
-const SCIMActions = styled.div`
-    display: flex;
-    gap: var(--space-4u);
-    flex-wrap: wrap;
-`;
 
 const ConnectionCard = ({
     connection,
@@ -727,42 +515,27 @@ const ConnectionCard = ({
     };
 
     return (
-        <Card>
-            <CardHeader>
-                <CardTitle>
+        <div className="w-flex-col w-gap-4 w-sso-conn">
+            <div className="w-flex w-justify-between w-items-start">
+                <h3 className="w-sec w-inline w-gap-2">
                     <Shield size={16} />
                     {connection.protocol === "oidc" ? "OIDC SSO" : "SAML SSO"}
-                    <Badge>{connection.protocol.toUpperCase()}</Badge>
-                </CardTitle>
-                <div
-                    style={{
-                        display: "flex",
-                        alignItems: "center",
-                        gap: "var(--space-4u)",
-                    }}
-                >
+                    <span className="w-pill w-pill--current">{connection.protocol.toUpperCase()}</span>
+                </h3>
+                <div className="w-flex w-items-center w-gap-2">
                     <Button
+                        $size="sm"
                         onClick={handleTestConnection}
                         disabled={testing}
-                        style={{
-                            fontSize: "var(--font-size-sm)",
-                            padding: "var(--space-3u) var(--space-7u)",
-                            width: "var(--size-40u)",
-                        }}
                     >
                         {testing ? <Spinner size={14} /> : "Test"}
                     </Button>
-                    <div style={{ position: "relative" }}>
+                    <div className="w-relative">
                         <Button
+                            $size="sm"
                             $outline
                             onClick={() => onDelete(connection.id)}
-                            style={{
-                                fontSize: "var(--font-size-sm)",
-                                padding: "var(--space-3u) var(--space-7u)",
-                                width: "var(--size-40u)",
-                                color: "var(--color-error)",
-                                borderColor: "var(--color-error)",
-                            }}
+                            className="w-text-error"
                         >
                             Remove
                         </Button>
@@ -775,137 +548,75 @@ const ConnectionCard = ({
                         )}
                     </div>
                 </div>
-            </CardHeader>
+            </div>
 
             {/* Test Result */}
             {testResult && (
-                <div
-                    style={{
-                        marginBottom: "var(--space-6u)",
-                        padding: "var(--space-4u) var(--space-6u)",
-                        background: testResult.success
-                            ? "var(--color-success-background)"
-                            : "var(--color-error-background)",
-                        borderRadius: "var(--radius-xs)",
-                        fontSize: "var(--font-size-sm)",
-                        color: testResult.success
-                            ? "var(--color-success)"
-                            : "var(--color-error)",
-                        fontWeight: 500,
-                    }}
-                >
-                    {testResult.success
-                        ? "✓ Connection is valid"
-                        : "✗ Connection failed"}
-                    {testResult.errors &&
-                        Object.entries(testResult.errors).map(
-                            ([key, value]) => (
-                                <div
-                                    key={key}
-                                    style={{
-                                        fontWeight: 400,
-                                        marginTop: "var(--space-2u)",
-                                    }}
-                                >
-                                    {key.replace(/_/g, " ")}: {value}
-                                </div>
-                            ),
-                        )}
+                <div className={`w-banner ${testResult.success ? "w-banner--success" : "w-banner--error"}`}>
+                    <span className={`w-banner-txt w-flex-col w-gap-1 ${testResult.success ? "w-text-success" : "w-text-error"}`}>
+                        <span>
+                            {testResult.success
+                                ? "✓ Connection is valid"
+                                : "✗ Connection failed"}
+                        </span>
+                        {testResult.errors &&
+                            Object.entries(testResult.errors).map(
+                                ([key, value]) => (
+                                    <div key={key}>
+                                        {key.replace(/_/g, " ")}: {value}
+                                    </div>
+                                ),
+                            )}
+                    </span>
                 </div>
             )}
 
             {/* Connection Details - Compact Grid */}
-            <div
-                style={{
-                    display: "grid",
-                    gridTemplateColumns: "auto 1fr",
-                    gap: "var(--space-2u) var(--space-8u)",
-                    fontSize: "var(--font-size-sm)",
-                    marginBottom: "var(--space-8u)",
-                }}
-            >
+            <div className="w-sso-detail">
                 {connection.protocol === "saml" ? (
                     <>
-                        <span style={{ color: "var(--color-muted)" }}>
-                            Entity ID
-                        </span>
-                        <span
-                            style={{
-                                color: "var(--color-foreground)",
-                                wordBreak: "break-all",
-                            }}
-                        >
+                        <span className="w-secsub">Entity ID</span>
+                        <span className="w-sec w-break-all">
                             {connection.idp_entity_id}
                         </span>
-                        <span style={{ color: "var(--color-muted)" }}>
-                            SSO URL
-                        </span>
-                        <span
-                            style={{
-                                color: "var(--color-foreground)",
-                                wordBreak: "break-all",
-                            }}
-                        >
+                        <span className="w-secsub">SSO URL</span>
+                        <span className="w-sec w-break-all">
                             {connection.idp_sso_url}
                         </span>
                     </>
                 ) : (
                     <>
-                        <span style={{ color: "var(--color-muted)" }}>
-                            Issuer URL
-                        </span>
-                        <span
-                            style={{
-                                color: "var(--color-foreground)",
-                                wordBreak: "break-all",
-                            }}
-                        >
+                        <span className="w-secsub">Issuer URL</span>
+                        <span className="w-sec w-break-all">
                             {connection.oidc_issuer_url}
                         </span>
-                        <span style={{ color: "var(--color-muted)" }}>
-                            Client ID
-                        </span>
-                        <span style={{ color: "var(--color-foreground)" }}>
-                            {connection.oidc_client_id}
-                        </span>
-                        <span style={{ color: "var(--color-muted)" }}>
-                            Scopes
-                        </span>
-                        <span style={{ color: "var(--color-foreground)" }}>
+                        <span className="w-secsub">Client ID</span>
+                        <span className="w-sec">{connection.oidc_client_id}</span>
+                        <span className="w-secsub">Scopes</span>
+                        <span className="w-sec">
                             {connection.oidc_scopes || "openid profile email"}
                         </span>
                     </>
                 )}
-                <span style={{ color: "var(--color-muted)" }}>Created</span>
-                <span style={{ color: "var(--color-foreground)" }}>
+                <span className="w-secsub">Created</span>
+                <span className="w-sec">
                     {new Date(connection.created_at).toLocaleDateString()}
                 </span>
             </div>
 
             {/* SCIM Provisioning Section */}
-            <SCIMSection>
-                <div
-                    style={{
-                        display: "flex",
-                        justifyContent: "space-between",
-                        alignItems: "center",
-                        marginBottom: "var(--space-6u)",
-                    }}
-                >
-                    <SCIMHeader style={{ marginBottom: 0 }}>
+            <div className="w-flex-col w-gap-3 w-sso-scim">
+                <div className="w-flex w-justify-between w-items-center">
+                    <div className="w-sec w-inline w-gap-2">
                         <Shield size={14} />
                         SCIM Provisioning
-                    </SCIMHeader>
-                    <SCIMActions>
+                    </div>
+                    <div className="w-flex w-wrap w-gap-2">
                         {!scimToken?.exists || !scimToken?.token?.enabled ? (
                             <Button
+                                $size="sm"
                                 onClick={handleGenerateToken}
                                 disabled={scimLoading}
-                                style={{
-                                    fontSize: "var(--font-size-sm)",
-                                    padding: "var(--space-3u) var(--space-7u)",
-                                    width: "calc(var(--space-10u) * 6)",
-                                }}
                             >
                                 {scimLoading ? (
                                     <Spinner size={14} />
@@ -916,14 +627,9 @@ const ConnectionCard = ({
                         ) : (
                             <>
                                 <Button
+                                    $size="sm"
                                     onClick={handleGenerateToken}
                                     disabled={scimLoading}
-                                    style={{
-                                        fontSize: "var(--font-size-sm)",
-                                        padding:
-                                            "var(--space-3u) var(--space-7u)",
-                                        width: "var(--size-40u)",
-                                    }}
                                 >
                                     {scimLoading ? (
                                         <Spinner size={14} />
@@ -932,104 +638,52 @@ const ConnectionCard = ({
                                     )}
                                 </Button>
                                 <Button
+                                    $size="sm"
                                     $outline
                                     onClick={handleRevokeToken}
                                     disabled={scimLoading}
-                                    style={{
-                                        fontSize: "var(--font-size-sm)",
-                                        padding:
-                                            "var(--space-3u) var(--space-7u)",
-                                        width: "var(--size-40u)",
-                                        color: "var(--color-error)",
-                                        borderColor: "var(--color-error)",
-                                    }}
+                                    className="w-text-error"
                                 >
                                     Revoke
                                 </Button>
                             </>
                         )}
-                    </SCIMActions>
+                    </div>
                 </div>
 
                 {(scimToken?.token?.scim_base_url || showNewToken) && (
-                    <div style={{ marginBottom: "var(--space-4u)" }}>
-                        <div
-                            style={{
-                                display: "flex",
-                                alignItems: "center",
-                                gap: "var(--space-4u)",
-                            }}
-                        >
-                            <span
-                                style={{
-                                    fontSize: "var(--font-size-xs)",
-                                    color: "var(--color-muted)",
-                                    minWidth: "var(--size-40u)",
-                                }}
+                    <div className="w-token">
+                        <span className="w-secsub w-none">Base URL:</span>
+                        <code>
+                            {scimToken?.token?.scim_base_url || "Loading..."}
+                        </code>
+                        {scimToken?.token?.scim_base_url && (
+                            <button
+                                className="w-btn w-btn--icon"
+                                onClick={() =>
+                                    copyToClipboard(
+                                        scimToken.token.scim_base_url,
+                                        "scim-url",
+                                    )
+                                }
                             >
-                                Base URL:
-                            </span>
-                            <code
-                                style={{
-                                    fontSize: "var(--font-size-xs)",
-                                    flex: 1,
-                                    wordBreak: "break-all",
-                                    color: "var(--color-foreground)",
-                                }}
-                            >
-                                {scimToken?.token?.scim_base_url ||
-                                    "Loading..."}
-                            </code>
-                            {scimToken?.token?.scim_base_url && (
-                                <IconButton
-                                    onClick={() =>
-                                        copyToClipboard(
-                                            scimToken.token.scim_base_url,
-                                            "scim-url",
-                                        )
-                                    }
-                                >
-                                    {copiedField === "scim-url" ? (
-                                        <Check size={12} />
-                                    ) : (
-                                        <Copy size={12} />
-                                    )}
-                                </IconButton>
-                            )}
-                        </div>
+                                {copiedField === "scim-url" ? (
+                                    <Check size={12} />
+                                ) : (
+                                    <Copy size={12} />
+                                )}
+                            </button>
+                        )}
                     </div>
                 )}
 
                 {showNewToken && (
-                    <div style={{ marginBottom: "var(--space-4u)" }}>
-                        <div
-                            style={{
-                                display: "flex",
-                                alignItems: "center",
-                                gap: "var(--space-4u)",
-                            }}
-                        >
-                            <span
-                                style={{
-                                    fontSize: "var(--font-size-xs)",
-                                    color: "var(--color-muted)",
-                                    minWidth: "var(--size-40u)",
-                                }}
-                            >
-                                Token:
-                            </span>
-                            <code
-                                style={{
-                                    fontSize: "var(--font-size-xs)",
-                                    flex: 1,
-                                    wordBreak: "break-all",
-                                    color: "var(--color-foreground)",
-                                    fontFamily: "monospace",
-                                }}
-                            >
-                                {showNewToken}
-                            </code>
-                            <IconButton
+                    <div className="w-flex-col w-gap-2">
+                        <div className="w-token">
+                            <span className="w-secsub w-none">Token:</span>
+                            <code>{showNewToken}</code>
+                            <button
+                                className="w-btn w-btn--icon"
                                 onClick={() =>
                                     copyToClipboard(showNewToken, "scim-token")
                                 }
@@ -1039,17 +693,10 @@ const ConnectionCard = ({
                                 ) : (
                                     <Copy size={12} />
                                 )}
-                            </IconButton>
+                            </button>
                         </div>
-                        <div
-                            style={{
-                                fontSize: "var(--font-size-xs)",
-                                color: "var(--color-warning)",
-                                marginTop: "var(--space-3u)",
-                            }}
-                        >
-                            ⚠️ Copy this token now. It won&apos;t be shown
-                            again.
+                        <div className="w-mono-faint w-text-warning">
+                            ⚠️ Copy this token now. It won&apos;t be shown again.
                         </div>
                     </div>
                 )}
@@ -1057,22 +704,9 @@ const ConnectionCard = ({
                 {scimToken?.exists &&
                     scimToken?.token?.enabled &&
                     !showNewToken && (
-                        <div
-                            style={{
-                                fontSize: "var(--font-size-xs)",
-                                color: "var(--color-muted)",
-                            }}
-                        >
+                        <div className="w-secsub">
                             Token:{" "}
-                            <code
-                                style={{
-                                    color: "var(--color-foreground)",
-                                    background:
-                                        "var(--color-background-subtle)",
-                                    padding: "var(--space-1u) var(--space-3u)",
-                                    borderRadius: "var(--radius-2xs)",
-                                }}
-                            >
+                            <code className="w-mono-sm w-token-chip">
                                 {scimToken.token.token_prefix}...
                             </code>
                             {scimToken.token.last_used_at && (
@@ -1086,8 +720,8 @@ const ConnectionCard = ({
                             )}
                         </div>
                     )}
-            </SCIMSection>
-        </Card>
+            </div>
+        </div>
     );
 };
 
@@ -1096,15 +730,6 @@ interface CreateSSOScreenProps {
     onClose: () => void;
     onCreate: (payload: CreateEnterpriseConnectionPayload) => Promise<void>;
 }
-
-const SectionTitle = styled.h3`
-    margin: 0 0 var(--space-6u) 0;
-    font-size: var(--font-size-md);
-    font-weight: 600;
-    color: var(--color-card-foreground);
-    text-transform: uppercase;
-    letter-spacing: var(--letter-spacing-tight);
-`;
 
 const CreateSSOScreen = ({
     onCreate,
@@ -1402,214 +1027,88 @@ const CreateSSOScreen = ({
         }
     };
 
+    const renderTemplateLogo = (template: IdPTemplate) => (
+        <TemplateLogo template={template} />
+    );
+
     return (
-        <form onSubmit={handleSubmit} autoComplete="off">
+        <form onSubmit={handleSubmit} autoComplete="off" className="w-flex-col w-gap-4">
             {/* Template Selection - Accordion behavior */}
             {selectedTemplate ? (
-                <div
-                    style={{
-                        display: "flex",
-                        alignItems: "center",
-                        gap: "var(--space-6u)",
-                        padding: "var(--space-6u)",
-                        background: "var(--color-primary-background)",
-                        borderRadius: "var(--radius-md)",
-                        border: "var(--border-width-thin) solid var(--color-primary)",
-                        marginBottom: "var(--space-8u)",
-                    }}
-                >
-                    {selectedTemplate.logo ? (
-                        <TemplateLogo
-                            src={selectedTemplate.logo}
-                            alt={selectedTemplate.name}
-                        />
-                    ) : (
-                        <div
-                            style={{
-                                height: "var(--size-12u)",
-                                width: "var(--size-12u)",
-                                display: "flex",
-                                alignItems: "center",
-                                justifyContent: "center",
-                                background: "var(--color-background)",
-                                borderRadius: "var(--radius-2xs)",
-                                padding: "var(--space-1u)",
-                            }}
-                        >
-                            <Shield size={18} color="var(--color-muted)" />
-                        </div>
-                    )}
-                    <div style={{ flex: 1 }}>
-                        <div
-                            style={{
-                                fontWeight: 500,
-                                fontSize: "var(--font-size-lg)",
-                                color: "var(--color-foreground)",
-                            }}
-                        >
-                            {selectedTemplate.name}
-                        </div>
-                        <div
-                            style={{
-                                fontSize: "var(--font-size-xs)",
-                                color: "var(--color-muted)",
-                                textTransform: "uppercase",
-                            }}
-                        >
+                <div className="w-flex w-items-center w-gap-4 w-sso-template">
+                    {renderTemplateLogo(selectedTemplate)}
+                    <div className="w-grow">
+                        <div className="w-sec">{selectedTemplate.name}</div>
+                        <div className="w-eyebrow">
                             {selectedTemplate.protocol}
                         </div>
                     </div>
-                    <button
+                    <Button
                         type="button"
+                        $size="sm"
+                        $outline
                         onClick={() => setSelectedTemplate(null)}
-                        style={{
-                            background: "none",
-                            border: "none",
-                            color: "var(--color-primary)",
-                            cursor: "pointer",
-                            fontSize: "var(--font-size-sm)",
-                            padding: "var(--space-2u) var(--space-4u)",
-                        }}
                     >
                         Change
-                    </button>
+                    </Button>
                 </div>
             ) : (
-                <>
-                    <SectionTitle>SAML Providers</SectionTitle>
-                    <TemplateGrid>
-                        {IDP_TEMPLATES.filter((t) => t.protocol === "saml").map(
-                            (template) => (
-                                <TemplateCard
-                                    key={template.id}
-                                    type="button"
-                                    $selected={false}
-                                    onClick={() => selectTemplate(template)}
-                                >
-                                    {template.logo ? (
-                                        <TemplateLogo
-                                            src={template.logo}
-                                            alt={template.name}
-                                        />
-                                    ) : (
-                                        <div
-                                            style={{
-                                                height: "var(--size-12u)",
-                                                width: "var(--size-12u)",
-                                                display: "flex",
-                                                alignItems: "center",
-                                                justifyContent: "center",
-                                                background:
-                                                    "var(--color-background)",
-                                                borderRadius:
-                                                    "var(--radius-2xs)",
-                                                padding: "var(--space-1u)",
-                                            }}
-                                        >
-                                            <Shield
-                                                size={18}
-                                                color="var(--color-muted)"
-                                            />
-                                        </div>
-                                    )}
-                                    <TemplateName>{template.name}</TemplateName>
-                                </TemplateCard>
-                            ),
-                        )}
-                    </TemplateGrid>
+                <div className="w-flex-col w-gap-5">
+                    <div className="w-flex-col w-gap-3">
+                        <div className="w-eyebrow">SAML Providers</div>
+                        <div className="w-grid-4">
+                            {IDP_TEMPLATES.filter((t) => t.protocol === "saml").map(
+                                (template) => (
+                                    <button
+                                        key={template.id}
+                                        type="button"
+                                        className="w-sso-tile"
+                                        onClick={() => selectTemplate(template)}
+                                    >
+                                        {renderTemplateLogo(template)}
+                                        <span className="w-secsub">{template.name}</span>
+                                    </button>
+                                ),
+                            )}
+                        </div>
+                    </div>
 
-                    <SectionTitle style={{ marginTop: "var(--space-10u)" }}>
-                        OIDC Providers
-                    </SectionTitle>
-                    <TemplateGrid>
-                        {IDP_TEMPLATES.filter((t) => t.protocol === "oidc").map(
-                            (template) => (
-                                <TemplateCard
-                                    key={template.id}
-                                    type="button"
-                                    $selected={false}
-                                    onClick={() => selectTemplate(template)}
-                                >
-                                    {template.logo ? (
-                                        <TemplateLogo
-                                            src={template.logo}
-                                            alt={template.name}
-                                        />
-                                    ) : (
-                                        <div
-                                            style={{
-                                                height: "var(--size-12u)",
-                                                width: "var(--size-12u)",
-                                                display: "flex",
-                                                alignItems: "center",
-                                                justifyContent: "center",
-                                                background:
-                                                    "var(--color-background)",
-                                                borderRadius:
-                                                    "var(--radius-2xs)",
-                                                padding: "var(--space-1u)",
-                                            }}
-                                        >
-                                            <Shield
-                                                size={18}
-                                                color="var(--color-muted)"
-                                            />
-                                        </div>
-                                    )}
-                                    <TemplateName>{template.name}</TemplateName>
-                                </TemplateCard>
-                            ),
-                        )}
-                    </TemplateGrid>
-                </>
+                    <div className="w-flex-col w-gap-3">
+                        <div className="w-eyebrow">OIDC Providers</div>
+                        <div className="w-grid-4">
+                            {IDP_TEMPLATES.filter((t) => t.protocol === "oidc").map(
+                                (template) => (
+                                    <button
+                                        key={template.id}
+                                        type="button"
+                                        className="w-sso-tile"
+                                        onClick={() => selectTemplate(template)}
+                                    >
+                                        {renderTemplateLogo(template)}
+                                        <span className="w-secsub">{template.name}</span>
+                                    </button>
+                                ),
+                            )}
+                        </div>
+                    </div>
+                </div>
             )}
 
             {/* Only show SP Details and Configuration when a template is selected */}
             {selectedTemplate && (
                 <>
                     {/* Service Provider Details */}
-                    <InfoBox style={{ marginTop: "var(--space-8u)" }}>
-                        <div
-                            style={{
-                                marginBottom: "var(--space-6u)",
-                                fontWeight: 500,
-                            }}
-                        >
-                            Service Provider Details
-                        </div>
-                        <div
-                            style={{
-                                display: "flex",
-                                flexDirection: "column",
-                                gap: "var(--space-4u)",
-                            }}
-                        >
+                    <div className="w-tile w-flex-col w-gap-3">
+                        <div className="w-sec">Service Provider Details</div>
+                        <div className="w-flex-col w-gap-2 w-full">
                             {protocol === "saml" ? (
                                 <>
-                                    <div
-                                        style={{
-                                            display: "flex",
-                                            alignItems: "center",
-                                            gap: "var(--space-4u)",
-                                        }}
-                                    >
-                                        <span
-                                            style={{
-                                                minWidth: "var(--size-40u)",
-                                                fontSize: "var(--font-size-sm)",
-                                            }}
-                                        >
-                                            ACS URL:
-                                        </span>
-                                        <code
-                                            style={{
-                                                flex: 1,
-                                                fontSize: "var(--font-size-xs)",
-                                            }}
-                                        >
-                                            {spAcsUrl}
-                                        </code>
-                                        <IconButton
+                                    <div className="w-token">
+                                        <span className="w-secsub w-none">ACS URL:</span>
+                                        <code>{spAcsUrl}</code>
+                                        <button
+                                            type="button"
+                                            className="w-btn w-btn--icon"
                                             onClick={() =>
                                                 copyToClipboard(spAcsUrl, "acs")
                                             }
@@ -1619,32 +1118,14 @@ const CreateSSOScreen = ({
                                             ) : (
                                                 <Copy size={12} />
                                             )}
-                                        </IconButton>
+                                        </button>
                                     </div>
-                                    <div
-                                        style={{
-                                            display: "flex",
-                                            alignItems: "center",
-                                            gap: "var(--space-4u)",
-                                        }}
-                                    >
-                                        <span
-                                            style={{
-                                                minWidth: "var(--size-40u)",
-                                                fontSize: "var(--font-size-sm)",
-                                            }}
-                                        >
-                                            Metadata:
-                                        </span>
-                                        <code
-                                            style={{
-                                                flex: 1,
-                                                fontSize: "var(--font-size-xs)",
-                                            }}
-                                        >
-                                            {spMetadataUrl}
-                                        </code>
-                                        <IconButton
+                                    <div className="w-token">
+                                        <span className="w-secsub w-none">Metadata:</span>
+                                        <code>{spMetadataUrl}</code>
+                                        <button
+                                            type="button"
+                                            className="w-btn w-btn--icon"
                                             onClick={() =>
                                                 copyToClipboard(
                                                     spMetadataUrl,
@@ -1657,34 +1138,16 @@ const CreateSSOScreen = ({
                                             ) : (
                                                 <Copy size={12} />
                                             )}
-                                        </IconButton>
+                                        </button>
                                     </div>
                                 </>
                             ) : (
-                                <div
-                                    style={{
-                                        display: "flex",
-                                        alignItems: "center",
-                                        gap: "var(--space-4u)",
-                                    }}
-                                >
-                                    <span
-                                        style={{
-                                            minWidth: "var(--size-40u)",
-                                            fontSize: "var(--font-size-sm)",
-                                        }}
-                                    >
-                                        Callback:
-                                    </span>
-                                    <code
-                                        style={{
-                                            flex: 1,
-                                            fontSize: "var(--font-size-xs)",
-                                        }}
-                                    >
-                                        {oidcCallbackUrl}
-                                    </code>
-                                    <IconButton
+                                <div className="w-token">
+                                    <span className="w-secsub w-none">Callback:</span>
+                                    <code>{oidcCallbackUrl}</code>
+                                    <button
+                                        type="button"
+                                        className="w-btn w-btn--icon"
                                         onClick={() =>
                                             copyToClipboard(
                                                 oidcCallbackUrl,
@@ -1697,61 +1160,38 @@ const CreateSSOScreen = ({
                                         ) : (
                                             <Copy size={12} />
                                         )}
-                                    </IconButton>
+                                    </button>
                                 </div>
                             )}
                         </div>
-                    </InfoBox>
+                    </div>
 
                     {/* Configuration Form */}
-                    <div style={{ marginTop: "var(--space-12u)" }}>
-                        <div
-                            style={{
-                                display: "flex",
-                                justifyContent: "space-between",
-                                alignItems: "center",
-                                marginBottom: "var(--space-6u)",
-                            }}
-                        >
-                            <SectionTitle style={{ margin: 0 }}>
+                    <div className="w-flex-col w-gap-3">
+                        <div className="w-flex w-justify-between w-items-center w-gap-3">
+                            <div className="w-eyebrow">
                                 {selectedTemplate
                                     ? `${selectedTemplate.name} Configuration`
                                     : "Configuration"}
-                            </SectionTitle>
-                            <div
-                                style={{
-                                    display: "flex",
-                                    alignItems: "center",
-                                    gap: "var(--space-6u)",
-                                }}
-                            >
+                            </div>
+                            <div className="w-flex w-items-center w-gap-3">
                                 {selectedTemplate &&
                                     selectedTemplate.docUrl && (
                                         <a
                                             href={selectedTemplate.docUrl}
                                             target="_blank"
                                             rel="noopener noreferrer"
-                                            style={{
-                                                fontSize: "var(--font-size-sm)",
-                                                color: "var(--color-primary)",
-                                                textDecoration: "none",
-                                                display: "flex",
-                                                gap: "var(--space-1u)",
-                                                alignItems: "center",
-                                            }}
+                                            className="w-link w-link--sm w-text-primary w-inline w-gap-1"
                                         >
                                             <ArrowSquareOut size={12} /> Docs
                                         </a>
                                     )}
                                 <Button
                                     type="button"
+                                    $size="sm"
                                     $outline
                                     onClick={testConnection}
                                     disabled={testing || !selectedTemplate}
-                                    style={{
-                                        padding:
-                                            "var(--space-4u) var(--space-8u)",
-                                    }}
                                 >
                                     {testing ? (
                                         <Spinner size={16} />
@@ -1760,17 +1200,13 @@ const CreateSSOScreen = ({
                                     )}
                                 </Button>
                                 <Button
+                                    $size="sm"
                                     type="submit"
                                     disabled={
                                         loading ||
                                         domains.length === 0 ||
                                         !selectedTemplate
                                     }
-                                    style={{
-                                        width: "auto",
-                                        padding:
-                                            "var(--space-4u) var(--space-8u)",
-                                    }}
                                 >
                                     {loading ? (
                                         <Spinner size={16} />
@@ -1803,79 +1239,26 @@ const CreateSSOScreen = ({
                                 };
                                 return (
                                     <div
-                                        style={{
-                                            padding: "var(--space-8u)",
-                                            marginBottom: "var(--space-8u)",
-                                            borderRadius: "var(--radius-md)",
-                                            background: testResult.success
-                                                ? "var(--color-success-background)"
-                                                : "var(--color-error-background)",
-                                            border: `var(--border-width-thin) solid ${testResult.success ? "var(--color-success)" : "var(--color-error)"}`,
-                                        }}
+                                        className={`w-banner ${testResult.success ? "w-banner--success" : "w-banner--error"} w-flex-col w-gap-3`}
                                     >
-                                        <div
-                                            style={{
-                                                fontWeight: 600,
-                                                marginBottom: "var(--space-6u)",
-                                                fontSize: "var(--font-size-lg)",
-                                                color: testResult.success
-                                                    ? "var(--color-success)"
-                                                    : "var(--color-error)",
-                                            }}
-                                        >
+                                        <div className={`w-sec ${testResult.success ? "w-text-success" : "w-text-error"}`}>
                                             {testResult.success
                                                 ? "✓ All checks passed"
                                                 : "✗ Some checks failed"}
                                         </div>
-                                        <div
-                                            style={{
-                                                display: "flex",
-                                                flexDirection: "column",
-                                                gap: "var(--space-4u)",
-                                            }}
-                                        >
+                                        <div className="w-flex-col w-gap-2 w-full">
                                             {Object.entries(
                                                 testResult.checks,
                                             ).map(([key, value]) => (
                                                 <div
                                                     key={key}
-                                                    style={{
-                                                        display: "flex",
-                                                        alignItems:
-                                                            "flex-start",
-                                                        gap: "var(--space-4u)",
-                                                        padding:
-                                                            "var(--space-4u) var(--space-6u)",
-                                                        background:
-                                                            "var(--color-background)",
-                                                        borderRadius:
-                                                            "var(--radius-xs)",
-                                                        border: "var(--border-width-thin) solid var(--color-border)",
-                                                    }}
+                                                    className="w-flex w-items-start w-gap-2 w-sso-check"
                                                 >
-                                                    <span
-                                                        style={{
-                                                            color: value
-                                                                ? "var(--color-success)"
-                                                                : "var(--color-error)",
-                                                            fontWeight: 600,
-                                                            fontSize:
-                                                                "var(--font-size-lg)",
-                                                            minWidth:
-                                                                "var(--size-8u)",
-                                                        }}
-                                                    >
+                                                    <span className={`w-sso-check-mark ${value ? "w-text-success" : "w-text-error"}`}>
                                                         {value ? "✓" : "✗"}
                                                     </span>
-                                                    <div style={{ flex: 1 }}>
-                                                        <div
-                                                            style={{
-                                                                fontWeight: 500,
-                                                                color: "var(--color-foreground)",
-                                                                fontSize:
-                                                                    "var(--font-size-md)",
-                                                            }}
-                                                        >
+                                                    <div className="w-grow w-flex-col w-gap-1">
+                                                        <div className="w-sec">
                                                             {labelMap[key] ||
                                                                 key
                                                                     .replace(
@@ -1891,15 +1274,7 @@ const CreateSSOScreen = ({
                                                         {testResult.errors?.[
                                                             key
                                                         ] && (
-                                                            <div
-                                                                style={{
-                                                                    color: "var(--color-error)",
-                                                                    fontSize:
-                                                                        "var(--font-size-sm)",
-                                                                    marginTop:
-                                                                        "var(--space-2u)",
-                                                                }}
-                                                            >
+                                                            <div className="w-secsub w-text-error">
                                                                 {
                                                                     testResult
                                                                         .errors[
@@ -1917,18 +1292,14 @@ const CreateSSOScreen = ({
                             })()}
 
                         {/* Two-column grid for form fields */}
-                        <div
-                            style={{
-                                display: "grid",
-                                gridTemplateColumns: "1fr 1fr",
-                                gap: "var(--space-8u)",
-                            }}
-                        >
+                        <div className="w-grid-2">
+
                             {/* Only show Protocol dropdown when no template selected */}
                             {!selectedTemplate && (
                                 <FormGroup>
                                     <Label>Protocol *</Label>
-                                    <Select
+                                    <select
+                                        className="w-input"
                                         value={protocol}
                                         onChange={(e) =>
                                             setProtocol(
@@ -1942,28 +1313,26 @@ const CreateSSOScreen = ({
                                         <option value="oidc">
                                             OpenID Connect (OIDC)
                                         </option>
-                                    </Select>
+                                    </select>
                                 </FormGroup>
                             )}
 
-                            <FormGroup style={{ gridColumn: "1 / -1" }}>
+                            <FormGroup className="w-col-full">
                                 <Label>Domain *</Label>
                                 {domainsLoading ? (
-                                    <div
-                                        style={{
-                                            padding: "var(--space-5u)",
-                                            color: "var(--color-muted)",
-                                        }}
-                                    >
+                                    <div className="w-secsub">
                                         Loading domains...
                                     </div>
                                 ) : domains.length === 0 ? (
-                                    <InfoBox style={{ marginBottom: 0 }}>
-                                        No verified domains found. Please add
-                                        and verify a domain first.
-                                    </InfoBox>
+                                    <div className="w-banner w-banner--warn">
+                                        <span className="w-banner-txt">
+                                            No verified domains found. Please add
+                                            and verify a domain first.
+                                        </span>
+                                    </div>
                                 ) : (
-                                    <Select
+                                    <select
+                                        className="w-input"
                                         value={formData.domain_id}
                                         onChange={(e) =>
                                             setFormData({
@@ -1984,7 +1353,7 @@ const CreateSSOScreen = ({
                                                 {domain.fqdn}
                                             </option>
                                         ))}
-                                    </Select>
+                                    </select>
                                 )}
                             </FormGroup>
 
@@ -2021,9 +1390,10 @@ const CreateSSOScreen = ({
                                             required
                                         />
                                     </FormGroup>
-                                    <FormGroup style={{ gridColumn: "1 / -1" }}>
+                                    <FormGroup className="w-col-full">
                                         <Label>X.509 Certificate *</Label>
-                                        <Textarea
+                                        <Input
+                                            as="textarea"
                                             value={formData.idp_certificate}
                                             onChange={(e) =>
                                                 setFormData({
@@ -2034,6 +1404,7 @@ const CreateSSOScreen = ({
                                             }
                                             placeholder="-----BEGIN CERTIFICATE-----..."
                                             required
+                                            className="w-input--area w-input--mono"
                                         />
                                     </FormGroup>
                                 </>
@@ -2111,31 +1482,13 @@ const CreateSSOScreen = ({
                             )}
 
                             {/* JIT Provisioning Toggle */}
-                            <FormGroup style={{ gridColumn: "1 / -1" }}>
-                                <div
-                                    style={{
-                                        display: "flex",
-                                        alignItems: "center",
-                                        justifyContent: "space-between",
-                                    }}
-                                >
-                                    <div>
-                                        <span
-                                            style={{
-                                                fontWeight: 400,
-                                                color: "var(--color-foreground)",
-                                                display: "block",
-                                            }}
-                                        >
+                            <FormGroup className="w-col-full">
+                                <div className="w-flex w-items-center w-justify-between w-gap-4">
+                                    <div className="w-flex-col w-gap-1">
+                                        <span className="w-sec">
                                             Enable JIT Provisioning
                                         </span>
-                                        <div
-                                            style={{
-                                                fontSize: "var(--font-size-sm)",
-                                                color: "var(--color-muted)",
-                                                marginTop: "var(--space-2u)",
-                                            }}
-                                        >
+                                        <div className="w-secsub">
                                             When enabled, new users are
                                             automatically created on their first
                                             SSO login. When disabled, only
@@ -2157,69 +1510,27 @@ const CreateSSOScreen = ({
                             </FormGroup>
 
                             {/* Advanced Options - Attribute Mapping */}
-                            <div
-                                style={{
-                                    gridColumn: "1 / -1",
-                                    marginTop: "var(--space-4u)",
-                                    marginBottom: "var(--space-12u)",
-                                }}
-                            >
+                            <div className="w-col-full w-flex-col w-gap-4">
                                 <div
+                                    className="w-inline w-gap-2 w-text-primary w-disclosure"
                                     onClick={() =>
                                         setShowAdvanced(!showAdvanced)
                                     }
-                                    style={{
-                                        display: "flex",
-                                        alignItems: "center",
-                                        gap: "var(--space-4u)",
-                                        cursor: "pointer",
-                                        color: "var(--color-primary)",
-                                        fontSize: "var(--font-size-md)",
-                                        fontWeight: 500,
-                                        marginBottom: showAdvanced
-                                            ? "var(--space-8u)"
-                                            : "0",
-                                    }}
                                 >
-                                    <span
-                                        style={{
-                                            fontSize: "var(--font-size-2xs)",
-                                        }}
-                                    >
+                                    <span className="w-disclosure-caret">
                                         {showAdvanced ? "▼" : "▶"}
                                     </span>
                                     Advanced Options (Attribute Mapping)
                                 </div>
 
                                 {showAdvanced && (
-                                    <div
-                                        style={{
-                                            padding: "var(--space-8u)",
-                                            background:
-                                                "var(--color-background-subtle)",
-                                            borderRadius: "var(--radius-md)",
-                                            border: "var(--border-width-thin) solid var(--color-border)",
-                                        }}
-                                    >
-                                        <div
-                                            style={{
-                                                fontSize: "var(--font-size-sm)",
-                                                color: "var(--color-muted)",
-                                                marginBottom: "var(--space-6u)",
-                                            }}
-                                        >
+                                    <div className="w-tile w-flex-col w-gap-3">
+                                        <div className="w-secsub">
                                             Map IdP attribute names to Wacht
                                             user fields. Leave empty to use
                                             default attribute names.
                                         </div>
-                                        <div
-                                            style={{
-                                                display: "grid",
-                                                gridTemplateColumns:
-                                                    "1fr 1fr 1fr",
-                                                gap: "var(--space-6u)",
-                                            }}
-                                        >
+                                        <div className="w-grid-3">
                                             <FormGroup>
                                                 <Label>
                                                     First Name Attribute

@@ -1,7 +1,6 @@
 import { useState, useEffect } from "react";
-import styled, { keyframes } from "styled-components";
+import { PencilSimple } from "@phosphor-icons/react";
 import { useSignUp } from "../../hooks/use-signup";
-import { CircleNotch, EnvelopeSimple, DeviceMobile, PencilSimple } from "@phosphor-icons/react";
 import {
     useSignInWithStrategy,
     type OAuthProvider,
@@ -11,268 +10,15 @@ import { useNavigation } from "../../hooks/use-navigation";
 import { useSession } from "../../hooks/use-session";
 import { DefaultStylesProvider } from "../utility/root";
 import { OTPInput } from "@/components/utility/otp-input";
-
 import { SocialAuthButtons } from "./social-buttons";
 import { NavigationLink } from "../utility/navigation";
-import { Input } from "../utility/input";
+import { NoPrefillInput } from "../utility/no-prefill-input";
 import { PhoneNumberInput } from "../utility/phone";
 import type { SignUpParams } from "@/types";
 import type { DeploymentSocialConnection } from "@/types";
-import { AuthFormImage } from "./auth-image";
+import { AuthCard, AuthHead, Spin, AuthCardLoader } from "./auth-card";
 import { getStoredDevSession } from "@/utils/dev-session";
 import { sanitizeRedirectUri } from "@/utils/redirect-uri";
-import { standaloneAuthShell } from "./auth-shell";
-
-const spin = keyframes`
-  from {
-  transform: rotate(0deg);
-}
-  to {
-  transform: rotate(360deg);
-}
-`;
-
-const ButtonSpinner = styled(CircleNotch)`
-    animation: ${spin} 1s linear infinite;
-`;
-
-const Container = styled.div`
-    ${standaloneAuthShell}
-`;
-
-const LoadingContainer = styled.div`
-    display: flex;
-    justify-content: center;
-    align-items: center;
-    min-height: 200px;
-
-    svg {
-        animation: ${spin} 1s linear infinite;
-        color: var(--color-primary);
-    }
-`;
-
-const Header = styled.div`
-    text-align: center;
-    margin-bottom: var(--space-8u);
-    position: relative;
-`;
-
-const Title = styled.h1`
-    font-size: var(--font-size-xl);
-    font-weight: 400;
-    color: var(--color-card-foreground);
-    margin-bottom: var(--space-2u);
-    margin-top: 0;
-`;
-
-const Subtitle = styled.p`
-    color: var(--color-secondary-text);
-    font-size: var(--font-size-md);
-    margin: 0;
-`;
-
-const Divider = styled.div`
-    position: relative;
-    text-align: center;
-    margin: var(--space-8u) 0;
-
-    &::before {
-        content: "";
-        position: absolute;
-        top: 50%;
-        left: 0;
-        right: 0;
-        height: var(--border-width-thin);
-        background: var(--color-border);
-    }
-`;
-
-const DividerText = styled.span`
-    position: relative;
-    background: var(--color-card);
-    padding: 0 var(--space-4u);
-    color: var(--color-secondary-text);
-    font-size: var(--font-size-2xs);
-    font-weight: 600;
-    text-transform: uppercase;
-    letter-spacing: 0.1em;
-`;
-
-const Form = styled.form`
-    display: flex;
-    flex-direction: column;
-    gap: var(--space-6u);
-`;
-
-const NameFields = styled.div<{ $isBothEnabled: boolean }>`
-    display: grid;
-    grid-template-columns: ${(props) =>
-        props.$isBothEnabled ? "1fr 1fr" : "1fr"};
-    gap: var(--space-4u);
-`;
-
-const FormGroup = styled.div`
-    display: flex;
-    flex-direction: column;
-    gap: var(--space-2u);
-`;
-
-const Label = styled.label`
-    font-size: var(--font-size-md);
-    text-align: left;
-    font-weight: 400;
-    color: var(--color-card-foreground);
-`;
-
-const PasswordGroup = styled.div`
-    position: relative;
-`;
-
-const ErrorMessage = styled.p`
-    font-size: var(--font-size-xs);
-    color: var(--color-error);
-    margin: 0;
-    margin-top: var(--space-1u);
-`;
-
-const SubmitButton = styled.button`
-    width: 100%;
-    padding: 0 var(--space-8u);
-    background: var(--color-primary);
-    color: var(--color-primary-foreground);
-    border: var(--border-width-thin) solid var(--color-primary);
-    border-radius: var(--radius-md);
-    font-weight: 400;
-    font-size: var(--font-size-md);
-    cursor: pointer;
-    transition: background-color 0.2s, border-color 0.2s;
-    min-height: var(--size-18u);
-    height: var(--size-18u);
-    display: inline-flex;
-    align-items: center;
-    justify-content: center;
-    line-height: 1;
-
-    &:hover:not(:disabled) {
-        background: var(--color-primary-hover);
-        border-color: var(--color-primary-hover);
-    }
-
-    &:disabled {
-        opacity: 0.7;
-        cursor: not-allowed;
-    }
-`;
-
-const Footer = styled.div`
-    margin-top: var(--space-8u);
-    padding-top: var(--space-6u);
-    border-top: var(--border-width-thin) solid var(--color-border);
-    text-align: center;
-    font-size: var(--font-size-sm);
-    color: var(--color-secondary-text);
-`;
-
-const Link = styled.span`
-    color: var(--color-primary);
-    text-decoration: none;
-    font-weight: 400;
-    transition: color 0.2s;
-
-    &:hover {
-        color: var(--color-primary-hover);
-    }
-`;
-
-const RestrictedMessage = styled.div`
-    text-align: center;
-    padding: var(--space-10u);
-    margin-bottom: var(--space-8u);
-    background: transparent;
-    border: var(--border-width-thin) solid var(--color-border);
-    border-radius: var(--radius-md);
-`;
-
-const RestrictedText = styled.p`
-    font-size: var(--font-size-xl);
-    color: var(--color-secondary-text);
-    margin: 0 0 var(--space-4u) 0;
-    line-height: 1.5;
-`;
-
-const RestrictedFooter = styled.div`
-    text-align: center;
-    margin-top: var(--space-8u);
-`;
-
-const RestrictedFooterText = styled.p`
-    font-size: var(--font-size-md);
-    color: var(--color-muted);
-    margin: 0;
-`;
-
-const RestrictedLink = styled.a`
-    color: var(--color-primary);
-    text-decoration: none;
-    cursor: pointer;
-`;
-
-const RequiredAsterisk = styled.span`
-    color: var(--color-error);
-    margin-left: var(--space-1u);
-`;
-
-const OtpIconCircle = styled.div`
-    width: var(--size-24u);
-    height: var(--size-24u);
-    border-radius: var(--radius-full);
-    border: var(--border-width-thin) solid var(--color-border);
-    background: var(--color-accent);
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    margin: 0 auto var(--space-6u);
-
-    svg {
-        width: var(--size-12u);
-        height: var(--size-12u);
-        color: var(--color-card-foreground);
-    }
-`;
-
-const OtpAddressRow = styled.div`
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    gap: var(--space-2u);
-    margin-top: var(--space-3u);
-`;
-
-const OtpAddressBadge = styled.button`
-    display: inline-flex;
-    align-items: center;
-    gap: var(--space-2u);
-    padding: var(--space-2u) var(--space-4u);
-    border: var(--border-width-thin) solid var(--color-border);
-    border-radius: var(--radius-full);
-    font-size: var(--font-size-sm);
-    color: var(--color-secondary-text);
-    background: transparent;
-    cursor: pointer;
-    transition: border-color 0.15s ease, color 0.15s ease;
-
-    svg {
-        width: 12px;
-        height: 12px;
-        flex-shrink: 0;
-    }
-
-    &:hover {
-        border-color: var(--color-border-hover);
-        color: var(--color-card-foreground);
-    }
-`;
 
 export function SignUpForm() {
     const { loading, signUp, signupAttempt, discardSignupAttempt } =
@@ -331,10 +77,6 @@ export function SignUpForm() {
             if (!redirectUri) {
                 redirectUri =
                     deployment?.ui_settings?.after_signin_redirect_url || null;
-            }
-
-            if (!redirectUri && deployment?.frontend_host) {
-                redirectUri = `https://${deployment.frontend_host}`;
             }
 
             if (!redirectUri && deployment?.frontend_host) {
@@ -531,8 +273,10 @@ export function SignUpForm() {
         try {
             const searchParams = new URLSearchParams(window.location.search);
             const redirectUri =
-                sanitizeRedirectUri(deployment, searchParams.get("redirect_uri")) ||
-                undefined;
+                sanitizeRedirectUri(
+                    deployment,
+                    searchParams.get("redirect_uri"),
+                ) || undefined;
 
             const { data } = await oauthSignIn.create({
                 provider: connection.provider as OAuthProvider,
@@ -634,393 +378,403 @@ export function SignUpForm() {
         setOtpSent(true);
     }, [signupAttempt, signUp, otpSent, deployment, session, navigate]);
 
-    if (sessionLoading) {
-        return (
-            <DefaultStylesProvider>
-                <Container>
-                    <AuthFormImage />
-                    <LoadingContainer>
-                        <CircleNotch size={32} />
-                    </LoadingContainer>
-                </Container>
-            </DefaultStylesProvider>
-        );
+    if (sessionLoading || isRedirecting) {
+        return <AuthCardLoader />;
     }
 
-    if (isRedirecting) {
-        return (
-            <DefaultStylesProvider>
-                <Container>
-                    <AuthFormImage />
-                    <LoadingContainer>
-                        <CircleNotch size={32} />
-                    </LoadingContainer>
-                </Container>
-            </DefaultStylesProvider>
-        );
-    }
+    const appName = deployment?.ui_settings?.app_name || "App";
 
-    // Show restricted message if signup is restricted
+    // Sign-up restricted
     if (isSignupRestricted) {
         return (
             <DefaultStylesProvider>
-                <Container>
-                    <AuthFormImage />
-
-                    <Header>
-                        <Title>Sign up Restricted!</Title>
-                    </Header>
-
-                    <RestrictedMessage>
-                        <RestrictedText>
-                            New account registration is currently restricted.
-                            Please check back later.
-                        </RestrictedText>
-                    </RestrictedMessage>
-
-                    <RestrictedFooter>
-                        <RestrictedFooterText>
+                <AuthCard
+                    footer={
+                        <span className="w-auth-foot">
                             Need assistance?{" "}
-                            <RestrictedLink
-                                href={
+                            <NavigationLink
+                                className="w-link"
+                                to={
                                     deployment?.ui_settings?.sign_in_page_url
                                         ? `${deployment.ui_settings.sign_in_page_url}?help=true`
-                                        : "/contact"
+                                        : "#"
                                 }
                             >
                                 Get help
-                            </RestrictedLink>
-                        </RestrictedFooterText>
-                    </RestrictedFooter>
-                </Container>
+                            </NavigationLink>
+                        </span>
+                    }
+                >
+                    <AuthHead
+                        title="Sign-up restricted"
+                        sub="This app isn't open for public sign-up right now."
+                    />
+                    <div className="w-banner w-banner--warn">
+                        <span className="w-banner-txt">
+                            New account registration is currently restricted.
+                            Please check back later or contact your
+                            administrator for an invitation.
+                        </span>
+                    </div>
+                </AuthCard>
             </DefaultStylesProvider>
         );
     }
 
+    // OTP verification step
+    if (otpSent) {
+        const isPhone = signupAttempt?.current_step === "verify_phone";
+        return (
+            <DefaultStylesProvider>
+                <AuthCard
+                    footer={
+                        <span className="w-auth-foot">
+                            Having trouble?{" "}
+                            <NavigationLink
+                                className="w-link"
+                                to={
+                                    deployment?.ui_settings?.support_page_url ||
+                                    "#"
+                                }
+                            >
+                                Get help
+                            </NavigationLink>
+                        </span>
+                    }
+                >
+                    <AuthHead
+                        title={isPhone ? "Check your phone" : "Enter the code"}
+                        sub={
+                            isPhone
+                                ? "We sent a verification code via SMS."
+                                : "We sent a 6-digit code to your email."
+                        }
+                    >
+                        <button
+                            type="button"
+                            className="w-addr-badge"
+                            onClick={resetFormData}
+                        >
+                            <PencilSimple weight="bold" />
+                            {isPhone
+                                ? `+${formData.phone_number}`
+                                : formData.email}
+                        </button>
+                    </AuthHead>
+
+                    <form
+                        onSubmit={completeVerification}
+                        noValidate
+                        style={{
+                            display: "flex",
+                            flexDirection: "column",
+                            gap: 20,
+                            alignItems: "center",
+                        }}
+                    >
+                        <OTPInput
+                            onComplete={async (code) => {
+                                setOtpCode(code);
+                            }}
+                            onResend={async () => {
+                                const strategy = isPhone
+                                    ? "phone_otp"
+                                    : "email_otp";
+                                await signUp.prepareVerification({ strategy });
+                            }}
+                            error={errors.otp}
+                            isSubmitting={isSubmitting}
+                        />
+                        <button
+                            type="submit"
+                            className="w-btn w-btn--primary w-btn--block"
+                            disabled={isSubmitting || loading || !otpCode}
+                        >
+                            {isSubmitting && otpCode ? (
+                                <Spin size={15} onAccent />
+                            ) : (
+                                `Continue to ${appName}`
+                            )}
+                        </button>
+                    </form>
+                </AuthCard>
+            </DefaultStylesProvider>
+        );
+    }
+
+    // Main sign-up form
     return (
         <DefaultStylesProvider>
-            <Container>
-                {otpSent ? (
+            <AuthCard
+                footer={
+                    <span className="w-auth-foot">
+                        Already have an account?{" "}
+                        <NavigationLink
+                            className="w-link"
+                            to={`${deployment?.ui_settings?.sign_in_page_url ?? ""}${window.location.search}`}
+                        >
+                            Sign in
+                        </NavigationLink>
+                    </span>
+                }
+            >
+                <AuthHead
+                    title="Create your account"
+                    sub={
+                        inviteData?.valid
+                            ? "You've been invited — complete your registration below."
+                            : "Get started in a few seconds."
+                    }
+                />
+
+                {enabledSocialProviders.length > 0 && (
                     <>
-                        <AuthFormImage />
-                        <Header>
-                            {!deployment?.ui_settings?.logo_image_url && (
-                                <OtpIconCircle>
-                                    {signupAttempt?.current_step === "verify_phone" ? (
-                                        <DeviceMobile weight="light" />
-                                    ) : (
-                                        <EnvelopeSimple weight="light" />
-                                    )}
-                                </OtpIconCircle>
-                            )}
-                            <Title>
-                                {signupAttempt?.current_step === "verify_phone"
-                                    ? "Check your phone"
-                                    : "Enter the code"}
-                            </Title>
-                            <Subtitle>
-                                {signupAttempt?.current_step === "verify_phone"
-                                    ? "We sent a verification code via SMS."
-                                    : "We sent a 6-digit code to your email."}
-                            </Subtitle>
-                            <OtpAddressRow>
-                                <OtpAddressBadge
-                                    type="button"
-                                    onClick={resetFormData}
-                                >
-                                    <PencilSimple weight="light" />
-                                    {signupAttempt?.current_step === "verify_phone"
-                                        ? `+${formData.phone_number}`
-                                        : formData.email}
-                                </OtpAddressBadge>
-                            </OtpAddressRow>
-                        </Header>
-                        <Form onSubmit={completeVerification} noValidate>
-                            <OTPInput
-                                onComplete={async (code) => {
-                                    setOtpCode(code);
-                                }}
-                                onResend={async () => {
-                                    const strategy =
-                                        signupAttempt?.current_step === "verify_email"
-                                            ? "email_otp"
-                                            : "phone_otp";
-                                    await signUp.prepareVerification({ strategy });
-                                }}
-                                error={errors.otp}
-                                isSubmitting={isSubmitting}
-                            />
-                            <SubmitButton
-                                type="submit"
-                                disabled={isSubmitting || loading || !otpCode}
-                            >
-                                {isSubmitting && otpCode
-                                    ? <ButtonSpinner size={16} />
-                                    : `Continue to ${deployment?.ui_settings?.app_name}`}
-                            </SubmitButton>
-                        </Form>
-                        <Footer>
-                            Having trouble?{" "}
-                            <Link>
-                                <NavigationLink to={deployment!.ui_settings.support_page_url}>
-                                    Get help
-                                </NavigationLink>
-                            </Link>
-                        </Footer>
-                    </>
-                ) : (
-                    <>
-                        <AuthFormImage />
-
-                        <Header>
-                            <Title>Create your account</Title>
-                            <Subtitle>
-                                {inviteData?.valid
-                                    ? "You've been invited! Complete your registration below."
-                                    : "Welcome! Please fill in the details to get started."}
-                            </Subtitle>
-                        </Header>
-
-                        {enabledSocialProviders.length > 0 && (
-                            <>
-                                <SocialAuthButtons
-                                    connections={enabledSocialProviders}
-                                    callback={handleSocialSignIn}
-                                />
-
-                                <Divider>
-                                    <DividerText>or</DividerText>
-                                </Divider>
-                            </>
-                        )}
-
-                        <Form onSubmit={handleSubmit} noValidate>
-                            {(authSettings?.first_name?.enabled ||
-                                authSettings?.last_name?.enabled) && (
-                                <NameFields $isBothEnabled={isBothNamesEnabled}>
-                                    {authSettings?.first_name?.enabled && (
-                                        <FormGroup>
-                                            <Label htmlFor="first_name">
-                                                First name
-                                                {authSettings?.first_name
-                                                    ?.required && (
-                                                    <RequiredAsterisk>
-                                                        *
-                                                    </RequiredAsterisk>
-                                                )}
-                                            </Label>
-                                            <Input
-                                                type="text"
-                                                id="first_name"
-                                                name="first_name"
-                                                required
-                                                minLength={3}
-                                                maxLength={30}
-                                                value={formData.first_name}
-                                                onChange={handleInputChange}
-                                                placeholder="First name"
-                                                aria-invalid={
-                                                    !!errors.first_name
-                                                }
-                                                pattern="^[a-zA-Z]{3,30}$"
-                                            />
-                                            {errors.first_name && (
-                                                <ErrorMessage>
-                                                    {errors.first_name}
-                                                </ErrorMessage>
-                                            )}
-                                        </FormGroup>
-                                    )}
-                                    {authSettings?.last_name?.enabled && (
-                                        <FormGroup>
-                                            <Label htmlFor="last_name">
-                                                Last name
-                                                {authSettings?.last_name
-                                                    ?.required && (
-                                                    <RequiredAsterisk>
-                                                        *
-                                                    </RequiredAsterisk>
-                                                )}
-                                            </Label>
-                                            <Input
-                                                type="text"
-                                                id="last_name"
-                                                name="last_name"
-                                                required
-                                                minLength={3}
-                                                maxLength={30}
-                                                value={formData.last_name}
-                                                onChange={handleInputChange}
-                                                placeholder="Last name"
-                                                aria-invalid={
-                                                    !!errors.last_name
-                                                }
-                                                pattern="^[a-zA-Z]{3,30}$"
-                                            />
-                                            {errors.last_name && (
-                                                <ErrorMessage>
-                                                    {errors.last_name}
-                                                </ErrorMessage>
-                                            )}
-                                        </FormGroup>
-                                    )}
-                                </NameFields>
-                            )}
-
-                            {authSettings?.username.enabled && (
-                                <FormGroup>
-                                    <Label htmlFor="username">
-                                        Username
-                                        {authSettings.username.required && (
-                                            <RequiredAsterisk>
-                                                *
-                                            </RequiredAsterisk>
-                                        )}
-                                    </Label>
-                                    <Input
-                                        type="text"
-                                        id="username"
-                                        name="username"
-                                        minLength={3}
-                                        maxLength={20}
-                                        value={formData.username}
-                                        onChange={handleInputChange}
-                                        placeholder="Choose a username"
-                                        aria-invalid={!!errors.username}
-                                        required
-                                        pattern="^[a-zA-Z][a-zA-Z0-9_.]{2,29}$"
-                                    />
-
-                                    {errors.username && (
-                                        <ErrorMessage>
-                                            {errors.username}
-                                        </ErrorMessage>
-                                    )}
-                                </FormGroup>
-                            )}
-
-                            {authSettings?.email_address.enabled && (
-                                <FormGroup>
-                                    <Label htmlFor="email">
-                                        Email address
-                                        {authSettings.email_address
-                                            .required && (
-                                            <RequiredAsterisk>
-                                                *
-                                            </RequiredAsterisk>
-                                        )}
-                                    </Label>
-                                    <Input
-                                        type="email"
-                                        id="email"
-                                        name="email"
-                                        maxLength={320}
-                                        value={formData.email}
-                                        onChange={handleInputChange}
-                                        placeholder="Enter your email address"
-                                        aria-invalid={!!errors.email}
-                                        required
-                                        readOnly={
-                                            inviteData?.valid &&
-                                            !!inviteData?.email
-                                        }
-                                        pattern="^[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}$"
-                                    />
-                                    {errors.email && (
-                                        <ErrorMessage>
-                                            {errors.email}
-                                        </ErrorMessage>
-                                    )}
-                                </FormGroup>
-                            )}
-
-                            {authSettings?.phone_number.enabled && (
-                                <FormGroup>
-                                    <Label htmlFor="phone_number">
-                                        Phone number
-                                        {authSettings.phone_number.required && (
-                                            <RequiredAsterisk>
-                                                *
-                                            </RequiredAsterisk>
-                                        )}
-                                    </Label>
-
-                                    <PhoneNumberInput
-                                        value={formData.phone_number}
-                                        onChange={handleInputChange}
-                                        error={errors.phone_number}
-                                        countryCode={countryCode}
-                                        setCountryCode={setCountryCode}
-                                    />
-
-                                    {errors.phone_number && (
-                                        <ErrorMessage>
-                                            {errors.phone_number}
-                                        </ErrorMessage>
-                                    )}
-                                </FormGroup>
-                            )}
-
-                            {authSettings?.password.enabled && (
-                                <FormGroup>
-                                    <Label htmlFor="password">
-                                        Password
-                                        {authSettings.password.required && (
-                                            <RequiredAsterisk>
-                                                *
-                                            </RequiredAsterisk>
-                                        )}
-                                    </Label>
-                                    <PasswordGroup>
-                                        <Input
-                                            type="password"
-                                            id="password"
-                                            name="password"
-                                            value={formData.password}
-                                            onChange={handleInputChange}
-                                            placeholder="Enter your password"
-                                            aria-invalid={!!errors.password}
-                                            required
-                                            minLength={8}
-                                            maxLength={128}
-                                            pattern="^(?=.*[a-z])(?=.*[A-Z])(?=.*\d)(?=.*[@$!%*?&])[A-Za-z\d@$!%*?&]{8,125}$"
-                                        />
-                                    </PasswordGroup>
-                                    {errors.password && (
-                                        <ErrorMessage>
-                                            {errors.password}
-                                        </ErrorMessage>
-                                    )}
-                                </FormGroup>
-                            )}
-
-                            {errors.submit && (
-                                <ErrorMessage>{errors.submit}</ErrorMessage>
-                            )}
-
-                            <SubmitButton
-                                type="submit"
-                                disabled={isSubmitting || loading}
-                            >
-                                {isSubmitting
-                                    ? <ButtonSpinner size={16} />
-                                    : "Continue"}
-                            </SubmitButton>
-                        </Form>
-
-                        <Footer>
-                            Already have an account?{" "}
-                            <Link>
-                                <NavigationLink
-                                    to={`${deployment!.ui_settings?.sign_in_page_url}${window.location.search}`}
-                                >
-                                    Sign in
-                                </NavigationLink>
-                            </Link>
-                        </Footer>
+                        <SocialAuthButtons
+                            connections={enabledSocialProviders}
+                            callback={handleSocialSignIn}
+                        />
+                        <div className="w-or">
+                            <span>OR</span>
+                        </div>
                     </>
                 )}
-            </Container>
+
+                <form
+                    onSubmit={handleSubmit}
+                    noValidate
+                    style={{
+                        display: "flex",
+                        flexDirection: "column",
+                        gap: 13,
+                    }}
+                >
+                    {(authSettings?.first_name?.enabled ||
+                        authSettings?.last_name?.enabled) && (
+                        <div className={isBothNamesEnabled ? "w-grid-2" : ""}>
+                            {authSettings?.first_name?.enabled && (
+                                <label className="w-field">
+                                    <span className="w-label">
+                                        First name
+                                        {authSettings?.first_name?.required && (
+                                            <span className="w-req">*</span>
+                                        )}
+                                    </span>
+                                    <NoPrefillInput
+                                        className="w-input"
+                                        type="text"
+                                        id="first_name"
+                                        name="first_name"
+                                        autoComplete="given-name"
+                                        required
+                                        minLength={3}
+                                        maxLength={30}
+                                        value={formData.first_name}
+                                        onChange={handleInputChange}
+                                        placeholder="Jane"
+                                        aria-invalid={!!errors.first_name}
+                                        pattern="^[a-zA-Z]{3,30}$"
+                                    />
+                                    {errors.first_name && (
+                                        <span className="w-input-err">
+                                            {errors.first_name}
+                                        </span>
+                                    )}
+                                </label>
+                            )}
+                            {authSettings?.last_name?.enabled && (
+                                <label className="w-field">
+                                    <span className="w-label">
+                                        Last name
+                                        {authSettings?.last_name?.required && (
+                                            <span className="w-req">*</span>
+                                        )}
+                                    </span>
+                                    <NoPrefillInput
+                                        className="w-input"
+                                        type="text"
+                                        id="last_name"
+                                        name="last_name"
+                                        autoComplete="family-name"
+                                        required
+                                        minLength={3}
+                                        maxLength={30}
+                                        value={formData.last_name}
+                                        onChange={handleInputChange}
+                                        placeholder="Doe"
+                                        aria-invalid={!!errors.last_name}
+                                        pattern="^[a-zA-Z]{3,30}$"
+                                    />
+                                    {errors.last_name && (
+                                        <span className="w-input-err">
+                                            {errors.last_name}
+                                        </span>
+                                    )}
+                                </label>
+                            )}
+                        </div>
+                    )}
+
+                    {authSettings?.username.enabled && (
+                        <label className="w-field">
+                            <span className="w-label">
+                                Username
+                                {authSettings.username.required && (
+                                    <span className="w-req">*</span>
+                                )}
+                            </span>
+                            <NoPrefillInput
+                                className="w-input"
+                                type="text"
+                                id="username"
+                                name="username"
+                                autoComplete="username"
+                                minLength={3}
+                                maxLength={20}
+                                value={formData.username}
+                                onChange={handleInputChange}
+                                placeholder="yourname"
+                                aria-invalid={!!errors.username}
+                                required
+                                pattern="^[a-zA-Z][a-zA-Z0-9_.]{2,29}$"
+                            />
+                            {errors.username && (
+                                <span className="w-input-err">
+                                    {errors.username}
+                                </span>
+                            )}
+                        </label>
+                    )}
+
+                    {authSettings?.email_address.enabled && (
+                        <label className="w-field">
+                            <span className="w-label">
+                                Email address
+                                {authSettings.email_address.required && (
+                                    <span className="w-req">*</span>
+                                )}
+                            </span>
+                            <NoPrefillInput
+                                className="w-input"
+                                type="email"
+                                id="email"
+                                name="email"
+                                autoComplete="email"
+                                maxLength={320}
+                                value={formData.email}
+                                onChange={handleInputChange}
+                                placeholder="you@company.com"
+                                aria-invalid={!!errors.email}
+                                required
+                                readOnly={
+                                    inviteData?.valid && !!inviteData?.email
+                                }
+                                pattern="^[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}$"
+                            />
+                            {errors.email && (
+                                <span className="w-input-err">
+                                    {errors.email}
+                                </span>
+                            )}
+                        </label>
+                    )}
+
+                    {authSettings?.phone_number.enabled && (
+                        <label className="w-field">
+                            <span className="w-label">
+                                Phone number
+                                {authSettings.phone_number.required && (
+                                    <span className="w-req">*</span>
+                                )}
+                            </span>
+                            <PhoneNumberInput
+                                value={formData.phone_number}
+                                onChange={handleInputChange}
+                                error={errors.phone_number}
+                                countryCode={countryCode}
+                                setCountryCode={setCountryCode}
+                            />
+                            {errors.phone_number && (
+                                <span className="w-input-err">
+                                    {errors.phone_number}
+                                </span>
+                            )}
+                        </label>
+                    )}
+
+                    {authSettings?.password.enabled && (
+                        <label className="w-field">
+                            <span className="w-label">
+                                Password
+                                {authSettings.password.required && (
+                                    <span className="w-req">*</span>
+                                )}
+                            </span>
+                            <NoPrefillInput
+                                className="w-input"
+                                type="password"
+                                id="password"
+                                name="password"
+                                autoComplete="new-password"
+                                value={formData.password}
+                                onChange={handleInputChange}
+                                placeholder="Create a password"
+                                aria-invalid={!!errors.password}
+                                required
+                                minLength={8}
+                                maxLength={128}
+                                pattern="^(?=.*[a-z])(?=.*[A-Z])(?=.*\d)(?=.*[@$!%*?&])[A-Za-z\d@$!%*?&]{8,125}$"
+                            />
+                            {errors.password && (
+                                <span className="w-input-err">
+                                    {errors.password}
+                                </span>
+                            )}
+                        </label>
+                    )}
+
+                    {errors.submit && (
+                        <span className="w-input-err">{errors.submit}</span>
+                    )}
+
+                    <button
+                        type="submit"
+                        className="w-btn w-btn--primary w-btn--block"
+                        disabled={isSubmitting || loading}
+                    >
+                        {isSubmitting ? <Spin size={15} onAccent /> : "Continue"}
+                    </button>
+
+                    {(() => {
+                        const tosUrl = deployment?.ui_settings?.tos_page_url;
+                        const privacyUrl =
+                            deployment?.ui_settings?.privacy_policy_url;
+                        if (!tosUrl && !privacyUrl) return null;
+                        return (
+                            <p className="w-fineprint">
+                                By continuing you agree to our{" "}
+                                {tosUrl && (
+                                    <NavigationLink
+                                        className="w-link w-link--muted"
+                                        to={tosUrl}
+                                    >
+                                        Terms of Service
+                                    </NavigationLink>
+                                )}
+                                {tosUrl && privacyUrl && " and "}
+                                {privacyUrl && (
+                                    <NavigationLink
+                                        className="w-link w-link--muted"
+                                        to={privacyUrl}
+                                    >
+                                        Privacy Policy
+                                    </NavigationLink>
+                                )}
+                                .
+                            </p>
+                        );
+                    })()}
+                </form>
+            </AuthCard>
         </DefaultStylesProvider>
     );
 }

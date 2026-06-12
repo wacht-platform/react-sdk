@@ -21,13 +21,11 @@ export const CreateOrganizationDialog: React.FC<
     <DefaultStylesProvider>
       <Dialog isOpen={isOpen} onClose={onClose}>
         <Dialog.Overlay>
-          <Dialog.Content style={{ width: "900px", maxWidth: "90vw" }}>
-            <Dialog.Body style={{ padding: 0 }}>
-              <CreateOrganizationForm
-                onSuccess={handleSuccess}
-                onCancel={onClose}
-              />
-            </Dialog.Body>
+          <Dialog.Content className="w-dialog--create">
+            <CreateOrganizationForm
+              onSuccess={handleSuccess}
+              onCancel={onClose}
+            />
           </Dialog.Content>
         </Dialog.Overlay>
       </Dialog>

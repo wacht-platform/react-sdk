@@ -1,7 +1,6 @@
 "use client";
 
 import { useState, useEffect, useRef } from "react";
-import styled from "styled-components";
 import {
     Plus,
     Buildings,
@@ -22,324 +21,6 @@ import { Dialog } from "../utility/dialog";
 
 type ViewMode = "orgList" | "workspaceList" | "createOrg" | "createWorkspace";
 
-const Container = styled.div`
-    width: 100%;
-    max-width: 100%;
-    height: calc(calc(var(--size-50u) * 4) + calc(var(--size-50u) * 2));
-    background: var(--color-card);
-    display: grid;
-    grid-template-columns: calc(calc(var(--size-50u) * 2) + var(--size-40u)) 1fr;
-    border-radius: var(--radius-lg);
-    overflow: hidden;
-
-    @media (max-width: 768px) {
-        width: 100%;
-        grid-template-columns: 1fr;
-        height: auto;
-        max-height: 90vh;
-        overflow-y: auto;
-    }
-`;
-
-const LeftColumn = styled.div`
-    background: var(--color-secondary);
-    padding: var(--space-16u) var(--space-12u);
-    display: flex;
-    flex-direction: column;
-    justify-content: space-between;
-    border-right: var(--border-width-thin) solid var(--color-border);
-
-    @media (max-width: 768px) {
-        border-right: none;
-        border-bottom: var(--border-width-thin) solid var(--color-border);
-        padding: var(--space-12u);
-        gap: var(--space-12u);
-        align-items: center;
-        text-align: center;
-    }
-`;
-
-const LeftColumnContent = styled.div`
-    display: flex;
-    flex-direction: column;
-
-    @media (max-width: 768px) {
-        align-items: center;
-    }
-`;
-
-const RightColumn = styled.div`
-    padding: var(--space-16u) var(--space-12u);
-    display: flex;
-    flex-direction: column;
-    overflow: hidden;
-
-    @media (max-width: 768px) {
-        padding: var(--space-12u);
-        min-height: calc(var(--size-50u) * 4);
-    }
-`;
-
-const ListSection = styled.div`
-    flex: 1;
-    display: flex;
-    flex-direction: column;
-    overflow: hidden;
-    margin-bottom: var(--space-12u);
-`;
-
-const ListHeaderContainer = styled.div`
-    display: flex;
-    align-items: center;
-    justify-content: flex-start;
-    gap: var(--space-4u);
-    margin-bottom: var(--space-4u);
-`;
-
-const ListHeader = styled.h2`
-    font-size: var(--font-size-lg);
-    font-weight: 400;
-    color: var(--color-secondary-text);
-    margin: 0;
-`;
-
-const BackLink = styled.button`
-    display: flex;
-    align-items: center;
-    background: none;
-    border: none;
-    padding: var(--space-2u);
-    color: var(--color-primary);
-    cursor: pointer;
-    transition: opacity 0.2s;
-    font-weight: 400;
-    border-radius: var(--radius-full);
-
-    &:hover {
-        opacity: 0.8;
-        background: var(--color-accent);
-    }
-
-    svg {
-        width: var(--space-7u);
-        height: var(--space-7u);
-    }
-`;
-
-const TitleSection = styled.div`
-    display: flex;
-    flex-direction: column;
-    align-items: flex-start;
-    gap: var(--space-2u);
-    flex: 1;
-
-    @media (max-width: 768px) {
-        align-items: center;
-        text-align: center;
-    }
-`;
-
-const Title = styled.h1`
-    font-size: var(--font-size-xl);
-    font-weight: 400;
-    color: var(--color-card-foreground);
-    margin: 0;
-    line-height: 1.2;
-`;
-
-const Subtitle = styled.p`
-    color: var(--color-secondary-text);
-    font-size: var(--font-size-lg);
-    margin: 0;
-    font-weight: 400;
-`;
-
-const ListContainer = styled.div`
-    flex: 1;
-    overflow-y: auto;
-    display: flex;
-    flex-direction: column;
-    gap: 0;
-    padding-right: var(--space-4u);
-
-    &::-webkit-scrollbar {
-        width: var(--space-2u);
-    }
-
-    &::-webkit-scrollbar-track {
-        background: transparent;
-    }
-
-    &::-webkit-scrollbar-thumb {
-        background: var(--color-border);
-        border-radius: var(--space-1u);
-    }
-`;
-
-const ListItem = styled.button`
-    display: grid;
-    grid-template-columns: auto 1fr auto;
-    align-items: center;
-    gap: var(--space-6u);
-    width: 100%;
-    padding: var(--space-6u) 0;
-    text-align: left;
-    border: none;
-    border-bottom: var(--border-width-thin) solid var(--color-border);
-    background: transparent;
-    cursor: pointer;
-    color: var(--color-card-foreground);
-    transition: background-color 0.2s ease;
-    font-size: var(--font-size-lg);
-    position: relative;
-
-    &:last-child {
-        border-bottom: none;
-    }
-
-    &:disabled {
-        cursor: not-allowed;
-        opacity: 0.6;
-    }
-
-    &:hover .warning-popover {
-        visibility: visible;
-        opacity: 1;
-    }
-`;
-
-const ListItemWarningPopover = styled.div`
-    visibility: hidden;
-    opacity: 0;
-    position: absolute;
-    top: 50%;
-    right: var(--size-50u);
-    transform: translateY(-50%);
-    background: var(--color-popover);
-    border: var(--border-width-thin) solid var(--color-border);
-    border-radius: var(--radius-2xs);
-    padding: var(--space-3u) var(--space-5u);
-    box-shadow: var(--shadow-md);
-    z-index: 100;
-    width: max-content;
-    max-width: calc(var(--size-50u) * 3);
-    font-size: var(--font-size-xs);
-    line-height: 1.4;
-    color: var(--color-warning);
-    pointer-events: none;
-    transition:
-        opacity 0.1s ease,
-        visibility 0.1s ease;
-
-    &::after {
-        content: "";
-        position: absolute;
-        top: 50%;
-        left: 100%;
-        margin-top: calc(var(--space-5u) * -1);
-        border-width: var(--space-5u);
-        border-style: solid;
-        border-color: transparent transparent transparent var(--color-border);
-    }
-`;
-
-const Avatar = styled.div`
-    width: var(--size-20u);
-    height: var(--size-20u);
-    border-radius: var(--radius-md);
-    overflow: hidden;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    background: var(--color-secondary);
-    border: var(--border-width-thin) solid var(--color-border);
-    color: var(--color-secondary-text);
-    font-size: var(--font-size-lg);
-    font-weight: 400;
-    flex-shrink: 0;
-`;
-
-const AvatarImage = styled.img`
-    width: 100%;
-    height: 100%;
-    object-fit: cover;
-`;
-
-const ItemContent = styled.div`
-    flex: 1;
-    min-width: 0;
-`;
-
-const ItemName = styled.div`
-    font-size: var(--font-size-lg);
-    font-weight: 400;
-    color: var(--color-card-foreground);
-    overflow: hidden;
-    text-overflow: ellipsis;
-    white-space: nowrap;
-`;
-
-const ItemMeta = styled.div`
-    display: flex;
-    align-items: center;
-    gap: var(--space-2u);
-    margin-top: var(--space-1u);
-    font-size: var(--font-size-sm);
-    color: var(--color-secondary-text);
-    font-weight: 400;
-
-    svg {
-        width: var(--size-8u);
-        height: var(--size-8u);
-    }
-`;
-
-const ItemArrow = styled.div`
-    color: var(--color-secondary-text);
-    display: flex;
-    align-items: center;
-
-    svg {
-        width: var(--size-8u);
-        height: var(--size-8u);
-    }
-`;
-
-// WarningText is no longer used, replaced by right-aligned WarningCircle
-
-const EmptyState = styled.div`
-    text-align: center;
-    padding: var(--space-16u) var(--space-8u);
-    display: flex;
-    flex-direction: column;
-    margin-top: auto;
-    margin-bottom: auto;
-    align-items: center;
-    justify-content: center;
-    color: var(--color-secondary-text);
-`;
-
-const EmptyStateTitle = styled.div`
-    font-size: var(--font-size-lg);
-    font-weight: 400;
-    color: var(--color-card-foreground);
-    margin-bottom: var(--space-2u);
-`;
-
-const EmptyStateText = styled.div`
-    font-size: var(--font-size-md);
-    color: var(--color-secondary-text);
-    margin-bottom: var(--space-8u);
-    line-height: 1.5;
-`;
-
-const EmptyStateCTA = styled(Button)`
-    width: auto;
-    margin: 0 auto;
-    padding: var(--space-3u) var(--space-8u);
-    font-size: var(--font-size-md);
-`;
-
 export const OrganizationSelectorMenu = () => {
     const {
         organizationMemberships,
@@ -355,7 +36,8 @@ export const OrganizationSelectorMenu = () => {
     const [selectedOrgId, setSelectedOrgId] = useState<string | null>(null);
 
     const workspacesEnabled =
-        deployment?.b2b_settings.workspaces_enabled ?? false;
+        (deployment?.b2b_settings.organizations_enabled ?? false) &&
+        (deployment?.b2b_settings.workspaces_enabled ?? false);
     const allowUsersToCreateOrgs =
         deployment?.b2b_settings.allow_users_to_create_orgs ?? false;
 
@@ -451,7 +133,16 @@ export const OrganizationSelectorMenu = () => {
         }
     };
 
-    const handleWorkspaceCreated = () => {};
+    const handleWorkspaceCreated = async (workspace?: any) => {
+        const wsId = workspace?.id ?? workspace?.workspace?.id;
+        if (!wsId) return;
+        setSwitching(wsId);
+        try {
+            await switchWorkspace(wsId);
+        } finally {
+            setSwitching(null);
+        }
+    };
 
     const handleGoBack = async () => {
         setSelectedOrgId(null);
@@ -504,37 +195,38 @@ export const OrganizationSelectorMenu = () => {
         : `to continue to ${deployment?.ui_settings?.app_name || "App"}`;
 
     return (
-        <Container>
-            <LeftColumn>
-                <LeftColumnContent>
+        <div className="w-split">
+            <div className="w-split-aside w-flex-col w-justify-between w-gap-6">
+                <div className="w-flex-col w-gap-4">
                     <AuthFormImage placement="left" />
-                    <TitleSection>
-                        <Title>{dialogTitle}</Title>
-                        <Subtitle>{dialogSubtitle}</Subtitle>
-                    </TitleSection>
-                </LeftColumnContent>
+                    <div className="w-flex-col w-gap-1">
+                        <div className="w-title">{dialogTitle}</div>
+                        <p className="w-sub">{dialogSubtitle}</p>
+                    </div>
+                </div>
                 <UserButton showName={true} />
-            </LeftColumn>
+            </div>
 
-            <RightColumn>
-                <ListSection>
-                    <ListHeaderContainer>
+            <div className="w-split-main">
+                <div className="w-grow w-flex-col" style={{ overflow: "hidden", marginBottom: 24 }}>
+                    <div className="w-flex w-items-center w-gap-2" style={{ marginBottom: 8 }}>
                         {showingWorkspaces && (
-                            <BackLink
+                            <button
+                                className="w-btn w-btn--icon"
                                 onClick={handleGoBack}
                                 aria-label="Go back"
                                 title="Go back"
                             >
                                 <CaretLeft />
-                            </BackLink>
+                            </button>
                         )}
-                        <ListHeader>
+                        <h2 className="w-sec">
                             {showingWorkspaces
                                 ? "Workspaces"
                                 : "Your organizations"}
-                        </ListHeader>
-                    </ListHeaderContainer>
-                    <ListContainer>
+                        </h2>
+                    </div>
+                    <div className="w-grow w-flex-col" style={{ overflowY: "auto" }}>
                         {showingWorkspaces ? (
                             <>
                                 {selectedOrgWorkspaces &&
@@ -547,8 +239,9 @@ export const OrganizationSelectorMenu = () => {
                                                 ?.type !== undefined;
 
                                         return (
-                                            <ListItem
+                                            <button
                                                 key={workspace.id}
+                                                className="w-listrow"
                                                 onClick={() =>
                                                     !hasRestriction &&
                                                     handleSelectWorkspace(
@@ -560,24 +253,17 @@ export const OrganizationSelectorMenu = () => {
                                                         workspace.id ||
                                                     hasRestriction
                                                 }
-                                                style={{
-                                                    opacity: hasRestriction
-                                                        ? 0.6
-                                                        : 1,
-                                                }}
+                                                title={
+                                                    hasRestriction
+                                                        ? workspace
+                                                              .eligibility_restriction
+                                                              ?.message
+                                                        : undefined
+                                                }
                                             >
-                                                {hasRestriction && (
-                                                    <ListItemWarningPopover className="warning-popover">
-                                                        {
-                                                            workspace
-                                                                .eligibility_restriction
-                                                                ?.message
-                                                        }
-                                                    </ListItemWarningPopover>
-                                                )}
-                                                <Avatar>
+                                                <div className="w-avatar w-avatar--lg">
                                                     {workspace.image_url ? (
-                                                        <AvatarImage
+                                                        <img
                                                             src={
                                                                 workspace.image_url
                                                             }
@@ -588,49 +274,53 @@ export const OrganizationSelectorMenu = () => {
                                                             workspace.name,
                                                         ).charAt(0)
                                                     )}
-                                                </Avatar>
-                                                <ItemContent>
-                                                    <ItemName>
+                                                </div>
+                                                <div className="w-grow">
+                                                    <div className="w-sec w-truncate">
                                                         {workspace.name}
-                                                    </ItemName>
-                                                    <ItemMeta>
+                                                    </div>
+                                                    <div className="w-secsub w-inline w-gap-1">
                                                         <Users />
                                                         Workspace
-                                                    </ItemMeta>
-                                                </ItemContent>
-                                                <ItemArrow>
+                                                    </div>
+                                                </div>
+                                                <div className="w-inline w-gap-1 w-text-secondary">
                                                     {hasRestriction && (
                                                         <WarningCircle
                                                             size={16}
-                                                            style={{
-                                                                color: "var(--color-error)",
-                                                            }}
+                                                            className="w-text-error"
                                                         />
                                                     )}
                                                     <CaretRight />
-                                                </ItemArrow>
-                                            </ListItem>
+                                                </div>
+                                            </button>
                                         );
                                     })
                                 ) : (
-                                    <EmptyState>
-                                        <EmptyStateTitle>
-                                            No workspaces yet
-                                        </EmptyStateTitle>
-                                        <EmptyStateText>
-                                            Create your first workspace for{" "}
-                                            {selectedOrg?.name ||
-                                                "this organization"}
-                                        </EmptyStateText>
-                                        <EmptyStateCTA
-                                            onClick={() =>
-                                                setViewMode("createWorkspace")
-                                            }
-                                        >
-                                            <Plus />
-                                            Create workspace
-                                        </EmptyStateCTA>
-                                    </EmptyState>
+                                    <div className="w-empty">
+                                        <div className="w-empty-ic">
+                                            <Users size={20} />
+                                        </div>
+                                        <div className="w-empty-text">
+                                            <h4>No workspaces yet</h4>
+                                            <p>
+                                                Create your first workspace for{" "}
+                                                {selectedOrg?.name ||
+                                                    "this organization"}
+                                            </p>
+                                        </div>
+                                        <div className="w-empty-action">
+                                            <Button
+                                                $size="sm"
+                                                onClick={() =>
+                                                    setViewMode("createWorkspace")
+                                                }
+                                            >
+                                                <Plus />
+                                                Create workspace
+                                            </Button>
+                                        </div>
+                                    </div>
                                 )}
                             </>
                         ) : organizationMemberships &&
@@ -661,8 +351,9 @@ export const OrganizationSelectorMenu = () => {
                                         undefined;
 
                                 return (
-                                    <ListItem
+                                    <button
                                         key={org.id}
+                                        className="w-listrow"
                                         onClick={() =>
                                             !hasRestriction &&
                                             handleSelectOrganization(org)
@@ -671,32 +362,27 @@ export const OrganizationSelectorMenu = () => {
                                             switching === org.id ||
                                             hasRestriction
                                         }
-                                        style={{
-                                            opacity: hasRestriction ? 0.6 : 1,
-                                        }}
+                                        title={
+                                            hasRestriction
+                                                ? membership
+                                                      .eligibility_restriction
+                                                      ?.message
+                                                : undefined
+                                        }
                                     >
-                                        {hasRestriction && (
-                                            <ListItemWarningPopover className="warning-popover">
-                                                {
-                                                    membership
-                                                        .eligibility_restriction
-                                                        ?.message
-                                                }
-                                            </ListItemWarningPopover>
-                                        )}
-                                        <Avatar>
+                                        <div className="w-avatar w-avatar--lg">
                                             {org.image_url ? (
-                                                <AvatarImage
+                                                <img
                                                     src={org.image_url}
                                                     alt={org.name}
                                                 />
                                             ) : (
                                                 getInitials(org.name)
                                             )}
-                                        </Avatar>
-                                        <ItemContent>
-                                            <ItemName>{org.name}</ItemName>
-                                            <ItemMeta>
+                                        </div>
+                                        <div className="w-grow">
+                                            <div className="w-sec w-truncate">{org.name}</div>
+                                            <div className="w-secsub w-inline w-gap-1">
                                                 {workspacesEnabled ? (
                                                     <>
                                                         <Users />
@@ -716,49 +402,52 @@ export const OrganizationSelectorMenu = () => {
                                                             : ""}
                                                     </>
                                                 )}
-                                            </ItemMeta>
-                                        </ItemContent>
-                                        <ItemArrow>
+                                            </div>
+                                        </div>
+                                        <div className="w-inline w-gap-1 w-text-secondary">
                                             {hasRestriction && (
                                                 <WarningCircle
                                                     size={16}
-                                                    style={{
-                                                        color: "var(--color-error)",
-                                                    }}
+                                                    className="w-text-error"
                                                 />
                                             )}
                                             <CaretRight />
-                                        </ItemArrow>
-                                    </ListItem>
+                                        </div>
+                                    </button>
                                 );
                             })
                         ) : (
-                            <EmptyState>
-                                <EmptyStateTitle>
-                                    No organizations yet
-                                </EmptyStateTitle>
-                                <EmptyStateText>
-                                    {allowUsersToCreateOrgs
-                                        ? "Create your first organization to get started"
-                                        : "You don't have access to any organizations yet"}
-                                </EmptyStateText>
+                            <div className="w-empty">
+                                <div className="w-empty-ic">
+                                    <Buildings size={20} />
+                                </div>
+                                <div className="w-empty-text">
+                                    <h4>No organizations yet</h4>
+                                    <p>
+                                        {allowUsersToCreateOrgs
+                                            ? "Create your first organization to get started"
+                                            : "You don't have access to any organizations yet"}
+                                    </p>
+                                </div>
                                 {allowUsersToCreateOrgs && (
-                                    <EmptyStateCTA
-                                        onClick={() => setViewMode("createOrg")}
-                                    >
-                                        <Plus />
-                                        Create organization
-                                    </EmptyStateCTA>
+                                    <div className="w-empty-action">
+                                        <Button
+                                            $size="sm"
+                                            onClick={() => setViewMode("createOrg")}
+                                        >
+                                            <Plus />
+                                            Create organization
+                                        </Button>
+                                    </div>
                                 )}
-                            </EmptyState>
+                            </div>
                         )}
-                    </ListContainer>
-                </ListSection>
+                    </div>
+                </div>
 
                 {showingWorkspaces && selectedOrgId && (
                     <Button
                         $outline
-                        style={{ marginTop: "var(--space-4u)" }}
                         onClick={() => setViewMode("createWorkspace")}
                         disabled={switching !== null}
                     >
@@ -773,11 +462,6 @@ export const OrganizationSelectorMenu = () => {
                     allowUsersToCreateOrgs && (
                         <Button
                             $outline
-                            style={{
-                                marginTop: workspacesEnabled
-                                    ? "var(--space-4u)"
-                                    : "var(--space-6u)",
-                            }}
                             onClick={() => setViewMode("createOrg")}
                             disabled={switching !== null}
                         >
@@ -785,7 +469,7 @@ export const OrganizationSelectorMenu = () => {
                             Create new organization
                         </Button>
                     )}
-            </RightColumn>
-        </Container>
+            </div>
+        </div>
     );
 };

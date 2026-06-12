@@ -1,5 +1,4 @@
 import { useState, useMemo, useEffect, useRef, useCallback } from "react";
-import styled from "styled-components";
 import { Organization } from "@/types";
 import { useSession } from "@/hooks/use-session";
 import { useWorkspaceList } from "@/hooks/use-workspace";
@@ -16,44 +15,6 @@ import {
     Label,
 } from "@/components/utility";
 import { ItemRow, ItemContent, ItemActions, SectionLabel } from "./shared";
-
-const Section = styled.div`
-    display: flex;
-    flex-direction: column;
-    gap: var(--space-6u);
-`;
-
-const DangerCard = styled.div`
-    padding: var(--space-8u);
-    border: 1px solid
-        color-mix(in srgb, var(--color-error) 45%, var(--color-border));
-    background: color-mix(in srgb, var(--color-error) 4%, transparent);
-    border-radius: 10px;
-`;
-
-const DangerRow = styled.div`
-    display: flex;
-    align-items: center;
-    justify-content: space-between;
-    gap: var(--space-4u);
-    @media (max-width: 600px) {
-        flex-direction: column;
-        align-items: stretch;
-    }
-`;
-
-const DangerTitle = styled.div`
-    font-size: 13px;
-    font-weight: 500;
-    color: var(--color-card-foreground);
-`;
-
-const DangerSub = styled.div`
-    font-size: 12px;
-    color: var(--color-secondary-text);
-    margin-top: 2px;
-    line-height: 1.4;
-`;
 
 export const GeneralSettingsSection = ({
     organization: selectedOrganization,
@@ -158,16 +119,9 @@ export const GeneralSettingsSection = ({
     if (!selectedOrganization) return <Spinner />;
 
     return (
-        <div
-            style={{
-                display: "flex",
-                flexDirection: "column",
-                gap: "var(--space-8u)",
-                paddingBottom: "var(--size-20u)",
-            }}
-        >
+        <div className="w-flex-col w-gap-4">
             {/* Details */}
-            <Section>
+            <div className="w-flex-col w-gap-3">
                 <FormGroup>
                     <Label htmlFor="name">Organization name</Label>
                     <Input
@@ -188,10 +142,7 @@ export const GeneralSettingsSection = ({
                         onChange={(e) => setDescription(e.target.value)}
                         onBlur={autoSave}
                         placeholder="Optional description"
-                        style={{
-                            minHeight: "var(--size-40u)",
-                            resize: "vertical",
-                        }}
+                        className="w-input--area"
                     />
                 </FormGroup>
                 {deployment?.b2b_settings?.workspaces_enabled &&
@@ -217,33 +168,20 @@ export const GeneralSettingsSection = ({
                             />
                         </FormGroup>
                     )}
-            </Section>
+            </div>
 
             {/* Security */}
             {(deployment?.b2b_settings?.enforce_mfa_per_org_enabled ||
                 deployment?.b2b_settings?.ip_allowlist_per_org_enabled) && (
-                <Section>
+                <div className="w-flex-col w-gap-3">
                     <SectionLabel>Security</SectionLabel>
                     {deployment?.b2b_settings?.enforce_mfa_per_org_enabled && (
-                        <ItemRow style={{ padding: 0 }}>
-                            <ItemContent>
-                                <Label
-                                    style={{
-                                        fontSize: 13,
-                                        fontWeight: 500,
-                                        marginBottom: 4,
-                                        display: "block",
-                                    }}
-                                >
+                        <ItemRow>
+                            <ItemContent className="w-flex-col w-gap-1">
+                                <div className="w-sec">
                                     Multi-factor authentication
-                                </Label>
-                                <p
-                                    style={{
-                                        fontSize: 12,
-                                        color: "var(--color-secondary-text)",
-                                        margin: 0,
-                                    }}
-                                >
+                                </div>
+                                <p className="w-secsub">
                                     Require all members to set up MFA for added
                                     security.
                                 </p>
@@ -265,25 +203,12 @@ export const GeneralSettingsSection = ({
                     )}
                     {deployment?.b2b_settings?.ip_allowlist_per_org_enabled && (
                         <>
-                            <ItemRow style={{ padding: 0 }}>
-                                <ItemContent>
-                                    <Label
-                                        style={{
-                                            fontSize: 13,
-                                            fontWeight: 500,
-                                            marginBottom: 4,
-                                            display: "block",
-                                        }}
-                                    >
+                            <ItemRow>
+                                <ItemContent className="w-flex-col w-gap-1">
+                                    <div className="w-sec">
                                         IP restrictions
-                                    </Label>
-                                    <p
-                                        style={{
-                                            fontSize: 12,
-                                            color: "var(--color-secondary-text)",
-                                            margin: 0,
-                                        }}
-                                    >
+                                    </div>
+                                    <p className="w-secsub">
                                         Only allow access from specific IP
                                         addresses.
                                     </p>
@@ -320,30 +245,27 @@ export const GeneralSettingsSection = ({
                                         }
                                         onBlur={autoSave}
                                         placeholder="192.168.1.1&#10;10.0.0.0/24"
-                                        style={{
-                                            minHeight: "var(--size-40u)",
-                                            fontFamily: "monospace",
-                                        }}
+                                        className="w-input--area w-input--mono"
                                     />
                                 </FormGroup>
                             )}
                         </>
                     )}
-                </Section>
+                </div>
             )}
 
             {/* Danger zone */}
             {deployment?.b2b_settings?.allow_org_deletion && (
-                <Section>
+                <div className="w-flex-col w-gap-3">
                     <SectionLabel>Danger zone</SectionLabel>
-                    <DangerCard>
-                        <DangerRow>
-                            <div style={{ flex: 1, minWidth: 0 }}>
-                                <DangerTitle>Delete organization</DangerTitle>
-                                <DangerSub>
+                    <div className="w-danger w-flex-col w-items-start w-gap-3">
+                        <div className="w-flex w-items-center w-justify-between w-gap-2 w-full">
+                            <div className="w-grow w-flex-col w-gap-1">
+                                <div className="w-sec">Delete organization</div>
+                                <div className="w-secsub">
                                     Once you delete this organization, there is
                                     no going back.
-                                </DangerSub>
+                                </div>
                             </div>
                             <Button
                                 $size="sm"
@@ -358,17 +280,10 @@ export const GeneralSettingsSection = ({
                                     ? "Cancel"
                                     : "Delete organization"}
                             </Button>
-                        </DangerRow>
+                        </div>
 
                         {showDeleteConfirm && (
-                            <div
-                                style={{
-                                    marginTop: 14,
-                                    display: "flex",
-                                    flexDirection: "column",
-                                    gap: 10,
-                                }}
-                            >
+                            <div className="w-flex-col w-gap-3 w-full">
                                 <FormGroup>
                                     <Label htmlFor="confirm_org_name">
                                         Type{" "}
@@ -405,8 +320,8 @@ export const GeneralSettingsSection = ({
                                 </Button>
                             </div>
                         )}
-                    </DangerCard>
-                </Section>
+                    </div>
+                </div>
             )}
         </div>
     );

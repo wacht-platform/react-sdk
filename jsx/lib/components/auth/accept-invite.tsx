@@ -1,402 +1,314 @@
-import { useEffect, useRef } from "react";
-import styled from "styled-components";
+import { useEffect, useRef, type ReactNode } from "react";
+import { Check, X, Info, Clock } from "@phosphor-icons/react";
 import { useInvitation } from "@/hooks/use-invitation";
 import { useNavigation } from "@/hooks/use-navigation";
 import { useDeployment } from "@/hooks/use-deployment";
 import { DefaultStylesProvider } from "../utility/root";
-import { Button } from "../utility";
+import { AuthCard, AuthHead, Spin } from "./auth-card";
 import { sanitizeRedirectUri } from "@/utils/redirect-uri";
-import { standaloneAuthShell } from "./auth-shell";
 
-const Container = styled.div`
-  ${standaloneAuthShell}
-`;
+function StatusIcon({
+    kind,
+}: {
+    kind: "success" | "error" | "info";
+}) {
+    const cls =
+        kind === "success"
+            ? "w-success"
+            : kind === "error"
+              ? "w-success w-success--error"
+              : "w-success w-success--info";
+    const Glyph = kind === "success" ? Check : kind === "error" ? X : Info;
+    return (
+        <div className={cls}>
+            <span className="ring" />
+            <span className="disc">
+                <Glyph weight="bold" />
+            </span>
+        </div>
+    );
+}
 
-const Header = styled.div`
-  text-align: center;
-  margin-bottom: var(--space-8u);
-  position: relative;
-`;
-
-const Title = styled.h1`
-  font-size: var(--font-size-2xl);
-  font-weight: 400;
-  color: var(--color-card-foreground);
-  margin-bottom: var(--space-2u);
-  margin-top: 0;
-`;
-
-const Subtitle = styled.p`
-  color: var(--color-secondary-text);
-  font-size: var(--font-size-md);
-  margin: 0;
-`;
-
-const StatusContainer = styled.div`
-  padding-top: var(--space-10u);
-  text-align: center;
-`;
-
-const SuccessIcon = styled.div`
-  width: calc(var(--space-14u) * 2);
-  height: calc(var(--space-14u) * 2);
-  border-radius: 50%;
-  background: var(--color-success-background);
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  margin: 0 auto var(--space-8u) auto;
-  color: var(--color-success);
-  font-size: var(--font-size-3xl);
-`;
-
-const ErrorIcon = styled.div`
-  width: calc(var(--space-14u) * 2);
-  height: calc(var(--space-14u) * 2);
-  border-radius: 50%;
-  background: var(--color-error-background);
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  margin: 0 auto var(--space-8u) auto;
-  color: var(--color-error);
-  font-size: var(--font-size-3xl);
-`;
-
-const InfoIcon = styled.div`
-  width: calc(var(--space-14u) * 2);
-  height: calc(var(--space-14u) * 2);
-  border-radius: 50%;
-  background: var(--color-info-background);
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  margin: 0 auto var(--space-8u) auto;
-  color: var(--color-info);
-  font-size: var(--font-size-3xl);
-`;
-
-const LoadingSpinner = styled.div`
-  width: calc(var(--space-14u) * 2);
-  height: calc(var(--space-14u) * 2);
-  border: var(--border-width-regular) solid var(--color-border);
-  border-top: var(--border-width-regular) solid var(--color-primary);
-  border-radius: 50%;
-  animation: spin 1s linear infinite;
-  margin: 0 auto var(--space-8u) auto;
-
-  @keyframes spin {
-    0% {
-      transform: rotate(0deg);
-    }
-    100% {
-      transform: rotate(360deg);
-    }
-  }
-`;
-
-const Message = styled.p`
-  font-size: var(--font-size-lg);
-  color: var(--color-card-foreground);
-  margin-bottom: var(--space-2u);
-`;
-
-const SubMessage = styled.p`
-  font-size: var(--font-size-md);
-  color: var(--color-secondary-text);
-  margin-bottom: var(--space-8u);
-`;
-
-const EmailHighlight = styled.span`
-  color: var(--color-primary);
-  font-weight: 400;
-`;
-
-const Footer = styled.div`
-  margin-top: var(--space-10u);
-  text-align: center;
-  font-size: var(--font-size-md);
-  color: var(--color-secondary-text);
-`;
-
-const Link = styled.span`
-  color: var(--color-primary);
-  text-decoration: none;
-  font-weight: 400;
-  transition: color 0.2s;
-  cursor: pointer;
-
-  &:hover {
-    color: var(--color-primary-hover);
-  }
-`;
+function Status({
+    title,
+    sub,
+    icon,
+    message,
+    action,
+    footer,
+}: {
+    title: string;
+    sub: string;
+    icon: ReactNode;
+    message: ReactNode;
+    action?: ReactNode;
+    footer?: ReactNode;
+}) {
+    return (
+        <DefaultStylesProvider>
+            <AuthCard footer={footer}>
+                <AuthHead title={title} sub={sub} />
+                <div className="w-auth-status">
+                    {icon}
+                    <p className="w-auth-sub">{message}</p>
+                    {action}
+                </div>
+            </AuthCard>
+        </DefaultStylesProvider>
+    );
+}
 
 interface AcceptInviteProps {
-  token?: string;
-  onSuccess?: (organizationId?: string, workspaceId?: string) => void;
-  onError?: (error: string) => void;
+    token?: string;
+    onSuccess?: (organizationId?: string, workspaceId?: string) => void;
+    onError?: (error: string) => void;
 }
 
 export function AcceptInvite({
-  token: propToken,
-  onSuccess,
-  onError,
+    token: propToken,
+    onSuccess,
+    onError,
 }: AcceptInviteProps) {
-  const { acceptInvitation, invitationData, loading, error } = useInvitation();
-  const { navigate } = useNavigation();
-  const { deployment } = useDeployment();
-  const hasAttempted = useRef(false);
+    const { acceptInvitation, invitationData, loading, error } =
+        useInvitation();
+    const { navigate } = useNavigation();
+    const { deployment } = useDeployment();
+    const hasAttempted = useRef(false);
 
-  // Get token and other params from URL
-  const getUrlParams = () => {
-    const params = new URLSearchParams(window.location.search);
-    return {
-      token: propToken || params.get("invite_token") || params.get("token"),
-      redirectUri:
-        sanitizeRedirectUri(deployment, params.get("redirect_uri")) ||
-        deployment?.ui_settings?.after_signin_redirect_url ||
-        "/",
+    const getUrlParams = () => {
+        const params = new URLSearchParams(window.location.search);
+        return {
+            token:
+                propToken ||
+                params.get("invite_token") ||
+                params.get("token"),
+            redirectUri:
+                sanitizeRedirectUri(deployment, params.get("redirect_uri")) ||
+                deployment?.ui_settings?.after_signin_redirect_url ||
+                "/",
+        };
     };
-  };
 
-  // Handle the invitation acceptance attempt
-  useEffect(() => {
-    if (hasAttempted.current) return;
+    useEffect(() => {
+        if (hasAttempted.current) return;
+
+        const { token } = getUrlParams();
+        if (!token) return;
+
+        hasAttempted.current = true;
+        acceptInvitation(token);
+    }, [acceptInvitation]);
+
+    useEffect(() => {
+        if (!invitationData) return;
+
+        if (
+            invitationData.organization &&
+            !invitationData.requires_signin &&
+            onSuccess
+        ) {
+            onSuccess(
+                invitationData.organization.id,
+                invitationData.workspace?.id,
+            );
+        }
+
+        if (invitationData.error_code && onError) {
+            onError(invitationData.message || "Failed to accept invitation");
+        }
+    }, [invitationData, onSuccess, onError]);
+
+    const handleContinue = () => {
+        const { redirectUri } = getUrlParams();
+        navigate(redirectUri);
+    };
+
+    const handleGoToAuth = () => {
+        const { token } = getUrlParams();
+        const signInUrl =
+            deployment?.ui_settings?.sign_in_page_url || "/sign-in";
+        const signUpUrl =
+            deployment?.ui_settings?.sign_up_page_url || "/sign-up";
+        const params = new URLSearchParams();
+
+        if (token) params.set("invite_token", token);
+        if (invitationData?.invited_email)
+            params.set("invited_email", invitationData.invited_email);
+
+        const invitePageUrl = window.location.pathname;
+        const inviteRedirectUri = `${invitePageUrl}?token=${token}`;
+        params.set("redirect_uri", inviteRedirectUri);
+
+        if (invitationData?.message) {
+            params.set("message", invitationData.message);
+        }
+
+        const isSignup =
+            invitationData?.error_code === "INVITATION_REQUIRES_SIGNUP";
+        navigate(`${isSignup ? signUpUrl : signInUrl}?${params.toString()}`);
+    };
+
+    const handleRetry = () => {
+        const { token } = getUrlParams();
+        if (token) {
+            hasAttempted.current = false;
+            acceptInvitation(token);
+        }
+    };
+
+    const primaryBtn = (label: string, onClick: () => void) => (
+        <button
+            type="button"
+            className="w-btn w-btn--primary w-btn--block"
+            onClick={onClick}
+        >
+            {label}
+        </button>
+    );
 
     const { token } = getUrlParams();
-    if (!token) return;
 
-    hasAttempted.current = true;
-    acceptInvitation(token);
-  }, [acceptInvitation]);
-
-  // Call success callback if needed
-  useEffect(() => {
-    if (!invitationData) return;
-
-    // Successful acceptance
-    if (invitationData.organization && !invitationData.requires_signin && onSuccess) {
-      onSuccess(invitationData.organization.id, invitationData.workspace?.id);
+    if (!token && !loading) {
+        return (
+            <Status
+                title="Invalid invitation"
+                sub="No invitation token found"
+                icon={<StatusIcon kind="error" />}
+                message="The invitation link appears to be invalid or incomplete."
+                action={primaryBtn("Go to home", () => navigate("/"))}
+            />
+        );
     }
 
-    // Handle other errors
-    if (invitationData.error_code && onError) {
-      onError(invitationData.message || "Failed to accept invitation");
-    }
-  }, [invitationData, onSuccess, onError]);
-
-  const handleContinue = () => {
-    const { redirectUri } = getUrlParams();
-    navigate(redirectUri);
-  };
-
-  const handleGoToAuth = () => {
-    const { token } = getUrlParams();
-    const signInUrl = deployment?.ui_settings?.sign_in_page_url || "/sign-in";
-    const signUpUrl = deployment?.ui_settings?.sign_up_page_url || "/sign-up";
-    const params = new URLSearchParams();
-
-    if (token) params.set("invite_token", token);
-    if (invitationData?.invited_email) params.set("invited_email", invitationData.invited_email);
-
-    const invitePageUrl = window.location.pathname;
-    const inviteRedirectUri = `${invitePageUrl}?token=${token}`;
-    params.set("redirect_uri", inviteRedirectUri);
-
-    // Add message for display
-    if (invitationData?.message) {
-      params.set("message", invitationData.message);
+    if (loading) {
+        return (
+            <Status
+                title="Processing invitation"
+                sub="Please wait while we verify your invitation"
+                icon={<Spin size={32} />}
+                message="Verifying invitation… this will only take a moment."
+            />
+        );
     }
 
-    // Redirect based on error code
-    const isSignup = invitationData?.error_code === "INVITATION_REQUIRES_SIGNUP";
-    navigate(`${isSignup ? signUpUrl : signInUrl}?${params.toString()}`);
-  };
-
-  const handleRetry = () => {
-    const { token } = getUrlParams();
-    if (token) {
-      hasAttempted.current = false;
-      acceptInvitation(token);
+    if (invitationData?.organization && !invitationData.requires_signin) {
+        return (
+            <Status
+                title="Invitation accepted"
+                sub="You've successfully joined the organization"
+                icon={<StatusIcon kind="success" />}
+                message={
+                    <>
+                        Welcome to{" "}
+                        <strong>{invitationData.organization.name}</strong>
+                        {invitationData.workspace
+                            ? `. You've been added to the ${invitationData.workspace.name} workspace.`
+                            : "."}
+                    </>
+                }
+                action={primaryBtn("Continue to application", handleContinue)}
+            />
+        );
     }
-  };
 
-  const { token } = getUrlParams();
+    if (invitationData?.already_member) {
+        return (
+            <Status
+                title="Already a member"
+                sub="You're already part of this organization"
+                icon={<StatusIcon kind="info" />}
+                message={`You're already a member of ${invitationData.organization?.name || "this organization"}. No action needed.`}
+                action={primaryBtn("Continue to application", handleContinue)}
+            />
+        );
+    }
 
-  // No token provided
-  if (!token && !loading) {
-    return (
-      <DefaultStylesProvider>
-        <Container>
-          <Header>
-            <Title>Invalid Invitation</Title>
-            <Subtitle>No invitation token found</Subtitle>
-          </Header>
-          <StatusContainer>
-            <ErrorIcon>✗</ErrorIcon>
-            <Message>Missing Invitation Token</Message>
-            <SubMessage>
-              The invitation link appears to be invalid or incomplete.
-            </SubMessage>
-            <Button onClick={() => navigate("/")} $fullWidth style={{ marginTop: "var(--space-8u)" }}>
-              Go to Home
-            </Button>
-          </StatusContainer>
-        </Container>
-      </DefaultStylesProvider>
-    );
-  }
+    if (invitationData?.requires_signin) {
+        const isSignup =
+            invitationData.error_code === "INVITATION_REQUIRES_SIGNUP";
 
-  // Loading state
-  if (loading) {
-    return (
-      <DefaultStylesProvider>
-        <Container>
-          <Header>
-            <Title>Processing Invitation</Title>
-            <Subtitle>Please wait while we verify your invitation</Subtitle>
-          </Header>
-          <StatusContainer>
-            <LoadingSpinner />
-            <Message>Verifying invitation...</Message>
-            <SubMessage>This will only take a moment.</SubMessage>
-          </StatusContainer>
-        </Container>
-      </DefaultStylesProvider>
-    );
-  }
+        return (
+            <Status
+                title={isSignup ? "Sign up required" : "Sign in required"}
+                sub="To accept this invitation"
+                icon={<StatusIcon kind="info" />}
+                message={
+                    <>
+                        This invitation is for{" "}
+                        <strong className="w-text-primary">
+                            {invitationData.invited_email}
+                        </strong>
+                        .{" "}
+                        {isSignup
+                            ? "Create an account with this email address to accept it."
+                            : invitationData.error_code ===
+                                "INVITATION_EMAIL_MISMATCH"
+                              ? "You're signed in with a different account. Please sign in with the invited email."
+                              : "Please sign in to accept this invitation."}
+                    </>
+                }
+                action={primaryBtn(
+                    isSignup ? "Sign up to accept" : "Sign in to accept",
+                    handleGoToAuth,
+                )}
+            />
+        );
+    }
 
-  // Success state
-  if (invitationData?.organization && !invitationData.requires_signin) {
-    return (
-      <DefaultStylesProvider>
-        <Container>
-          <Header>
-            <Title>Invitation Accepted!</Title>
-            <Subtitle>You've successfully joined the organization</Subtitle>
-          </Header>
-          <StatusContainer>
-            <SuccessIcon>✓</SuccessIcon>
-            <Message>Welcome to {invitationData.organization.name}!</Message>
-            {invitationData.workspace && (
-              <SubMessage>You've been added to the {invitationData.workspace.name} workspace.</SubMessage>
-            )}
-            <Button onClick={handleContinue} $fullWidth style={{ marginTop: "var(--space-8u)" }}>
-              Continue to Application
-            </Button>
-          </StatusContainer>
-        </Container>
-      </DefaultStylesProvider>
-    );
-  }
+    if (invitationData?.error_code === "INVITATION_EXPIRED") {
+        return (
+            <Status
+                title="Invitation expired"
+                sub="This invitation is no longer valid"
+                icon={
+                    <div className="w-success w-success--error">
+                        <span className="ring" />
+                        <span className="disc">
+                            <Clock weight="bold" />
+                        </span>
+                    </div>
+                }
+                message={
+                    <>
+                        Invitation for{" "}
+                        <strong className="w-text-primary">
+                            {invitationData.invited_email}
+                        </strong>{" "}
+                        has expired. Invitations are valid for 10 days — please
+                        request a new one from your organization administrator.
+                    </>
+                }
+            />
+        );
+    }
 
-  // Already a member
-  if (invitationData?.already_member) {
-    return (
-      <DefaultStylesProvider>
-        <Container>
-          <Header>
-            <Title>Already a Member</Title>
-            <Subtitle>You're already part of this organization</Subtitle>
-          </Header>
-          <StatusContainer>
-            <InfoIcon>ℹ</InfoIcon>
-            <Message>You're already a member of {invitationData.organization?.name || "this organization"}</Message>
-            <SubMessage>No action needed - you already have access.</SubMessage>
-            <Button onClick={handleContinue} $fullWidth style={{ marginTop: "var(--space-8u)" }}>
-              Continue to Application
-            </Button>
-          </StatusContainer>
-        </Container>
-      </DefaultStylesProvider>
-    );
-  }
+    if (error || invitationData?.error_code) {
+        return (
+            <Status
+                title="Invitation error"
+                sub="Unable to process invitation"
+                icon={<StatusIcon kind="error" />}
+                message={
+                    invitationData?.message ||
+                    error ||
+                    "Failed to accept invitation"
+                }
+                action={primaryBtn("Try again", handleRetry)}
+                footer={
+                    <span className="w-auth-foot">
+                        Having trouble?{" "}
+                        <button
+                            type="button"
+                            className="w-link"
+                            onClick={handleGoToAuth}
+                        >
+                            Sign in manually
+                        </button>
+                    </span>
+                }
+            />
+        );
+    }
 
-  // Needs to sign in or sign up
-  if (invitationData?.requires_signin) {
-    const isSignup = invitationData.error_code === "INVITATION_REQUIRES_SIGNUP";
-
-    return (
-      <DefaultStylesProvider>
-        <Container>
-          <Header>
-            <Title>{isSignup ? "Sign Up Required" : "Sign In Required"}</Title>
-            <Subtitle>To accept this invitation</Subtitle>
-          </Header>
-          <StatusContainer>
-            <InfoIcon>ℹ</InfoIcon>
-            <Message>
-              This invitation is for <EmailHighlight>{invitationData.invited_email}</EmailHighlight>
-            </Message>
-            <SubMessage>
-              {isSignup
-                ? "You need to create an account with this email address to accept the invitation."
-                : invitationData.error_code === "INVITATION_EMAIL_MISMATCH"
-                  ? "You're currently signed in with a different account. Please sign in with the invited email."
-                  : "Please sign in to accept this invitation."}
-            </SubMessage>
-            <Button onClick={handleGoToAuth} $fullWidth style={{ marginTop: "var(--space-8u)" }}>
-              {isSignup ? "Sign Up to Accept" : "Sign In to Accept"}
-            </Button>
-          </StatusContainer>
-        </Container>
-      </DefaultStylesProvider>
-    );
-  }
-
-  // Expired invitation
-  if (invitationData?.error_code === "INVITATION_EXPIRED") {
-    return (
-      <DefaultStylesProvider>
-        <Container>
-          <Header>
-            <Title>Invitation Expired</Title>
-            <Subtitle>This invitation is no longer valid</Subtitle>
-          </Header>
-          <StatusContainer>
-            <ErrorIcon>⏱</ErrorIcon>
-            <Message>
-              Invitation for <EmailHighlight>{invitationData.invited_email}</EmailHighlight> has expired
-            </Message>
-            <SubMessage>
-              Invitations are valid for 10 days. Please request a new invitation from your organization administrator.
-            </SubMessage>
-          </StatusContainer>
-        </Container>
-      </DefaultStylesProvider>
-    );
-  }
-
-  // Generic error state
-  if (error || invitationData?.error_code) {
-    return (
-      <DefaultStylesProvider>
-        <Container>
-          <Header>
-            <Title>Invitation Error</Title>
-            <Subtitle>Unable to process invitation</Subtitle>
-          </Header>
-          <StatusContainer>
-            <ErrorIcon>✗</ErrorIcon>
-            <Message>Something went wrong</Message>
-            <SubMessage>{invitationData?.message || error || "Failed to accept invitation"}</SubMessage>
-            <Button onClick={handleRetry} $fullWidth style={{ marginTop: "var(--space-8u)" }}>
-              Try Again
-            </Button>
-            <Footer>
-              <div style={{ marginTop: "var(--space-6u)" }}>
-                Having trouble?{" "}
-                <Link onClick={handleGoToAuth}>
-                  Sign in manually
-                </Link>
-              </div>
-            </Footer>
-          </StatusContainer>
-        </Container>
-      </DefaultStylesProvider>
-    );
-  }
-
-  // Default loading state (shouldn't normally reach here)
-  return null;
+    return null;
 }

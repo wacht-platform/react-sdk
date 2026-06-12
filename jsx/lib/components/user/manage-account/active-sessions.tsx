@@ -49,7 +49,7 @@ const UnknownBrowserIcon = () => (
         height="20"
         viewBox="0 0 24 24"
         fill="none"
-        style={{ color: "var(--color-secondary-text)" }}
+        className="w-text-secondary"
     >
         <circle
             cx="12"
@@ -160,9 +160,7 @@ export const ActiveSessionsSection = () => {
 
     if (loading) {
         return (
-            <div
-                style={{ display: "flex", justifyContent: "center", padding: "var(--space-10u)" }}
-            >
+            <div className="w-loading">
                 <Spinner />
             </div>
         );
@@ -186,25 +184,14 @@ export const ActiveSessionsSection = () => {
                                         {typedSignins.map((signin) => (
                                             <TableRow key={signin.id}>
                                                 <TableCell>
-                                                    <div
-                                                        style={{
-                                                            display: "flex",
-                                                            alignItems: "center",
-                                                            gap: "var(--space-4u)",
-                                                        }}
-                                                    >
+                                                    <div className="w-flex w-items-center w-gap-3">
                                                         <IconWrapper>
                                                             <BrowserIcon browser={signin.browser || "Unknown"} />
                                                         </IconWrapper>
-                                                        <div>
+                                                        <div className="w-flex-col w-gap-1">
                                                             <div>{signin.browser || "Unknown Browser"}</div>
                                                             {signin.device && (
-                                                                <div
-                                                                    style={{
-                                                                        fontSize: "var(--font-size-sm)",
-                                                                        color: "var(--color-muted)",
-                                                                    }}
-                                                                >
+                                                                <div className="w-text-muted">
                                                                     {signin.device}
                                                                 </div>
                                                             )}
@@ -212,19 +199,14 @@ export const ActiveSessionsSection = () => {
                                                     </div>
                                                 </TableCell>
                                                 <TableCell>
-                                                    <div>
+                                                    <div className="w-flex-col w-gap-1">
                                                         <div>
                                                             {signin.city && signin.country
                                                                 ? `${signin.city}, ${signin.country}`
                                                                 : "Unknown location"}
                                                         </div>
                                                         {signin.ip_address && (
-                                                            <div
-                                                                style={{
-                                                                    fontSize: "var(--font-size-sm)",
-                                                                    color: "var(--color-muted)",
-                                                                }}
-                                                            >
+                                                            <div className="w-text-muted">
                                                                 {signin.ip_address}
                                                             </div>
                                                         )}
@@ -240,7 +222,7 @@ export const ActiveSessionsSection = () => {
                                                         $destructive
                                                         onClick={() => logoutSession(signin.id)}
                                                     >
-                                                        <SignOut size={12} style={{ marginRight: 4 }} />
+                                                        <SignOut size={12} />
                                                         Sign out
                                                     </Button>
                                                 </ActionsCell>

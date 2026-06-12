@@ -1,40 +1,8 @@
 import { useState, useRef, useEffect } from "react";
-import styled from "styled-components";
 import { QRCodeSVG } from "qrcode.react";
 import { Input } from "@/components/utility/input";
-import { Button } from "@/components/utility/button";
 import { useScreenContext } from "./context";
 import { usePopoverPosition } from "@/hooks/use-popover-position";
-
-const PopoverContainer = styled.div`
-  position: fixed;
-  background: var(--color-popover);
-  border-radius: var(--radius-md);
-  box-shadow: var(--shadow-md);
-  border: var(--border-width-thin) solid var(--color-border);
-  padding: var(--space-8u);
-  width: calc(calc(var(--size-50u) * 3) + var(--size-40u));
-  max-width: calc(100vw - var(--space-24u));
-  z-index: 1001;
-
-  @media (max-width: 600px) {
-    width: calc(100vw - var(--space-24u));
-  }
-`;
-
-const ButtonGroup = styled.div`
-  display: flex;
-  gap: var(--space-4u);
-  justify-content: flex-end;
-  margin-top: var(--space-8u);
-`;
-
-const Title = styled.div`
-  font-size: var(--font-size-lg);
-  font-weight: 400;
-  color: var(--color-popover-foreground);
-  margin-bottom: var(--space-4u);
-`;
 
 interface SetupTOTPPopoverProps {
   triggerRef?: React.RefObject<HTMLElement | null>;
@@ -62,6 +30,7 @@ export const SetupTOTPPopover = ({
   const [mounted, setMounted] = useState(false);
   const { toast } = useScreenContext();
   const position = usePopoverPosition({
+    contentRef: popoverRef,
     triggerRef: triggerRef ?? { current: null },
     isOpen: mounted,
     minWidth: 380,
@@ -138,9 +107,14 @@ export const SetupTOTPPopover = ({
   }
 
   return (
-    <PopoverContainer
+    <div
       ref={popoverRef}
+      className="w-pop"
       style={{
+        position: "fixed",
+        zIndex: 1001,
+        width: 340,
+        maxWidth: "calc(100vw - 24px)",
         top: position?.top !== undefined ? `${position.top}px` : undefined,
         bottom: position?.bottom !== undefined ? `${position.bottom}px` : undefined,
         left: position?.left !== undefined ? `${position.left}px` : undefined,
@@ -152,172 +126,110 @@ export const SetupTOTPPopover = ({
     >
       {step === "qr" ? (
         <>
-          <Title>Setup Two-Factor Authentication</Title>
-          <div
-            style={{
-              fontSize: "var(--font-size-lg)",
-              color: "var(--color-muted)",
-              marginBottom: "var(--space-8u)",
-            }}
-          >
-            Scan this QR code with your authenticator app (Google Authenticator,
-            Authy, etc.)
-          </div>
+          <div className="w-pop-body">
+            <div className="w-flex-col w-gap-1">
+              <div className="w-pop-title">Setup Two-Factor Authentication</div>
+              <p className="w-pop-sub">
+                Scan this QR code with your authenticator app (Google Authenticator,
+                Authy, etc.)
+              </p>
+            </div>
 
-          <div
-            style={{
-              display: "flex",
-              justifyContent: "center",
-              marginBottom: "var(--space-8u)",
-            }}
-          >
-            {loading ? (
-              <div
-                style={{
-                  width: "calc(var(--size-50u) + var(--space-24u) + var(--space-1u))",
-                  height: "calc(var(--size-50u) + var(--space-24u) + var(--space-1u))",
-                  display: "flex",
-                  alignItems: "center",
-                  justifyContent: "center",
-                  border: "var(--border-width-thin) solid var(--color-border)",
-                  borderRadius: "var(--radius-md)",
-                  background: "var(--color-input-background)",
-                }}
-              >
-                Loading...
-              </div>
-            ) : qrUrl ? (
-              <div
-                style={{
-                  border: "var(--border-width-thin) solid var(--color-border)",
-                  borderRadius: "var(--radius-md)",
-                  padding: "var(--space-4u)",
-                  background: "var(--color-foreground-inverse)",
-                }}
-              >
-                <QRCodeSVG
-                  value={qrUrl}
-                  size={150}
-                  title="QR Code for Two-Factor Authentication Setup"
-                  aria-label="Scan this QR code with your authenticator app to set up two-factor authentication"
-                />
-              </div>
-            ) : (
-              <div
-                style={{
-                  width: "calc(var(--size-50u) + var(--space-24u) + var(--space-1u))",
-                  height: "calc(var(--size-50u) + var(--space-24u) + var(--space-1u))",
-                  display: "flex",
-                  alignItems: "center",
-                  justifyContent: "center",
-                  border: "var(--border-width-thin) solid var(--color-border)",
-                  borderRadius: "var(--radius-md)",
-                  background: "var(--color-input-background)",
-                  color: "var(--color-error)",
-                }}
-              >
-                QR Code Not Available
+            <div className="w-flex w-justify-center">
+              {loading ? (
+                <div className="w-qr w-text-muted">Loading...</div>
+              ) : qrUrl ? (
+                <div className="w-qr" style={{ background: "#fff", padding: 8 }}>
+                  <QRCodeSVG
+                    value={qrUrl}
+                    size={130}
+                    title="QR Code for Two-Factor Authentication Setup"
+                    aria-label="Scan this QR code with your authenticator app to set up two-factor authentication"
+                  />
+                </div>
+              ) : (
+                <div className="w-qr w-text-error">QR Code Not Available</div>
+              )}
+            </div>
+
+            {secret && (
+              <div className="w-flex-col w-gap-1">
+                <span className="w-secsub">Or enter manually:</span>
+                <div className="w-token">
+                  <code style={{ wordBreak: "break-all" }}>{secret}</code>
+                </div>
               </div>
             )}
           </div>
 
-          {secret && (
-            <div
-              style={{
-                background: "var(--color-input-background)",
-                border: "var(--border-width-thin) solid var(--color-border)",
-                borderRadius: "var(--radius-md)",
-                padding: "var(--space-4u)",
-                marginBottom: "var(--space-8u)",
-                fontSize: "var(--font-size-sm)",
-              }}
-            >
-              <div
-                style={{
-                  color: "var(--color-secondary-text)",
-                  marginBottom: "var(--space-2u)",
-                }}
-              >
-                Or enter manually:
-              </div>
-              <code
-                style={{
-                  fontFamily: "monospace",
-                  wordBreak: "break-all",
-                  color: "var(--color-secondary-text)",
-                }}
-              >
-                {secret}
-              </code>
-            </div>
-          )}
-
-          <ButtonGroup>
-            <Button
+          <div className="w-pop-foot">
+            <button
+              className="w-btn w-btn--primary w-btn--sm"
+              style={{ width: "auto" }}
               onClick={() => setStep("verify")}
               disabled={loading || !qrUrl}
             >
               I've Scanned the Code
-            </Button>
-          </ButtonGroup>
+            </button>
+          </div>
         </>
       ) : (
         <>
-          <Title>Verify Your Authenticator</Title>
-          <div
-            style={{
-              fontSize: "var(--font-size-lg)",
-              color: "var(--color-muted)",
-              marginBottom: "var(--space-8u)",
-            }}
-          >
-            Enter two consecutive codes from your authenticator app
+          <div className="w-pop-body">
+            <div className="w-flex-col w-gap-1">
+              <div className="w-pop-title">Verify Your Authenticator</div>
+              <p className="w-pop-sub">
+                Enter two consecutive codes from your authenticator app
+              </p>
+            </div>
+
+            <div className="w-flex w-gap-2">
+              <Input
+                id="totp-code-1"
+                type="text"
+                placeholder="000000"
+                value={codes[0]}
+                onChange={(e) => {
+                  const value = e.target.value
+                    .replace(/[^0-9]/g, "")
+                    .substring(0, 6);
+                  setCodes([value, codes[1]]);
+                }}
+                maxLength={6}
+                style={{ textAlign: "center", fontFamily: "var(--wa-font-mono)" }}
+                aria-label="First verification code from authenticator app"
+              />
+              <Input
+                id="totp-code-2"
+                type="text"
+                placeholder="000000"
+                value={codes[1]}
+                onChange={(e) => {
+                  const value = e.target.value
+                    .replace(/[^0-9]/g, "")
+                    .substring(0, 6);
+                  setCodes([codes[0], value]);
+                }}
+                maxLength={6}
+                style={{ textAlign: "center", fontFamily: "var(--wa-font-mono)" }}
+                aria-label="Second verification code from authenticator app"
+              />
+            </div>
           </div>
 
-          <div style={{ display: "flex", gap: "var(--space-4u)", marginBottom: "var(--space-8u)" }}>
-            <Input
-              id="totp-code-1"
-              type="text"
-              placeholder="000000"
-              value={codes[0]}
-              onChange={(e) => {
-                const value = e.target.value
-                  .replace(/[^0-9]/g, "")
-                  .substring(0, 6);
-                setCodes([value, codes[1]]);
-              }}
-              maxLength={6}
-              style={{ textAlign: "center", fontFamily: "monospace" }}
-              aria-label="First verification code from authenticator app"
-            />
-            <Input
-              id="totp-code-2"
-              type="text"
-              placeholder="000000"
-              value={codes[1]}
-              onChange={(e) => {
-                const value = e.target.value
-                  .replace(/[^0-9]/g, "")
-                  .substring(0, 6);
-                setCodes([codes[0], value]);
-              }}
-              maxLength={6}
-              style={{ textAlign: "center", fontFamily: "monospace" }}
-              aria-label="Second verification code from authenticator app"
-            />
-          </div>
-
-          <ButtonGroup>
-            <Button $outline onClick={() => setStep("qr")}>Back</Button>
-            <Button
+          <div className="w-pop-foot">
+            <button className="w-btn w-btn--secondary w-btn--sm" onClick={() => setStep("qr")}>Back</button>
+            <button
+              className="w-btn w-btn--primary w-btn--sm"
+              style={{ width: "auto" }}
               onClick={handleVerify}
               disabled={loading || codes.some((code) => code.length !== 6)}
             >
               {loading ? "Verifying..." : "Verify"}
-            </Button>
-          </ButtonGroup>
+            </button>
+          </div>
         </>
       )}
-    </PopoverContainer>
+    </div>
   );
 };

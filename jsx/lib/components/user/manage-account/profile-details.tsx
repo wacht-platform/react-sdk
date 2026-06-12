@@ -83,13 +83,7 @@ export const ProfileDetailsManagementSection = () => {
 
     if (!user) {
         return (
-            <div
-                style={{
-                    display: "flex",
-                    justifyContent: "center",
-                    padding: "var(--size-20u) 0",
-                }}
-            >
+            <div className="w-loading">
                 <Spinner />
             </div>
         );
@@ -113,245 +107,131 @@ export const ProfileDetailsManagementSection = () => {
     };
 
     return (
-        <>
-            <div
-                style={{
-                    display: "flex",
-                    flexDirection: "column",
-                    gap: "var(--space-12u)",
-                }}
-            >
-                {/* Profile Details */}
-                <div>
-                    <div style={{ marginBottom: "var(--space-6u)" }}>
-                        <p
-                            style={{
-                                fontSize: "var(--font-size-md)",
-                                color: "var(--color-secondary-text)",
-                                margin: 0,
-                            }}
-                        >
-                            Basic information about your profile
-                        </p>
-                    </div>
+        <div className="w-flex-col w-gap-6">
+            {/* Profile Details */}
+            <div className="w-flex-col w-gap-4">
+                <p className="w-secsub">Basic information about your profile</p>
 
-                    <div
-                        style={{
-                            display: "flex",
-                            flexDirection: "column",
-                            gap: "var(--space-8u)",
-                        }}
-                    >
-                        {/* First Name and Last Name in same row */}
-                        <FormRow>
-                            <FormGroup style={{ flex: 1 }}>
-                                <Label htmlFor="firstName">First Name</Label>
-                                <Input
-                                    id="firstName"
-                                    type="text"
-                                    value={firstName}
-                                    onChange={handleFirstNameChange}
-                                    onBlur={handleFirstNameBlur}
-                                    placeholder="Enter your first name"
-                                    required
-                                />
-                            </FormGroup>
+                <div className="w-flex-col w-gap-4">
+                    {/* First Name and Last Name in same row */}
+                    <FormRow>
+                        <FormGroup className="w-grow">
+                            <Label htmlFor="firstName">First Name</Label>
+                            <Input
+                                id="firstName"
+                                type="text"
+                                value={firstName}
+                                onChange={handleFirstNameChange}
+                                onBlur={handleFirstNameBlur}
+                                placeholder="Enter your first name"
+                                required
+                            />
+                        </FormGroup>
 
-                            <FormGroup style={{ flex: 1 }}>
-                                <Label htmlFor="lastName">Last Name</Label>
-                                <Input
-                                    id="lastName"
-                                    type="text"
-                                    value={lastName}
-                                    onChange={handleLastNameChange}
-                                    onBlur={handleLastNameBlur}
-                                    placeholder="Enter your last name"
-                                    required
-                                />
-                            </FormGroup>
-                        </FormRow>
+                        <FormGroup className="w-grow">
+                            <Label htmlFor="lastName">Last Name</Label>
+                            <Input
+                                id="lastName"
+                                type="text"
+                                value={lastName}
+                                onChange={handleLastNameChange}
+                                onBlur={handleLastNameBlur}
+                                placeholder="Enter your last name"
+                                required
+                            />
+                        </FormGroup>
+                    </FormRow>
 
-                        {deployment?.auth_settings?.username?.enabled && (
-                            <FormGroup>
-                                <Label htmlFor="username">Username</Label>
-                                <Input
-                                    id="username"
-                                    type="text"
-                                    value={username}
-                                    onChange={handleUsernameChange}
-                                    onBlur={handleUsernameBlur}
-                                    placeholder="Enter your username"
-                                    required
-                                />
-                            </FormGroup>
-                        )}
-                    </div>
-                </div>
-
-                {/* Divider */}
-                <div
-                    style={{
-                        position: "relative",
-                        height: "var(--border-width-thin)",
-                        background: "var(--color-divider)",
-                        margin: "0",
-                    }}
-                />
-
-                {/* Danger Zone */}
-                <div>
-                    <div style={{ marginBottom: "var(--space-8u)" }}>
-                        <h3
-                            style={{
-                                fontSize: "var(--font-size-xl)",
-                                color: "var(--color-foreground)",
-                                margin: "0 0 var(--space-2u) 0",
-                            }}
-                        >
-                            Danger Zone
-                        </h3>
-                        <p
-                            style={{
-                                fontSize: "var(--font-size-lg)",
-                                color: "var(--color-muted)",
-                                margin: 0,
-                            }}
-                        >
-                            Irreversible and destructive actions
-                        </p>
-                    </div>
-
-                    <div
-                        style={{
-                            padding: "var(--space-10u)",
-                            border: "var(--border-width-thin) solid var(--color-error)",
-                            borderRadius: "var(--radius-md)",
-                        }}
-                    >
-                        <div
-                            style={{
-                                display: "flex",
-                                alignItems: "center",
-                                justifyContent: "space-between",
-                                marginBottom: showDeleteConfirm
-                                    ? "var(--space-10u)"
-                                    : "0",
-                            }}
-                        >
-                            <div>
-                                <div
-                                    style={{
-                                        fontSize: "var(--font-size-lg)",
-                                        color: "var(--color-foreground)",
-                                        marginBottom: "var(--space-2u)",
-                                        fontWeight: "500",
-                                    }}
-                                >
-                                    Delete Account
-                                </div>
-                                <div
-                                    style={{
-                                        fontSize: "var(--font-size-md)",
-                                        color: "var(--color-muted)",
-                                    }}
-                                >
-                                    Once you delete your account, there is no
-                                    going back. Please be certain.
-                                </div>
-                            </div>
-                            <Button
-                                onClick={() => {
-                                    if (!showDeleteConfirm) {
-                                        setShowDeleteConfirm(true);
-                                    } else {
-                                        setShowDeleteConfirm(false);
-                                        setConfirmName("");
-                                    }
-                                }}
-                                style={{
-                                    background: "var(--color-error)",
-                                    color: "var(--color-foreground-inverse)",
-                                    border: "none",
-                                    padding: "var(--space-3u) var(--space-6u)",
-                                    fontSize: "var(--font-size-md)",
-                                    height: "calc(var(--size-8u) * 2)",
-                                    width: "auto",
-                                }}
-                            >
-                                {showDeleteConfirm ? "Cancel" : "Delete"}
-                            </Button>
-                        </div>
-
-                        {showDeleteConfirm && (
-                            <div
-                                style={{
-                                    width: "100%",
-                                    marginTop: "var(--space-8u)",
-                                }}
-                            >
-                                <FormGroup>
-                                    <Label htmlFor="confirm_username">
-                                        Type "delete this account" to confirm
-                                    </Label>
-                                    <Input
-                                        id="confirm_username"
-                                        type="text"
-                                        value={confirmName}
-                                        onChange={(e) =>
-                                            setConfirmName(e.target.value)
-                                        }
-                                        placeholder="delete this account"
-                                        style={{ width: "100%" }}
-                                    />
-                                </FormGroup>
-
-                                <Button
-                                    onClick={handleDeleteAccount}
-                                    disabled={
-                                        confirmName !== "delete this account" ||
-                                        isDeleting
-                                    }
-                                    style={{
-                                        background:
-                                            confirmName ===
-                                            "delete this account"
-                                                ? "var(--color-error)"
-                                                : "transparent",
-                                        color:
-                                            confirmName ===
-                                            "delete this account"
-                                                ? "var(--color-foreground-inverse)"
-                                                : "var(--color-muted)",
-                                        border: "var(--border-width-thin) solid var(--color-border)",
-                                        padding:
-                                            "var(--space-4u) var(--space-8u)",
-                                        fontSize: "var(--font-size-lg)",
-                                        height: "var(--size-18u)",
-                                        cursor:
-                                            confirmName ===
-                                            "delete this account"
-                                                ? "pointer"
-                                                : "not-allowed",
-                                        opacity:
-                                            confirmName ===
-                                            "delete this account"
-                                                ? 1
-                                                : 0.6,
-                                        marginTop: "var(--space-6u)",
-                                        width: "100%",
-                                    }}
-                                >
-                                    {isDeleting ? (
-                                        <Spinner size={12} />
-                                    ) : (
-                                        "Delete Forever"
-                                    )}
-                                </Button>
-                            </div>
-                        )}
-                    </div>
+                    {deployment?.auth_settings?.username?.enabled && (
+                        <FormGroup>
+                            <Label htmlFor="username">Username</Label>
+                            <Input
+                                id="username"
+                                type="text"
+                                value={username}
+                                onChange={handleUsernameChange}
+                                onBlur={handleUsernameBlur}
+                                placeholder="Enter your username"
+                                required
+                            />
+                        </FormGroup>
+                    )}
                 </div>
             </div>
-        </>
+
+            {/* Divider */}
+            <div className="w-hr" />
+
+            {/* Danger Zone */}
+            <div className="w-flex-col w-gap-4">
+                <div className="w-flex-col w-gap-1">
+                    <h3 className="w-sec">Danger Zone</h3>
+                    <p className="w-secsub">
+                        Irreversible and destructive actions
+                    </p>
+                </div>
+
+                <div className="w-danger w-flex-col w-items-start">
+                    <div className="w-flex w-items-center w-justify-between w-gap-4 w-full">
+                        <div className="w-flex-col w-gap-1">
+                            <div className="w-sec">Delete Account</div>
+                            <div className="w-secsub">
+                                Once you delete your account, there is no going
+                                back. Please be certain.
+                            </div>
+                        </div>
+                        <Button
+                            $destructive
+                            $size="sm"
+                            onClick={() => {
+                                if (!showDeleteConfirm) {
+                                    setShowDeleteConfirm(true);
+                                } else {
+                                    setShowDeleteConfirm(false);
+                                    setConfirmName("");
+                                }
+                            }}
+                        >
+                            {showDeleteConfirm ? "Cancel" : "Delete"}
+                        </Button>
+                    </div>
+
+                    {showDeleteConfirm && (
+                        <div className="w-full w-flex-col w-gap-3">
+                            <FormGroup>
+                                <Label htmlFor="confirm_username">
+                                    Type "delete this account" to confirm
+                                </Label>
+                                <Input
+                                    id="confirm_username"
+                                    type="text"
+                                    value={confirmName}
+                                    onChange={(e) =>
+                                        setConfirmName(e.target.value)
+                                    }
+                                    placeholder="delete this account"
+                                />
+                            </FormGroup>
+
+                            <Button
+                                $destructive
+                                $fullWidth
+                                onClick={handleDeleteAccount}
+                                disabled={
+                                    confirmName !== "delete this account" ||
+                                    isDeleting
+                                }
+                            >
+                                {isDeleting ? (
+                                    <Spinner size={12} />
+                                ) : (
+                                    "Delete Forever"
+                                )}
+                            </Button>
+                        </div>
+                    )}
+                </div>
+            </div>
+        </div>
     );
 };

@@ -1,341 +1,247 @@
 "use client";
 
-import { useEffect, useState } from "react";
-import styled from "styled-components";
+import { useEffect, useState, type ReactNode } from "react";
+import { Check, X } from "@phosphor-icons/react";
 import { DefaultStylesProvider } from "../utility/root";
 import { useSSOCallback } from "../../hooks/use-sso-callback";
 import { useDeployment } from "../../hooks/use-deployment";
 import { useNavigation } from "../../hooks/use-navigation";
-import { Button } from "../utility";
 import { PasskeyPrompt } from "./passkey-prompt";
-import { AuthFormImage } from "./auth-image";
+import { AuthCard, AuthHead, Spin } from "./auth-card";
 import { getStoredDevSession } from "@/utils/dev-session";
 import { sanitizeRedirectUri } from "@/utils/redirect-uri";
-import { standaloneAuthShell } from "./auth-shell";
 
-const Container = styled.div`
-  ${standaloneAuthShell}
-`;
-
-const Header = styled.div`
-  text-align: center;
-  margin-bottom: var(--space-8u);
-  position: relative;
-`;
-
-const Title = styled.h1`
-  font-size: var(--font-size-2xl);
-  font-weight: 400;
-  color: var(--color-card-foreground);
-  margin-bottom: var(--space-2u);
-  margin-top: 0;
-`;
-
-const Subtitle = styled.p`
-  color: var(--color-secondary-text);
-  font-size: var(--font-size-md);
-  margin: 0;
-`;
-
-const StatusContainer = styled.div`
-  padding-top: var(--space-10u);
-  text-align: center;
-`;
-
-const ErrorIcon = styled.div`
-  width: calc(var(--space-14u) * 2);
-  height: calc(var(--space-14u) * 2);
-  border-radius: 50%;
-  background: var(--color-error-background);
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  margin: 0 auto var(--space-8u) auto;
-  color: var(--color-error);
-  font-size: var(--font-size-3xl);
-`;
-
-const LoadingSpinner = styled.div`
-  width: calc(var(--space-14u) * 2);
-  height: calc(var(--space-14u) * 2);
-  border: var(--border-width-regular) solid var(--color-border);
-  border-top: var(--border-width-regular) solid var(--color-primary);
-  border-radius: 50%;
-  animation: spin 1s linear infinite;
-  margin: 0 auto var(--space-8u) auto;
-
-  @keyframes spin {
-    0% {
-      transform: rotate(0deg);
-    }
-    100% {
-      transform: rotate(360deg);
-    }
-  }
-`;
-
-const SuccessIcon = styled.div`
-  width: calc(var(--space-14u) * 2);
-  height: calc(var(--space-14u) * 2);
-  border-radius: 50%;
-  background: var(--color-success-background);
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  margin: 0 auto var(--space-8u) auto;
-  color: var(--color-success);
-  font-size: var(--font-size-3xl);
-`;
-
-const Message = styled.p`
-  font-size: var(--font-size-lg);
-  color: var(--color-card-foreground);
-  margin-bottom: var(--space-2u);
-`;
-
-const SubMessage = styled.p`
-  font-size: var(--font-size-md);
-  color: var(--color-secondary-text);
-  margin-bottom: var(--space-8u);
-`;
-
-const Footer = styled.div`
-  margin-top: var(--space-10u);
-  text-align: center;
-  font-size: var(--font-size-md);
-  color: var(--color-secondary-text);
-`;
-
-const Link = styled.span`
-  color: var(--color-primary);
-  text-decoration: none;
-  font-weight: 400;
-  transition: color 0.2s;
-  cursor: pointer;
-
-  &:hover {
-    color: var(--color-primary-hover);
-    text-decoration: underline;
-  }
-`;
+function Status({
+    title,
+    sub,
+    icon,
+    message,
+    action,
+    footer,
+}: {
+    title: string;
+    sub: string;
+    icon: ReactNode;
+    message: string;
+    action?: ReactNode;
+    footer?: ReactNode;
+}) {
+    return (
+        <DefaultStylesProvider>
+            <AuthCard footer={footer}>
+                <AuthHead title={title} sub={sub} />
+                <div className="w-auth-status">
+                    {icon}
+                    <p className="w-auth-sub">{message}</p>
+                    {action}
+                </div>
+            </AuthCard>
+        </DefaultStylesProvider>
+    );
+}
 
 export function SSOCallback() {
-  const { deployment } = useDeployment();
-  const { navigate } = useNavigation();
-  const { error, session, processed, signinAttempt, redirectUri, loading } =
-    useSSOCallback();
-  const [showPasskeyPrompt, setShowPasskeyPrompt] = useState(false);
-  const [pendingRedirectUrl, setPendingRedirectUrl] = useState<string | null>(null);
+    const { deployment } = useDeployment();
+    const { navigate } = useNavigation();
+    const { error, session, processed, signinAttempt, redirectUri, loading } =
+        useSSOCallback();
+    const [showPasskeyPrompt, setShowPasskeyPrompt] = useState(false);
+    const [pendingRedirectUrl, setPendingRedirectUrl] = useState<string | null>(
+        null,
+    );
 
-  const handleRetry = () => {
-    window.location.reload();
-  };
+    const handleRetry = () => {
+        window.location.reload();
+    };
 
-  const handleReturnToSignIn = () => {
-    const signInUrl = deployment?.ui_settings?.sign_in_page_url || "/sign-in";
-    navigate(signInUrl);
-  };
+    const handleReturnToSignIn = () => {
+        const signInUrl =
+            deployment?.ui_settings?.sign_in_page_url || "/sign-in";
+        navigate(signInUrl);
+    };
 
-  const handlePasskeyComplete = () => {
-    setShowPasskeyPrompt(false);
-    if (pendingRedirectUrl) {
-      navigate(pendingRedirectUrl);
-    }
-  };
+    const handlePasskeyComplete = () => {
+        setShowPasskeyPrompt(false);
+        if (pendingRedirectUrl) {
+            navigate(pendingRedirectUrl);
+        }
+    };
 
-  const handlePasskeySkip = () => {
-    setShowPasskeyPrompt(false);
-    if (pendingRedirectUrl) {
-      navigate(pendingRedirectUrl);
-    }
-  };
+    const handlePasskeySkip = () => {
+        setShowPasskeyPrompt(false);
+        if (pendingRedirectUrl) {
+            navigate(pendingRedirectUrl);
+        }
+    };
 
-  useEffect(() => {
-    if (!processed || loading || showPasskeyPrompt) return;
+    useEffect(() => {
+        if (!processed || loading || showPasskeyPrompt) return;
 
-    if (signinAttempt && !signinAttempt.completed) {
-      const signinUrl = deployment?.ui_settings?.sign_in_page_url;
-      if (signinUrl) {
-        const url = new URL(signinUrl, window.location.origin);
-        url.searchParams.set("signin_attempt_id", signinAttempt.id);
+        if (signinAttempt && !signinAttempt.completed) {
+            const signinUrl = deployment?.ui_settings?.sign_in_page_url;
+            if (signinUrl) {
+                const url = new URL(signinUrl, window.location.origin);
+                url.searchParams.set("signin_attempt_id", signinAttempt.id);
 
-        if (redirectUri) {
-          url.searchParams.set("redirect_uri", redirectUri);
+                if (redirectUri) {
+                    url.searchParams.set("redirect_uri", redirectUri);
+                }
+
+                navigate(url.toString());
+            }
+            return;
         }
 
-        navigate(url.toString());
-      }
-      return;
+        if (signinAttempt?.completed) {
+            const safeRedirectUri = sanitizeRedirectUri(deployment, redirectUri);
+            const redirectTarget =
+                safeRedirectUri ||
+                deployment?.ui_settings?.after_signin_redirect_url ||
+                deployment?.frontend_host ||
+                "/";
+
+            let redirectUrl: URL;
+            try {
+                redirectUrl = new URL(redirectTarget);
+            } catch {
+                redirectUrl = new URL(redirectTarget, window.location.origin);
+            }
+
+            if (redirectUrl) {
+                if (deployment?.mode === "staging") {
+                    redirectUrl.searchParams.set(
+                        "__dev_session__",
+                        getStoredDevSession(deployment.backend_host) || "",
+                    );
+                }
+
+                const passkeySettings = deployment?.auth_settings?.passkey;
+                const shouldPrompt =
+                    passkeySettings?.enabled &&
+                    passkeySettings?.prompt_registration_on_auth &&
+                    !session?.active_signin?.user?.has_passkeys;
+
+                if (shouldPrompt) {
+                    setPendingRedirectUrl(redirectUrl.toString());
+                    setShowPasskeyPrompt(true);
+                } else {
+                    navigate(redirectUrl.toString());
+                }
+            }
+        }
+    }, [
+        session,
+        processed,
+        loading,
+        redirectUri,
+        deployment,
+        signinAttempt,
+        navigate,
+    ]);
+
+    useEffect(() => {
+        if (error && error.message.includes("No OAuth callback data found")) {
+            setTimeout(() => {
+                const loginUrl =
+                    deployment?.ui_settings?.sign_in_page_url ||
+                    deployment?.frontend_host;
+
+                if (loginUrl) {
+                    navigate(loginUrl);
+                }
+            }, 2000);
+        }
+    }, [error, deployment, navigate]);
+
+    if (showPasskeyPrompt) {
+        return (
+            <DefaultStylesProvider>
+                <AuthCard>
+                    <PasskeyPrompt
+                        onComplete={handlePasskeyComplete}
+                        onSkip={handlePasskeySkip}
+                    />
+                </AuthCard>
+            </DefaultStylesProvider>
+        );
     }
 
-    if (signinAttempt?.completed) {
-      const safeRedirectUri = sanitizeRedirectUri(deployment, redirectUri);
-      const redirectTarget =
-        safeRedirectUri ||
-        deployment?.ui_settings?.after_signin_redirect_url ||
-        deployment?.frontend_host ||
-        "/";
-
-      let redirectUrl: URL;
-      try {
-        redirectUrl = new URL(redirectTarget);
-      } catch {
-        redirectUrl = new URL(redirectTarget, window.location.origin);
-      }
-
-      if (redirectUrl) {
-        if (deployment?.mode === "staging") {
-          redirectUrl.searchParams.set(
-            "__dev_session__",
-            getStoredDevSession(deployment.backend_host) || "",
-          );
-        }
-
-        // Check if we should show passkey registration prompt
-        const passkeySettings = deployment?.auth_settings?.passkey;
-        const shouldPrompt =
-          passkeySettings?.enabled &&
-          passkeySettings?.prompt_registration_on_auth &&
-          !session?.active_signin?.user?.has_passkeys;
-
-        if (shouldPrompt) {
-          setPendingRedirectUrl(redirectUrl.toString());
-          setShowPasskeyPrompt(true);
-        } else {
-          navigate(redirectUrl.toString());
-        }
-      }
+    if (session && processed && !error) {
+        return (
+            <Status
+                title="Success"
+                sub="Authentication completed successfully"
+                icon={
+                    <div className="w-success">
+                        <span className="ring" />
+                        <span className="disc">
+                            <Check weight="bold" />
+                        </span>
+                    </div>
+                }
+                message="You'll be redirected to your destination shortly."
+            />
+        );
     }
-  }, [
-    session,
-    processed,
-    loading,
-    redirectUri,
-    deployment,
-    signinAttempt,
-    navigate,
-  ]);
 
-  useEffect(() => {
-    if (error && error.message.includes("No OAuth callback data found")) {
-      setTimeout(() => {
-        const loginUrl =
-          deployment?.ui_settings?.sign_in_page_url ||
-          deployment?.frontend_host;
+    if (error) {
+        const isNoCallbackData = error.message.includes(
+            "No OAuth callback data found",
+        );
 
-        if (loginUrl) {
-          navigate(loginUrl);
-        }
-      }, 2000);
+        return (
+            <Status
+                title="Something went wrong"
+                sub="We couldn't complete your sign in"
+                icon={
+                    <div className="w-success w-success--error">
+                        <span className="ring" />
+                        <span className="disc">
+                            <X weight="bold" />
+                        </span>
+                    </div>
+                }
+                message={
+                    error.message ||
+                    "An unexpected error occurred during authentication."
+                }
+                action={
+                    !isNoCallbackData ? (
+                        <button
+                            type="button"
+                            className="w-btn w-btn--primary w-btn--block"
+                            onClick={handleRetry}
+                        >
+                            Try again
+                        </button>
+                    ) : undefined
+                }
+                footer={
+                    !isNoCallbackData ? (
+                        <span className="w-auth-foot">
+                            Having trouble?{" "}
+                            <button
+                                type="button"
+                                className="w-link"
+                                onClick={handleReturnToSignIn}
+                            >
+                                Return to sign in
+                            </button>
+                        </span>
+                    ) : undefined
+                }
+            />
+        );
     }
-  }, [error, deployment, navigate]);
-
-  if (loading && !processed) {
-    return (
-      <DefaultStylesProvider>
-        <Container>
-          <Header>
-            <Title>Completing sign in</Title>
-            <Subtitle>Please wait while we authenticate you</Subtitle>
-          </Header>
-          <StatusContainer>
-            <LoadingSpinner />
-            <Message>Verifying your credentials...</Message>
-            <SubMessage>This will only take a moment.</SubMessage>
-          </StatusContainer>
-        </Container>
-      </DefaultStylesProvider>
-    );
-  }
-
-  if (showPasskeyPrompt) {
-    return (
-      <DefaultStylesProvider>
-        <Container>
-          <AuthFormImage />
-          <PasskeyPrompt onComplete={handlePasskeyComplete} onSkip={handlePasskeySkip} />
-        </Container>
-      </DefaultStylesProvider>
-    );
-  }
-
-  if (session && processed && !error) {
-    return (
-      <DefaultStylesProvider>
-        <Container>
-          <Header>
-            <Title>Success!</Title>
-            <Subtitle>Authentication completed successfully</Subtitle>
-          </Header>
-          <StatusContainer>
-            <SuccessIcon>✓</SuccessIcon>
-            <Message>Redirecting you now...</Message>
-            <SubMessage>
-              You'll be redirected to your destination shortly.
-            </SubMessage>
-          </StatusContainer>
-        </Container>
-      </DefaultStylesProvider>
-    );
-  }
-
-  if (error) {
-    const isNoCallbackData = error.message.includes(
-      "No OAuth callback data found",
-    );
 
     return (
-      <DefaultStylesProvider>
-        <Container>
-          <Header>
-            <Title>Something went wrong</Title>
-            <Subtitle>We couldn't complete your sign in</Subtitle>
-          </Header>
-          <StatusContainer>
-            <ErrorIcon>✗</ErrorIcon>
-            <Message>Authentication Failed</Message>
-            <SubMessage>
-              {error.message ||
-                "An unexpected error occurred during authentication."}
-            </SubMessage>
-            {!isNoCallbackData && (
-              <Button
-                onClick={handleRetry}
-                $fullWidth
-                style={{ marginTop: "var(--space-8u)" }}
-              >
-                Try Again
-              </Button>
-            )}
-          </StatusContainer>
-          {!isNoCallbackData && (
-            <Footer>
-              <div>
-                Having trouble?{" "}
-                <Link onClick={handleReturnToSignIn}>Return to sign in</Link>
-              </div>
-            </Footer>
-          )}
-        </Container>
-      </DefaultStylesProvider>
+        <Status
+            title="Completing sign in"
+            sub="Please wait while we authenticate you"
+            icon={<Spin size={32} />}
+            message="Verifying your credentials… this will only take a moment."
+        />
     );
-  }
-
-  return (
-    <DefaultStylesProvider>
-      <Container>
-        <Header>
-          <Title>Completing sign in</Title>
-          <Subtitle>Please wait while we authenticate you</Subtitle>
-        </Header>
-        <StatusContainer>
-          <LoadingSpinner />
-          <Message>Verifying your credentials...</Message>
-          <SubMessage>This will only take a moment.</SubMessage>
-        </StatusContainer>
-      </Container>
-    </DefaultStylesProvider>
-  );
 }
 
 export default SSOCallback;

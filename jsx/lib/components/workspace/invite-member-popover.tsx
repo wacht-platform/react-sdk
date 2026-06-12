@@ -1,81 +1,12 @@
 import { useState, useRef, useEffect } from "react";
-import styled from "styled-components";
-import { X } from "@phosphor-icons/react";
 import { Input } from "@/components/utility/input";
 import { FormGroup, Label } from "../utility/form";
-import { Button, Spinner } from "../utility";
+import { Spinner } from "../utility";
 import { ComboBox, ComboBoxOption } from "../utility/combo-box";
 import { WorkspaceRole } from "@/types";
 import { useScreenContext } from "../organization/context";
 import { useActiveWorkspace } from "@/hooks/use-workspace";
 import { usePopoverPosition } from "@/hooks/use-popover-position";
-
-const PopoverContainer = styled.div`
-  position: fixed;
-  width: calc(var(--space-10u) * 18);
-  max-width: calc(100vw - var(--space-24u));
-  background: var(--color-popover);
-  border: var(--border-width-thin) solid var(--color-border);
-  border-radius: var(--radius-md);
-  box-shadow: var(--shadow-md);
-  z-index: 1001;
-  
-  @media (max-width: 600px) {
-    width: calc(100vw - var(--space-24u));
-  }
-`;
-
-const Header = styled.div`
-  display: flex;
-  justify-content: space-between;
-  align-items: center;
-  padding: var(--space-4u) var(--space-6u);
-  border-bottom: var(--border-width-thin) solid var(--color-border);
-`;
-
-const Title = styled.h3`
-  margin: 0;
-  font-size: var(--font-size-md);
-  font-weight: 400;
-  color: var(--color-popover-foreground);
-`;
-
-const Content = styled.div`
-  padding: var(--space-6u);
-`;
-
-const ButtonGroup = styled.div`
-  display: flex;
-  gap: var(--space-2u);
-  justify-content: flex-end;
-  padding: var(--space-4u) var(--space-6u);
-  border-top: var(--border-width-thin) solid var(--color-border);
-  background: var(--color-secondary);
-`;
-
-const CloseButton = styled.button`
-  background: none;
-  border: none;
-  padding: var(--space-2u);
-  cursor: pointer;
-  color: var(--color-muted);
-  transition: all 0.15s ease;
-  border-radius: var(--radius-2xs);
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  
-  &:hover {
-    color: var(--color-accent-foreground);
-    background: var(--color-accent);
-  }
-`;
-
-const FormFields = styled.div`
-  display: flex;
-  flex-direction: column;
-  gap: var(--space-4u);
-`;
 
 interface InviteMemberPopoverProps {
   onClose?: () => void;
@@ -98,6 +29,7 @@ export const InviteMemberPopover = ({
   const { toast } = useScreenContext();
   const { inviteMember } = useActiveWorkspace();
   const position = usePopoverPosition({
+    contentRef: popoverRef,
     triggerRef: triggerRef ?? { current: null },
     isOpen: mounted,
     minWidth: 360,
@@ -178,9 +110,12 @@ export const InviteMemberPopover = ({
   }
 
   return (
-    <PopoverContainer
+    <div
       ref={popoverRef}
+      className="w-pop w-pop--wide"
       style={{
+        position: "fixed",
+        zIndex: 1001,
         top: position?.top !== undefined ? `${position.top}px` : undefined,
         bottom: position?.bottom !== undefined ? `${position.bottom}px` : undefined,
         left: position?.left !== undefined ? `${position.left}px` : undefined,
@@ -193,69 +128,48 @@ export const InviteMemberPopover = ({
       aria-labelledby="invite-workspace-member-title"
       aria-modal="true"
     >
-      <Header>
-        <Title id="invite-workspace-member-title">Invite Member</Title>
-        <CloseButton onClick={onClose} aria-label="Close invite member dialog">
-          <X size={16} />
-        </CloseButton>
-      </Header>
+      <div className="w-pop-body">
+        <div className="w-pop-title" id="invite-workspace-member-title">Invite member</div>
+        <FormGroup>
+          <Label>Email Address</Label>
+          <Input
+            type="email"
+            placeholder="colleague@company.com"
+            value={email}
+            onChange={(e) => setEmail(e.target.value)}
+            autoFocus
+            aria-label="Email address for workspace invitation"
+            aria-describedby="workspace-email-help"
+          />
+        </FormGroup>
 
-      <Content>
-        <FormFields>
-          <FormGroup>
-            <Label>Email Address</Label>
-            <Input
-              type="email"
-              placeholder="colleague@company.com"
-              value={email}
-              onChange={(e) => setEmail(e.target.value)}
-              autoFocus
-              aria-label="Email address for workspace invitation"
-              aria-describedby="workspace-email-help"
-            />
-          </FormGroup>
+        <FormGroup>
+          <Label>Role</Label>
+          <ComboBox
+            options={roleOptions}
+            value={selectedRole?.id}
+            onChange={(id) =>
+              setSelectedRole(roles.find((role) => role.id === id)!)
+            }
+            placeholder="Select a role"
+            aria-label="Select role for invited workspace member"
+          />
+        </FormGroup>
+      </div>
 
-          <FormGroup>
-            <Label>Role</Label>
-            <ComboBox
-              options={roleOptions}
-              value={selectedRole?.id}
-              onChange={(id) =>
-                setSelectedRole(roles.find((role) => role.id === id)!)
-              }
-              placeholder="Select a role"
-              aria-label="Select role for invited workspace member"
-            />
-          </FormGroup>
-        </FormFields>
-      </Content>
-
-      <ButtonGroup>
-        <Button
-          $outline
-          onClick={onClose}
-          style={{
-            width: "auto",
-          }}
-        >
+      <div className="w-pop-foot">
+        <button type="button" className="w-btn w-btn--ghost w-btn--sm" onClick={onClose}>
           Cancel
-        </Button>
-        <Button
+        </button>
+        <button
+          type="button"
+          className="w-btn w-btn--primary w-btn--sm"
           onClick={handleInvite}
           disabled={!email || !selectedRole || loading}
-          style={{
-            width: "auto",
-          }}
         >
-          {loading ? (
-            <>
-              <Spinner size={14} /> Sending...
-            </>
-          ) : (
-            "PaperPlaneTilt Invitation"
-          )}
-        </Button>
-      </ButtonGroup>
-    </PopoverContainer>
+          {loading ? <Spinner size={14} /> : "Send invite"}
+        </button>
+      </div>
+    </div>
   );
 };

@@ -1,0 +1,2914 @@
+/* ============================================================
+   Wacht SDK — component layer (the `.w-*` design system).
+   Builds ONLY on the 23 `--wa-*` theme tokens. Non-themeable
+   constants (shadows, focus ring, inset highlights) are inlined
+   here — implementation detail, not part of the token contract.
+   Dark-mode shadow variants are handled by `.dark` overrides on
+   the few elevated surfaces.
+   ============================================================ */
+
+/* ---------- layout utilities (compose, don't inline) ---------- */
+.w-flex {
+    display: flex;
+}
+.w-flex-col {
+    display: flex;
+    flex-direction: column;
+}
+.w-inline {
+    display: inline-flex;
+    align-items: center;
+}
+.w-items-center {
+    align-items: center;
+}
+.w-items-start {
+    align-items: flex-start;
+}
+.w-items-end {
+    align-items: flex-end;
+}
+.w-justify-between {
+    justify-content: space-between;
+}
+.w-justify-end {
+    justify-content: flex-end;
+}
+.w-justify-center {
+    justify-content: center;
+}
+.w-wrap {
+    flex-wrap: wrap;
+}
+.w-grow {
+    flex: 1 1 auto;
+    min-width: 0;
+}
+.w-none {
+    flex: none;
+}
+.w-full {
+    width: 100%;
+}
+.w-gap-1 {
+    gap: 4px;
+}
+.w-gap-2 {
+    gap: 8px;
+}
+.w-gap-3 {
+    gap: 12px;
+}
+.w-gap-4 {
+    gap: 16px;
+}
+.w-gap-5 {
+    gap: 20px;
+}
+.w-gap-6 {
+    gap: 24px;
+}
+.w-truncate {
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+}
+.w-contents {
+    display: contents;
+}
+.w-h-full {
+    height: 100%;
+}
+.w-minh-full {
+    min-height: 100%;
+}
+.w-mono-sm {
+    font: 400 12px/1.4 var(--wa-font-mono);
+    color: var(--wa-text-muted);
+}
+.w-text-primary {
+    color: var(--wa-primary);
+}
+.w-text-secondary {
+    color: var(--wa-text-secondary);
+}
+.w-text-muted {
+    color: var(--wa-text-muted);
+}
+.w-text-faint {
+    color: var(--wa-text-faint);
+}
+.w-text-error {
+    color: var(--wa-error);
+}
+.w-text-success {
+    color: var(--wa-success);
+}
+.w-text-warning {
+    color: var(--wa-warning);
+}
+.w-mb-4 {
+    margin-bottom: 16px;
+}
+.w-mt-6 {
+    margin-top: 24px;
+}
+.w-maxw-sm {
+    max-width: 340px;
+}
+/* role-picker trigger sizing */
+.w-rolepick-btn {
+    min-width: 120px;
+}
+/* anchored combo dropdown (renders over content, not in-flow) */
+.w-combo-menu--pop {
+    position: absolute;
+    top: calc(100% + 4px);
+    left: 0;
+    right: 0;
+    z-index: 60;
+}
+.w-relative {
+    position: relative;
+}
+
+/* ---------- surface card ---------- */
+.w-card {
+    background: var(--wa-surface);
+    border: 0;
+    border-radius: var(--wa-radius-lg);
+    box-shadow:
+        0 0 0 0.5px var(--wa-border),
+        0 1px 1px rgba(20, 20, 22, 0.04),
+        0 4px 8px -4px rgba(20, 20, 22, 0.08),
+        0 24px 48px -16px rgba(20, 20, 22, 0.16);
+    overflow: hidden;
+}
+
+/* ---------- type ---------- */
+.w-eyebrow {
+    font: 400 10px/1 var(--wa-font-mono);
+    letter-spacing: 0.12em;
+    text-transform: uppercase;
+    color: var(--wa-text-faint);
+}
+.w-title {
+    font: 400 17px/1.25 var(--wa-font-sans);
+    letter-spacing: -0.02em;
+    color: var(--wa-text);
+    margin: 0;
+}
+.w-title-lg {
+    font: 400 19px/1.2 var(--wa-font-sans);
+    letter-spacing: -0.022em;
+    color: var(--wa-text);
+    margin: 0;
+}
+.w-sub {
+    font: 400 13px/1.5 var(--wa-font-sans);
+    color: var(--wa-text-muted);
+    margin: 0;
+}
+.w-sec {
+    font: 400 13px/1.3 var(--wa-font-sans);
+    color: var(--wa-text);
+    margin: 0;
+}
+.w-secsub {
+    font: 400 12px/1.45 var(--wa-font-sans);
+    color: var(--wa-text-muted);
+    margin: 0;
+}
+
+/* ---------- buttons ---------- */
+.w-btn {
+    height: 32px;
+    padding: 0 13px;
+    border-radius: var(--wa-radius);
+    border: 0.5px solid transparent;
+    font: 400 12.5px/1 var(--wa-font-sans);
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    gap: 7px;
+    cursor: pointer;
+    white-space: nowrap;
+    user-select: none;
+    transition:
+        background 0.14s ease,
+        border-color 0.14s ease,
+        filter 0.14s ease,
+        box-shadow 0.14s ease;
+    background: transparent;
+    color: var(--wa-text);
+}
+.w-btn:focus-visible {
+    outline: none;
+    box-shadow: 0 0 0 3px var(--wa-primary-soft);
+}
+.w-btn:disabled {
+    opacity: 0.6;
+    cursor: not-allowed;
+}
+.w-btn svg {
+    width: 14px;
+    height: 14px;
+    flex: none;
+}
+
+.w-btn--primary {
+    background: var(--wa-primary);
+    color: var(--wa-primary-foreground);
+    box-shadow:
+        inset 0 1px 0 rgba(255, 255, 255, 0.18),
+        0 1px 2px rgba(20, 20, 22, 0.12),
+        0 2px 8px -2px color-mix(in srgb, var(--wa-primary) 50%, transparent);
+    background-image: linear-gradient(
+        180deg,
+        rgba(255, 255, 255, 0.1),
+        rgba(255, 255, 255, 0) 42%
+    );
+}
+.w-btn--primary:active:not(:disabled) {
+    filter: brightness(0.97);
+    box-shadow: inset 0 1px 2px rgba(20, 20, 22, 0.2);
+}
+/* full-width, taller CTA (auth submit, wizard primary action) — opt-in */
+.w-btn--block {
+    width: 100%;
+    height: 38px;
+    font-size: 13px;
+}
+
+.w-btn--secondary {
+    background: var(--wa-surface);
+    border-color: var(--wa-border-strong);
+    color: var(--wa-text);
+    box-shadow:
+        inset 0 1px 0 rgba(255, 255, 255, 0.5),
+        0 1px 1.5px rgba(20, 20, 22, 0.04);
+}
+.w-btn--ghost {
+    background: transparent;
+    color: var(--wa-text-secondary);
+}
+
+.w-btn--danger {
+    background: transparent;
+    color: var(--wa-error);
+    border-color: color-mix(in srgb, var(--wa-error) 26%, transparent);
+}
+.w-btn--danger-solid {
+    background: var(--wa-error);
+    color: #fff;
+}
+
+.w-btn--sm {
+    height: 26px;
+    padding: 0 9px;
+    font-size: 11.5px;
+}
+.w-btn--lg {
+    height: 42px;
+    padding: 0 18px;
+    font-size: 13.5px;
+}
+.w-btn--icon {
+    height: 28px;
+    width: 28px;
+    padding: 0;
+    color: var(--wa-text-muted);
+}
+.w-btn--icon:hover {
+    background: var(--wa-surface-subtle);
+    color: var(--wa-text);
+}
+
+/* social / provider buttons */
+.w-social {
+    height: 40px;
+    width: 100%;
+    border-radius: var(--wa-radius);
+    border: 0.5px solid var(--wa-border-strong);
+    background: var(--wa-surface);
+    color: var(--wa-text);
+    font: 400 13px/1 var(--wa-font-sans);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 10px;
+    padding: 0 14px;
+    cursor: pointer;
+    position: relative;
+    box-shadow:
+        inset 0 1px 0 rgba(255, 255, 255, 0.5),
+        0 1px 1.5px rgba(20, 20, 22, 0.04);
+    transition:
+        background 0.14s ease,
+        border-color 0.14s ease,
+        box-shadow 0.14s ease,
+        transform 0.1s ease;
+}
+.w-social:active {
+    transform: translateY(0.5px);
+}
+.w-social:focus-visible {
+    outline: none;
+    box-shadow: 0 0 0 3px var(--wa-primary-soft);
+}
+.w-social svg,
+.w-social img {
+    width: 17px;
+    height: 17px;
+    flex: none;
+}
+.w-social .w-social-label {
+    flex: none;
+}
+.w-social .w-lastused {
+    position: absolute;
+    top: -9px;
+    right: 12px;
+    white-space: nowrap;
+    font: 400 9.5px/1 var(--wa-font-mono);
+    letter-spacing: 0.04em;
+    color: var(--wa-text-muted);
+    background: var(--wa-surface);
+    border: 0.5px solid var(--wa-border);
+    padding: 3px 6px;
+    border-radius: 5px;
+}
+
+/* ---------- fields ---------- */
+.w-field {
+    display: flex;
+    flex-direction: column;
+    gap: 7px;
+}
+.w-label {
+    font: 400 13px/1 var(--wa-font-sans);
+    color: var(--wa-text);
+    display: flex;
+    align-items: center;
+    gap: 4px;
+    letter-spacing: -0.005em;
+    white-space: nowrap;
+}
+.w-req {
+    color: var(--wa-error);
+    font-size: 12px;
+}
+.w-input {
+    height: 34px;
+    padding: 0 12px;
+    border-radius: var(--wa-radius);
+    border: 0.5px solid var(--wa-border-strong);
+    background: var(--wa-surface);
+    color: var(--wa-text);
+    font: 400 13px/1 var(--wa-font-sans);
+    width: 100%;
+    box-shadow: inset 0 1px 2px rgba(20, 20, 22, 0.05);
+    transition:
+        border-color 0.14s ease,
+        box-shadow 0.14s ease;
+}
+.w-input::placeholder {
+    color: var(--wa-text-faint);
+}
+.w-input:focus {
+    outline: none;
+    border-color: var(--wa-primary);
+    box-shadow:
+        inset 0 1px 2px rgba(20, 20, 22, 0.04),
+        0 0 0 3px var(--wa-primary-soft);
+}
+.w-input-row {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+}
+.w-input-trail {
+    margin-left: -34px;
+    z-index: 1;
+}
+.w-input-wrap {
+    position: relative;
+}
+.w-input--valid:focus {
+    border-color: var(--wa-success);
+    box-shadow: 0 0 0 3px var(--wa-success-soft);
+}
+.w-input--invalid,
+.w-input[aria-invalid="true"] {
+    border-color: color-mix(
+        in srgb,
+        var(--wa-error) 55%,
+        var(--wa-border-strong)
+    );
+}
+.w-input--invalid:focus,
+.w-input[aria-invalid="true"]:focus {
+    border-color: var(--wa-error);
+    box-shadow: 0 0 0 3px var(--wa-error-soft);
+}
+.w-input:disabled,
+.w-input[data-disabled] {
+    opacity: 0.55;
+    cursor: not-allowed;
+}
+.w-input-err {
+    font: 400 11.5px/1.3 var(--wa-font-sans);
+    color: var(--wa-error);
+}
+.w-input-ok {
+    font: 400 11.5px/1.3 var(--wa-font-sans);
+    color: var(--wa-success);
+}
+.w-input-eye {
+    position: absolute;
+    right: 6px;
+    top: 50%;
+    transform: translateY(-50%);
+    width: 28px;
+    height: 28px;
+    display: grid;
+    place-items: center;
+    border: 0;
+    background: none;
+    cursor: pointer;
+    color: var(--wa-text-faint);
+    border-radius: 6px;
+}
+.w-input-eye:hover {
+    color: var(--wa-text);
+    background: var(--wa-surface-subtle);
+}
+.w-input-eye svg {
+    width: 15px;
+    height: 15px;
+}
+
+/* ---------- avatar ---------- */
+.w-avatar {
+    width: 36px;
+    height: 36px;
+    border-radius: 50%;
+    display: grid;
+    place-items: center;
+    font: 400 var(--av-fs, 13px)/1 var(--wa-font-sans);
+    color: #fff;
+    flex: none;
+    background: var(--av-bg, linear-gradient(135deg, #6b3df5, #9277ff));
+    box-shadow: inset 0 0 0 0.5px rgba(255, 255, 255, 0.16);
+    letter-spacing: 0.01em;
+    overflow: hidden;
+}
+.w-avatar img {
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+}
+.w-avatar--square {
+    border-radius: var(--wa-radius);
+}
+.w-avatar--sm {
+    width: 20px;
+    height: 20px;
+    font-size: 10px;
+}
+.w-avatar--md {
+    width: 28px;
+    height: 28px;
+    font-size: 11px;
+}
+.w-avatar--lg {
+    width: 44px;
+    height: 44px;
+    font-size: 15px;
+}
+.w-avatar--xl {
+    width: 80px;
+    height: 80px;
+    font-size: 24px;
+}
+/* editable avatar — hover-reveal camera/upload veil */
+.w-avatar-edit {
+    position: relative;
+    cursor: pointer;
+    border: 0;
+    padding: 0;
+    /* No background reset: when the button itself is the avatar
+       (.w-avatar.w-avatar-edit) it must keep .w-avatar's colored gradient.
+       Wrapper usages supply their own bg (.w-ibadge / inner .w-avatar). */
+}
+.w-avatar-edit .w-avatar-veil {
+    position: absolute;
+    inset: 0;
+    border-radius: inherit;
+    display: grid;
+    place-items: center;
+    color: #fff;
+    background: color-mix(in srgb, #000 45%, transparent);
+    opacity: 0;
+    transition: opacity 0.15s ease;
+    font: 400 11px/1.2 var(--wa-font-sans);
+    text-align: center;
+    padding: 0 6px;
+}
+.w-avatar-edit:hover .w-avatar-veil,
+.w-avatar-edit[data-busy] .w-avatar-veil {
+    opacity: 1;
+}
+.w-avatar-veil svg {
+    width: 18px;
+    height: 18px;
+}
+
+/* ---------- pills / badges ---------- */
+.w-pill {
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    height: 21px;
+    padding: 0 8px;
+    border-radius: 4px;
+    font: 400 10.5px/1 var(--wa-font-mono);
+    text-transform: lowercase;
+    letter-spacing: 0.01em;
+    background: var(--wa-surface-subtle);
+    color: var(--wa-text-muted);
+    border: 0.5px solid var(--wa-border);
+    white-space: nowrap;
+    flex: none;
+}
+.w-pill .w-dot {
+    width: 5px;
+    height: 5px;
+    border-radius: 999px;
+    background: var(--wa-text-faint);
+}
+.w-pill--success {
+    background: var(--wa-success-soft);
+    color: var(--wa-success);
+    border-color: color-mix(in srgb, var(--wa-success) 26%, transparent);
+}
+.w-pill--success .w-dot {
+    background: var(--wa-success);
+}
+.w-pill--warning {
+    background: var(--wa-warning-soft);
+    color: var(--wa-warning);
+    border-color: color-mix(in srgb, var(--wa-warning) 26%, transparent);
+}
+.w-pill--warning .w-dot {
+    background: var(--wa-warning);
+}
+.w-pill--info {
+    background: var(--wa-info-soft);
+    color: var(--wa-info);
+    border-color: color-mix(in srgb, var(--wa-info) 26%, transparent);
+}
+.w-pill--info .w-dot {
+    background: var(--wa-info);
+}
+.w-pill--current {
+    background: var(--wa-primary-soft);
+    color: var(--wa-primary);
+    border-color: color-mix(in srgb, var(--wa-primary) 26%, transparent);
+}
+.w-pill--error {
+    background: var(--wa-error-soft);
+    color: var(--wa-error);
+    border-color: color-mix(in srgb, var(--wa-error) 26%, transparent);
+}
+.w-pill--error .w-dot {
+    background: var(--wa-error);
+}
+.w-pill--pending {
+    background: transparent;
+    color: var(--wa-warning);
+    border: 0.5px dashed color-mix(in srgb, var(--wa-warning) 55%, transparent);
+}
+.w-pill--pending .w-dot {
+    background: var(--wa-warning);
+}
+
+/* chip for connected-account emails etc */
+.w-chip {
+    display: inline-flex;
+    align-items: center;
+    gap: 7px;
+    height: 24px;
+    padding: 0 5px 0 9px;
+    border-radius: var(--wa-radius);
+    background: var(--wa-surface-subtle);
+    border: 0.5px solid var(--wa-border);
+    font: 400 12px/1 var(--wa-font-mono);
+    color: var(--wa-text-secondary);
+}
+.w-chip-x {
+    display: grid;
+    place-items: center;
+    width: 16px;
+    height: 16px;
+    border-radius: 3px;
+    color: var(--wa-text-faint);
+    cursor: pointer;
+}
+.w-chip-x:hover {
+    background: var(--wa-border);
+    color: var(--wa-text);
+}
+.w-chip-x svg {
+    width: 11px;
+    height: 11px;
+}
+
+/* ---------- OR divider ---------- */
+.w-or {
+    display: flex;
+    align-items: center;
+    gap: 14px;
+    margin: 18px 0;
+}
+.w-or::before,
+.w-or::after {
+    content: "";
+    height: 0.5px;
+    background: var(--wa-border);
+    flex: 1;
+}
+.w-or span {
+    font: 400 10px/1 var(--wa-font-mono);
+    letter-spacing: 0.14em;
+    color: var(--wa-text-faint);
+}
+
+.w-hr {
+    height: 0.5px;
+    background: var(--wa-border);
+    border: 0;
+    margin: 0;
+    width: 100%;
+}
+
+/* ---------- list rows ---------- */
+.w-list {
+    display: flex;
+    flex-direction: column;
+}
+.w-listhead {
+    display: grid;
+    align-items: center;
+    padding: 0 2px 8px;
+    font: 400 10px/1 var(--wa-font-mono);
+    letter-spacing: 0.1em;
+    text-transform: uppercase;
+    color: var(--wa-text-faint);
+    border-bottom: 0.5px solid var(--wa-border);
+}
+.w-row {
+    display: grid;
+    align-items: center;
+    padding: 13px 2px;
+    border-bottom: 0.5px solid var(--wa-border);
+}
+.w-row:last-child {
+    border-bottom: 0;
+}
+.w-row--hover {
+    border-radius: var(--wa-radius);
+    margin: 0 -8px;
+    padding: 11px 10px;
+    border-bottom: 0;
+    transition: background 0.12s ease;
+}
+.w-row--hover:hover {
+    background: var(--wa-surface-subtle);
+}
+
+/* ---------- account switcher rows ---------- */
+.w-acct {
+    display: flex;
+    align-items: center;
+    gap: 13px;
+    width: 100%;
+    text-align: left;
+    padding: 11px 12px;
+    border: 0.5px solid transparent;
+    border-radius: var(--wa-radius-lg);
+    background: none;
+    cursor: pointer;
+    transition:
+        background 0.13s ease,
+        border-color 0.13s ease;
+}
+.w-acct:hover {
+    background: var(--wa-surface-subtle);
+}
+.w-acct[data-active] {
+    background: var(--wa-surface-subtle);
+    border-color: var(--wa-border);
+}
+.w-acct .w-acct-go {
+    color: var(--wa-text-faint);
+    flex: none;
+    opacity: 0;
+    transform: translateX(-4px);
+    transition:
+        opacity 0.13s ease,
+        transform 0.13s ease;
+}
+.w-acct:hover .w-acct-go {
+    opacity: 1;
+    transform: none;
+    color: var(--wa-text-muted);
+}
+.w-acct[data-busy] {
+    opacity: 0.55;
+    pointer-events: none;
+}
+/* bordered account-switcher list (sign-in chooser) */
+.w-acct-list {
+    border: 0.5px solid var(--wa-border);
+    border-radius: var(--wa-radius-lg);
+    overflow: hidden;
+    margin-bottom: 18px;
+}
+.w-acct-list-head {
+    padding: 11px 14px;
+    border-bottom: 0.5px solid var(--wa-border);
+}
+.w-acct-list-body {
+    padding: 6px;
+}
+/* two-line name + email block inside an account row */
+.w-acct-text {
+    flex: 1;
+    min-width: 0;
+    text-align: left;
+}
+.w-acct-name {
+    display: block;
+    font: 400 13px/1.3 var(--wa-font-sans);
+    color: var(--wa-text);
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+}
+.w-acct-text .w-secsub {
+    display: block;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+}
+.w-acct .w-avatar {
+    width: 34px;
+    height: 34px;
+    flex: none;
+}
+.w-acct[data-active] .w-avatar {
+    width: 40px;
+    height: 40px;
+}
+.w-acct-add-ic {
+    width: 36px;
+    height: 36px;
+    border-radius: 50%;
+    background: var(--wa-surface-subtle);
+    border: 0.5px solid var(--wa-border);
+    display: grid;
+    place-items: center;
+    color: var(--wa-text-muted);
+    flex: none;
+    transition:
+        color 0.13s ease,
+        border-color 0.13s ease;
+}
+.w-acct--add:hover .w-acct-add-ic {
+    color: var(--wa-text);
+    border-color: var(--wa-text-muted);
+}
+/* trailing sign-out affordance on an account row — pulled flush so its
+   centered glyph aligns to the same inset as the avatar on the left */
+.w-acct-out {
+    color: var(--wa-text-faint);
+    flex: none;
+    margin-right: -6px;
+}
+.w-acct-out:hover {
+    color: var(--wa-error);
+    background: var(--wa-error-soft);
+}
+.w-acct--add:hover {
+    background: var(--wa-surface-subtle);
+}
+/* "add another account" action — divider-separated, distinct from rows */
+.w-acct-foot {
+    margin-top: 8px;
+    padding-top: 10px;
+}
+
+.w-acct-add {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 7px;
+    width: 100%;
+    height: 36px;
+    border: 0;
+    background: none;
+    cursor: pointer;
+    border-radius: var(--wa-radius);
+    font: 400 12.5px/1 var(--wa-font-sans);
+    color: var(--wa-text-muted);
+    transition:
+        background 0.13s ease,
+        color 0.13s ease;
+}
+.w-acct-add svg {
+    width: 15px;
+    height: 15px;
+}
+.w-acct-add:hover {
+    background: var(--wa-surface-subtle);
+    color: var(--wa-text);
+}
+
+/* ---------- tabs ---------- */
+.w-tabs {
+    display: flex;
+    gap: 2px;
+}
+.w-tab {
+    display: inline-flex;
+    align-items: center;
+    gap: 7px;
+    height: 30px;
+    flex: none;
+    white-space: nowrap;
+    padding: 0 12px;
+    border-radius: var(--wa-radius);
+    font: 400 12.5px/1 var(--wa-font-sans);
+    color: var(--wa-text-muted);
+    background: none;
+    border: 0;
+    cursor: pointer;
+    transition:
+        color 0.14s ease,
+        background 0.14s ease;
+}
+.w-tab svg {
+    width: 14px;
+    height: 14px;
+}
+.w-tab:hover {
+    color: var(--wa-text);
+    background: var(--wa-surface-subtle);
+}
+.w-tab--active {
+    color: var(--wa-text);
+    background: var(--wa-surface-subtle);
+}
+.w-tab--active svg {
+    color: var(--wa-primary);
+}
+
+/* ---------- dropdown menu ---------- */
+.w-menu {
+    width: 264px;
+    background: var(--wa-surface);
+    border: 0.5px solid var(--wa-border);
+    border-radius: var(--wa-radius-lg);
+    box-shadow:
+        0 1px 2px rgba(20, 20, 22, 0.05),
+        0 12px 32px -10px rgba(20, 20, 22, 0.16);
+    padding: 4px;
+    overflow: hidden;
+}
+.w-menu-head {
+    display: flex;
+    align-items: center;
+    gap: 11px;
+    padding: 11px 9px;
+}
+.w-menu-item {
+    display: flex;
+    align-items: center;
+    justify-content: flex-start;
+    gap: 10px;
+    height: 32px;
+    padding: 0 8px;
+    border-radius: var(--wa-radius);
+    font: 400 12.5px/1 var(--wa-font-sans);
+    color: var(--wa-text);
+    cursor: pointer;
+    transition: background 0.12s ease;
+    width: 100%;
+    border: 0;
+    background: none;
+    text-align: left;
+    white-space: nowrap;
+}
+.w-menu-item:hover {
+    background: var(--wa-surface-subtle);
+}
+.w-menu-item svg {
+    width: 15px;
+    height: 15px;
+    color: var(--wa-text-muted);
+    flex: none;
+}
+.w-menu-item--danger {
+    color: var(--wa-error);
+}
+.w-menu-item--danger svg {
+    color: var(--wa-error);
+}
+.w-menu-item--danger:hover {
+    background: var(--wa-error-soft);
+}
+.w-menu-trail {
+    margin-left: auto;
+    font: 400 10.5px/1 var(--wa-font-mono);
+    color: var(--wa-text-faint);
+}
+.w-menu-label {
+    font: 400 10px/1 var(--wa-font-mono);
+    letter-spacing: 0.1em;
+    text-transform: uppercase;
+    color: var(--wa-text-faint);
+    padding: 10px 9px 5px;
+}
+/* tenancy switcher trigger (subtle chip, not a form select) */
+.w-orgtrigger {
+    display: flex;
+    align-items: center;
+    gap: 9px;
+    width: 100%;
+    height: 40px;
+    padding: 0 9px;
+    border: 0;
+    border-radius: var(--wa-radius);
+    background: transparent;
+    color: var(--wa-text);
+    cursor: pointer;
+    font: 400 13px/1 var(--wa-font-sans);
+    text-align: left;
+    transition: background 0.12s ease;
+}
+.w-orgtrigger:hover,
+.w-orgtrigger[data-open] {
+    background: var(--wa-surface-subtle);
+}
+.w-orgtrigger:disabled {
+    opacity: 0.6;
+    cursor: default;
+}
+.w-orgtrigger > svg {
+    color: var(--wa-text-faint);
+    flex: none;
+}
+/* tenancy switcher dropdown regions */
+.w-switch-body {
+    overflow-y: auto;
+    padding: 4px 0;
+}
+.w-switch-banner {
+    margin: 8px 8px 0;
+}
+/* indented workspace group under an expanded org */
+.w-switch-nest {
+    display: flex;
+    flex-direction: column;
+    margin: 2px 0 6px 24px;
+    padding-left: 8px;
+    border-left: 0.5px solid var(--wa-border);
+}
+/* muted "create" menu item (new org / new workspace) */
+.w-menu-item--muted {
+    color: var(--wa-text-muted);
+}
+.w-menu-item--muted svg {
+    color: var(--wa-text-muted);
+}
+/* small inline row action (gear / leave) inside a switcher row */
+.w-rowact {
+    display: inline-grid;
+    place-items: center;
+    width: 22px;
+    height: 22px;
+    border-radius: 5px;
+    color: var(--wa-text-muted);
+    cursor: pointer;
+}
+.w-rowact:hover {
+    color: var(--wa-text);
+    background: var(--wa-border);
+}
+.w-rowact svg {
+    width: 13px;
+    height: 13px;
+}
+
+/* danger zone callout */
+.w-danger {
+    border: 0.5px solid color-mix(in srgb, var(--wa-error) 30%, transparent);
+    background: var(--wa-error-soft);
+    border-radius: var(--wa-radius);
+    padding: 14px 16px;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 20px;
+}
+
+.w-link {
+    color: var(--wa-text);
+    font-weight: 400;
+    cursor: pointer;
+    text-decoration: none;
+}
+.w-link--sm {
+    font-size: 12px;
+}
+.w-link:hover {
+    text-decoration: underline;
+}
+.w-link--muted {
+    color: var(--wa-text-muted);
+}
+.w-mono-faint {
+    font: 400 12px/1.4 var(--wa-font-mono);
+    color: var(--wa-text-faint);
+}
+
+/* ---- spinner ---- */
+@keyframes w-spin {
+    to {
+        transform: rotate(360deg);
+    }
+}
+.w-spin {
+    display: inline-block;
+    border-radius: 50%;
+    border: 2px solid var(--wa-border-strong);
+    border-top-color: var(--wa-primary);
+    animation: w-spin 0.7s linear infinite;
+}
+.w-spin--on-accent {
+    border-color: rgba(255, 255, 255, 0.35);
+    border-top-color: #fff;
+}
+.w-loading {
+    display: grid;
+    place-items: center;
+    gap: 14px;
+    padding: 40px;
+    text-align: center;
+}
+
+/* OTP input */
+.w-otp {
+    display: flex;
+    gap: 8px;
+}
+.w-otp .w-otp-cell {
+    width: 42px;
+    height: 48px;
+    text-align: center;
+    font: 400 20px/1 var(--wa-font-mono);
+    color: var(--wa-text);
+    border: 0.5px solid var(--wa-border-strong);
+    border-radius: var(--wa-radius);
+    background: var(--wa-surface);
+    display: grid;
+    place-items: center;
+}
+.w-otp .w-otp-cell[data-active],
+.w-otp .w-otp-cell:focus {
+    outline: none;
+    border-color: var(--wa-primary);
+    box-shadow: 0 0 0 3px var(--wa-primary-soft);
+}
+.w-otp .w-otp-cell[data-filled] {
+    border-color: var(--wa-text-muted);
+}
+.w-otp[data-error] .w-otp-cell {
+    border-color: color-mix(
+        in srgb,
+        var(--wa-error) 50%,
+        var(--wa-border-strong)
+    );
+}
+.w-otp-caret {
+    width: 1.5px;
+    height: 22px;
+    background: var(--wa-primary);
+    animation: w-blink 1s steps(1) infinite;
+}
+@keyframes w-blink {
+    50% {
+        opacity: 0;
+    }
+}
+
+/* address-edit badge above OTP */
+.w-addr-badge {
+    display: inline-flex;
+    align-items: center;
+    gap: 8px;
+    height: 30px;
+    padding: 0 6px 0 12px;
+    border-radius: 999px;
+    background: var(--wa-surface-subtle);
+    border: 0.5px solid var(--wa-border);
+    font: 400 12.5px/1 var(--wa-font-sans);
+    color: var(--wa-text-secondary);
+}
+.w-addr-badge button {
+    border: 0;
+    background: none;
+    cursor: pointer;
+    color: var(--wa-primary);
+    font: 400 12px/1 var(--wa-font-sans);
+    padding: 4px 8px;
+    border-radius: 6px;
+}
+.w-addr-badge button:hover {
+    background: var(--wa-primary-soft);
+}
+
+/* ---- empty state ---- */
+.w-empty {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    text-align: center;
+    gap: 12px;
+    padding: 48px 24px;
+}
+.w-empty .w-empty-ic {
+    display: grid;
+    place-items: center;
+    width: 44px;
+    height: 44px;
+    border-radius: var(--wa-radius-lg);
+    background: var(--wa-primary-soft);
+    color: var(--wa-primary);
+}
+.w-empty .w-empty-ic svg {
+    width: 20px;
+    height: 20px;
+    color: var(--wa-primary);
+}
+.w-empty-text {
+    display: flex;
+    flex-direction: column;
+    gap: 4px;
+}
+.w-empty h4 {
+    margin: 0;
+    font: 500 14px/1.4 var(--wa-font-sans);
+    color: var(--wa-text);
+}
+.w-empty p {
+    margin: 0;
+    font: 400 12px/1.5 var(--wa-font-sans);
+    color: var(--wa-text-muted);
+    max-width: 384px;
+    text-wrap: pretty;
+}
+.w-empty-action {
+    margin-top: 4px;
+}
+/* fill the available body height (already centered) */
+.w-empty--fill {
+    height: 100%;
+}
+/* legacy accent modifier — base icon is already primary-tinted now */
+.w-empty-ic--accent {
+    width: 44px;
+    height: 44px;
+}
+
+/* ---- toast ---- */
+.w-toast {
+    display: inline-flex;
+    align-items: center;
+    gap: 11px;
+    padding: 11px 13px 11px 14px;
+    border-radius: var(--wa-radius-lg);
+    background: var(--wa-surface);
+    border: 0.5px solid var(--wa-border);
+    box-shadow:
+        0 1px 2px rgba(20, 20, 22, 0.05),
+        0 12px 32px -10px rgba(20, 20, 22, 0.16);
+    min-width: 280px;
+    max-width: 380px;
+}
+.w-toast .w-toast-ic {
+    width: 20px;
+    height: 20px;
+    border-radius: 50%;
+    display: grid;
+    place-items: center;
+    flex: none;
+}
+.w-toast .w-toast-ic svg {
+    width: 12px;
+    height: 12px;
+}
+.w-toast--success .w-toast-ic {
+    background: var(--wa-success-soft);
+    color: var(--wa-success);
+}
+.w-toast--error .w-toast-ic {
+    background: var(--wa-error-soft);
+    color: var(--wa-error);
+}
+.w-toast-msg {
+    flex: 1;
+    font: 400 13px/1.35 var(--wa-font-sans);
+    color: var(--wa-text);
+}
+.w-toast-x {
+    border: 0;
+    background: none;
+    cursor: pointer;
+    color: var(--wa-text-faint);
+    width: 22px;
+    height: 22px;
+    border-radius: 6px;
+    display: grid;
+    place-items: center;
+    flex: none;
+}
+.w-toast-x:hover {
+    background: var(--wa-surface-subtle);
+    color: var(--wa-text);
+}
+.w-toast-x svg {
+    width: 12px;
+    height: 12px;
+}
+
+/* ---- popover (confirm / add / setup) ---- */
+.w-pop {
+    width: 320px;
+    background: var(--wa-surface);
+    border: 0.5px solid var(--wa-border);
+    border-radius: var(--wa-radius-lg);
+    box-shadow:
+        0 1px 2px rgba(20, 20, 22, 0.05),
+        0 12px 32px -10px rgba(20, 20, 22, 0.16);
+    overflow: hidden;
+}
+.w-pop-body {
+    padding: 15px 15px 13px;
+    display: flex;
+    flex-direction: column;
+    gap: 11px;
+}
+.w-pop-title {
+    margin: 0;
+    font: 400 13.5px/1.3 var(--wa-font-sans);
+    letter-spacing: -0.01em;
+    color: var(--wa-text);
+}
+.w-pop-sub {
+    margin: 0;
+    font: 400 12.5px/1.5 var(--wa-font-sans);
+    color: var(--wa-text-muted);
+    text-wrap: pretty;
+}
+/* a sub-line directly under the title belongs to it — pull it tight against
+   the heading (compensating the body's flex gap) instead of a full row gap */
+.w-pop-title + .w-pop-sub {
+    margin-top: -7px;
+}
+.w-pop-foot {
+    display: flex;
+    gap: 8px;
+    justify-content: flex-end;
+    padding: 10px 14px;
+    border-top: 0.5px solid var(--wa-border);
+    background: var(--wa-surface-subtle);
+}
+/* footer action buttons hug their content (override the full-width primary) */
+.w-pop-foot .w-btn {
+    width: auto;
+}
+.w-pop-icon {
+    width: 38px;
+    height: 38px;
+    border-radius: var(--wa-radius);
+    display: grid;
+    place-items: center;
+    flex: none;
+}
+.w-pop-icon--danger {
+    background: var(--wa-error-soft);
+    color: var(--wa-error);
+}
+.w-pop-icon--warn {
+    background: var(--wa-warning-soft);
+    color: var(--wa-warning);
+}
+.w-pop-icon svg {
+    width: 18px;
+    height: 18px;
+}
+
+/* ---- locked input ---- */
+.w-locked {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    height: 38px;
+    padding: 0 8px 0 13px;
+    border-radius: var(--wa-radius);
+    border: 0.5px solid var(--wa-border);
+    background: var(--wa-surface-subtle);
+}
+.w-locked .w-locked-ic {
+    color: var(--wa-text-faint);
+    flex: none;
+}
+.w-locked .w-locked-ic svg {
+    width: 15px;
+    height: 15px;
+    display: block;
+}
+.w-locked .w-locked-val {
+    flex: 1;
+    font: 400 13.5px/1 var(--wa-font-sans);
+    color: var(--wa-text-secondary);
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+}
+
+/* ---- restriction / disabled row ---- */
+.w-restricted {
+    opacity: 0.55;
+    cursor: not-allowed;
+}
+.w-restricted * {
+    pointer-events: none;
+}
+.w-warn-ic {
+    color: var(--wa-warning);
+    display: inline-grid;
+    place-items: center;
+}
+.w-warn-ic svg {
+    width: 15px;
+    height: 15px;
+}
+
+/* ---- backup codes grid ---- */
+.w-codes {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 8px;
+    padding: 14px;
+    border-radius: var(--wa-radius);
+    background: var(--wa-surface-subtle);
+    border: 0.5px solid var(--wa-border);
+}
+.w-codes span {
+    font: 400 13px/1.6 var(--wa-font-mono);
+    color: var(--wa-text);
+    text-align: center;
+    letter-spacing: 0.04em;
+}
+
+/* ---- QR placeholder ---- */
+.w-qr {
+    width: 148px;
+    height: 148px;
+    border-radius: var(--wa-radius);
+    border: 0.5px solid var(--wa-border);
+    background: var(--wa-surface);
+    display: grid;
+    place-items: center;
+    color: var(--wa-text);
+}
+
+/* ---- callout / banner ---- */
+.w-banner {
+    display: flex;
+    gap: 11px;
+    padding: 12px 14px;
+    border-radius: var(--wa-radius);
+    align-items: flex-start;
+}
+.w-banner svg {
+    width: 16px;
+    height: 16px;
+    flex: none;
+    margin-top: 1px;
+}
+.w-banner-txt {
+    font: 400 12.5px/1.5 var(--wa-font-sans);
+    text-wrap: pretty;
+    color: var(--wa-text-secondary);
+}
+.w-banner--error {
+    background: var(--wa-error-soft);
+}
+.w-banner--warn {
+    background: var(--wa-warning-soft);
+}
+.w-banner--info {
+    background: var(--wa-info-soft);
+}
+.w-banner--error svg {
+    color: var(--wa-error);
+}
+.w-banner--warn svg {
+    color: var(--wa-warning);
+}
+.w-banner--info svg {
+    color: var(--wa-info);
+}
+
+/* segmented context toggle */
+.w-seg {
+    display: inline-flex;
+    padding: 3px;
+    gap: 2px;
+    background: var(--wa-surface-subtle);
+    border: 0.5px solid var(--wa-border);
+    border-radius: var(--wa-radius);
+}
+.w-seg button {
+    height: 28px;
+    padding: 0 12px;
+    border: 0;
+    background: none;
+    cursor: pointer;
+    border-radius: 4px;
+    font: 400 12px/1 var(--wa-font-sans);
+    color: var(--wa-text-muted);
+    white-space: nowrap;
+}
+.w-seg button[data-on] {
+    background: var(--wa-surface);
+    color: var(--wa-text);
+    box-shadow: 0 0 0 0.5px var(--wa-border);
+}
+
+/* ---------- create flow (org / workspace wizard) ---------- */
+.w-steps {
+    display: flex;
+    gap: 6px;
+    justify-content: center;
+}
+.w-steps i {
+    width: 5px;
+    height: 5px;
+    border-radius: 999px;
+    background: var(--wa-border-strong);
+    transition:
+        background 0.2s ease,
+        width 0.2s ease;
+}
+.w-steps i[data-on] {
+    background: var(--wa-primary);
+    width: 16px;
+}
+.w-ibadge {
+    display: grid;
+    place-items: center;
+    width: 48px;
+    height: 48px;
+    flex: none;
+    border-radius: var(--wa-radius-lg);
+    background: var(--wa-primary-soft);
+    color: var(--wa-primary);
+    overflow: hidden;
+}
+.w-ibadge svg {
+    width: 24px;
+    height: 24px;
+}
+.w-ibadge img {
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+}
+.w-ibadge--done {
+    width: 52px;
+    height: 52px;
+    border-radius: 999px;
+    background: var(--wa-success-soft);
+    color: var(--wa-success);
+}
+.w-ibadge--done svg {
+    width: 26px;
+    height: 26px;
+}
+/* badge that doubles as a logo uploader (create flow, step 0) */
+.w-ibadge-wrap {
+    position: relative;
+}
+.w-ibadge-x {
+    position: absolute;
+    top: -6px;
+    right: -6px;
+    width: 20px;
+    height: 20px;
+    display: grid;
+    place-items: center;
+    border-radius: 999px;
+    border: 0.5px solid var(--wa-border);
+    background: var(--wa-surface);
+    color: var(--wa-text-muted);
+    cursor: pointer;
+    box-shadow: 0 1px 2px rgba(20, 20, 22, 0.12);
+}
+.w-ibadge-x svg {
+    width: 11px;
+    height: 11px;
+}
+/* footer note strip on the create card */
+.w-create-foot {
+    padding: 13px 32px;
+    border-top: 0.5px solid var(--wa-border);
+    background: var(--wa-surface-subtle);
+    text-align: center;
+}
+/* done-step summary row */
+.w-create-summary {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 12px;
+    width: 100%;
+    padding: 12px 16px;
+    border: 0.5px solid var(--wa-border);
+    border-radius: var(--wa-radius);
+}
+
+/* ---------- auth card chrome ---------- */
+.w-auth-card {
+    width: min(440px, 100%);
+}
+.w-auth-head {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 14px;
+    margin-bottom: 24px;
+}
+.w-auth-head-text {
+    display: flex;
+    flex-direction: column;
+    gap: 6px;
+    text-align: center;
+}
+.w-auth-title {
+    margin: 0;
+    font: 400 21px/1.2 var(--wa-font-sans);
+    letter-spacing: -0.025em;
+    color: var(--wa-text);
+}
+.w-auth-sub {
+    margin: 0;
+    font: 400 12.5px/1.5 var(--wa-font-sans);
+    color: var(--wa-text-muted);
+    text-wrap: pretty;
+}
+/* centered status pane (sso/magic-link/invite result screens) */
+.w-auth-status {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 16px;
+    padding-top: 4px;
+    text-align: center;
+}
+/* fine-print line in an auth card footer */
+.w-auth-foot {
+    font: 400 12.5px/1.5 var(--wa-font-sans);
+    color: var(--wa-text-muted);
+}
+/* tos/privacy consent fine print under a submit button */
+.w-fineprint {
+    margin: 2px 2px 0;
+    font: 400 11px/1.5 var(--wa-font-sans);
+    color: var(--wa-text-faint);
+    text-align: center;
+    text-wrap: pretty;
+}
+
+/* switch */
+.w-switch {
+    display: inline-flex;
+    align-items: center;
+    gap: 10px;
+    cursor: pointer;
+    user-select: none;
+}
+.w-switch .w-switch-track {
+    width: 36px;
+    height: 20px;
+    border-radius: 999px;
+    background: var(--wa-border-strong);
+    border: 0.5px solid transparent;
+    position: relative;
+    transition: background 0.16s ease;
+    flex: none;
+}
+.w-switch .w-switch-knob {
+    position: absolute;
+    top: 1.5px;
+    left: 1.5px;
+    width: 16px;
+    height: 16px;
+    border-radius: 50%;
+    background: #fff;
+    box-shadow: 0 1px 2px rgba(0, 0, 0, 0.25);
+    transition: transform 0.16s ease;
+}
+.w-switch[data-on] .w-switch-track {
+    background: var(--wa-primary);
+}
+.w-switch[data-on] .w-switch-knob {
+    transform: translateX(16px);
+}
+.w-switch-label {
+    font: 400 13px/1 var(--wa-font-sans);
+    color: var(--wa-text);
+}
+
+/* search input */
+.w-search {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    height: 32px;
+    width: 240px;
+    max-width: 100%;
+    padding: 0 11px;
+    border-radius: var(--wa-radius);
+    border: 0.5px solid var(--wa-border-strong);
+    background: var(--wa-surface);
+}
+/* search + action toolbar (members tabs) */
+.w-toolbar {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    flex-wrap: wrap;
+    gap: 12px;
+    margin-bottom: 14px;
+}
+.w-search svg {
+    width: 15px;
+    height: 15px;
+    color: var(--wa-text-faint);
+    flex: none;
+}
+.w-search input {
+    border: 0;
+    background: none;
+    outline: none;
+    flex: 1;
+    font: 400 13px/1 var(--wa-font-sans);
+    color: var(--wa-text);
+    min-width: 0;
+}
+.w-search input::placeholder {
+    color: var(--wa-text-faint);
+}
+
+/* combobox trigger */
+.w-combo {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    height: 34px;
+    padding: 0 10px 0 12px;
+    width: 100%;
+    border-radius: var(--wa-radius);
+    border: 0.5px solid var(--wa-border-strong);
+    background: var(--wa-surface);
+    cursor: pointer;
+    font: 400 13px/1 var(--wa-font-sans);
+    color: var(--wa-text);
+    transition: border-color 0.14s ease;
+}
+.w-combo:hover {
+    border-color: var(--wa-text-muted);
+}
+.w-combo[data-open] {
+    border-color: var(--wa-primary);
+    box-shadow: 0 0 0 3px var(--wa-primary-soft);
+}
+.w-combo .w-combo-val {
+    flex: 1;
+    text-align: left;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+}
+.w-combo .w-combo-val[data-ph] {
+    color: var(--wa-text-faint);
+}
+.w-combo svg {
+    width: 15px;
+    height: 15px;
+    color: var(--wa-text-muted);
+    flex: none;
+}
+.w-combo-menu {
+    width: 100%;
+    background: var(--wa-surface);
+    border: 0.5px solid var(--wa-border);
+    border-radius: var(--wa-radius);
+    box-shadow:
+        0 1px 2px rgba(20, 20, 22, 0.05),
+        0 12px 32px -10px rgba(20, 20, 22, 0.16);
+    padding: 4px;
+    overflow: hidden;
+}
+.w-combo-opt {
+    display: flex;
+    align-items: center;
+    justify-content: flex-start;
+    gap: 9px;
+    height: 30px;
+    padding: 0 8px;
+    border-radius: 5px;
+    font: 400 12.5px/1 var(--wa-font-sans);
+    color: var(--wa-text);
+    cursor: pointer;
+    width: 100%;
+    border: 0;
+    background: none;
+    text-align: left;
+    white-space: nowrap;
+}
+.w-combo-opt > svg {
+    width: 15px;
+    height: 15px;
+    flex: none;
+    color: var(--wa-text-muted);
+}
+.w-combo-opt:hover {
+    background: var(--wa-surface-subtle);
+}
+.w-combo-opt .w-combo-check {
+    margin-left: auto;
+    color: var(--wa-primary);
+    display: grid;
+    place-items: center;
+}
+.w-combo-opt .w-combo-check svg {
+    width: 14px;
+    height: 14px;
+}
+.w-combo-opt[data-disabled] {
+    opacity: 0.5;
+    cursor: not-allowed;
+}
+.w-combo-grp {
+    font: 400 10px/1 var(--wa-font-mono);
+    letter-spacing: 0.1em;
+    text-transform: uppercase;
+    color: var(--wa-text-faint);
+    padding: 9px 9px 5px;
+}
+
+/* phone input */
+.w-phone {
+    display: flex;
+    align-items: stretch;
+    gap: 0;
+    width: 100%;
+}
+.w-phone .w-phone-cc {
+    display: flex;
+    align-items: center;
+    gap: 7px;
+    height: 34px;
+    padding: 0 10px;
+    border: 0.5px solid var(--wa-border-strong);
+    border-right: 0;
+    border-radius: var(--wa-radius) 0 0 var(--wa-radius);
+    background: var(--wa-surface-subtle);
+    cursor: pointer;
+    font: 400 13px/1 var(--wa-font-sans);
+    color: var(--wa-text);
+    white-space: nowrap;
+}
+.w-phone .w-phone-cc svg {
+    width: 13px;
+    height: 13px;
+    color: var(--wa-text-muted);
+}
+.w-phone input {
+    flex: 1;
+    height: 34px;
+    padding: 0 12px;
+    border: 0.5px solid var(--wa-border-strong);
+    border-radius: 0 var(--wa-radius) var(--wa-radius) 0;
+    background: var(--wa-surface);
+    font: 400 13px/1 var(--wa-font-sans);
+    color: var(--wa-text);
+    outline: none;
+    min-width: 0;
+}
+.w-phone input:focus {
+    border-color: var(--wa-primary);
+    box-shadow: 0 0 0 3px var(--wa-primary-soft);
+    position: relative;
+}
+.w-flag {
+    width: 18px;
+    height: 13px;
+    border-radius: 2px;
+    display: inline-block;
+    flex: none;
+    box-shadow: inset 0 0 0 0.5px rgba(0, 0, 0, 0.15);
+}
+
+/* country picker popover */
+.w-country-pop {
+    position: absolute;
+    top: calc(100% + 6px);
+    left: 0;
+    z-index: 50;
+    width: 260px;
+    background: var(--wa-surface);
+    border: 0.5px solid var(--wa-border);
+    border-radius: var(--wa-radius);
+    box-shadow:
+        0 1px 2px rgba(20, 20, 22, 0.05),
+        0 12px 32px -10px rgba(20, 20, 22, 0.16);
+    overflow: hidden;
+}
+.w-country-search {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    padding: 9px 11px;
+    border-bottom: 0.5px solid var(--wa-border);
+}
+.w-country-search svg {
+    width: 14px;
+    height: 14px;
+    color: var(--wa-text-faint);
+    flex: none;
+}
+.w-country-search input {
+    border: 0;
+    background: none;
+    outline: none;
+    flex: 1;
+    font: 400 12.5px/1 var(--wa-font-sans);
+    color: var(--wa-text);
+    min-width: 0;
+}
+.w-country-search input::placeholder {
+    color: var(--wa-text-faint);
+}
+.w-country-list {
+    max-height: 220px;
+    overflow-y: auto;
+    padding: 5px;
+}
+.w-country-opt {
+    display: flex;
+    align-items: center;
+    gap: 9px;
+    height: 32px;
+    padding: 0 9px;
+    border-radius: 5px;
+    cursor: pointer;
+    font: 400 12.5px/1 var(--wa-font-sans);
+    color: var(--wa-text);
+    width: 100%;
+    border: 0;
+    background: none;
+    text-align: left;
+}
+.w-country-opt:hover {
+    background: var(--wa-surface-subtle);
+}
+.w-country-opt .dial {
+    margin-left: auto;
+    color: var(--wa-text-muted);
+    font: 400 12px/1 var(--wa-font-mono);
+    flex: none;
+}
+
+/* method button — wide selectable row */
+.w-method-stack {
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
+}
+.w-method {
+    display: flex;
+    align-items: center;
+    gap: 13px;
+    width: 100%;
+    padding: 13px 14px;
+    border: 0.5px solid var(--wa-border-strong);
+    border-radius: var(--wa-radius);
+    background: var(--wa-surface);
+    cursor: pointer;
+    text-align: left;
+    transition:
+        background 0.14s ease,
+        border-color 0.14s ease;
+}
+.w-method .w-method-ic {
+    width: 34px;
+    height: 34px;
+    border-radius: var(--wa-radius);
+    display: grid;
+    place-items: center;
+    background: var(--wa-surface-subtle);
+    color: var(--wa-text-secondary);
+    flex: none;
+}
+.w-method .w-method-ic svg {
+    width: 17px;
+    height: 17px;
+}
+.w-method .w-method-body {
+    flex: 1;
+    min-width: 0;
+    display: flex;
+    flex-direction: column;
+    gap: 3px;
+}
+.w-method .w-method-title {
+    font: 400 13.5px/1 var(--wa-font-sans);
+    color: var(--wa-text);
+}
+.w-method .w-method-desc {
+    font: 400 12px/1.4 var(--wa-font-sans);
+    color: var(--wa-text-muted);
+}
+.w-method .w-method-go {
+    color: var(--wa-text-faint);
+    flex: none;
+}
+.w-method .w-method-go svg {
+    width: 16px;
+    height: 16px;
+}
+.w-method[data-disabled] {
+    opacity: 0.5;
+    cursor: not-allowed;
+}
+
+/* dialog chrome */
+.w-overlay {
+    position: relative;
+    width: 100%;
+    height: 100%;
+    background: color-mix(in srgb, #000 38%, transparent);
+    display: grid;
+    place-items: center;
+    border-radius: inherit;
+}
+.w-dialog {
+    background: var(--wa-surface);
+    border: 0.5px solid var(--wa-border);
+    border-radius: var(--wa-radius-lg);
+    box-shadow:
+        0 1px 2px rgba(20, 20, 22, 0.05),
+        0 12px 32px -10px rgba(20, 20, 22, 0.16);
+    width: 100%;
+    max-width: 480px;
+    overflow: hidden;
+    display: flex;
+    flex-direction: column;
+}
+/* full settings panel (manage account / org / workspace): a fixed-size,
+   self-scrolling, viewport-responsive dialog. Sizing lives here, on the
+   dialog — the hosted component stays layout-agnostic. */
+.w-dialog--panel {
+    display: block;
+    width: 880px;
+    max-width: 100%;
+    height: min(560px, calc(100dvh - 40px));
+    overflow-y: auto;
+}
+/* the hosted component carries its own .w-card; flatten it so the panel is the
+   single (opaque, fixed-size) card and there's no card-in-card */
+.w-dialog--panel .w-card {
+    background: transparent;
+    border-radius: 0;
+    box-shadow: none;
+}
+@media (max-width: 640px) {
+    .w-dialog--panel {
+        height: calc(100dvh - 16px);
+    }
+}
+/* create-flow dialog: the CreateFlow card is the visible surface, so the
+   dialog shell itself is transparent and sizes to the card */
+.w-dialog--create {
+    background: transparent;
+    border: 0;
+    box-shadow: none;
+    width: 440px;
+    max-width: 100%;
+    align-items: center;
+    scrollbar-gutter: stable both-edges;
+}
+.w-create-card {
+    width: 440px;
+    max-width: 100%;
+}
+.w-create-body {
+    padding: 34px 32px 28px;
+}
+.w-create-head {
+    margin-bottom: 24px;
+}
+.w-create-steps {
+    margin-bottom: 22px;
+}
+.w-text-center {
+    text-align: center;
+}
+/* button styled as a muted link (e.g. "create another") */
+.w-linkbtn {
+    background: none;
+    border: 0;
+    padding: 0;
+    cursor: pointer;
+}
+/* modal overlay (backdrop + centering) — less inset on small viewports */
+.w-modal {
+    position: fixed;
+    inset: 0;
+    background: rgba(8, 8, 12, 0.5);
+    backdrop-filter: blur(3px);
+    -webkit-backdrop-filter: blur(3px);
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    padding: 20px;
+    z-index: 99999;
+}
+@media (max-width: 640px) {
+    .w-modal {
+        padding: 8px;
+    }
+}
+.w-dialog-head {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: 18px 20px;
+    border-bottom: 0.5px solid var(--wa-border);
+}
+.w-dialog-title {
+    margin: 0;
+    font: 400 15px/1.2 var(--wa-font-sans);
+    letter-spacing: -0.01em;
+    color: var(--wa-text);
+}
+.w-dialog-body {
+    padding: 20px;
+    display: flex;
+    flex-direction: column;
+    gap: 14px;
+}
+.w-dialog-foot {
+    display: flex;
+    gap: 8px;
+    justify-content: flex-end;
+    padding: 14px 20px;
+    border-top: 0.5px solid var(--wa-border);
+    background: var(--wa-surface-subtle);
+}
+
+/* vertical tabs (sidebar) */
+.w-vtabs {
+    display: flex;
+    flex-direction: column;
+    gap: 2px;
+}
+.w-vtab {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    height: 34px;
+    padding: 0 11px;
+    border-radius: var(--wa-radius);
+    font: 400 13px/1 var(--wa-font-sans);
+    color: var(--wa-text-muted);
+    background: none;
+    border: 0;
+    cursor: pointer;
+    text-align: left;
+    width: 100%;
+}
+.w-vtab svg {
+    width: 15px;
+    height: 15px;
+}
+.w-vtab:hover {
+    color: var(--wa-text);
+    background: var(--wa-surface-subtle);
+}
+.w-vtab[data-on] {
+    color: var(--wa-text);
+    background: var(--wa-surface-subtle);
+}
+.w-vtab[data-on] svg {
+    color: var(--wa-primary);
+}
+
+/* skeleton shimmer */
+@keyframes w-shimmer {
+    0% {
+        background-position: -200% 0;
+    }
+    100% {
+        background-position: 200% 0;
+    }
+}
+.w-skel {
+    border-radius: 6px;
+    background: linear-gradient(
+        90deg,
+        var(--wa-surface-subtle) 25%,
+        var(--wa-border) 37%,
+        var(--wa-surface-subtle) 63%
+    );
+    background-size: 200% 100%;
+    animation: w-shimmer 1.4s ease infinite;
+}
+/* auth card loading skeleton — mirrors the form so the swap-in is seamless */
+.w-auth-skel {
+    display: flex;
+    flex-direction: column;
+    gap: 22px;
+}
+.w-auth-skel-head {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 12px;
+    margin-bottom: 2px;
+}
+.w-auth-skel-fields {
+    display: flex;
+    flex-direction: column;
+    gap: 15px;
+}
+.w-auth-skel-field {
+    display: flex;
+    flex-direction: column;
+    gap: 7px;
+}
+.w-skel-avatar {
+    width: 44px;
+    height: 44px;
+    border-radius: 50%;
+}
+.w-skel-line {
+    height: 10px;
+}
+.w-skel-title {
+    height: 16px;
+    width: 56%;
+}
+.w-skel-sub {
+    height: 11px;
+    width: 78%;
+}
+.w-skel-label {
+    height: 9px;
+    width: 34%;
+}
+.w-skel-input {
+    height: 38px;
+    border-radius: var(--wa-radius);
+}
+.w-skel-btn {
+    height: 38px;
+    border-radius: var(--wa-radius);
+    margin-top: 3px;
+}
+
+/* data table */
+.w-table {
+    width: 100%;
+    border-collapse: separate;
+    border-spacing: 0;
+    background: var(--wa-surface);
+    border: 0.5px solid var(--wa-border);
+    border-radius: var(--wa-radius-lg);
+    overflow: hidden;
+}
+.w-table thead {
+    background: var(--wa-surface-subtle);
+}
+.w-table th {
+    text-align: left;
+    padding: 9px 16px;
+    font: 400 11px/1 var(--wa-font-mono);
+    letter-spacing: 0.06em;
+    text-transform: uppercase;
+    color: var(--wa-text-faint);
+    white-space: nowrap;
+    border-bottom: 0.5px solid var(--wa-border);
+}
+.w-table th:last-child {
+    text-align: right;
+}
+.w-table td {
+    padding: 11px 16px;
+    font: 400 13px/1.35 var(--wa-font-sans);
+    color: var(--wa-text-secondary);
+    vertical-align: middle;
+    white-space: nowrap;
+}
+.w-table tbody tr {
+    transition: background 0.12s ease;
+}
+.w-table tbody tr:not(:last-child) td {
+    border-bottom: 0.5px solid var(--wa-border);
+}
+.w-table tbody tr:hover td {
+    background: var(--wa-surface-subtle);
+}
+.w-table tbody tr:last-child td:last-child {
+    overflow: visible;
+}
+.w-td--flex > div {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+}
+.w-td--actions {
+    text-align: right;
+    width: auto;
+    white-space: nowrap;
+    position: relative;
+    overflow: visible;
+}
+.w-td--actions > * {
+    width: fit-content;
+    margin-left: auto;
+}
+.w-td--actions > [data-dropdown-trigger] {
+    display: inline-flex;
+    width: fit-content;
+    margin-left: auto;
+}
+
+/* table actions cell helper */
+.w-actions {
+    display: flex;
+    gap: 6px;
+    justify-content: flex-end;
+    align-items: center;
+}
+.w-kebab {
+    width: 28px;
+    height: 28px;
+    border-radius: 6px;
+    border: 0;
+    background: none;
+    cursor: pointer;
+    color: var(--wa-text-muted);
+    display: grid;
+    place-items: center;
+}
+.w-kebab:hover {
+    background: var(--wa-surface-subtle);
+    color: var(--wa-text);
+}
+.w-kebab svg {
+    width: 16px;
+    height: 16px;
+}
+
+/* code / token field with copy */
+.w-token {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    height: 36px;
+    padding: 0 6px 0 12px;
+    border-radius: var(--wa-radius);
+    border: 0.5px solid var(--wa-border);
+    background: var(--wa-surface-subtle);
+}
+.w-token code {
+    flex: 1;
+    font: 400 12px/1 var(--wa-font-mono);
+    color: var(--wa-text-secondary);
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+}
+
+/* ---- management-page building blocks ---- */
+/* manage screen (account / org / workspace): header bar, tab strip, body */
+.w-page-head {
+    display: flex;
+    align-items: center;
+    flex-wrap: wrap;
+    gap: 12px;
+    padding: 18px 22px;
+}
+.w-tabsbar {
+    flex: none;
+    padding: 0 22px;
+    border-bottom: 0.5px solid var(--wa-border);
+    overflow-x: auto;
+    overflow-y: hidden;
+    scrollbar-width: none;
+}
+.w-tabsbar::-webkit-scrollbar {
+    display: none;
+}
+.w-tabbody {
+    flex: 1;
+    min-height: 0;
+    padding: 20px 22px;
+    overflow-y: auto;
+    overflow-x: auto;
+}
+.w-tabpane {
+    min-width: 300px;
+}
+/* settings cards inside a manage body */
+.w-card-head {
+    display: flex;
+    align-items: flex-start;
+    justify-content: space-between;
+    flex-wrap: wrap;
+    gap: 16px;
+    padding: 16px 20px;
+}
+.w-card-body {
+    padding: 16px 20px;
+}
+.w-card-foot {
+    display: flex;
+    align-items: center;
+    justify-content: flex-end;
+    flex-wrap: wrap;
+    gap: 12px;
+    padding: 14px 20px;
+    border-top: 0.5px solid var(--wa-border);
+}
+/* section header: title/sub on the left, action on the right, gap before body */
+.w-sechead {
+    display: flex;
+    align-items: flex-start;
+    justify-content: space-between;
+    gap: 16px;
+    margin-bottom: 14px;
+}
+/* fixed-size icon box (provider logos in connected accounts, etc.) */
+.w-iconbox {
+    width: 22px;
+    height: 22px;
+    flex: none;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    overflow: hidden;
+}
+.w-iconbox svg,
+.w-iconbox img {
+    width: 22px;
+    height: 22px;
+    display: block;
+}
+/* vertical-padded flex row with separators (security items, connections) —
+   left content + right actions on ONE line. (Do NOT combine with .w-row,
+   which is display:grid and would stack the children.) */
+.w-vrow {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 14px;
+    padding: 14px 0;
+}
+.w-vrow:not(:last-child) {
+    border-bottom: 0.5px solid var(--wa-border);
+}
+/* keep a row's trailing action aligned to the first text line when the
+   leading column wraps to multiple lines */
+.w-row-act-top {
+    align-self: flex-start;
+    margin-top: 20px;
+}
+/* full-width row inside a card body (members, sessions, …) */
+.w-rowitem {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 16px;
+    padding: 14px 20px;
+}
+.w-rowitem:not(:last-child) {
+    border-bottom: 0.5px solid var(--wa-border);
+}
+
+/* centered helper copy inside a split aside */
+.w-aside-copy {
+    max-width: 220px;
+    text-align: center;
+}
+/* two-panel split card (create org / workspace, account picker) */
+.w-split {
+    display: flex;
+    min-height: 400px;
+    border-radius: var(--wa-radius-lg);
+    overflow: hidden;
+    border: 0.5px solid var(--wa-border);
+    background: var(--wa-surface);
+}
+.w-split-aside {
+    width: 35%;
+    min-width: 200px;
+    flex: none;
+    background: var(--wa-surface-subtle);
+    border-right: 0.5px solid var(--wa-border);
+    padding: 28px;
+    display: flex;
+    flex-direction: column;
+    gap: 14px;
+}
+.w-split-main {
+    flex: 1;
+    min-width: 0;
+    padding: 28px;
+    display: flex;
+    flex-direction: column;
+    gap: 16px;
+}
+@media (max-width: 600px) {
+    .w-split {
+        flex-direction: column;
+    }
+    .w-split-aside {
+        width: 100%;
+        border-right: 0;
+        border-bottom: 0.5px solid var(--wa-border);
+    }
+}
+/* bordered selectable list row (org/ws pickers) */
+.w-listrow {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    width: 100%;
+    padding: 12px 0;
+    text-align: left;
+    border: 0;
+    border-bottom: 0.5px solid var(--wa-border);
+    background: transparent;
+    cursor: pointer;
+    transition: background 0.12s ease;
+}
+.w-listrow:last-child {
+    border-bottom: 0;
+}
+.w-listrow:hover {
+    background: var(--wa-surface-subtle);
+}
+.w-listrow:disabled {
+    opacity: 0.6;
+    cursor: not-allowed;
+}
+/* framed sub-panel (qr surround, passkey rows) */
+.w-tile {
+    border: 0.5px solid var(--wa-border);
+    border-radius: var(--wa-radius);
+    padding: 12px;
+    background: var(--wa-surface-subtle);
+}
+/* multi-line input */
+.w-input--area {
+    min-height: 80px;
+    padding-top: 9px;
+    padding-bottom: 9px;
+    resize: vertical;
+    line-height: 1.5;
+}
+/* monospace input (certs, IP allowlists) */
+.w-input--mono {
+    font-family: var(--wa-font-mono);
+}
+/* wide popover (role/sso popovers) */
+.w-pop--wide {
+    width: 372px;
+    max-width: calc(100vw - 24px);
+    overflow: visible;
+}
+/* compact inputs/dropdowns inside popovers (single-line fields only) */
+.w-pop .w-input:not(.w-input--area),
+.w-pop .w-combo {
+    height: 32px;
+}
+/* round gradient feature badge (passkey prompt) */
+.w-feature-badge {
+    width: 52px;
+    height: 52px;
+    border-radius: 999px;
+    display: grid;
+    place-items: center;
+    color: var(--wa-primary-foreground);
+    background: linear-gradient(
+        135deg,
+        var(--wa-primary),
+        var(--wa-primary-tint, #9277ff)
+    );
+    box-shadow: 0 4px 14px -3px
+        color-mix(in srgb, var(--wa-primary) 55%, transparent);
+    margin-bottom: 18px;
+}
+/* centered constrained column (setup panes) */
+.w-narrow {
+    max-width: 420px;
+    margin: 0 auto;
+}
+/* responsive field grids */
+.w-grid-2 {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 14px;
+}
+.w-grid-3 {
+    display: grid;
+    grid-template-columns: repeat(3, 1fr);
+    gap: 12px;
+}
+.w-grid-4 {
+    display: grid;
+    grid-template-columns: repeat(4, 1fr);
+    gap: 8px;
+}
+@media (max-width: 600px) {
+    .w-grid-2,
+    .w-grid-3,
+    .w-grid-4 {
+        grid-template-columns: 1fr;
+    }
+}
+/* positioned toast */
+.w-toast--fixed {
+    position: fixed;
+    bottom: 20px;
+    right: 20px;
+    z-index: 1000;
+}
+/* toast contained within a manage card (relative parent) instead of the
+   whole viewport — sits at the bottom, clipped to the card */
+.w-toast--contained {
+    position: absolute;
+    bottom: 16px;
+    left: 50%;
+    transform: translateX(-50%);
+    z-index: 20;
+    width: max-content;
+    max-width: calc(100% - 32px);
+}
+/* notification count badge (overlay on an icon button) */
+.w-notif-badge {
+    position: absolute;
+    top: 4px;
+    right: 4px;
+    min-width: 16px;
+    height: 16px;
+    padding: 0 4px;
+    border-radius: 999px;
+    background: var(--wa-error);
+    color: #fff;
+    font: 500 9px/1 var(--wa-font-sans);
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    border: 1px solid var(--wa-surface);
+}
+.w-notif-badge[data-dot] {
+    top: 6px;
+    right: 6px;
+    min-width: 8px;
+    height: 8px;
+    padding: 0;
+}
+/* notification row */
+.w-notif-row {
+    cursor: pointer;
+    padding: 12px 16px;
+    border-bottom: 0.5px solid var(--wa-border);
+}
+.w-notif-row[data-unread] {
+    background: var(--wa-surface-subtle);
+}
+.w-notif-dot {
+    width: 8px;
+    height: 8px;
+    border-radius: 50%;
+    background: var(--wa-primary);
+    flex: none;
+}
+.w-btn--icon[data-on] {
+    color: var(--wa-warning);
+}
+/* fixed notification popover panel */
+.w-notif-pop {
+    position: fixed;
+    width: 450px;
+    max-width: calc(100vw - 24px);
+    z-index: 99999;
+}
+/* notification panel (header / scroll body / overflow menu) */
+.w-notif-panel {
+    width: 450px;
+    max-width: 100%;
+    height: 100%;
+    background: var(--wa-surface);
+    overflow: hidden;
+}
+.w-notif-panel--fill {
+    width: 100%;
+}
+.w-notif-head {
+    padding: 12px 16px;
+    border-bottom: 0.5px solid var(--wa-border);
+}
+.w-notif-body {
+    overflow-y: auto;
+    background: var(--wa-surface);
+}
+.w-notif-menu {
+    position: absolute;
+    top: 48px;
+    right: 12px;
+    width: 200px;
+    z-index: 100000;
+}
+/* success banner variant */
+.w-banner--success {
+    background: var(--wa-success-soft);
+}
+.w-banner--success svg {
+    color: var(--wa-success);
+}
+
+/* ---- success / redirect ---- */
+@keyframes w-pop {
+    0% {
+        transform: scale(0.5);
+        opacity: 0;
+    }
+    60% {
+        transform: scale(1.06);
+    }
+    100% {
+        transform: scale(1);
+        opacity: 1;
+    }
+}
+@keyframes w-ring {
+    0% {
+        transform: scale(0.85);
+        opacity: 0.45;
+    }
+    100% {
+        transform: scale(1.9);
+        opacity: 0;
+    }
+}
+@keyframes w-draw {
+    to {
+        stroke-dashoffset: 0;
+    }
+}
+@keyframes w-indeterminate {
+    0% {
+        transform: translateX(-100%);
+    }
+    100% {
+        transform: translateX(330%);
+    }
+}
+.w-success {
+    position: relative;
+    display: grid;
+    place-items: center;
+    width: 56px;
+    height: 56px;
+}
+.w-success .ring {
+    position: absolute;
+    inset: 2px;
+    border-radius: 999px;
+    border: 1.5px solid var(--wa-success);
+    opacity: 0;
+}
+.w-success .disc {
+    width: 52px;
+    height: 52px;
+    border-radius: 999px;
+    background: var(--wa-success);
+    color: #fff;
+    display: grid;
+    place-items: center;
+    box-shadow: 0 4px 14px -3px
+        color-mix(in srgb, var(--wa-success) 55%, transparent);
+}
+.w-success .disc svg {
+    width: 26px;
+    height: 26px;
+}
+.w-success--error .ring {
+    border-color: var(--wa-error);
+}
+.w-success--error .disc {
+    background: var(--wa-error);
+    box-shadow: 0 4px 14px -3px
+        color-mix(in srgb, var(--wa-error) 55%, transparent);
+}
+.w-success--info .ring {
+    border-color: var(--wa-info);
+}
+.w-success--info .disc {
+    background: var(--wa-info);
+    box-shadow: 0 4px 14px -3px
+        color-mix(in srgb, var(--wa-info) 55%, transparent);
+}
+.w-progress {
+    position: relative;
+    width: 70%;
+    height: 3px;
+    border-radius: 999px;
+    background: var(--wa-border);
+    overflow: hidden;
+}
+.w-progress::after {
+    content: "";
+    position: absolute;
+    top: 0;
+    left: 0;
+    width: 30%;
+    height: 100%;
+    border-radius: 999px;
+    background: var(--wa-primary);
+}
+@media (prefers-reduced-motion: no-preference) {
+    .w-success .ring {
+        animation: w-ring 1.7s ease-out infinite;
+    }
+    .w-success .disc {
+        animation: w-pop 0.42s cubic-bezier(0.2, 0.9, 0.3, 1.2);
+    }
+    .w-success .disc svg path {
+        stroke-dasharray: 26;
+        stroke-dashoffset: 26;
+        animation: w-draw 0.4s 0.22s ease forwards;
+    }
+    .w-progress::after {
+        animation: w-indeterminate 1.15s ease-in-out infinite;
+    }
+}
+
+/* ---- enterprise SSO settings ---- */
+/* one configured-connection block, separated from the next */
+.w-sso-conn {
+    padding-bottom: 24px;
+}
+.w-sso-conn:not(:last-child) {
+    margin-bottom: 24px;
+    border-bottom: 0.5px solid var(--wa-border);
+}
+/* label / value detail grid (entity id, sso url, …) */
+.w-sso-detail {
+    display: grid;
+    grid-template-columns: auto 1fr;
+    gap: 4px 32px;
+}
+/* scim sub-section divider */
+.w-sso-scim {
+    padding-top: 16px;
+    border-top: 0.5px solid var(--wa-border);
+}
+/* selected-template summary banner */
+.w-sso-template {
+    padding: 12px;
+    background: var(--wa-primary-soft);
+    border-radius: var(--wa-radius);
+    border: 0.5px solid var(--wa-primary);
+}
+/* a single test-result check line */
+.w-sso-check {
+    padding: 8px 12px;
+    background: var(--wa-surface);
+    border-radius: var(--wa-radius);
+    border: 0.5px solid var(--wa-border);
+}
+.w-sso-check-mark {
+    min-width: 12px;
+}
+/* idp template tile (self-contained — not a repurposed .w-method row) */
+.w-sso-tile {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 8px;
+    padding: 14px 10px;
+    border: 0.5px solid var(--wa-border);
+    border-radius: var(--wa-radius);
+    background: var(--wa-surface);
+    cursor: pointer;
+    transition:
+        border-color 0.14s ease,
+        background 0.14s ease;
+}
+.w-sso-tile:hover {
+    border-color: var(--wa-border-strong);
+    background: var(--wa-surface-subtle);
+}
+/* idp provider logo */
+.w-sso-logo {
+    object-fit: contain;
+    background: var(--wa-surface);
+    padding: 4px;
+}
+.w-sso-logo--ph {
+    background: var(--wa-surface);
+}
+/* inline mono token chip */
+.w-token-chip {
+    background: var(--wa-surface-subtle);
+    padding: 2px 6px;
+    border-radius: 4px;
+    color: var(--wa-text);
+}
+/* clickable disclosure toggle */
+.w-disclosure {
+    cursor: pointer;
+    font: 400 12.5px/1 var(--wa-font-sans);
+}
+.w-disclosure-caret {
+    font-size: 9px;
+}
+/* break long urls/ids onto multiple lines */
+.w-break-all {
+    word-break: break-all;
+}
+/* span all columns in a grid */
+.w-col-full {
+    grid-column: 1 / -1;
+}
+
+/* ---------- dark-mode elevation overrides ---------- */
+.dark .w-card {
+    box-shadow:
+        0 0 0 0.5px var(--wa-border),
+        0 2px 4px rgba(0, 0, 0, 0.4),
+        0 28px 60px -20px rgba(0, 0, 0, 0.7);
+}
+.dark .w-menu,
+.dark .w-pop,
+.dark .w-toast,
+.dark .w-dialog,
+.dark .w-combo-menu,
+.dark .w-country-pop {
+    box-shadow:
+        0 1px 2px rgba(0, 0, 0, 0.5),
+        0 18px 44px -14px rgba(0, 0, 0, 0.7);
+}
+.dark .w-btn--secondary,
+.dark .w-social {
+    box-shadow:
+        inset 0 1px 0 rgba(255, 255, 255, 0.05),
+        0 1px 1.5px rgba(20, 20, 22, 0.04);
+}
+
+/* ---------- layout utility overrides ----------
+   Re-asserted last so single-class flex utilities win over component
+   defaults (e.g. .w-btn / .w-social hardcode justify-content:center).
+   This lets <Button className="w-justify-between"> align as expected. */
+.w-flex { display: flex; }
+.w-inline { display: inline-flex; }
+.w-items-center { align-items: center; }
+.w-items-start { align-items: flex-start; }
+.w-items-end { align-items: flex-end; }
+.w-justify-start { justify-content: flex-start; }
+.w-justify-center { justify-content: center; }
+.w-justify-end { justify-content: flex-end; }
+.w-justify-between { justify-content: space-between; }

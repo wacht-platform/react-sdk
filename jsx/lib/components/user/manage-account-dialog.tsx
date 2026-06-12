@@ -28,7 +28,7 @@ export const ManageAccountDialog: FC<ManageAccountDialogProps> = ({
   return (
     <Dialog isOpen={isOpen} onClose={onClose}>
       <Dialog.Overlay>
-        <Dialog.Content style={{ width: "900px", maxWidth: "min(90vw, 100vw - 16px)" }}>
+        <Dialog.Content className="w-dialog--panel">
           {showHeader && (
             <Dialog.Header showCloseButton={showCloseButton}>
               {headerContent || title}

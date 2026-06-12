@@ -1,6 +1,5 @@
 import { useState, useRef } from "react";
 import useSWR from "swr";
-import styled from "styled-components";
 import { Organization, OrganizationInvitation, OrganizationRole } from "@/types";
 import { useOrganizationList } from "@/hooks/use-organization";
 import { useScreenContext } from "../context";
@@ -21,15 +20,6 @@ import {
     DesktopTableContainer,
     StatusPill,
 } from "./shared";
-
-const InlineActions = styled.div`
-    display: flex;
-    align-items: center;
-    gap: 6px;
-    justify-content: flex-end;
-    flex-wrap: nowrap;
-    white-space: nowrap;
-`;
 
 const isExpired = (inv: OrganizationInvitation) => {
     const exp = (inv as any).expires_at;
@@ -101,12 +91,10 @@ export const InvitationsSection = ({ organization }: { organization: Organizatio
 
     return (
         <>
-            <HeaderCTAContainer style={{ marginBottom: "var(--space-6u)" }}>
-                <div style={{ flex: 1, minWidth: 0 }}>
-                    <div style={{ fontSize: 14, fontWeight: 500, color: "var(--color-card-foreground)" }}>
-                        Invitations
-                    </div>
-                    <div style={{ fontSize: 12, color: "var(--color-secondary-text)", marginTop: 2 }}>
+            <HeaderCTAContainer>
+                <div className="w-grow w-flex-col w-gap-1">
+                    <div className="w-sec">Invitations</div>
+                    <div className="w-secsub">
                         Pending invites to join this organization.
                     </div>
                 </div>
@@ -155,7 +143,7 @@ export const InvitationsSection = ({ organization }: { organization: Organizatio
                                 return (
                                     <TableRow key={inv.id}>
                                         <TableCell>{inv.email}</TableCell>
-                                        <TableCell style={{ color: "var(--color-secondary-text)" }}>
+                                        <TableCell>
                                             {inv.initial_organization_role?.name || "No role"}
                                         </TableCell>
                                         <TableCell>
@@ -164,11 +152,11 @@ export const InvitationsSection = ({ organization }: { organization: Organizatio
                                                 : <StatusPill $variant="warning">Pending</StatusPill>
                                             }
                                         </TableCell>
-                                        <TableCell style={{ color: "var(--color-secondary-text)" }}>
+                                        <TableCell>
                                             {new Date(inv.created_at).toLocaleDateString()}
                                         </TableCell>
                                         <ActionsCell>
-                                            <InlineActions>
+                                            <div className="w-actions">
                                                 <Button
                                                     $size="sm"
                                                     $outline
@@ -186,7 +174,7 @@ export const InvitationsSection = ({ organization }: { organization: Organizatio
                                                 >
                                                     {isBusy ? <Spinner size={12} /> : "Cancel"}
                                                 </Button>
-                                            </InlineActions>
+                                            </div>
                                         </ActionsCell>
                                     </TableRow>
                                 );

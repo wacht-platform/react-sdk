@@ -1,7 +1,6 @@
 import { useState, useEffect, useRef } from "react";
 import { Check, CaretDown, Trash } from "@phosphor-icons/react";
 import useSWR from "swr";
-import styled from "styled-components";
 import { useActiveWorkspace } from "@/hooks/use-workspace";
 import { useSession } from "@/hooks/use-session";
 import { useScreenContext } from "../../organization/context";
@@ -27,21 +26,7 @@ import {
 } from "@/components/utility/table";
 import { EmptyState } from "@/components/utility/empty-state";
 import { InviteMemberPopover } from "../invite-member-popover";
-import { HeaderCTAContainer, DesktopTableContainer } from "./shared";
-const AvatarPlaceholder = styled.div`
-    width: var(--size-20u);
-    height: var(--size-20u);
-    border-radius: 50%;
-    background: var(--color-input-background);
-    border: var(--border-width-thin) solid var(--color-border);
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    color: var(--color-muted);
-    font-weight: 400;
-    font-size: var(--font-size-lg);
-    overflow: hidden;
-`;
+import { DesktopTableContainer } from "./shared";
 
 export const MembersSection = () => {
     const {
@@ -72,7 +57,7 @@ export const MembersSection = () => {
 
     const { data: membersResponse, mutate: reloadMembers } = useSWR(
         activeWorkspace
-            ? `wacht - api - workspaces:${activeWorkspace.id}: members:${page}:${limit}:${debouncedSearchQuery} `
+            ? `wacht-api-workspaces:${activeWorkspace.id}:members:${page}:${limit}:${debouncedSearchQuery}`
             : null,
         () => getMembers?.({ page, limit, search: debouncedSearchQuery }),
         { keepPreviousData: true },
@@ -84,7 +69,7 @@ export const MembersSection = () => {
 
     const { data: rolesData = [] } = useSWR(
         activeWorkspace
-            ? `wacht - api - workspaces:${activeWorkspace.id}: roles`
+            ? `wacht-api-workspaces:${activeWorkspace.id}:roles`
             : null,
         () => getRoles() || [],
     );
@@ -123,39 +108,27 @@ export const MembersSection = () => {
 
     return (
         <>
-            <HeaderCTAContainer>
-                <div style={{ flex: 1 }}>
-                    <SearchInput
-                        value={searchQuery}
-                        onChange={setSearchQuery}
-                        placeholder="Search members..."
-                    />
-                </div>
-                <div
-                    style={{
-                        display: "flex",
-                        gap: "var(--space-6u)",
-                        alignItems: "center",
-                    }}
-                >
+            <div className="w-toolbar">
+                <SearchInput
+                    value={searchQuery}
+                    onChange={setSearchQuery}
+                    placeholder="Search members..."
+                />
+                <div className="w-flex w-items-center w-gap-3">
                     {meta.total > 0 && (
-                        <div
-                            style={{
-                                fontSize: "var(--font-size-lg)",
-                                color: "var(--color-muted)",
-                            }}
-                        >
+                        <div className="w-text-muted w-secsub">
                             {meta.total} member{meta.total !== 1 ? "s" : ""}
                         </div>
                     )}
                     <Button
                         ref={inviteMemberButtonRef}
                         onClick={() => setIsInviting(true)}
+                        $size="sm"
                     >
                         Invite
                     </Button>
                 </div>
-            </HeaderCTAContainer>
+            </div>
 
             {isInviting && (
                 <InviteMemberPopover
@@ -229,15 +202,7 @@ export const MembersSection = () => {
             )}
 
             {totalPages > 1 && (
-                <div
-                    style={{
-                        display: "flex",
-                        justifyContent: "center",
-                        alignItems: "center",
-                        gap: "var(--space-8u)",
-                        marginTop: "var(--space-12u)",
-                    }}
-                >
+                <div className="w-flex w-items-center w-justify-center w-gap-4">
                     <Button
                         onClick={() => setPage((p) => Math.max(1, p - 1))}
                         disabled={page === 1}
@@ -245,7 +210,7 @@ export const MembersSection = () => {
                     >
                         Previous
                     </Button>
-                    <span style={{ fontSize: "var(--font-size-md)" }}>
+                    <span className="w-secsub">
                         {page} / {totalPages}
                     </span>
                     <Button
@@ -271,79 +236,29 @@ const UserIdentity = ({ member, session, subtitle }: any) => {
         `${f[0] || ""}${l[0] || ""} `.toUpperCase();
 
     return (
-        <div
-            style={{
-                display: "flex",
-                alignItems: "center",
-                gap: "var(--space-6u)",
-            }}
-        >
-            <AvatarPlaceholder>
+        <div className="w-flex w-items-center w-gap-3">
+            <div className="w-avatar">
                 {userData?.profile_picture_url ? (
-                    <img
-                        src={userData.profile_picture_url}
-                        alt="Avatar"
-                        style={{
-                            width: "100%",
-                            height: "100%",
-                            objectFit: "cover",
-                        }}
-                    />
+                    <img src={userData.profile_picture_url} alt="Avatar" />
                 ) : (
                     getInitials(userData?.first_name, userData?.last_name) ||
                     "?"
                 )}
-            </AvatarPlaceholder>
+            </div>
             <div>
-                <div
-                    style={{
-                        display: "flex",
-                        alignItems: "center",
-                        gap: "var(--space-4u)",
-                    }}
-                >
-                    <span
-                        style={{
-                            fontSize: "var(--font-size-lg)",
-                            fontWeight: "400",
-                        }}
-                    >
+                <div className="w-flex w-items-center w-gap-2">
+                    <span className="w-sec">
                         {userData
                             ? `${userData.first_name || ""} ${userData.last_name || ""} `.trim() ||
                               userData.primary_email_address?.email
                             : "Unknown"}
                     </span>
-                    {isCurrentUser && (
-                        <span
-                            style={{
-                                fontSize: "var(--font-size-2xs)",
-                                padding: "var(--space-1u) var(--space-2u)",
-                                background: "var(--color-background-subtle)",
-                                color: "var(--color-muted)",
-                                borderRadius:
-                                    "calc(var(--radius-2xs) - var(--border-width-thin))",
-                                fontWeight: "400",
-                            }}
-                        >
-                            You
-                        </span>
-                    )}
+                    {isCurrentUser && <span className="w-pill">You</span>}
                 </div>
-                <div
-                    style={{
-                        fontSize: "var(--font-size-xs)",
-                        color: "var(--color-secondary-text)",
-                        fontWeight: "400",
-                        display: "flex",
-                        flexWrap: "wrap",
-                        gap: "var(--space-2u) var(--space-4u)",
-                    }}
-                >
+                <div className="w-flex w-wrap w-gap-2 w-secsub">
                     <span>{userData?.primary_email_address?.email}</span>
                     {subtitle && (
-                        <span style={{ color: "var(--color-muted)" }}>
-                            • {subtitle}
-                        </span>
+                        <span className="w-text-muted">• {subtitle}</span>
                     )}
                 </div>
             </div>
@@ -355,29 +270,22 @@ const RoleSelector = ({ member, roles, onToggle, onRemove }: any) => {
     const memberRoles = member.roles || [];
     const memberHasRole = (roleId: string) =>
         memberRoles.some((r: any) => r.id === roleId);
-    const roleSelectorWidth = "calc(var(--size-50u) + var(--size-40u))";
 
     return (
         <Dropdown>
             <DropdownTrigger>
                 <Button
                     $outline
-                    style={{
-                        color: "var(--color-foreground)",
-                        minWidth: roleSelectorWidth,
-                        justifyContent: "space-between",
-                    }}
+                    $size="sm"
+                    className="w-justify-between w-rolepick-btn"
                 >
                     {memberRoles.length > 0
                         ? memberRoles?.[0]?.name
                         : "No role"}{" "}
-                    <CaretDown
-                        size={14}
-                        style={{ marginLeft: "var(--space-2u)" }}
-                    />
+                    <CaretDown size={14} />
                 </Button>
             </DropdownTrigger>
-            <DropdownItems style={{ minWidth: roleSelectorWidth }}>
+            <DropdownItems>
                 {roles.map((role: any) => {
                     const active = memberHasRole(role.id);
                     return (
@@ -385,20 +293,10 @@ const RoleSelector = ({ member, roles, onToggle, onRemove }: any) => {
                             key={role.id}
                             onClick={() => onToggle(role.id, active)}
                         >
-                            <div
-                                style={{
-                                    display: "flex",
-                                    justifyContent: "space-between",
-                                    width: "100%",
-                                    gap: "var(--space-6u)",
-                                }}
-                            >
+                            <div className="w-flex w-justify-between w-full w-gap-3">
                                 <span>{role.name}</span>
                                 {active && (
-                                    <Check
-                                        size={14}
-                                        color="var(--color-success)"
-                                    />
+                                    <Check size={14} className="w-text-success" />
                                 )}
                             </div>
                         </DropdownItem>
@@ -406,13 +304,7 @@ const RoleSelector = ({ member, roles, onToggle, onRemove }: any) => {
                 })}
                 <DropdownDivider />
                 <DropdownItem $destructive onClick={onRemove}>
-                    <div
-                        style={{
-                            display: "flex",
-                            alignItems: "center",
-                            gap: "var(--space-4u)",
-                        }}
-                    >
+                    <div className="w-flex w-items-center w-gap-2">
                         <Trash size={14} /> Remove Member
                     </div>
                 </DropdownItem>

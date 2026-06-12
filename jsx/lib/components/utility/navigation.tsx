@@ -25,7 +25,7 @@ export const NavigationLink: React.FC<NavigationProps> = ({
   );
 
   return (
-    <a href={to} onClick={handleNavigation} {...props}>
+    <a href={to || undefined} onClick={handleNavigation} {...props}>
       {children}
     </a>
   );

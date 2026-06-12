@@ -1,57 +1,11 @@
 import { useState, useRef, useEffect } from "react";
-import styled from "styled-components";
 import { Input } from "@/components/utility/input";
 import { useActiveOrganization } from "@/hooks/use-organization";
-import { Button, Spinner } from "../utility";
+import { Spinner } from "../utility";
 import { ComboBox, ComboBoxOption } from "../utility/combo-box";
 import { OrganizationRole } from "@/types";
 import { useScreenContext } from "./context";
 import { usePopoverPosition } from "@/hooks/use-popover-position";
-
-const PopoverContainer = styled.div`
-    position: fixed;
-    background: var(--color-popover);
-    border-radius: 10px;
-    box-shadow: var(--shadow-md);
-    border: 1px solid var(--color-border);
-    width: 360px;
-    max-width: calc(100vw - 24px);
-    z-index: 1001;
-    overflow: hidden;
-    padding: 14px;
-    display: flex;
-    flex-direction: column;
-    gap: 10px;
-
-    @media (max-width: 600px) {
-        width: calc(100vw - 24px);
-    }
-`;
-
-const Title = styled.div`
-    font-size: 13px;
-    font-weight: 600;
-    color: var(--color-popover-foreground);
-`;
-
-const Field = styled.div`
-    display: flex;
-    flex-direction: column;
-    gap: 4px;
-`;
-
-const FieldLabel = styled.label`
-    font-size: 11px;
-    font-weight: 500;
-    color: var(--color-secondary-text);
-`;
-
-const Actions = styled.div`
-    display: grid;
-    grid-template-columns: 1fr 1fr;
-    gap: 6px;
-    & > button { width: 100%; }
-`;
 
 interface InviteMemberPopoverProps {
     onClose?: () => void;
@@ -74,6 +28,7 @@ export const InviteMemberPopover = ({
     const { inviteMember } = useActiveOrganization();
     const { toast } = useScreenContext();
     const position = usePopoverPosition({
+        contentRef: popoverRef,
         triggerRef: triggerRef ?? { current: null },
         isOpen: mounted,
         minWidth: 360,
@@ -131,9 +86,12 @@ export const InviteMemberPopover = ({
     if (!mounted) return null;
 
     return (
-        <PopoverContainer
+        <div
             ref={popoverRef}
+            className="w-pop w-pop--wide"
             style={{
+                position: "fixed",
+                zIndex: 1001,
                 top: position?.top !== undefined ? `${position.top}px` : undefined,
                 bottom: position?.bottom !== undefined ? `${position.bottom}px` : undefined,
                 left: position?.left !== undefined ? `${position.left}px` : undefined,
@@ -145,45 +103,48 @@ export const InviteMemberPopover = ({
             aria-labelledby="invite-member-title"
             aria-modal="true"
         >
-            <Title id="invite-member-title">Invite member</Title>
-            <Field>
-                <FieldLabel>Email</FieldLabel>
-                <Input
-                    type="email"
-                    placeholder="colleague@company.com"
-                    value={email}
-                    onChange={(e) => setEmail(e.target.value)}
-                    onKeyDown={(e) => {
-                        if (e.key === "Enter" && email && selectedRole) handleInvite();
-                    }}
-                    autoFocus
-                    aria-label="Email address for invitation"
-                />
-            </Field>
-            <Field>
-                <FieldLabel>Role</FieldLabel>
-                <ComboBox
-                    options={roleOptions}
-                    value={selectedRole?.id}
-                    onChange={(id) =>
-                        setSelectedRole(roles.find((role) => role.id === id)!)
-                    }
-                    placeholder="Select a role"
-                    aria-label="Select role for invited member"
-                />
-            </Field>
-            <Actions>
-                <Button $size="sm" $outline onClick={onClose}>
+            <div className="w-pop-body">
+                <div className="w-pop-title" id="invite-member-title">Invite member</div>
+                <label className="w-field">
+                    <span className="w-label">Email</span>
+                    <Input
+                        type="email"
+                        placeholder="colleague@company.com"
+                        value={email}
+                        onChange={(e) => setEmail(e.target.value)}
+                        onKeyDown={(e) => {
+                            if (e.key === "Enter" && email && selectedRole) handleInvite();
+                        }}
+                        autoFocus
+                        aria-label="Email address for invitation"
+                    />
+                </label>
+                <label className="w-field">
+                    <span className="w-label">Role</span>
+                    <ComboBox
+                        options={roleOptions}
+                        value={selectedRole?.id}
+                        onChange={(id) =>
+                            setSelectedRole(roles.find((role) => role.id === id)!)
+                        }
+                        placeholder="Select a role"
+                        aria-label="Select role for invited member"
+                    />
+                </label>
+            </div>
+            <div className="w-pop-foot">
+                <button type="button" className="w-btn w-btn--ghost w-btn--sm" onClick={onClose}>
                     Cancel
-                </Button>
-                <Button
-                    $size="sm"
+                </button>
+                <button
+                    type="button"
+                    className="w-btn w-btn--primary w-btn--sm"
                     onClick={handleInvite}
                     disabled={!email || !selectedRole || loading}
                 >
                     {loading ? <Spinner size={12} /> : "Send invite"}
-                </Button>
-            </Actions>
-        </PopoverContainer>
+                </button>
+            </div>
+        </div>
     );
 };
