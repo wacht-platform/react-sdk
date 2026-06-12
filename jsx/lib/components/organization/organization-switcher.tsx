@@ -270,8 +270,12 @@ export const OrganizationSwitcher = ({ showPersonal = true }: OrganizationSwitch
                                             </button>
                                         )}
 
-                                        <hr className="w-hr" />
-                                        <div className="w-menu-label">Organizations</div>
+                                        {(organizationMemberships?.length ?? 0) > 0 && (
+                                            <>
+                                                <hr className="w-hr" />
+                                                <div className="w-menu-label">Organizations</div>
+                                            </>
+                                        )}
 
                                         {organizationMemberships?.map((membership) => {
                                             const org = membership.organization;
