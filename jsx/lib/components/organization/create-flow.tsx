@@ -546,9 +546,14 @@ export const CreateFlow = ({
                                 onClick={handleCreate}
                                 disabled={busy || !name.trim()}
                             >
-                                {busy ? <Spinner size={15} /> : null}
-                                Continue
-                                {!busy && <CaretRight size={15} />}
+                                {busy ? (
+                                    <Spinner size={15} />
+                                ) : (
+                                    <>
+                                        Continue
+                                        <CaretRight size={15} />
+                                    </>
+                                )}
                             </button>
                             {onCancel && (
                                 <button
@@ -649,10 +654,13 @@ export const CreateFlow = ({
                                 onClick={handleFinish}
                                 disabled={busy}
                             >
-                                {busy ? <Spinner size={15} /> : null}
-                                {invites.length
-                                    ? `Invite ${invites.length} & finish`
-                                    : "Finish"}
+                                {busy ? (
+                                    <Spinner size={15} />
+                                ) : invites.length ? (
+                                    `Invite ${invites.length} & finish`
+                                ) : (
+                                    "Finish"
+                                )}
                             </button>
                         </div>
                     </div>
