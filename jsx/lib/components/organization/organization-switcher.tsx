@@ -12,7 +12,7 @@ import {
     WarningCircle,
     Check,
 } from "@phosphor-icons/react";
-import { DefaultStylesProvider } from "../utility/root";
+import { DefaultStylesProvider, useThemeOverrideVars } from "../utility/root";
 import {
     useActiveOrganization,
     useOrganizationMemberships,
@@ -48,6 +48,7 @@ export const OrganizationSwitcher = ({ showPersonal = true }: OrganizationSwitch
     const [selectedOrgForWorkspace, setSelectedOrgForWorkspace] = useState<string | null>(null);
     const [leaveError, setLeaveError] = useState<string | null>(null);
 
+    const themeOverrides = useThemeOverrideVars();
     const { organizationMemberships, loading: organizationLoading, refetch: refetchOrganizations } = useOrganizationMemberships();
     const { activeOrganization, activeMembership: activeOrgMembership, leave: leaveOrganization } = useActiveOrganization();
     const { activeWorkspace, activeMembership: activeWsMembership, leave: leaveWorkspace } = useActiveWorkspace();
@@ -229,6 +230,7 @@ export const OrganizationSwitcher = ({ showPersonal = true }: OrganizationSwitch
                                 transform: open ? "translateY(0)" : "translateY(-4px)",
                                 pointerEvents: open ? "auto" : "none",
                                 transition: `opacity 0.15s ease, transform 0.15s ease, visibility 0s linear ${open ? "0s" : "0.15s"}`,
+                                ...themeOverrides,
                             }}
                         >
                             {leaveError && (

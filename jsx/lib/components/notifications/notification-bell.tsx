@@ -1,7 +1,7 @@
 import { useState, useRef, useEffect } from "react";
 import ReactDOM from "react-dom";
 import { Bell } from "@phosphor-icons/react";
-import { DefaultStylesProvider } from "../utility/root";
+import { DefaultStylesProvider, useThemeOverrideVars } from "../utility/root";
 import { useNotificationUnreadCount } from "@/hooks/use-notifications";
 import { NotificationPopover } from "./notification-popover";
 import { usePopoverPosition } from "@/hooks/use-popover-position";
@@ -21,6 +21,7 @@ export function NotificationBell({
     onAction,
 }: NotificationBellProps) {
     const [isOpen, setIsOpen] = useState(false);
+    const themeOverrides = useThemeOverrideVars();
     const containerRef = useRef<HTMLDivElement>(null);
     const popoverRef = useRef<HTMLDivElement>(null);
     const buttonRef = useRef<HTMLButtonElement>(null);
@@ -83,7 +84,7 @@ export function NotificationBell({
             >
                 <button
                     ref={buttonRef}
-                    className="w-btn w-btn--icon"
+                    className="w-btn w-btn--icon w-notif-bell"
                     onClick={() => setIsOpen(!isOpen)}
                     aria-label={
                         unreadCount > 0
@@ -105,7 +106,7 @@ export function NotificationBell({
                 {typeof window !== "undefined" &&
                     isOpen &&
                     ReactDOM.createPortal(
-                        <div className="wacht-root">
+                        <div className="wacht-root" style={themeOverrides}>
                             <NotificationPopover
                                 ref={popoverRef}
                                 position={popoverPosition}

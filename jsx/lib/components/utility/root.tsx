@@ -45,6 +45,20 @@ function buildThemeOverrideVars(theme?: ThemeTokens | null): Record<string, stri
 }
 
 /**
+ * Inline `--wa-ov-*` override vars for the current deployment's theme_tokens.
+ * Apply to any `.wacht-root` element that lives OUTSIDE the main provider's DOM
+ * subtree — i.e. portalled popovers/dropdowns/dialogs rendered to `document.body`.
+ * Those re-wrap in `.wacht-root` (restoring base tokens) but don't inherit the
+ * overrides, which are set inline on the provider's root; this re-applies them.
+ * React context flows through portals, so this reads the same deployment.
+ */
+export function useThemeOverrideVars(): Record<string, string> {
+  const deploymentCtx = useContext(DeploymentContext);
+  const themeTokens = deploymentCtx?.deployment?.ui_settings?.theme_tokens;
+  return useMemo(() => buildThemeOverrideVars(themeTokens), [themeTokens]);
+}
+
+/**
  * True once an ancestor `DefaultStylesProvider` has rendered the global style
  * layer. Any nested provider — a portalled dropdown, a dialog, or one SDK
  * component composing another (ManageOrganization in its dialog, the switcher
@@ -77,12 +91,7 @@ export function DefaultStylesProvider({
   ...props
 }: DefaultStylesProviderProps) {
   const alreadyInjected = useContext(StylesInjected);
-  const deploymentCtx = useContext(DeploymentContext);
-  const themeTokens = deploymentCtx?.deployment?.ui_settings?.theme_tokens;
-  const overrideVars = useMemo(
-    () => buildThemeOverrideVars(themeTokens),
-    [themeTokens],
-  );
+  const overrideVars = useThemeOverrideVars();
   const [mounted, setMounted] = useState(false);
   useEffect(() => setMounted(true), []);
 

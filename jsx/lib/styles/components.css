@@ -215,6 +215,15 @@
     height: 14px;
     flex: none;
 }
+/* notification bell: larger nav-level glyph (overrides the 14px button-icon default) */
+.w-btn.w-notif-bell {
+    width: 32px;
+    height: 32px;
+}
+.w-btn.w-notif-bell svg {
+    width: 18px;
+    height: 18px;
+}
 
 .w-btn--primary {
     background: var(--wa-primary);

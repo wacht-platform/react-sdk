@@ -18,7 +18,7 @@ import {
     WarningCircle,
     ArrowsLeftRight,
 } from "@phosphor-icons/react";
-import { DefaultStylesProvider } from "../utility/root";
+import { DefaultStylesProvider, useThemeOverrideVars } from "../utility/root";
 import { useSession, useDeployment, useNavigation } from "@/hooks";
 import {
     useActiveOrganization,
@@ -399,6 +399,7 @@ export const UserButton: React.FC<UserButtonProps> = ({
     showOrgSwitcher = true,
     narrowBreakpoint = 640,
 }): JSX.Element => {
+    const themeOverrides = useThemeOverrideVars();
     const [isOpen, setIsOpen] = useState(false);
     const [showSwitcher, setShowSwitcher] = useState(false);
     const [isNarrow, setIsNarrow] = useState(
@@ -682,7 +683,7 @@ export const UserButton: React.FC<UserButtonProps> = ({
 
                 {typeof window !== "undefined" &&
                     ReactDOM.createPortal(
-                        <div className="wacht-root">
+                        <div className="wacht-root" style={themeOverrides}>
                             {/* Main popover */}
                             <DropdownContainer
                                 ref={dropdownRef}

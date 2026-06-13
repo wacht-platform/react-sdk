@@ -11,6 +11,7 @@ import {
 } from "react";
 import ReactDOM from "react-dom";
 import { X } from "@phosphor-icons/react";
+import { useThemeOverrideVars } from "./root";
 
 // Context for Dialog state
 interface DialogContextValue {
@@ -38,6 +39,7 @@ interface DialogProps {
 
 const DialogRoot: FC<DialogProps> = ({ isOpen, onClose, children }) => {
     const [isMounted, setIsMounted] = useState(false);
+    const themeOverrides = useThemeOverrideVars();
 
     useEffect(() => {
         setIsMounted(true);
@@ -58,9 +60,11 @@ const DialogRoot: FC<DialogProps> = ({ isOpen, onClose, children }) => {
     if (!isOpen || !isMounted) return null;
 
     // Portal outside the parent DOM hierarchy; the `.wacht-root` class scopes
-    // the token vars (styles are already injected document-wide by the host).
+    // the token vars (styles are already injected document-wide by the host),
+    // and themeOverrides re-applies the deployment's inline `--wa-ov-*` overrides
+    // which don't inherit across the portal boundary.
     return ReactDOM.createPortal(
-        <div className="wacht-root">
+        <div className="wacht-root" style={themeOverrides}>
             <DialogContext.Provider value={{ isOpen, onClose }}>
                 {children}
             </DialogContext.Provider>
