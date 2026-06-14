@@ -43,6 +43,8 @@ const THREAD_STATUS_POLL_INTERVAL_MS = 5000;
 interface UseAgentThreadConversationProps {
     threadId: string;
     initialThread?: AgentThread | null;
+    /** Scope the conversation to a single task (board item). Omit = whole thread. */
+    boardItemId?: string;
     platformAdapter?: {
         onPlatformEvent?: (eventName: string, eventData: unknown) => void;
     };
@@ -51,6 +53,7 @@ interface UseAgentThreadConversationProps {
 export function useAgentThreadConversation({
     threadId,
     initialThread = null,
+    boardItemId,
     platformAdapter,
 }: UseAgentThreadConversationProps) {
     const { deployment } = useDeployment();
@@ -306,6 +309,9 @@ export function useAgentThreadConversation({
                 if (beforeId) {
                     params.append("before_id", beforeId);
                 }
+                if (boardItemId) {
+                    params.append("board_item_id", boardItemId);
+                }
 
                 const response = await client(
                     `/ai/threads/${threadId}/messages?${params}`,
@@ -343,7 +349,7 @@ export function useAgentThreadConversation({
                 }
             }
         },
-        [threadId, client, applyMessagePage],
+        [threadId, boardItemId, client, applyMessagePage],
     );
 
     useEffect(() => {
@@ -379,7 +385,7 @@ export function useAgentThreadConversation({
                     const reconnectThreadId = threadId;
                     setTimeout(() => {
                         client(
-                            `/ai/threads/${reconnectThreadId}/messages?limit=100`,
+                            `/ai/threads/${reconnectThreadId}/messages?limit=100${boardItemId ? `&board_item_id=${encodeURIComponent(boardItemId)}` : ""}`,
                             { method: "GET" },
                         )
                             .then(async (response) => {
@@ -432,9 +438,20 @@ export function useAgentThreadConversation({
                     const conversation = unwrapConversationEvent(
                         JSON.parse(event.data),
                     );
-                    if (conversation) {
-                        handleConversationMessageRef.current(conversation);
+                    if (!conversation) return;
+                    // When scoped to a task, drop live events for other tasks on
+                    // the same (shared) thread. The streamed record carries
+                    // board_item_id even though the REST payload strips it.
+                    if (boardItemId) {
+                        const raw = (conversation as { board_item_id?: unknown })
+                            .board_item_id;
+                        const eventBoardItemId =
+                            raw === null || raw === undefined
+                                ? ""
+                                : String(raw);
+                        if (eventBoardItemId !== boardItemId) return;
                     }
+                    handleConversationMessageRef.current(conversation);
                 } catch {}
             });
 
@@ -468,7 +485,7 @@ export function useAgentThreadConversation({
                 eventSourceRef.current = null;
             }
         };
-    }, [threadId, client, applyMessagePage]);
+    }, [threadId, boardItemId, client, applyMessagePage]);
 
     const refreshThreadStatus = useCallback(async () => {
         if (!threadId) return;
