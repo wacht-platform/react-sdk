@@ -93,6 +93,57 @@ export interface ClarificationResponseContent {
     freeform_text?: string;
 }
 
+export interface TaskHandoffArtifact {
+    path?: string;
+    kind?: string;
+    note?: string;
+}
+
+export interface TaskHandoffReceivedContent {
+    type: "task_handoff_received";
+    source_thread_id: string;
+    board_item_id: string;
+    source_role: string;
+    outcome: string;
+    summary: string;
+    artifacts?: TaskHandoffArtifact[] | null;
+    blockers?: unknown[] | null;
+    next_actions?: unknown[] | null;
+    completed_at: string;
+}
+
+export interface TaskSubscriptionNotificationContent {
+    type: "task_subscription_notification";
+    board_item_id: string;
+    task_key: string;
+    task_title: string;
+    from_status: string;
+    to_status: string;
+    transitioned_at: string;
+}
+
+export interface TaskSubscriptionDeliveryContent {
+    type: "task_subscription_delivery";
+    summary: string;
+}
+
+export interface AssignmentExecutionTriggerContent {
+    type: "assignment_execution_trigger";
+    assignment_id: string;
+    board_item_id: string;
+    task_key: string;
+    routing_reason?: string;
+    triggered_at: string;
+}
+
+export interface TaskRoutingTriggerContent {
+    type: "task_routing_trigger";
+    board_item_id: string;
+    task_key: string;
+    routing_reason?: string;
+    triggered_at: string;
+}
+
 export type ConversationContent =
     | UserMessageContent
     | SteerContent
@@ -102,7 +153,12 @@ export type ConversationContent =
     | ApprovalResponseContent
     | ExecutionSummaryContent
     | ClarificationRequestContent
-    | ClarificationResponseContent;
+    | ClarificationResponseContent
+    | TaskHandoffReceivedContent
+    | TaskSubscriptionNotificationContent
+    | TaskSubscriptionDeliveryContent
+    | AssignmentExecutionTriggerContent
+    | TaskRoutingTriggerContent;
 
 export type MessageType = ConversationContent["type"];
 
