@@ -373,7 +373,7 @@ export interface ProjectTaskDeliverable {
     by_thread_id: string;
     by_agent_name: string;
     result_summary: string;
-    artifacts: string[];
+    artifacts: TaskHandoffArtifact[];
     findings?: string;
     cautions?: string;
     next?: string;
