@@ -467,7 +467,17 @@
     font: 400 var(--av-fs, 13px)/1 var(--wa-font-sans);
     color: #fff;
     flex: none;
-    background: var(--av-bg, linear-gradient(135deg, #6b3df5, #9277ff));
+    background: var(
+        --av-bg,
+        linear-gradient(
+            135deg,
+            var(--wa-primary),
+            var(
+                --wa-primary-tint,
+                color-mix(in srgb, var(--wa-primary), #fff 25%)
+            )
+        )
+    );
     box-shadow: inset 0 0 0 0.5px rgba(255, 255, 255, 0.16);
     letter-spacing: 0.01em;
     overflow: hidden;

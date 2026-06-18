@@ -60,7 +60,11 @@ const AccountButton = React.forwardRef<HTMLButtonElement, BtnProps>(
 AccountButton.displayName = "AccountButton";
 
 const Avatar = ({ children, ...p }: DivProps) => (
-    <div {...p} className={cx("w-avatar", "w-avatar--md", p.className)}>
+    <div
+        {...p}
+        className={cx("w-avatar", "w-avatar--md", p.className)}
+        style={{ width: 28, height: 28, fontSize: 11, ...p.style }}
+    >
         {children}
     </div>
 );
