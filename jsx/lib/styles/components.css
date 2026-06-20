@@ -2631,7 +2631,7 @@
 /* notification row */
 .w-notif-row {
     cursor: pointer;
-    padding: 12px 16px;
+    padding: 14px 18px;
     border-bottom: 0.5px solid var(--wa-border);
 }
 .w-notif-row[data-unread] {
@@ -2666,19 +2666,35 @@
     width: 100%;
 }
 .w-notif-head {
-    padding: 12px 16px;
+    position: relative;
+    padding: 14px 18px;
     border-bottom: 0.5px solid var(--wa-border);
 }
 .w-notif-body {
+    overflow-x: hidden;
     overflow-y: auto;
     background: var(--wa-surface);
 }
 .w-notif-menu {
     position: absolute;
-    top: 48px;
+    top: calc(100% + 4px);
     right: 12px;
     width: 200px;
     z-index: 100000;
+}
+.w-notif-menu .w-menu-check {
+    margin-left: auto;
+    color: var(--wa-primary);
+}
+/* active-filter marker on the options button */
+.w-notif-filter-dot {
+    position: absolute;
+    top: 5px;
+    right: 5px;
+    width: 6px;
+    height: 6px;
+    border-radius: 50%;
+    background: var(--wa-primary);
 }
 /* success banner variant */
 .w-banner--success {

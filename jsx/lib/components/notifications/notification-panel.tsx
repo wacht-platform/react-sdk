@@ -1,5 +1,5 @@
 import { useState, useRef, useEffect, forwardRef } from "react";
-import { BellSlash, Checks, DotsThree, Archive } from "@phosphor-icons/react";
+import { BellSlash, Checks, DotsThree, Archive, Funnel, Check } from "@phosphor-icons/react";
 import { NotificationItem, type NotificationAction } from "./notification-item";
 import { Spinner } from "../utility/spinner";
 import { EmptyState } from "../utility/empty-state";
@@ -90,7 +90,7 @@ export const NotificationPanel = forwardRef<HTMLDivElement, NotificationPanelPro
                 className={`w-flex-col w-relative w-notif-panel${fullWidth ? " w-notif-panel--fill" : ""}${className ? ` ${className}` : ""}`}
                 style={{ maxHeight: maxHeight || "100%" }}
             >
-                <div className="w-flex w-items-center w-justify-between w-gap-3 w-none w-notif-head">
+                <div className="w-flex w-items-center w-justify-between w-gap-2 w-none w-notif-head">
                     <div className="w-tabs w-grow">
                         <button
                             className={`w-tab${activeTab === 'inbox' ? ' w-tab--active' : ''}`}
@@ -112,26 +112,27 @@ export const NotificationPanel = forwardRef<HTMLDivElement, NotificationPanelPro
                         </button>
                     </div>
 
-                    <label
-                        className="w-switch w-none"
-                        data-on={unreadOnly ? "" : undefined}
-                        onClick={() => setUnreadOnly(!unreadOnly)}
-                    >
-                        <span className="w-switch-track">
-                            <span className="w-switch-knob" />
-                        </span>
-                        <span className="w-switch-label">Unread Only</span>
-                    </label>
-
                     <button
-                        className="w-btn w-btn--icon w-none"
+                        className="w-btn w-btn--icon w-none w-relative"
                         onClick={() => setShowMenu(!showMenu)}
+                        title="Options"
                     >
                         <DotsThree size={16} />
+                        {unreadOnly && <span className="w-notif-filter-dot" />}
                     </button>
 
                     {showMenu && (
                         <div ref={menuRef} className="w-menu w-notif-menu">
+                            <button
+                                className="w-menu-item"
+                                onClick={() => {
+                                    setUnreadOnly(!unreadOnly);
+                                    setShowMenu(false);
+                                }}
+                            >
+                                <Funnel /> Unread only
+                                {unreadOnly && <Check className="w-menu-check" />}
+                            </button>
                             {activeTab === 'inbox' && (
                                 <button className="w-menu-item" onClick={handleMarkAllRead}>
                                     <Checks /> Mark all as read
