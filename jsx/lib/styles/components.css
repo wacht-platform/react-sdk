@@ -2635,11 +2635,29 @@
 /* notification row */
 .w-notif-row {
     cursor: pointer;
-    padding: 14px 18px;
+    padding: 12px 18px;
     border-bottom: 0.5px solid var(--wa-border);
+    transition: background 0.12s ease;
+}
+.w-notif-row:hover {
+    background: var(--wa-surface-subtle);
 }
 .w-notif-row[data-unread] {
     background: var(--wa-surface-subtle);
+}
+.w-notif-row:hover .w-notif-actions button {
+    color: var(--wa-text-secondary);
+}
+.w-notif-row .w-notif-actions button {
+    color: var(--wa-text-faint);
+    transition: color 0.12s ease;
+}
+.w-notif-row .w-notif-actions button:hover {
+    color: var(--wa-text);
+    background: var(--wa-surface-subtle);
+}
+.w-notif-row .w-notif-actions button[data-on] {
+    color: var(--wa-warning);
 }
 .w-notif-dot {
     width: 8px;
@@ -2647,9 +2665,6 @@
     border-radius: 50%;
     background: var(--wa-primary);
     flex: none;
-}
-.w-btn--icon[data-on] {
-    color: var(--wa-warning);
 }
 /* fixed notification popover panel */
 .w-notif-pop {

@@ -53,7 +53,7 @@ export function NotificationItem({
 
   return (
     <div
-      className="w-flex w-gap-3 w-row--hover w-notif-row"
+      className="w-flex w-gap-3 w-notif-row"
       onClick={handleClick}
       data-unread={!notification.is_read ? "" : undefined}
     >
@@ -87,7 +87,7 @@ export function NotificationItem({
       </div>
 
       <div className="w-flex-col w-items-end w-gap-2 w-none">
-        <div className="w-flex w-items-center w-gap-1">
+        <div className="w-flex w-items-center w-gap-1 w-notif-actions">
           {notification.is_read && (
             <button
               className="w-btn w-btn--icon"
