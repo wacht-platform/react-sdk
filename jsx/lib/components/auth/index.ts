@@ -1,7 +1,7 @@
 export * from "./signup-form";
 export * from "./signin-form";
 export * from "./waitlist-form";
-export * from "./sso-callback";
+export * from "./social-callback";
 export * from "./auth-image";
 export { MagicLinkVerification } from "./magic-link-verification";
 export { TwoFactorVerification } from "./two-factor-verification";

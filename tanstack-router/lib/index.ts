@@ -2,7 +2,7 @@ export {
   SignInForm,
   SignUpForm,
   WaitlistForm,
-  SSOCallback,
+  SocialCallback,
   MagicLinkVerification,
 } from "@wacht/jsx";
 export {
@@ -33,7 +33,7 @@ export {
   useClient,
   useSignIn,
   useSignUp,
-  useSSOCallback,
+  useSocialCallback,
   useWaitlist,
   useOrganizationList,
   useNavigation,

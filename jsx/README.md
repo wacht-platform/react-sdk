@@ -11,7 +11,7 @@ Use `@wacht/jsx` when you want the core Wacht React layer without committing to 
 
 `@wacht/jsx` contains the shared client-side building blocks behind the framework adapters:
 
-- auth UI such as `SignInForm`, `SignUpForm`, `WaitlistForm`, `SSOCallback`, and `MagicLinkVerification`
+- auth UI such as `SignInForm`, `SignUpForm`, `WaitlistForm`, `SocialCallback`, and `MagicLinkVerification`
 - control components such as `SignedIn`, `SignedOut`, `SignedInAccounts`, and `NavigateToSignIn`
 - account and tenancy components such as `UserButton`, `UserControls`, `ManageAccount`, `ManageOrganization`, `ManageWorkspace`, `CreateOrganizationForm`, and `CreateWorkspaceForm`
 - notifications components such as `NotificationBell`, `NotificationPopover`, and `NotificationPanel`
@@ -60,7 +60,7 @@ export default function App() {
 ## Main hook families
 
 - state and context: `useDeployment`, `useClient`, `useSession`, `useUser`, `useNavigation`
-- auth flows: `useSignIn`, `useSignUp`, `useSSOCallback`, `useMagicLinkVerification`, `useForgotPassword`, `useInvitation`, `useWaitlist`, `useUserSignins`
+- auth flows: `useSignIn`, `useSignUp`, `useSocialCallback`, `useMagicLinkVerification`, `useForgotPassword`, `useInvitation`, `useWaitlist`, `useUserSignins`
 - multi tenancy: `useOrganizationList`, `useActiveOrganization`, `useWorkspaceList`, `useActiveWorkspace`, `useActiveTenancy`, `useOrganizationMemberships`, `useWorkspaceMemberships`
 - notifications: `useNotifications`, `useNotificationStream`, `useNotificationUnreadCount`
 - platform surfaces: agent, webhook, and API identity hooks

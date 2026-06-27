@@ -2,7 +2,7 @@ export {
     SignInForm,
     SignUpForm,
     WaitlistForm,
-    SSOCallback,
+    SocialCallback,
     MagicLinkVerification,
 } from "@wacht/jsx";
 export { UserButton, UserControls, ManageAccount, ManageWorkspace } from "@wacht/jsx";
@@ -27,7 +27,7 @@ export {
     useClient,
     useSignIn,
     useSignUp,
-    useSSOCallback,
+    useSocialCallback,
     useWaitlist,
     useOrganizationList,
     useNavigation,

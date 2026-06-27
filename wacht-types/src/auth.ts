@@ -25,7 +25,7 @@ export interface SignInResponse {
   session: unknown;
 }
 
-export interface SSOCallbackResponse {
+export interface SocialCallbackResponse {
   session: unknown;
 }
 

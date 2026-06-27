@@ -3,12 +3,12 @@ import { useClient } from "./use-client";
 import { responseMapper } from "../utils/response-mapper";
 import type { Session, SigninAttempt } from "@/types";
 
-interface SSOCallbackResult {
+interface SocialCallbackResult {
   session: Session;
   redirect_uri?: string;
 }
 
-interface SSOCallbackState {
+interface SocialCallbackState {
   loading: boolean;
   error: Error | null;
   session: Session | null;
@@ -18,10 +18,10 @@ interface SSOCallbackState {
 }
 
 /**
- * Headless hook for handling SSO OAuth callback
+ * Headless hook for handling social OAuth callback
  * Automatically processes URL parameters and handles the callback flow
  */
-export function useSSOCallback(): SSOCallbackState {
+export function useSocialCallback(): SocialCallbackState {
   const { client, loading: clientLoading } = useClient();
 
   const [loading, setLoading] = useState(false);
@@ -117,7 +117,7 @@ export function useSSOCallback(): SSOCallbackState {
         },
       );
 
-      const result = await responseMapper<SSOCallbackResult>(response);
+      const result = await responseMapper<SocialCallbackResult>(response);
 
       if ("data" in result) {
         const sessionData = result.data.session;
@@ -136,7 +136,7 @@ export function useSSOCallback(): SSOCallbackState {
           }
         }
       } else {
-        const err = new Error("SSO callback failed");
+        const err = new Error("Social callback failed");
         setError(err);
       }
     } catch (err) {

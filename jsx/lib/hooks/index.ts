@@ -7,7 +7,7 @@ export * from "./use-user";
 export * from "./use-waitlist";
 export * from "./use-organization";
 export * from "./use-workspace";
-export * from "./use-sso-callback";
+export * from "./use-social-callback";
 export { useMagicLinkVerification } from "./use-magic-link";
 export * from "./use-navigation";
 export * from "./use-forgot-password";

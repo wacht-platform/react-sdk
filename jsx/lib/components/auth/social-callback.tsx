@@ -3,7 +3,7 @@
 import { useEffect, useState, type ReactNode } from "react";
 import { Check, X } from "@phosphor-icons/react";
 import { DefaultStylesProvider } from "../utility/root";
-import { useSSOCallback } from "../../hooks/use-sso-callback";
+import { useSocialCallback } from "../../hooks/use-social-callback";
 import { useDeployment } from "../../hooks/use-deployment";
 import { useNavigation } from "../../hooks/use-navigation";
 import { PasskeyPrompt } from "./passkey-prompt";
@@ -40,11 +40,11 @@ function Status({
     );
 }
 
-export function SSOCallback() {
+export function SocialCallback() {
     const { deployment } = useDeployment();
     const { navigate } = useNavigation();
     const { error, session, processed, signinAttempt, redirectUri, loading } =
-        useSSOCallback();
+        useSocialCallback();
     const [showPasskeyPrompt, setShowPasskeyPrompt] = useState(false);
     const [pendingRedirectUrl, setPendingRedirectUrl] = useState<string | null>(
         null,
@@ -244,4 +244,4 @@ export function SSOCallback() {
     );
 }
 
-export default SSOCallback;
+export default SocialCallback;
