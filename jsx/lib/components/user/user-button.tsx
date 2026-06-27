@@ -279,7 +279,7 @@ const SPRow = ({ $active, ...p }: BtnProps & { $active?: boolean }) => (
     <button
         {...p}
         className={cx("w-menu-item", "sp-row", $active && "sp-row--active", p.className)}
-        style={{ height: 30, ...p.style }}
+        style={{ height: 32, ...p.style }}
     />
 );
 
@@ -287,7 +287,7 @@ const SPWsRow = ({ $active, ...p }: BtnProps & { $active?: boolean }) => (
     <button
         {...p}
         className={cx("w-menu-item", "sp-row", "sp-ws-row", $active && "sp-row--active", p.className)}
-        style={{ height: 30, paddingLeft: 30, position: "relative", ...p.style }}
+        style={{ height: 32, paddingLeft: 30, position: "relative", ...p.style }}
     >
         {p.children}
     </button>
@@ -379,7 +379,7 @@ const SPFooter = (p: DivProps) => (
 );
 
 const SPCreateRow = (p: BtnProps) => (
-    <button {...p} className={cx("w-menu-item", p.className)} style={{ height: 30, color: "var(--wa-text-muted)", ...p.style }} />
+    <button {...p} className={cx("w-menu-item", p.className)} style={{ height: 32, color: "var(--wa-text-muted)", ...p.style }} />
 );
 
 const SPCreateIcon = (p: DivProps) => (

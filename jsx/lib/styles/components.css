@@ -938,6 +938,10 @@
     color: var(--wa-text-muted);
     flex: none;
 }
+/* avatar SVGs inside menu items keep the avatar's own color, not the muted item color */
+.w-menu-item .w-avatar svg {
+    color: inherit;
+}
 .w-menu-item--danger {
     color: var(--wa-error);
 }
