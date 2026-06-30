@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useRef, useCallback, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 
 interface WachtChallengeProps {
     apiHost: string;
@@ -16,6 +16,8 @@ type CapInstance = {
 declare global {
     interface Window {
         Cap?: new (options: { apiEndpoint: string }) => CapInstance;
+        CAP_SILENT?: boolean;
+        CAP_DISABLE_WIDGET_REF?: boolean;
     }
 }
 
@@ -47,33 +49,49 @@ function loadScript(): Promise<void> {
 export function WachtChallenge({ apiHost, onSolve, onError }: WachtChallengeProps) {
     const capRef = useRef<CapInstance | null>(null);
     const [error, setError] = useState<string | null>(null);
+    const onSolveRef = useRef(onSolve);
+    const onErrorRef = useRef(onError);
+    const startedRef = useRef(false);
 
-    const init = useCallback(async () => {
-        if (!apiHost) return;
-        try {
-            await loadScript();
-            if (!window.Cap) throw new Error("Challenge script did not expose Cap");
-
-            const base = normalizeApiHost(apiHost);
-            if (!base) return;
-            const cap = new window.Cap({ apiEndpoint: `${base}/captcha/` });
-            capRef.current = cap;
-            const result = await cap.solve();
-            onSolve(result.token);
-        } catch (err) {
-            const message = err instanceof Error ? err.message : "Challenge failed";
-            setError(message);
-            onError?.("challenge_failed");
-        }
-    }, [apiHost, onSolve, onError]);
+    onSolveRef.current = onSolve;
+    onErrorRef.current = onError;
 
     useEffect(() => {
-        init();
+        if (startedRef.current) return;
+        startedRef.current = true;
+
+        const base = normalizeApiHost(apiHost);
+        if (!base) return;
+
+        let cancelled = false;
+
+        (async () => {
+            try {
+                await loadScript();
+                if (cancelled || !window.Cap) return;
+
+                window.CAP_SILENT = true;
+                window.CAP_DISABLE_WIDGET_REF = true;
+
+                const cap = new window.Cap({ apiEndpoint: `${base}/captcha/` });
+                capRef.current = cap;
+                const result = await cap.solve();
+                if (cancelled) return;
+                onSolveRef.current(result.token);
+            } catch (err) {
+                if (cancelled) return;
+                const message = err instanceof Error ? err.message : "Challenge failed";
+                setError(message);
+                onErrorRef.current?.("challenge_failed");
+            }
+        })();
+
         return () => {
+            cancelled = true;
             capRef.current?.reset();
             capRef.current = null;
         };
-    }, [init]);
+    }, [apiHost]);
 
     if (error) {
         return (
