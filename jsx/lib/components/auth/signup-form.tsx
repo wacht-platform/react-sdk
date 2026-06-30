@@ -55,6 +55,7 @@ export function SignUpForm() {
     const [inviteToken, setInviteToken] = useState<string | null>(null);
     const [isRedirecting, setIsRedirecting] = useState(false);
     const [challengeToken, setChallengeToken] = useState<string>("");
+    const isChallengeReady = Boolean(challengeToken);
 
     const isSignupRestricted =
         deployment?.restrictions?.sign_up_mode === "restricted";
@@ -171,6 +172,9 @@ export function SignUpForm() {
         if (loading || isSubmitting) return;
 
         const newErrors: Record<string, string> = {};
+        if (!isChallengeReady) {
+            newErrors.submit = "Challenge verification is still loading. Please try again.";
+        }
 
         const namePattern = /^[a-zA-Z]{3,30}$/;
         const usernamePattern = /^[a-zA-Z][a-zA-Z0-9_.]{2,29}$/;
@@ -272,7 +276,7 @@ export function SignUpForm() {
     const handleSocialSignIn = async (
         connection: DeploymentSocialConnection,
     ) => {
-        if (loading || isSubmitting) return;
+        if (loading || isSubmitting || !isChallengeReady) return;
 
         setIsSubmitting(true);
         try {
@@ -286,6 +290,7 @@ export function SignUpForm() {
             const { data } = await oauthSignIn.create({
                 provider: connection.provider as OAuthProvider,
                 redirectUri,
+                challenge_token: challengeToken,
             });
             if (data && typeof data === "object" && "oauth_url" in data) {
                 window.location.href = data.oauth_url as string;
@@ -742,7 +747,7 @@ export function SignUpForm() {
                     )}
 
                     <WachtChallenge
-                        apiHost={deployment?.backend_host ? `https://${deployment.backend_host}` : ""}
+                        apiHost={deployment?.backend_host ?? ""}
                         onSolve={(token) => setChallengeToken(token)}
                         onError={() => setChallengeToken("")}
                     />
@@ -750,7 +755,7 @@ export function SignUpForm() {
                     <button
                         type="submit"
                         className="w-btn w-btn--primary w-btn--block"
-                        disabled={isSubmitting || loading}
+                        disabled={isSubmitting || loading || !isChallengeReady}
                     >
                         {isSubmitting ? <Spin size={15} onAccent /> : "Continue"}
                     </button>

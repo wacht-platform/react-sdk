@@ -8,9 +8,27 @@ interface WachtChallengeProps {
     onError?: (error: string) => void;
 }
 
+type CapInstance = {
+    solve: () => Promise<{ token: string }>;
+    reset: () => void;
+};
+
+declare global {
+    interface Window {
+        Cap?: new (options: { apiEndpoint: string }) => CapInstance;
+    }
+}
+
 const WIDGET_URL = "https://cdn.wacht.services/captcha/wacht-challenge.min.js";
 
 const SCRIPT_ID = "wacht-challenge-script";
+
+function normalizeApiHost(apiHost: string): string {
+    const trimmed = apiHost.trim().replace(/\/$/, "");
+    if (!trimmed) return "";
+    if (/^https?:\/\//i.test(trimmed)) return trimmed;
+    return `https://${trimmed}`;
+}
 
 function loadScript(): Promise<void> {
     if (document.getElementById(SCRIPT_ID)) return Promise.resolve();
@@ -27,44 +45,33 @@ function loadScript(): Promise<void> {
 }
 
 export function WachtChallenge({ apiHost, onSolve, onError }: WachtChallengeProps) {
-    const containerRef = useRef<HTMLDivElement>(null);
+    const capRef = useRef<CapInstance | null>(null);
     const [error, setError] = useState<string | null>(null);
 
     const init = useCallback(async () => {
         if (!apiHost) return;
         try {
             await loadScript();
-        } catch {
-            setError("Failed to load challenge");
-            onError?.("script_load_failed");
-            return;
+            if (!window.Cap) throw new Error("Challenge script did not expose Cap");
+
+            const base = normalizeApiHost(apiHost);
+            if (!base) return;
+            const cap = new window.Cap({ apiEndpoint: `${base}/captcha/` });
+            capRef.current = cap;
+            const result = await cap.solve();
+            onSolve(result.token);
+        } catch (err) {
+            const message = err instanceof Error ? err.message : "Challenge failed";
+            setError(message);
+            onError?.("challenge_failed");
         }
-
-        if (!containerRef.current) return;
-        containerRef.current.innerHTML = "";
-
-        const widget = document.createElement("wacht-challenge");
-        widget.setAttribute("data-wacht-api-endpoint", `${apiHost}/captcha/challenge`);
-
-        widget.addEventListener("solve", ((e: CustomEvent<{ token: string }>) => {
-            onSolve(e.detail.token);
-        }) as EventListener);
-
-        widget.addEventListener("error", ((e: CustomEvent<{ code: string; message: string }>) => {
-            const msg = e.detail.message || e.detail.code || "Captcha failed";
-            setError(msg);
-            onError?.(e.detail.code);
-        }) as EventListener);
-
-        containerRef.current.appendChild(widget);
     }, [apiHost, onSolve, onError]);
 
     useEffect(() => {
         init();
         return () => {
-            if (containerRef.current) {
-                containerRef.current.innerHTML = "";
-            }
+            capRef.current?.reset();
+            capRef.current = null;
         };
     }, [init]);
 
@@ -76,5 +83,5 @@ export function WachtChallenge({ apiHost, onSolve, onError }: WachtChallengeProp
         );
     }
 
-    return <div ref={containerRef} style={{ minHeight: 60 }} />;
+    return null;
 }

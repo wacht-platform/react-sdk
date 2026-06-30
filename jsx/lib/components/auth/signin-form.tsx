@@ -101,6 +101,7 @@ function SignInFormContent() {
         null,
     );
     const [challengeToken, setChallengeToken] = useState<string>("");
+    const isChallengeReady = Boolean(challengeToken);
 
     const existingSignins = [...(session?.signins || [])].sort((a, b) =>
         a.id === session?.active_signin?.id
@@ -217,6 +218,10 @@ function SignInFormContent() {
     const handleIdentify = async (email: string) => {
         if (!email) {
             setErrors({ email: "Email address is required" });
+            return;
+        }
+        if (!isChallengeReady) {
+            setErrors({ submit: "Challenge verification is still loading. Please try again." });
             return;
         }
 
@@ -380,6 +385,11 @@ function SignInFormContent() {
             firstFactor === "email_magic_link" ||
             firstFactor === "phone_otp";
 
+        if (!isChallengeReady) {
+            setErrors({ submit: "Challenge verification is still loading. Please try again." });
+            return;
+        }
+
         setIsSubmitting(true);
         try {
             const submitData: any = {
@@ -430,7 +440,7 @@ function SignInFormContent() {
     const initSocialAuthSignIn = async (
         connection: DeploymentSocialConnection,
     ) => {
-        if (loading || isSubmitting) return;
+        if (loading || isSubmitting || !isChallengeReady) return;
 
         setIsSubmitting(true);
         try {
@@ -456,7 +466,7 @@ function SignInFormContent() {
     };
 
     const handlePasskeySignIn = async () => {
-        if (loading || isSubmitting) return;
+        if (loading || isSubmitting || !isChallengeReady) return;
 
         setIsSubmitting(true);
         setErrors({});
@@ -1238,7 +1248,7 @@ function SignInFormContent() {
                     )}
 
                     <WachtChallenge
-                        apiHost={deployment?.backend_host ? `https://${deployment.backend_host}` : ""}
+                        apiHost={deployment?.backend_host ?? ""}
                         onSolve={(token) => setChallengeToken(token)}
                         onError={() => setChallengeToken("")}
                     />
@@ -1246,7 +1256,7 @@ function SignInFormContent() {
                     <button
                         type="submit"
                         className="w-btn w-btn--primary w-btn--block"
-                        disabled={isSubmitting || loading}
+                        disabled={isSubmitting || loading || !isChallengeReady}
                     >
                         {isSubmitting ? (
                             <Spin size={15} onAccent />
