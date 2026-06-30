@@ -19,6 +19,7 @@ import type { DeploymentSocialConnection } from "@/types";
 import { AuthCard, AuthHead, Spin, AuthCardLoader } from "./auth-card";
 import { getStoredDevSession } from "@/utils/dev-session";
 import { sanitizeRedirectUri } from "@/utils/redirect-uri";
+import { WachtChallenge } from "./challenge-widget";
 
 export function SignUpForm() {
     const { loading, signUp, signupAttempt, discardSignupAttempt } =
@@ -53,6 +54,7 @@ export function SignUpForm() {
     } | null>(null);
     const [inviteToken, setInviteToken] = useState<string | null>(null);
     const [isRedirecting, setIsRedirecting] = useState(false);
+    const [challengeToken, setChallengeToken] = useState<string>("");
 
     const isSignupRestricted =
         deployment?.restrictions?.sign_up_mode === "restricted";
@@ -256,6 +258,9 @@ export function SignUpForm() {
             if (inviteToken) {
                 submitData.invite_token = inviteToken;
             }
+            if (challengeToken) {
+                submitData.challenge_token = challengeToken;
+            }
             await signUp.create(submitData);
         } catch (err) {
             setErrors({ submit: (err as Error).message });
@@ -368,10 +373,10 @@ export function SignUpForm() {
 
         switch (signupAttempt.current_step) {
             case "verify_email":
-                signUp.prepareVerification({ strategy: "email_otp" });
+                signUp.prepareVerification({ strategy: "email_otp", challenge_token: challengeToken });
                 break;
             case "verify_phone":
-                signUp.prepareVerification({ strategy: "phone_otp" });
+                signUp.prepareVerification({ strategy: "phone_otp", challenge_token: challengeToken });
                 break;
         }
 
@@ -480,7 +485,7 @@ export function SignUpForm() {
                                 const strategy = isPhone
                                     ? "phone_otp"
                                     : "email_otp";
-                                await signUp.prepareVerification({ strategy });
+                                await signUp.prepareVerification({ strategy, challenge_token: challengeToken });
                             }}
                             error={errors.otp}
                             isSubmitting={isSubmitting}
@@ -735,6 +740,12 @@ export function SignUpForm() {
                     {errors.submit && (
                         <span className="w-input-err">{errors.submit}</span>
                     )}
+
+                    <WachtChallenge
+                        apiHost={deployment?.backend_host ? `https://${deployment.backend_host}` : ""}
+                        onSolve={(token) => setChallengeToken(token)}
+                        onError={() => setChallengeToken("")}
+                    />
 
                     <button
                         type="submit"

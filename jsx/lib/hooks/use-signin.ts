@@ -11,7 +11,11 @@ export interface IdentifyResult {
   provider?: string;
 }
 
-type UsernameSignInParams = {
+type ChallengeParams = {
+  challenge_token?: string;
+};
+
+type UsernameSignInParams = ChallengeParams & {
   username: string;
   password: string;
 };
@@ -21,7 +25,7 @@ type SignInPlainUsername = ({
   password,
 }: UsernameSignInParams) => Promise<ApiResult<Session>>;
 
-type EmailSignInParams = {
+type EmailSignInParams = ChallengeParams & {
   email: string;
   password: string;
 };
@@ -37,6 +41,7 @@ type GenericSignInParams = {
   password?: string;
   phone?: string;
   strategy?: string;
+  challenge_token?: string;
 };
 
 type SignInGeneric = ({
@@ -45,9 +50,10 @@ type SignInGeneric = ({
   password,
   phone,
   strategy,
+  challenge_token,
 }: GenericSignInParams) => Promise<ApiResult<Session>>;
 
-type PhoneSignInParams = {
+type PhoneSignInParams = ChallengeParams & {
   phone: string;
 };
 
@@ -55,7 +61,7 @@ type SignInPhone = ({
   phone,
 }: PhoneSignInParams) => Promise<ApiResult<Session>>;
 
-type EmailOTPSignInParams = {
+type EmailOTPSignInParams = ChallengeParams & {
   email: string;
 };
 
@@ -63,7 +69,7 @@ type SignInEmailOTP = ({
   email,
 }: EmailOTPSignInParams) => Promise<ApiResult<Session>>;
 
-type MagicLinkSignInParams = {
+type MagicLinkSignInParams = ChallengeParams & {
   email: string;
 };
 
@@ -89,9 +95,10 @@ type SignInOauth = ({
 }: {
   provider: OAuthProvider;
   redirectUri?: string;
+  challenge_token?: string;
 }) => Promise<ApiResult<InitSSOResponseType>>;
 
-type SignInPasskey = () => Promise<ApiResult<Session>>;
+type SignInPasskey = (params?: ChallengeParams) => Promise<ApiResult<Session>>;
 
 type SignInStrategy =
   | "username"
@@ -104,17 +111,17 @@ type SignInStrategy =
   | "generic";
 
 // Declarative verification parameter types
-type EmailOTPVerificationParams = {
+type EmailOTPVerificationParams = ChallengeParams & {
   strategy: "email_otp";
   redirectUri?: string;
 };
 
-type PhoneOTPVerificationParams = {
+type PhoneOTPVerificationParams = ChallengeParams & {
   strategy: "phone_otp";
   lastDigits?: string;
 };
 
-type MagicLinkVerificationParams = {
+type MagicLinkVerificationParams = ChallengeParams & {
   strategy: "magic_link";
   redirectUri?: string;
 };
@@ -149,8 +156,8 @@ type SignIn = {
   ) => Promise<ApiResult<PrepareVerificationResponse>>;
   completeVerification: (verificationCode: string) => Promise<Session>;
   completeProfile: (data: ProfileCompletionData) => Promise<Session>;
-  identify: (identifier: string) => Promise<IdentifyResult>;
-  initEnterpriseSso: (connectionId: string, redirectUri?: string) => Promise<{ sso_url: string; session: Session }>;
+  identify: (identifier: string, challengeToken?: string) => Promise<IdentifyResult>;
+  initEnterpriseSso: (connectionId: string, redirectUri?: string, challengeToken?: string) => Promise<{ sso_url: string; session: Session }>;
 };
 
 type UseSignInReturnType =
@@ -198,11 +205,12 @@ function builderUsername(
   client: Client,
   setSignInAttempt: (attempt: SigninAttempt | null) => void,
 ): SignInPlainUsername {
-  return async ({ username, password }: UsernameSignInParams) => {
+  return async ({ username, password, challenge_token }: UsernameSignInParams) => {
     const form = new FormData();
     form.append("strategy", "plain_username");
     form.append("username", username);
     form.append("password", password);
+    if (challenge_token) form.append("challenge_token", challenge_token);
 
     const response = await client("/auth/signin", {
       method: "POST",
@@ -220,11 +228,12 @@ function builderEmail(
   client: Client,
   setSignInAttempt: (attempt: SigninAttempt | null) => void,
 ): SignInPlainEmail {
-  return async ({ email, password }: EmailSignInParams) => {
+  return async ({ email, password, challenge_token }: EmailSignInParams) => {
     const form = new FormData();
     form.append("strategy", "plain_email");
     form.append("email", email);
     form.append("password", password);
+    if (challenge_token) form.append("challenge_token", challenge_token);
 
     const response = await client("/auth/signin", {
       method: "POST",
@@ -242,10 +251,11 @@ function builderPhone(
   client: Client,
   setSignInAttempt: (attempt: SigninAttempt | null) => void,
 ): SignInPhone {
-  return async ({ phone }: PhoneSignInParams) => {
+  return async ({ phone, challenge_token }: PhoneSignInParams) => {
     const form = new FormData();
     form.append("strategy", "phone_otp");
     form.append("phone", phone);
+    if (challenge_token) form.append("challenge_token", challenge_token);
 
     const response = await client("/auth/signin", {
       method: "POST",
@@ -263,10 +273,11 @@ function builderEmailOTP(
   client: Client,
   setSignInAttempt: (attempt: SigninAttempt | null) => void,
 ): SignInEmailOTP {
-  return async ({ email }: EmailOTPSignInParams) => {
+  return async ({ email, challenge_token }: EmailOTPSignInParams) => {
     const form = new FormData();
     form.append("strategy", "email_otp");
     form.append("email", email);
+    if (challenge_token) form.append("challenge_token", challenge_token);
 
     const response = await client("/auth/signin", {
       method: "POST",
@@ -284,10 +295,11 @@ function builderMagicLink(
   client: Client,
   setSignInAttempt: (attempt: SigninAttempt | null) => void,
 ): SignInMagicLink {
-  return async ({ email }: MagicLinkSignInParams) => {
+  return async ({ email, challenge_token }: MagicLinkSignInParams) => {
     const form = new FormData();
     form.append("strategy", "magic_link");
     form.append("email", email);
+    if (challenge_token) form.append("challenge_token", challenge_token);
 
     const response = await client("/auth/signin", {
       method: "POST",
@@ -307,17 +319,22 @@ function builderOauth(
   return async ({
     provider,
     redirectUri,
+    challenge_token,
   }: {
     provider: OAuthProvider;
     redirectUri?: string;
+    challenge_token?: string;
   }) => {
     const params = new URLSearchParams({ provider });
     if (redirectUri) {
       params.append("redirect_uri", redirectUri);
     }
+    const form = new FormData();
+    if (challenge_token) form.append("challenge_token", challenge_token);
 
     const response = await client(`/auth/oauth2/init?${params.toString()}`, {
       method: "POST",
+      body: form,
     });
     const result = await responseMapper<InitSSOResponseType>(response);
     if ("data" in result) {
@@ -351,10 +368,14 @@ function base64urlToBuffer(base64url: string): ArrayBuffer {
 }
 
 function builderPasskey(client: Client): SignInPasskey {
-  return async () => {
+  return async (params?: ChallengeParams) => {
+    const form = new FormData();
+    if (params?.challenge_token) form.append("challenge_token", params.challenge_token);
+
     // Begin passkey login
     const beginResponse = await client("/auth/passkey/login/begin", {
       method: "POST",
+      body: form,
     });
     const beginResult = await responseMapper<{
       options: {
@@ -443,6 +464,7 @@ function builderGeneric(
     password,
     phone,
     strategy,
+    challenge_token,
   }: GenericSignInParams) => {
     const form = new FormData();
 
@@ -453,6 +475,7 @@ function builderGeneric(
     if (username) form.append("username", username);
     if (password) form.append("password", password);
     if (phone) form.append("phone", phone);
+    if (challenge_token) form.append("challenge_token", challenge_token);
 
     const response = await client("/auth/signin", {
       method: "POST",
@@ -530,8 +553,12 @@ export function useSignIn(): UseSignInReturnType {
           url.searchParams.set("redirect_uri", params.redirectUri);
         }
 
+        const form = new FormData();
+        if (params.challenge_token) form.append("challenge_token", params.challenge_token);
+
         const response = await client(url.pathname + url.search, {
           method: "POST",
+          body: form,
         });
 
         return responseMapper(response) as Promise<
@@ -573,9 +600,10 @@ export function useSignIn(): UseSignInReturnType {
         }
       },
       // Identifier-First flow methods
-      identify: async (identifier: string): Promise<IdentifyResult> => {
+      identify: async (identifier: string, challengeToken?: string): Promise<IdentifyResult> => {
         const form = new FormData();
         form.append("identifier", identifier);
+        if (challengeToken) form.append("challenge_token", challengeToken);
 
         const response = await client("/auth/identify", {
           method: "POST",
@@ -585,13 +613,17 @@ export function useSignIn(): UseSignInReturnType {
         const result = await responseMapper<IdentifyResult>(response);
         return result.data;
       },
-      initEnterpriseSso: async (connectionId: string, redirectUri?: string): Promise<{ sso_url: string; session: Session }> => {
+      initEnterpriseSso: async (connectionId: string, redirectUri?: string, challengeToken?: string): Promise<{ sso_url: string; session: Session }> => {
         const params = new URLSearchParams({ connection_id: connectionId });
         if (redirectUri) {
           params.append("redirect_uri", redirectUri);
         }
+        const form = new FormData();
+        if (challengeToken) form.append("challenge_token", challengeToken);
+
         const response = await client(`/auth/sso/login?${params.toString()}`, {
           method: "POST",
+          body: form,
         });
 
         const result = await responseMapper<{ sso_url: string; session: Session }>(response);
@@ -633,8 +665,8 @@ export type UseSignInWithStrategyReturnType<T extends SignInStrategy> =
         params: VerificationParams,
       ) => Promise<ApiResult<PrepareVerificationResponse>>;
       completeProfile: (data: ProfileCompletionData) => Promise<Session>;
-      identify: (identifier: string) => Promise<IdentifyResult>;
-      initEnterpriseSso: (connectionId: string, redirectUri?: string) => Promise<{ sso_url: string; session: Session }>;
+      identify: (identifier: string, challengeToken?: string) => Promise<IdentifyResult>;
+      initEnterpriseSso: (connectionId: string, redirectUri?: string, challengeToken?: string) => Promise<{ sso_url: string; session: Session }>;
     };
     signinAttempt: SigninAttempt | null;
     discardSignInAttempt: () => void;

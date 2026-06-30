@@ -28,11 +28,13 @@ export type SignupVerificationStrategy = "email_otp" | "phone_otp";
 type SignupEmailOTPVerificationParams = {
   strategy: "email_otp";
   redirectUri?: string;
+  challenge_token?: string;
 };
 
 type SignupPhoneOTPVerificationParams = {
   strategy: "phone_otp";
   lastDigits?: string;
+  challenge_token?: string;
 };
 
 type SignupVerificationParams =
@@ -98,8 +100,12 @@ function builder(
         url.searchParams.set("redirect_uri", params.redirectUri);
       }
 
+      const form = new FormData();
+      if (params.challenge_token) form.append("challenge_token", params.challenge_token);
+
       const response = await client(url.pathname + url.search, {
         method: "POST",
+        body: form,
       });
 
       return responseMapper(response) as Promise<

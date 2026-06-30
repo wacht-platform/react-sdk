@@ -5,6 +5,7 @@ export interface SignUpParams {
   phone_number?: string;
   email?: string;
   password?: string;
+  challenge_token?: string;
 }
 
 export interface SSOResponse {
@@ -19,6 +20,11 @@ export interface SignInParams {
   phone?: string;
   strategy?: string;
   token?: string;
+  challenge_token?: string;
+}
+
+export interface ChallengeParams {
+  challenge_token?: string;
 }
 
 export interface SignInResponse {
