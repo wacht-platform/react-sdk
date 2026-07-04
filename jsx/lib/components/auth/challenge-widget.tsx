@@ -18,10 +18,12 @@ declare global {
         Cap?: new (options: { apiEndpoint: string }) => CapInstance;
         CAP_SILENT?: boolean;
         CAP_DISABLE_WIDGET_REF?: boolean;
+        CAP_CUSTOM_WASM_URL?: string;
     }
 }
 
 const WIDGET_URL = "https://cdn.wacht.services/captcha/wacht-challenge.min.js";
+const WASM_URL = "https://cdn.wacht.services/captcha/cap_wasm_bg.wasm";
 
 const SCRIPT_ID = "wacht-challenge-script";
 
@@ -72,6 +74,7 @@ export function WachtChallenge({ apiHost, onSolve, onError }: WachtChallengeProp
 
                 window.CAP_SILENT = true;
                 window.CAP_DISABLE_WIDGET_REF = true;
+                window.CAP_CUSTOM_WASM_URL = WASM_URL;
 
                 const cap = new window.Cap({ apiEndpoint: `${base}/captcha/` });
                 capRef.current = cap;
