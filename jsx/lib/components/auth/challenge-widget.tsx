@@ -1,6 +1,7 @@
 "use client";
 
 import { useEffect, useRef, useState } from "react";
+import { solveWachtChallenge } from "@/utils/challenge";
 
 interface WachtChallengeProps {
     apiHost: string;
@@ -8,48 +9,7 @@ interface WachtChallengeProps {
     onError?: (error: string) => void;
 }
 
-type CapInstance = {
-    solve: () => Promise<{ token: string }>;
-    reset: () => void;
-};
-
-declare global {
-    interface Window {
-        Cap?: new (options: { apiEndpoint: string }) => CapInstance;
-        CAP_SILENT?: boolean;
-        CAP_DISABLE_WIDGET_REF?: boolean;
-        CAP_CUSTOM_WASM_URL?: string;
-    }
-}
-
-const WIDGET_URL = "https://cdn.wacht.services/captcha/wacht-challenge.min.js";
-const WASM_URL = "https://cdn.wacht.services/captcha/cap_wasm_bg.wasm";
-
-const SCRIPT_ID = "wacht-challenge-script";
-
-function normalizeApiHost(apiHost: string): string {
-    const trimmed = apiHost.trim().replace(/\/$/, "");
-    if (!trimmed) return "";
-    if (/^https?:\/\//i.test(trimmed)) return trimmed;
-    return `https://${trimmed}`;
-}
-
-function loadScript(): Promise<void> {
-    if (document.getElementById(SCRIPT_ID)) return Promise.resolve();
-
-    return new Promise((resolve, reject) => {
-        const script = document.createElement("script");
-        script.id = SCRIPT_ID;
-        script.src = WIDGET_URL;
-        script.async = true;
-        script.onload = () => resolve();
-        script.onerror = () => reject(new Error("Failed to load challenge script"));
-        document.head.appendChild(script);
-    });
-}
-
 export function WachtChallenge({ apiHost, onSolve, onError }: WachtChallengeProps) {
-    const capRef = useRef<CapInstance | null>(null);
     const [error, setError] = useState<string | null>(null);
     const onSolveRef = useRef(onSolve);
     const onErrorRef = useRef(onError);
@@ -62,25 +22,13 @@ export function WachtChallenge({ apiHost, onSolve, onError }: WachtChallengeProp
         if (startedRef.current) return;
         startedRef.current = true;
 
-        const base = normalizeApiHost(apiHost);
-        if (!base) return;
-
         let cancelled = false;
 
         (async () => {
             try {
-                await loadScript();
-                if (cancelled || !window.Cap) return;
-
-                window.CAP_SILENT = true;
-                window.CAP_DISABLE_WIDGET_REF = true;
-                window.CAP_CUSTOM_WASM_URL = WASM_URL;
-
-                const cap = new window.Cap({ apiEndpoint: `${base}/captcha/` });
-                capRef.current = cap;
-                const result = await cap.solve();
+                const token = await solveWachtChallenge(apiHost);
                 if (cancelled) return;
-                onSolveRef.current(result.token);
+                onSolveRef.current(token);
             } catch (err) {
                 if (cancelled) return;
                 const message = err instanceof Error ? err.message : "Challenge failed";
@@ -91,8 +39,6 @@ export function WachtChallenge({ apiHost, onSolve, onError }: WachtChallengeProp
 
         return () => {
             cancelled = true;
-            capRef.current?.reset();
-            capRef.current = null;
         };
     }, [apiHost]);
 

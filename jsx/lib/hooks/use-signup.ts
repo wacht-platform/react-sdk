@@ -1,6 +1,8 @@
 import { ApiResult, Client } from "@/types";
 import { responseMapper } from "../utils/response-mapper";
+import { resolveChallengeToken } from "../utils/challenge";
 import { useClient } from "./use-client";
+import { useDeployment } from "./use-deployment";
 import { useState } from "react";
 import { Session, SignupAttempt } from "@/types";
 import { SignUpParams } from "@/types";
@@ -65,6 +67,7 @@ export type UseSignUpReturnType =
 
 function builder(
   client: Client,
+  apiHost: string,
   signupAttempt: SignupAttempt | null,
   setSignUpAttempt: (attempt: SignupAttempt | null) => void,
 ): SignUpFunction {
@@ -72,8 +75,9 @@ function builder(
     create: async (params: SignUpParams) => {
       const form = new FormData();
       for (const [key, value] of Object.entries(params)) {
-        form.append(key, value);
+        if (key !== "challenge_token") form.append(key, value);
       }
+      form.append("challenge_token", await resolveChallengeToken(apiHost, params.challenge_token));
       const response = await client("/auth/signup", {
         method: "POST",
         body: form,
@@ -101,7 +105,7 @@ function builder(
       }
 
       const form = new FormData();
-      if (params.challenge_token) form.append("challenge_token", params.challenge_token);
+      form.append("challenge_token", await resolveChallengeToken(apiHost, params.challenge_token));
 
       const response = await client(url.pathname + url.search, {
         method: "POST",
@@ -160,6 +164,8 @@ function builder(
 
 export function useSignUp(): UseSignUpReturnType {
   const { client, loading } = useClient();
+  const { deployment } = useDeployment();
+  const apiHost = deployment?.backend_host ?? "";
   const [signupAttempt, setSignupAttempt] = useState<SignupAttempt | null>(
     null,
   );
@@ -181,6 +187,6 @@ export function useSignUp(): UseSignUpReturnType {
     discardSignupAttempt: () => {
       setSignupAttempt(null);
     },
-    signUp: builder(client, signupAttempt, setSignupAttempt),
+    signUp: builder(client, apiHost, signupAttempt, setSignupAttempt),
   };
 }

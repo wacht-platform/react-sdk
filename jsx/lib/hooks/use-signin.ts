@@ -1,6 +1,8 @@
 import { useState } from "react";
 import { responseMapper } from "../utils/response-mapper";
 import { useClient } from "./use-client";
+import { useDeployment } from "./use-deployment";
+import { resolveChallengeToken } from "@/utils/challenge";
 import type { ApiResult, Client } from "@/types";
 import type { Session, SigninAttempt, ProfileCompletionData } from "@/types";
 
@@ -183,17 +185,18 @@ type InitSSOResponseType = {
 
 function builder(
   client: Client,
+  apiHost: string,
   setSignInAttempt: (attempt: SigninAttempt | null) => void,
 ): CreateSignInStrategyResult {
   const functionMap = {
-    ["username"]: builderUsername(client, setSignInAttempt),
-    ["email"]: builderEmail(client, setSignInAttempt),
-    ["phone"]: builderPhone(client, setSignInAttempt),
-    ["email_otp"]: builderEmailOTP(client, setSignInAttempt),
-    ["magic_link"]: builderMagicLink(client, setSignInAttempt),
-    ["oauth"]: builderOauth(client),
-    ["passkey"]: builderPasskey(client),
-    ["generic"]: builderGeneric(client, setSignInAttempt),
+    ["username"]: builderUsername(client, apiHost, setSignInAttempt),
+    ["email"]: builderEmail(client, apiHost, setSignInAttempt),
+    ["phone"]: builderPhone(client, apiHost, setSignInAttempt),
+    ["email_otp"]: builderEmailOTP(client, apiHost, setSignInAttempt),
+    ["magic_link"]: builderMagicLink(client, apiHost, setSignInAttempt),
+    ["oauth"]: builderOauth(client, apiHost),
+    ["passkey"]: builderPasskey(client, apiHost),
+    ["generic"]: builderGeneric(client, apiHost, setSignInAttempt),
   };
 
   return function signInBuilder(strategy: SignInStrategy) {
@@ -201,8 +204,13 @@ function builder(
   } as CreateSignInStrategyResult;
 }
 
+async function appendChallengeToken(form: FormData, apiHost: string, challengeToken?: string) {
+  form.append("challenge_token", await resolveChallengeToken(apiHost, challengeToken));
+}
+
 function builderUsername(
   client: Client,
+  apiHost: string,
   setSignInAttempt: (attempt: SigninAttempt | null) => void,
 ): SignInPlainUsername {
   return async ({ username, password, challenge_token }: UsernameSignInParams) => {
@@ -210,7 +218,7 @@ function builderUsername(
     form.append("strategy", "plain_username");
     form.append("username", username);
     form.append("password", password);
-    if (challenge_token) form.append("challenge_token", challenge_token);
+    await appendChallengeToken(form, apiHost, challenge_token);
 
     const response = await client("/auth/signin", {
       method: "POST",
@@ -226,6 +234,7 @@ function builderUsername(
 
 function builderEmail(
   client: Client,
+  apiHost: string,
   setSignInAttempt: (attempt: SigninAttempt | null) => void,
 ): SignInPlainEmail {
   return async ({ email, password, challenge_token }: EmailSignInParams) => {
@@ -233,7 +242,7 @@ function builderEmail(
     form.append("strategy", "plain_email");
     form.append("email", email);
     form.append("password", password);
-    if (challenge_token) form.append("challenge_token", challenge_token);
+    await appendChallengeToken(form, apiHost, challenge_token);
 
     const response = await client("/auth/signin", {
       method: "POST",
@@ -249,13 +258,14 @@ function builderEmail(
 
 function builderPhone(
   client: Client,
+  apiHost: string,
   setSignInAttempt: (attempt: SigninAttempt | null) => void,
 ): SignInPhone {
   return async ({ phone, challenge_token }: PhoneSignInParams) => {
     const form = new FormData();
     form.append("strategy", "phone_otp");
     form.append("phone", phone);
-    if (challenge_token) form.append("challenge_token", challenge_token);
+    await appendChallengeToken(form, apiHost, challenge_token);
 
     const response = await client("/auth/signin", {
       method: "POST",
@@ -271,13 +281,14 @@ function builderPhone(
 
 function builderEmailOTP(
   client: Client,
+  apiHost: string,
   setSignInAttempt: (attempt: SigninAttempt | null) => void,
 ): SignInEmailOTP {
   return async ({ email, challenge_token }: EmailOTPSignInParams) => {
     const form = new FormData();
     form.append("strategy", "email_otp");
     form.append("email", email);
-    if (challenge_token) form.append("challenge_token", challenge_token);
+    await appendChallengeToken(form, apiHost, challenge_token);
 
     const response = await client("/auth/signin", {
       method: "POST",
@@ -293,13 +304,14 @@ function builderEmailOTP(
 
 function builderMagicLink(
   client: Client,
+  apiHost: string,
   setSignInAttempt: (attempt: SigninAttempt | null) => void,
 ): SignInMagicLink {
   return async ({ email, challenge_token }: MagicLinkSignInParams) => {
     const form = new FormData();
     form.append("strategy", "magic_link");
     form.append("email", email);
-    if (challenge_token) form.append("challenge_token", challenge_token);
+    await appendChallengeToken(form, apiHost, challenge_token);
 
     const response = await client("/auth/signin", {
       method: "POST",
@@ -315,6 +327,7 @@ function builderMagicLink(
 
 function builderOauth(
   client: Client,
+  apiHost: string,
 ): SignInOauth {
   return async ({
     provider,
@@ -330,7 +343,7 @@ function builderOauth(
       params.append("redirect_uri", redirectUri);
     }
     const form = new FormData();
-    if (challenge_token) form.append("challenge_token", challenge_token);
+    await appendChallengeToken(form, apiHost, challenge_token);
 
     const response = await client(`/auth/oauth2/init?${params.toString()}`, {
       method: "POST",
@@ -367,10 +380,10 @@ function base64urlToBuffer(base64url: string): ArrayBuffer {
   return bytes.buffer;
 }
 
-function builderPasskey(client: Client): SignInPasskey {
+function builderPasskey(client: Client, apiHost: string): SignInPasskey {
   return async (params?: ChallengeParams) => {
     const form = new FormData();
-    if (params?.challenge_token) form.append("challenge_token", params.challenge_token);
+    await appendChallengeToken(form, apiHost, params?.challenge_token);
 
     // Begin passkey login
     const beginResponse = await client("/auth/passkey/login/begin", {
@@ -456,6 +469,7 @@ function builderPasskey(client: Client): SignInPasskey {
 
 function builderGeneric(
   client: Client,
+  apiHost: string,
   setSignInAttempt: (attempt: SigninAttempt | null) => void,
 ): SignInGeneric {
   return async ({
@@ -475,7 +489,7 @@ function builderGeneric(
     if (username) form.append("username", username);
     if (password) form.append("password", password);
     if (phone) form.append("phone", phone);
-    if (challenge_token) form.append("challenge_token", challenge_token);
+    await appendChallengeToken(form, apiHost, challenge_token);
 
     const response = await client("/auth/signin", {
       method: "POST",
@@ -491,6 +505,8 @@ function builderGeneric(
 
 export function useSignIn(): UseSignInReturnType {
   const { client, loading } = useClient();
+  const { deployment } = useDeployment();
+  const apiHost = deployment?.backend_host ?? "";
   const [signinAttempt, setSignInAttempt] = useState<SigninAttempt | null>(
     null,
   );
@@ -511,7 +527,7 @@ export function useSignIn(): UseSignInReturnType {
     loading: false,
     signinAttempt,
     signIn: {
-      createStrategy: builder(client, setSignInAttempt),
+      createStrategy: builder(client, apiHost, setSignInAttempt),
       completeVerification: async (verificationCode: string) => {
         const form = new FormData();
         form.append("verification_code", verificationCode);
@@ -554,7 +570,7 @@ export function useSignIn(): UseSignInReturnType {
         }
 
         const form = new FormData();
-        if (params.challenge_token) form.append("challenge_token", params.challenge_token);
+        await appendChallengeToken(form, apiHost, params.challenge_token);
 
         const response = await client(url.pathname + url.search, {
           method: "POST",
@@ -603,7 +619,7 @@ export function useSignIn(): UseSignInReturnType {
       identify: async (identifier: string, challengeToken?: string): Promise<IdentifyResult> => {
         const form = new FormData();
         form.append("identifier", identifier);
-        if (challengeToken) form.append("challenge_token", challengeToken);
+        await appendChallengeToken(form, apiHost, challengeToken);
 
         const response = await client("/auth/identify", {
           method: "POST",
@@ -619,7 +635,7 @@ export function useSignIn(): UseSignInReturnType {
           params.append("redirect_uri", redirectUri);
         }
         const form = new FormData();
-        if (challengeToken) form.append("challenge_token", challengeToken);
+        await appendChallengeToken(form, apiHost, challengeToken);
 
         const response = await client(`/auth/sso/login?${params.toString()}`, {
           method: "POST",
