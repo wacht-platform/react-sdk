@@ -34,7 +34,6 @@ import {
 
 import { getStoredDevSession } from "@/utils/dev-session";
 import { sanitizeRedirectUri } from "@/utils/redirect-uri";
-import { WachtChallenge } from "./challenge-widget";
 
 export function SignInForm() {
     return (
@@ -100,8 +99,6 @@ function SignInFormContent() {
     const [pendingRedirectUri, setPendingRedirectUri] = useState<string | null>(
         null,
     );
-    const [challengeToken, setChallengeToken] = useState<string>("");
-    const isChallengeReady = Boolean(challengeToken);
 
     const existingSignins = [...(session?.signins || [])].sort((a, b) =>
         a.id === session?.active_signin?.id
@@ -220,16 +217,11 @@ function SignInFormContent() {
             setErrors({ email: "Email address is required" });
             return;
         }
-        if (!isChallengeReady) {
-            setErrors({ submit: "Challenge verification is still loading. Please try again." });
-            return;
-        }
-
         setIsSubmitting(true);
         setErrors({});
 
         try {
-            const result = await signIn.identify(email, challengeToken);
+            const result = await signIn.identify(email);
 
             if (result.strategy === "sso" && result.connection_id) {
                 const searchParams = new URLSearchParams(
@@ -243,7 +235,6 @@ function SignInFormContent() {
                 const response = await signIn.initEnterpriseSso(
                     result.connection_id,
                     redirectUri,
-                    challengeToken,
                 );
                 if (response && response.sso_url) {
                     setIsRedirecting(true);
@@ -266,7 +257,6 @@ function SignInFormContent() {
                     const { data } = await oauthSignIn.create({
                         provider: socialConnection.provider as OAuthProvider,
                         redirectUri,
-                        challenge_token: challengeToken,
                     });
                     if (
                         data &&
@@ -385,11 +375,6 @@ function SignInFormContent() {
             firstFactor === "email_magic_link" ||
             firstFactor === "phone_otp";
 
-        if (!isChallengeReady) {
-            setErrors({ submit: "Challenge verification is still loading. Please try again." });
-            return;
-        }
-
         setIsSubmitting(true);
         try {
             const submitData: any = {
@@ -400,10 +385,6 @@ function SignInFormContent() {
             if (firstFactor === "phone_otp" && countryCode) {
                 submitData.phone_country_code = countryCode;
             }
-            if (challengeToken) {
-                submitData.challenge_token = challengeToken;
-            }
-
             await signIn.create(submitData);
             if (!isVerificationStrategy) setIsSubmitting(false);
         } catch (err) {
@@ -440,7 +421,7 @@ function SignInFormContent() {
     const initSocialAuthSignIn = async (
         connection: DeploymentSocialConnection,
     ) => {
-        if (loading || isSubmitting || !isChallengeReady) return;
+        if (loading || isSubmitting) return;
 
         setIsSubmitting(true);
         try {
@@ -453,7 +434,6 @@ function SignInFormContent() {
             const { data } = await oauthSignIn.create({
                 provider: connection.provider as OAuthProvider,
                 redirectUri,
-                challenge_token: challengeToken,
             });
             if (data && typeof data === "object" && "oauth_url" in data) {
                 window.location.href = data.oauth_url as string;
@@ -466,12 +446,12 @@ function SignInFormContent() {
     };
 
     const handlePasskeySignIn = async () => {
-        if (loading || isSubmitting || !isChallengeReady) return;
+        if (loading || isSubmitting) return;
 
         setIsSubmitting(true);
         setErrors({});
         try {
-            const result = await passkeySignIn.create({ challenge_token: challengeToken });
+            const result = await passkeySignIn.create();
             if ("data" in result && result.data) {
                 await refetchSession();
 
@@ -720,7 +700,7 @@ function SignInFormContent() {
 
         const prepareVerificationAsync = async () => {
             try {
-                await signIn.prepareVerification({ strategy, challenge_token: challengeToken });
+                await signIn.prepareVerification({ strategy });
                 setIsSubmitting(false);
                 setOtpSent(true);
             } catch {
@@ -927,7 +907,6 @@ function SignInFormContent() {
                             try {
                                 await signIn.prepareVerification({
                                     strategy: "magic_link",
-                                    challenge_token: challengeToken,
                                 });
                             } catch {}
                         }}
@@ -976,7 +955,7 @@ function SignInFormContent() {
                             firstFactor === "email_otp"
                                 ? "email_otp"
                                 : "phone_otp";
-                        await signIn.prepareVerification({ strategy, challenge_token: challengeToken });
+                        await signIn.prepareVerification({ strategy });
                     }}
                     error={errors.otp}
                     isSubmitting={isSubmitting}
@@ -1247,16 +1226,10 @@ function SignInFormContent() {
                         <span className="w-input-err">{errors.submit}</span>
                     )}
 
-                    <WachtChallenge
-                        apiHost={deployment?.backend_host ?? ""}
-                        onSolve={(token) => setChallengeToken(token)}
-                        onError={() => setChallengeToken("")}
-                    />
-
                     <button
                         type="submit"
                         className="w-btn w-btn--primary w-btn--block"
-                        disabled={isSubmitting || loading || !isChallengeReady}
+                        disabled={isSubmitting || loading}
                     >
                         {isSubmitting ? (
                             <Spin size={15} onAccent />
@@ -1288,7 +1261,6 @@ function SignInFormContent() {
                                             await signIn.create({
                                                 email: formData.email,
                                                 strategy: "email_otp",
-                                                challenge_token: challengeToken,
                                             });
                                             setFirstFactor("email_otp");
                                         } catch (err) {

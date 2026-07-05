@@ -57,9 +57,3 @@ export async function solveWachtChallenge(apiHost: string): Promise<string> {
     }
 }
 
-export async function resolveChallengeToken(
-    apiHost: string,
-    challengeToken?: string,
-): Promise<string> {
-    return challengeToken || solveWachtChallenge(apiHost);
-}
