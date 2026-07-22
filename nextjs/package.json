@@ -39,7 +39,7 @@
         "vite-plugin-dts": "^4.4.0"
     },
     "peerDependencies": {
-        "@wacht/jsx": "^1.0.0-beta.43",
+        "@wacht/jsx": "^1.0.0-beta.65",
         "@wacht/types": "^1.0.0-beta.35",
         "react": "catalog:",
         "react-dom": "catalog:",

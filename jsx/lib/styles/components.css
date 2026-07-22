@@ -465,7 +465,7 @@
     display: grid;
     place-items: center;
     font: 400 var(--av-fs, 13px)/1 var(--wa-font-sans);
-    color: #fff;
+    color: var(--wa-primary-foreground);
     flex: none;
     background: var(
         --av-bg,
