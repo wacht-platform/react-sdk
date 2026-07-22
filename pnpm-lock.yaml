@@ -109,7 +109,7 @@ importers:
         specifier: ^1.0.0-beta.18
         version: 1.0.0-beta.18
       '@wacht/jsx':
-        specifier: ^1.0.0-beta.43
+        specifier: ^1.0.0-beta.65
         version: link:../jsx
       '@wacht/types':
         specifier: ^1.0.0-beta.35
@@ -146,7 +146,7 @@ importers:
         specifier: ^1.0.0-beta.6
         version: 1.0.0-beta.15
       '@wacht/jsx':
-        specifier: ^1.0.0-beta.43
+        specifier: ^1.0.0-beta.65
         version: link:../jsx
       '@wacht/types':
         specifier: ^1.0.0-beta.35
@@ -186,7 +186,7 @@ importers:
         specifier: ^1.0.0-beta.6
         version: 1.0.0-beta.15
       '@wacht/jsx':
-        specifier: ^1.0.0-beta.43
+        specifier: ^1.0.0-beta.65
         version: link:../jsx
       '@wacht/types':
         specifier: ^1.0.0-beta.35
