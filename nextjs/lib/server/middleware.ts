@@ -17,10 +17,12 @@ import {
 } from "@wacht/backend";
 import {
     authFromSerializedHeader,
+    createSignedOutAuth,
     decorateAuth,
     parseSerializedNextAuth,
+    setSerializedAuthHeader,
 } from "./auth-state";
-import { readCookie, resolveCookieNames } from "./cookies";
+import { AUTH_HEADER, readCookie, resolveCookieNames } from "./cookies";
 import {
     authenticateRequestWithHandshake,
     normalizeDevSessionQuery,
@@ -174,6 +176,9 @@ export function wachtMiddleware(
     options: WachtMiddlewareOptions = {},
 ): (request: NextRequest) => Promise<NextResponse> {
     return async (request: NextRequest) => {
+        stripClientAuthHeader(request);
+
+        let context: { auth: NextWachtAuth; headers: Headers };
         try {
             const normalizedDevSessionResponse = await normalizeDevSessionQuery(
                 request,
@@ -183,10 +188,15 @@ export function wachtMiddleware(
                 return normalizedDevSessionResponse;
             }
 
-            const context = await authenticateRequestWithHandshake(
+            context = await authenticateRequestWithHandshake(
                 request,
                 options,
             );
+        } catch {
+            context = signedOutContext(request, options);
+        }
+
+        try {
             const authState = context.auth;
 
             if (!handler) {
@@ -264,9 +274,41 @@ export function wachtMiddleware(
             applyAuthHeaders(request, response, context.headers);
             return response;
         } catch {
-            return NextResponse.next();
+            return failClosedResponse(request, options);
         }
     };
+}
+
+function stripClientAuthHeader(request: NextRequest): void {
+    try {
+        request.headers.delete(AUTH_HEADER);
+    } catch {
+        // Immutable headers; applyAuthHeaders still strips the forwarded copy.
+    }
+}
+
+function signedOutContext(
+    request: NextRequest,
+    options: WachtMiddlewareOptions,
+): { auth: NextWachtAuth; headers: Headers } {
+    const auth = createSignedOutAuth(request, options);
+    const headers = new Headers();
+    setSerializedAuthHeader(headers, auth);
+    return { auth, headers };
+}
+
+function failClosedResponse(
+    request: NextRequest,
+    options: WachtMiddlewareOptions,
+): NextResponse {
+    if (!isApiLikeRequest(request, options)) {
+        try {
+            return NextResponse.redirect(
+                new URL(resolveSignInRedirectUrl(request, options), request.url),
+            );
+        } catch {}
+    }
+    return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
 }
 
 export function createRouteMatcher(

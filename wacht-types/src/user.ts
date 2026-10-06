@@ -4,8 +4,10 @@ import type { Segment } from "./segment";
 
 export type VerificationStrategy =
   | "otp"
-  | "oath_google"
-  | "oath_github"
+  | "oauth_google"
+  | "oauth_github"
+  | "enterprise_sso"
+  | "scim"
   | "oauth_microsoft"
   | "oauth_facebook"
   | "oauth_linkedin"

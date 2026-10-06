@@ -22,7 +22,11 @@ export function readCookie(request: Request, cookieName: string): string | null 
   for (const part of cookieHeader.split(';')) {
     const [name, ...rest] = part.trim().split('=');
     if (name !== cookieName) continue;
-    return decodeURIComponent(rest.join('='));
+    try {
+      return decodeURIComponent(rest.join('='));
+    } catch {
+      return null;
+    }
   }
 
   return null;

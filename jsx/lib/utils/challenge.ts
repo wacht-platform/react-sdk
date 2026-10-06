@@ -23,30 +23,49 @@ export function normalizeApiHost(apiHost: string): string {
     return `https://${trimmed}`;
 }
 
-function loadChallengeScript(): Promise<void> {
-    if (document.getElementById(SCRIPT_ID)) return Promise.resolve();
+let challengeScriptPromise: Promise<void> | undefined;
 
-    return new Promise((resolve, reject) => {
-        const script = document.createElement("script");
-        script.id = SCRIPT_ID;
-        script.src = WIDGET_URL;
-        script.async = true;
-        script.onload = () => resolve();
-        script.onerror = () => reject(new Error("Failed to load challenge script"));
-        document.head.appendChild(script);
+function configureChallenge() {
+    window.CAP_SILENT = true;
+    window.CAP_DISABLE_WIDGET_REF = true;
+    window.CAP_CUSTOM_WASM_URL = WASM_URL;
+}
+
+function loadChallengeScript(): Promise<void> {
+    if (window.Cap) return Promise.resolve();
+    if (challengeScriptPromise) return challengeScriptPromise;
+
+    challengeScriptPromise = new Promise((resolve, reject) => {
+        const script = document.getElementById(SCRIPT_ID) as HTMLScriptElement | null;
+        if (script) {
+            script.addEventListener("load", () => resolve(), { once: true });
+            script.addEventListener(
+                "error",
+                () => reject(new Error("Failed to load challenge script")),
+                { once: true },
+            );
+            return;
+        }
+
+        const newScript = document.createElement("script");
+        newScript.id = SCRIPT_ID;
+        newScript.src = WIDGET_URL;
+        newScript.async = true;
+        newScript.onload = () => resolve();
+        newScript.onerror = () => reject(new Error("Failed to load challenge script"));
+        document.head.appendChild(newScript);
     });
+
+    return challengeScriptPromise;
 }
 
 export async function solveWachtChallenge(apiHost: string): Promise<string> {
     const base = normalizeApiHost(apiHost);
     if (!base) throw new Error("Challenge API host is missing");
 
+    configureChallenge();
     await loadChallengeScript();
     if (!window.Cap) throw new Error("Challenge script did not initialize");
-
-    window.CAP_SILENT = true;
-    window.CAP_DISABLE_WIDGET_REF = true;
-    window.CAP_CUSTOM_WASM_URL = WASM_URL;
 
     const cap = new window.Cap({ apiEndpoint: `${base}/captcha/` });
     try {

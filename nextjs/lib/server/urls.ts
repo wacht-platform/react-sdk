@@ -24,6 +24,7 @@ export function applyAuthHeaders(
   headers: Headers,
 ): void {
   const requestHeaders = new Headers(request.headers);
+  requestHeaders.delete(AUTH_HEADER);
 
   headers.forEach((value, key) => {
     const normalizedKey = key.toLowerCase();

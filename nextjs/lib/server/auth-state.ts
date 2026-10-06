@@ -210,7 +210,76 @@ export function parseSerializedNextAuth(headers: Headers): SerializedNextAuth {
   if (!serialized) {
     throw new Error('Missing x-wacht-auth header.');
   }
-  return JSON.parse(serialized) as SerializedNextAuth;
+  try {
+    const parsed: unknown = JSON.parse(serialized);
+    if (isSerializedNextAuth(parsed)) return parsed;
+  } catch {}
+  return signedOutSerializedAuth();
+}
+
+export function signedOutSerializedAuth(): SerializedNextAuth {
+  return {
+    userId: null,
+    sessionId: null,
+    organizationId: null,
+    workspaceId: null,
+    organizationPermissions: [],
+    workspacePermissions: [],
+    tokenType: null,
+    ownerUserId: null,
+    identity: null,
+    metadata: null,
+  };
+}
+
+function isNullableString(value: unknown): boolean {
+  return value === null || typeof value === 'string';
+}
+
+function isStringArray(value: unknown): value is string[] {
+  return Array.isArray(value) && value.every((item) => typeof item === 'string');
+}
+
+function isSerializedNextAuth(value: unknown): value is SerializedNextAuth {
+  if (!value || typeof value !== 'object') return false;
+  const v = value as Record<string, unknown>;
+  return (
+    isNullableString(v.userId) &&
+    isNullableString(v.sessionId) &&
+    isNullableString(v.organizationId) &&
+    isNullableString(v.workspaceId) &&
+    isNullableString(v.tokenType) &&
+    isNullableString(v.ownerUserId) &&
+    isStringArray(v.organizationPermissions) &&
+    isStringArray(v.workspacePermissions)
+  );
+}
+
+export function createSignedOutAuth(
+  request: Request | NextRequest,
+  options: WachtMiddlewareOptions = {},
+): NextWachtAuth {
+  const base = authFromSerializedHeader(signedOutSerializedAuth());
+  return {
+    ...base,
+    redirectToSignIn: createRedirectToSignIn(request, options),
+    async protect(protectOptions?: NextProtectOptions) {
+      try {
+        await base.protect(protectOptions);
+      } catch (error) {
+        if (
+          error instanceof WachtAuthError &&
+          error.code === 'unauthenticated' &&
+          protectOptions?.unauthenticatedUrl
+        ) {
+          throw new WachtAuthError(error.code, error.status, error.message, {
+            redirectUrl: protectOptions.unauthenticatedUrl,
+          });
+        }
+        throw error;
+      }
+    },
+  };
 }
 
 export function authFromSerializedHeader(parsed: SerializedNextAuth): NextWachtAuth {
