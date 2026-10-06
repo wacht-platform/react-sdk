@@ -60,6 +60,8 @@ export interface NextProtectOptions extends ProtectOptions {
 
 export interface NextWachtAuth extends Omit<WachtAuth, "protect"> {
     isAuthenticated: boolean;
+    allowed?: boolean;
+    reason?: string;
     tokenType: WachtTokenType | null;
     ownerUserId: string | null;
     identity: WachtPrincipalIdentity | null;

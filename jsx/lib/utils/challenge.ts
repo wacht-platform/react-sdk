@@ -35,7 +35,7 @@ function loadChallengeScript(): Promise<void> {
     if (window.Cap) return Promise.resolve();
     if (challengeScriptPromise) return challengeScriptPromise;
 
-    challengeScriptPromise = new Promise((resolve, reject) => {
+    challengeScriptPromise = new Promise<void>((resolve, reject) => {
         const script = document.getElementById(SCRIPT_ID) as HTMLScriptElement | null;
         if (script) {
             script.addEventListener("load", () => resolve(), { once: true });
@@ -54,6 +54,10 @@ function loadChallengeScript(): Promise<void> {
         newScript.onload = () => resolve();
         newScript.onerror = () => reject(new Error("Failed to load challenge script"));
         document.head.appendChild(newScript);
+    }).catch((error) => {
+        challengeScriptPromise = undefined;
+        document.getElementById(SCRIPT_ID)?.remove();
+        throw error;
     });
 
     return challengeScriptPromise;
